@@ -10150,6 +10150,21 @@ export interface operations {
                 | "team"
                 | "administration"
               )[];
+              toolsets: (
+                | "workspace"
+                | "contracts"
+                | "matters"
+                | "tasks"
+                | "requests"
+                | "comments"
+                | "documents"
+                | "auto-docs"
+                | "entities"
+                | "knowledge"
+                | "people"
+                | "team"
+                | "administration"
+              )[];
               readOnly: boolean;
               apiKeyLifetimeDays: number;
             };

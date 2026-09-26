@@ -18,17 +18,17 @@ Select a column heading to sort ascending, descending or return to the default o
 
 ## Read record information
 
-The record details at the top and **Fields** show the current values from the full app record. Contracts and Matters both show **Department** and **Region**. A Contract shows its details under **Overview**, including Value and dates. Fields whose Rows have **Visible on Portal** on, and built-in values such as Description, are read-only. The switch belongs to the Row, so a Field may be visible on one type's Form and hidden on another's. Branches hide empty Rows when their conditions do not hold; stored values remain visible subject to that switch and your access. Ask Legal to change a value; reload the record to see their update.
+The record details at the top and **Fields** show the current values from the full app record. Contracts and Matters both show **Department** and **Region**. A Contract shows its details under **Overview**, including Value and dates. Fields whose Rows have **Visible on Portal** on, and built-in values such as Description, are read-only. The switch belongs to the Row, so a Field may be visible on one type's Form and hidden on another's. The Portal lists every Field whose Row is Visible on Portal, even when a Branch condition in the Form does not hold. A Field with no value shows **Not recorded**. Ask Legal to change a value; reload the record to see their update.
 
 **Original request** contains the original description, submitted answers, Requester and submission date. It is read-only. A record may show more than one original submission, or none if it started without a Request. Legal's changes to the live Description do not change the original ask.
 
 ## Work with Documents
 
-**Documents** holds the Contract or Matter's files together. A Contract's Primary Document appears first. Each row shows the current Version, kind, uploader and date. Select the Document name to preview it, or use its download control. Preview processing may finish after upload.
+**Documents** holds the Contract or Matter's files together. A Contract's Primary Document appears first. Each row shows the current Version, its kind, uploader and date. The Portal shows the kind, not the Document type Legal sees, so a Version of a type that an Administrator added reads **General**. Select the Document name to preview it, or use its download control. Preview processing may finish after upload.
 
 Select **earlier versions** to read or download previous rounds. The current Version appears only on the main row. A Document with one Version has no history to expand. **Signed copy** identifies the Version Legal pinned as executed, which may differ from the current Version.
 
-Drop files onto Documents or select **Upload documents**. Choose **New documents** under **Add as** for separate files, or select an existing Document to add a Version. A new Version takes one file. Choose its Kind, add an optional Note, and select **Upload**. For multiple new Documents, the Kind and Note apply to every selected file. Successful files remain uploaded if another fails; **Retry failed uploads** retries only the failures.
+Drop files onto Documents or select **Upload documents**. Choose **New documents** under **Add as** for separate files, or choose **New version of** an existing Document to add a Version. A new Version takes one file. On a Contract, choose its **Kind**. It starts on **General** and also offers the six fixed Contract types, such as **Draft · theirs** and **Executed**. Legal sees your choice as the Version's Document type, and **General** leaves it with no type. Matter uploads have no Kind control. Enter a **Note (optional)** if you need one, and select **Upload**. For multiple new Documents, the Kind and Note apply to every selected file. Successful files remain uploaded if another fails; **Retry failed uploads** retries only the failures.
 
 **Add version** beside a Document opens the same dialog with that Document selected. This works for the primary Contract Document too. Legal chooses which Document is primary and which Version is the signed copy. Uploading a new Version changes neither designation. Business Users cannot manage folders or archive paper.
 
@@ -66,4 +66,6 @@ Closing a Matter or Ending a Contract does not remove permitted Portal work. Arc
 
 ## Review an approval request
 
-Open **Approvals** in the Legal portal to see Contracts awaiting your decision. Open a request, review its primary Document, and choose **Approve** or **Reject**, with an optional note. Only the named approver can decide. Your completed decisions appear under **Completed**. See [Request and give approval](contract-approvals.md).
+Select **Approvals** in the Portal navigation bar. The **Your approvals** page lists Contracts awaiting your decision under **Pending**. Search by Contract title or requester name, then open a request. Review its primary Document, enter a **Note (optional)** if you need one, and choose **Approve** or **Reject**. Only the named approver can decide, and a decision is final. Your completed decisions appear under **Completed**.
+
+An approval request does not add you to the Contract team. It shows the Contract title and primary Document only. If the primary Document is Confidential and you are not on the Contract team, the request shows no Document. Withdrawing the request or archiving the Contract removes it from your list. See [Request and give approval](contract-approvals.md).

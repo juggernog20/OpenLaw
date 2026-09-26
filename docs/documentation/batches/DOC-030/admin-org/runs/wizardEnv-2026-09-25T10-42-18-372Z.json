@@ -1,0 +1,76 @@
+{
+  "section": "wizardEnv",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "env: SMTP_URL smtp://mailpit:1025 and SMTP_FROM DOC-030 Environment <env-relay@helix.example> (overlay-mail-env.json); stored relay saved",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:42:18.373Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/welcome",
+      "action": "Deployment sets SMTP_URL and SMTP_FROM: the wizard step names the environment source and sender, with no relay form and no Send test email",
+      "expected": "Environment message; no Save relay, Replace relay, Clear relay or Send test email; a save is refused",
+      "startedAt": "2026-09-25T10:42:19.798Z",
+      "finishedAt": "2026-09-25T10:42:20.542Z",
+      "actual": "The Outbound email step read \"Outbound email is set by the deployment environment. Mail is sent from DOC-030 Environment <env-relay@helix.example>.\". Its buttons were [\"Back\",\"Continue\"]. A direct save answered 409 (\"SMTP is set by the deployment environment (SMTP_URL / SMTP_FROM), which always wins over settings saved here. Change it in the environment instead.\").",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/email",
+      "action": "Settings, Advanced, Outbound email with an environment relay: Managed by your deployment configuration; only Send test email; the test arrives from the environment sender, not the stored relay",
+      "expected": "Managed message; Sender line; one button; test mail from env-relay@helix.example",
+      "startedAt": "2026-09-25T10:42:20.543Z",
+      "finishedAt": "2026-09-25T10:42:21.826Z",
+      "actual": "The pane at /settings/email read \"Managed by your deployment configuration. Contact your system administrator to change the relay.\" and \"Sender: DOC-030 Environment <env-relay@helix.example>\". Pane buttons: [\"Send test email\"]. Send test email showed \"Test email sent to doc030-wiz-admin@helix.example. Check your inbox.\" and the message arrived from DOC-030 Environment <env-relay@helix.example> although the stored relay (stored-relay@helix.example) was still saved.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/welcome",
+      "action": "Invite your team from the wizard while the environment relay is active: the invitation arrives from the environment sender",
+      "expected": "Set password email from env-relay@helix.example",
+      "startedAt": "2026-09-25T10:42:21.826Z",
+      "finishedAt": "2026-09-25T10:42:22.998Z",
+      "actual": "The Invite your team step sent \"Set your OpenLaw password\" to doc030-wiz-pending@helix.example from env-relay@helix.example. The row stays pending for the resend check.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/",
+      "action": "Finish the wizard with email configured; it does not reopen",
+      "expected": "Skip optional steps completes setup; /welcome redirects",
+      "startedAt": "2026-09-25T10:42:22.998Z",
+      "finishedAt": "2026-09-25T10:42:24.091Z",
+      "actual": "Skip optional steps on the Welcome step, with email configured, completed setup and went to /. Opening /welcome again went to /.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:42:24.103Z"
+}

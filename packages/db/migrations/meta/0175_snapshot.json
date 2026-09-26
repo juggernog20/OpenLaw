@@ -1,6 +1,6 @@
 {
-  "id": "3d4bef0b-5534-411d-b063-956a60eb20da",
-  "prevId": "f605d582-fe1b-4694-b77a-e470099f4d1d",
+  "id": "f605d582-fe1b-4694-b77a-e470099f4d1d",
+  "prevId": "318500d2-66d5-4ba3-8211-4909d477f36d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4329,12 +4329,6 @@
           "notNull": true,
           "default": false
         },
-        "launch_claim_expires_at": {
-          "name": "launch_claim_expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "next_reconcile_at": {
           "name": "next_reconcile_at",
           "type": "timestamp with time zone",
@@ -4558,7 +4552,7 @@
         },
         "contract_envelopes_sent_time": {
           "name": "contract_envelopes_sent_time",
-          "value": "(status in ('preparing', 'draft', 'preparation_failed', 'discarded')) = (sent_at is null)"
+          "value": "(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)"
         },
         "contract_envelopes_provider_check": {
           "name": "contract_envelopes_provider_check",
@@ -4566,7 +4560,7 @@
         },
         "contract_envelopes_status_check": {
           "name": "contract_envelopes_status_check",
-          "value": "status in ('preparing', 'draft', 'preparation_failed', 'discarded', 'sent', 'signed', 'declined', 'voided')"
+          "value": "status in ('preparing', 'draft', 'preparation_failed', 'sent', 'signed', 'declined', 'voided')"
         },
         "contract_envelopes_executed_fetch_check": {
           "name": "contract_envelopes_executed_fetch_check",
@@ -14517,7 +14511,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

@@ -1,5 +1,5 @@
 {
-  "id": "50bc2e53-f9ee-42e2-9e17-ff18adeb793e",
+  "id": "2e60880d-82a5-4b1e-8858-a7793e958e06",
   "prevId": "d98ad505-1cb3-4c66-bc17-6f7f43072988",
   "version": "7",
   "dialect": "postgresql",
@@ -4272,55 +4272,7 @@
           "name": "provider_envelope_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "document_id": {
-          "name": "document_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "subject": {
-          "name": "subject",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "idempotency_key": {
-          "name": "idempotency_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "request_fingerprint": {
-          "name": "request_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "provider_transaction_id": {
-          "name": "provider_transaction_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "provider_account_id": {
-          "name": "provider_account_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "provider_environment": {
-          "name": "provider_environment",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "preparation_state": {
-          "name": "preparation_state",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "next_reconcile_at": {
           "name": "next_reconcile_at",
@@ -4370,7 +4322,7 @@
           "name": "sent_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "now()"
         },
         "completed_at": {
@@ -4442,43 +4394,7 @@
             }
           ],
           "isUnique": true,
-          "where": "status in ('preparing', 'draft', 'sent')",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "contract_envelopes_idempotency_idx": {
-          "name": "contract_envelopes_idempotency_idx",
-          "columns": [
-            {
-              "expression": "contract_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "idempotency_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "contract_envelopes_transaction_idx": {
-          "name": "contract_envelopes_transaction_idx",
-          "columns": [
-            {
-              "expression": "provider_transaction_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
+          "where": "status = 'sent'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -4492,15 +4408,6 @@
           "columnsFrom": ["contract_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "contract_envelopes_document_id_documents_id_fk": {
-          "name": "contract_envelopes_document_id_documents_id_fk",
-          "tableFrom": "contract_envelopes",
-          "tableTo": "documents",
-          "columnsFrom": ["document_id"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "contract_envelopes_document_version_id_document_versions_id_fk": {
@@ -4535,25 +4442,13 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "contract_envelopes_creation_check": {
-          "name": "contract_envelopes_creation_check",
-          "value": "preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')"
-        },
-        "contract_envelopes_provider_required": {
-          "name": "contract_envelopes_provider_required",
-          "value": "status in ('preparing', 'preparation_failed') or provider_envelope_id is not null"
-        },
-        "contract_envelopes_sent_time": {
-          "name": "contract_envelopes_sent_time",
-          "value": "(status in ('preparing', 'draft', 'preparation_failed')) = (sent_at is null)"
-        },
         "contract_envelopes_provider_check": {
           "name": "contract_envelopes_provider_check",
           "value": "provider in ('docusign')"
         },
         "contract_envelopes_status_check": {
           "name": "contract_envelopes_status_check",
-          "value": "status in ('preparing', 'draft', 'preparation_failed', 'sent', 'signed', 'declined', 'voided')"
+          "value": "status in ('sent', 'signed', 'declined', 'voided')"
         },
         "contract_envelopes_executed_fetch_check": {
           "name": "contract_envelopes_executed_fetch_check",
@@ -4561,7 +4456,7 @@
         },
         "contract_envelopes_completed_at": {
           "name": "contract_envelopes_completed_at",
-          "value": "(status in ('preparing', 'draft', 'sent')) = (completed_at is null)"
+          "value": "(status = 'sent') = (completed_at is null)"
         },
         "contract_envelopes_reason_status": {
           "name": "contract_envelopes_reason_status",
@@ -14416,7 +14311,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

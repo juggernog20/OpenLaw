@@ -1,26 +1,47 @@
 {
   "articleId": "follow-request",
-  "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (portal, round 1)",
+  "contentSha256": "257a2a24c146025cca08e77a3071d6fe1a3a9c59c2fe4dddc4c6d820a17999ae",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (portal)",
+  "technicalReviewer": "DOC-030 source-review author agent (portal)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (portal)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (portal); link label correction by DOC-029 integration author agent",
-  "technicalReviewer": "DOC-029 source-review author agent (portal)",
-  "verifiedAt": "2026-09-16T15:23:35.996Z",
+  "verifiedAt": "2026-09-25T11:19:43.647Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/follow-request.md",
-    "docs/documentation/batches/DOC-029/portal/technical-review.json",
-    "docs/documentation/batches/DOC-029/portal/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-030/portal/technical-review.json",
+    "docs/documentation/batches/DOC-030/portal/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/portal/walkthrough.json",
+    "docs/documentation/batches/DOC-030/portal/fixtures.mjs",
+    "docs/documentation/batches/DOC-030/portal/lib.mjs",
+    "docs/documentation/batches/DOC-030/portal/pdf.mjs",
+    "messages/en-US.json",
     "apps/web/src/routes/portal-request.tsx",
+    "apps/web/src/routes/portal-contract.tsx",
+    "apps/web/src/routes/inbox-request.tsx",
+    "apps/web/src/components/portal/my-requests.tsx",
     "apps/web/src/components/portal/request-owner.tsx",
     "apps/web/src/components/portal/record-shell.tsx",
+    "apps/web/src/components/portal/record-work.tsx",
+    "apps/web/src/components/activity/activity-applet.tsx",
     "apps/web/src/components/comments/comment-applet.tsx",
     "apps/web/src/components/comments/comment-attachments.tsx",
+    "apps/web/src/lib/requester-status.ts",
+    "apps/web/src/lib/requests.ts",
+    "packages/shared/src/index.ts (isOpenRequestStatus)",
+    "packages/shared/src/form-evaluator.ts",
     "apps/api/src/modules/requests/routes.ts",
-    "apps/api/src/modules/comments/routes.ts"
+    "apps/api/src/modules/requests/read.ts",
+    "apps/api/src/modules/requests/service.ts",
+    "apps/api/src/modules/requests/request-detail.ts",
+    "apps/api/src/modules/requests/convert.ts",
+    "apps/api/src/modules/portal/applets.ts",
+    "apps/api/src/modules/portal/record-work.ts",
+    "apps/api/src/lib/custom-fields.ts",
+    "apps/api/src/modules/comments/audience.ts"
   ],
   "scenarios": [
     {
@@ -29,69 +50,36 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; Nadia Haddad signs in with a password; each identity has its own browser context.",
-        "Jonas created DOC-029 portal follow Requests R-74 to R-79 through the API, each with one original PDF. Nadia posted Full thread (with a PDF), Legal only and Working team comments on each, assigned R-74, converted R-75 to Contract 59 and R-76 to Matter 69, resolved R-77 with a reply, declined R-78 with a reason, then posted later Full thread replies with PDFs and Legal only notes, and 55 Full thread replies on R-79."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7. Jonas Weber (Business User) and Amara Nwosu (second Business User) sign in to the Portal with magic links read from the lab Mailpit, each in an isolated browser context. Nadia Haddad (Legal Team Member) signs in with a password in her own context.",
+        "Jonas's six Requests (R-95 to R-100) were created through the API with one original PDF each; R-95 and R-96 use the DOC-030 portal request type and its Form answers. The form itself is V-C09.",
+        "Legal actions (Full thread, Legal only and Working team comments, assignment, conversion, resolution, decline, Business Owner change, team-row removal, archive) were applied through the API as Nadia. Nadia opened R-95 in the Inbox in her browser to produce the Read status."
       ],
       "expected": "The Requester sees the supported progress and conversation for their own Request after disposition. A second Business User cannot open it; Legal-only conversation and internal work details remain unavailable.",
-      "actual": "Your requests listed R-74 (Owner: Nadia Haddad, Open), R-77 (Resolved) and R-78 (Declined) and not the converted R-75 and R-76. Each opened from the list with its title, R- meta line, status and Owner line; R-78's banner carried the decline reason; Attach new files to a reply appeared on R-77 and R-78 only and opened the Comments composer. Comments showed Legal's Full thread replies before and after the decision, and the resolution reply on R-77, never the Legal only or Working team notes, with no audience choice; Legal's PDFs downloaded with matching bytes. What you submitted showed the description, the original PDF (same bytes), Engineering and High. Comment stayed disabled with no text and with only a file; each reply with a PDF posted once, the status stayed the same after reload, and Nadia's API read showed it. /portal/requests/75 and /76 redirected to /portal/contracts/59 and /portal/matters/69 with Original request, Jonas as Business Owner on the team applet, Full thread replies only, and a reply posted on the record. Show older grew R-79 from 50 to 55 replies. A failed reply kept text and file and the retry posted once; a failed conversation read showed the error and reopening Comments recovered. Clearing assignment showed Not assigned yet on the page and the list. Amara's browser returned to /portal for R-74, R-75 and R-76 and her API reads answered 404 for the Request and its file; Jonas's staff Request read answered 403 and /contracts/59 and /matters/69 ended on /portal. After Nadia removed Jonas's Matter team row, /portal/requests/76 returned to /portal. After Nadia archived Contract 59, /portal/requests/75 showed \"The record created from this Request was archived. Your original request is shown below.\" with no Comments applet and no file links.",
+      "actual": "26 recorded steps passed in one run: 22 browser steps as Jonas or Amara, 1 API setup step that created Jonas's Requests, and 3 Legal steps (2 API setup steps and Nadia's Inbox open in her browser). Your requests showed \"R-95 DOC-030 portal follow open … DOC-030 portal Evaluation review … · this minute Legal Owner: Nadia Haddad Open\". The Request page showed the meta line \"R-95 · DOC-030 portal Evaluation review 1790330794487 · Submitted Sep 25\", status Open, the Legal Owner card with Nadia Haddad and the banner \"Legal has received your request. You'll get an email when the status changes.\". A reply while Open posted and left it Open. After Nadia opened /inbox/95 the staff read showed read, and Jonas saw status Read, the banner \"Your request has been opened by the Legal team.\", no Attach new files to a reply link, and Read in Your requests. Comments showed Legal's Full thread reply and file and none of the Legal only or Working team notes, with no audience choice. History listed \"Jonas Weber commented\" and \"Nadia Haddad commented\". What you submitted showed the description, the original PDF (download matched), Engineering, High, Our entity, Term type, Expiry date and Business reason. While Read, Comment stayed unavailable with no text and with only a file; Remove took an unintended file off; the reply posted with its file; selecting the filename opened a preview and \"Download <file>\" saved the same bytes; the status stayed Read and Legal read the reply. Converted R-96 and R-97 left Your requests. Resolved R-98 showed \"Legal has answered this request and closed it.\" with the resolution in Comments; Declined R-99 showed the reason in the banner. On both, Attach new files to a reply opened #portal-request-composer, a reply with a file posted and the status did not change. R-96 redirected to /portal/contracts/340 and R-97 to /portal/matters/118, each with Original request, Jonas as Business Owner on the team, Full thread replies only, and a reply posted on the record. The contract's Fields card listed its Visible on Portal Fields with Not recorded for empty ones. Show older took R-100 from 50 to 55 markers. A failed reply kept its text and file and the retry posted once; a failed conversation read showed \"The conversation could not be read. Reopen the panel to try again.\" and reopening fixed it. Clearing the assignment showed Not assigned yet on the card and the list. Amara was sent to /portal from R-95, R-98 and R-96, the API answered 404 for the Request and its attachment, and the contract page did not show its title. Jonas's staff Request read answered 403, his comment list held no Legal only or Working team text, and /inbox/95 and /matters/118 sent him to the Portal. After Legal cleared the Matter's Business Owner and removed Jonas's team row, /portal/requests/97 returned to /portal. After Legal archived C-340, /portal/requests/96 showed \"The record created from this Request was archived. Your original request is shown below.\" with no Comments applet and no attachment links.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/portal/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/portal/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/portal/r1-declined-request-comments.png"
+        "docs/documentation/batches/DOC-030/portal/walkthrough.json",
+        "docs/documentation/batches/DOC-030/portal/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/portal/fixtures.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The work lab is shared with other DOC-029 agents. Only records named DOC-029 portal were created; no organisation settings changed. Debug runs of the same script before the recorded run left further DOC-029 portal Requests; they are not credited.",
-    "Legal replies, assignment, conversion, resolution, decline, team-row removal and archive were applied through the API as the Legal Team Member; the staff guides own those controls.",
+    "The work2 lab (openlaw-docs-80ceef9e-work2) is shared with other DOC-030 agents. This walkthrough created only records named DOC-030 portal: one Portal-listed Entity, three contract-scoped catalog Fields, one Contract type with its own Form, one request type that targets it, one type-specific Before you submit link, and the Requests and records named in the log. It changed no seeded record and no organization setting. Development runs before the recorded run left further DOC-030 portal Requests (R-36 to R-48); they are not credited.",
+    "Sign-in link requests are budgeted per email address and per client address, and other agents also sign in as Jonas Weber. So one fresh magic link per Business User was read from Mailpit and its browser session was kept outside the repository and reused for the recorded run.",
+    "Legal replies, assignment, conversion, resolution, decline, Business Owner change, team-row removal and archive were applied through the API as the Legal Team Member; the staff guides own those controls. Only the Inbox open that sets Read ran in Nadia's browser.",
+    "Legal's first attempt to remove Jonas's Matter team row answered 409 \"Change the Business Owner before removing this person from the team.\" Legal cleared the Business Owner first, then the removal worked. The guide's sentence is about what the Requester sees after removal and still holds.",
     "Recovery checks used browser route interception to fail a reply post and a conversation read.",
-    "Selecting a conversation attachment's filename opens a preview with a Download link, and the row has a separate Download control; the article's \"Select an attachment to download it\" reaches the file either way. Recorded as an observation in the walkthrough log.",
-    "The email and notification-preference sentences were not exercised in this walkthrough."
+    "History on a Request listed only comment entries (\"<name> commented\"); the Legal only note did not appear there.",
+    "Product bug confirmed (reported by the author): C-340 has Term type Evergreen, but its Portal Fields card lists the optional Field under the \"Term type is Fixed\" Branch as Not recorded. The guide only says a Field without a value shows Not recorded, which holds.",
+    "The email and notification-preference sentences were not exercised in this walkthrough; the notifications guide owns them."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "ca5dff1ef7d999e36d8655c3d00ffb6b5a2136427e86f2be168889ca417dbca3",
-    "verifiedAt": "2026-09-07T10:07:20.254Z"
-  },
-  "copyOnlyReview": {
-    "classification": "copy-only",
-    "reviewer": "DOC-029 independent re-walk agent",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T17:37:45Z",
-    "previousContentSha256": "5cea0964158582671d5f4b3dbdb9726d214f83dcaf08ed8ddedbc1603923b9a7",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
-    "priorEvidence": {
-      "path": "docs/documentation/evidence/follow-request.json",
-      "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-      "contentSha256": "5cea0964158582671d5f4b3dbdb9726d214f83dcaf08ed8ddedbc1603923b9a7",
-      "verifiedAt": "2026-09-16T15:23:35.996Z",
-      "walkthroughReviewer": "DOC-029 independent walkthrough agent (portal, round 1)"
-    },
-    "changes": [
-      "Line 38: the link label for comments-and-activity.md changed from \"Comments, attachments, and activity\" to \"Choose who can read a comment\". That is the article title in articles.json and its H1. The link target did not change."
-    ],
-    "whyPriorWalkthroughsApply": "No action, prerequisite, result, control name or meaning changed. Only the visible text of one link changed, so the link now names the article it opens. The walkthrough evidence above ran against the previous bytes and is kept unchanged. No fresh walkthrough is claimed for these bytes."
+    "verifiedAt": "2026-09-16T15:23:35.996Z"
   },
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (portal)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38; the only Portal-path change is the colour of an archived author name in Comments, which the article does not state. I replayed the round 1 V-C10 walkthrough and supplement on the work2 lab and all 29 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/portal.json",
-        "sha256": "16d6ed753c45c8962449190096edcbd94fecc19f3cd1ae56b1b00a294b153966"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

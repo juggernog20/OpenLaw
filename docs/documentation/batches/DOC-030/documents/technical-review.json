@@ -1,0 +1,197 @@
+{
+  "batch": "DOC-030",
+  "group": "documents",
+  "reviewer": "DOC-030 source-review author agent (documents)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:23:10Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousWalkthroughBuild": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "previousCompatibilityTarget": "432dba3a835863091791fbac429a6a66777bdc40",
+    "lastArticleEdit": "f5168158"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "document-versions",
+      "scenario": "V-C26",
+      "contentSha256Before": "65e7f8a7cd5a5afac33059e9bfd1c203006699e7b95c3f8ee72412e3013b5c2d",
+      "contentSha256": "52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/document-versions.json",
+        "docs/documentation/batches/DOC-029/documents/technical-review.json",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-001 addenda, DOC-007 status, DOC-015 and its Knowledge addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/batch-dialog.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/documents/document-filter-bar.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/documents-settings-tabs.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/documents/service.ts",
+        "apps/api/src/modules/documents/upload-service.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "packages/db/src/schema/knowledge-items.ts",
+        "packages/db/migrations/0160_document_types.sql"
+      ],
+      "corrections": [
+        {
+          "claim": "Upload step 3, the classification control",
+          "before": "Select Kind and choose Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, or Amendment. A Matter upload has no Kind control.",
+          "after": "If the dialog shows Type, choose a type or leave No type. Type always starts on No type. The Contract list starts with the six fixed types; Matter and Entity lists start empty, so those uploads show no Type until an Administrator adds one. Knowledge has no type list.",
+          "source": "documents-card.tsx UploadDialog (documents.composer.type, documents.type.none, shown when typeOptions.length > 0, typeId starts empty); lib/documents.ts documentTypeModuleOf returns null for knowledge_item; 0160_document_types.sql seeds six Contract rows; DOC-015 (d0d16390, 1a98360f)"
+        },
+        {
+          "claim": "New section context: where the type list comes from",
+          "before": "Not stated.",
+          "after": "Added a Before you start paragraph: one optional Document type per Version, one list each for Matters, Contracts and Entities under profile menu, Settings, Documents (Administrator only), and the Knowledge Item's own Knowledge type on its files.",
+          "source": "settings.tsx section documents -> /settings/documents/matters; documents-settings-tabs.tsx; settings-document-types.tsx loader redirects non-administrators; CONTEXT.md Document type; DOC-015"
+        },
+        {
+          "claim": "Upload step 2, dialog name",
+          "before": "Select Upload, then Choose files.",
+          "after": "Select Upload. In the Upload document dialog, select Choose files.",
+          "source": "documents-card.tsx documents.composer.uploadTitle 'Upload document', documents.composer.chooseMany 'Choose files'"
+        },
+        {
+          "claim": "Add version step 2",
+          "before": "Use Choose file, select Kind if the record shows it, and enter a Note.",
+          "after": "Use Choose file, choose a Type if the dialog shows it, enter a Note. The new Version does not copy the earlier Version's type.",
+          "source": "documents-card.tsx UploadDialog: picked state starts null and typeId falls back to '' unless a renewal seeds Amendment"
+        },
+        {
+          "claim": "Add version step 3, how to show earlier Versions",
+          "before": "Expand the row to see earlier Versions.",
+          "after": "Select the arrow beside the Document name to show earlier Versions.",
+          "source": "documents-card.tsx DocumentRows: the documents.chain.toggle button moved from before the icon to after the name"
+        },
+        {
+          "claim": "Kind correction paragraph",
+          "before": "A Legal Team Member or Administrator can correct the Kind control on an existing hand-set Version. Matter Documents have no Kind control. Generated redline cannot be corrected to or from another kind.",
+          "after": "The Type column (now on every module) shows each Version's Document type. Member+ corrects it from that column on an unarchived record and Document, choosing a list type or No type; only the type changes. The column shows a dash and no choice where the list is empty and the Version has no type. Generated redline Versions and Auto-Doc generated Versions are read-only. On a Knowledge Item the column shows the item's Knowledge type and a change there is refused.",
+          "source": "documents-card.tsx TypeCell (readOnly rule, documents.versionTypeLabel, documents.column.type); routes.ts PATCH /documents/:documentId/versions/:versionId (requireMember, 409 for generated_redline and source generated, 409 'That version already has this type.'); lib/document-versions.ts resolveDocumentType (400 for a type outside the module's list); service.ts toVersion derives the Knowledge type"
+        },
+        {
+          "claim": "First upload takes the primary designation",
+          "before": "Not stated.",
+          "after": "On a Contract with no primary Document, the first Legal Team Member or Administrator upload becomes the primary Document; on a Knowledge Item the first Document becomes primary paper.",
+          "source": "upload-service.ts contract create path (document.primary_set when primaryDocumentId is null and the actor is not a business_user) and the Knowledge create path"
+        },
+        {
+          "claim": "Executed pin paragraph",
+          "before": "Changing a Version's kind is separate from moving the pin.",
+          "after": "The Executed type is separate from the pin. Choosing that type does not set the pin, and correcting a Version's type does not move it.",
+          "source": "routes.ts setExecutedDocumentVersion summary (pin never read off the kind); upload-service.ts never writes executedVersionId; CONTEXT.md Executed pin; DOC-015 (executed pin keeps reading the kind)"
+        },
+        {
+          "claim": "Filing step 3, classification and Confidential label",
+          "before": "On a Contract, select Kind. ... On a Matter, the switch names the Matter team.",
+          "after": "If the dialog shows Type, choose a type or leave No type. The switch reads Confidential — restrict to the contract team on a Contract and Confidential — restrict to the matter team on a Matter.",
+          "source": "comment-attachments.tsx FilingDialog (useDocumentTypeOptions matter or contract, comments.filing.type, typeId starts empty, ConfidentialToggle record prop); confidential-toggle.tsx; messages matters.confidential.field"
+        },
+        {
+          "claim": "Business User limits",
+          "before": "They cannot change designations, kinds, or folders.",
+          "after": "They cannot correct a Version's Document type, change designations or folders, or archive or delete paper.",
+          "source": "portal/documents-section.tsx (Business Users pick Kind on a Contract upload; no correction control); routes.ts PATCH version type requireMember"
+        },
+        {
+          "claim": "Recover from a refusal",
+          "before": "Business Users should ask Legal to ... correct a kind.",
+          "after": "A refused upload or type correction adds no Version and leaves the chain as it was. Ask an Administrator to add a missing type. Business Users ask Legal to correct a type.",
+          "source": "documents-card.tsx changeType and UploadDialog error paths; routes.ts version type route runs in one transaction; DOC-015"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Upload, Choose files, Choose file, Note, Add version, Edit details, Save, Actions menu labels",
+          "source": "messages/en-US.json documents.upload, documents.composer.*, documents.action.*, documents.details.*"
+        },
+        {
+          "claim": "Several chosen files open the bulk import dialog; the composer's type carries over",
+          "source": "documents-card.tsx UploadDialog onBatch(files, typeId)"
+        },
+        {
+          "claim": "The filename supplies the initial Document name; Edit details changes name and description only",
+          "source": "upload-service.ts title: file.filename; documents-card.tsx DetailsDialog"
+        },
+        {
+          "claim": "Any file type can be stored; the picker has no filter",
+          "source": "documents-card.tsx document-file input has no accept attribute (DOC-004)"
+        },
+        {
+          "claim": "Versions are immutable; no per-Version delete; a new Document makes a separate chain",
+          "source": "routes.ts (PATCH version changes the type only; no version delete route); upload-service.ts has no duplicate check"
+        },
+        {
+          "claim": "Archived owning record refuses uploads with a restore message and hides Upload",
+          "source": "upload-service.ts assertOpen / assertOpenMatter / assertOpenEntity 409; Knowledge 409 'Restore this Knowledge Item before adding Documents.'; documents-card.tsx showHeaderActions"
+        },
+        {
+          "claim": "Primary, Make primary, Mark as executed copy, Unmark as executed copy on Contracts only; Set as primary on Knowledge",
+          "source": "documents-card.tsx designations / executedDesignations / setPrimaryCopy; routes.ts assertContractDocument"
+        },
+        {
+          "claim": "A later upload does not move the Executed pin",
+          "source": "upload-service.ts version append does not touch executedVersionId"
+        },
+        {
+          "claim": "Filing: File to Contract / File to Matter, also from the preview; Member+ on an unarchived record",
+          "source": "comment-attachments.tsx comments.attachments.fileContract/fileMatter; contract-record.tsx and matter-record.tsx canFile"
+        },
+        {
+          "claim": "File attachment dialog labels Destination, New Document, New Version on an existing Document, Document name, Document, Note, File, Filed to",
+          "source": "messages/en-US.json comments.filing.*, comments.attachments.filedTo"
+        },
+        {
+          "claim": "Legal Only attachment preselects the Confidential switch",
+          "source": "comment-attachments.tsx isConfidential initial state comment.visibility === 'legal_only'"
+        },
+        {
+          "claim": "Business Users on a team add Versions in the Portal, including the primary Contract Document",
+          "source": "portal/documents-section.tsx Add version on each row; CONTEXT.md Business User; DD-024"
+        },
+        {
+          "claim": "The six fixed Contract type names",
+          "source": "packages/db/migrations/0160_document_types.sql; settings.documentTypes.fixed"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. No browser walkthrough, API call or screenshot was made.",
+        "The V-C26 walkthrough needs new evidence for the Type control. The DOC-029 walkthrough checked Kind and six hand-set kinds, which no longer exist in the staff app.",
+        "A Matter or Entity shows no Type control until an Administrator adds a type under Settings, Documents. The walkthrough must add one to exercise Type on those records, or record that the control is absent on a fresh list.",
+        "A Generated redline correction cannot be exercised without a Word Comparison export. Source shows the Type cell is read-only for it and the API answers 409.",
+        "The Knowledge Type column behavior (a choice that the API refuses) is derived from code, not observed.",
+        "The Portal still labels its Contract upload control Kind and offers General plus the six kinds, and shows kind labels on Versions (DOC-015 consequences). This guide does not describe Portal controls; contributor-guide.md does."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/documents/documents-card.tsx TypeCell: on a Knowledge Item the Type column renders an editable select (No type plus the item's Knowledge type) because the derived Knowledge type makes options non-empty. Every change fails: No type gets 409 'That version already has this type.' and the Knowledge type gets 400 'Pick a document type from this record's list.' DOC-015 Knowledge addendum says Knowledge has no type list and the label is derived from the item, so the cell should be read-only."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/document-folders.md step 3: the batch import control is now Type (documents.batch.type), not Version kind, and a Matter or Entity import shows it only when its list has types (DOC-015).",
+    "docs/user-guides/create-knowledge.md step 2: Knowledge creation no longer offers a Document kind for attached files; Knowledge has no Document type list (DOC-015 Knowledge addendum, create-attachments.tsx module null).",
+    "docs/user-guides/reference.md: the Version kind row should become Document type (CONTEXT.md avoids 'document kind'); the Generated redline row can keep its wording.",
+    "docs/user-guides/manual-signing.md and docs/user-guides/terms-and-renewals.md: say Executed type and Amendment type instead of kind (documents-card.tsx seeds the Amendment type; CONTEXT.md Document type).",
+    "docs/user-guides/types-statuses-fields.md: no guide documents Settings, Documents (Matters, Contracts, Entities type lists; six fixed Contract types). document-versions.md now names the page but does not give its steps.",
+    "docs/documentation/edition.json: the publication content hash for document-versions must change to 52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444 when the batch owner publishes it."
+  ],
+  "statusChange": null
+}

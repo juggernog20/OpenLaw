@@ -1,6 +1,6 @@
 {
-  "id": "119b2deb-4ea1-417e-9dea-51a4dd414352",
-  "prevId": "3d4bef0b-5534-411d-b063-956a60eb20da",
+  "id": "3d4bef0b-5534-411d-b063-956a60eb20da",
+  "prevId": "f605d582-fe1b-4694-b77a-e470099f4d1d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4322,26 +4322,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "recovery_attempts": {
-          "name": "recovery_attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "next_recovery_at": {
-          "name": "next_recovery_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now() + interval '15 minutes'"
-        },
-        "recovery_stopped": {
-          "name": "recovery_stopped",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "confirmation_pending": {
           "name": "confirmation_pending",
           "type": "boolean",
@@ -4568,14 +4548,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "contract_envelopes_recovery_attempts_check": {
-          "name": "contract_envelopes_recovery_attempts_check",
-          "value": "recovery_attempts >= 0"
-        },
-        "contract_envelopes_recovery_stopped_check": {
-          "name": "contract_envelopes_recovery_stopped_check",
-          "value": "recovery_stopped is null or recovery_stopped in ('lookup_expired', 'attempts_exhausted', 'identity_missing')"
-        },
         "contract_envelopes_creation_check": {
           "name": "contract_envelopes_creation_check",
           "value": "preparation_state is null or preparation_state in ('pending', 'uncertain', 'created', 'failed')"
@@ -14545,7 +14517,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

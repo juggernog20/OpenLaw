@@ -20,7 +20,7 @@ Use this path for separate library entries. To put several Documents on one item
 ## Start with guidance
 
 1. In **Knowledge**, select **New**, then **New Knowledge Item**.
-2. Enter **Title**, and choose **Type** and **Folder**. To add files now, select **Attach documents** and choose a **Document kind**. Select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**. If a file upload fails, the item still exists; select **Retry failed uploads** or **Continue**.
+2. Enter **Title**, and choose **Type** and **Folder**. To add files now, select **Attach documents**. There is no type choice for the files; they show the item's Knowledge type. Select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**. If a file upload fails, the item still exists; select **Retry failed uploads** or **Continue**.
 3. Under **Guidance**, select **Add guidance** and enter your instructions in the editor. The editor accepts Markdown headings, lists, emphasis, code, and links. It does not show these rules, so use **Preview** to check the result.
 4. Select **Preview** to save when the editor loses focus and inspect the rendered guidance. Select **Edit** to return to the source. Reload the item to confirm the saved text if a save is uncertain.
 
@@ -32,7 +32,7 @@ Guidance can stand alone without a Document. Do not use raw HTML for formatting.
 2. The first Document added to an item becomes primary automatically. To choose another, open that Document's **Actions** menu and select **Set as primary**. Check its **Primary** mark and the **Primary document** control above the Documents section.
 3. Select **Open preview** to read the primary Document's current Version. Other Documents remain supporting Documents and keep their own Version histories.
 
-The primary choice changes presentation; it does not make supporting files private. When an item becomes available in the Portal, readers can download the current Version of every available Document on it. Check all supporting files before [publishing](publish-knowledge.md).
+The primary choice changes presentation; it does not make supporting files private. When an item becomes available in the Portal, readers can download the current Version of every Document on it, except a Document marked Confidential. A Confidential Document stays off the Portal, and on the staff record only Administrators can open it. Check all supporting files before [publishing](publish-knowledge.md), and see [who can read a Confidential file](publish-knowledge.md#before-you-start).
 
 A Knowledge Item's Documents use a flat list. Knowledge Folders organize whole items, not the files inside an item. Use the Document row's actions for [archive, restore, and permanent deletion](archive-and-delete-documents.md). Archiving a Document preserves its Versions and designation; restoring it returns that Document to the ordinary list. Archiving does not choose a replacement primary Document.
 

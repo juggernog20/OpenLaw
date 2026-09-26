@@ -41,7 +41,28 @@ description = "Fixture values that look like credentials and are not"
 # as a key name. Then three fictional stand-in values: the AI key the
 # credential-free checks type into a connector form, and the integration
 # key of the local DocuSign stand-in server.
+#
+# DOC-030 documentation walkthrough logs under
+# docs/documentation/batches/DOC-030/. Four sha256 digests of guide
+# Markdown, recorded the same way as in DOC-029. One more digest is the
+# suffix of a Field slug (`key_date:<digest>`) that the Analysis run
+# logged. Two UUIDv7 record IDs of API key requests in the conversations
+# fixtures. Then the public development account key of Azurite, the
+# Azure Storage emulator, which Microsoft publishes in its own docs.
+# Last, the fictional invalid AI key and the DocuSign stand-in
+# integration key. The real OpenRouter key of the live Analysis check
+# went into no file.
 regexes = [
+  '''^0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f$''',
+  '''^24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7$''',
+  '''^cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733$''',
+  '''^d81e8cf14f7a9bbbb520d3823cac40df554d8353510279f6eaa01e89bd2ae810$''',
+  '''^76000a6004dfeda8db41a88ad608146a809d90f1f67a6ffe31ac475d0e8ce8db$''',
+  '''^01a0d83d-b240-7171-b748-a5c8c3804521$''',
+  '''^01a0d83e-5fe8-7554-9b45-1811869b90d4$''',
+  '''^Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==$''',
+  '''^doc030-fictional-invalid-key-0000$''',
+  '''^doc030-standin-integration-key$''',
   '''^72be10f398e150f7d280aa0ba0d00d76033ee6d00c95314d5d57bd12757d0aa1$''',
   '''^b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208$''',
   '''^4785f9d115bbf7c8038eef77875a9da731c695930445a7b8e91a1b9ba84f2df8$''',

@@ -1,0 +1,197 @@
+{
+  "batch": "DOC-030",
+  "group": "contracts-c",
+  "reviewer": "DOC-030 source-review author agent (contracts-c)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:42:37Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "electronic-signing": "0e860c81",
+      "matter-templates": "0e860c81",
+      "archive-and-delete-documents": "0e860c81"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "electronic-signing",
+      "scenario": "V-C17-electronic",
+      "contentSha256Before": "89fa2f3b1ad68ba730f1f7e42f3c1943bfecd0ef53d46e6593fe68daa765282c",
+      "contentSha256": "ac399d586e1a3cabb6018c89b9901ccfeca411519f7405d276d1e0109ba2cb24",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/evidence/electronic-signing.json",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/lib/signing/resolver.ts",
+        "apps/api/src/lib/signing/docusign.ts",
+        "apps/api/src/pipeline/reconciliation.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "packages/db/src/schema/signing-connectors.ts",
+        "git show 417155e9 (Describe the configured signature update mode accurately, #916)",
+        "git show a13efeee (Pin outbound connectors to their own hosts and bound what they read)"
+      ],
+      "corrections": [
+        {
+          "claim": "Follow completion, the note under a live Envelope row",
+          "before": "The note under a live row still says that status arrives by webhook in both modes.",
+          "after": "The note under a live row names the configured mode. If an Administrator disables the connector while an Envelope is out, the note says that automatic status updates are unavailable. Webhook mode also keeps the polling check as a fallback.",
+          "source": "approvals-signing-card.tsx signing.statusArrives select on signing.updateMode (polling / webhook / other); contract-envelopes/routes.ts signingUpdateMode reads the enabled connector only; reconciliation.ts runs on RECONCILIATION_SWEEP_CRON regardless of mode (417155e9)"
+        },
+        {
+          "claim": "Before you start, what the send dialog says about Active",
+          "before": "The guide paraphrased the pre-send text as 'the executed file lands on this contract and the stage advances to Active'.",
+          "after": "The send dialog says that the Contract advances to Active only if it is still in the Signature Stage.",
+          "source": "approvals-signing-card.tsx SendEnvelopeDialog; messages/en-US.json signing.sendNote (417155e9)"
+        }
+      ],
+      "confirmed": [
+        "Open Approvals (tab label Approvals), card Approvals & signing, action Send for signature.",
+        "Send for signature is absent, never disabled, when the Contract is archived, no connector is enabled, no sendable primary Document exists, or a live Envelope exists (canSend).",
+        "Dialog labels Version, Signers (Signer N name / email), Add signer, Remove signer N, Subject, Cancel, Send envelope; 'Only the primary document goes out. Attachments are not sent.'",
+        "Row statuses Out for signature, Signed, Declined, Voided; Executed copy link; 'Filing the executed copy…'; 'The executed copy could not be filed. Upload it to the record instead.'",
+        "Void envelope is offered on a sent row to an Administrator, the sender, or the Contract's owner; the dialog asks for Reason and says the Contract can be sent again straight after.",
+        "Polling is the stored default update mode (signing_connectors.update_mode default 'polling'); the sweep runs every five minutes with a 15-minute minimum per Envelope.",
+        "Completion moves the Contract to the first live Status in the Active Stage by display order only when the current Status is in the Signature Stage (executed-copy.ts advanceFromSignature).",
+        "The DocuSign hardening in a13efeee (no redirects, account host check, bounded reads) changes only error detail text; the guide's 'read the displayed error' advice still holds."
+      ],
+      "limitations": [
+        "Source inspection only. V-C17-electronic needs a new browser walkthrough against this content hash for both roles; the note text now differs by update mode, so DOC-029 evidence cannot be kept.",
+        "The walkthrough should record the connector's update mode. In Polling mode the note reads 'checked by polling, about every 15–20 minutes'; in Webhook mode it reads 'arrives by webhook'.",
+        "The disabled-connector note shows only when a live Envelope exists and the connector is then disabled; it was read from code, not exercised."
+      ]
+    },
+    {
+      "articleId": "matter-templates",
+      "scenario": "V-C39",
+      "contentSha256Before": "1246385a1b3b539231a06a80811809d508924d55da0fac824c307251964192ed",
+      "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/evidence/matter-templates.json",
+        "docs/documentation/batches/DOC-029/admin-config/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-028 built-Form corrections)",
+        "docs/decision-records/DECISIONS-MATTERS.md (MTR-013)",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings-matter-templates.tsx",
+        "apps/web/src/routes/settings-matter-template-editor.tsx",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/conversion-values.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/requests/convert-form.ts",
+        "apps/api/src/lib/creation-form.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/shared/src/form-builtins.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Test both creation paths, direct creation dialog",
+          "before": "Select its template, inspect the suggested title, Priority, Risk, and Fields.",
+          "after": "Choose the template in Matter template; the dialog says how many Tasks and Key dates it adds. The dialog shows only the type Form's creation Rows (On intake form or Required for creation). Check the template's Priority, Risk and Field values in those Rows. A template default for a Row the dialog does not show still goes on the new Matter.",
+          "source": "create-matter-dialog.tsx (creationRows, creationNativeValues, matters.template.contentHint); creation-rows.tsx formRowsForTouchpoint 'creation'; matters/create.ts merges templateDefaults and template priority/risk when the caller omits them (71d3fe94, #1013)"
+        },
+        {
+          "claim": "Test both creation paths, Convert dialog review",
+          "before": "Review carried answers and suggested defaults before confirming.",
+          "after": "The dialog shows the creation Rows of the target type's Form. Each Field starts from an AI suggestion, then the Request's answer, then the template's default. Review these values, then select Convert to matter.",
+          "source": "convert-dialog.tsx fieldDraft order and collection = creationRows(target.creationForm); carry-over lists removed in a0682c5d; target Form Rows collected in 169e178b (#1016)"
+        },
+        {
+          "claim": "Conversion AI preparation",
+          "before": "AI preparation can propose supported values when enabled.",
+          "after": "AI preparation can propose values for the target Form's Rows when enabled.",
+          "source": "3495aa52 (#1017) conversion preparation split by Row touchpoint; convert-dialog.tsx suggestions per Row"
+        },
+        {
+          "claim": "Conversion Risk",
+          "before": "Risk stays unset even when the template has a Risk default.",
+          "after": "The template's Risk default does not apply. Risk gets a value only when the Request answered a Risk Row or you fill one in the dialog.",
+          "source": "convert.ts passes risk: form.native.risk ?? null to createMatter; convert-form.ts sets native.risk only from a Risk Row answer; conversion-values.ts prefills from Request answers"
+        },
+        {
+          "claim": "Required values at creation",
+          "before": "Required Fields must have a value before creation.",
+          "after": "Each Row that the type's Form marks Required for creation must have a value before creation. A Row inside a Branch whose condition does not hold is not required.",
+          "source": "lib/creation-form.ts assertCreationForm (evaluateForm enforcedRequiredRows, 'Fill …'); DD-028 built-Form correction on false Branches"
+        }
+      ],
+      "confirmed": [
+        "Settings > Matters > Templates: Matter type select, Add template dialog (Name, Description, Add template), Edit link, Archive dialog with Archive template, Show archived, Restore.",
+        "Editor sections Matter defaults (Priority, Risk, Title prefix), Custom field defaults, Tasks (Add task, due offset, Matter Manager or Unassigned), Key dates (Add key date, label, offset, note), Save template; only the Custom field defaults labels changed since 3fa407e3 (DescribedField, visibleOnPortal replaces fieldTag).",
+        "Offsets are whole numbers 0 to 3650; a Task offset may be blank; a Key date needs one.",
+        "Both paths anchor relative dates on the Matter creation date in UTC.",
+        "Matter Manager starts as the person who opens the create dialog; a Manager Task stays unassigned when the Matter has no manager.",
+        "Conversion: the converting person is Matter Manager; priority is the reviewed dialog value (AI suggestion, Request priority answer or Urgency), never the template default; the template title prefix is not applied.",
+        "A cleared optional Field is sent as null and stays empty; untouched template Field defaults still apply.",
+        "A template must be live and belong to the selected Matter type, or creation is refused ('The template must be live and belong to the selected matter type.').",
+        "Detached Field defaults are named in the editor as retained values; section save errors warn that earlier sections may be saved."
+      ],
+      "limitations": [
+        "Source inspection only. V-C39 needs a new browser walkthrough against this content hash; the create and Convert dialog content changed with the type Form.",
+        "Which Rows the create and Convert dialogs show depends on the lab type's Form switches. The walkthrough should record whether Priority and Risk are creation Rows on the Matter type used.",
+        "The registry lists only the administrator role for V-C39; the triage adds legal_team_member for the Convert path. The guide's conversion steps apply to both roles."
+      ]
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "scenario": "V-C54",
+      "contentSha256Before": "9b7236766f07ea15cba334194bf2b4d638e65663627ea6c004b417ecd318f01e",
+      "contentSha256": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/evidence/archive-and-delete-documents.json",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-010, DOC-015)",
+        "docs/user-guides/document-versions.md",
+        "messages/en-US.json",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/document-filter-bar.tsx",
+        "apps/web/src/routes/documents.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/documents/service.ts",
+        "apps/api/src/lib/document-erasure.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Permanently delete a Document, the alternative to deleting one Version",
+          "before": "Correct an ordinary Version kind or append a corrected file through Version management.",
+          "after": "If one Version carries the wrong Document type, correct it in that Version's Type column, or append a corrected file as a new Version. Version management explains both actions.",
+          "source": "documents-card.tsx TypeCell and changeType -> updateDocumentVersionType (Kind column replaced by Type, d0d16390, #1070); CONTEXT.md Document type (DOC-015)"
+        }
+      ],
+      "confirmed": [
+        "Row Actions menu (Actions for {title}) offers Archive, Restore and Delete; the selection bar offers Archive, Restore and Delete with its own typed confirmation ('Type \"delete\" to confirm').",
+        "Show archived toggle on the record card and in the repository Filter; archived rows carry the Archived pill; the repository offers Restore.",
+        "Archive and restore need an Administrator or Legal Team Member (requireMember) and a live owning record (assertLiveOwner); stale-state refusals 'already archived' / 'not archived'.",
+        "Delete dialog 'Delete this document?' names the Document and its Version count, needs the word delete, and the route is Administrator-only (requireAdministrator, 403 for other roles).",
+        "Erasure removes the Document, its Versions, stored blobs and derived text and renditions, clears a primary reference to it, and appends document.hard_deleted; a title mismatch is refused ('Type the document's name exactly to delete it.').",
+        "Blob deletes run inside the transaction, so a storage failure can roll back the rows after some files are already gone.",
+        "The documents route move into service.ts and upload-service.ts (#1120) kept the archive, restore and erasure handlers and their refusals unchanged."
+      ],
+      "limitations": [
+        "Source inspection only. V-C54 needs a new browser walkthrough against this content hash for both roles; only one sentence changed, but the content hash changed.",
+        "The Type column is read-only for archived Documents, generated redlines, Auto-Doc output and records whose module list is empty; the walkthrough does not need to exercise it, since the guide only points to Version management."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    {
+      "file": "docs/documentation/edition.json",
+      "request": "The publication content hashes for electronic-signing, matter-templates and archive-and-delete-documents must change to the new article hashes listed here."
+    }
+  ],
+  "statusChange": null
+}

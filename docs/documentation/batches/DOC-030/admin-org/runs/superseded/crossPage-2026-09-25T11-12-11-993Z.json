@@ -1,0 +1,48 @@
+{
+  "section": "crossPage",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "base lab environment",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T11:12:11.993Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "OpenLaw checks the account's actual role, whichever sign-in page the person opened",
+      "expected": "With Legal password sign-in off, a Legal Team Member is refused on the Portal page too; a Business User with a password signs in on the staff page and lands in the Portal",
+      "startedAt": "2026-09-25T11:12:12.614Z",
+      "finishedAt": "2026-09-25T11:12:16.428Z",
+      "actual": "Check failed: Saved {\"offered\":[\"Send link\",\"Back to sign-in\"],\"outcome\":\"password-not-offered\",\"alert\":null,\"me\":401,\"path\":\"/portal/login\"} {\"offered\":[\"Send link\",\"Administrator sign-in\",\"Back to sign-in\"],\"outcome\":\"alert\",\"alert\":\"Password sign-in is disabled for this account.\",\"me\":401,\"path\":\"/auth/login\"}",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "Business Users sign in only with the methods enabled under Business Portal Authentication",
+      "expected": "With Business Email and password off, a Business User with a password is refused on the Portal and staff pages; a sign-in link still works",
+      "startedAt": "2026-09-25T11:12:16.429Z",
+      "finishedAt": "2026-09-25T11:12:20.779Z",
+      "actual": "Check failed: Saved {\"offered\":[\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"],\"outcome\":\"signed-in\",\"alert\":null,\"me\":200,\"role\":\"business_user\",\"path\":\"/portal/onboarding\"} {\"offered\":[\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"],\"outcome\":\"signed-in\",\"alert\":null,\"me\":200,\"role\":\"business_user\",\"path\":\"/portal/onboarding\"} business_user",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-25T11:12:20.783Z"
+}

@@ -1,44 +1,60 @@
 {
   "articleId": "convert-request",
-  "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
-  "environment": "openlaw-docs-41255c61-work",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (inbox, round 1)",
+  "contentSha256": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (inbox)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-029 source-review author agent (inbox)",
-  "verifiedAt": "2026-09-16T15:33:24.989Z",
+  "technicalReviewer": "DOC-030 source-review author agent (inbox)",
+  "author": "DOC-030 source-review author agent (inbox)",
+  "verifiedAt": "2026-09-25T11:18:51.559Z",
   "status": "pass",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (inbox)",
   "sources": [
     "docs/user-guides/convert-request.md",
+    "docs/documentation/batches/DOC-030/inbox/technical-review.json",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough-ai.json",
+    "docs/documentation/batches/DOC-030/inbox/walkthrough-ai-record.json",
+    "docs/documentation/batches/DOC-030/inbox/provider-standin.mjs",
+    "docs/documentation/batches/DOC-030/inbox/setup-ai.mjs",
+    "docs/documentation/batches/DOC-030/inbox/setup-config.mjs",
+    "docs/documentation/batches/DOC-030/inbox/setup-requests.mjs",
+    "docs/documentation/batches/DOC-030/inbox/api.mjs",
     "CONTEXT.md",
-    "docs/decision-records/DECISIONS-INTAKE.md",
-    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "docs/decision-records/DECISIONS.md (DD-028 and its 2026-09-22 built addendum)",
+    "docs/decision-records/DECISIONS-INTAKE.md (INT-002, INT-007, INT-008 2026-09-19 background addendum, DD-028 amendment)",
+    "docs/decision-records/DECISIONS-DESIGN.md (DES-059, DES-060)",
     "messages/en-US.json",
     "apps/web/src/routes/inbox-request.tsx",
     "apps/web/src/components/intake/prepared-convert-dialog.tsx",
     "apps/web/src/components/intake/convert-dialog.tsx",
-    "apps/web/src/components/intake/description-source-toggle.tsx",
     "apps/web/src/components/intake/conversion-evidence.tsx",
+    "apps/web/src/components/intake/description-source-toggle.tsx",
+    "apps/web/src/components/documents/create-attachments.tsx",
+    "apps/web/src/components/type-form/creation-rows.tsx",
+    "apps/web/src/components/type-form/messages.ts",
+    "apps/web/src/components/contracts/analysis.tsx",
     "apps/web/src/routes/contract-record.tsx",
     "apps/web/src/routes/matter-record.tsx",
     "apps/web/src/routes/settings-ai-analysis.tsx",
-    "apps/web/src/components/contracts/ai-analysis-card.tsx",
-    "apps/web/src/routes/portal-request.tsx",
+    "apps/web/src/lib/notifications.ts",
     "apps/api/src/modules/requests/convert.ts",
-    "apps/api/src/modules/requests/promote-paper.ts",
-    "apps/api/src/modules/requests/move-thread.ts",
-    "apps/api/src/modules/requests/request-detail.ts",
-    "apps/api/src/modules/requests/routes.ts",
-    "apps/api/src/modules/requests/original-intake.ts",
+    "apps/api/src/modules/requests/convert-form.ts",
+    "apps/api/src/modules/requests/read.ts",
+    "apps/api/src/modules/requests/service.ts",
     "apps/api/src/modules/contracts/create.ts",
     "apps/api/src/modules/matters/create.ts",
-    "apps/api/src/lib/portal-record-access.ts",
+    "apps/api/src/lib/counterparty-link.ts",
+    "apps/api/src/lib/conversion-draft.ts",
+    "apps/api/src/lib/intake-form.ts",
     "apps/api/src/pipeline/conversion-analysis.ts",
     "apps/api/src/pipeline/contract-analysis.ts",
-    "docs/documentation/batches/DOC-029/inbox/technical-review.json",
-    "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json"
+    "apps/api/src/pipeline/matter-record-preparation.ts",
+    "apps/api/src/lib/analysis-targets.ts",
+    "packages/shared/src/analysis.ts",
+    "apps/api/src/modules/contract-analysis/request-evidence.ts"
   ],
   "scenarios": [
     {
@@ -47,17 +63,20 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Daniel Okafor (Administrator) signs in with a password in an isolated browser context; Nadia Haddad acts as the second legal session through the lab API.",
-        "Jonas Weber (Business User) and Amara Nwosu (second Business User) sign in to the Portal with fresh magic links from the lab Mailpit.",
-        "Fixtures from setup-config-r1.mjs and setup-requests-r1.mjs in the batch folder; the AI connector is unconfigured with every Request conversion switch off."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context; Nadia Haddad is the second legal session through the lab API for competing writes.",
+        "Fixtures from setup-config.mjs and setup-requests.mjs: Contract type \"DOC-030 inbox Supplier agreement\" and Matter type \"DOC-030 inbox Advisory\" with Forms (intake, creation and Record Rows), two Request types, catalog Fields, a live and an archived Entity, two Matter templates. Requests submitted through the Portal API by Oliver Grant, a seeded Business User, who reads the Portal with a fresh magic link from the lab Mailpit; Rosa Iglesias is the second Business User reader.",
+        "Separate lab openlaw-docs-80ceef9e-inboxai (inboxai) from the same commit and images, Helix seed light profile, random seed 7, with the AI connector pointed at the local OpenAI-compatible stand-in provider-standin.mjs in its own container on that lab's backend network (fictional text, known answers, no real provider). setup-ai.mjs sets the three Request conversion switches; the ai phase changes them per step and records them."
       ],
       "expected": "Each Request creates one work object of its configured target; paper and conversation retain the documented ownership and reach. Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths.",
-      "actual": "13 recorded browser steps passed for this role. With every AI switch off, Daniel Okafor's Triage > Convert to contract on R-109 opened the manual dialog directly with no Description box and no Unverified marker: Title from the Request, the configured Contract type, Priority High from Urgency, Counterparty, Needed by, the carried answer, the Does not carry into the contract list, an empty required Field and the archived Entity note. An empty Title, the empty required Field and the archived Entity were refused by name, and Cancel left the Request New. After replacing the Entity with a live one and answering the Field, conversion created exactly one Contract, C-109, with Converted by Daniel Okafor on the Status card. C-109 had the reviewed Title, Type and Priority, Risk unset, the Request's Description and Department, a Needed by Key date, the carried, typed and live Entity values on Fields, and no request-only answer. Daniel was Legal Owner, not the triage assignee; Jonas Weber was Business Owner; the team held Daniel, Jonas and the Contract Type default person. The Current / Requester switch was shown. Both attachments became root Documents at Version 1 with their original bytes, the first primary. Legal only and shared comments moved with their tiers, author and paper, which was not filed. Original attachment links answered 404 to staff and Portal. Jonas's R-109 address opened /portal/contracts/109 with Original request, it left Your requests, and Amara was refused. R-110 with the Matter template kept the carried answer over the template default, filled Region, and No template removed it; with the Entity explicitly cleared it became M-96 with Title and Priority kept, Risk unset, Daniel as Matter Manager, Jonas as Business Owner, Custom fields on Overview, the Matter Manager Task due +3 days and assigned to Daniel, a Task without due date, a checkpoint at +5 days from creation in UTC, Needed by, two Documents without primary, and a Portal redirect. R-111 re-targeted to M-99 after \"Pick a matter type.\" and a switch through Convert to contract instead kept the typed Title. Nadia's competing conversion of R-112 made the dialog say \"Somebody else already converted this request.\" and \"It became C-120.\" with Close, with one Contract and a refused second call. The stale template default on R-113 was refused as \"DOC-029 inbox Region: pick one of the options.\" without deciding the Request; No template and the required answer made M-100.",
+      "actual": "Work2, AI conversion switches off (the connector was enabled by the contracts-b group; all three Request conversion switches off): 14 browser steps passed. Triage > Convert to contract on R-53 opened the manual dialog directly with Title, Contract type, Priority High, Description (collected Row), Counterparties registry picker with the proposed name, Needed by date picker, the carried Fields, the archived Entity note \"DOC-030 inbox Old Holdings Ltd is archived. Pick a live entity to convert.\", the empty required Cost centre, Documents tiles for both Request files and Convert to matter instead; no Unverified and no Carries into / Does not carry into lists. Refusals: \"Name the contract.\", \"Pick a live value for DOC-030 inbox Contracting entity.\", then \"Fill DOC-030 inbox Cost centre — this contract type requires it.\"; Cancel left it undecided. Changing the Type to NDA showed NDA's Rows and changing back kept the edited Title and typed value. Attach documents staged two files with Document type offered, the remove control took one off, and Convert to contract made exactly one Contract, C-128, with the added file uploaded after creation. C-128: reviewed Title, Type, Priority high, Risk unset, Request Description and Department, one Needed by Key date, Fields with the carried and typed values and the live Entity, Legal Owner Daniel Okafor (not the triage assignee), Business Owner Oliver Grant, team with the Contract Type default person Priya Raman, the Current / Requester switch. Both Request files became root Documents at Version 1 with original bytes, the first primary; comments moved with tiers and paper; original attachment links answered 404 to staff and Portal; the R- address redirected to /portal/contracts/128 with Original request, left Your requests, and Rosa Iglesias was refused. R-54 with the Matter template kept the carried answer over the template default, showed the Region choice default North, No template removed it; with the Entity explicitly cleared and Needed by picked it became M-48 with Title and Priority kept, Risk unset, Daniel as Matter Manager, the Matter section on Overview, Tasks and Key dates from creation in UTC, one Needed by, two Documents without primary, and no Unverified value with Matter preparation off. R-55 re-targeted to Matter showed only Matter Rows, refused \"Pick a matter type.\", kept the Title through Convert to contract instead and back, and became M-49; Supplier name and Budget note stayed on the Request only. Nadia's competing conversion of R-56 made the dialog say \"Somebody else already converted this request.\" and \"It became C-131.\" with Close; one Contract, and a second convert answered 409. R-57's stale template default was refused as \"DOC-030 inbox Region choice: pick one of the options.\" without deciding; No template made M-50, and a failed added upload showed \"Record created. Some documents could not be uploaded.\" with Continue and Retry failed uploads, which uploaded it. Separate inboxai lab with a local stand-in provider: 10 browser steps passed. With Prepare Matter conversions with AI on, R-37 showed \"Conversion draft\", \"Getting matter ready…\", \"Working for 2 seconds.\", the leave hint, Close and Continue manually; Close left it undecided; the bell item \"The Conversion draft for … is ready to review\" reopened /inbox/37?convert=matter. The prepared dialog marked Title, Description, Matter cost centre and Adviser name Unverified while carried unchanged values stayed plain; the Description switch showed AI generated / Requester; \"Conflicting sources need your review:\" listed Region choice; Attachment reading details named the unreadable file. A sparkle opened the saved explanation and Sources; an attachment citation opened the reader above the dialog and Close the document returned with edits intact and no new model call. Discard AI suggestions kept the edited Title and removed untouched suggestions; conversion made M-24, whose empty Record Row Engagement summary then filled in the background with an Unverified value, no progress or retry control, a working sparkle and Confirm. R-38 with Continue manually and a Priority edit during the held record-Row run got no values. With Fill Contract Fields after conversion on, R-39 converted manually to C-37; the Fields header read Running… and the Contract summary Record Row and Risk landed Unverified. With Contract preparation on and broken replies, R-40's draft showed \"The AI provider returned a response that did not match the required format. Retry or continue manually.\" with Cancel, Continue manually and Retry; Retry prepared it, the accepted Cost centre stayed Unverified on C-38, and a failed Analysis run offered Retry Request-context Analysis, which then filled the Row.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/inbox/technical-review.json"
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough-ai.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough-ai-record.json",
+        "docs/documentation/batches/DOC-030/inbox/provider-standin.mjs",
+        "docs/documentation/batches/DOC-030/inbox/setup-ai.mjs"
       ]
     },
     {
@@ -66,53 +85,39 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context; Daniel Okafor acts as the second legal session through the lab API.",
-        "Jonas Weber (Business User) and Amara Nwosu (second Business User) sign in to the Portal with fresh magic links from the lab Mailpit.",
-        "Fixtures from setup-config-r1.mjs and setup-requests-r1.mjs in the batch folder; the AI connector is unconfigured with every Request conversion switch off."
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context; Daniel Okafor is the second legal session through the lab API for competing writes.",
+        "Fixtures from setup-config.mjs and setup-requests.mjs: Contract type \"DOC-030 inbox Supplier agreement\" and Matter type \"DOC-030 inbox Advisory\" with Forms (intake, creation and Record Rows), two Request types, catalog Fields, a live and an archived Entity, two Matter templates. Requests submitted through the Portal API by Rosa Iglesias, a seeded Business User, who reads the Portal with a fresh magic link from the lab Mailpit; Oliver Grant is the second Business User reader.",
+        "Separate lab openlaw-docs-80ceef9e-inboxai (inboxai) from the same commit and images, Helix seed light profile, random seed 7, with the AI connector pointed at the local OpenAI-compatible stand-in provider-standin.mjs in its own container on that lab's backend network (fictional text, known answers, no real provider). setup-ai.mjs sets the three Request conversion switches; the ai phase changes them per step and records them."
       ],
       "expected": "Each Request creates one work object of its configured target; paper and conversation retain the documented ownership and reach. Concurrent conversion, archived carried references, and missing required values have supported repair or refusal paths.",
-      "actual": "13 recorded browser steps passed for this role. Nadia Haddad followed the same path: R-117 manual dialog, named refusals and Cancel, then C-125 with Nadia as Legal Owner, Jonas as Business Owner, the default person on the team, values, Needed by, two root Documents with original bytes and the first primary, moved comments with tiers and paper, original links refused, Portal redirect with Original request and Amara refused; R-118 to M-108 with the template defaults and precedence, explicit clear, Nadia as Matter Manager with the Matter Manager Task, dated Task and Key dates from creation in UTC, and the Portal redirect; R-119 re-targeted to M-115; Daniel's competing conversion of R-120 shown as C-135 with Close and no second record; R-121 stale template refusal recovered with No template as M-116.",
+      "actual": "Work2, AI conversion switches off: 14 browser steps passed for Nadia Haddad with Requests from Rosa Iglesias: R-61 manual dialog and named refusals, Type change and back, staged documents with one removed, one Contract C-135 with Nadia as Legal Owner, Rosa as Business Owner, Priya Raman on the team, values, Needed by, root Documents with original bytes and the first primary, the added file, moved comments, 404 on the original links, Portal redirect with Original request and Oliver Grant refused; R-62 with template precedence and No template, explicit clear and Needed by to M-53 with Nadia as Matter Manager, Tasks and Key dates from creation, no Unverified with preparation off; R-63 re-targeted to M-54 with Contract answers left on the Request; Daniel's competing conversion of R-64 shown as \"It became C-137.\" with Close and a refused second conversion; R-65 stale template refusal recovered with No template and Retry failed uploads. Separate inboxai lab: 10 browser steps passed: R-41 Getting matter ready, Close, notification return, Unverified values, Description switch, conflicts, Attachment reading details, sparkle and reader, Discard AI suggestions, M-26's Record Row filled Unverified with Confirm; R-42 Continue manually and no write after an edit; R-43 Running… then Unverified Contract Rows on C-39; R-44 failed draft, Retry, Unverified on C-40 and Retry Request-context Analysis.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/inbox/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/inbox/technical-review.json"
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough-ai.json",
+        "docs/documentation/batches/DOC-030/inbox/walkthrough-ai-record.json",
+        "docs/documentation/batches/DOC-030/inbox/provider-standin.mjs",
+        "docs/documentation/batches/DOC-030/inbox/setup-ai.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The work lab is shared with other DOC-029 agents. Only records named DOC-029 inbox were created, including a Contract type, a Matter type, two request types, five global Fields, two Entities and two Matter templates; no organisation settings changed. Development runs of the same script before the recorded run left further decided DOC-029 inbox Requests and records; they are not credited.",
-    "Competing resolutions and conversions were written by the other legal role through the lab API while the browser write was held. The people-load failure used an aborted browser request and the failed save a controlled 503 browser response.",
-    "The lab's AI connector is unconfigured and every Request conversion switch is off. Getting contract ready / Getting matter ready, the Conversion draft, the dialog Description box and its AI generated / Requester switch, Unverified values, sparkle evidence, Discard AI suggestions, Continue manually, Retry, Fill Contract Fields after conversion and Retry Request-context Analysis were not observed. Only the manual path was walked; changing an AI switch is an organisation setting this shared lab does not allow.",
-    "The Current / Requester switch on the records was seen but not toggled; with manual conversion both texts are the same. Contract Type default people were checked with one person.",
-    "The manual Convert dialog also shows a Documents area with Attach documents, which the guide does not describe; it was not used.",
-    "The linked Matter templates, Document Versions, comments and Contract analysis guides were not followed."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "work2 is shared with other DOC-030 agents. Only records named DOC-030 inbox were created; no organisation setting was changed on work2. Development runs before the recorded runs left more DOC-030 inbox Requests and records from Diego Salas, Felix Brandt, Karim Aziz and Lena Vogel; they are not credited.",
+    "Requests came from the seeded Business Users Oliver Grant and Rosa Iglesias, not Jonas Weber and Amara Nwosu, to keep the shared sign-in link and submission budgets free for other groups.",
+    "Competing resolutions and conversions were written by the other legal role through the lab API while the browser write was held. The people-load failure used an aborted browser request; the failed assignment save and failed document upload used controlled 503 browser responses.",
+    "Confirmed the author's limitation: the Convert dialog lists only the destination Form's Rows and does not name answers that stay behind; the stay-behind answers were confirmed on the Request page (R-55, R-63). The author's product bug about DES-059/DES-060 stands.",
+    "Confirmed the author's limitation: the Matter record-Row preparation has no progress or retry control. Its Unverified values were observed only on the separate inboxai lab with the stand-in (M-24, M-26), and its no-write path after a Matter edit on M-25 and M-27. On work2, with the switch off, no Unverified values appeared.",
+    "AI behaviour was walked with a stand-in provider, not a live provider: answers are fixed fictional citations, and the conflict and failure states were forced through the stand-in's control routes. Changing Type or switching modules with preparation on, the Current / AI generated switch after re-preparation, and Document Version evidence in the doc panel on the record were not exercised.",
+    "Value, Our entity, Effective date and term Rows, and a template default refused for a reason other than an invalid option, were not exercised. The Matter templates, Document Versions, comments and Contract analysis guides were not followed.",
+    "In the ai phase log, the first run of the record-Row step failed on the script's popover locator (the Matter page names the popover \"Unverified value\"); walkthrough-ai-record.json re-ran that step on the same Matters and passed. The failed entries are marked superseded."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "09ba1d034467e55a18a1b06c5942e0485d9282afbfe6b31676e239b470809abe",
-    "verifiedAt": "2026-09-07T11:33:34.068Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
+    "verifiedAt": "2026-09-16T15:33:24.989Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "ec5baf1224fbac73ee0d4de2e653833f3bd760bdbb55823840d7ae47954ca3ee",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (inbox)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and messages/en-US.json; no change touches the Convert dialog, conversion, paper and thread moves, Matter templates or the AI conversion switches, only a refactor and new intro text on the AI analysis settings page. I replayed the round 1 V-C13 manual-conversion walkthrough on the work2 lab built from 57e77e38, and all 26 steps passed for the Administrator and Legal Team Member; AI preparation was not exercised because no AI connector is configured. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/inbox.json",
-        "sha256": "640e1adf49673000fb8b6c6ac0cd9b00cd9bf75984c5994fb83b79312fedcf13"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

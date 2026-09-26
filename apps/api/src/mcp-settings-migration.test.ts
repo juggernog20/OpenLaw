@@ -38,8 +38,6 @@ it("leaves MCP off on upgrade and gives new Organization settings the same defau
         "entities",
         "knowledge",
         "people",
-        "team",
-        "administration",
       ],
       mcp_read_only: false,
       mcp_api_key_lifetime_days: 90,
@@ -116,3 +114,53 @@ it("leaves existing MCP policy intact when adding the off-by-default OAuth Clien
     await db.$client.end();
   }
 });
+
+it.each([
+  { ceiling: ["team", "contracts", "administration", "people"] },
+  { ceiling: ["administration", "team"] },
+  { ceiling: ["people", "contracts"] },
+  { ceiling: [] },
+])(
+  "removes only Team and Administration from an M41 ceiling %j and changes the default",
+  async ({ ceiling }) => {
+    const db = await freshDb(container, `m42_ceiling_${ceiling.join("_") || "empty"}`);
+    try {
+      await migrateThrough(db, "0171_m41-oauth-clients", migrationEntries());
+      await db.execute(sql`update org_settings set name = 'M41 organization',
+      mcp_enabled = true, mcp_legal_api_keys_enabled = true,
+      mcp_business_oauth_clients_enabled = true, mcp_read_only = true,
+      mcp_api_key_lifetime_days = 17`);
+      await db.execute(
+        sql`update org_settings set mcp_toolset_ceiling = ${JSON.stringify(ceiling)}::jsonb`,
+      );
+      const before = (await db.execute(sql`select * from org_settings`)).rows[0]!;
+      await runMigrations(db);
+      expect((await db.execute(sql`select * from org_settings`)).rows).toEqual([
+        {
+          ...before,
+          mcp_toolset_ceiling: ceiling.filter((id) => id !== "team" && id !== "administration"),
+        },
+      ]);
+      await db.execute(sql`delete from org_settings`);
+      await db.execute(sql`insert into org_settings (id) values ('m42-fresh')`);
+      expect(
+        (await db.execute(sql`select mcp_toolset_ceiling from org_settings`)).rows[0]!
+          .mcp_toolset_ceiling,
+      ).toEqual([
+        "workspace",
+        "contracts",
+        "matters",
+        "tasks",
+        "requests",
+        "comments",
+        "documents",
+        "auto-docs",
+        "entities",
+        "knowledge",
+        "people",
+      ]);
+    } finally {
+      await db.$client.end();
+    }
+  },
+);

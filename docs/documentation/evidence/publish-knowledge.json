@@ -1,27 +1,42 @@
 {
   "articleId": "publish-knowledge",
-  "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-entities",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (knowledge, round 1)",
+  "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (knowledge)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author agent; corrections by DOC-029 source-review author agent (knowledge)",
-  "technicalReviewer": "DOC-029 source-review author agent (knowledge)",
-  "verifiedAt": "2026-09-16T15:28:24.654Z",
+  "author": "DOC-030 source-review author agent (knowledge)",
+  "technicalReviewer": "DOC-030 source-review author agent (knowledge)",
+  "verifiedAt": "2026-09-25T10:37:15.300Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/publish-knowledge.md",
-    "docs/documentation/batches/DOC-029/knowledge/technical-review.json",
-    "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-030/knowledge/technical-review.json",
+    "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/knowledge/walkthrough.json",
     "docs/decision-records/DECISIONS-KNOWLEDGE.md",
+    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "docs/decision-records/DECISIONS-DOCUMENTS.md",
+    "messages/en-US.json",
     "apps/web/src/routes/knowledge-record.tsx",
     "apps/web/src/routes/portal-knowledge.tsx",
     "apps/web/src/components/portal/deflection-panel.tsx",
     "apps/web/src/routes/settings-intake-links.tsx",
+    "apps/web/src/components/intake-settings-tabs.tsx",
+    "apps/web/src/router.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/confidential-marker.tsx",
     "apps/api/src/modules/knowledge/routes.ts",
+    "apps/api/src/modules/knowledge/service.ts",
     "apps/api/src/modules/portal/routes.ts",
-    "apps/api/src/modules/intake-links/routes.ts"
+    "apps/api/src/modules/portal/knowledge.test.ts",
+    "apps/api/src/modules/intake-links/routes.ts",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/lib/contract-access.ts",
+    "apps/api/src/lib/document-access.ts",
+    "apps/api/src/mcp/knowledge.ts",
+    "apps/api/src/mcp/documents.ts"
   ],
   "scenarios": [
     {
@@ -30,19 +45,20 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Nadia Haddad created the draft item (primary PDF, supporting DOCX, guidance) and a draft replacement through the API as fixtures.",
-        "Daniel Okafor added the deflection link in a separate Administrator context; Jonas Weber and Ravi Menon read in separate Business Portal contexts signed in with fresh magic links."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2, built from 067c1646 with the Helix seed (light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z).",
+        "Fictional PDF and DOCX files from docs/documentation/batches/DOC-029/knowledge/fixtures, copied under run-specific DOC-030 knowledge V-C34 names (stamp 20260925T1036).",
+        "Mei Tanaka and Sara Haddadi (Business Users) each signed in to the Business Portal with a fresh magic link read from the lab Mailpit, in separate browser contexts.",
+        "Nadia Haddad created, through the API as fixtures, a draft item with guidance, a primary PDF and two supporting files, a draft replacement, an archived item and a published Legal Only item.",
+        "Daniel Okafor added the deflection link and set the Confidential mark in his own Administrator context, as the guide asks."
       ],
       "expected": "Only the intended published audience reaches the item and its files; later removal takes effect. Direct links do not bypass publication/audience checks, including links to supporting Documents.",
-      "actual": "11 recorded steps passed with Nadia Haddad publishing (the first is an API fixture). While Draft and while published Legal Only, Jonas Weber and Ravi Menon in Business Portal sessions got 404 and were returned to /portal. Audience Everyone and Knowledge Item actions, Publish removed Draft and showed On the portal; no Portal link existed until Daniel Okafor used Settings, Intake, Deflection links, Add link with Target Knowledge item, the item, a Label and Placement Portal home (the draft replacement was not offered). Jonas followed the link under Before you submit, read the title and guidance, saw Documents before Guidance with the primary first, downloaded both files byte for byte, and had no staff or Version controls. A guidance edit and a new primary Version reached him on reload with no second Publish. Audience Legal Only opened Remove this from the portal? naming 1 deflection link; Cancel kept Everyone and Continue saved Legal Only. The link left the Portal home, the saved article address returned to /portal, and the article and both saved download addresses answered 404 for both readers, while the link stayed in Settings. Everyone restored access; Unpublish (same dialog) returned Draft with Audience Everyone and blocked access; Publish restored the existing link, article and downloads. The Knowledge list had no archived toggle. Archive with Replaced by marked the item Archived, disabled editing, kept guidance and Documents, removed the link, article and downloads, did not redirect the old Portal address to the replacement, and dropped the item from the list; the saved staff address reopened it and Restore returned it Published for Everyone with the link, article and downloads working. An archived item was not offered under Replaced by, and the list showed a newly created item only after a reload. A browser with no session was sent to /portal/login and got 401 for the article and a file.",
+      "actual": "14 recorded steps passed with Nadia Haddad publishing (the first is an API fixture, one is a limitation check). While Draft and while published Legal Only, Daniel Okafor also opened the record, and Mei Tanaka and Sara Haddadi got 404 from the article read and were returned to /portal. Mei was sent from /knowledge and the record to /portal, and the staff list, read and publish calls answered 403. Audience offered Legal Only and Everyone; Everyone and Knowledge Item actions, Publish removed Draft and showed On the portal. No Portal link existed until Daniel used Settings, Intake, Deflection links, Add link. Its Knowledge item list offered the item but not the draft, archived or published Legal Only fixtures. Mei followed the link under Before you submit and saw Documents before Guidance, primary first. She downloaded all three files byte for byte and had no staff or Version controls. Daniel then used Actions, Mark confidential on one supporting file, and the row showed CONFI (spoken \"Confidential\"). Mei's article then listed two files. The saved address of the Confidential file answered 404 for both readers, the same as a missing item, while the other two answered 200. Nadia saw no row for it and her Documents list left it out. Clear confidential mark brought it back for Mei and Nadia. A guidance edit and a new primary Version reached Mei with no second Publish. Audience Legal Only opened Remove this from the portal? reading \"1 deflection link points at this item\". Cancel kept Everyone and Continue saved Legal Only. The link left the Portal home, the saved article address returned to /portal, and the article and all three saved file addresses answered 404 for both readers (8 denied reads). The link stayed in Settings. Everyone restored access. Unpublish (same dialog) returned Draft and blocked access, and Publish restored the existing link. The list had no archived toggle. Archive with Replaced by kept guidance and Documents, disabled Title, Type, Folder and Audience, and blocked the link, article and files with no redirect to the replacement. The saved staff address reopened it, and Restore returned Published, Everyone and working downloads. Replaced by did not offer an archived item. It offered an item created in another session without a reload. When that choice was archived while the dialog was open, Archive showed \"The replacement must be a live Knowledge Item.\" and the item stayed live. With no session the article went to /portal/login and the article and files answered 401.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:26:10.558Z",
-      "completedAt": "2026-09-16T15:26:22.312Z",
+      "startedAt": "2026-09-25T10:36:24.877Z",
+      "completedAt": "2026-09-25T10:36:47.634Z",
       "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.json",
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs"
       ]
     },
     {
@@ -51,19 +67,19 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Daniel Okafor created the draft item (primary PDF, supporting DOCX, guidance) and a draft replacement through the API as fixtures, and added the deflection link himself.",
-        "Jonas Weber and Ravi Menon read in separate Business Portal contexts signed in with fresh magic links."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2, built from 067c1646 with the Helix seed (light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z).",
+        "Fictional PDF and DOCX files from docs/documentation/batches/DOC-029/knowledge/fixtures, copied under run-specific DOC-030 knowledge V-C34 names (stamp 20260925T1036).",
+        "Mei Tanaka and Sara Haddadi (Business Users) each signed in to the Business Portal with a fresh magic link read from the lab Mailpit, in separate browser contexts.",
+        "Daniel Okafor created the same fixtures through the API, added the deflection links and set the Confidential mark himself; Nadia Haddad was the Legal Team Member comparison and the competing second session."
       ],
       "expected": "Only the intended published audience reaches the item and its files; later removal takes effect. Direct links do not bypass publication/audience checks, including links to supporting Documents.",
-      "actual": "11 recorded steps passed with Daniel Okafor publishing (the first is an API fixture). While Draft and while published Legal Only, Jonas Weber and Ravi Menon in Business Portal sessions got 404 and were returned to /portal. Audience Everyone and Knowledge Item actions, Publish removed Draft and showed On the portal; no Portal link existed until Daniel Okafor used Settings, Intake, Deflection links, Add link with Target Knowledge item, the item, a Label and Placement Portal home (the draft replacement was not offered). Jonas followed the link under Before you submit, read the title and guidance, saw Documents before Guidance with the primary first, downloaded both files byte for byte, and had no staff or Version controls. A guidance edit and a new primary Version reached him on reload with no second Publish. Audience Legal Only opened Remove this from the portal? naming 1 deflection link; Cancel kept Everyone and Continue saved Legal Only. The link left the Portal home, the saved article address returned to /portal, and the article and both saved download addresses answered 404 for both readers, while the link stayed in Settings. Everyone restored access; Unpublish (same dialog) returned Draft with Audience Everyone and blocked access; Publish restored the existing link, article and downloads. The Knowledge list had no archived toggle. Archive with Replaced by marked the item Archived, disabled editing, kept guidance and Documents, removed the link, article and downloads, did not redirect the old Portal address to the replacement, and dropped the item from the list; the saved staff address reopened it and Restore returned it Published for Everyone with the link, article and downloads working. An archived item was not offered under Replaced by, and the list showed a newly created item only after a reload. A browser with no session was sent to /portal/login and got 401 for the article and a file.",
+      "actual": "14 recorded steps passed with Daniel Okafor publishing (the first is an API fixture). The Draft, Legal Only, Business User, Publish, deflection link, Portal reading, Confidential, live edit, Withdraw, Unpublish, Archive, Replaced by and no-session checks gave the same results as the Legal Team Member run, with Nadia Haddad as the other staff reader. Daniel also added a second link with Placement NDA request. Mei's Portal home did not show it. The NDA request card opened /portal/new/nda_request, whose Before you submit panel showed the link and opened the item. With two links, Audience Legal Only read \"2 deflection links point at this item\". Unpublish and Archive removed the link from both the Portal home and the form. The article and all three saved file addresses answered 404 for both readers each time. Restore and Publish brought them back.",
       "result": "pass",
-      "startedAt": "2026-09-16T15:26:22.313Z",
-      "completedAt": "2026-09-16T15:26:34.089Z",
+      "startedAt": "2026-09-25T10:36:47.634Z",
+      "completedAt": "2026-09-25T10:37:13.185Z",
       "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.json",
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs"
       ]
     },
     {
@@ -72,52 +88,34 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared seeded entities lab openlaw-docs-41255c61-entities built from 3fa407e3, with the seeded Knowledge types and folders.",
-        "Reviewer fixtures from docs/documentation/batches/DOC-029/knowledge/fixtures/build-fixtures.py (fictional PDF and DOCX files), copied under run-specific DOC-029 knowledge names.",
-        "Jonas Weber and Ravi Menon each signed in to the Business Portal with a fresh magic link in this lab."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2, built from 067c1646 with the Helix seed (light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z).",
+        "Fictional PDF and DOCX files from docs/documentation/batches/DOC-029/knowledge/fixtures, copied under run-specific DOC-030 knowledge V-C34 names (stamp 20260925T1036).",
+        "Mei Tanaka and Sara Haddadi (Business Users) each signed in to the Business Portal with a fresh magic link read from the lab Mailpit, in separate browser contexts."
       ],
       "expected": "A Portal reader reaches a published Everyone item and its files, and nothing else.",
-      "actual": "Inside both publisher runs, Jonas Weber and Ravi Menon got 404 for the article and every saved download address, and were returned to /portal, while the item was Draft, published Legal Only, unpublished or archived. While it was published for Everyone, Jonas reached it from Before you submit, downloaded the primary PDF and supporting DOCX byte for byte, got the new current Version after a live edit, and had no staff controls; Ravi's article read answered 200.",
+      "actual": "Inside both publisher runs, Mei Tanaka and Sara Haddadi got 404 for the article and every saved download address while the item was Draft, published Legal Only, unpublished or archived. Mei was returned to /portal each time. They got 404 for a Confidential supporting file while its item was readable. While the item was published for Everyone, Mei reached it from Before you submit and, in the Administrator run, from a request form. She downloaded every non-Confidential file byte for byte, got the new current Version after a live edit, and had no staff controls. Sara's article read answered 200. Mei could not reach /knowledge or the staff Knowledge API (403).",
       "result": "pass",
-      "startedAt": "2026-09-16T15:26:10.558Z",
-      "completedAt": "2026-09-16T15:26:34.089Z",
+      "startedAt": "2026-09-25T10:36:24.877Z",
+      "completedAt": "2026-09-25T10:37:13.185Z",
       "evidence": [
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/knowledge/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.json",
+        "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The entities lab is shared with other DOC-029 agents. Only records named DOC-029 knowledge were created. The run added two Portal home deflection links and removed them at the end, and archived its published Everyone fixtures. Development runs before the recorded run E48831 are not credited (see harnessNotes in the walkthrough log).",
-    "The publication fixtures (item, Documents, guidance, replacement and archived replacement) were created through the API; the guide's own controls were used for Audience, Publish, Unpublish, Archive, Restore, the deflection link, the guidance edit and the new Version.",
-    "Only Placement Portal home was exercised; a request-type placement was read from source only.",
-    "The walkthrough ran on app commit 3fa407e3, which differs from edition.json supportedAppCommit 7f7e917a; the edition re-pin is outside this record."
+    "The registry's out-of-audience comparison reader has no per-person equivalent: a Knowledge audience is Legal Only or Everyone, and Everyone means every signed-in Portal session. The walkthrough compared two Business Portal readers against the item in Draft, published Legal Only, unpublished and archived states, against a browser with no session (/portal/login, 401), and against a Confidential supporting Document (404 on the Portal, absent for the Legal Team Member).",
+    "Marking a Knowledge Document Confidential was done by the Administrator, as the guide says. The walkthrough confirmed the author's product bug. The Legal Team Member who uploaded a Knowledge Document is offered Mark confidential. After she uses it the Document leaves her staff record after a reload, and her own clear request answers 404. Only an Administrator returned it.",
+    "MCP Knowledge reads for a Business User were not exercised; MCP and API keys start off and need configure-mcp setup. The guide's MCP sentence rests on the author's source review.",
+    "The work2 lab is shared with other DOC-030 agents. Only records named DOC-030 knowledge V-C34 were created. The run added three deflection links and removed them at the end, and archived its published fixtures. It changed no organization setting. Two development runs before the recorded run (stamps 20260925T1029 and 20260925T1035) are not credited; see harnessNotes in the log.",
+    "The publication fixtures (items, Documents, guidance, replacement, archived and Legal Only items, and the late replacement) were created through the API. The guide's own controls were used for Audience, Publish, Unpublish, Archive, Restore, the deflection links, Mark confidential and Clear confidential mark, the guidance edit and the new Version. The competing archive of the late replacement came from the second staff session through the API."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "cae7b9ef9551242ef7b502892e4a9f63fa0229caf44e1578ec684490b793ffa5",
-    "verifiedAt": "2026-09-08T02:40:18.418Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
+    "verifiedAt": "2026-09-16T15:28:24.654Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "18918ce410b68ee48ca7bfc2217bc187ef24da783f5817298c0cf1188336e7bd",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (knowledge)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Knowledge publication, Audience, archive, deflection links or Portal Knowledge reads. I replayed the round 1 V-C34 walkthrough on the entities2 lab as a Legal Team Member and an Administrator with a magic-link Portal reader, and all 22 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/knowledge.json",
-        "sha256": "8dc569dbe0e6c4f0c1316a20511712b57eb27b45e244216c376ab665c8475900"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

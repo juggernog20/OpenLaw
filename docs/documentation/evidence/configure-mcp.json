@@ -1,0 +1,137 @@
+{
+  "articleId": "configure-mcp",
+  "contentSha256": "0db986245a7bc89d795e0f798185f48e24f46fb49b20521a19853270d000e297",
+  "environment": "openlaw-docs-80ceef9e-work2 (V-M40-MCP Administrator) and openlaw-docs-80ceef9e-mcplan (V-M40-MCP operator, V-M41-MCP)",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (mcp)",
+  "reviewerKind": "agent",
+  "technicalReviewer": "DOC-030 source-review author agent (mcp)",
+  "author": "DOC-030 source-review author agent (mcp)",
+  "verifiedAt": "2026-09-25T13:17:43.486Z",
+  "status": "pass",
+  "sources": [
+    "docs/user-guides/configure-mcp.md",
+    "docs/documentation/batches/DOC-030/mcp/technical-review.json",
+    "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+    "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
+    "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs",
+    "docs/documentation/batches/DOC-030/mcp/overlay-rate.json",
+    "docs/documentation/batches/DOC-030/mcp/overlay-unpin.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
+    "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135, #1138 addenda)",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-mcp.tsx",
+    "apps/web/src/components/allowed-clients.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/settings-card.tsx",
+    "apps/web/src/components/notification-bell.tsx",
+    "apps/web/src/routes/settings-tool-calls.tsx",
+    "apps/web/src/components/audit-settings-tabs.tsx",
+    "apps/web/src/routes/settings-advanced.tsx",
+    "apps/web/src/routes/consent.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/lib/mcp.ts",
+    "apps/api/src/modules/mcp-settings/routes.ts",
+    "apps/api/src/modules/mcp-settings/reachability.ts",
+    "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/modules/oauth-grants/routes.ts",
+    "apps/api/src/modules/advanced-settings/config.ts",
+    "apps/api/src/auth/oauth.ts",
+    "apps/api/src/auth/discovery.ts",
+    "apps/api/src/auth/allowed-clients.ts",
+    "apps/api/src/auth/oauth-grants.ts",
+    "apps/api/src/mcp/auth.ts",
+    "apps/api/src/mcp/routes.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/calls.ts",
+    "packages/db/migrations/0163_mcp-settings.sql",
+    "packages/db/migrations/0171_m41-oauth-clients.sql",
+    "packages/shared/src/mcp.ts",
+    "e2e/tests/62-m40-mcp.spec.ts",
+    "e2e/tests/63-m41-oauth.spec.ts"
+  ],
+  "scenarios": [
+    {
+      "id": "V-M40-MCP",
+      "coverage": ["C57"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run.",
+        "Fixture setup, not a reader step: the expired-key check moved the walkthrough's own api_keys row expiry one minute into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql, because the shortest key lifetime is one day."
+      ],
+      "expected": "Policy saves immediately and the next Client request uses it. Only Administrators manage the section. An expired or revoked key cannot connect.",
+      "actual": "Phase m40 (2026-09-25T11:53:56Z to 12:18:47Z) plus re-run m40r (13:17:34Z to 13:17:43Z). The rail lists Integrations, MCP, Advanced in the Organization group; the card reads MCP is off with all five switches off and no reachability pill. Nadia Haddad sees no Organization group and /settings/mcp lands on /settings/profile. The switch beside MCP is off turned the title to MCP is on with Settings saved.; Copy address put http://127.0.0.1:43300/mcp on the clipboard and the button read Copied. Legal Users and Business Users API keys saved. Toolset ceiling started collapsed with 13 of 13 checked (summary 13 of 13 Toolsets · read and write allowed); clearing Administration saved and the request form then offered 12. API key lifetime (days) 30 saved on Enter; 400 showed API key lifetime must be a whole number from 1 to 365 days.; new keys expired Oct 25, 2026. Next-request effects on Nadia's existing Write key: Read-only on dropped openlaw_matter_create (16 to 9 Tools; a forced call returned mcp_read_only) and the request form showed only the Read radio; clearing Matters from the ceiling removed every Matters Tool (16 to 11); Legal Users API keys off gave 401, MCP off gave 401, both back on gave 200. Your approvals in the bell showed Nadia Haddad, the Client name, Contracts, Matters and Write; Mark all read left it; Approve removed it. In the API key requests card the request's note showed under the Client name; Approve and Deny opened dialogs with Note (Optional). With Read-only on, approving a Write request showed MCP is read-only for the organization. in the card dialog and The request could not be handled. Try again. in the bell; Deny with a note showed Denied and the note on Nadia's row. Active keys and grants started collapsed and showed 8 keys · 0 grants with Owner, Client, Toolsets, Scope, Status, Granted, Last used, Expires. Revoke on Nadia's key opened Revoke API key; Revoke gave 401 on the next request and her row read Revoked. Tool calls in the last day opened /settings/audit-log/tool-calls?range=last-day with When, Person, Client, Tool, Outcome, Duration, From and To filters and Export CSV (openlaw-tool-calls-2026-09-25.csv, no argument or result columns). The Audit log filtered to Org settings updated and Daniel Okafor listed Daniel Okafor changed the organization settings entries such as Legal Users API keys: No → Yes. Expired key (fixture): 401 Authentication required. with a WWW-Authenticate challenge.",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+      ]
+    },
+    {
+      "id": "V-M40-MCP",
+      "coverage": ["C57"],
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Owned lab openlaw-docs-80ceef9e-mcplan (mcplan, app 127.0.0.1:43320, mail 127.0.0.1:48445) built from the same commit with the same app and engine image IDs, Helix seed light profile, random seed 7, seeded 2026-09-25T11:50:17.612Z to 2026-09-25T11:50:51.580Z; destroyed after the walk. Nothing was exposed outside this machine: the LAN origin was reached through a loopback-only forward proxy.",
+        "Operator responsibility was performed with docker compose on the owned mcplan lab (overlay-rate.json, overlay-unpin.json, restart app worker), and its browser checks as the Administrator it serves; operator is not an app role."
+      ],
+      "expected": "Advanced MCP values need an API and worker restart; a deployment-set value is Read only; a refused call names the limit and reset time; a private deployment uses API keys.",
+      "actual": "Phase lan (2026-09-25T11:50:58Z to 11:52:33Z) and the m41 restart. Settings → Organization → Advanced → MCP showed Calls per hour per credential 600 and OAuth grant lifetime (days) 90. With MCP_RATE_LIMIT_PER_HOUR=3 set in the deployment and app and worker recreated, the field showed 3, Deployment configuration · Read only and a read-only input. The fourth openlaw_whoami call in the hour returned rate_limited: The limit is 3 Tool calls per hour per credential. It resets at 2026-09-25T12:00:00.000Z. After removing the BASE_URL pin, an Application address saved in Advanced showed Settings saved. Restart the API and worker to apply changes. and the MCP Server address kept the old origin until docker compose restart app worker, after which it changed. On the private address http://192.168.50.10:43320 API keys worked: an Administrator key connected an SDK Client at http://192.168.50.10:43320/mcp (7 Tools, whoami Daniel Okafor). A saved OAuth grant lifetime of 7 applied only after the operator restart (see V-M41-MCP).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs"
+      ]
+    },
+    {
+      "id": "V-M41-MCP",
+      "coverage": ["C57"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Owned lab openlaw-docs-80ceef9e-mcplan (mcplan, app 127.0.0.1:43320, mail 127.0.0.1:48445) built from the same commit with the same app and engine image IDs, Helix seed light profile, random seed 7, seeded 2026-09-25T11:50:17.612Z to 2026-09-25T11:50:51.580Z; destroyed after the walk. Nothing was exposed outside this machine: the LAN origin was reached through a loopback-only forward proxy.",
+        "Instance address set as the guides say: the operator removed the BASE_URL pin; the Administrator saved Application address in Settings → Advanced → Instance address (http://[::1]:43320, then http://192.168.50.10:43320, then http://127.0.0.1:43320) and the operator restarted the API and worker after each save.",
+        "The Client's own OAuth protocol steps (authorize URL with PKCE, token exchange, refresh, self-registration) were made with fetch from a loopback callback server; every OpenLaw screen step ran in the browser. Nadia Haddad and Daniel Okafor consented in their own contexts."
+      ],
+      "expected": "Labels and results match the article; new grants use the lifetime after restart. A plain-HTTP LAN address refuses OAuth enablement by name while keys work. Rotation invalidates the old secret without deleting grants.",
+      "actual": "Phases lan and m41 (2026-09-25T11:50:58Z to 11:53:05Z). Loopback 127.0.0.1: no pill while OAuth Clients are off; Legal Users and Business Users OAuth Clients each saved (200), separate from API keys, and the pill read Not reachable · HTTPS scheme, Public IPv4 address. On http://[::1]:43320 the switch saved and the pill read Not reachable · HTTPS scheme, IPv4 record, Public IPv4 address. On the plain-HTTP LAN address http://192.168.50.10:43320 both OAuth Clients switches were refused (PATCH 400) and stayed off, the pill read Not reachable · HTTPS scheme, Public IPv4 address, Add Client showed The Client could not be saved. Check the callback URLs and try again., Generate secret showed The Client secret could not be generated. Try again., six well-known documents returned 404, and API keys worked. Allowed Clients started open with Claude, Claude Code and ChatGPT as Published identity (metadata URL captions, no Edit) and Microsoft 365 Copilot as Registered client with No secret generated, all enabled; Enable Claude turned off and on. Edit on the template opened Edit Client with Client name, Client id (Generate a secret to create the client id.) and Callback URLs 1 and 2 read-only for Teams and vscode.dev plus an empty slot 3; http://192.168.1.5 was refused, an HTTPS slot saved, Add callback URL added slot 4. Generate secret opened Your Client secret is ready (outside click kept it open; Copy, Client name, Client id, Done); the caption became Secret generated Sep 25, 2026 and the button Rotate secret; no Delete Client on the seeded template. Add Client with a loopback callback stayed open as Edit Client, offered Delete Client, Generate secret worked and the Client started enabled. Nadia consented without Administrator approval: the consent page offered only the requested Contracts and Matters with Read only and Read and write, Allow disabled until chosen. Active keys and grants showed 0 keys · 1 grant with a 90-day Expires. Read-only, the Allowed Client switch and the Legal Users OAuth Clients switch applied to the grant's next request (write Tools dropped; 401; 401; back to 200). Rotate secret kept the Client id; refresh with the old secret returned 400 invalid_client, the grant count stayed 1, the new secret refreshed and connected. Dynamic client registration on: discovery advertised /api/auth/oauth2/register and a self-registered native Client appeared as Registered by the Client, enabled; off: discovery dropped the endpoint, a new registration got 403 Dynamic Client registration is disabled., the existing entry stayed enabled; Delete Client removed it. Revoke on the grant opened Revoke OAuth grant; its token got 401 and refresh failed. OAuth grant lifetime (days) 7 saved with Settings saved. Restart the API and worker to apply changes.; a grant before the restart got 90 days; after restart Nadia's new grant got 7 days (Oct 2, 2026) while Daniel's earlier grant kept Dec 24, 2026 through a refresh. Nadia's Connected Clients Disconnect opened Revoke OAuth grant and the grant stopped (401). Delete Client removed the entry and its remaining grant (401).",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
+        "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs"
+      ]
+    }
+  ],
+  "limitations": [
+    "The Reachable pill (all three checks passing) needs an HTTPS BASE_URL with a public IPv4 record; the labs are loopback only, so only the Not reachable states were observed: HTTPS scheme and Public IPv4 address on 127.0.0.1 and the LAN address, plus IPv4 record on http://[::1].",
+    "An expired key was produced as fixture setup by moving the walkthrough's own api_keys row expiry into the past in the work2 database, because the shortest API key lifetime is one day. Expired OAuth grants were not produced; revoked grants were.",
+    "The plain-HTTP LAN case used the private address http://192.168.50.10:43320 as the Application address, reached by a loopback-only forward proxy; the lab port stayed bound to 127.0.0.1. On that origin the key-ready Copy button fails silently (product bug in walkthrough.json); the key was taken by selecting the dialog text.",
+    "OAuth consent used a registered test Client with a loopback callback. The vendor Clients (Claude, Claude Code, ChatGPT, Microsoft 365 Copilot) were not connected; their guides cover that.",
+    "Record activity 'via the named Client' attribution for writes was not walked; the registry does not require it.",
+    "The V-M40-MCP Administrator steps ran in two work2 runs: the full m40 run and the m40r re-run of three checks that failed on a stale row read and an unfiltered Audit log read (walkthrough.json marks them supersededBy m40r)."
+  ],
+  "previousEvidence": null,
+  "compatibilityReview": null,
+  "copyOnlyReview": null
+}

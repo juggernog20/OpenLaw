@@ -1,6 +1,6 @@
 {
-  "id": "f605d582-fe1b-4694-b77a-e470099f4d1d",
-  "prevId": "318500d2-66d5-4ba3-8211-4909d477f36d",
+  "id": "318500d2-66d5-4ba3-8211-4909d477f36d",
+  "prevId": "50bc2e53-f9ee-42e2-9e17-ff18adeb793e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4622,20 +4622,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {},
@@ -14511,7 +14497,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

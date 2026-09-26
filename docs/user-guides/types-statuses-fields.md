@@ -11,13 +11,24 @@ Configure the choices and information your organization uses on its records. Sig
 
 A display name can change without breaking existing records or configuration. Configuration saves affect the organization immediately. Test a new definition before asking colleagues to rely on it.
 
-To archive a type, select its **Archive** control and read the usage count. If records use it, choose the live replacement requested by the dialog, then confirm. Those records move to the replacement. Check that replacement's Fields and required information first. **Other** remains protected where provided. Contracts and Matters also have one **Default type**. You can rename it, but cannot archive or delete it. Create dialogs preselect it, and a Request type with a module-only destination reads its Form. Other types do not inherit that Form. Turn on **Show archived** and use **Restore** to make an archived definition available again; restoring it does not move reassigned records back.
+To archive a type, select its **Archive** control and read the usage count. If records use it, choose the live replacement requested by the dialog, then confirm. Those records move to the replacement. Check that replacement's Fields and required information first. The dialog lists only live types, so it cannot move records onto an archived type. **Other** shows a lock in place of its archive control where a list has one. Contracts and Matters also each have one Default type. It is seeded with the name **Default**, and no label marks it in the list. You can rename it. Its row still shows an **Archive** control, but the dialog refuses and says it is the Default type. Create dialogs preselect it, and a Request type whose destination names a module and the **Default** type reads its Form. Other types do not inherit that Form. Turn on **Show archived** and use **Restore** to make an archived definition available again; restoring it does not move reassigned records back.
 
 Request types have destination settings and read the destination type's Form. See [Configure request types and forms](request-forms.md).
 
+## Add Document types
+
+A Document type says what a file is, for example a board resolution. Each owning module keeps its own list.
+
+1. In **Settings**, under **Organization**, select **Documents**.
+2. Select the **Matters**, **Contracts**, or **Entities** tab.
+3. Select **Add type**, enter a name such as **Board resolution**, and select **Save**.
+4. Rename, reorder, archive, and restore rows as for other types.
+
+The Contracts list starts with six fixed types: **Draft · ours**, **Draft · theirs**, **Redline · theirs**, **Redline · ours**, **Executed**, and **Amendment**. Contract workflows depend on them, so each shows a lock and has no rename or archive control. The Matters and Entities lists start empty. Upload dialogs in a module show a type choice only when that module's list holds a live type. Archiving a Document type asks for no replacement. Versions that carry it keep it, and it leaves the upload choices. Knowledge has no Document type list. A Knowledge Item's files show the item's Knowledge type.
+
 ## Configure Statuses
 
-For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, and choose its Stage or Category. For a Matter Status in the Open Category, also choose its group: **Open**, **In progress**, or **Waiting**. A new Status uses **In progress** unless you choose another group. Select **Save status**, or select **Cancel** to discard the draft. Rename and reorder existing rows with their row controls.
+For Contract Statuses, open **Contracts**, then **Statuses**. For Matter Statuses, open **Matters**, then **Statuses**. Select **Add status**, enter a name, and choose its Stage or Category. Neither page has a control to change the Stage or Category of an existing Status. For a Matter Status in the Open Category, also choose its group: **Open**, **In progress**, or **Waiting**. A new Status uses **In progress** unless you choose another group. Select **Save status**, or select **Cancel** to discard the draft. Rename and reorder existing rows with their row controls.
 
 | Setting         | Fixed structure                                                                                                                                      | Archive behavior                                                                                                                                                                                                                                                      |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -34,13 +45,13 @@ Three Contract Fields in the **Custom Fields** list came with the installation: 
 
 1. Open **Contracts**, **Matters**, or **Entities**, then **Fields**.
 2. Select **Add field**. Enter **Name** and, if useful, **Description** as help for the person completing it.
-3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation. For a Boolean Field, select **Yes** or **No**. An untouched Boolean Field reads **No**.
+3. Choose **Type**: Text, Long text, Number, Currency, Date, Boolean, Single select, Multi select, User, or Entity. The type cannot change after creation. People answer a Boolean Field with **Yes** or **No**. An unanswered Boolean Field reads **No**.
 4. For a select Field, enter **Options**, one per line in the intended order. Portal visibility is set on each type Form Row after attachment.
 5. Select **Add field**, then check the new row.
 
 Fields belong to the area where you create them: Contracts, Matters, or Entities. A field can be attached to several types within that area. To collect similar information in another area, create a separate field there.
 
-The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields other than User and Entity may also have an **AI prompt**; [Configure the AI connector and Field prompts](configure-analysis.md) covers that separate setup.
+The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields other than User and Entity may also have an **AI prompt**. A Contract Text or Long text Field also has an **Answer style** choice. Keep **Organisation default**, or choose a style that overrides the organization's Answer style for this Field only. [Add a catalog Field to Analysis](configure-analysis.md#add-a-catalog-field-to-analysis) covers the prompt and the Answer style.
 
 ## Attach Fields and set requiredness
 
@@ -66,7 +77,7 @@ Visible on Portal belongs to the Row, so a Field can be visible on one type's Fo
 For an NDA that collects an expiry date only for a fixed term:
 
 1. Open the NDA type's **Form** tab. Turn on **On intake form** for **Term type** and **Expiry date**. Turn on **Required for creation** for Expiry date.
-2. Select **Add condition** below the intended preceding Rows. Choose **Term type** as **Row**, **is** as **Operator**, and **Fixed** as **Value**. The completed condition saves immediately. A half-written condition saves nothing and says nothing until it is complete.
+2. Select **Add condition** in the Form header. The new Branch appears at the end of the Form, below Term type. Choose **Term type** as **Row**, **is** as **Operator**, and **Fixed** as **Value**. The completed condition saves immediately. A half-written condition saves nothing and says nothing until it is complete.
 3. Select the grip **Move Expiry date**, choose **Put under a condition…**, and choose **Show when all of: Term type is Fixed**. The Row moves under that Branch. Other Rows, including catalog Fields, can join it.
 4. Select **Preview intake form**. Choose Fixed and check that Expiry date appears as required. Choose Evergreen and check that it disappears. **Submit request** tests validation here without sending a Request or uploading files.
 5. Close the preview. Check the **Intake form** card on each affected Request type before sharing the change.
@@ -79,7 +90,7 @@ Rows under a false Branch are not collected or required. Changing an answer can 
 
 ## Maintain Officer roles
 
-Open **Entities**, **Officer roles**. Use **Add role**, the row's **Rename** control, and its reorder handle. When archiving an in-use role, select its replacement and confirm **Archive role**. Usage and reassignment include resigned Officer entries as well as current appointments. **Other** cannot be archived. Restoring a role makes it selectable again without reversing the reassignment.
+Open **Entities**, **Director & Officer roles**. Use **Add role**, the row's **Rename** control, and its reorder handle. When archiving an in-use role, select its replacement and confirm **Archive role**. Usage and reassignment include resigned Officer entries as well as current appointments. **Other** cannot be archived. Restoring a role makes it selectable again without reversing the reassignment.
 
 These roles describe Entity appointments; they do not grant app access. [Manage Entity records and Officers](entity-records.md) covers appointments, and [Manage your organization and users](organisation-and-users.md) covers app roles.
 

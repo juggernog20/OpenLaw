@@ -1,6 +1,6 @@
 {
-  "id": "318500d2-66d5-4ba3-8211-4909d477f36d",
-  "prevId": "50bc2e53-f9ee-42e2-9e17-ff18adeb793e",
+  "id": "50bc2e53-f9ee-42e2-9e17-ff18adeb793e",
+  "prevId": "2e60880d-82a5-4b1e-8858-a7793e958e06",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4322,13 +4322,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "confirmation_pending": {
-          "name": "confirmation_pending",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "next_reconcile_at": {
           "name": "next_reconcile_at",
           "type": "timestamp with time zone",
@@ -4575,80 +4568,6 @@
           "value": "reason is null or status in ('declined', 'voided')"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.envelope_launches": {
-      "name": "envelope_launches",
-      "schema": "",
-      "columns": {
-        "state_hash": {
-          "name": "state_hash",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "envelope_id": {
-          "name": "envelope_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "provider_account_id": {
-          "name": "provider_account_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "provider_environment": {
-          "name": "provider_environment",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "consumed_at": {
-          "name": "consumed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "envelope_launches_envelope_id_contract_envelopes_id_fk": {
-          "name": "envelope_launches_envelope_id_contract_envelopes_id_fk",
-          "tableFrom": "envelope_launches",
-          "tableTo": "contract_envelopes",
-          "columnsFrom": ["envelope_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "envelope_launches_user_id_users_id_fk": {
-          "name": "envelope_launches_user_id_users_id_fk",
-          "tableFrom": "envelope_launches",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.contract_key_dates": {
@@ -14497,7 +14416,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

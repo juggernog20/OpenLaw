@@ -1,0 +1,286 @@
+{
+  "batch": "DOC-030",
+  "group": "access",
+  "reviewer": "DOC-030 source-review author agent (access)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:25:54Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+  "comparedFrom": {
+    "portal-sign-in": {
+      "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "8fd2ca38"
+    },
+    "roles-and-access": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "3425a746"
+    },
+    "contributor-guide": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "3cccc022"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "portal-sign-in",
+      "scenario": ["V-C02"],
+      "contentSha256Before": "27a81399b248f26765a89a6202ef8704bc141bd18238411c641d565acf5f1270",
+      "contentSha256": "d547143ab8f3c8f3969576cadb326df6e9aa58ed3eb7a340994ed41257dd6256",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/portal-sign-in.json",
+        "docs/documentation/batches/DOC-029/access/technical-review.json",
+        "docs/documentation/batches/DOC-029/access/technical-review-r2.json",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/link-expired.tsx",
+        "apps/web/src/routes/portal-entry.tsx",
+        "apps/web/src/components/magic-link-request.tsx",
+        "apps/web/src/routes/portal-onboarding.tsx",
+        "apps/web/src/lib/portal-onboarding.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/auth/routes.ts (POST /auth/magic-link)",
+        "apps/api/src/auth/instance.ts (magicLink expiresIn 5 minutes)",
+        "apps/api/src/auth/two-factor-policy.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "node_modules better-auth 1.7.5 dist/plugins/magic-link/index.mjs (redirectWithError sets error=INVALID_TOKEN)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 1 and 2, what the sign-in page shows first",
+          "before": "The page shows the organization name above Business Portal sign-in; only a password form leads to Email me a sign-in link.",
+          "after": "The page shows the organization name and logo. A password form or Continue with single sign-on leads to Email me a sign-in link. When sign-in links are the only method the page already shows Get a sign-in link.",
+          "source": "apps/web/src/routes/login.tsx (initialView: sso, then password, then magic; CardTitle shows Get a sign-in link in the magic view)"
+        },
+        {
+          "claim": "When email links are switched off",
+          "before": "Email and Password are shown; no mention of SSO-first pages or of outbound email.",
+          "after": "The link is also absent when OpenLaw cannot send email. On an SSO-first page, select Sign in with a password to reach the password form.",
+          "source": "apps/web/src/routes/login.tsx (magicLinkOffered = options.magicLink && methods.emailConfigured; Sign in with a password link in the sso view)"
+        },
+        {
+          "claim": "Two-factor scope",
+          "before": "The two-factor paragraph sat under the links-off section only.",
+          "after": "Two-factor authentication applies to every sign-in method, including sign-in links.",
+          "source": "apps/web/src/lib/session.ts (currentUser redirects to /auth/two-factor/enroll?portal=1 or /auth/two-factor?portal=1 for any session); apps/api/src/auth/two-factor-policy.ts"
+        },
+        {
+          "claim": "Introduction, what the Portal is for",
+          "before": "Requests, conversations, shared Contracts and Matters.",
+          "after": "Also answers approval requests (Portal Approvals added by 588dc3f0).",
+          "source": "apps/web/src/components/portal/portal-nav.tsx (Approvals destination); apps/web/src/routes/portal-approvals.tsx"
+        }
+      ],
+      "confirmed": [
+        "/portal/login uses AuthLayout; the name falls back to OpenLaw and a failed logo is hidden (auth-layout.tsx).",
+        "Labels Email me a sign-in link, Get a sign-in link, Email, Send link, Check your email, the neutral 5-minute works-once body, Sign-in link expired, Back to sign-in, Set up or reset your password, Send password setup link, one-hour setup link, Continue with single sign-on, Sign-in is unavailable. Contact your administrator. (login.tsx, link-expired.tsx, magic-link-request.tsx, messages/en-US.json).",
+        "Magic link issues to an existing non-archived account, or to a new address only on an allowed domain; the 202 answer is identical either way (auth/routes.ts POST /auth/magic-link, 8fd2ca38).",
+        "An expired or used link lands on /auth/link-expired?portal=1 because better-auth replaces error=link with INVALID_TOKEN and loginLoader redirects; the page offers Email and Send link when links are on, else Back to sign-in.",
+        "Business User first run: Welcome to your Business Portal; Department step has Continue and no Skip and appears only when Departments exist; later steps offer Skip; the last step shows Finish (portal-onboarding.tsx, guardPortalLoader).",
+        "Sign out is in the Portal header; Portal lists use current non-archived team membership; Contract page shows Counterparty, Stage, owners, dates, Value and the Unverified marker; Documents shows the Primary Document label; Matter page shows Matter Type, Status, Matter Manager, Business Owner.",
+        "Conversion sets the Requester as Business Owner and team member; assigning a Business Owner adds a team row; the Request address redirects (requests/convert.ts, 3425a746)."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C02 browser walkthrough must run again against 067c1646.",
+        "The sign-in page also shows a Legal Portal line and Powered by OpenLaw under the organization name (auth-layout.tsx). The guide does not name them.",
+        "The SSO-first, links-off and two-factor variants need organization setting changes; the prior walkthrough covered them only with mocked browser answers."
+      ]
+    },
+    {
+      "articleId": "roles-and-access",
+      "scenario": ["V-C06"],
+      "contentSha256Before": "3b862e395d01f8bc04de19ca00928cf263c280e22a0c1eccc0b87da1f486a846",
+      "contentSha256": "24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/explanation.md",
+        "docs/documentation/evidence/roles-and-access.json",
+        "docs/documentation/batches/DOC-029/roles/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-017 amendment 2026-09-23, DD-023, DD-028)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 business approvers; 2026-09-18 security review H1 and H6)",
+        "docs/decision-records/DECISIONS-MATTERS.md (2026-09-18 security review H1)",
+        "docs/decision-records/DECISIONS-ENTITIES.md (ENT-004 amendment of 10 September 2026)",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "apps/api/src/modules/contracts/service.ts (managerId change takes assertMayChangeTeam)",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/modules/contracts/routes.ts (Business Owner removal refusal)",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/portal/applets.ts (/portal/activity allowlist)",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/web/src/routes/portal-approvals.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Portal History content",
+          "before": "Portal History shows only Contract Team and Matter Team comment activity. Record changes do not appear in Portal History.",
+          "after": "Portal History also narrates a Contract's Stage move, a Matter's Status move, changes to values the Portal draws and to Visible on Portal Fields, and Tasks added or completed. Priority, Risk and hidden Fields stay out.",
+          "source": "apps/api/src/modules/portal/applets.ts (GET /portal/activity keys and progress predicate); DD-017 amendment 2026-09-23 (146c954a)"
+        },
+        {
+          "claim": "Portal excludes Approvals",
+          "before": "The Portal excludes legal Fields, Tasks, Key dates, Approvals and signing controls.",
+          "after": "The Portal record has no controls for Fields, Tasks, Key dates, approval requests or signing. A named Business User approver answers under Approvals in the Portal.",
+          "source": "apps/web/src/routes/portal-approvals.tsx; apps/api/src/modules/portal/approvals.ts; DECISIONS-CONTRACTS 2026-09-17 amendment (588dc3f0)"
+        },
+        {
+          "claim": "Business User access table row",
+          "before": "read business Fields; no approval access.",
+          "after": "read Fields that are Visible on Portal; also answer approval requests that name them. 'Business Field' is the retired tag term (CONTEXT.md Field entry, DD-028 point 8).",
+          "source": "apps/api/src/lib/custom-fields.ts projectCustomFields; CONTEXT.md"
+        },
+        {
+          "claim": "Approval packet as the exception to team membership",
+          "before": "Not described.",
+          "after": "The approval request shows the Contract title and current primary Document, no team row, comments, Fields or other Documents; a Confidential primary Document shows only to an approver on the team; withdrawal or archiving ends access.",
+          "source": "apps/api/src/modules/portal/approvals.ts (primaryDocument applies documentAudienceScope; archivedAt filters); DECISIONS-CONTRACTS 2026-09-18 H6"
+        },
+        {
+          "claim": "Naming an owner on a Confidential record",
+          "before": "Not described.",
+          "after": "Naming a new Legal Owner or Matter Manager on a Confidential record takes the same actor set as a Confidential audience change.",
+          "source": "apps/api/src/modules/contracts/service.ts (managerId change calls assertMayChangeTeam); matters/service.ts; 7f1573c5"
+        },
+        {
+          "claim": "Related-record reach for V-C06 negative check",
+          "before": "Every related record has its own audience.",
+          "after": "Adds that a parent Contract's team and Confidential flag do not pass to child Contracts, and that an unreachable related record shows as Restricted contract or Restricted Matter with no link.",
+          "source": "CONTEXT.md Parent (CTR-015); messages/en-US.json contracts.relations.restricted, matters.relations.restricted"
+        },
+        {
+          "claim": "Administrator row",
+          "before": "Confidential Contracts and Matters still require named access.",
+          "after": "Adds: Confidential Entities require a Grant.",
+          "source": "apps/api/src/lib/entity-access.ts entityReachScope"
+        }
+      ],
+      "confirmed": [
+        "Administrators and Legal Team Members reach non-Confidential Contracts, and Confidential ones only by team row or Legal Owner; Business Users only non-archived records by team row (contract-access.ts contractTeamScope; portal-record-access.ts).",
+        "Confidential Entities need an entity_grants row for Administrators too; Manage access belongs to a grantee, or an Administrator on an open Entity; the last live grantee cannot be removed; Business Users reach no Entity (entity-access.ts).",
+        "Add team member, Person, Add in the staff team applet; Portal add is refused on a Confidential record with Ask Legal to add members to a Confidential record. (record-team-applet.tsx, portal/applets.ts, record-shell.tsx).",
+        "Removing the current Business Owner from the team is refused with Change the Business Owner before removing this person from the team. (contracts/routes.ts, matters/routes.ts).",
+        "Full Thread rows show Contract Team or Matter Team; working_team rows show Internal team; the Audience control above New comment offers Legal Only and the team tier (comments.ts, comment-applet.tsx).",
+        "An archived converted record leaves the Request page with the original ask and the archived notice (portal-request.tsx)."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C06 browser walkthrough must run again against 067c1646.",
+        "The Contributor and Stakeholder migration statements were not re-traced through migrations; the article keeps them as CONTEXT.md states them.",
+        "The H2 'Manage Portal Contract access' also covers Matter teams. It was kept because renaming would need a redirect and the content is correct."
+      ]
+    },
+    {
+      "articleId": "contributor-guide",
+      "scenario": ["V-C25"],
+      "contentSha256Before": "831e05ebe02405272d4b3676ed074b0a8ca90542e611890b0b7916681a8ce207",
+      "contentSha256": "9bdee91665ad125eb9fd2510acdf534d0734ecfcfe097e762cbd188eeb506edc",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/contributor-guide.json",
+        "docs/documentation/batches/DOC-029/roles/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-017 amendment 2026-09-23, DD-026, DD-028 points 4, 5 and 8)",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (2026-09-17 and 2026-09-18 amendments)",
+        "apps/web/src/routes/portal-contracts.tsx",
+        "apps/web/src/routes/portal-matters.tsx",
+        "apps/web/src/components/portal/record-list.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/column-menu.tsx",
+        "apps/api/src/modules/portal/contracts.ts (search includes primary Counterparty)",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/api/src/modules/portal/record-work.ts",
+        "apps/api/src/lib/custom-fields.ts (selectAttachedFields, projectCustomFields, unused assertBusinessCustomFieldWrite)",
+        "packages/shared/src/form-evaluator.ts",
+        "apps/web/src/routes/contract-record.tsx (recordFormRows use)",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/routes/portal-approvals.tsx",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/api/src/lib/contract-access.ts (documentAudienceScope)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Branch behavior on the Portal record",
+          "before": "Branches hide empty Rows when their conditions do not hold.",
+          "after": "The Portal lists every Field whose Row is Visible on Portal, even when a Branch condition does not hold; an empty Field shows Not recorded.",
+          "source": "apps/api/src/modules/portal/record-work.ts and custom-fields.ts projectCustomFields (no Form evaluator); apps/web/src/components/portal/record-work.tsx (maps every field, Not recorded for empty). Recorded as a product bug."
+        },
+        {
+          "claim": "Kind on Portal uploads",
+          "before": "Choose its Kind for every upload.",
+          "after": "Kind appears only on Contract uploads; Matter uploads have no Kind control. Add as offers New documents or New version of <Document>. The note field is Note (optional).",
+          "source": "apps/web/src/components/portal/documents-section.tsx (Kind select inside module === 'contract'; 34c29e81)"
+        },
+        {
+          "claim": "Where Approvals is",
+          "before": "Open Approvals in the Legal portal.",
+          "after": "Select Approvals in the Portal navigation bar; the page is Your approvals with Pending and Completed, a Search approvals box, Note (optional), Approve and Reject; a decision is final.",
+          "source": "apps/web/src/components/portal/portal-nav.tsx; apps/web/src/routes/portal-approvals.tsx; apps/api/src/modules/portal/approvals.ts (409 already decided)"
+        },
+        {
+          "claim": "Approval packet limits",
+          "before": "Not described.",
+          "after": "The request does not add you to the team, shows title and primary Document only, hides a Confidential primary Document unless you are on the team, and leaves your list on withdrawal or archiving.",
+          "source": "apps/api/src/modules/portal/approvals.ts primaryDocument + documentAudienceScope; DECISIONS-CONTRACTS 2026-09-18 H6"
+        }
+      ],
+      "confirmed": [
+        "Your Contracts and Your Matters use a managed table with Search, Filter (Type, Legal Owner, Stage, Expiry date; Type, Matter Manager, Status, Lifecycle Open/Closed), Clear all, Columns and Show more.",
+        "Contract search matches title, reference and the primary Counterparty (portal/contracts.ts).",
+        "Contract and Matter pages show Department and Region; the Contract Overview shows Value and dates; Fields shows Description and Visible on Portal Fields read-only (record-work.tsx).",
+        "Documents lists the primary Document first (document-service.ts primaryRank); rows show Version, kind, Current, Signed copy, size, uploader and date; earlier versions, Add version, Upload documents, Add as, New documents, Retry failed uploads, Search Documents and Show more exist (documents-section.tsx).",
+        "Portal comments post at Full Thread with the Contract Team or Matter Team label and the Visible to Legal and all ... team members. line; no audience picker (comments.ts, record-shell.tsx).",
+        "History list and exclusions match the /portal/activity allowlist (portal/applets.ts, 146c954a and 3cccc022).",
+        "Portal Add team member is disabled on a Confidential record with Ask Legal to add members to a Confidential record.; existing members are excluded; no remove control (record-shell.tsx, portal/applets.ts).",
+        "Closing or ending keeps the record in the Portal; archiving removes it (portal-record-access.ts)."
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C25 browser walkthrough must run again against 067c1646.",
+        "V-C25 action 'Edit permitted business Fields' is not supported. Business Users cannot edit any Field in the Portal; Fields are read-only and Legal changes them (DD-026). assertBusinessCustomFieldWrite exists in custom-fields.ts but no route calls it. The walkthrough should confirm there is no edit control and ask Legal for the change.",
+        "V-C25 negative check 'removing Ravi's reach stops access' is a Legal action in the full app; the Portal has no remove control.",
+        "The Branch statement depends on the product bug below. If the Portal record gains the Form evaluator, the Read record information paragraph must change back."
+      ]
+    }
+  ],
+  "productBugs": [
+    "Portal record ignores Branch conditions. apps/api/src/modules/portal/record-work.ts (projectCustomFields) and apps/web/src/components/portal/record-work.tsx list every Visible on Portal Field and show Not recorded for an empty Row under a false Branch. DD-028 point 4 says a Row under a false Branch is not shown at any touchpoint unless it holds a value, and point 5 names the Portal record as a caller of the shared evaluator (packages/shared/src/form-evaluator.ts recordFormRows), which only the staff record uses."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/contract-approvals.md (section Approve from the business portal): 'Open Approvals in the Legal portal' should say 'Select Approvals in the Portal navigation bar'. The Portal nav item is Approvals and the page title is Your approvals.",
+    "docs/user-guides/approver-groups.md step 3: 'Business Users receive their requests in the Legal portal' should say 'in the Portal, under Approvals'.",
+    "CONTEXT.md Grant entry says 'Administrators need no Grant'. The ENT-004 amendment of 10 September 2026 and apps/api/src/lib/entity-access.ts require a Grant for Administrators on a Confidential Entity. The glossary needs the amendment.",
+    "docs/documentation/edition.json: the publication content hashes for portal-sign-in, roles-and-access and contributor-guide must change to the new article hashes."
+  ],
+  "statusChange": "none; catalog status left at review for the batch owner",
+  "structuralCheck": "compileWorkspace({development:true}) printed 'ok, warnings: 2' (stale compatibility review and pending review). An earlier run threw on another group's in-progress entity-records anchor; that cleared once that group finished."
+}

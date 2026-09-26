@@ -4418,6 +4418,27 @@
                             ]
                           }
                         },
+                        "toolsets": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "workspace",
+                              "contracts",
+                              "matters",
+                              "tasks",
+                              "requests",
+                              "comments",
+                              "documents",
+                              "auto-docs",
+                              "entities",
+                              "knowledge",
+                              "people",
+                              "team",
+                              "administration"
+                            ]
+                          }
+                        },
                         "readOnly": {
                           "type": "boolean"
                         },
@@ -4429,6 +4450,7 @@
                         "enabled",
                         "groupEnabled",
                         "toolsetCeiling",
+                        "toolsets",
                         "readOnly",
                         "apiKeyLifetimeDays"
                       ],

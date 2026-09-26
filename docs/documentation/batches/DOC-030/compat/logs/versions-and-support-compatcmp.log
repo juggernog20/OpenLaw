@@ -1,0 +1,27 @@
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+sign-in link budget spent for jonas.weber@helix.example; waiting 60 s
+[versions-and-support administrator] PASS Find the applicable edition: Help, All documentation below Browse guides, Edition details
+[versions-and-support administrator] PASS If a link names another edition, a missing article or a missing section
+[versions-and-support administrator] PASS An article outside the Help selection offers the full documentation; search finds the support guide
+[versions-and-support administrator] PASS Report a defect: the GitHub tracker link, and an external failure leaves local reading usable
+[versions-and-support legal_team_member] PASS Find the applicable edition: Help, All documentation below Browse guides, Edition details
+[versions-and-support legal_team_member] PASS If a link names another edition, a missing article or a missing section
+[versions-and-support legal_team_member] PASS An article outside the Help selection offers the full documentation; search finds the support guide
+[versions-and-support legal_team_member] PASS Report a defect: the GitHub tracker link, and an external failure leaves local reading usable
+[versions-and-support business_user] PASS Find the applicable edition: Help, All documentation below Browse guides, Edition details
+[versions-and-support business_user] PASS If a link names another edition, a missing article or a missing section
+[versions-and-support business_user] PASS An article outside the Help selection offers the full documentation; search finds the support guide
+[versions-and-support business_user] PASS Report a defect: the GitHub tracker link, and an external failure leaves local reading usable
+[versions-and-support operator] PASS Signed-out reading, standalone edition, and an offline copy with and without JavaScript
+[versions-and-support operator] PASS Links in the reviewed versions-and-support and troubleshooting bytes resolve
+[versions-and-support administrator] PASS Check the relevant limitation: Administrators need named access to Confidential Contracts
+{"total":15,"pass":15,"fail":0}

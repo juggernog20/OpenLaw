@@ -1,6 +1,6 @@
 {
-  "id": "1cab4d6b-38c6-4306-b2d5-9678b9e0fb00",
-  "prevId": "7ebdfe42-e2ba-4cf8-a6c8-75d05644dea7",
+  "id": "7ebdfe42-e2ba-4cf8-a6c8-75d05644dea7",
+  "prevId": "119b2deb-4ea1-417e-9dea-51a4dd414352",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4360,20 +4360,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "scheduled": {
-          "name": "scheduled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "externally_restored": {
-          "name": "externally_restored",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "confirmation_pending": {
           "name": "confirmation_pending",
           "type": "boolean",
@@ -4507,7 +4493,7 @@
             }
           ],
           "isUnique": true,
-          "where": "status in ('preparing', 'draft', 'sent') and not externally_restored",
+          "where": "status in ('preparing', 'draft', 'sent')",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -14585,7 +14571,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

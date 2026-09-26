@@ -26,7 +26,7 @@ const FilterSchema = z.object({
   from: z.iso.datetime({ offset: true }).optional(),
   to: z.iso.datetime({ offset: true }).optional(),
 });
-const EntrySchema = z.object({
+export const ToolCallEntrySchema = z.object({
   id: z.string(),
   createdAt: z.string(),
   person: z.object({ id: z.string(), displayName: z.string() }),
@@ -70,6 +70,23 @@ function selectCalls(db: Db, where: SQL | undefined, limit: number) {
     .limit(limit);
 }
 
+export async function queryToolCalls(
+  db: Db,
+  filters: z.infer<typeof FilterSchema>,
+  { cursor, limit }: { cursor?: string; limit: number },
+) {
+  const rows = await selectCalls(
+    db,
+    and(datePredicate(filters), cursor ? olderThan(cursor) : undefined),
+    limit + 1,
+  );
+  const page = rows.slice(0, limit);
+  return {
+    entries: page.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
+    nextCursor: rows.length > limit ? page.at(-1)!.id : null,
+  };
+}
+
 // This ledger holds call metadata only. Record ids, arguments and results are
 // absent, so Administrator access does not bypass a record's reach rules.
 export const toolCallRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -84,23 +101,17 @@ export const toolCallRoutes: FastifyPluginAsyncZod = async (app) => {
         tags: ["audit-log"],
         querystring: FilterSchema.extend({ cursor: z.string().min(1).max(64).optional() }),
         response: {
-          200: z.object({ entries: z.array(EntrySchema), nextCursor: z.string().nullable() }),
+          200: z.object({
+            entries: z.array(ToolCallEntrySchema),
+            nextCursor: z.string().nullable(),
+          }),
           default: problemResponse,
         },
       },
     },
     async (request) => {
       const { cursor, ...filters } = request.query;
-      const rows = await selectCalls(
-        app.db,
-        and(datePredicate(filters), cursor ? olderThan(cursor) : undefined),
-        PAGE_SIZE + 1,
-      );
-      const page = rows.slice(0, PAGE_SIZE);
-      return {
-        entries: page.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
-        nextCursor: rows.length > PAGE_SIZE ? page.at(-1)!.id : null,
-      };
+      return queryToolCalls(app.db, filters, { cursor, limit: PAGE_SIZE });
     },
   );
   app.get(

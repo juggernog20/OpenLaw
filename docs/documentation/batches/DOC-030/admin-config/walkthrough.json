@@ -1,0 +1,1664 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "issue": 1157,
+  "group": "admin-config",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
+  "reviewerKind": "agent",
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "articlePath": "docs/user-guides/types-statuses-fields.md",
+      "contentSha256": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060"
+    },
+    {
+      "articleId": "request-forms",
+      "articlePath": "docs/user-guides/request-forms.md",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "articlePath": "docs/user-guides/reminders-and-audit.md",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e"
+    },
+    {
+      "articleId": "auto-doc-template",
+      "articlePath": "docs/user-guides/auto-doc-template.md",
+      "contentSha256": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f"
+    }
+  ],
+  "scenarios": {
+    "V-C38": "types-statuses-fields",
+    "V-C40": "request-forms",
+    "V-C41": "reminders-and-audit",
+    "V-C56": "auto-doc-template"
+  },
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appUrl": "http://127.0.0.1:43300",
+    "mailUrl": "http://127.0.0.1:48425",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "runs": [
+    {
+      "sections": ["types"],
+      "startedAt": "2026-09-25T11:15:51.962Z",
+      "stamp": "09251115"
+    },
+    {
+      "sections": ["types"],
+      "startedAt": "2026-09-25T11:16:24.352Z",
+      "stamp": "09251116"
+    },
+    {
+      "sections": ["types"],
+      "startedAt": "2026-09-25T11:16:47.815Z",
+      "stamp": "09251116"
+    },
+    {
+      "sections": ["types"],
+      "startedAt": "2026-09-25T11:17:42.247Z",
+      "stamp": "0925111742"
+    },
+    {
+      "sections": ["documents", "statuses", "fields"],
+      "startedAt": "2026-09-25T11:21:34.187Z",
+      "stamp": "0925112134"
+    },
+    {
+      "sections": ["documents", "statuses", "fields"],
+      "startedAt": "2026-09-25T11:22:57.254Z",
+      "stamp": "0925112257"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:25:51.978Z",
+      "stamp": "0925112551"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:28:05.175Z",
+      "stamp": "0925112805"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:29:52.127Z",
+      "stamp": "0925112952"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:31:34.981Z",
+      "stamp": "0925113134"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:34:34.537Z",
+      "stamp": "0925113434"
+    },
+    {
+      "sections": ["form"],
+      "startedAt": "2026-09-25T11:36:30.568Z",
+      "stamp": "0925113630"
+    },
+    {
+      "sections": ["form", "officers", "access"],
+      "startedAt": "2026-09-25T11:38:32.340Z",
+      "stamp": "0925113832"
+    },
+    {
+      "sections": ["officers", "access"],
+      "startedAt": "2026-09-25T11:41:15.844Z",
+      "stamp": "0925114115"
+    },
+    {
+      "sections": ["officers"],
+      "startedAt": "2026-09-25T11:41:57.171Z",
+      "stamp": "0925114157"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T11:45:26.655Z",
+      "stamp": "0925114526"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T11:48:42.608Z",
+      "stamp": "0925114842"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T11:51:26.272Z",
+      "stamp": "0925115126"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T11:54:03.826Z",
+      "stamp": "0925115403"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T13:16:03.452Z",
+      "stamp": "0925131603"
+    },
+    {
+      "sections": ["reminders"],
+      "startedAt": "2026-09-25T13:24:05.691Z",
+      "stamp": "0925132405"
+    },
+    {
+      "sections": ["reminders"],
+      "startedAt": "2026-09-25T13:25:48.897Z",
+      "stamp": "0925132548"
+    },
+    {
+      "sections": ["audit", "toolcalls"],
+      "startedAt": "2026-09-25T13:27:03.331Z",
+      "stamp": "0925132703"
+    },
+    {
+      "sections": ["audit", "toolcalls"],
+      "startedAt": "2026-09-25T13:28:51.168Z",
+      "stamp": "0925132851"
+    },
+    {
+      "sections": ["forms"],
+      "startedAt": "2026-09-25T13:29:41.774Z",
+      "stamp": "0925132941"
+    },
+    {
+      "sections": ["autodoc"],
+      "startedAt": "2026-09-25T13:33:39.656Z",
+      "stamp": "0925133339"
+    },
+    {
+      "sections": ["types", "audit", "autodoc"],
+      "startedAt": "2026-09-25T13:34:20.050Z",
+      "stamp": "0925133420"
+    }
+  ],
+  "steps": [
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types",
+      "action": "Add and maintain types, steps 1-2: profile menu > Settings > Organization > Matters > Types; Add type, enter a name, Save; Cancel discards a draft",
+      "expected": "Cancel creates no row. Save adds the named type row.",
+      "startedAt": "2026-09-25T13:34:21.040Z",
+      "at": "2026-09-25T13:34:22.621Z",
+      "actual": "Profile menu > Settings > Organization > Matters opened the Types pane with heading \"Matter types\". Add type opened the \"New type name\" box; the draft \"DOC-030 admin-config V-C38 Cancelled draft 0925133420\" with Cancel left no row after reload. Add type + Save added \"DOC-030 admin-config V-C38 Supplier assessment 0925133420\" (row reads \"DOC-030 admin-config V-C38 Supplier assessment 0925133420 0 matters\"), \"DOC-030 admin-config V-C38 Replacement type 0925133420\" and \"DOC-030 admin-config V-C38 Archived probe type 0925133420\".",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types/01a0d8c6-3092-7f8b-b86a-2f14771b7a8a/form",
+      "action": "Step 3: select the row's Rename control; open Edit, change the description, leave the field; check the Form tab exists and the saved result",
+      "expected": "Rename changes the display name; the editor has Details and Form; the description saves on leaving the field and survives reload.",
+      "startedAt": "2026-09-25T13:34:22.629Z",
+      "at": "2026-09-25T13:34:24.425Z",
+      "actual": "Rename changed the row to \"DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420\". Edit opened /settings/matters/types/01a0d8c6-3092-7f8b-b86a-2f14771b7a8a with Type sections [\"Details\",\"Form\"]. The Description saved on Tab (Saved note seen: true) and read \"DOC-030 fictional supplier assessment type.\" after reload. The Form link opened the Form region.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types",
+      "action": "Step 4: focus a reorder handle and use the arrow keys to change the display order",
+      "expected": "The row moves up one position and keeps it after reload.",
+      "startedAt": "2026-09-25T13:34:24.426Z",
+      "at": "2026-09-25T13:34:26.430Z",
+      "actual": "The handle \"Reorder DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420, position 39 of …\" moved to position 38 with ArrowUp and kept it after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/knowledge/types",
+      "action": "Step 1-3 for Contracts, Entities and Knowledge: Add type; Edit is available on Contracts and Entities, not on Knowledge",
+      "expected": "Each list accepts Add type + Save; Contract and Entity rows have Edit; Knowledge rows have none.",
+      "startedAt": "2026-09-25T13:34:26.432Z",
+      "at": "2026-09-25T13:34:29.496Z",
+      "actual": "Contracts: added \"DOC-030 admin-config V-C38 Contracts probe type 0925133420\"; Edit present; Other lock images 1. Entities: added \"DOC-030 admin-config V-C38 Entities probe type 0925133420\"; Edit present; Other lock images 1. Knowledge: added \"DOC-030 admin-config V-C38 Knowledge probe type 0925133420\"; Edit absent; Other lock images 0.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types",
+      "action": "Archive a type in use: read the usage count, choose the live replacement, confirm; the dialog lists only live types; Other shows a lock",
+      "expected": "The dialog shows the usage count and offers only live types other than the target; the record moves to the replacement.",
+      "startedAt": "2026-09-25T13:34:29.497Z",
+      "at": "2026-09-25T13:34:30.107Z",
+      "actual": "Archiving the unused \"DOC-030 admin-config V-C38 Archived probe type 0925133420\" read \"Archive DOC-030 admin-config V-C38 Archived probe type 0925133420 DOC-030 admin-config V-C38 Archived probe type 0925133420 is not used by any matters — it can be archived without reassignment. Reassi\". M-212 (API fixture) used \"DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420\"; its row read \"DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420 1 matter\". The Archive dialog read \"Archive DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420 DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420 is used by 1 matter. Pick a replacement type — that matter moves to it when the type is archived. Reassign 1 matter to No reassignment Employment Litigation Reg\"; the replacement list offered 40 entries, without the archived \"DOC-030 admin-config V-C38 Archived probe type 0925133420\" or the type itself. After choosing \"DOC-030 admin-config V-C38 Replacement type 0925133420\" and confirming, M-212 reads Matter type \"DOC-030 admin-config V-C38 Replacement type 0925133420\". Other shows the image \"Other is system-protected and can't be archived\" in place of Archive.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types",
+      "action": "Default type: Contracts and Matters each have one type named Default with no label; its row shows Archive, and the dialog refuses and says it is the Default type",
+      "expected": "The Archive dialog refuses the Default type with a reason; the type stays live.",
+      "startedAt": "2026-09-25T13:34:30.109Z",
+      "at": "2026-09-25T13:34:34.944Z",
+      "actual": "Contract types: row \"Default 5 contracts\" (no Default label); the Archive dialog read \"Archive Default Default is used by 5 contracts. Pick a replacement type — those contracts move to it when the type is archived. Reassign 5 contracts to No reass\"; after choosing a replacement and Archive it showed \"Default is the Default type and cannot be archived or deleted: module-only Requests need its Form.\"; the Default row stayed live after reload. Matter types: row \"Default 10 matters\" (no Default label); the Archive dialog read \"Archive Default Default is used by 10 matters. Pick a replacement type — those matters move to it when the type is archived. Reassign 10 matters to No reassignm\"; after choosing a replacement and Archive it showed \"Default is the Default type and cannot be archived or deleted: module-only Requests need its Form.\"; the Default row stayed live after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters",
+      "action": "Create dialogs preselect the Default type",
+      "expected": "The Create matter dialog preselects Default as its Matter type.",
+      "startedAt": "2026-09-25T13:34:34.946Z",
+      "at": "2026-09-25T13:34:35.295Z",
+      "actual": "Matters > Create matter opened with Matter type \"Default\" preselected.",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/types",
+      "action": "Show archived and Restore: restoring makes the type available again and does not move reassigned records back",
+      "expected": "Show archived lists the archived type with Restore; after Restore it is live and the reassigned Matter keeps the replacement.",
+      "startedAt": "2026-09-25T13:34:35.296Z",
+      "at": "2026-09-25T13:34:35.574Z",
+      "actual": "Show archived listed \"DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420\" with \"Restore DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420\". Restore made it live again (its Archive control returned). M-212 still reads Matter type \"DOC-030 admin-config V-C38 Replacement type 0925133420\".",
+      "result": "pass"
+    },
+    {
+      "section": "types",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "api-refusal",
+      "page": "/settings/matters/types",
+      "action": "Negative check (API): invalid reassignment onto an archived type or onto the type itself is refused",
+      "expected": "The archive dialog cannot offer these choices, so the API is asked directly and refuses both with a 400 and a reason.",
+      "startedAt": "2026-09-25T13:34:35.575Z",
+      "at": "2026-09-25T13:34:35.597Z",
+      "actual": "As the Administrator, POST /api/v1/matter-types/{\"DOC-030 admin-config V-C38 Replacement type 0925133420\"}/archive with reassignToId = the archived \"DOC-030 admin-config V-C38 Archived probe type 0925133420\" answered 400 \"The reassignment target must be a live matter type.\"; with reassignToId = itself answered 400 \"A type can't take reassignments from itself.\". The type stayed live (archivedAt null).",
+      "result": "pass"
+    },
+    {
+      "section": "documents",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/121/documents",
+      "action": "Add Document types, steps 1-4: Settings > Organization > Documents; Matters tab; Add type, enter a name, Save; rename and reorder",
+      "expected": "The new Document type row appears in the Matters list; rename and keyboard reorder persist.",
+      "startedAt": "2026-09-25T11:22:58.309Z",
+      "at": "2026-09-25T11:23:01.873Z",
+      "actual": "Settings > Organization > Documents shows the lists [\"Matters\",\"Contracts\",\"Entities\"]; Knowledge has none. The Matters list held 2 rows before this run ([\"DOC-030 admin-config V-C38 Board resolution renamed 0925112134\",\"DOC-030 documents Matter type 09251116\"]), all made by other DOC-030 agents on this shared lab, so \"starts empty\" cannot be seen here. Add type + Save added \"DOC-030 admin-config V-C38 Board resolution 0925112257\"; Rename changed it to \"DOC-030 admin-config V-C38 Board resolution renamed 0925112257\"; ArrowUp moved it from position 3 to 2, kept after reload. A Matter's Upload dialog now shows a Type choice [\"No type\",\"DOC-030 admin-config V-C38 Board resolution renamed 0925112134\",\"DOC-030 admin-config V-C38 Board resolution renamed 0925112257\",\"DOC-030 documents Matter type 09251116\"].",
+      "result": "pass"
+    },
+    {
+      "section": "documents",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/contracts",
+      "action": "Contracts tab: six fixed types with a lock and no rename or archive control",
+      "expected": "Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed and Amendment each show a lock and no Rename or Archive.",
+      "startedAt": "2026-09-25T11:23:01.881Z",
+      "at": "2026-09-25T11:23:02.590Z",
+      "actual": "The Contracts list shows [\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Executed\",\"Amendment\"], each with the image \"<name> is fixed. Contract workflows depend on it.\" and no Rename or Archive control. Other rows present, all added by other DOC-030 agents: [\"DOC-030 access Admin document type 09251012\"].",
+      "result": "pass"
+    },
+    {
+      "section": "documents",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/entities",
+      "action": "Entities tab: upload dialogs show a type choice only when the module's list holds a live type; archive asks for no replacement; Show archived and Restore",
+      "expected": "With no live Entity Document type, an Entity upload has no Type choice; after Add type it has one; Archive names the version count without a replacement choice; the archived type leaves the upload choices; Restore brings it back.",
+      "startedAt": "2026-09-25T11:23:02.591Z",
+      "at": "2026-09-25T11:23:05.343Z",
+      "actual": "The Entities list held [\"DOC-030 documents Entity type 09251116\"] live rows. On Entity \"DOC-030 documents Admin versions Entity 09251046 Ltd\" the Upload dialog showed \"(list not empty)\". After Add type \"DOC-030 admin-config V-C38 Entity certificate 0925112257\" it showed Type [\"No type\",\"DOC-030 documents Entity type 09251116\",\"DOC-030 admin-config V-C38 Entity certificate 0925112257\"]. Archive read \"Archive DOC-030 admin-config V-C38 Entity certificate 0925112257 No version uses DOC-030 admin-config V-C38 Entity certificate 0925112257. It leaves the upload pickers. The change applies immediately and is recorded in the audit log. Cancel Archive type\" with 0 choice controls; afterwards the Upload dialog showed [\"No type\",\"DOC-030 documents Entity type 09251116\"]. Show archived + Restore brought it back ([\"No type\",\"DOC-030 documents Entity type 09251116\",\"DOC-030 admin-config V-C38 Entity certificate 0925112257\"]). The type was archived again to leave the list as found.",
+      "result": "pass"
+    },
+    {
+      "section": "statuses",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/statuses",
+      "action": "Configure Statuses, Contract: Contracts > Statuses; Add status, name, Stage; Cancel discards; Save status; rename and reorder; no control changes the Stage",
+      "expected": "The new row reads its Stage; the row has no Stage control; rename and reorder persist; Draft, Active and Expired are protected.",
+      "startedAt": "2026-09-25T11:23:05.344Z",
+      "at": "2026-09-25T11:23:08.682Z",
+      "actual": "Contracts > Statuses: Add status offered Stage choices [\"Stage…\",\"Draft\",\"Review\",\"Approval\",\"Signature\",\"Active\",\"Ended\"]. Cancel left no row. Save status added the row; after Rename it reads \"DOC-030 admin-config V-C38 Contract status renamed 0925112257 Stage: Review 0 contracts Saved\" with 0 Stage controls. ArrowUp moved it from 11 to 10 after reload. Draft, Active and Expired show \"<name> is system-protected and can't be archived\".",
+      "result": "pass"
+    },
+    {
+      "section": "statuses",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/statuses",
+      "action": "Contract Status archive: the dialog for an in-use Status asks you to move Contracts yourself and does not reassign; an unused custom Status archives",
+      "expected": "In-use: the dialog says to move the Contracts first and has no replacement choice. Unused: Archive status removes it.",
+      "startedAt": "2026-09-25T11:23:08.683Z",
+      "at": "2026-09-25T11:23:08.880Z",
+      "actual": "Archive Terminated (seeded, in use) read \"Archive Terminated Terminated is the status of 2 contracts. Move them to another status first. The change applies immediately and is recorded in the audit log. Cancel Archive status\" with 0 replacement controls and Archive status enabled=false; Cancel closed it. Archive on the unused \"DOC-030 admin-config V-C38 Contract status renamed 0925112257\" read \"Archive DOC-030 admin-config V-C38 Contract status renamed 0925112257 DOC-030 admin-config V-C38 Contract status renamed 0925112257 is not used by any contracts. The change applies immediately and is recorded in the audit log. Cancel Archive status\"; Archive status removed it from the live list.",
+      "result": "pass"
+    },
+    {
+      "section": "statuses",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/statuses",
+      "action": "Configure Statuses, Matter: Matters > Statuses; Add status in the Open Category with the default group (In progress) and one in Waiting; a Closed Category Status; change a group on its row",
+      "expected": "New Open-Category Status defaults to In progress; the row group control changes and persists; Category is fixed; Open and Closed are protected.",
+      "startedAt": "2026-09-25T11:23:08.881Z",
+      "at": "2026-09-25T11:23:12.022Z",
+      "actual": "Matters > Statuses: Add status offered Categories [\"Category…\",\"Open\",\"Closed\"]; with Open the group control defaulted to \"In progress\". Save status added \"DOC-030 admin-config V-C38 Matter status 0925112257\" (row group \"In progress\") and \"DOC-030 admin-config V-C38 Matter status waiting 0925112257\" (row group \"Waiting\"). With Closed the add row showed 0 group controls; \"DOC-030 admin-config V-C38 Matter status closed 0925112257\" reads \"DOC-030 admin-config V-C38 Matter status closed 0925112257 Category: Closed 0 matters\" with no group control. Changing \"DOC-030 admin-config V-C38 Matter status 0925112257\"'s row group to Open saved and read \"Open\" after reload. Open and Closed show the protected lock.",
+      "result": "pass"
+    },
+    {
+      "section": "statuses",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/statuses",
+      "action": "Matter Status archive: for an in-use custom Status, choose a replacement in the same Category",
+      "expected": "The dialog offers only Open-Category Statuses; after Archive status the Matter moves to the replacement.",
+      "startedAt": "2026-09-25T11:23:12.023Z",
+      "at": "2026-09-25T11:23:12.342Z",
+      "actual": "M-122 (API fixture) was set to \"DOC-030 admin-config V-C38 Matter status 0925112257\". Its Archive dialog read \"Archive DOC-030 admin-config V-C38 Matter status 0925112257 DOC-030 admin-config V-C38 Matter status 0925112257 is the status of 1 matter. Pick its replacement below. Reassign 1 matter to Choose a sta\" and offered [\"Choose a status…\",\"Open\",\"In progress\",\"On hold\",\"Awaiting the business\",\"With external counsel\",\"With counterparty\",\"DOC-030 admin-config V-C38 Matter status 0925112134\",\"DOC-030 admin-config V-C38 Matter status waiting 0925112134\",\"DOC-030 admin-config V-C38 Matter status waiting 0925112257\"] (no Closed-Category Status). With \"DOC-030 admin-config V-C38 Matter status waiting 0925112257\" chosen, Archive status moved M-122 to \"DOC-030 admin-config V-C38 Matter status waiting 0925112257\".",
+      "result": "pass"
+    },
+    {
+      "section": "statuses",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "api-refusal",
+      "page": "/settings/matters/statuses",
+      "action": "Negative check (API): a Stage or Category change on an existing Status is refused",
+      "expected": "Neither page has a Stage or Category control, so the API is asked: a rename body carrying stage or category is refused.",
+      "startedAt": "2026-09-25T11:23:12.343Z",
+      "at": "2026-09-25T11:23:12.374Z",
+      "actual": "As the Administrator, PATCH /api/v1/contract-statuses/{\"DOC-030 admin-config V-C38 Contract status renamed 0925112257\"} with stage \"ended\" answered 400 \"One or more request fields are invalid.\"; the Status keeps Stage \"review\". PATCH /api/v1/matter-statuses/{\"DOC-030 admin-config V-C38 Matter status waiting 0925112257\"} with category \"closed\" answered 400 \"One or more request fields are invalid.\".",
+      "result": "pass"
+    },
+    {
+      "section": "fields",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/fields",
+      "action": "Create a Field, first paragraphs: Matter and Contract Fields show a collapsed Default Fields card of locked read-only rows above an expanded Custom Fields card; Governing law, Jurisdiction and Our position show a lock in place of archive",
+      "expected": "Default Fields starts collapsed and expands on its heading into locked rows with no controls; Custom Fields starts expanded with Add field; the three default catalog Fields have a lock and no Archive.",
+      "startedAt": "2026-09-25T11:23:12.375Z",
+      "at": "2026-09-25T11:23:14.598Z",
+      "actual": "Matters > Fields: Default Fields aria-expanded=false, Custom Fields aria-expanded=true with Add field. Expanded, Default Fields lists 15 rows ([\"Reference\",\"Title\",\"Matter type\",\"Status\"]…), each with a \"<name>: built-in field, read-only here\" lock and no buttons. Contracts > Fields: Default Fields aria-expanded=false, Custom Fields aria-expanded=true with Add field. Expanded, Default Fields lists 23 rows ([\"Reference\",\"Title\",\"Contract type\",\"Status\"]…), each with a \"<name>: built-in field, read-only here\" lock and no buttons. Custom Fields lists [\"Governing law\",\"Jurisdiction\",\"Our position\"] with Rename and the image \"<name> is a default Field and can't be archived\" in place of Archive; the API refuses the archive of Governing law with 409 \"The Governing law field is a default Field and can't be archived.\".",
+      "result": "pass"
+    },
+    {
+      "section": "fields",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/matters/fields",
+      "action": "Create a Field, steps 1-5: Matters > Fields > Add field with Name, Description, Type and Options; the type cannot change after creation; Boolean has no Yes/No control at creation; no reorder handles",
+      "expected": "The Type list matches the guide; Options take one per line; the row shows the new Field; Edit has no Type control; the catalog has no reorder handles.",
+      "startedAt": "2026-09-25T11:23:14.599Z",
+      "at": "2026-09-25T11:23:16.229Z",
+      "actual": "Add field offered Types [\"Text\",\"Long text\",\"Number\",\"Currency\",\"Date\",\"Boolean\",\"Single select\",\"Multi select\",\"User\",\"Entity\"]. \"DOC-030 admin-config V-C38 Assessment scope 0925112257\" (Single select, Options \"Security/Privacy/Finance\") saved as row \"DOC-030 admin-config V-C38 Assessment scope 0925112257 Type: Single select\"; a Matter Field has no AI prompt. The Boolean Field \"DOC-030 admin-config V-C38 Assessment signed off 0925112257\" was created with 0 Yes/No controls in the dialog. Custom Fields shows 0 reorder handles. Edit shows no Type control and reads \"The field type is immutable after creation.\"; Options read \"Security\\nPrivacy\\nFinance\".",
+      "result": "pass"
+    },
+    {
+      "section": "fields",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/fields",
+      "action": "Contract Fields: AI prompt on Contract Fields other than User and Entity; a Text or Long text Field has Answer style with Organisation default",
+      "expected": "Text shows AI prompt and Answer style with Organisation default; User and Entity show no AI prompt; Number shows AI prompt without Answer style.",
+      "startedAt": "2026-09-25T11:23:16.230Z",
+      "at": "2026-09-25T11:23:18.975Z",
+      "actual": "Contracts > Fields > Add field: Text: AI prompt shown, Answer style [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"]; Long text: AI prompt shown, Answer style [\"Organisation default (1-2 sentence summary)\",\"Few word summary\",\"1-2 sentence summary\",\"Full clause text\"]; Number: AI prompt shown, Answer style absent; User: AI prompt absent, Answer style absent; Entity: AI prompt absent, Answer style absent. The Text Field \"DOC-030 admin-config V-C38 Supplier tier 0925112257\" was added with Organisation default kept.",
+      "result": "pass"
+    },
+    {
+      "section": "fields",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/entities/fields",
+      "action": "Create a Field, step 1 for Entities: Entities > Fields > Add field",
+      "expected": "An Entity Field can be added.",
+      "startedAt": "2026-09-25T11:23:18.975Z",
+      "at": "2026-09-25T11:23:20.166Z",
+      "actual": "Entities > Fields: Add field created \"DOC-030 admin-config V-C38 Registry code 0925112257\". The page shows 0 Default Fields cards.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Attach Fields, step 1: Types > Edit on the type > Form; Title and Type stay pinned; built-in Rows show Built-in and Visible on Portal Fixed",
+      "expected": "The Form tab opens; Title and Type have a lock and disabled switches; built-in Rows show Fixed under Visible on Portal.",
+      "startedAt": "2026-09-25T11:38:33.450Z",
+      "at": "2026-09-25T11:38:36.483Z",
+      "actual": "Added Contract type \"DOC-030 admin-config V-C38 Fixed-term NDA 0925113832\"; Edit > Form opened /settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form. The Form header reads \"Form DOC-030 admin-config V-C38 Fixed-term NDA 0925113832 Attach Field Create Field Add condition Preview intake form\". Rows in order: [\"Title\",\"Type\",\"Description\",\"Entity\",\"Counterparties\",\"Department\",\"Region\",\"Priority\",\"Risk\",\"Term type\",\"Effective date\",\"Expiry date\",\"Renewal period\",\"Notice period\",\"Value\",\"Needed by\"]. Title reads \"Title Built-in Position and switches are fixed Position and switches are fixed Fixed Creation\" (Required for creation on and locked); Term type reads \"Term type Built-in Fixed Record\".",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Attach Fields, step 2: Attach Field lists the module's Fields alphabetically; Search fields filters; choose one",
+      "expected": "The menu opens with a Search fields box; typing filters the list; choosing a Field adds its Row with Touchpoint Record.",
+      "startedAt": "2026-09-25T11:38:36.520Z",
+      "at": "2026-09-25T11:38:38.363Z",
+      "actual": "Attach Field opened a menu with the Search fields box focused (true), 50 Contract Fields in alphabetical order, and \"Create Field\" last. Typing \"Supplier tier form\" left [\"DOC-030 admin-config V-C38 Supplier tier form 0925113134 Text\",\"DOC-030 admin-config V-C38 Supplier tier form 0925113434 Text\",\"DOC-030 admin-config V-C38 Supplier tier form 0925113630 Text\",\"DOC-030 admin-config V-C38 Supplier tier form 0925113832 Text\"]. Choosing it added the Row \"DOC-030 admin-config V-C38 Supplier tier form 0925113832\" with Touchpoint Record.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Attach Fields, step 2: Create Field opens a new Field definition without leaving the Form and attaches it",
+      "expected": "The Add field dialog opens over the Form; after Add field the new Row is on the Form.",
+      "startedAt": "2026-09-25T11:38:38.369Z",
+      "at": "2026-09-25T11:38:39.008Z",
+      "actual": "Create Field opened the \"Add field\" dialog while /settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form stayed open. The User Field \"DOC-030 admin-config V-C38 Business contact 0925113832\" was created and its Row attached (reads \"DOC-030 admin-config V-C38 Business contact 0925113832 User Record\").",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Attach Fields, step 3 and the switch table: each change saves (Saved); On intake form also turns on Visible on Portal and locks it; Touchpoint follows the switches; a User Row on intake cannot be required",
+      "expected": "Touchpoint reads Intake, Creation or Record as the switches change; Visible on Portal is on and locked while On intake form is on; the User Row's Required switch refuses with a reason; changes survive reload.",
+      "startedAt": "2026-09-25T11:38:39.010Z",
+      "at": "2026-09-25T11:38:44.272Z",
+      "actual": "On intake form on: Saved true, Visible on Portal checked true locked true, Touchpoint Intake. Required for creation on: Saved true, Touchpoint Intake. On intake form off: Saved true, Visible on Portal checked true locked false, Touchpoint Creation. The locked Visible on Portal switch reads \"Turn off On intake form first\". With On intake form on for the User Row \"DOC-030 admin-config V-C38 Business contact 0925113832\", its Required for creation switch is locked with \"Required for creation is unavailable for DOC-030 admin-config V-C38 Business contact 0925113832 while it is on the intake form\" and a click left it off. After reload \"DOC-030 admin-config V-C38 Supplier tier form 0925113832\" reads On intake form off, Required for creation on, Touchpoint Creation.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Attach Fields, step 4: focus a Row's move handle and use the arrow keys; Title and Type stay pinned",
+      "expected": "The Row moves up one place and keeps it after reload; Title and Type keep the first two places.",
+      "startedAt": "2026-09-25T11:38:44.273Z",
+      "at": "2026-09-25T11:38:57.452Z",
+      "actual": "ArrowUp on \"Move DOC-030 admin-config V-C38 Supplier tier form 0925113832\" moved it from place 17 to 16, kept after reload. Further ArrowUp presses stopped it at place 3; Title and Type stay first and second.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Add conditional Rows with a Branch, steps 1-3: On intake form for Term type and Expiry date, Required for creation for Expiry date; Add condition in the Form header; Row Term type, Operator is, Value Fixed; grip Move Expiry date > Put under a condition… > Show when all of: Term type is Fixed",
+      "expected": "The new Branch appears at the end of the Form below Term type; the completed condition saves; Expiry date moves under the Branch.",
+      "startedAt": "2026-09-25T11:38:57.454Z",
+      "at": "2026-09-25T11:39:03.569Z",
+      "actual": "On intake form was turned on for Term type and Expiry date and Required for creation for Expiry date. Add condition in the Form header opened a condition editor at the end of the Form (last group before it: \"Children of Add a condition\"). Row offered [\"Select Row\",\"Title\",\"Type\",\"DOC-030 admin-config V-C38 Supplier tier form 0925113832\",\"Description\",\"Entity\",\"Counterparties\",\"Department\",\"Region\",\"Priority\",\"Risk\",\"Term type\",\"Effective date\",\"Expiry date\",\"Renewal period\",\"Notice period\",\"Value\",\"Needed by\",\"DOC-030 admin-config V-C38 Business contact 0925113832\"]; Operator offered [\"is\",\"is not\",\"is one of\",\"is set\"]; Value offered [\"Select value\",\"Fixed\",\"Auto-renew\",\"Evergreen\"]. After Term type / is / Fixed the Branch header read \"Show when all of: Term type is Fixed\" (Saved seen true). The grip \"Move Expiry date\" offered Put under a condition…, and the dialog \"Put under a condition\" offered \"Show when all of: Term type is Fixed\". Expiry date now sits in \"Children of Show when all of: Term type is Fixed\", which is after Term type and last on the Form, after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Branch, step 4: Preview intake form; Fixed shows Expiry date as required, Evergreen hides it; Submit request tests validation without sending",
+      "expected": "The preview reads Preview only. No Request will be sent.; Expiry date appears only for Fixed; Submit request without it is refused and sends nothing.",
+      "startedAt": "2026-09-25T11:39:03.576Z",
+      "at": "2026-09-25T11:39:05.946Z",
+      "actual": "Preview intake form opened a dialog reading \"Preview only. No Request will be sent.\". Term type offered [\"Not set\",\"Fixed\",\"Auto-renew\",\"Evergreen\"]. With Fixed, Expiry date appeared (\"Expiry date* (required)\"); Submit request with Expiry date empty showed \"(required) | (required) | Department is required. | (required) | Expiry date is required. | Choose files\" (1 controls marked invalid) and no completion message. With Evergreen, Expiry date disappeared. Close returned to the Form. Screenshot v-c38-preview-intake-form.png.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Branch rules: Add another condition asks AND or OR once and Join conditions changes it; a second Branch cannot start until the first is finished; Escape discards a new condition",
+      "expected": "The join question offers AND and OR; the Join conditions control appears; Add condition is refused while a Branch is unfinished; Escape removes the draft.",
+      "startedAt": "2026-09-25T11:39:05.947Z",
+      "at": "2026-09-25T11:39:08.042Z",
+      "actual": "Edit conditions > Add another condition asked \"Join the next condition with\" offering [\"AND\",\"OR\",\"Cancel\"]; after OR, the Join conditions control read \"OR\" and was changed to AND; Remove condition 2 removed the second condition. A new Add condition opened an unfinished Branch; the header's Add condition then carried aria-disabled=true (\"Complete the Branch condition first\"). Escape discarded the draft (0 editors, 1 Branch left).",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/437/fields",
+      "action": "New and existing records follow the Form: a new Contract of this type needs the Required for creation Row; Rows under a false Branch are not collected or required; the record holds the value",
+      "expected": "Create is refused while the required Field is empty; Expiry date is asked only for Fixed; Create succeeds with Evergreen and a value; the Contract shows the value.",
+      "startedAt": "2026-09-25T11:39:08.045Z",
+      "at": "2026-09-25T11:39:14.999Z",
+      "actual": "Contracts > Create contract with type \"DOC-030 admin-config V-C38 Fixed-term NDA 0925113832\" showed [\"Title*\",\"Contract type*\",\"Legal Owner\",\"Matter\",\"DOC-030 admin-config V-C38 Supplier tier form 0925113832*\",\"Description\",\"Term type\",\"Documents\"]. Create with \"DOC-030 admin-config V-C38 Supplier tier form 0925113832\" empty kept the dialog open with \"Fill DOC-030 admin-config V-C38 Supplier tier form 0925113832 — this contract type requires it.\". With \"Tier 2\" filled, Term type offered [\"Not set\",\"Fixed\",\"Auto-renew\",\"Evergreen\"]; with Fixed the dialog showed [\"Expiry date*\"], with Evergreen no Expiry date control; Create with Evergreen opened C-437, whose Fields tab shows \"DOC-030 admin-config V-C38 Supplier tier form 0925113832\" = \"Tier 2\".",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d85c-317b-774b-b901-7f16227465c3/form",
+      "action": "Branch rules: Remove condition keeps its children",
+      "expected": "After Remove condition the Branch is gone and Expiry date stays on the Form at the root with its switches.",
+      "startedAt": "2026-09-25T11:39:15.001Z",
+      "at": "2026-09-25T11:39:17.222Z",
+      "actual": "Actions for \"Show when all of: Term type is Fixed\" > Remove condition removed the Branch; after reload Expiry date is on the Form at the root (18 of 18 groups) with Required for creation on.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/437/fields",
+      "action": "Archive in the Field catalog hides the Field and keeps attachments and stored values; Show archived > Restore brings them back; Detach removes a Row and keeps the Field",
+      "expected": "The archive dialog says the attachment is kept; the Form no longer shows the Row; after Restore the Row and the record's value return; Detach removes the User Row and the Field stays in the catalog.",
+      "startedAt": "2026-09-25T11:39:17.224Z",
+      "at": "2026-09-25T11:39:56.668Z",
+      "actual": "Archive \"DOC-030 admin-config V-C38 Supplier tier form 0925113832\" read \"Archive DOC-030 admin-config V-C38 Supplier tier form 0925113832 DOC-030 admin-config V-C38 Supplier tier form 0925113832 is attached to 2 types — the attachments are kept, hidden until the field is restored. The change applies immediately and is recorded in the audit log. Cancel Archive field\" with 0 reassignment controls. While archived, the Form showed 0 Rows for it; the API still held the stored value (true); the Contract's Fields tab control for it read \"(no control)\". Show archived > Restore returned the Row with Required for creation on, and C-437's Fields tab reads \"Tier 2\" again. \"Detach DOC-030 admin-config V-C38 Business contact 0925113832\" removed the User Row; the Field stays live in the catalog.",
+      "result": "pass"
+    },
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/entities/types/01a0d85d-7441-7de8-b906-2855fc252516/form",
+      "action": "Entity Forms show only Required for creation, with no On intake form or Visible on Portal switch and no intake preview",
+      "expected": "An Entity type's Form has only Required for creation switches and no Preview intake form button.",
+      "startedAt": "2026-09-25T11:39:56.669Z",
+      "at": "2026-09-25T11:40:01.076Z",
+      "actual": "Entity type \"DOC-030 admin-config V-C38 Entity form type 0925113832\" (one Entity Field attached through Attach Field) Form header reads \"Form DOC-030 admin-config V-C38 Entity form type 0925113832 Attach FieldSaved Create Field Add condition\"; its 1 switches are all \"<Row>: Required for creation\" ([\"DOC-030 admin-config V-C38 Registry code 0925112134: Required for creation\"]); Preview intake form buttons 0; Add condition buttons 1.",
+      "result": "pass"
+    },
+    {
+      "section": "officers",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/entities/officer-roles",
+      "action": "Maintain Officer roles: Entities > Director & Officer roles; Add role, Rename, reorder",
+      "expected": "The new role row appears; Rename and keyboard reorder persist; Other is protected.",
+      "startedAt": "2026-09-25T11:41:59.034Z",
+      "at": "2026-09-25T11:42:04.514Z",
+      "actual": "Entities > Director & Officer roles: Add role added \"DOC-030 admin-config V-C38 Board observer 0925114157\" and \"DOC-030 admin-config V-C38 Board adviser 0925114157\"; Rename changed the first to \"DOC-030 admin-config V-C38 Board observer renamed 0925114157\"; ArrowUp moved it from 14 to 13, kept after reload. Other shows \"Other is system-protected and can't be archived\".",
+      "result": "pass"
+    },
+    {
+      "section": "officers",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/entities/officer-roles",
+      "action": "Archive an in-use role: usage counts current and resigned Officers; select the replacement and confirm Archive role; Restore does not reverse the reassignment",
+      "expected": "The dialog counts both Officers; after Archive role both move to the replacement; Restore makes the role selectable and leaves them on the replacement.",
+      "startedAt": "2026-09-25T11:42:04.524Z",
+      "at": "2026-09-25T11:42:05.357Z",
+      "actual": "Two fictional Officers (one current, one resigned 2025-06-30) were given \"DOC-030 admin-config V-C38 Board observer renamed 0925114157\" through the API. Its row read \"DOC-030 admin-config V-C38 Board observer renamed 0925114157 2 officers\"; the Archive dialog read \"Archive DOC-030 admin-config V-C38 Board observer renamed 0925114157 DOC-030 admin-config V-C38 Board observer renamed 0925114157 is used by 2 officers. Pick a replacement role — those officers move to it when the role is archived. Reassign 2 officers to No reassignment Director CEO CFO Secretary Other Managing Director Company Secretary Authorised Signatory Treasurer DOC-030 admin-config V-C38 Board adviser 0925113832 DOC-030 admin-config V-C38 Board observer renamed 0925113832 DOC-030 admin-config V-C38 Board adviser 0925114115 DOC-030 admin-config V-C38 Board observer renamed 0925114115 DOC-030 admin-config V-C38 Board adviser 0925114157 The change applies immediately and is recorded in the audit log. Cancel Archive role\". After choosing \"DOC-030 admin-config V-C38 Board adviser 0925114157\" and Archive role, the Officers read [\"Imani Fictional 0925114157: DOC-030 admin-config V-C38 Board adviser 0925114157\",\"Tomas Fictional 0925114157: DOC-030 admin-config V-C38 Board adviser 0925114157\"]. Show archived > Restore made \"DOC-030 admin-config V-C38 Board observer renamed 0925114157\" live again; 0 Officers moved back.",
+      "result": "pass"
+    },
+    {
+      "section": "access",
+      "scenario": "V-C38",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/profile",
+      "action": "Negative check: a legal team member (Nadia Haddad) cannot open or change type, Status or Field configuration",
+      "expected": "The Settings rail has no Organization configuration; the configuration URLs do not show the editors; the API refuses a change.",
+      "startedAt": "2026-09-25T11:41:23.782Z",
+      "at": "2026-09-25T11:41:34.859Z",
+      "actual": "Nadia Haddad opened Settings from the profile menu; the rail groups are [\"Personal\"]. /settings/contracts/types -> /settings/profile (\"Personal\", add controls 0); /settings/matters/statuses -> /settings/profile (\"Personal\", add controls 0); /settings/contracts/fields -> /settings/profile (\"Personal\", add controls 0); /settings/entities/officer-roles -> /settings/profile (\"Personal\", add controls 0). POST /api/v1/contract-types answered 403 \"You do not have permission to perform this action.\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "fixture-setup",
+      "page": "/",
+      "action": "Before you start (fixture): live destination Contract and Matter types whose Forms hold the Rows to collect",
+      "expected": "Two destination types exist with intake Rows; a third Contract type exists for the archived-destination check.",
+      "startedAt": "2026-09-25T13:29:42.778Z",
+      "at": "2026-09-25T13:29:42.899Z",
+      "actual": "API fixtures as the Administrator: Contract types \"DOC-030 admin-config V-C40 MSA 0925132941\" and \"DOC-030 admin-config V-C40 Retired destination 0925132941\"; Matter type \"DOC-030 admin-config V-C40 Advisory 0925132941\"; Contract Number Field \"DOC-030 admin-config V-C40 Deal value 0925132941\"; Matter Single select Field \"DOC-030 admin-config V-C40 Advice area 0925132941\" (Employment, Privacy, Tax). \"DOC-030 admin-config V-C40 MSA 0925132941\"'s Form: \"DOC-030 admin-config V-C40 Deal value 0925132941\" after Description (On intake form, Required for creation); Term type, Value and Counterparties On intake form; a Branch \"Term type is Fixed\" at the end holding Expiry date (On intake form, Required for creation). \"DOC-030 admin-config V-C40 Advisory 0925132941\"'s Form: \"DOC-030 admin-config V-C40 Advice area 0925132941\" On intake form and Required for creation.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0d8c1-f11a-799d-8e81-675f4a56bec9",
+      "action": "Create the request type, steps 1-4: profile menu > Settings > Intake > Request types; Add request type (Cancel discards); Save; Edit; Description saves on leaving the field; a new type starts with a Matter destination",
+      "expected": "Cancel leaves no row; Save adds the row; the editor opens with Default destination Matter and Default matter type Default; the Description survives reload.",
+      "startedAt": "2026-09-25T13:29:42.904Z",
+      "at": "2026-09-25T13:29:45.995Z",
+      "actual": "Profile menu > Settings > Intake > Request types listed a Destination column (\"Destination\"). Add request type + Cancel left no row; Save added \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" (row \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Destination: Matter · Default\"), \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" and \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\". Edit opened the editor with Default destination \"Matter\" and Default matter type \"Default\". The Description saved on Tab and read \"Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form.\" after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types",
+      "action": "Set the default destination, steps 1-3: Contract; Default contract type lists Default first; pick the destination type; changing the module clears the type; the Intake form card follows",
+      "expected": "Default contract type starts on Default, lists it first, and saves the chosen type; Matter then Contract resets it to Default; the card shows the destination Form; the list's Destination column reads Contract · type.",
+      "startedAt": "2026-09-25T13:29:45.997Z",
+      "at": "2026-09-25T13:29:51.699Z",
+      "actual": "Default destination Contract showed Default contract type \"Default\" with \"Default\" as the first option; choosing \"DOC-030 admin-config V-C40 MSA 0925132941\" refreshed the Intake form card to its Rows. Switching to Matter reset the type to \"Default\"; back to Contract it read \"Default\". After choosing \"DOC-030 admin-config V-C40 MSA 0925132941\" again and reloading it read \"DOC-030 admin-config V-C40 MSA 0925132941\". The list row reads \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form. Destination: Contract · DOC-030 admin-config V-C40 MSA 0925132941\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0d8c1-f11a-799d-8e81-675f4a56bec9",
+      "action": "Publish an estimated turnaround: 0 to 36,500 or blank; save on leaving the control or Enter",
+      "expected": "36501 is refused with the range message; 5 saves and survives reload.",
+      "startedAt": "2026-09-25T13:29:51.701Z",
+      "at": "2026-09-25T13:29:54.611Z",
+      "actual": "36501 + Enter showed \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\". 5 + Tab saved; after reload the control reads \"5\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0d8c1-f11a-799d-8e81-675f4a56bec9",
+      "action": "Read and preview the Intake form: the read-only card lists Title, Department, Urgency, the Intake Rows with Branch headers, Attachments last, each Required or Optional; Preview intake form shows the name and description, follows the Branch, validates on Submit request and sends nothing; Escape returns to the eye button",
+      "expected": "The card order and markers match the Form; the preview shows the Request type name and description; Expiry date shows only for Fixed; Submit request refuses missing answers; Escape closes and focus returns to the eye button.",
+      "startedAt": "2026-09-25T13:29:54.612Z",
+      "at": "2026-09-25T13:29:56.060Z",
+      "actual": "The Intake form card has no inputs (0) and lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-030 admin-config V-C40 Deal value 0925132941 Number Required\",\"Counterparties Multi select Optional\",\"Term type Single select Optional\",\"Value Money Optional\",\"Show when all of: Term type is Fixed Expiry date Date Required\",\"Expiry date Date Required\",\"Attachments Files Optional\"]; its text includes the Branch header (Show when … Term type is Fixed present). The eye button opened a preview naming \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" with its description. Expiry date showed for Fixed and not for Evergreen. Submit request showed \"Title is required. | Department is required. | DOC-030 admin-config V-C40 Deal value 0925132941 is required.\" and sent nothing. Escape closed it and focus returned to \"Preview intake form\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0d8c1-ec84-738f-85a8-221cbe182155/form",
+      "action": "Choose the Intake Rows, step 1: Edit form in the card header opens the destination type's Form tab",
+      "expected": "Edit form opens the Form tab of the chosen Contract type.",
+      "startedAt": "2026-09-25T13:29:56.061Z",
+      "at": "2026-09-25T13:29:56.167Z",
+      "actual": "Edit form opened /settings/contracts/types/01a0d8c1-ec84-738f-85a8-221cbe182155/form (Form header \"Form DOC-030 admin-config V-C40 MSA 0925132941 Attach Field Create Field Add condition Preview intake form\"). Built-in Contract Rows: Counterparties: present, Effective date: present, Expiry date: present, Term type: present, Value: present; Status Row absent.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0d8c1-f190-7b87-93a3-a531503c5788",
+      "action": "Second request type for a Matter destination; a module-only Contract destination reads the Default type's Form",
+      "expected": "The Matter request type saves its destination; with Default type the card reads the Default Contract type's Form.",
+      "startedAt": "2026-09-25T13:29:56.168Z",
+      "at": "2026-09-25T13:30:00.498Z",
+      "actual": "\"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" with Contract and type Default showed a card for the Default type (\"Intake form Edit form Default Title Text Required Department Single select Required Urgency Single select Required Descr\"…) whose Edit form link opens the Default Contract type (\"Default\"); it was then pointed at \"DOC-030 admin-config V-C40 Retired destination 0925132941\". \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" saved Default destination Matter with \"DOC-030 admin-config V-C40 Advisory 0925132941\"; its card lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-030 admin-config V-C40 Advice area 0925132941 Single select Required\",\"Attachments Files Optional\"].",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/links",
+      "action": "Offer guidance before submission, steps 1-4: Deflection links > Add link; External address needs http(s); Knowledge item; Label; Placement; Edit; reorder",
+      "expected": "A bare address is refused; the external and Knowledge links save with their placements; Edit and keyboard reorder persist.",
+      "startedAt": "2026-09-25T13:30:00.499Z",
+      "at": "2026-09-25T13:30:04.250Z",
+      "actual": "A bare address was refused with \"Enter a full web address that starts with http:// or https://.\"; with https:// the External address link \"DOC-030 admin-config V-C40 Supplier checklist 0925132941\" saved with Placement \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\". Knowledge item offered 24 live items; \"How to ask legal for help\" saved as \"DOC-030 admin-config V-C40 How to ask Legal 0925132941\" for \"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" after Edit changed its Label. ArrowUp moved it from 14 to 13, kept after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/new/doc_030_admin_config_v_c40_docs_contract_review_0925132941",
+      "action": "Negative check (V-C38, V-C40 editors): a Business User cannot open configuration; Check the result on the Portal: cards, Before you submit, Fields, order and required markers; submit with a required answer missing, then valid answers",
+      "expected": "Settings configuration URLs send the Business User away; the card shows the description and Estimated turnaround: 5 business days; the form shows the external guidance and the Rows in Form order with required markers; a missing required answer is refused; valid answers create a Request.",
+      "startedAt": "2026-09-25T13:30:04.269Z",
+      "at": "2026-09-25T13:31:10.975Z",
+      "actual": "Jonas Weber signed in with a fresh magic link from the lab Mailpit. /settings/contracts/types -> /portal; /settings/intake/request-types -> /portal. Portal card: \"DOC-030 admin-config V-C40 Docs Contract review 0925132941 Ask Legal to review a supplier contract. Fictional DOC-030 walkthrough form. Estimated turnaround: 5 business days\". \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" shows Before you submit with \"DOC-030 admin-config V-C40 Supplier checklist 0925132941\" -> https://example.com/doc-030-supplier-checklist; labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-030 admin-config V-C40 Deal value 0925132941* (required)\",\"Counterparties\",\"Term type\",\"Value\",\"Currency\",\"Frequency\",\"Attachments\"]. Submit with only a Title showed \"DOC-030 admin-config V-C40 Deal value 0925132941 is required. | Fill DOC-030 admin-config V-C40 Deal value 0925132941 first — the form requires it.\" and stayed on the form. Term type offered [\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"]; with fixed the form showed [\"Expiry date* (required)\"], with evergreen no Expiry date. With Department \"Engineering\", \"DOC-030 admin-config V-C40 Deal value 0925132941\" 125000 and Term type evergreen, Submit showed \"Thanks! Your request has been submitted to legal.\" (R-158). Screenshot v-c40-portal-contract-form.png.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/knowledge/01a0d801-f7e3-7fde-b27b-642983d213d8",
+      "action": "Check the result on the Portal for the Matter form: guidance for that form only; submit valid answers",
+      "expected": "The Matter form shows the Knowledge link and not the external one; valid answers create a Request; the Knowledge link opens.",
+      "startedAt": "2026-09-25T13:31:10.977Z",
+      "at": "2026-09-25T13:31:13.046Z",
+      "actual": "\"DOC-030 admin-config V-C40 Docs Matter advice 0925132941\" shows Before you submit with \"DOC-030 admin-config V-C40 How to ask Legal 0925132941\" only (external link count 0); labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-030 admin-config V-C40 Advice area 0925132941* (required)\",\"Attachments\"]. Submit with \"DOC-030 admin-config V-C40 Advice area 0925132941\" Privacy created R-159. The Knowledge link opened /portal/knowledge/01a0d801-f7e3-7fde-b27b-642983d213d8 with heading \"How to ask legal for help\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/526/fields",
+      "action": "Check the result: convert the Contract form Request to a Contract and check the intended answers on the new record",
+      "expected": "The Convert dialog proposes the configured Contract type; the new Contract holds Deal value and Term type from the Request.",
+      "startedAt": "2026-09-25T13:31:13.048Z",
+      "at": "2026-09-25T13:31:15.716Z",
+      "actual": "Inbox R-158 > Triage > Convert to contract opened a dialog with Contract type \"DOC-030 admin-config V-C40 MSA 0925132941\" (\"Convert R-158 to a contract DOC-030 admin-config V-C40 Docs Contract review 0925132941 · submitted by Jonas Weber Title* Contract type* Type… NDA MSA SOW Sales \"…). After Convert the Request page read Status \"Status Converted C-526 Converted by Daniel Okafor on Sep 25\" with a link \"C-526\". C-526 is of type \"DOC-030 admin-config V-C40 MSA 0925132941\"; it holds \"DOC-030 admin-config V-C40 Deal value 0925132941\" 125000 (Fields tab shows \"125,000\") and Term type evergreen.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/inbox/159",
+      "action": "Check the result: convert the Matter form Request to a Matter and check the answer",
+      "expected": "The Convert dialog proposes the configured Matter type; the new Matter holds the Field answer.",
+      "startedAt": "2026-09-25T13:31:15.718Z",
+      "at": "2026-09-25T13:31:17.957Z",
+      "actual": "Inbox R-159 > Triage > Convert to matter proposed Matter type \"DOC-030 admin-config V-C40 Advisory 0925132941\". After Convert the Request page read Status \"Status Converted M-211 Converted by Daniel Okafor on Sep 25\"; M-211 (\"DOC-030 admin-config V-C40 Advisory 0925132941\") is holding \"DOC-030 admin-config V-C40 Advice area 0925132941\" = \"Privacy\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/new/doc_030_admin_config_v_c40_docs_retired_destination_form_0925132941",
+      "action": "Negative check: archived destination type. Submit on the form while its type is live; archive the type; the editor shows it unavailable; the Portal still lists the form and opening it shows an error instead of the questions (suspected product bug)",
+      "expected": "The guide says the Business User sees an error instead of the questions and that OpenLaw does not send the form to another type or module.",
+      "startedAt": "2026-09-25T13:31:17.958Z",
+      "at": "2026-09-25T13:31:21.279Z",
+      "actual": "R-160 was submitted on \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" while \"DOC-030 admin-config V-C40 Retired destination 0925132941\" was live. The Administrator archived \"DOC-030 admin-config V-C40 Retired destination 0925132941\" (no Contracts used it). The Request types list row then read \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941 Fictional form whose destination type will be archived. Destination: Contract · DOC-030 admin-config V-C40 Retired destination 0925132941\"; the editor's Default contract type read \"DOC-030 admin-config V-C40 Retired destination 0925132941 (unavailable)\"; the Intake form card read \"Intake form Edit form DOC-030 admin-config V-C40 Retired destination 0925132941 Title Text Required Department Single select Required Urgency Single select Requ\". On the Portal the card is still listed (1); opening it showed \"Something went wrong. The page could not load. Reload to try again. Reload Back to Home\" with 0 Submit request buttons. The API detail read answers 400 \"This Request type needs a destination type.\". The guide's \"If it does not work\" describes this as an error instead of the questions; the product bug is recorded.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/inbox/160",
+      "action": "Negative check: conversion with an archived destination type does not switch modules",
+      "expected": "The Convert dialog for the Request stays on Contract (conversion reads the archived type as no type) and does not route to Matter.",
+      "startedAt": "2026-09-25T13:31:21.281Z",
+      "at": "2026-09-25T13:31:21.633Z",
+      "actual": "Inbox R-160 reads \"Converts to Contract\". Triage offered [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"]. Convert to contract opened \"Convert R-160 to a contract\" with Contract type \"Type…\"; the archived \"DOC-030 admin-config V-C40 Retired destination 0925132941\" is not offered (40 options). The dialog stays in the Contract module. It was closed without converting.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types",
+      "action": "Archive a request type: the dialog shows how many Requests use it; choose a live replacement; the Portal drops the form; Show archived > Restore offers it again",
+      "expected": "The count matches; after archive the Requests move and the Portal no longer lists the form; Restore brings it back.",
+      "startedAt": "2026-09-25T13:31:21.635Z",
+      "at": "2026-09-25T13:31:22.161Z",
+      "actual": "Archive \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" read \"Archive DOC-030 admin-config V-C40 Docs retired destination form 0925132941 DOC-030 admin-config V-C40 Docs retired destination form 0925132941 is used by 1 request. Pick a replacement type — that request moves to it when the type is archived. Reassign 1 request to No reassignment NDA request Contract review Legal question Vendor onboarding Employment question DOC-030 portal Evaluation review 1790330794487 DOC-030 inbox Supplier contract request DOC-030 inbox Advisory matter request DOC-030 contracts-c matter request 20260925112623 DOC-030 contracts-c matter request 20260925112826 DOC-030 contracts-c matter request 20260925112933 DOC-030 contracts-c matter request 20260925113117 DOC-030 contracts-c matter request 20260925113237 DOC-030 contracts-c matter request 20260925113332 DOC-030 admin-config V-C40 Docs Contract review 0925114526 DOC-030 admin-config V-C40 Docs Matter advice 0925114526 DOC-030 admin-config V-C40 Docs Contract review 0925114842 DOC-030 admin-config V-C40 Docs Matter advice 0925114842 DOC-030 admin-config V-C40 Docs Contract review 0925115126 DOC-030 admin-config V-C40 Docs Matter advice 0925115126 DOC-030 admin-config V-C40 Docs Contract review 0925115403 DOC-030 admin-config V-C40 Docs Matter advice 0925115403 DOC-030 admin-config V-C40 Docs Contract review 0925131603 DOC-030 admin-config V-C40 Docs Matter advice 0925131603 DOC-030 admin-config V-C40 Docs retired destination form 0925131603 DOC-030 admin-config V-C40 Docs Contract review 0925132941 DOC-030 admin-config V-C40 Docs Matter advice 0925132941 The change applies immediately and is recorded in the audit log. Cancel Archive type\"; with \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\" chosen, Archive type archived it. The Portal then listed it 0 times; R-160 reads request type \"DOC-030 admin-config V-C40 Docs Contract review 0925132941\". Show archived > Restore made it live again; it was archived again afterwards (no Requests left) so other walkers do not meet its error page.",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/notifications",
+      "action": "Set reminder lead times, steps 1-2: profile menu > Settings > Organization > Notifications shows Reminder lead times; Personal > Notifications changes only your preferences",
+      "expected": "Organization > Notifications shows the Reminder lead times list; Personal > Notifications shows Notification preferences and the personal lead time switch.",
+      "startedAt": "2026-09-25T13:25:49.357Z",
+      "at": "2026-09-25T13:25:51.642Z",
+      "actual": "Organization > Notifications opened /settings/reminders with headings [\"Personal\",\"Organization\",\"Comment emails\",\"Reminder lead times\"] and the list [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"]; the note reads \"These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time.\". Personal > Notifications opened /settings/notifications with Notification preferences and the switch \"Use the organization's default lead times\".",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/reminders",
+      "action": "Steps 3-5: Add lead time with Save; Cancel discards; a duplicate and 731 are refused; reorder with the arrow keys; Remove; reload and confirm; at most 20 entries",
+      "expected": "The new lead time is added; duplicates and 731 are refused; the reorder persists after reload; a 21st entry is refused; Remove removes an entry.",
+      "startedAt": "2026-09-25T13:25:51.650Z",
+      "at": "2026-09-25T13:26:27.207Z",
+      "actual": "Add lead time with 33 and Cancel saved nothing. 9 + Save added \"9 days before\". A second 9 stayed in the add row with \"days before the date 9 days before is already on the list. Save Cancel\"; 731 with \"days before the date Enter a whole number of days between 0 and 730. Save Cancel\". \"On the day\" (0) is on the list: true. ArrowUp moved \"9 days before\" from 6 to 5; after reload the list read [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"9 days before\",\"On the day\"]. 14 temporary entries filled the list to 20; 90 was then refused with \"days before the date The list holds at most 20 lead times. Remove one first. Save Cancel\" and the list stayed at 20. Remove took the temporary entries away again.",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Choose whether comment emails carry the words: Comment emails card, Include comment words in email, on by default; saves on change; recorded as an Administrator-only Audit log event",
+      "expected": "The switch starts on, turns off and saves, and the Audit log shows the change with an Administrator audience; it is put back on.",
+      "startedAt": "2026-09-25T13:26:27.208Z",
+      "at": "2026-09-25T13:26:32.766Z",
+      "actual": "The Comment emails card's switch started on (true); help \"Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words.\". Turning it off saved and read off after reload; it was turned back on. Audit log Search \"comment\" shows 12 of Daniel Okafor's rows, newest \"Daniel Okafor changed the organization settings commentWordsInEmail: No → Yes System Administrators this minute\".",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/208/key-dates",
+      "action": "Check delivery: two fictional Legal Team Members, one past 08:00 and one before 08:00 in their saved timezone; Key dates at listed and unlisted distances; a Key date's own lead time; run the morning round; read each bell and briefing email",
+      "expected": "The past-08:00 colleague gets one reminder per Key date at a listed distance (two Key dates on one date each remind) and for the Key date's own lead time, none at an unlisted distance; the before-08:00 colleague gets nothing yet.",
+      "startedAt": "2026-09-25T13:26:32.767Z",
+      "at": "2026-09-25T13:26:52.102Z",
+      "actual": "Invited \"DOC-030 admin-config V-C41 Reminder ready 0925132548\" (timezone Asia/Dubai, local hour 17) and \"DOC-030 admin-config V-C41 Reminder early 0925132548\" (Pacific/Honolulu, local hour 3) as Legal Team Members; each set a password from the invitation mail and saved the timezone on Profile. Each manages one Matter (M-207, M-208). Key dates on M-207: KD listed A 7 0925132548 on 2026-10-02: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD listed B 7 0925132548 on 2026-10-02: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD unlisted 11 0925132548 on 2026-10-06: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD own lead 15 0925132548 on 2026-10-10: This date will remind: 30 days before, 15 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day. The Key dates page showed the generic error page 0 times on navigation and loaded after Reload. The round ran through pg-boss job notification.morning-round queued in openlaw-docs-80ceef9e-work2-worker-1 (trigger route answered 404): {\"id\":\"4757c2cd-353f-4488-b05c-b21727ecaf73\",\"state\":\"completed\",\"output\":null}. \"DOC-030 admin-config V-C41 Reminder ready 0925132548\"'s bell items per Key date: {\"DOC-030 admin-config V-C41 KD listed A 7 0925132548\":1,\"DOC-030 admin-config V-C41 KD listed B 7 0925132548\":1,\"DOC-030 admin-config V-C41 KD unlisted 11 0925132548\":0,\"DOC-030 admin-config V-C41 KD own lead 15 0925132548\":1}; header bell \"Notifications, none unread\"; briefing mail \"Your daily briefing\" with Key date names {\"DOC-030 admin-config V-C41 KD listed A 7 0925132548\":true,\"DOC-030 admin-config V-C41 KD listed B 7 0925132548\":true,\"DOC-030 admin-config V-C41 KD unlisted 11 0925132548\":false,\"DOC-030 admin-config V-C41 KD own lead 15 0925132548\":true}. \"DOC-030 admin-config V-C41 Reminder early 0925132548\" (before 08:00): bell holds its Key date false; briefing mail none.",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "restore",
+      "page": "/settings/reminders",
+      "action": "Restore the organization lead time list (the guide's last-entry rule checked on the way) and confirm it after reload",
+      "expected": "The last entry cannot be removed; the list reads as before the walkthrough.",
+      "startedAt": "2026-09-25T13:26:52.104Z",
+      "at": "2026-09-25T13:26:54.853Z",
+      "actual": "Removed entries down to one (\"30 days before\"): no Remove control; the list kept 1 entry. The original offsets [30,14,7,1,0] were put back with PUT /api/v1/org/reminder-offsets (200); after reload the page reads [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"].",
+      "result": "pass"
+    },
+    {
+      "section": "audit",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Find a change in the Audit log, steps 1-2: Settings > Advanced > Audit log; combine Person, Action and Record",
+      "expected": "The Activity tab opens; Person Daniel Okafor plus an Action plus a Record kind narrow to matching rows only.",
+      "startedAt": "2026-09-25T13:34:35.599Z",
+      "at": "2026-09-25T13:34:38.171Z",
+      "actual": "Settings > Advanced > Audit log opened /settings/audit-log with tabs [\"Activity\",\"Tool calls\"] and columns [\"Event\",\"Record\",\"Audience\",\"When\"]. Action offered 213 choices; Record offered [\"Any record\",\"Contract\",\"Matter\",\"Document\",\"Request\",\"User\",\"Entity\",\"System\"]. Person Daniel Okafor + Action \"Matter type archived\" showed 10 rows, all by Daniel Okafor, for example \"Daniel Okafor archived the matter type DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420 System Administrators this minute\".",
+      "result": "pass"
+    },
+    {
+      "section": "audit",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Steps 3-5: From and To in the browser's local days; Search; read event, record, audience, time and before-and-after values; Show older; Clear filters",
+      "expected": "Today's bounds keep rows; yesterday's bounds remove them; Search narrows to this walk's records; Show older adds rows; Clear filters resets every filter.",
+      "startedAt": "2026-09-25T13:34:38.172Z",
+      "at": "2026-09-25T13:34:47.015Z",
+      "actual": "From/To 2026-09-25 kept 10 rows; 2026-09-24 left 0. Clear filters reset to {\"person\":\"Anyone\",\"action\":\"Any action\",\"record\":\"Any record\",\"from\":\"\",\"search\":\"\"}. Unfiltered first page 50 rows; Show older made 100. Search \"DOC-030 admin-config V-C38\" left 50 rows: 48 name this walk's records and 2 are earlier \"exported the audit log\" entries whose saved filter holds the same words; one with before-and-after values reads \"Daniel Okafor reassigned this matter's type Matter type: DOC-030 admin-config V-C38 Supplier assessment renamed 0925133420 → DOC-030 admin-config V-C38 Replacement type 0925133420 Matter M-212 · DOC-030 admin-config V-C38 Reassigned matter 0925133420 01a0d8c6-\".",
+      "result": "pass"
+    },
+    {
+      "section": "audit",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Export CSV downloads the matching entries",
+      "expected": "The file has a header and only rows that match the filter.",
+      "startedAt": "2026-09-25T13:34:47.016Z",
+      "at": "2026-09-25T13:34:48.671Z",
+      "actual": "With Person Daniel Okafor and Search \"DOC-030 admin-config V-C38\" the page showed 50 rows. Export CSV downloaded \"openlaw-audit-log-2026-09-25.csv\" with header \"\\\"id\\\",\\\"created_at\\\",\\\"action\\\",\\\"entity_type\\\",\\\"entity_id\\\",\\\"visibility\\\",\\\"actor_id\\\",\\\"actor_name\\\",\\\"actor_email\\\",\\\"payload\\\",\\\"via_kind\\\",\\\"via_id\\\",\\\"via_client_name\\\"\\r\" and 164 data lines naming this walk's records. The file was saved outside the repository and deleted.",
+      "result": "pass"
+    },
+    {
+      "section": "audit",
+      "scenario": "V-C41",
+      "role": "legal_team_member+administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Entries about a Confidential Matter appear only when the Administrator is in its audience, in the page and in Export CSV",
+      "expected": "While Nadia Haddad's Confidential Matter excludes Daniel Okafor, Search and the CSV hold none of its entries; after Nadia adds Daniel to the team they appear.",
+      "startedAt": "2026-09-25T13:34:48.674Z",
+      "at": "2026-09-25T13:34:53.164Z",
+      "actual": "Nadia Haddad created Confidential M-213 \"DOC-030 admin-config V-C41 Confidential audit 0925133420\" (API fixture as Nadia). Daniel's GET of it answered 404. Audit log Search for the title showed 0 entries and Export CSV held 0. After Nadia added Daniel Okafor through Matter team > Add team member, the same Search showed 4 rows (for example \"Nadia Haddad added Daniel Okafor to the team Matter M-213 · DOC-030 admin-config V-C41 Confidential audit 0925133420 01a0d8c6-991e-74b0-982d-68fc32bd0306 Working team this minute\") and the CSV held 4.",
+      "result": "pass"
+    },
+    {
+      "section": "audit",
+      "scenario": "V-C41",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/settings/profile",
+      "action": "Negative check: the Audit log is unavailable to other roles",
+      "expected": "Nadia Haddad (Legal Team Member) is sent away from /settings/audit-log and its Tool calls tab, and the API refuses both.",
+      "startedAt": "2026-09-25T13:34:53.166Z",
+      "at": "2026-09-25T13:34:56.886Z",
+      "actual": "/settings/audit-log -> /settings/profile; GET /api/v1/audit-log answered 403. /settings/audit-log/tool-calls -> /settings/profile; GET /api/v1/audit-log/tool-calls answered 403. Nadia's Settings rail lists [\"Profile\",\"Appearance\",\"Notifications\",\"API keys\",\"View Business Portal\"].",
+      "result": "pass"
+    },
+    {
+      "section": "toolcalls",
+      "scenario": "V-C41",
+      "role": "legal_team_member+administrator",
+      "method": "fixture-setup",
+      "page": "/settings/api-keys",
+      "action": "Fixture: one MCP Tool call through an API key that Nadia Haddad requests and Daniel Okafor approves on this lab; one Tool makes a change",
+      "expected": "MCP is on with Legal API keys allowed; the approved key connects a Client; openlaw_whoami answers; a write Tool changes a fictional record.",
+      "startedAt": "2026-09-25T13:29:13.318Z",
+      "at": "2026-09-25T13:29:14.852Z",
+      "actual": "MCP policy before: enabled false, Legal API keys false, read-only false; turned on for this step and put back afterwards. Nadia Haddad requested \"DOC-030 admin-config V-C41 Headless client 0925132851\" on Settings > API keys (Matters, read and write); Daniel Okafor approved it from the bell's Your approvals; Nadia's \"Your key is ready\" dialog showed the key once (not recorded). The SDK Client connected over /mcp with 10 Tools; openlaw_whoami answered; openlaw_matter_create answered isError=false \"{\\\"number\\\":210}\".",
+      "result": "pass"
+    },
+    {
+      "section": "toolcalls",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log/tool-calls",
+      "action": "Read Tool calls, steps 1-3: Settings > Advanced > Audit log > Tool calls; When, Person, Client, Tool, Outcome, Duration; From and To; Load more; Clear filters",
+      "expected": "The tab lists the call with Nadia Haddad, the Client name, openlaw_whoami, an outcome and a duration; the date filters narrow; Clear filters resets.",
+      "startedAt": "2026-09-25T13:29:14.853Z",
+      "at": "2026-09-25T13:29:24.280Z",
+      "actual": "Tool calls columns [\"When\",\"Person\",\"Client\",\"Tool\",\"Outcome\",\"Duration\"]. Rows for \"DOC-030 admin-config V-C41 Headless client 0925132851\": [\"Sep 25, 2026, 5:29 PM GMT+4 Nadia Haddad DOC-030 admin-config V-C41 Headless client 0925132851 openlaw_matter_create Success 14 ms\",\"Sep 25, 2026, 5:29 PM GMT+4 Nadia Haddad DOC-030 admin-config V-C41 Headless client 0925132851 openlaw_whoami Success 5 ms\"]. From/To = 2026-09-24 hid them. Load more took the table from 50 to 54 rows. Clear filters reset the dates.",
+      "result": "pass"
+    },
+    {
+      "section": "toolcalls",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Tool calls: a change a Tool made appears on the Activity tab attributed to the person via the Client; Export CSV of calls is itself recorded on the Activity tab as an Administrator-only event",
+      "expected": "Activity shows Nadia Haddad, via the Client, creating the Matter; after Export CSV an Administrator-only export entry appears.",
+      "startedAt": "2026-09-25T13:29:24.281Z",
+      "at": "2026-09-25T13:29:27.760Z",
+      "actual": "Activity Search for the Matter the Tool made reads \"Nadia Haddad, via DOC-030 admin-config V-C41 Headless client 0925132851, created this matter Matter M-210 · DOC-030 admin-config V-C41 Matter via MCP 0925132851 01a0d8c1-7f5d-7903-b3e7-f7f2be4bcf0f Working team this minu\". Tool calls Export CSV downloaded \"openlaw-tool-calls-2026-09-25.csv\" with header \"\\\"id\\\",\\\"created_at\\\",\\\"person_id\\\",\\\"person_name\\\",\\\"client_name\\\",\\\"tool\\\",\\\"outcome\\\",\\\"duration_ms\\\"\\r\" and 54 data lines (file deleted). Activity with Person Daniel Okafor and Action \"Export performed\" now shows \"Daniel Okafor exported the audit log System Administrators this minute\".",
+      "result": "pass"
+    },
+    {
+      "section": "toolcalls",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log/tool-calls?range=last-day",
+      "action": "On Settings, MCP, the Tool calls in the last day button opens the Tool calls tab filtered to the last 24 hours",
+      "expected": "The link opens /settings/audit-log/tool-calls with a last-day range and the From date set.",
+      "startedAt": "2026-09-25T13:29:27.762Z",
+      "at": "2026-09-25T13:29:30.199Z",
+      "actual": "Settings > MCP > Tool calls in the last day opened /settings/audit-log/tool-calls?range=last-day; the tab reads \"Last 24 hours: Sep 24, 2026, 5:29 PM GMT+4 to Sep 25, 2026, 5:29 PM GMT+4\" (From box \"\"); it lists 2 rows for \"DOC-030 admin-config V-C41 Headless client 0925132851\".",
+      "result": "pass"
+    },
+    {
+      "section": "toolcalls",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "restore",
+      "page": "/settings/audit-log/tool-calls?range=last-day",
+      "action": "Restore the MCP policy",
+      "expected": "The MCP policy reads as before this walk.",
+      "startedAt": "2026-09-25T13:29:30.201Z",
+      "at": "2026-09-25T13:29:30.245Z",
+      "actual": "The walk's key: POST /api/v1/api-key-requests/{id}/revoke answered 200. PATCH /api/v1/mcp-settings answered 200; MCP enabled false, Legal API keys false, read-only false, as before.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs",
+      "action": "Download a starter template: Download starter template (.docx) beside the page title on Auto-Docs",
+      "expected": "A Word file downloads with an instruction page (placeholders, bold, underline, italic, capitals, three date formats, currency, blocks) and an example services agreement with five fields and a confidentiality block.",
+      "startedAt": "2026-09-25T13:34:57.247Z",
+      "at": "2026-09-25T13:34:57.563Z",
+      "actual": "Primary navigation > Auto-Docs showed the link \"Download starter template (.docx)\" beside the title; it downloaded \"OpenLaw-Auto-Doc-Starter.docx\" (saved outside the repository and deleted). The file has a page break; the instruction page shows [\"client_name\",\"client_name|bold\",\"client_name|underline\",\"client_name|italic\",\"client_name|upper\",\"start_date|date:DD/MM/YYYY\",\"start_date|date:YYYY-MM-DD\",\"start_date|date:MMMM D, YYYY\",\"fee|currency:USD\",\"#block confidentiality\",\"/block\"]; the agreement after the break uses [\"start_date\",\"provider_name\",\"client_name\",\"services\",\"fee\"] and a confidentiality Block.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Before you start: open Auto-Docs, create an Auto-Doc, open its Form section; the file shows on the left and the form on the right; Upload version",
+      "expected": "The Form section shows an empty template pane beside the form and an Upload version button.",
+      "startedAt": "2026-09-25T13:34:57.565Z",
+      "at": "2026-09-25T13:34:57.797Z",
+      "actual": "Create Auto-Doc > Name > Create made \"DOC-030 admin-config V-C56 Member Services Agreement 0925133420\" and opened /auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b. The Form section reads \"Upload a Word file to start the form.\" with Upload version.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Upload the file with Placeholders, directives (bold, italic, underline, upper, dates, currency) and one Block; read the template pane",
+      "expected": "The upload reports the counts; the pane marks every Placeholder and Block in body, header, footer, footnote and endnote; new fields follow the pane order, body first; directives set the field types.",
+      "startedAt": "2026-09-25T13:34:57.798Z",
+      "at": "2026-09-25T13:34:58.299Z",
+      "actual": "Upload version caption \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\"; report \"File version 1: 14 Placeholders, 1 Block. 12 form fields created.\". Pane summary \"14 Placeholders, 1 Block\"; parts in order [\"Body\",\"Endnotes\",\"Footer\",\"Footnotes\",\"Header\"] with chips {\"Body\":[\"counterparty_name\",\"provider_contact\",\"provider_role\",\"provider_team\",\"signing_date\",\"start_date\",\"fee_amount\",\"governing_law\",\"arbitration_seat\"],\"Header\":[\"counterparty_name\",\"client_matter\"],\"Footer\":[\"reference_code\"],\"Footnotes\":[\"counterparty_name\"],\"Endnotes\":[\"schedule_number\"]}. Block tag \"arbitration · always\". Fields in order [\"Counterparty name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\"] (body first). Types: {\"fee_amount\":\"Currency\",\"signing_date\":\"Date\",\"provider_contact\":\"Text\",\"governing_law\":\"Text\",\"client_matter\":\"Text\"}; the header {{counterparty_name|upper}} and the bold, italic and underline Placeholders uploaded without refusal.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Edit a field from its card: select its chip, change the label and help; Template placeholder connects the field to the marker; the form follows each commit",
+      "expected": "The chip opens the card with Label, Template placeholder, Type and Help text; the Fields list follows the new label; help saves.",
+      "startedAt": "2026-09-25T13:34:58.300Z",
+      "at": "2026-09-25T13:34:59.408Z",
+      "actual": "The chip opened the card with [\"Label:1\",\"Template placeholder:1\",\"Type:1\",\"Help text:1\"]; Template placeholder reads \"counterparty_name\". Label \"Counterparty legal name\" + Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\"]…); Help text saved.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Mark a Block: open the Block under Clauses, choose When a rule matches, pick the form field, the operator and the value",
+      "expected": "Clauses notes that a Block with no rule is always included; after the rule the Block tag and Clauses row show the rule.",
+      "startedAt": "2026-09-25T13:34:59.409Z",
+      "at": "2026-09-25T13:35:01.004Z",
+      "actual": "Clauses reads \"A Block with no rule is always included.\"; Block tag \"arbitration · always\". Include offered [\"Always\",\"When a rule matches\"]; Operator offered [\"Equals\",\"Is one of\",\"Is set\",\"Is not\"]. After When a rule matches / Governing law / \"Equals\" / \"England and Wales\" the tag reads \"arbitration · when Governing law equals England and Wales\" and the row \"Included when Governing law equals England and Wales\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Negative: an unclosed Block, an unclosed brace, a bad name, an unknown directive, an unknown currency code and two directives on one Placeholder are refused and quote the text",
+      "expected": "Each upload is refused with the offending text quoted; no file version is written.",
+      "startedAt": "2026-09-25T13:35:01.006Z",
+      "at": "2026-09-25T13:35:02.030Z",
+      "actual": "Refusals: doc030-unclosed-block.docx: \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; doc030-unclosed-brace.docx: \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; doc030-bad-name.docx: \"Use a valid slug for the Placeholder or Block name: \\\"{{Counterparty-Name}}\\\"\"; doc030-bad-directive.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|lower}}\\\"\"; doc030-bad-currency.docx: \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\"; doc030-two-directives-one-placeholder.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|upper|bold}}\\\"\". The pane still reads \"File version 1\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Negative: a macro, a non-hyperlink external link, an INCLUDETEXT field and a package that expands past 32 MiB are refused with the reason named",
+      "expected": "Each upload is refused and the refusal names the reason; no file version is written.",
+      "startedAt": "2026-09-25T13:35:02.031Z",
+      "at": "2026-09-25T13:35:02.708Z",
+      "actual": "Refusals: doc030-macro.docx: \"The Word file carries a macro project (word/vbaProject.bin).\"; doc030-external-link.docx: \"The Word file has an external attachedTemplate link in word/_rels/document.xml.rels. Only hyperlinks may point outside the file.\"; doc030-includetext-field.docx: \"The Word file has a INCLUDETEXT field in word/document.xml.\"; doc030-expands-past-32mib.docx: \"The expanded Word template exceeds 32 MiB.\". The pane still reads \"File version 1\". Fixtures are fictional files built by fixtures/build-fixtures.py.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Negative: Publish refuses a field whose type cannot print its directive and names it (currency directive on a Text field)",
+      "expected": "Publish shows a refusal naming the field and the Placeholder; the Auto-Doc stays Draft.",
+      "startedAt": "2026-09-25T13:35:02.710Z",
+      "at": "2026-09-25T13:35:05.311Z",
+      "actual": "With Fee amount set to Text, Publish refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". Type was set back to Currency.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b/form",
+      "action": "Upload a new version that drops a Placeholder: the orphaned field stays, marked No Placeholder in file version N; a new Placeholder gets a new field",
+      "expected": "Signing date stays with the mark; Notice address is added.",
+      "startedAt": "2026-09-25T13:35:05.312Z",
+      "at": "2026-09-25T13:35:05.572Z",
+      "actual": "Report \"File version 2: 14 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\"; pane \"File version 2\". Fields [\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\",\"Notice address\"]; the Signing date row reads \"No Placeholder in file version 2\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-ba83-74d8-8103-64dd1595fd9b",
+      "action": "Publish pins one file version and one form version together; later edits change nothing live until you publish again",
+      "expected": "The Publish dialog offers file and form versions; after Publish the state is Published; a later edit leaves the live pair and Overview warns that a newer version exists.",
+      "startedAt": "2026-09-25T13:35:05.573Z",
+      "at": "2026-09-25T13:35:07.308Z",
+      "actual": "Publish offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\". After Publish with File version 2 the state reads Published and Overview reads \"Live since Sep 25, 2026: file version 2, form version 8.\". A later Help text edit left \"Live since Sep 25, 2026: file version 2, form version 8.\" and Overview warns \"Form version 9 is newer than the currently published form.\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e11e-7014-96ab-d929cd47096a/form",
+      "action": "Directive disagreement: one name with a date directive and a currency directive becomes a text field, and Publish names the gap",
+      "expected": "The new field is Text; Publish refuses and names the Placeholder.",
+      "startedAt": "2026-09-25T13:35:07.310Z",
+      "at": "2026-09-25T13:35:08.185Z",
+      "actual": "\"DOC-030 admin-config V-C56 Member disagreeing directives 0925133420\": upload of {{payment|currency:USD}} and {{payment|date:YYYY-MM-DD}} reported \"File version 1: 2 Placeholders, 0 Blocks. 1 form field created.\"; the Payment field's Type is \"Text\". Publish refused with \"This pair cannot be published. Set \\\"Payment\\\" to a currency or number field for Placeholder \\\"{{payment|currency:USD}}\\\". Set \\\"Payment\\\" to a date field for Placeholder \\\"{{payment|date:YYYY-MM-DD}}\\\".\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs",
+      "action": "Download a starter template: Download starter template (.docx) beside the page title on Auto-Docs",
+      "expected": "A Word file downloads with an instruction page (placeholders, bold, underline, italic, capitals, three date formats, currency, blocks) and an example services agreement with five fields and a confidentiality block.",
+      "startedAt": "2026-09-25T13:35:08.597Z",
+      "at": "2026-09-25T13:35:08.884Z",
+      "actual": "Primary navigation > Auto-Docs showed the link \"Download starter template (.docx)\" beside the title; it downloaded \"OpenLaw-Auto-Doc-Starter.docx\" (saved outside the repository and deleted). The file has a page break; the instruction page shows [\"client_name\",\"client_name|bold\",\"client_name|underline\",\"client_name|italic\",\"client_name|upper\",\"start_date|date:DD/MM/YYYY\",\"start_date|date:YYYY-MM-DD\",\"start_date|date:MMMM D, YYYY\",\"fee|currency:USD\",\"#block confidentiality\",\"/block\"]; the agreement after the break uses [\"start_date\",\"provider_name\",\"client_name\",\"services\",\"fee\"] and a confidentiality Block.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Before you start: open Auto-Docs, create an Auto-Doc, open its Form section; the file shows on the left and the form on the right; Upload version",
+      "expected": "The Form section shows an empty template pane beside the form and an Upload version button.",
+      "startedAt": "2026-09-25T13:35:08.887Z",
+      "at": "2026-09-25T13:35:09.152Z",
+      "actual": "Create Auto-Doc > Name > Create made \"DOC-030 admin-config V-C56 Admin Services Agreement 0925133420\" and opened /auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f. The Form section reads \"Upload a Word file to start the form.\" with Upload version.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Upload the file with Placeholders, directives (bold, italic, underline, upper, dates, currency) and one Block; read the template pane",
+      "expected": "The upload reports the counts; the pane marks every Placeholder and Block in body, header, footer, footnote and endnote; new fields follow the pane order, body first; directives set the field types.",
+      "startedAt": "2026-09-25T13:35:09.153Z",
+      "at": "2026-09-25T13:35:09.743Z",
+      "actual": "Upload version caption \"Each upload adds a file version. A new Placeholder gets a form field; a removed one leaves its field in place.\"; report \"File version 1: 14 Placeholders, 1 Block. 12 form fields created.\". Pane summary \"14 Placeholders, 1 Block\"; parts in order [\"Body\",\"Endnotes\",\"Footer\",\"Footnotes\",\"Header\"] with chips {\"Body\":[\"counterparty_name\",\"provider_contact\",\"provider_role\",\"provider_team\",\"signing_date\",\"start_date\",\"fee_amount\",\"governing_law\",\"arbitration_seat\"],\"Header\":[\"counterparty_name\",\"client_matter\"],\"Footer\":[\"reference_code\"],\"Footnotes\":[\"counterparty_name\"],\"Endnotes\":[\"schedule_number\"]}. Block tag \"arbitration · always\". Fields in order [\"Counterparty name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\"] (body first). Types: {\"fee_amount\":\"Currency\",\"signing_date\":\"Date\",\"provider_contact\":\"Text\",\"governing_law\":\"Text\",\"client_matter\":\"Text\"}; the header {{counterparty_name|upper}} and the bold, italic and underline Placeholders uploaded without refusal.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Edit a field from its card: select its chip, change the label and help; Template placeholder connects the field to the marker; the form follows each commit",
+      "expected": "The chip opens the card with Label, Template placeholder, Type and Help text; the Fields list follows the new label; help saves.",
+      "startedAt": "2026-09-25T13:35:09.744Z",
+      "at": "2026-09-25T13:35:10.869Z",
+      "actual": "The chip opened the card with [\"Label:1\",\"Template placeholder:1\",\"Type:1\",\"Help text:1\"]; Template placeholder reads \"counterparty_name\". Label \"Counterparty legal name\" + Enter renamed the card and the Fields list ([\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\"]…); Help text saved.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Mark a Block: open the Block under Clauses, choose When a rule matches, pick the form field, the operator and the value",
+      "expected": "Clauses notes that a Block with no rule is always included; after the rule the Block tag and Clauses row show the rule.",
+      "startedAt": "2026-09-25T13:35:10.871Z",
+      "at": "2026-09-25T13:35:12.490Z",
+      "actual": "Clauses reads \"A Block with no rule is always included.\"; Block tag \"arbitration · always\". Include offered [\"Always\",\"When a rule matches\"]; Operator offered [\"Equals\",\"Is one of\",\"Is set\",\"Is not\"]. After When a rule matches / Governing law / \"Equals\" / \"England and Wales\" the tag reads \"arbitration · when Governing law equals England and Wales\" and the row \"Included when Governing law equals England and Wales\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Negative: an unclosed Block, an unclosed brace, a bad name, an unknown directive, an unknown currency code and two directives on one Placeholder are refused and quote the text",
+      "expected": "Each upload is refused with the offending text quoted; no file version is written.",
+      "startedAt": "2026-09-25T13:35:12.492Z",
+      "at": "2026-09-25T13:35:13.479Z",
+      "actual": "Refusals: doc030-unclosed-block.docx: \"Unclosed Block: \\\"{{#block arbitration}}\\\"\"; doc030-unclosed-brace.docx: \"Unclosed Placeholder brace: \\\"{{counterparty_name on the date below.\\\"\"; doc030-bad-name.docx: \"Use a valid slug for the Placeholder or Block name: \\\"{{Counterparty-Name}}\\\"\"; doc030-bad-directive.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|lower}}\\\"\"; doc030-bad-currency.docx: \"Use a supported currency code: \\\"{{fee_amount|currency:ZZZ}}\\\"\"; doc030-two-directives-one-placeholder.docx: \"Use bold, underline, italic, upper, a supported date format, or currency with a three-letter code: \\\"{{counterparty_name|upper|bold}}\\\"\". The pane still reads \"File version 1\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Negative: a macro, a non-hyperlink external link, an INCLUDETEXT field and a package that expands past 32 MiB are refused with the reason named",
+      "expected": "Each upload is refused and the refusal names the reason; no file version is written.",
+      "startedAt": "2026-09-25T13:35:13.481Z",
+      "at": "2026-09-25T13:35:14.154Z",
+      "actual": "Refusals: doc030-macro.docx: \"The Word file carries a macro project (word/vbaProject.bin).\"; doc030-external-link.docx: \"The Word file has an external attachedTemplate link in word/_rels/document.xml.rels. Only hyperlinks may point outside the file.\"; doc030-includetext-field.docx: \"The Word file has a INCLUDETEXT field in word/document.xml.\"; doc030-expands-past-32mib.docx: \"The expanded Word template exceeds 32 MiB.\". The pane still reads \"File version 1\". Fixtures are fictional files built by fixtures/build-fixtures.py.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Negative: Publish refuses a field whose type cannot print its directive and names it (currency directive on a Text field)",
+      "expected": "Publish shows a refusal naming the field and the Placeholder; the Auto-Doc stays Draft.",
+      "startedAt": "2026-09-25T13:35:14.156Z",
+      "at": "2026-09-25T13:35:16.804Z",
+      "actual": "With Fee amount set to Text, Publish refused with \"This pair cannot be published. Set \\\"Fee amount\\\" to a currency or number field for Placeholder \\\"{{fee_amount|currency:USD}}\\\".\". Type was set back to Currency.",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f/form",
+      "action": "Upload a new version that drops a Placeholder: the orphaned field stays, marked No Placeholder in file version N; a new Placeholder gets a new field",
+      "expected": "Signing date stays with the mark; Notice address is added.",
+      "startedAt": "2026-09-25T13:35:16.805Z",
+      "at": "2026-09-25T13:35:17.042Z",
+      "actual": "Report \"File version 2: 14 Placeholders, 1 Block. 1 form field created. 1 field has no Placeholder now.\"; pane \"File version 2\". Fields [\"Counterparty legal name\",\"Provider contact\",\"Provider role\",\"Provider team\",\"Signing date\",\"Start date\",\"Fee amount\",\"Governing law\",\"Arbitration seat\",\"Schedule number\",\"Reference code\",\"Client matter\",\"Notice address\"]; the Signing date row reads \"No Placeholder in file version 2\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c6-e6c8-7000-92b8-72f1daccc65f",
+      "action": "Publish pins one file version and one form version together; later edits change nothing live until you publish again",
+      "expected": "The Publish dialog offers file and form versions; after Publish the state is Published; a later edit leaves the live pair and Overview warns that a newer version exists.",
+      "startedAt": "2026-09-25T13:35:17.043Z",
+      "at": "2026-09-25T13:35:18.790Z",
+      "actual": "Publish offered file versions [\"File version 2\",\"File version 1\"] and form versions [\"Form version 8\",\"Form version 7\",\"Form version 6\",\"Form version 5\",\"Form version 4\",\"Form version 3\",\"Form version 2\",\"Form version 1\"] with caption \"Later edits leave this pair unchanged until you publish again.\". After Publish with File version 2 the state reads Published and Overview reads \"Live since Sep 25, 2026: file version 2, form version 8.\". A later Help text edit left \"Live since Sep 25, 2026: file version 2, form version 8.\" and Overview warns \"Form version 9 is newer than the currently published form.\".",
+      "result": "pass"
+    },
+    {
+      "section": "autodoc",
+      "scenario": "V-C56",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auto-docs/01a0d8c7-0e08-721d-bb15-a621e659c8a0/form",
+      "action": "Directive disagreement: one name with a date directive and a currency directive becomes a text field, and Publish names the gap",
+      "expected": "The new field is Text; Publish refuses and names the Placeholder.",
+      "startedAt": "2026-09-25T13:35:18.792Z",
+      "at": "2026-09-25T13:35:19.617Z",
+      "actual": "\"DOC-030 admin-config V-C56 Admin disagreeing directives 0925133420\": upload of {{payment|currency:USD}} and {{payment|date:YYYY-MM-DD}} reported \"File version 1: 2 Placeholders, 0 Blocks. 1 form field created.\"; the Payment field's Type is \"Text\". Publish refused with \"This pair cannot be published. Set \\\"Payment\\\" to a currency or number field for Placeholder \\\"{{payment|currency:USD}}\\\". Set \\\"Payment\\\" to a date field for Placeholder \\\"{{payment|date:YYYY-MM-DD}}\\\".\".",
+      "result": "pass"
+    }
+  ],
+  "records": [
+    {
+      "section": "documents",
+      "kind": "matter document type",
+      "name": "DOC-030 admin-config V-C38 Board resolution 0925112257"
+    },
+    {
+      "section": "documents",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C38 Document types matter 0925112257",
+      "number": 121
+    },
+    {
+      "section": "documents",
+      "kind": "entity document type",
+      "name": "DOC-030 admin-config V-C38 Entity certificate 0925112257"
+    },
+    {
+      "section": "statuses",
+      "kind": "contract status",
+      "name": "DOC-030 admin-config V-C38 Contract status 0925112257"
+    },
+    {
+      "section": "statuses",
+      "kind": "matter status",
+      "name": "DOC-030 admin-config V-C38 Matter status 0925112257"
+    },
+    {
+      "section": "statuses",
+      "kind": "matter status",
+      "name": "DOC-030 admin-config V-C38 Matter status waiting 0925112257"
+    },
+    {
+      "section": "statuses",
+      "kind": "matter status",
+      "name": "DOC-030 admin-config V-C38 Matter status closed 0925112257"
+    },
+    {
+      "section": "statuses",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C38 Status matter 0925112257",
+      "number": 122
+    },
+    {
+      "section": "fields",
+      "kind": "matter field",
+      "name": "DOC-030 admin-config V-C38 Assessment scope 0925112257"
+    },
+    {
+      "section": "fields",
+      "kind": "matter field",
+      "name": "DOC-030 admin-config V-C38 Assessment signed off 0925112257"
+    },
+    {
+      "section": "fields",
+      "kind": "contract field",
+      "name": "DOC-030 admin-config V-C38 Supplier tier 0925112257"
+    },
+    {
+      "section": "fields",
+      "kind": "entity field",
+      "name": "DOC-030 admin-config V-C38 Registry code 0925112257"
+    },
+    {
+      "section": "form",
+      "kind": "contract type",
+      "name": "DOC-030 admin-config V-C38 Fixed-term NDA 0925113832"
+    },
+    {
+      "section": "form",
+      "kind": "contract field",
+      "name": "DOC-030 admin-config V-C38 Supplier tier form 0925113832"
+    },
+    {
+      "section": "form",
+      "kind": "contract field",
+      "name": "DOC-030 admin-config V-C38 Business contact 0925113832"
+    },
+    {
+      "section": "form",
+      "kind": "contract",
+      "name": "DOC-030 admin-config V-C38 Supplier NDA 0925113832",
+      "number": "437"
+    },
+    {
+      "section": "form",
+      "kind": "entity type",
+      "name": "DOC-030 admin-config V-C38 Entity form type 0925113832"
+    },
+    {
+      "section": "officers",
+      "kind": "officer role",
+      "name": "DOC-030 admin-config V-C38 Board observer 0925114157"
+    },
+    {
+      "section": "officers",
+      "kind": "officer role",
+      "name": "DOC-030 admin-config V-C38 Board adviser 0925114157"
+    },
+    {
+      "section": "reminders",
+      "kind": "user",
+      "name": "DOC-030 admin-config V-C41 Reminder ready 0925132548",
+      "role": "legal_team_member",
+      "timezone": "Asia/Dubai"
+    },
+    {
+      "section": "reminders",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C41 Reminder matter ready 0925132548",
+      "number": 207
+    },
+    {
+      "section": "reminders",
+      "kind": "user",
+      "name": "DOC-030 admin-config V-C41 Reminder early 0925132548",
+      "role": "legal_team_member",
+      "timezone": "Pacific/Honolulu"
+    },
+    {
+      "section": "reminders",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C41 Reminder matter early 0925132548",
+      "number": 208
+    },
+    {
+      "section": "toolcalls",
+      "kind": "api key",
+      "name": "DOC-030 admin-config V-C41 Headless client 0925132851",
+      "owner": "Nadia Haddad"
+    },
+    {
+      "section": "toolcalls",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C41 Matter via MCP 0925132851",
+      "via": "DOC-030 admin-config V-C41 Headless client 0925132851"
+    },
+    {
+      "section": "forms",
+      "kind": "contract type",
+      "name": "DOC-030 admin-config V-C40 MSA 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "contract type",
+      "name": "DOC-030 admin-config V-C40 Retired destination 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "matter type",
+      "name": "DOC-030 admin-config V-C40 Advisory 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "contract field",
+      "name": "DOC-030 admin-config V-C40 Deal value 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "matter field",
+      "name": "DOC-030 admin-config V-C40 Advice area 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-030 admin-config V-C40 Docs Contract review 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-030 admin-config V-C40 Docs Matter advice 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-030 admin-config V-C40 Docs retired destination form 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "deflection link",
+      "name": "DOC-030 admin-config V-C40 Supplier checklist 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "deflection link",
+      "name": "DOC-030 admin-config V-C40 How to ask Legal 0925132941"
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-030 admin-config V-C40 Supplier contract request 0925132941",
+      "number": 158
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-030 admin-config V-C40 Advice request 0925132941",
+      "number": 159
+    },
+    {
+      "section": "forms",
+      "kind": "contract",
+      "name": "converted",
+      "number": "526"
+    },
+    {
+      "section": "forms",
+      "kind": "matter",
+      "name": "converted",
+      "number": "211"
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-030 admin-config V-C40 Retired destination request 0925132941",
+      "number": 160
+    },
+    {
+      "section": "types",
+      "kind": "matter type",
+      "name": "DOC-030 admin-config V-C38 Supplier assessment 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "matter type",
+      "name": "DOC-030 admin-config V-C38 Replacement type 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "matter type",
+      "name": "DOC-030 admin-config V-C38 Archived probe type 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "Contracts type",
+      "name": "DOC-030 admin-config V-C38 Contracts probe type 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "Entities type",
+      "name": "DOC-030 admin-config V-C38 Entities probe type 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "Knowledge type",
+      "name": "DOC-030 admin-config V-C38 Knowledge probe type 0925133420"
+    },
+    {
+      "section": "types",
+      "kind": "matter",
+      "name": "DOC-030 admin-config V-C38 Reassigned matter 0925133420",
+      "number": 212
+    },
+    {
+      "section": "audit",
+      "kind": "matter (confidential)",
+      "name": "DOC-030 admin-config V-C41 Confidential audit 0925133420",
+      "number": 213,
+      "createdBy": "Nadia Haddad"
+    },
+    {
+      "section": "autodoc",
+      "kind": "auto-doc",
+      "name": "DOC-030 admin-config V-C56 Member Services Agreement 0925133420",
+      "role": "legal_team_member"
+    },
+    {
+      "section": "autodoc",
+      "kind": "auto-doc",
+      "name": "DOC-030 admin-config V-C56 Member disagreeing directives 0925133420",
+      "role": "legal_team_member"
+    },
+    {
+      "section": "autodoc",
+      "kind": "auto-doc",
+      "name": "DOC-030 admin-config V-C56 Admin Services Agreement 0925133420",
+      "role": "administrator"
+    },
+    {
+      "section": "autodoc",
+      "kind": "auto-doc",
+      "name": "DOC-030 admin-config V-C56 Admin disagreeing directives 0925133420",
+      "role": "administrator"
+    }
+  ],
+  "productBugs": [
+    {
+      "section": "form",
+      "scenario": "V-C38",
+      "title": "The Field archive dialog counts records holding a value as attached types",
+      "reproduction": "Attach a new Contract Field to one Contract type's Form only, create one Contract that holds a value for it, then open Archive on the Field in Settings > Contracts > Fields. The dialog read \"Archive DOC-030 admin-config V-C38 Supplier tier form 0925113832 DOC-030 admin-config V-C38 Supplier tier form 0925113832 is attached to 2 types — the attachments are kept, hidden until the field is restored. The change applies immediately and is recorded in the audit log. Cancel Archive field\".",
+      "expected": "attached to 1 type (only one type's Form holds the Field)",
+      "observed": "attached to 2 types",
+      "source": "apps/api/src/modules/fields/routes.ts attachmentCounts adds type attachments and records holding the slug; settings.contractFields.archiveWarning calls the sum types"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "title": "The Portal form shows Term type choices as machine values",
+      "reproduction": "Turn on On intake form for the built-in Term type Row on a Contract type's Form, point a Request type at it, and open that form on the Portal as a Business User. The Term type choices read [\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"].",
+      "expected": "Not set, Fixed, Auto-renew, Evergreen (the labels the Form builder preview and the Create contract dialog show)",
+      "observed": "[\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"]",
+      "source": "apps/web/src/routes/portal-request-form.tsx built-in Term type Row options"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "title": "The Portal lists a Request type whose destination type is archived, and opening it shows the generic error page",
+      "reproduction": "As the Administrator, point Request type \"DOC-030 admin-config V-C40 Docs retired destination form 0925132941\" at Contract type \"DOC-030 admin-config V-C40 Retired destination 0925132941\", then archive that Contract type (Settings > Contracts > Types > Archive). As Jonas Weber (Business User) open the Portal: the card is still listed. Select it.",
+      "expected": "Either the Portal stops listing the form, or it opens the Default type's Form (INT-002 archived target type addendum: an archived target type reads as no type), or it names the problem.",
+      "observed": "The card stays listed (1). Opening it shows \"Something went wrong. The page could not load. Reload to try again. Reload Back to Home\" with no form questions. GET /api/v1/portal/request-types/{slug} answers 400 \"This Request type needs a destination type.\".",
+      "source": "apps/api/src/lib/intake-form.ts readIntakeTree (400 This Request type needs a destination type.); apps/web/src/routes/portal-request-form.tsx loader throws for any non-404 failure; apps/api/src/modules/portal/routes.ts lists the type",
+      "confirmsAuthorSuspicion": true
+    }
+  ],
+  "guideFailures": [],
+  "finishedAt": "2026-09-25T13:35:19.619Z",
+  "images": {
+    "app": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engine": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "worker": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+  },
+  "summary": {
+    "total": 88,
+    "pass": 88,
+    "fail": 0
+  }
+}

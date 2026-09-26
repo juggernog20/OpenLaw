@@ -1,0 +1,223 @@
+{
+  "batch": "DOC-030",
+  "group": "operator",
+  "reviewer": "DOC-030 source-review author agent (operator)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:24:24Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousWalkthroughBuild": "57e77e386be31b2a319f7143dd54d00123e65efe",
+    "previousCompatibilityTarget": "432dba3a835863091791fbac429a6a66777bdc40",
+    "lastArticleEdit": "4a4b164d"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "deployment-configuration",
+      "scenario": ["V-C45", "V-C45-advanced-settings", "V-M40-LAN", "V-M41-PUBLIC"],
+      "contentSha256Before": "4aac5cc67a960ec02db974c5ae4bebe1aecae538dba7fd08f4138c7821bc8c99",
+      "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/reference.md",
+        "docs/documentation/evidence/deployment-configuration.json",
+        "compose.yml",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "docs/user-guides/install.md",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-013, SET-014)",
+        "apps/api/src/modules/advanced-settings/config.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/reset-advanced-settings.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/lib/uploads.ts",
+        "apps/api/src/lib/doc-engine/config.ts",
+        "apps/api/src/lib/notifications/vapid.ts",
+        "apps/api/src/lib/mailer.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/auth/discovery.ts",
+        "apps/api/src/auth/guards.ts",
+        "apps/api/src/mcp/calls.ts",
+        "apps/api/src/modules/mcp-settings/reachability.ts",
+        "apps/worker/src/index.ts",
+        "packages/db/src/rewrap.ts",
+        "packages/db/src/schema/api-keys.ts",
+        "services/doc-engine/src/server.ts",
+        "apps/web/src/routes/settings-advanced.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/routes/login.tsx",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Precedence between app-saved Advanced values and the deployment environment",
+          "before": "Saved values override the corresponding deployment defaults. An address saved in Advanced → Instance address overrides BASE_URL; update that saved value if one exists.",
+          "after": "The deployment environment always wins. A key set to a non-empty value in .env or the shell shows Deployment configuration · Read only, the API refuses a different value, and an earlier saved value is ignored. A saved value replaces OpenLaw's default only for a key the deployment leaves empty. BASE_URL pins Instance address.",
+          "source": "apps/api/src/modules/advanced-settings/config.ts pinnedKeys/effectiveEnvironment and routes.ts proposal/state (61ccf95f); SET-013, whose consequences name this guide sentence"
+        },
+        {
+          "claim": "Document processing address is editable in Advanced",
+          "before": "Document processing sets the document-service address and API/worker client timeouts.",
+          "after": "Names the three fields. Under the standard Compose file DOC_ENGINE_URL always has a value, so Document service address is read only; change it in .env.",
+          "source": "compose.yml DOC_ENGINE_URL: ${DOC_ENGINE_URL:-http://doc-engine:8080}; SET-013 consequences"
+        },
+        {
+          "claim": "Advanced page list and the number of editable pages",
+          "before": "Four editable pages: Instance address, File uploads, Document storage, Document processing, plus System status.",
+          "after": "Adds the MCP page with Calls per hour per credential (default 600) and OAuth grant lifetime (days) (1 to 365, default 90). Names the field labels Application address and Maximum file size (MiB).",
+          "source": "apps/web/src/routes/settings.tsx advanced group; settings-advanced.tsx labels; messages/en-US.json settings.advanced.*"
+        },
+        {
+          "claim": "https rule for saved endpoints",
+          "before": "Not stated.",
+          "after": "A saved Application address, Document service address or object-store endpoint must use https unless the host is localhost, a private IP address, or listed in OPENLAW_PLAIN_HTTP_HOSTS. Environment values are not checked.",
+          "source": "config.ts requireSecureEndpoints and isPrivateHost; SET-013"
+        },
+        {
+          "claim": "Storage save gate",
+          "before": "Select Test connection, then Save.",
+          "after": "Save stays unavailable until a test of the current values passes; the API refuses a save more than 10 minutes after the test. The test also covers local storage.",
+          "source": "routes.ts tested map (10 * 60_000) and checkDriver list starting with local; settings-advanced.tsx Save disabled while !tested"
+        },
+        {
+          "claim": "System status wording and stale rows",
+          "before": "A heartbeat older than one minute is shown as stale. Old process rows can remain stale for up to a day.",
+          "after": "A process with no heartbeat in the last minute shows No recent heartbeat and the page warns that a heartbeat is missing; a process started with a different configuration shows Restart required under Configuration. Operators check Running and Current after Refresh.",
+          "source": "routes.ts /system-status visible filter (older offline rows hidden behind a newer row of the same role); settings-advanced.tsx SettingsSystemStatusPage"
+        },
+        {
+          "claim": "Refusals the scenario asks the walkthrough to check",
+          "before": "Not stated.",
+          "after": "Lists the stale-edit 409 message, malformed or out-of-range values, a changed configured bucket or container location, an invalid pinned value blocking every Advanced save, and the Administrator-only guard (403 from the API).",
+          "source": "routes.ts proposal and requireRole('administrator'); config.ts validateSettings and preserveStorageLocations; auth/guards.ts"
+        },
+        {
+          "claim": "Recovery command sections",
+          "before": "Also accepts uploads, storage or processing.",
+          "after": "Also accepts uploads, storage, processing or mcp. Setting BASE_URL in .env is named as the first recovery for a bad saved address.",
+          "source": "apps/api/src/reset-advanced-settings.ts validates against sectionIds, which include mcp"
+        },
+        {
+          "claim": "Default app port binding",
+          "before": "Docker publishes ports on all host addresses by default. Create compose.private.yml with ports: !override to bind 127.0.0.1:3000:3000, and add it to COMPOSE_FILE.",
+          "after": "The standard Compose file publishes the app on ${APP_BIND:-127.0.0.1}:${PORT}. No overlay is needed; leave APP_BIND unset and check docker compose port app 3000 prints 127.0.0.1:3000. An existing compose.private.yml can stay but fixes the port at 3000 and ignores PORT and APP_BIND.",
+          "source": "compose.yml app ports"
+        },
+        {
+          "claim": "Proxy in a container or on another host",
+          "before": "A proxy in a container needs a reachable upstream address; restrict direct access through host/network rules.",
+          "after": "With the loopback default only a proxy on the host reaches the port. For a container or remote proxy, set APP_BIND to a reachable address, add a network rule admitting only the proxy, and set TRUSTED_PROXIES.",
+          "source": "compose.yml ports comment; .env.example APP_BIND"
+        },
+        {
+          "claim": "Trusted proxies",
+          "before": "Not stated.",
+          "after": "The proxy must overwrite X-Forwarded-For and set X-Forwarded-Proto; set TRUSTED_PROXIES to the proxy address (127.0.0.1,::1 on the same host). Without it every client shares one sign-in bucket and the app warns at start. The private VM .env example now includes it.",
+          "source": "apps/api/src/index.ts trustedProxies warning; app.ts trustProxy; .env.example TRUSTED_PROXIES; docs/DEPLOYMENT.md Trusted proxies"
+        },
+        {
+          "claim": "Setup token",
+          "before": "Not stated.",
+          "after": "SETUP_TOKEN is optional; while there are no users the app prints a new token at each start; set it to choose the token; ignored once a user exists.",
+          "source": "apps/api/src/index.ts readSetupToken; compose.yml SETUP_TOKEN"
+        },
+        {
+          "claim": "Container resource limits and engine concurrency",
+          "before": "Not stated.",
+          "after": "Adds APP_*, WORKER_* and DOC_ENGINE_* CPU, memory and process limits with their defaults, DOC_ENGINE_MAX_CONCURRENT (2) and DOC_ENGINE_MAX_QUEUED (8) with the 503 Retry-After behavior, and the rule to keep DOC_ENGINE_MEM_LIMIT above DOC_ENGINE_TMPFS_SIZE.",
+          "source": "compose.yml cpus/mem_limit/pids_limit and doc-engine environment; services/doc-engine/src/server.ts DEFAULT_MAX_CONCURRENT/DEFAULT_MAX_QUEUED"
+        },
+        {
+          "claim": "MCP limits pinned by the environment",
+          "before": "Only the OAuth grant lifetime and its env pin were described.",
+          "after": "Adds that an out-of-range pinned grant lifetime stops the app, and describes Calls per hour per credential (default 600), MCP_RATE_LIMIT_PER_HOUR as its pin, and its fallback to 600 when unusable.",
+          "source": "config.ts oauthGrantLifetimeDays called from app.ts buildApp; apps/api/src/mcp/calls.ts reserveCall fallback"
+        },
+        {
+          "claim": "What OPENLAW_SECRET_KEY encrypts",
+          "before": "Signing RSA key and HMAC secret, SMTP relay, SSO client secret, AI Saved keys, saved Advanced configuration.",
+          "after": "Adds the generated Web Push private key and an approved API key until its owner reads it once.",
+          "source": "packages/db/src/rewrap.ts SEALED_COLUMNS (vapidPrivateKey, apiKeyRequests.sealedKey)"
+        },
+        {
+          "claim": "Web Push key pair",
+          "before": "Not stated.",
+          "after": "VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY are optional; unset, OpenLaw generates and stores a pair; setting only one stops startup; use one pair for app and worker; a new pair needs browsers to enable notifications again.",
+          "source": "apps/api/src/lib/notifications/vapid.ts createVapidResolver; compose.yml x-openlaw-environment; .env.example"
+        },
+        {
+          "claim": "Upload limit unit and pin",
+          "before": "Maximum size of one upload, default 100 MB.",
+          "after": "In MiB, default 100; a set value pins File uploads. Storage variables in .env pin the matching Document storage fields.",
+          "source": "apps/api/src/lib/uploads.ts MEGABYTE = 1024 * 1024; config.ts sections"
+        },
+        {
+          "claim": "System status heartbeat rows",
+          "before": "Only No recent heartbeat is described for a stopped process.",
+          "after": "A worker that stops cleanly removes its own row instead.",
+          "source": "apps/worker/src/index.ts (stopHeartbeat on shutdown); operator walkthrough.json",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Trusted proxy log check",
+          "before": "Every recorded line should show a browser address.",
+          "after": "Ignore the 127.0.0.1 lines from the container health check.",
+          "source": "compose.yml (app healthcheck fetches http://127.0.0.1:3000/readyz every 30s)",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Storage under a wrong OPENLAW_SECRET_KEY",
+          "before": "Storage becomes the local driver.",
+          "after": "Storage uses STORAGE_DRIVER from .env, or the local driver when it is unset.",
+          "source": "apps/api/src/lib/storage/config.ts (read(env, \"STORAGE_DRIVER\") ?? DEFAULT_STORAGE_DRIVER)",
+          "correctedBy": "DOC-030 batch owner, from the operator walkthrough notes of 2026-09-25"
+        },
+        {
+          "claim": "Publicly reachable profile, step 1",
+          "before": "Set that HTTPS origin as BASE_URL, without an application subpath.",
+          "after": "Serve it on the default HTTPS port, 443. Set that HTTPS origin as BASE_URL, without a port or an application subpath. claude.ai did not reach an origin on port 8443.",
+          "source": "docs/documentation/batches/DOC-030/claude-live/walkthrough.json (guideFailures; v-m41-public.json)",
+          "correctedBy": "DOC-030 batch owner, from the claude-live walkthrough of 2026-09-25 (live claude.ai session)"
+        }
+      ],
+      "confirmed": [
+        "Compose passes the same x-openlaw-environment block and env_file .env to app and worker; doc-engine gets only DOC_ENGINE_COMPARE_TIMEOUT_MS and the concurrency pair, on the internal openlaw-doc-engine network (compose.yml).",
+        "docker compose restart keeps the existing container environment; up -d --no-build --pull never applies a changed .env (unchanged Compose behavior, walked in DOC-029r2).",
+        "An unreadable saved Advanced configuration stops API and worker startup: parseSettings throws 'Advanced settings cannot be decrypted...' from resolveAdvancedSettings in apps/api/src/index.ts and apps/worker/src/index.ts.",
+        "Saves need both processes restarted; the UI says 'Settings saved. Restart the API and worker to apply changes.' and shows 'Active: {value}' while pending (settings-advanced.tsx, messages/en-US.json).",
+        "Storage credentials are write-only: GET returns an empty value for secret keys; a blank secret keeps the stored one (routes.ts state and proposal).",
+        "Configured bucket and container location fields are locked, and a change is refused with 'An existing storage location cannot be changed or removed here...' (routes.ts locked, config.ts preserveStorageLocations).",
+        "Only Administrators reach Advanced: loaders redirect other roles and every advanced-settings route uses requireRole('administrator'), which answers 403.",
+        "MAX_UPLOAD_MB falls back to 100 at startup when unreadable (uploads.ts maxUploadBytes); DOC_ENGINE_TIMEOUT_MS above 420000 and DOC_ENGINE_COMPARE_TIMEOUT_MS above 840000 stop startup (lib/doc-engine/config.ts).",
+        "SMTP rules: SMTP_URL pins email to env; with SMTP_URL and no SMTP_FROM the wizard shows welcome.email.env.incomplete and no Send test email; sign-in hides Set up or reset your password and Email me a sign-in link; invites answer 409 naming the environment (mailer.ts, welcome.tsx, login.tsx, auth/routes.ts requireInviteMailer).",
+        "OAuth is available only for an https BASE_URL or http on localhost, [::1] or 127.0.0.0/8; the six root well-known aliases answer 404 otherwise (auth/oauth.ts authorizationServerAvailable, auth/discovery.ts).",
+        "The reachability pill checks https, an IPv4 record and public IPv4 addresses from the API and never refuses a save (mcp-settings/reachability.ts); labels Server address, Reachable and Not reachable · {checks} match messages/en-US.json.",
+        "/mcp, /mcp/uploads and /api/v1/oauth-grants/consent routes exist as listed in the Publicly reachable table (mcp/routes.ts, mcp/uploads.ts, oauth-grants/routes.ts).",
+        "AUTH_SECRET protects session signing and two-factor material; OPENLAW_SECRET_KEY_PREVIOUS is read during rotation and the API logs 'Stored credentials resealed under the key in use' (apps/api/src/index.ts).",
+        "Existing H2 and H3 headings are unchanged, so inbound links to #deploy-on-a-private-vm, #lan-only, #publicly-reachable and #serve-the-intended-origin still resolve; no redirects.json alias was needed."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the container-operation, browser-walkthrough and live-provider-check runs that V-C45, V-C45-advanced-settings, V-M40-LAN and V-M41-PUBLIC require against 067c1646.",
+        "V-C45-advanced-settings asks the walkthrough to save a document-service client setting. Under the standard Compose file the Document service address is always pinned (SET-013), so only the two timeouts can be saved in the app. A walkthrough that must save the address needs DOC_ENGINE_URL removed from the service environment, which the standard compose.yml does not allow through .env.",
+        "V-C45-advanced-settings says pending or mismatched configuration is visible in System status. The page shows Restart required per process and a missing-heartbeat warning; it does not name which setting differs.",
+        "The reset script's usage message lists only instance, uploads, storage and processing, but it accepts mcp because it validates against sectionIds. The guide documents mcp.",
+        "An invalid pinned value (for example MAX_UPLOAD_MB=ten) is used as the default fallback at startup but makes every Advanced save fail with that setting's validation message, because validateSettings checks the whole effective environment. The guide states this; it is behavior to confirm in the walkthrough.",
+        "Caddy's handling of an incoming X-Forwarded-For (replace, not append, when trusted_proxies is unset) is taken from docs/DEPLOYMENT.md and not re-checked against Caddy's own documentation in this review.",
+        "Vendor egress ranges and links in Allow vendor egress addresses were not re-checked against the vendors' current pages; that needs the live-provider check in V-M41-PUBLIC."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    "docs/user-guides/install.md (no DOC-030 group): the 'For a private VM' paragraph says 'The base Compose file otherwise publishes the app port on all host interfaces.' compose.yml now publishes on ${APP_BIND:-127.0.0.1}. Drop that sentence and point at the private VM section's TRUSTED_PROXIES entry; step 3's .env block could add TRUSTED_PROXIES=127.0.0.1,::1.",
+    "docs/DEPLOYMENT.md (operator reference, not a guide): the Configuration table lacks MCP_OAUTH_GRANT_LIFETIME_DAYS, VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY, the APP_/WORKER_/DOC_ENGINE_ CPU, memory and process limits, and DOC_ENGINE_MAX_CONCURRENT/MAX_QUEUED. 'The credential encryption key' still counts five credentials and omits the saved Advanced configuration and approved API keys awaiting their one-time read.",
+    "docs/documentation/edition.json: the publication content hash for deployment-configuration must change to 3f8cb58bd4dd3ab55bab00834a7523d022ca3967c12d70de3c3f14228664ecb6.",
+    "docs/documentation/scenarios.json and docs/documentation/evidence/deployment-configuration.json: acceptance still points at the 57e77e38 walkthrough of bytes e50a783f. They need the new walkthrough result at 067c1646."
+  ],
+  "statusChange": null
+}

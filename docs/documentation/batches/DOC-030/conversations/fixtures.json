@@ -1,0 +1,130 @@
+{
+  "stamp": "040441",
+  "fresh": {
+    "l1": {
+      "key": "l1",
+      "role": "legal_team_member",
+      "label": "Legal Own List",
+      "email": "doc030-conv-040441-l1@helix.example",
+      "displayName": "DOC-030 conversations Legal Own List 040441",
+      "id": "01a0d80b-b53e-73d0-a4b4-bd47985b6b6a"
+    },
+    "l2": {
+      "key": "l2",
+      "role": "legal_team_member",
+      "label": "Legal Los Angeles",
+      "email": "doc030-conv-040441-l2@helix.example",
+      "displayName": "DOC-030 conversations Legal Los Angeles 040441",
+      "id": "01a0d80b-bd37-7826-8b05-8706bd4e61f8"
+    },
+    "l3": {
+      "key": "l3",
+      "role": "legal_team_member",
+      "label": "Legal No Date Bell",
+      "email": "doc030-conv-040441-l3@helix.example",
+      "displayName": "DOC-030 conversations Legal No Date Bell 040441",
+      "id": "01a0d80b-c56d-7839-aced-d63ee72a1d69"
+    },
+    "a1": {
+      "key": "a1",
+      "role": "administrator",
+      "label": "Admin",
+      "email": "doc030-conv-040441-a1@helix.example",
+      "displayName": "DOC-030 conversations Admin 040441",
+      "id": "01a0d80b-ceeb-7f98-b9aa-d16efc3b56ae"
+    },
+    "b1": {
+      "key": "b1",
+      "role": "business_user",
+      "label": "Business",
+      "email": "doc030-conv-040441-b1@helix.example",
+      "id": "01a0d80b-d82d-7c31-992f-f7be0e1c0443",
+      "displayName": "DOC-030 conversations Business 040441",
+      "onboarded": true
+    }
+  },
+  "n": {
+    "request": 32,
+    "openRequest": 33,
+    "openRequestId": "01a0d80b-dc0c-7eb3-a133-04b3f864775b",
+    "contract": 55,
+    "contractId": "01a0d80b-dc4f-742e-86bb-b1ecaaa78866",
+    "title": "DOC-030 conversations notifications Contract 040441",
+    "openTitle": "DOC-030 conversations notifications open Request 040441",
+    "keyDates": {
+      "three": "2026-09-28",
+      "seven": "2026-10-02",
+      "five": "2026-09-30"
+    },
+    "today": "2026-09-25",
+    "morningReadyAt": "2026-09-25T10:27:14.524Z",
+    "bellFill": true,
+    "staffApproval": "01a0d83d-10fd-722a-9b3b-7ddbfdf0aef4",
+    "bellMore": true,
+    "bellRequest": 84,
+    "keyRequest": "01a0d83d-b240-7171-b748-a5c8c3804521",
+    "buKeyRequest": "01a0d83e-5fe8-7554-9b45-1811869b90d4",
+    "taskId": "01a0d83f-f71c-74f1-ab43-0ca65540dbac"
+  },
+  "c": {
+    "tag": "DOC-030 conversations 040441",
+    "contractRequest": 78,
+    "matterRequest": 79,
+    "openRequest": 80,
+    "archiveRequest": 81,
+    "contract": 263,
+    "matter": 68,
+    "archive": 264,
+    "contractTitle": "DOC-030 conversations 040441 Contract",
+    "matterTitle": "DOC-030 conversations 040441 Matter",
+    "openTitle": "DOC-030 conversations 040441 open Request",
+    "contractId": "01a0d82c-8501-7fb7-8e83-848099a52b5d",
+    "matterId": "01a0d82c-855b-72a1-8199-09275768448b",
+    "archiveId": "01a0d82c-85b7-7aa1-8a08-1566e6346455",
+    "openRequestId": "01a0d82c-8468-787f-99fa-c8ac2755ad02",
+    "ids": {
+      "daniel": "01a0d801-d66f-78a5-aa9a-ead5afd877c7",
+      "nadia": "01a0d801-d66d-79e8-b77d-30ed0d6b420c",
+      "jonas": "01a0d80b-d82d-7c31-992f-f7be0e1c0443",
+      "amara": "01a0d801-d9c4-7edb-a42b-02d3b336204e"
+    },
+    "bulkPosted": true,
+    "workingTeam": true,
+    "matterClosed": true,
+    "hidden": {
+      "number": 276,
+      "title": "DOC-030 conversations 040441 confidential side letter"
+    },
+    "progressPart1": true,
+    "progressPart2": true,
+    "progressDone": true,
+    "taskId": "01a0d82d-2c6a-7fd9-838b-449efcac9e40"
+  },
+  "deviceStates": {
+    "support": {
+      "sw": true,
+      "push": true,
+      "notification": true,
+      "permission": "granted"
+    },
+    "cardBefore": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+    "detailsSwitch": "true",
+    "turnOnShown": 1,
+    "cardAfter": "Devices Registration failed - permission denied Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+    "enabled": 0,
+    "subscriptions": 0,
+    "revokeButtons": 0,
+    "detailsSaved": false,
+    "deniedCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on. ",
+    "deniedPermission": "denied",
+    "portalCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on."
+  },
+  "preSendTiming": {
+    "editStatus": 200,
+    "deleteStatus": 200,
+    "mails": [
+      "You were mentioned on DOC-030 conversations notifications Contract 040441",
+      "You were mentioned on DOC-030 conversations notifications Contract 040441"
+    ]
+  }
+}

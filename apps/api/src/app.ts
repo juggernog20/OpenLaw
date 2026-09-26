@@ -600,6 +600,8 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
       deps.advancedRuntime?.active ?? effectiveEnvironment({}, emptySettings()),
       deps.mcpTools,
       { baseUrl: deps.config.baseUrl, secret: deps.config.secret },
+      deps.advancedRuntime,
+      deps.mcpResolveIpv4,
     ),
   );
   // The stream owns its full path and bypasses JSON response

@@ -1,0 +1,284 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-030",
+  "group": "contracts-a",
+  "set": "compat",
+  "walkthroughReviewer": "DOC-030 compatibility reviewer (compat)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "environment": "openlaw-docs-80ceef9e-compatcmp",
+  "appUrl": "http://127.0.0.1:43345",
+  "mailUrl": "http://127.0.0.1:48455",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:80f4c7a5e91618546dce5b4fe60cf03b14c0f9efa7e40157278d122772ced8d2"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "browser": "Playwright Chromium from e2e/node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "create-contract": "f2e0f8f483189190429de4313ffbac136c0df54aa0b90e203c1906d67fc239db",
+    "contract-stages": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+    "contract-approvals": "45c6f9161c459b95c3205a6e0d4dac5a25d9f5dec2740cf480663ac18f1b6241",
+    "manual-signing": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572"
+  },
+  "stamp": 1790331153427,
+  "startedAt": "2026-09-25T10:12:33.428Z",
+  "finishedAt": "2026-09-25T10:22:30.058Z",
+  "fixtures": [
+    {
+      "kind": "Field",
+      "name": "DOC-030 compat contracts-a Required number 1790331153427",
+      "detail": "number, business, required on the fixture type"
+    },
+    {
+      "kind": "Field",
+      "name": "DOC-030 compat contracts-a Notes 1790331153427",
+      "detail": "long text, business, optional on the fixture type"
+    },
+    {
+      "kind": "Contract type",
+      "name": "DOC-030 compat contracts-a Required type 1790331153427",
+      "detail": "created for the required-Field and Change contract type checks"
+    },
+    {
+      "kind": "Contract Status",
+      "name": "DOC-030 compat contracts-a review 1790331153427",
+      "detail": "Review Stage; renamed during V-C15; archived at the end"
+    },
+    {
+      "kind": "Approver group",
+      "name": "DOC-030 compat contracts-a sign-off 1790331153427",
+      "detail": "Marcus Oyelaran and Priya Raman; archived at the end"
+    }
+  ],
+  "records": [
+    {
+      "title": "DOC-030 compat contracts-a legal_team_member C15 1790331153427",
+      "reference": "C-59",
+      "setup": "created through the acting role's API session as a prerequisite"
+    },
+    {
+      "title": "DOC-030 compat contracts-a administrator C15 1790331153427",
+      "reference": "C-60",
+      "setup": "created through the acting role's API session as a prerequisite"
+    }
+  ],
+  "steps": [
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Nadia Haddad"],
+      "method": "browser-walkthrough",
+      "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
+      "expected": "The menu lists each Status with its Stage; each move shows the new Status beside the C- reference and the Stage display, and History records it.",
+      "startedAt": "2026-09-25T10:22:12.923Z",
+      "finishedAt": "2026-09-25T10:22:15.039Z",
+      "actual": "Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-030 compat contracts-a review 1790331153427 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-59 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad changed the status Internal review → Awaiting approval this minute Nadia Haddad changed the status Draft → Internal review this minute Nadia Haddad added Jonas Weber to the team this minute Nadia Haddad created this contract this minu\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Nadia Haddad"],
+      "method": "browser-walkthrough",
+      "action": "Move backwards and skip Stages",
+      "expected": "A move back to Review and a skip from Review to Active are both accepted.",
+      "startedAt": "2026-09-25T10:22:15.039Z",
+      "finishedAt": "2026-09-25T10:22:15.688Z",
+      "actual": "Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "method": "browser-walkthrough",
+      "action": "Negative: renaming a Status does not change its Stage",
+      "expected": "After the Administrator renames the fixture Status, the menu shows the new name with the same Review Stage and the Contract in that Status keeps Stage review.",
+      "startedAt": "2026-09-25T10:22:15.689Z",
+      "finishedAt": "2026-09-25T10:22:16.143Z",
+      "actual": "Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-030 compat contracts-a renamed by legal_team_member 1790331153427\" (a rename carrying a Stage answered 400). The Contract reads DOC-030 compat contracts-a renamed by legal_team_member 1790331153427 / review; the menu item reads \"DOC-030 compat contracts-a renamed by legal_team_member 1790331153427 Review\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
+      "expected": "Cancel keeps the current Status; Move anyway saves and History records the override; the approval is still pending.",
+      "startedAt": "2026-09-25T10:22:16.143Z",
+      "finishedAt": "2026-09-25T10:22:18.644Z",
+      "actual": "Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Nadia Haddad moved this contract past approval, overriding Daniel Okafor this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad asked Daniel Okafor\". The approval for Daniel Okafor is still pending.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Nadia Haddad"],
+      "method": "browser-walkthrough",
+      "action": "Ended Contracts stay editable",
+      "expected": "After moving to an Ended Status the record still accepts edits.",
+      "startedAt": "2026-09-25T10:22:18.644Z",
+      "finishedAt": "2026-09-25T10:22:19.162Z",
+      "actual": "Moved to Expired (Ended); Priority Critical saved on the Ended Contract.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "actors": ["Nadia Haddad", "Jonas Weber (Portal)"],
+      "method": "browser-walkthrough",
+      "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
+      "expected": "Archived: no Stage move control and a direct write is refused. Jonas in the Portal has no control and cannot change the Status. After Restore the control works.",
+      "startedAt": "2026-09-25T10:22:19.162Z",
+      "finishedAt": "2026-09-25T10:22:22.105Z",
+      "actual": "Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-59 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History",
+      "expected": "The menu lists each Status with its Stage; each move shows the new Status beside the C- reference and the Stage display, and History records it.",
+      "startedAt": "2026-09-25T10:22:22.141Z",
+      "finishedAt": "2026-09-25T10:22:23.587Z",
+      "actual": "Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-030 compat contracts-a renamed by legal_team_member 1790331153427 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-60 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor changed the status Internal review → Awaiting approval this minute Daniel Okafor changed the status Draft → Internal review this minute Daniel Okafor added Jonas Weber to the team this minute Daniel Okafor created this contract thi\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Move backwards and skip Stages",
+      "expected": "A move back to Review and a skip from Review to Active are both accepted.",
+      "startedAt": "2026-09-25T10:22:23.587Z",
+      "finishedAt": "2026-09-25T10:22:24.218Z",
+      "actual": "Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor", "Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Negative: renaming a Status does not change its Stage",
+      "expected": "After the Administrator renames the fixture Status, the menu shows the new name with the same Review Stage and the Contract in that Status keeps Stage review.",
+      "startedAt": "2026-09-25T10:22:24.219Z",
+      "finishedAt": "2026-09-25T10:22:24.626Z",
+      "actual": "Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-030 compat contracts-a renamed by administrator 1790331153427\" (a rename carrying a Stage answered 400). The Contract reads DOC-030 compat contracts-a renamed by administrator 1790331153427 / review; the menu item reads \"DOC-030 compat contracts-a renamed by administrator 1790331153427 Review\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "method": "browser-walkthrough",
+      "action": "Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override",
+      "expected": "Cancel keeps the current Status; Move anyway saves and History records the override; the approval is still pending.",
+      "startedAt": "2026-09-25T10:22:24.626Z",
+      "finishedAt": "2026-09-25T10:22:27.210Z",
+      "actual": "Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Daniel Okafor moved this contract past approval, overriding Nadia Haddad this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor asked Nadia Haddad\". The approval for Nadia Haddad is still pending.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor"],
+      "method": "browser-walkthrough",
+      "action": "Ended Contracts stay editable",
+      "expected": "After moving to an Ended Status the record still accepts edits.",
+      "startedAt": "2026-09-25T10:22:27.210Z",
+      "finishedAt": "2026-09-25T10:22:27.389Z",
+      "actual": "Moved to Expired (Ended); Priority Critical saved on the Ended Contract.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "actors": ["Daniel Okafor", "Jonas Weber (Portal)"],
+      "method": "browser-walkthrough",
+      "action": "Negative: archived records and Business Users get no Status control; Restore brings it back",
+      "expected": "Archived: no Stage move control and a direct write is refused. Jonas in the Portal has no control and cannot change the Status. After Restore the control works.",
+      "startedAt": "2026-09-25T10:22:27.389Z",
+      "finishedAt": "2026-09-25T10:22:29.917Z",
+      "actual": "Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-60 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in",
+      "context": "daniel"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in",
+      "context": "nadia"
+    },
+    {
+      "role": "legal_team_member (comparison reader and approver)",
+      "person": "Priya Raman",
+      "entry": "password sign-in",
+      "context": "priya"
+    },
+    {
+      "role": "legal_team_member (reader outside the team)",
+      "person": "Marcus Oyelaran",
+      "entry": "password sign-in",
+      "context": "marcus"
+    },
+    {
+      "role": "business_user",
+      "person": "Jonas Weber",
+      "entry": "new magic link from this lab's Mailpit, Portal sign-in",
+      "context": "jonas"
+    }
+  ],
+  "cleanup": [
+    "status DOC-030 compat contracts-a renamed by administrator 1790331153427: 200",
+    "group DOC-030 compat contracts-a sign-off 1790331153427: 200",
+    "type DOC-030 compat contracts-a Required type 1790331070483: 200",
+    "type DOC-030 compat contracts-a Required type 1790331153427: 200",
+    "field DOC-030 compat contracts-a Required number 1790331070483: 200",
+    "field DOC-030 compat contracts-a Notes 1790331070483: 200",
+    "field DOC-030 compat contracts-a Required number 1790331153427: 200",
+    "field DOC-030 compat contracts-a Notes 1790331153427: 200"
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  "batch": "DOC-030",
+  "group": "support",
+  "set": "compat",
+  "kind": "independent-article-walkthrough",
+  "reviewer": "DOC-030 compatibility reviewer (compat)",
+  "reviewerKind": "agent",
+  "appUrl": "http://127.0.0.1:43345",
+  "mailUrl": "http://127.0.0.1:48455",
+  "lab": {
+    "project": "openlaw-docs-80ceef9e-compatcmp",
+    "source": "067c1646829df85e62b809ee9157921e867c84e7",
+    "appImage": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "workerImage": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImage": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+  },
+  "articles": {
+    "troubleshooting": {
+      "path": "docs/user-guides/troubleshooting.md",
+      "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678"
+    },
+    "reference": {
+      "path": "docs/user-guides/reference.md",
+      "contentSha256": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb"
+    },
+    "versions-and-support": {
+      "path": "docs/user-guides/versions-and-support.md",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, one browser context per identity",
+  "fixtures": {
+    "stamp": "mugud8w9",
+    "confidential": {
+      "number": 85,
+      "title": "DOC-030 compat support confidential contract mugud8w9"
+    },
+    "adminConfidential": {
+      "number": 86,
+      "title": "DOC-030 compat support administrator confidential contract mugud8w9"
+    },
+    "shared": {
+      "number": 87,
+      "title": "DOC-030 compat support shared contract mugud8w9",
+      "documentId": "01a0d831-ecf9-70f3-939f-32543c788feb",
+      "folderId": "01a0d831-ed43-7517-ae70-462b4ab9e34d"
+    },
+    "knowledge": {
+      "id": "01a0d831-edbe-7a80-adde-a2e7d230eb90",
+      "title": "DOC-030 compat support Portal Knowledge mugud8w9"
+    },
+    "confidentialPortal": {
+      "number": 88,
+      "title": "DOC-030 compat support confidential portal contract mugud8w9"
+    },
+    "archived": {
+      "number": 89,
+      "title": "DOC-030 compat support archived contract mugud8w9"
+    },
+    "approval": {
+      "number": 90,
+      "title": "DOC-030 compat support approval contract mugud8w9"
+    },
+    "uploads": {
+      "number": 91,
+      "title": "DOC-030 compat support upload contract mugud8w9"
+    },
+    "files": {
+      "number": 92,
+      "title": "DOC-030 compat support file behavior contract mugud8w9"
+    },
+    "relatedMatter": {
+      "number": 38,
+      "title": "DOC-030 compat support related matter mugud8w9"
+    },
+    "entity": {
+      "id": "01a0d831-efca-71c1-9bd1-2e3dca275f03",
+      "name": "DOC-030 compat support confidential entity Ltd mugud8w9"
+    },
+    "createdAt": "2026-09-25T10:52:26.481Z",
+    "createdBy": "Nadia Haddad and Daniel Okafor API sessions, Jonas Weber Portal session"
+  },
+  "startedAt": "2026-09-25T10:40:59.106Z",
+  "steps": [
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-25T10:52:26.482Z",
+      "at": "2026-09-25T10:52:33.279Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 432dba3a835863091791fbac429a6a66777bdc40\"],[\"Distribution commit\",\"067c1646829df85e62b809ee9157921e867c84e7\"],[\"Content digest\",\"7aa97f4e534b71de907547db1e8b46fb6d8bb9748447717885300be90c8cc1b2\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation. Screenshot docs/documentation/batches/DOC-030/compat/versions-and-support-replay/doc030-admin-edition-details.png.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-25T10:52:33.279Z",
+      "at": "2026-09-25T10:52:39.020Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-25T10:52:39.020Z",
+      "at": "2026-09-25T10:52:45.313Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-25T10:52:45.313Z",
+      "at": "2026-09-25T10:52:50.774Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-25T10:52:50.775Z",
+      "at": "2026-09-25T10:52:57.414Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 432dba3a835863091791fbac429a6a66777bdc40\"],[\"Distribution commit\",\"067c1646829df85e62b809ee9157921e867c84e7\"],[\"Content digest\",\"7aa97f4e534b71de907547db1e8b46fb6d8bb9748447717885300be90c8cc1b2\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-25T10:52:57.416Z",
+      "at": "2026-09-25T10:53:03.004Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-25T10:53:03.006Z",
+      "at": "2026-09-25T10:53:09.260Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-25T10:53:09.261Z",
+      "at": "2026-09-25T10:53:14.531Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-25T10:53:14.532Z",
+      "at": "2026-09-25T10:53:20.996Z",
+      "actual": "Header Help worked; /portal/help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.0.1 / 432dba3a835863091791fbac429a6a66777bdc40\"],[\"Distribution commit\",\"067c1646829df85e62b809ee9157921e867c84e7\"],[\"Content digest\",\"7aa97f4e534b71de907547db1e8b46fb6d8bb9748447717885300be90c8cc1b2\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-25T10:53:20.996Z",
+      "at": "2026-09-25T10:53:26.591Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-25T10:53:26.592Z",
+      "at": "2026-09-25T10:53:32.841Z",
+      "actual": "/portal/help/configure-analysis showed \"Configure the AI connector and Field prompts\" with Read this article in the full documentation, which opened /documentation/configure-analysis (\"Configure the AI connector and Field prompts\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-25T10:53:32.842Z",
+      "at": "2026-09-25T10:53:38.071Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed-out reading, standalone edition, and an offline copy with and without JavaScript",
+      "expected": "Formal documentation reads signed out; Open standalone edition loads; the downloaded edition extracts and its index and prose open from disk offline, with and without JavaScript.",
+      "startedAt": "2026-09-25T10:53:38.071Z",
+      "at": "2026-09-25T10:53:43.112Z",
+      "actual": "Signed out, /documentation/versions-and-support showed \"Find version information and get help\" (app API calls []). Download standalone edition gave openlaw-documentation.tar.gz (377145 bytes). Open standalone edition (/documentation-export/index.html) served \"Documentation · OpenLaw\". The archive extracted to an index at index.html. In an offline context from file://, with JavaScript the index and the support article read; without JavaScript the index read (search notice shown: true) and the article prose included \"Report a product defect or documentation correction\".",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Links in the reviewed versions-and-support and troubleshooting bytes resolve",
+      "expected": "Every internal link and anchor opens in the bundled edition.",
+      "startedAt": "2026-09-25T10:53:43.113Z",
+      "at": "2026-09-25T10:54:44.413Z",
+      "actual": "versions-and-support: 10 internal targets from the reviewed bytes all opened in /documentation: [\"upgrade\",\"roles-and-access\",\"contributor-guide\",\"document-previews\",\"contract-approvals\",\"electronic-signing\",\"contract-analysis\",\"notifications\",\"troubleshooting\",\"operator-troubleshooting\"]. troubleshooting: 24 internal targets from the reviewed bytes all opened in /documentation: [\"operator-troubleshooting\",\"staff-sign-in\",\"portal-sign-in\",\"authentication-and-email\",\"search-and-views\",\"roles-and-access\",\"follow-request\",\"portal-knowledge\",\"contributor-guide\",\"types-statuses-fields\",\"document-versions\",\"contributor-guide#work-with-documents\",\"reference#file-behavior-and-limits\",\"document-previews\",\"notifications\",\"contract-approvals#approve-from-the-business-portal\",\"contract-approvals\",\"electronic-signing\",\"manual-signing\",\"contract-analysis\",\"configure-analysis#request-conversion-switches\",\"connect-headless-client#fix-a-connection-or-stop-access\",\"connect-claude#disconnect-or-fix-a-connection\",\"versions-and-support\"].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check the relevant limitation: Administrators need named access to Confidential Contracts",
+      "expected": "The Administrator without a team entry or Legal Owner role gets Contract not found for a Confidential Contract.",
+      "startedAt": "2026-09-25T10:54:44.413Z",
+      "at": "2026-09-25T10:54:46.435Z",
+      "actual": "Daniel opened Confidential C-85 and saw \"Contract not found\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:54:46.478Z",
+  "edition": {
+    "Edition details": "documentation-development (Development)",
+    "Supported app": "0.0.1 / 432dba3a835863091791fbac429a6a66777bdc40",
+    "Distribution commit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "Content digest": "7aa97f4e534b71de907547db1e8b46fb6d8bb9748447717885300be90c8cc1b2",
+    "Publication target": "development-app"
+  },
+  "summary": {
+    "total": 15,
+    "pass": 15,
+    "fail": 0
+  }
+}

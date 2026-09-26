@@ -1,0 +1,48 @@
+{
+  "section": "guards",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2w",
+  "labProject": "openlaw-docs-80ceef9e-auth2w",
+  "appUrl": "http://127.0.0.1:43311",
+  "mailUrl": "http://127.0.0.1:48436",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "stored (overlay-mail-stored.json)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:23:06.471Z",
+  "steps": [
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/users",
+      "action": "Last Administrator safeguard: the only active Administrator cannot be demoted, and archiving that account is refused",
+      "expected": "\"You cannot demote the last Administrator.\" and \"You cannot archive the last Administrator.\"",
+      "startedAt": "2026-09-25T10:23:06.943Z",
+      "finishedAt": "2026-09-25T10:23:07.239Z",
+      "actual": "On auth2w DOC-030 admin-org Avery Morgan is the only active Administrator (1). Choosing Legal team member on the own row showed \"You cannot demote the last Administrator.\" and the role stayed administrator. The own row has no Archive and no … button, so the archive refusal was read from the archive route: 409 \"You cannot archive the last Administrator.\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2w",
+      "page": "http://127.0.0.1:43311/settings/users",
+      "action": "Show archived appears once at least one account is archived; archive and restore a colleague",
+      "expected": "No switch before; switch after; Restore returns the row to Active",
+      "startedAt": "2026-09-25T10:23:07.258Z",
+      "finishedAt": "2026-09-25T10:23:08.603Z",
+      "actual": "With no archived accounts, the Users header had 0 Show archived switch. After DOC-030 admin-org V-C36 Jordan set a password, signed in and was archived, the switch appeared (1) and the colleague's session answered 401. Restore showed \"Saved\" and the row read Active.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:23:08.614Z"
+}

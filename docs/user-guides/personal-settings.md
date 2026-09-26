@@ -2,17 +2,19 @@
 
 Change your own profile, appearance, and sessions. These steps apply to Administrators and Legal Team Members in the app.
 
+**Personal** in Settings lists **Profile**, **Appearance**, **Notifications**, and **API keys**, then **View Business Portal**. Use **API keys** to request a key for a headless Client. See [Connect a headless Client](connect-headless-client.md#request-and-collect-your-key).
+
 ## Update your profile
 
 1. Open your name menu in the header and select **Settings**.
 2. Open **Profile** under **Personal**.
-3. Edit **Full name**, then leave the field to save it.
+3. Edit **Full name**, then press Enter or leave the field to save it.
 4. In **Timezone**, search for and select the zone you need. Choose **Use browser timezone** to remove your explicit preference.
-5. Wait for the saved result, then reload to check the values.
+5. Wait for **Saved**, then reload to check the values.
 
-To change your photo, select **Upload** in **Profile photo** and choose a JPG or PNG no larger than 1 MB. Wait for it to save. If an update fails, check the file or value and try again before leaving the page.
+To change your photo, select **Upload** in **Profile photo** and choose a JPG or PNG file up to 10 MB. The hint says **JPG or PNG, up to 10 MB. Resized automatically.** Your browser scales the photo down before OpenLaw saves it, so a large photo is accepted. Wait for **Saved**, which shows briefly. A larger file shows **Choose a photo smaller than 10 MB.** Another file type shows **Choose a JPG or PNG photo.** If an update fails, check the file or value and try again before leaving the page.
 
-Email and Role are read-only here. Ask an Administrator about account access or role changes. Your name, photo, timezone, and theme changes do not change another person's preferences.
+Email and Role are read-only here. The **More information** icon beside **Role** says **Roles are managed in Organization → Users.** Ask an Administrator about account access or role changes. Your name, photo, timezone, and theme changes do not change another person's preferences.
 
 ## Choose a theme
 

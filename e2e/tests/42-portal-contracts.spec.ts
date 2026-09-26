@@ -111,6 +111,11 @@ test("Business Owner joins the team, and membership grants revocable Portal work
     await expect(businessOwner).toHaveAttribute("title", owner.displayName);
     await expect(legalOwner).toHaveAttribute("title", "Unassigned");
     await expect.poll(async () => (await portal.request.get(portalPath)).status()).toBe(200);
+    // The two owners have their own Owners section above the Fields
+    // rows, Legal Owner first. Our entity keeps its full width below them.
+    const owners = page.getByRole("region", { name: "Owners", exact: true });
+    await expect(owners.getByRole("button", { name: "Legal Owner", exact: true })).toBeVisible();
+    await expect(owners.getByRole("button", { name: "Business Owner", exact: true })).toBeVisible();
     const businessBox = await businessOwner.boundingBox();
     const legalBox = await legalOwner.boundingBox();
     const entityBox = await page.getByLabel("Our entity", { exact: true }).boundingBox();

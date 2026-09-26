@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Existing 0173 launch correlations survive the timestamp expansion. */
+/** Existing 0174 launch correlations survive the timestamp expansion. */
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { envelopeLaunches, eq, runMigrations, sql } from "@openlaw/db";
@@ -14,10 +14,10 @@ afterAll(async () => {
   await container?.stop();
 });
 
-it("preserves existing correlations and records subsequent consumption after upgrading 0173", async () => {
+it("preserves existing correlations and records subsequent consumption after upgrading 0174", async () => {
   const db = await freshDb(container, "launch_timestamps");
   try {
-    await migrateThrough(db, "0173_envelope-launch-return", migrationEntries());
+    await migrateThrough(db, "0174_envelope-launch-return", migrationEntries());
     await db.execute(sql`insert into users (id, email, display_name, role)
       values ('preparer', 'preparer@example.test', 'Preparer', 'legal_team_member')`);
     await db.execute(sql`insert into contracts (id, title, contract_type_id, status_id)

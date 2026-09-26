@@ -1,0 +1,2335 @@
+{
+  "batch": "DOC-030",
+  "group": "operator",
+  "article": "deployment-configuration",
+  "basedOn": "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-2.mjs",
+  "reviewer": "DOC-030 independent walkthrough agent (operator)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "projects": [
+    "openlaw-doc030-cfg-1",
+    "openlaw-doc030-cfg-fx",
+    "openlaw-doc030-cfg-2",
+    "openlaw-doc030-cfg-fx2"
+  ],
+  "origin": "https://openlaw-cfg.localhost:25711",
+  "privateOrigin": "https://openlaw-cfg.company.example:25716",
+  "localAddress": "http://127.0.0.1:25710",
+  "note": "Container-operation and browser walkthrough by an agent, not a human operator study. Commands ran against disposable Compose projects owned by this walkthrough, built from no new images: the app and engine images are the ones lab.mjs built from the pinned commit, tagged for this project. Secrets, cookies, API keys, mail bodies and links are not recorded; command output is reduced to exit codes and selected sanitized lines.",
+  "images": {
+    "app": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "worker": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "doc-engine": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "tags": {
+      "app": "openlaw-doc030-cfg-app:067c1646829df85e62b809ee9157921e867c84e7",
+      "engine": "openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7"
+    },
+    "builtBy": "scripts/documentation/lab.mjs up from 067c1646 (the work2 lab's images); tagged, not rebuilt",
+    "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+  },
+  "articleHashes": {
+    "deployment-configuration": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b"
+  },
+  "runs": [
+    {
+      "phase": "prep",
+      "startedAt": "2026-09-25T11:24:00.873Z",
+      "completedAt": "2026-09-25T11:24:01.516Z"
+    },
+    {
+      "phase": "fixtures",
+      "startedAt": "2026-09-25T11:24:05.193Z",
+      "completedAt": "2026-09-25T11:24:21.920Z"
+    },
+    {
+      "phase": "firstrun",
+      "startedAt": "2026-09-25T11:24:27.588Z",
+      "completedAt": "2026-09-25T11:26:02.052Z"
+    },
+    {
+      "phase": "accept",
+      "startedAt": "2026-09-25T11:26:25.325Z",
+      "completedAt": "2026-09-25T11:26:55.902Z"
+    },
+    {
+      "phase": "accept",
+      "startedAt": "2026-09-25T11:27:03.362Z",
+      "completedAt": "2026-09-25T11:27:34.322Z"
+    },
+    {
+      "phase": "accept",
+      "startedAt": "2026-09-25T11:27:55.202Z",
+      "completedAt": "2026-09-25T11:28:26.174Z"
+    },
+    {
+      "phase": "accept",
+      "startedAt": "2026-09-25T11:28:36.915Z",
+      "completedAt": "2026-09-25T11:28:52.324Z"
+    },
+    {
+      "phase": "proxy",
+      "startedAt": "2026-09-25T11:29:41.053Z",
+      "completedAt": "2026-09-25T11:30:10.784Z"
+    },
+    {
+      "phase": "proxy-diagnose",
+      "startedAt": "2026-09-25T11:30:24.793Z",
+      "completedAt": "2026-09-25T11:30:40.313Z"
+    },
+    {
+      "phase": "proxy-diagnose",
+      "startedAt": "2026-09-25T11:30:49.024Z",
+      "completedAt": "2026-09-25T11:31:05.608Z"
+    },
+    {
+      "phase": "origin",
+      "startedAt": "2026-09-25T11:32:22.525Z",
+      "completedAt": "2026-09-25T11:32:51.828Z"
+    },
+    {
+      "phase": "origin-upload",
+      "startedAt": "2026-09-25T11:33:16.670Z",
+      "completedAt": "2026-09-25T11:33:16.864Z"
+    },
+    {
+      "phase": "origin-upload",
+      "startedAt": "2026-09-25T11:33:29.935Z",
+      "completedAt": "2026-09-25T11:33:30.095Z"
+    },
+    {
+      "phase": "origin-upload",
+      "startedAt": "2026-09-25T11:33:39.424Z",
+      "completedAt": "2026-09-25T11:33:59.040Z"
+    },
+    {
+      "phase": "uploads",
+      "startedAt": "2026-09-25T11:34:03.127Z",
+      "completedAt": "2026-09-25T11:35:14.604Z"
+    },
+    {
+      "phase": "advanced",
+      "startedAt": "2026-09-25T11:37:44.525Z",
+      "completedAt": "2026-09-25T11:40:38.662Z"
+    },
+    {
+      "phase": "advanced-nav",
+      "startedAt": "2026-09-25T11:41:08.990Z",
+      "completedAt": "2026-09-25T11:41:11.852Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "startedAt": "2026-09-25T11:41:12.516Z",
+      "completedAt": "2026-09-25T11:44:20.592Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "startedAt": "2026-09-25T11:45:00.340Z",
+      "completedAt": "2026-09-25T11:48:07.676Z"
+    },
+    {
+      "phase": "nonadmin",
+      "startedAt": "2026-09-25T11:48:12.386Z",
+      "completedAt": "2026-09-25T11:48:18.524Z"
+    },
+    {
+      "phase": "storage",
+      "startedAt": "2026-09-25T11:49:27.512Z",
+      "completedAt": "2026-09-25T11:50:44.983Z"
+    },
+    {
+      "phase": "storage-recheck",
+      "startedAt": "2026-09-25T11:51:05.453Z",
+      "completedAt": "2026-09-25T11:51:35.948Z"
+    },
+    {
+      "phase": "storage-recheck",
+      "startedAt": "2026-09-25T11:51:45.869Z",
+      "completedAt": "2026-09-25T11:51:47.881Z"
+    },
+    {
+      "phase": "instance",
+      "startedAt": "2026-09-25T13:17:04.803Z",
+      "completedAt": "2026-09-25T13:19:35.117Z"
+    },
+    {
+      "phase": "instance-link",
+      "startedAt": "2026-09-25T13:19:52.648Z",
+      "completedAt": "2026-09-25T13:22:15.636Z"
+    },
+    {
+      "phase": "instance-link",
+      "startedAt": "2026-09-25T13:22:50.498Z",
+      "completedAt": "2026-09-25T13:24:35.503Z"
+    },
+    {
+      "phase": "engine",
+      "startedAt": "2026-09-25T13:24:40.034Z",
+      "completedAt": "2026-09-25T13:28:19.417Z"
+    },
+    {
+      "phase": "limits",
+      "startedAt": "2026-09-25T13:28:32.683Z",
+      "completedAt": "2026-09-25T13:28:59.332Z"
+    },
+    {
+      "phase": "storage-ttl",
+      "startedAt": "2026-09-25T13:29:04.710Z",
+      "completedAt": "2026-09-25T13:39:35.250Z"
+    },
+    {
+      "phase": "trusted-proxy",
+      "startedAt": "2026-09-25T13:39:40.410Z",
+      "completedAt": "2026-09-25T13:46:23.620Z"
+    },
+    {
+      "phase": "trusted-proxy-note",
+      "startedAt": "2026-09-25T13:47:02.724Z",
+      "completedAt": "2026-09-25T13:48:07.797Z"
+    },
+    {
+      "phase": "keys",
+      "startedAt": "2026-09-25T13:48:12.844Z",
+      "completedAt": "2026-09-25T13:50:13.287Z"
+    },
+    {
+      "phase": "wrong-key-note",
+      "startedAt": "2026-09-25T13:50:35.064Z",
+      "completedAt": "2026-09-25T13:50:35.068Z"
+    },
+    {
+      "phase": "auth-secret",
+      "startedAt": "2026-09-25T13:50:35.270Z",
+      "completedAt": "2026-09-25T13:51:03.237Z"
+    },
+    {
+      "phase": "vapid",
+      "startedAt": "2026-09-25T13:51:03.492Z",
+      "completedAt": "2026-09-25T13:51:44.743Z"
+    },
+    {
+      "phase": "mail",
+      "startedAt": "2026-09-25T13:51:50.387Z",
+      "completedAt": "2026-09-25T13:52:52.118Z"
+    },
+    {
+      "phase": "resend",
+      "startedAt": "2026-09-25T13:53:14.067Z",
+      "completedAt": "2026-09-25T13:53:48.147Z"
+    },
+    {
+      "phase": "database",
+      "startedAt": "2026-09-25T13:53:53.099Z",
+      "completedAt": "2026-09-25T13:55:27.756Z"
+    },
+    {
+      "phase": "lan-setup",
+      "startedAt": "2026-09-25T13:55:33.133Z",
+      "completedAt": "2026-09-25T13:56:48.009Z"
+    },
+    {
+      "phase": "lan-keys",
+      "startedAt": "2026-09-25T14:06:07.109Z",
+      "completedAt": "2026-09-25T14:06:30.842Z"
+    },
+    {
+      "phase": "lan-keys",
+      "startedAt": "2026-09-25T14:06:48.980Z",
+      "completedAt": "2026-09-25T14:07:07.593Z"
+    },
+    {
+      "phase": "m41-https",
+      "startedAt": "2026-09-25T14:07:15.141Z",
+      "completedAt": "2026-09-25T14:07:18.095Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:07:23.408Z",
+      "completedAt": "2026-09-25T14:07:56.255Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:08:20.395Z",
+      "completedAt": "2026-09-25T14:08:23.989Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:09:07.487Z",
+      "completedAt": "2026-09-25T14:09:40.563Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:09:51.428Z",
+      "completedAt": "2026-09-25T14:09:58.345Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:10:40.789Z",
+      "completedAt": "2026-09-25T14:10:45.840Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "startedAt": "2026-09-25T14:10:54.947Z",
+      "completedAt": "2026-09-25T14:11:04.981Z"
+    },
+    {
+      "phase": "m41-plain",
+      "startedAt": "2026-09-25T14:11:47.745Z",
+      "completedAt": "2026-09-25T14:12:27.858Z"
+    },
+    {
+      "phase": "m41-plain-detail",
+      "startedAt": "2026-09-25T14:12:45.945Z",
+      "completedAt": "2026-09-25T14:13:14.914Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "startedAt": "2026-09-25T14:13:21.206Z",
+      "completedAt": "2026-09-25T14:14:45.907Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "startedAt": "2026-09-25T14:23:52.338Z",
+      "completedAt": "2026-09-25T14:24:00.446Z"
+    },
+    {
+      "phase": "lan-pins",
+      "startedAt": "2026-09-25T14:24:05.367Z",
+      "completedAt": "2026-09-25T14:25:21.579Z"
+    },
+    {
+      "phase": "lan-pins",
+      "startedAt": "2026-09-25T14:45:26.845Z",
+      "completedAt": "2026-09-25T14:47:22.040Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "startedAt": "2026-09-25T14:55:54.708Z",
+      "completedAt": "2026-09-25T14:55:57.001Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "startedAt": "2026-09-25T14:56:06.852Z",
+      "completedAt": "2026-09-25T14:56:11.310Z"
+    },
+    {
+      "phase": "topology",
+      "startedAt": "2026-09-25T14:56:39.161Z",
+      "completedAt": "2026-09-25T14:56:39.447Z"
+    },
+    {
+      "phase": "vendor-lists",
+      "startedAt": "2026-09-25T14:56:39.669Z",
+      "completedAt": "2026-09-25T14:56:47.586Z"
+    },
+    {
+      "phase": "r2-setup",
+      "startedAt": "2026-09-25T20:32:07.744Z",
+      "completedAt": "2026-09-25T20:38:09.148Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "startedAt": "2026-09-25T20:38:41.649Z",
+      "completedAt": "2026-09-25T20:40:23.784Z"
+    },
+    {
+      "phase": "r2-status",
+      "startedAt": "2026-09-25T20:40:30.614Z",
+      "completedAt": "2026-09-25T20:42:40.954Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "startedAt": "2026-09-25T20:42:41.579Z",
+      "completedAt": "2026-09-25T20:53:21.455Z"
+    },
+    {
+      "phase": "r2-status",
+      "startedAt": "2026-09-25T21:03:23.765Z",
+      "completedAt": "2026-09-25T21:05:04.213Z"
+    },
+    {
+      "phase": "r2-wrongkey",
+      "startedAt": "2026-09-25T21:05:09.098Z",
+      "completedAt": "2026-09-25T21:06:07.731Z"
+    }
+  ],
+  "steps": [
+    {
+      "phase": "prep",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare a production-like installation directory from the pinned commit, as install.md establishes it",
+      "expected": "A directory with the pinned source, a .env made by the installation guide's grouped commands, the project name and file list in .env, and a compose.operator.yml naming revision-tagged images.",
+      "actual": "git archive of 067c1646829df85e62b809ee9157921e867c84e7 extracted into the installation directory (outside the repository). install.md's grouped .env commands exited 0; .env has mode 600 with two generated keys (not recorded). .env has COMPOSE_PROJECT_NAME=openlaw-doc030-cfg-1, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7, OPENLAW_BUILD_DIRTY=false, BASE_URL=https://openlaw-cfg.localhost:25711, PORT=25710. No TRUSTED_PROXIES yet, to see the start warning first. compose.operator.yml names openlaw-doc030-cfg-app:067c1646829df85e62b809ee9157921e867c84e7 and openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7, which are sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba and sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, both labelled revision 067c1646829df85e62b809ee9157921e867c84e7. docker compose config --quiet exited 0 and printed nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:24:00.874Z",
+      "at": "2026-09-25T11:24:01.515Z"
+    },
+    {
+      "phase": "fixtures",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start the installation, then owned fixtures: an SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and Caddy on the host",
+      "expected": "docker compose up -d --no-build --pull never starts app, worker, postgres and doc-engine; readyz answers 200; the fixture project joins the installation's backend network without changing its services.",
+      "actual": "up -d --no-build --pull never exited 0; readyz 200; docker compose ps: app running; doc-engine running; postgres running; worker running. Fixture project openlaw-doc030-cfg-fx started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI 127.0.0.1:25713), MinIO (127.0.0.1:25714, alias minio), Azurite (127.0.0.1:25715, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving https://openlaw-cfg.localhost:25711 with \"reverse_proxy 127.0.0.1:25710\" and its internal CA. Fixture image IDs: {\"relay\":\"sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0\",\"minio\":\"sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9\",\"azurite\":\"sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1\",\"extdb\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\",\"proxy\":\"sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:24:05.194Z",
+      "at": "2026-09-25T11:24:21.920Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SETUP_TOKEN unset: restart the app twice while the installation has no users and compare the printed tokens",
+      "expected": "While there are no users the app prints a setup token at each start, and each start prints a new one.",
+      "actual": "Two docker compose restart app runs each logged \"First-run setup is open. Paste this setup token into the setup screen:\" with a token (values not recorded) and \"It is printed once per boot and a restart makes a new one.\" The two tokens differ (SHA-256 prefixes 6e3e9717 and 23e8482e).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:24:27.589Z",
+      "at": "2026-09-25T11:24:53.979Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start without TRUSTED_PROXIES and read the app's start log",
+      "expected": "Without TRUSTED_PROXIES the app logs a warning at start.",
+      "actual": "The app log carries \"TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:24:53.980Z",
+      "at": "2026-09-25T11:24:54.043Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SETUP_TOKEN in .env, recreate with up -d --no-build --pull never, and check the setup screen accepts only that token",
+      "expected": "The app logs that setup asks for SETUP_TOKEN; the previously printed token is refused; the chosen token creates the first Administrator.",
+      "actual": "After up, the app logged \"First-run setup is open. The setup screen asks for the token in SETUP_TOKEN.\" and printed no generated token. On https://openlaw-cfg.localhost:25711 the \"Set up OpenLaw\" form with the earlier printed token showed \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\" and stayed on setup. With the SETUP_TOKEN value, Create Administrator created the fictional Avery Morgan and opened \"Welcome to OpenLaw\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:24:54.044Z",
+      "at": "2026-09-25T11:25:09.987Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restart with SETUP_TOKEN still set after a user exists",
+      "expected": "The app ignores SETUP_TOKEN once a user exists: no setup line in the log, and setup is closed.",
+      "actual": "After docker compose restart app with SETUP_TOKEN still in .env, the log had no \"First-run setup is open\" line and GET /api/v1/auth/setup answered needsSetup=false. SETUP_TOKEN was then removed from .env.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:25:09.988Z",
+      "at": "2026-09-25T11:25:22.648Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Complete the welcome wizard with an app-saved relay (fixture for the email and key checks)",
+      "expected": "The relay saved in the wizard delivers a test email; the wizard finishes.",
+      "actual": "Wizard: organization \"DOC-030 operator Organization\"; Outbound email relay \"relay\", port 1025, no TLS, no authentication, sender openlaw@doc030-cfg.example; Send test email delivered \"OpenLaw test email\". The invitation to the fictional Rowan Operator arrived with a link on [redacted]. Finish entered /.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:25:23.351Z",
+      "at": "2026-09-25T11:25:31.787Z"
+    },
+    {
+      "phase": "firstrun",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Accept the colleague's invitation through the proxy origin and set a password",
+      "expected": "The invitation link on the configured origin sets a password and signs the Legal Team Member in.",
+      "actual": "Check did not pass: locator.fill: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByLabel(/^(New password|Password)$/).first()\u001b[22m \u001b[2m    - locator resolved to <input disabled required=\"\" id=\"password\" minlength=\"8\" type=\"password\" name=\"password\" autocomplete=\"new-password\" class=\"h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50\"/>\u001b[22m \u001b[2m    - fill(\"[redacted]\")\u001b[22m \u001b[2m  - attempting fill action\u001b[22m \u001b[2m    2 × waiting for element to be visible, enabled and editable\u001b[22m \u001b[2m      - element is not enabled\u001b[22m",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:25:31.788Z",
+      "at": "2026-09-25T11:26:02.008Z"
+    },
+    {
+      "phase": "accept",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Accept the colleague's invitation through the proxy origin and set a password",
+      "expected": "The invitation link on the configured origin sets a password and signs the Legal Team Member in.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:26:25.326Z",
+      "at": "2026-09-25T11:26:55.901Z"
+    },
+    {
+      "phase": "accept",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Accept the colleague's invitation through the proxy origin and set a password",
+      "expected": "The invitation link on the configured origin sets a password and signs the Legal Team Member in.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByText('Password set').first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:27:03.363Z",
+      "at": "2026-09-25T11:27:34.321Z"
+    },
+    {
+      "phase": "accept",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Accept the colleague's invitation through the proxy origin and set a password",
+      "expected": "The invitation link on the configured origin sets a password and signs the Legal Team Member in.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByText('Password set').first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:27:55.203Z",
+      "at": "2026-09-25T11:28:26.173Z"
+    },
+    {
+      "phase": "accept",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Accept the colleague's invitation through the proxy origin and set a password",
+      "expected": "The invitation link on the configured origin sets a password and signs the Legal Team Member in.",
+      "actual": "The first attempt (logged above as failed) had already set the password: it waited for a page change, but the page stays on /auth/set-password and shows \"Password set\". The Legal Team Member now signs in through the proxy with that password (HTTP 200). Opening the same invitation link again shows \"no message\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:36.916Z",
+      "at": "2026-09-25T11:28:52.323Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Add TRUSTED_PROXIES=127.0.0.1,::1 to .env (the guide's value for a proxy on the same host) and run docker compose restart app",
+      "expected": "restart keeps the container's existing environment, so the new value is not applied.",
+      "actual": "After docker compose restart app, the app container's TRUSTED_PROXIES was still empty and the start log again said \"TRUSTED_PROXIES is not set.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:41.054Z",
+      "at": "2026-09-25T11:29:54.956Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Apply the change with docker compose up -d --no-build --pull never",
+      "expected": "up recreates the app with TRUSTED_PROXIES=127.0.0.1,::1 and the start warning is gone.",
+      "actual": "up exited 0 and recreated the app. Its TRUSTED_PROXIES is 127.0.0.1,::1 and the start log has no TRUSTED_PROXIES warning.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:54.957Z",
+      "at": "2026-09-25T11:30:09.889Z"
+    },
+    {
+      "phase": "proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check that the app reads the client address from X-Forwarded-For through the same-host Caddy proxy",
+      "expected": "With TRUSTED_PROXIES=127.0.0.1,::1 and Caddy on the host, the app records the client's address (here the loopback address the client used to reach Caddy), not the proxy's, and a client-sent X-Forwarded-For is replaced.",
+      "actual": "Check did not pass: Sign-in through Caddy connecting on 127.0.0.1 answered 200 and the session row holds ip_address 192.168.96.1; connecting on ::1 answered 200 with 192.168.96.1; with a client-sent X-Forwarded-For 203.0.113.9 it answered 200 with 192.168.96.1. 192.168.96.1 is the gateway of the installation's backend network, which is the source address Docker's published port gives every host-side connection.",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:30:09.890Z",
+      "at": "2026-09-25T11:30:10.783Z"
+    },
+    {
+      "phase": "proxy-diagnose",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Reviewer diagnosis (not a guide step): set TRUSTED_PROXIES to the backend network gateway the app actually sees, recreate, and repeat the three sign-ins",
+      "expected": "If the gateway is the listed address, the app records each client's own address and Caddy's replacement of a client-sent X-Forwarded-For.",
+      "actual": "Check did not pass: With TRUSTED_PROXIES=192.168.96.1: via 127.0.0.1 ip_address 127.0.0.1; via ::1 0000:0000:0000:0000:0000:0000:0000:0000; with client-sent X-Forwarded-For 203.0.113.9 127.0.0.1.",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:30:24.794Z",
+      "at": "2026-09-25T11:30:40.312Z"
+    },
+    {
+      "phase": "proxy-diagnose",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Reviewer diagnosis (not a guide step): set TRUSTED_PROXIES to the backend network gateway the app actually sees, recreate, and repeat the three sign-ins",
+      "expected": "If the gateway is the listed address, the app records each client's own address and Caddy's replacement of a client-sent X-Forwarded-For.",
+      "actual": "With TRUSTED_PROXIES=192.168.96.1: via 127.0.0.1 ip_address 127.0.0.1; via ::1 0000:0000:0000:0000:0000:0000:0000:0000; with client-sent X-Forwarded-For 203.0.113.9 127.0.0.1. (better-auth stores an IPv6 client by its /64 prefix, so ::1 appears as zeros.) So Caddy does replace a client-sent X-Forwarded-For, and the app believes it only when TRUSTED_PROXIES names the Docker network gateway, which is where host-side connections to the published port arrive from. The guide's 127.0.0.1,::1 never matches under the standard Compose file. TRUSTED_PROXIES was set back to 127.0.0.1,::1 and the app recreated.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:30:49.026Z",
+      "at": "2026-09-25T11:31:05.607Z"
+    },
+    {
+      "phase": "origin",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "docker compose port app 3000, then APP_BIND=0.0.0.0 and back, and a direct request on the LAN and Tailscale addresses",
+      "expected": "The standard Compose file publishes on 127.0.0.1:PORT; APP_BIND=0.0.0.0 changes it to all addresses; removing APP_BIND and recreating returns to 127.0.0.1; with the default the port is unreachable on other host addresses.",
+      "actual": "docker compose port app 3000 printed 127.0.0.1:25710. /readyz on http://192.168.0.59:25710 and http://100.68.96.37:25710 got no connection (curl code 000, 000). With APP_BIND=0.0.0.0 and up, it printed 0.0.0.0:25710 and the LAN address answered 200. After removing APP_BIND and up again it printed 127.0.0.1:25710 and the LAN address got no connection (000).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:32:22.526Z",
+      "at": "2026-09-25T11:32:51.580Z"
+    },
+    {
+      "phase": "origin",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "An earlier edition's compose.private.yml with ports: !override stays in COMPOSE_FILE: read the resulting port mapping",
+      "expected": "The overlay gives the same loopback mapping but fixes the host port at 3000 and ignores PORT and APP_BIND.",
+      "actual": "With compose.private.yml added to the file list, PORT=25710 in .env and APP_BIND=0.0.0.0 in the shell, the resolved app ports were [{\"mode\":\"ingress\",\"host_ip\":\"127.0.0.1\",\"target\":3000,\"published\":\"3000\",\"protocol\":\"tcp\"}] (only the port list was read from config --format json; nothing else was printed). Without the overlay they were [{\"mode\":\"ingress\",\"host_ip\":\"127.0.0.1\",\"target\":3000,\"published\":\"25710\",\"protocol\":\"tcp\"}]. The overlay was not started (host port 3000 is taken by an unrelated local service) and was removed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:32:51.580Z",
+      "at": "2026-09-25T11:32:51.717Z"
+    },
+    {
+      "phase": "origin",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Check origin enforcement: sign in with a foreign Origin and with the direct app address as Origin",
+      "expected": "Only the BASE_URL origin is accepted for sign-in.",
+      "actual": "Through the proxy, sign-in with Origin https://evil.example answered 403; on the direct address http://127.0.0.1:25710 with that address as Origin it answered 403; with Origin https://openlaw-cfg.localhost:25711 it answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:32:51.718Z",
+      "at": "2026-09-25T11:32:51.819Z"
+    },
+    {
+      "phase": "origin",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload, download, processing and a live update through the proxy origin",
+      "expected": "Upload and download bytes match; the worker extracts text; a record frame arrives on /api/events through Caddy.",
+      "actual": "Check did not pass: administrator sign-in answered 429",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:32:51.820Z",
+      "at": "2026-09-25T11:32:51.828Z"
+    },
+    {
+      "phase": "origin-upload",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload, download, processing and a live update through the proxy origin",
+      "expected": "Upload and download bytes match; the worker extracts text; a record frame arrives on /api/events through Caddy.",
+      "actual": "Check did not pass: Cannot read properties of undefined (reading 'slice')",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:33:16.671Z",
+      "at": "2026-09-25T11:33:16.864Z"
+    },
+    {
+      "phase": "origin-upload",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload, download, processing and a live update through the proxy origin",
+      "expected": "Upload and download bytes match; the worker extracts text; a record frame arrives on /api/events through Caddy.",
+      "actual": "Check did not pass: Cannot read properties of undefined (reading 'slice')",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:33:29.936Z",
+      "at": "2026-09-25T11:33:30.095Z"
+    },
+    {
+      "phase": "origin-upload",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Upload, download, processing and a live update through the proxy origin",
+      "expected": "Upload and download bytes match; the worker extracts text; a record frame arrives on /api/events through Caddy.",
+      "actual": "Contract 3 created through https://openlaw-cfg.localhost:25711. A PDF upload answered 201 (SHA-256 2336bf7ba945…); the download answered 200 with identical bytes; the worker's text state became ready. Stored reference prefix: local:. The browser read /api/events for Contract 3 through https://openlaw-cfg.localhost:25711 (HTTP 200); a second session's comment (201) produced a record frame for that Contract 27 ms later.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:33:39.425Z",
+      "at": "2026-09-25T11:33:59.039Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Add MAX_UPLOAD_MB=1, run docker compose restart app, and upload just over 1 MiB",
+      "expected": "restart does not apply the changed .env, so the upload is accepted under the old ceiling.",
+      "actual": "After restart the app container's MAX_UPLOAD_MB was still empty and an upload of 1,048,577 bytes answered 201.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:03.128Z",
+      "at": "2026-09-25T11:34:17.136Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Apply MAX_UPLOAD_MB=1 with up -d --no-build --pull never, then upload exactly 1 MiB and one byte more",
+      "expected": "The ceiling is in MiB: 1,048,576 bytes are accepted and 1,048,577 are refused.",
+      "actual": "up applied MAX_UPLOAD_MB=1 (container value 1). A 1,048,576-byte upload answered 201; a 1,048,577-byte upload answered 413 \"That file is over the 1 MB upload limit.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:17.137Z",
+      "at": "2026-09-25T11:34:32.951Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings → Advanced → File uploads while .env sets MAX_UPLOAD_MB=1",
+      "expected": "Maximum file size (MiB) shows 1 with Deployment configuration · Read only, and the page has no Save button because its only field is pinned.",
+      "actual": "File uploads shows Maximum file size (MiB) = 1, read only, with \"Deployment configuration · Read only\" under it. No Save button; the page says \"The deployment configuration sets this value. Change it there, then restart the API and worker.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:37.396Z",
+      "at": "2026-09-25T11:34:37.756Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Try to save a different upload limit through the API while MAX_UPLOAD_MB is pinned",
+      "expected": "The API refuses a different value for a pinned key.",
+      "actual": "PUT /api/v1/advanced-settings/uploads with MAX_UPLOAD_MB=5 answered 400 \"MAX_UPLOAD_MB is managed by the deployment environment and cannot be changed here.\". The field's source is deployment, locked true.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:37.757Z",
+      "at": "2026-09-25T11:34:37.811Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set MAX_UPLOAD_MB=ten (unreadable) and recreate",
+      "expected": "The app starts normally and falls back to the 100 MiB default.",
+      "actual": "With MAX_UPLOAD_MB=ten the app started (readyz 200) and a 2 MiB upload answered 201, so the default ceiling applied.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:37.819Z",
+      "at": "2026-09-25T11:34:55.051Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "With MAX_UPLOAD_MB=ten pinned, save another Advanced page (MCP → Calls per hour per credential)",
+      "expected": "Every Advanced save fails with the pinned setting's message until .env is corrected.",
+      "actual": "On MCP, Calls per hour per credential 500 then Save showed \"The upload limit must be a whole number from 1 to 10,240 MiB.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:59.514Z",
+      "at": "2026-09-25T11:34:59.931Z"
+    },
+    {
+      "phase": "uploads",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove MAX_UPLOAD_MB and recreate",
+      "expected": "The upload field returns to its default source.",
+      "actual": "After removing MAX_UPLOAD_MB and up, File uploads reports value 100 with source default.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:34:59.938Z",
+      "at": "2026-09-25T11:35:14.604Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings → Advanced at the bottom of the navigation",
+      "expected": "The Advanced group holds Outbound email, Authentication, Audit log, Instance address, File uploads, Document storage, Document processing, MCP and System status.",
+      "actual": "Check did not pass: locator.waitFor: Error: strict mode violation: getByRole('button', { name: 'Advanced' }) resolved to 2 elements:     1) <button type=\"button\" aria-haspopup=\"dialog\" aria-label=\"Advanced search\" class=\"absolute end-9 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-button text-on-inverted focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link\">…</button> aka getByRole('button', { name: 'Advanced search' })     2) <button type=\"button\" aria-expanded=\"false\" aria-controls=\"settings-rail-advanced\" class=\"flex items-center gap-2 rounded-button px-2.5 py-1.5 text-base whitespace-nowrap text-primary hover:bg-control\">…</button> aka getByRole('button', { name: 'Advanced', exact: true })  Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Advanced' }) to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:37:45.945Z",
+      "at": "2026-09-25T11:37:46.514Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Instance address and Document processing while .env sets BASE_URL and Compose sets DOC_ENGINE_URL",
+      "expected": "Application address and Document service address show Deployment configuration · Read only; the two timeouts show Default and are editable.",
+      "actual": "Instance address: Application address \"https://openlaw-cfg.localhost:25711\" with \"Deployment configuration · Read only\" and no Save button. Document processing: Document service address shows \"Deployment configuration · Read only\" (read only); Processing timeout shows \"Default\" and Comparison timeout \"Default\", both editable, with Test connection and Save.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:46.515Z",
+      "at": "2026-09-25T11:37:47.238Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Document processing: Test connection, then save Processing timeout 240000 and Comparison timeout 500000",
+      "expected": "The test passes; Save shows the restart message; each changed field shows Active: with the value still in use; the page warns that saved changes wait for a restart.",
+      "actual": "Test connection showed \"Connection test passed.\" Save showed \"Settings saved. Restart the API and worker to apply changes.\" Processing timeout now reads Saved in OpenLaw / Active: 300000; Comparison timeout Saved in OpenLaw / Active: 600000. The page shows \"Saved changes are waiting for a restart. The active values below are still in use by this API.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:47.239Z",
+      "at": "2026-09-25T11:37:47.812Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Save an out-of-range Processing timeout (420001)",
+      "expected": "The API refuses it and the page shows the reason.",
+      "actual": "Save showed \"DOC_ENGINE_TIMEOUT_MS must be at most 420000 milliseconds, so two engine calls still fit inside a derivation job's queue budget.\"; the saved value stayed 240000 (240000).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:47.813Z",
+      "at": "2026-09-25T11:37:48.274Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "File uploads: save Maximum file size (MiB) 2; MCP: save Calls per hour per credential 500 and OAuth grant lifetime (days) 30",
+      "expected": "Each save shows the restart message and Active: with the old value.",
+      "actual": "File uploads: Saved in OpenLaw / Active: 100. MCP: Calls per hour per credential Saved in OpenLaw / Active: 600; OAuth grant lifetime (days) Saved in OpenLaw / Active: 90.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:48.275Z",
+      "at": "2026-09-25T11:37:48.860Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Stale edit: open File uploads in two tabs, save 3 in the first, then save 4 in the second",
+      "expected": "The second save is refused with the stale-edit message.",
+      "actual": "The first tab saved 3. The second tab, still on the older version, showed \"These settings changed in another session. Reload the page before saving.\" on Save. The first tab then saved 2 again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:48.860Z",
+      "at": "2026-09-25T11:37:50.189Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "System status before restarting",
+      "expected": "Database available, active storage and document service shown, API and Worker rows Running with Restart required.",
+      "actual": "System status shows \"Database: available\", \"Active storage: local\", \"Document service: http://doc-engine:8080\". Rows: API Running Restart required 3:37 PM | Worker Running Restart required 3:37 PM.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:37:50.190Z",
+      "at": "2026-09-25T11:37:51.616Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "docker compose restart app worker, then Refresh System status and check the saved values apply",
+      "expected": "Both processes show Running and Current; the saved values are active: a 2 MiB + 1 byte upload is refused and the timeouts show no Active: line.",
+      "actual": "Check did not pass: Worker Running Current 3:38 PM,API Running Current 3:38 PM,API Running Restart required 3:37 PM 413 201",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:37:51.635Z",
+      "at": "2026-09-25T11:38:56.148Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Stop the worker for over a minute, then Refresh System status; start it again",
+      "expected": "The worker row shows No recent heartbeat and the page warns that a heartbeat is missing; after start both rows are Running.",
+      "actual": "Check did not pass: API Running Current 3:40 PM warn true",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:38:56.150Z",
+      "at": "2026-09-25T11:40:38.487Z"
+    },
+    {
+      "phase": "advanced",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Audit log after the Advanced saves",
+      "expected": "Each save wrote an Audit log entry without credentials.",
+      "actual": "The Audit log API lists 5 entries for Advanced saves (advanced.uploads, advanced.mcp, advanced.processing), each with old \"[configuration]\" and new \"[configuration saved; restart required]\" and no values.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:40:38.487Z",
+      "at": "2026-09-25T11:40:38.661Z"
+    },
+    {
+      "phase": "advanced-nav",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Open Settings → Advanced at the bottom of the navigation",
+      "expected": "The Advanced group holds Outbound email, Authentication, Audit log, Instance address, File uploads, Document storage, Document processing, MCP and System status.",
+      "actual": "Settings navigation: the Advanced group button is the last group button (Advanced). Expanded, it lists: Outbound email, Authentication, Audit log, Instance address, File uploads, Document storage, Document processing, MCP, System status.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:41:10.539Z",
+      "at": "2026-09-25T11:41:11.842Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "docker compose restart app worker again (settings unchanged), then Refresh System status at once and after a minute",
+      "expected": "After the restart both processes show Running and Current.",
+      "actual": "Right after the restart, Refresh showed: Worker Running Current 3:41 PM | API Running Current 3:41 PM | API Running Current 3:41 PM. 65 s later Refresh showed: Worker Running Current 3:42 PM | API Running Current 3:42 PM. The API process that was restarted keeps a Running row until its last heartbeat is a minute old (the worker's old row disappears at once), so during the first minute a reader can see an extra API row marked Restart required.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:41:12.518Z",
+      "at": "2026-09-25T11:42:43.177Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Kill the worker (docker compose kill worker) so it cannot remove its heartbeat, wait over a minute, Refresh; then start it",
+      "expected": "The worker row shows No recent heartbeat and the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 20000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Refresh' }) to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:42:43.180Z",
+      "at": "2026-09-25T11:44:20.589Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "docker compose restart app worker again (settings unchanged), then Refresh System status at once and after a minute",
+      "expected": "After the restart both processes show Running and Current.",
+      "actual": "Right after the restart, Refresh showed: Worker Running Current 3:45 PM | API Running Current 3:45 PM | API Running Current 3:44 PM. 65 s later Refresh showed: Worker Running Current 3:46 PM | API Running Current 3:46 PM. The API process that was restarted keeps a Running row until its last heartbeat is a minute old (the worker's old row disappears at once), so during the first minute a reader can see an extra API row marked Restart required.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:45:00.342Z",
+      "at": "2026-09-25T11:46:26.917Z"
+    },
+    {
+      "phase": "advanced-restart",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Kill the worker (docker compose kill worker) so it cannot remove its heartbeat, wait over a minute, Refresh; then start it",
+      "expected": "The worker row shows No recent heartbeat and the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "75 s after docker compose kill worker: API Running Current 3:47 PM | Worker No recent heartbeat Current 3:46 PM, with \"An API or worker heartbeat is missing. Check that both services are running.\" After docker compose start worker and Refresh: Worker Running Current 3:48 PM | API Running Current 3:48 PM. (In the earlier attempt, docker compose stop worker removed the worker's row entirely: the page showed the warning and only the API row, not a No recent heartbeat row.)",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:46:26.919Z",
+      "at": "2026-09-25T11:48:07.675Z"
+    },
+    {
+      "phase": "nonadmin",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Negative check as the Legal Team Member: Settings navigation, the Advanced addresses, and the API",
+      "expected": "The navigation does not show Advanced; opening its addresses leads elsewhere; the API answers 403.",
+      "actual": "Signed in as the Legal Team Member Rowan Operator: the Settings navigation has no Advanced group. /settings/instance → /settings/profile; /settings/uploads → /settings/profile; /settings/storage → /settings/profile; /settings/document-processing → /settings/profile; /settings/mcp-limits → /settings/profile; /settings/system-status → /settings/profile. GET /api/v1/advanced-settings/instance 403; GET /api/v1/system-status 403; PUT uploads 403.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:48:12.387Z",
+      "at": "2026-09-25T11:48:18.523Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Document storage: choose S3-compatible storage for a bucket created first in MinIO, with endpoint http://minio:9000, and select Test connection",
+      "expected": "Save is unavailable before a passing test; Local storage path is read only; an internal DNS name over plain http is refused.",
+      "actual": "Bucket doc030-app created in MinIO first. Local storage path reads Local storage path with \"Deployment configuration · Read only\". After choosing S3-compatible storage and entering bucket, endpoint http://minio:9000, path-style Yes and the MinIO keys, Save was disabled. Test connection showed \"S3_ENDPOINT must use https. Plain http is allowed only for localhost, private network addresses, and hosts listed in OPENLAW_PLAIN_HTTP_HOSTS.\" and Save stayed disabled.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:49:28.746Z",
+      "at": "2026-09-25T11:49:29.206Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Operator adds OPENLAW_PLAIN_HTTP_HOSTS=minio,azurite to .env and recreates app and worker",
+      "expected": "The app and worker receive the list.",
+      "actual": "up exited 0; OPENLAW_PLAIN_HTTP_HOSTS in the app container: minio,azurite; worker: minio,azurite (Compose passes .env through env_file).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:49:29.218Z",
+      "at": "2026-09-25T11:49:46.665Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Document storage: enter the S3 settings again, Test connection, edit a field, test again, then Save",
+      "expected": "The test passes and enables Save; an edit disables Save until the next test; Save shows the restart message; credentials come back blank and write-only; bucket and endpoint become read only.",
+      "actual": "Check did not pass: true true 0 0 0 leaked false",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:49:47.335Z",
+      "at": "2026-09-25T11:49:48.241Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Try to change the configured bucket through the API",
+      "expected": "The API refuses a change to a configured storage location.",
+      "actual": "PUT with S3_BUCKET=doc030-other answered 400 \"An existing storage location cannot be changed or removed here. Migrate its documents before changing the deployment configuration.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:49:48.242Z",
+      "at": "2026-09-25T11:49:48.276Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "docker compose restart app worker; upload a new Document and download it and the older local Document",
+      "expected": "New writes go to the S3 bucket; the older local Document stays readable; the worker processes the new one; System status names the s3 driver.",
+      "actual": "After restart, System status reports storage driver s3. A new PDF answered 201; its stored reference starts with s3: and the bucket doc030-app holds 1 object(s); the download matched its SHA-256; the worker's text state became ready. The older local Document still downloaded with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:49:48.281Z",
+      "at": "2026-09-25T11:50:08.340Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Test connection again with the credential fields left blank",
+      "expected": "A blank credential keeps the configured credential, so the test passes.",
+      "actual": "With both credential fields blank, Test connection showed \"Connection test passed.\" (it writes, reads and deletes a check object in local storage and the S3 bucket).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:50:08.341Z",
+      "at": "2026-09-25T11:50:11.491Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Make the object store unavailable (stop MinIO); check readiness, downloads and the storage test; start MinIO again",
+      "expected": "readyz stays 200 while the S3 Document's download fails and the local one works; the storage test fails; everything recovers after MinIO starts.",
+      "actual": "With MinIO stopped: /readyz answered 200; the S3 Document's download answered 500; the local Document downloaded with identical bytes; the storage test answered 502 \"The storage test failed. Check the destination, credentials, and read, write and delete permissions.\". After docker compose start minio the S3 Document downloaded again with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:50:11.493Z",
+      "at": "2026-09-25T11:50:20.518Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Local driver: check that app and worker mount the same named volume at STORAGE_PATH",
+      "expected": "Both containers mount the project's openlaw-files volume at /var/lib/openlaw/files.",
+      "actual": "app mounts openlaw-doc030-cfg-1_openlaw-files:/var/lib/openlaw/files; worker mounts openlaw-doc030-cfg-1_openlaw-files:/var/lib/openlaw/files; the worker sees 7 stored file(s) there, including the local Document the app wrote.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:50:20.522Z",
+      "at": "2026-09-25T11:50:21.159Z"
+    },
+    {
+      "phase": "storage",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "azure-blob through .env: create the container first in Azurite, set STORAGE_DRIVER=azure-blob and the AZURE_BLOB_* variables, recreate, upload and download",
+      "expected": "New writes go to Azure Blob; the worker processes them; the S3 and local Documents stay readable; the Document storage fields set in .env become Deployment configuration · Read only.",
+      "actual": "Container doc030-env created first. After up, a new PDF answered 201 with a stored reference starting azure-blob:, the container holds 1 blob(s), the download matched, and the worker's text state became ready. The app-saved S3 Document and the local Document still downloaded with identical bytes. Document storage sources: STORAGE_DRIVER deployment (read only), AZURE_BLOB_CONTAINER deployment (read only), AZURE_BLOB_ACCOUNT_KEY deployment (read only), S3_BUCKET app (read only), STORAGE_PATH deployment (read only).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:50:21.161Z",
+      "at": "2026-09-25T11:50:44.982Z"
+    },
+    {
+      "phase": "storage-recheck",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reopen Document storage and read the saved S3 fields (repeat of the failed read in the earlier attempt)",
+      "expected": "Credentials come back blank and write-only with the help text Credential configured. Leave blank to keep it.; bucket and endpoint are read only.",
+      "actual": "Check did not pass: locator.fill: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByLabel('Email')\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T11:51:05.454Z",
+      "at": "2026-09-25T11:51:35.947Z"
+    },
+    {
+      "phase": "storage-recheck",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Reopen Document storage and read the saved S3 fields (repeat of the failed read in the earlier attempt)",
+      "expected": "Credentials come back blank and write-only with the help text Credential configured. Leave blank to keep it.; bucket and endpoint are read only.",
+      "actual": "S3 access key ID and S3 secret access key are empty (types password and password); each field's More information help reads \"Credential configured. Leave blank to keep it.\" (hover shows \"Credential configured. Leave blank to keep it.\"). S3 bucket: Saved in OpenLaw · Read only; S3 endpoint: Saved in OpenLaw · Read only. The earlier attempt looked for the help text in the visible page; it sits behind the field's More information button.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:51:45.870Z",
+      "at": "2026-09-25T11:51:47.879Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Operator leaves BASE_URL empty: remove it from .env and recreate app and worker",
+      "expected": "Without BASE_URL the Instance address falls back to OpenLaw's default and the app warns; the proxy origin no longer passes the origin check.",
+      "actual": "After removing BASE_URL and up, the app logged \"The instance address is http://localhost:3000; emailed links and OIDC callbacks will point there.\" Sign-in through https://openlaw-cfg.localhost:25711 now answered 403. The reviewer added a Caddy site for http://localhost:3000 on [::1] (the host's 127.0.0.1:3000 is taken) to reach the default origin.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:17:04.804Z",
+      "at": "2026-09-25T13:17:21.903Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "At the default origin, open Instance address and try an address with a path and a public plain-http address",
+      "expected": "Application address shows the default with source Default; a path and plain http on a public name are refused with the reason.",
+      "actual": "Application address read http://localhost:3000 with source \"Default\". Saving https://openlaw-cfg.localhost:25711/openlaw showed \"BASE_URL must be an HTTP or HTTPS address without credentials, query parameters or fragments, and without a path.\". Saving http://openlaw.company.example showed \"BASE_URL must use https. Plain http is allowed only for localhost, private network addresses, and hosts listed in OPENLAW_PLAIN_HTTP_HOSTS.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:17:25.784Z",
+      "at": "2026-09-25T13:17:26.693Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Save plain-http private and allow-listed addresses through the API, then the intended HTTPS address in the browser",
+      "expected": "http on a private IP and on a host in OPENLAW_PLAIN_HTTP_HOSTS are accepted, an unlisted internal name is refused; the HTTPS address saves with Active: showing the old value.",
+      "actual": "API saves: http://10.20.30.40:8443 → 200; http://minio:8443 → 200 (minio is listed in OPENLAW_PLAIN_HTTP_HOSTS); http://openlaw-internal:8443 → 400 (an internal DNS name that is not listed). Browser: Application address https://openlaw-cfg.localhost:25711 then Save showed \"Settings saved. Restart the API and worker to apply changes.\", with \"Saved in OpenLaw / Active: http://localhost:3000\". Process log: advanced settings endpoint host changed: BASE_URL minio:8443 → openlaw-cfg.localhost:25711.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:17:26.694Z",
+      "at": "2026-09-25T13:17:28.221Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "docker compose restart app worker, then sign in through the saved address and check an emailed link",
+      "expected": "After both restart, the saved address is the origin: sign-in works through the proxy and a new sign-in email links to it.",
+      "actual": "Check did not pass: page.goto: net::ERR_NETWORK_CHANGED at https://openlaw-cfg.localhost:25711/auth/login Call log: \u001b[2m  - navigating to \"https://openlaw-cfg.localhost:25711/auth/login\", waiting until \"load\"\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:17:28.231Z",
+      "at": "2026-09-25T13:17:46.376Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "A saved address that prevents sign-in: save https://openlaw-wrong.localhost:25799 and restart both",
+      "expected": "Sign-in through the real origin is refused after the restart.",
+      "actual": "The save answered 200. After docker compose restart app worker, sign-in through https://openlaw-cfg.localhost:25711 answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:17:46.377Z",
+      "at": "2026-09-25T13:18:07.921Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery: set BASE_URL in .env and recreate app and worker",
+      "expected": "The environment value pins the address, sign-in works again, and the saved wrong value is ignored.",
+      "actual": "After BASE_URL=https://openlaw-cfg.localhost:25711 and up, sign-in through the proxy answered 200. Instance address reads https://openlaw-cfg.localhost:25711, source deployment, read only true; the saved https://openlaw-wrong.localhost:25799 is ignored.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:18:07.922Z",
+      "at": "2026-09-25T13:18:24.690Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Recovery command: docker compose run -T --rm --no-deps app node apps/api/dist/reset-advanced-settings.js instance, then docker compose restart app worker",
+      "expected": "The command removes only the instance section's saved overrides, prints no values and writes an Audit log entry.",
+      "actual": "Exit 0; output \"Saved instance overrides removed. Restart both app and worker to use their deployment configuration.\". No saved value was printed. The Audit log has an entry with new value \"[deployment defaults restored by operator; restart required]\". The MCP fields keep source app, so other sections were untouched.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:18:24.691Z",
+      "at": "2026-09-25T13:18:41.797Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Confirm the reset: remove BASE_URL again and check that the default returns, then restore BASE_URL",
+      "expected": "With the saved override gone, the Instance address falls back to the default, not to the saved wrong address.",
+      "actual": "With BASE_URL removed, Instance address read http://localhost:3000 with source default. BASE_URL=https://openlaw-cfg.localhost:25711 was then restored and app and worker recreated.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:18:41.799Z",
+      "at": "2026-09-25T13:19:15.197Z"
+    },
+    {
+      "phase": "instance",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Run the recovery command with mcp and with an unknown section",
+      "expected": "mcp is accepted and removes the MCP overrides; an unknown section is refused with the usage line.",
+      "actual": "mcp: exit 0, \"Saved mcp overrides removed. Restart both app and worker to use their deployment configuration.\"; after restart both MCP fields show source default (MCP_RATE_LIMIT_PER_HOUR=600, MCP_OAUTH_GRANT_LIFETIME_DAYS=90). \"everything\": exit 1, \"Usage: node apps/api/dist/reset-advanced-settings.js <instance|uploads|storage|processing>\". The usage line does not list mcp, although mcp is accepted.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:19:15.199Z",
+      "at": "2026-09-25T13:19:34.837Z"
+    },
+    {
+      "phase": "instance-link",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Repeat (the earlier attempt lost its browser page to ERR_NETWORK_CHANGED): with BASE_URL empty, save Application address in the browser, docker compose restart app worker, sign in through the saved address and check an emailed link",
+      "expected": "After both restart, the saved address is the origin: sign-in works through the proxy and a new sign-in email links to it.",
+      "actual": "Check did not pass: Settings saved. Restart the API and worker to apply changes. {\"key\":\"BASE_URL\",\"value\":\"https://openlaw-cfg.localhost:25711\",\"activeValue\":\"https://openlaw-cfg.localhost:25711\",\"secret\":false,\"configured\":true,\"source\":\"app\",\"locked\":false} mail no mail",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:19:52.649Z",
+      "at": "2026-09-25T13:22:15.630Z"
+    },
+    {
+      "phase": "instance-link",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Repeat (the earlier attempt lost its browser page to ERR_NETWORK_CHANGED): with BASE_URL empty, save Application address in the browser, docker compose restart app worker, sign in through the saved address and check an emailed link",
+      "expected": "After both restart, the saved address is the origin: sign-in works through the proxy and a new sign-in email links to it.",
+      "actual": "Save showed \"Settings saved. Restart the API and worker to apply changes.\". After docker compose restart app worker, sign-in through https://openlaw-cfg.localhost:25711 answered 200; Instance address reads https://openlaw-cfg.localhost:25711, active https://openlaw-cfg.localhost:25711, source app. \"Email me a sign-in link\", Email, Send link (\"Check your email\") for Rowan Operator delivered \"Sign in to OpenLaw\" with a link on https://openlaw-cfg.localhost:25711. The Audit log holds 6 entries for advanced.BASE_URL.host. Afterwards BASE_URL was set in .env again, the instance override removed with the recovery command, and both services restarted.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:22:50.499Z",
+      "at": "2026-09-25T13:24:35.502Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set DOC_ENGINE_TIMEOUT_MS=420001 and recreate; while the app restarts, run the recovery command for processing",
+      "expected": "App and worker stop at startup naming the bound; docker compose run --rm still runs the recovery command.",
+      "actual": "App: restarting (Restarting (1) Less than a second ago); worker: restarting (Restarting (1) Less than a second ago). App log: \"DOC_ENGINE_TIMEOUT_MS must be at most 420000 milliseconds, so two engine calls still fit inside a derivation job's queue budget.\". The worker log carries the same bound. While the app was restarting, the recovery command for processing exited 0 with \"Saved processing overrides removed. Restart both app and worker to use their deployment configuration.\". After removing the variable and up, readyz 200; Processing and Comparison timeouts now show 300000 (default) and 600000 (default).",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:24:40.035Z",
+      "at": "2026-09-25T13:25:05.641Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set DOC_ENGINE_COMPARE_TIMEOUT_MS=840001 and recreate",
+      "expected": "App and worker stop at startup; removing it recovers.",
+      "actual": "App: restarting (Restarting (1) Less than a second ago). App log: \"DOC_ENGINE_COMPARE_TIMEOUT_MS must be at most 840000 milliseconds, so one engine call still fits inside a comparison job's queue budget.\"; the worker log carries it too. After removing it and up, readyz 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:25:05.642Z",
+      "at": "2026-09-25T13:25:26.795Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Read the container limits and engine scratch space, then raise APP_MEM_LIMIT and lower DOC_ENGINE_TMPFS_SIZE and recreate",
+      "expected": "Defaults: app and worker 2 CPUs, 1g, 256 processes; engine 2 CPUs, 4g, 512 processes, /tmp 2g. The changed values apply after up.",
+      "actual": "Check did not pass: {\"app\":\"\",\"worker\":\"\",\"engine\":\"2000000000 4294967296 512 {\\\"/tmp\\\":\\\"mode=1777,size=2g\\\"}\"}",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:25:26.796Z",
+      "at": "2026-09-25T13:25:53.435Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Engine concurrency: send 12 OCR requests at once with the defaults, then 5 with DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1",
+      "expected": "Past the running and waiting slots the engine answers 503 with Retry-After: 2 of 12 with 2+8 slots, 3 of 5 with 1+1.",
+      "actual": "From inside the app container: 12 concurrent POST /ocr with the defaults answered [422/- 422/- 422/- 422/- 422/- 422/- 422/- 422/- 422/- 422/- 503/5 503/5] (status/Retry-After): 2 refused with 503, Retry-After 5. With DOC_ENGINE_MAX_CONCURRENT=1 and DOC_ENGINE_MAX_QUEUED=1, 5 concurrent answered [422/- 422/- 503/5 503/5 503/5]: 3 refused. The variables were removed again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:25:53.436Z",
+      "at": "2026-09-25T13:26:28.530Z"
+    },
+    {
+      "phase": "engine",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Stop the document engine, upload a PDF, and check readiness, processing and the Document processing test; start it again",
+      "expected": "readyz stays 200 while processing does not complete and the test fails; after start a new PDF is processed.",
+      "actual": "With doc-engine stopped: /readyz 200; a PDF uploaded then (201) still had text state \"pending\" after 45 s; Document processing Test connection answered 502 \"The document service did not respond successfully. Check its address and network access.\". After docker compose start doc-engine, a new PDF reached \"ready\", and the earlier PDF reached \"ready\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:26:28.532Z",
+      "at": "2026-09-25T13:28:19.416Z"
+    },
+    {
+      "phase": "limits",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Read the container limits and engine scratch space, then raise APP_MEM_LIMIT and lower DOC_ENGINE_TMPFS_SIZE and recreate",
+      "expected": "Defaults: app and worker 2 CPUs, 1g, 256 processes; engine 2 CPUs, 4g, 512 processes, /tmp 2g. The changed values apply after up.",
+      "actual": "Defaults (NanoCpus, memory bytes, pids, tmpfs): app 2000000000 1073741824 256; worker 2000000000 1073741824 256; doc-engine 2000000000 4294967296 512 {\"/tmp\":\"mode=1777,size=2g\"}. With APP_MEM_LIMIT=1536m and DOC_ENGINE_TMPFS_SIZE=1g after up: app 2000000000 1610612736 256; doc-engine 2000000000 4294967296 512 {\"/tmp\":\"mode=1777,size=1g\"}. Both removed again and recreated.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:28:32.683Z",
+      "at": "2026-09-25T13:28:59.331Z"
+    },
+    {
+      "phase": "storage-ttl",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Pass a storage test, wait more than 10 minutes without restarting, then save the same values",
+      "expected": "The API refuses a storage save more than 10 minutes after the test; a fresh test lets the same save through.",
+      "actual": "Unlocked fields sent unchanged (S3_REGION, S3_FORCE_PATH_STYLE, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY). The test answered 200. 630 s later the save answered 409 \"Test this storage configuration successfully before saving it.\". A new test answered 200 and the same save then answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:29:04.711Z",
+      "at": "2026-09-25T13:39:35.247Z"
+    },
+    {
+      "phase": "trusted-proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Find the trusted proxy address: run the guide's docker network inspect command for this project",
+      "expected": "It prints the gateway and range of the app's Compose network.",
+      "actual": "docker network inspect openlaw-doc030-cfg-1_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' printed \"192.168.96.1 192.168.96.0/20\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:39:40.412Z",
+      "at": "2026-09-25T13:39:40.432Z"
+    },
+    {
+      "phase": "trusted-proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "With the non-matching TRUSTED_PROXIES=127.0.0.1,::1: sign in once from a browser, run the guide's log check, and try four wrong passwords from one client then the right password from another",
+      "expected": "Every request shows the gateway; the app logs no TRUSTED_PROXIES warning; one client's wrong passwords refuse the other client's sign-in.",
+      "actual": "Check did not pass: false 10× \"remoteAddress\":\"127.0.0.1\"; 20× \"remoteAddress\":\"192.168.96.1\" {\"wrong\":\"401,401,401,429\",\"right\":\"429\"}",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:39:40.433Z",
+      "at": "2026-09-25T13:40:05.285Z"
+    },
+    {
+      "phase": "trusted-proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set TRUSTED_PROXIES to the gateway, run docker compose up -d --no-build --pull never, sign in from a browser, run the log check, and repeat the two-client sign-in",
+      "expected": "The log shows the browser's own address; one client's wrong passwords no longer refuse the other client.",
+      "actual": "TRUSTED_PROXIES=192.168.96.1. The log check printed: 25× \"remoteAddress\":\"127.0.0.1\". Four wrong-password sign-ins from the 127.0.0.1 client answered 401,401,401,429; the right password from the ::1 client then answered 200.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:40:05.286Z",
+      "at": "2026-09-25T13:45:54.459Z"
+    },
+    {
+      "phase": "trusted-proxy",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set a malformed entry (TRUSTED_PROXIES=proxy.internal) and recreate, then restore the gateway",
+      "expected": "The app stops at start with invalid IP address.",
+      "actual": "App restarting (Restarting (1) Less than a second ago); log \"throw new TypeError('invalid IP address: ' + str)\". TRUSTED_PROXIES was set back to 192.168.96.1 and the app started.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:45:54.460Z",
+      "at": "2026-09-25T13:46:23.619Z"
+    },
+    {
+      "phase": "trusted-proxy-note",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Re-read the failed log check: identify the 127.0.0.1 lines that appeared with the non-matching value",
+      "expected": "The guide's claim holds for proxied requests: with 127.0.0.1,::1 every request through Caddy showed the gateway, no warning was logged, and one client's wrong passwords refused another client (429).",
+      "actual": "The earlier attempt failed only on the reviewer's own filter. Its log check printed 20× the gateway 192.168.96.1 (every proxied request) and 10× 127.0.0.1. The 127.0.0.1 lines are the Compose healthcheck, which fetches /readyz inside the container every 30 s: in the last two minutes the only 127.0.0.1 paths are 4 \"path\":\"/readyz\". No TRUSTED_PROXIES warning was logged, and with the non-matching value four wrong passwords from one client (401,401,401,429) made the other client's right password answer 429; with the gateway listed it answered 200. Note for the author: the guide's log check also counts these healthcheck lines, and a test browser on the same host appears as 127.0.0.1 too, so \"the lines show the browsers' addresses\" is only clear-cut for browsers on other machines.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:47:02.725Z",
+      "at": "2026-09-25T13:48:07.795Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Rotate OPENLAW_SECRET_KEY: keep the old value in OPENLAW_SECRET_KEY_PREVIOUS, set a new key, recreate, check the re-encryption result and the saved configuration",
+      "expected": "The app logs that stored credentials were resealed; the saved relay delivers and the app-saved S3 store still reads.",
+      "actual": "App log: \"Stored credentials resealed under the key in use: smtp_url (1), vapid_private_key (1), advanced_settings (1).\". The stored relay delivered a test email; the app-saved S3 Document downloaded with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:48:12.846Z",
+      "at": "2026-09-25T13:48:25.996Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Remove OPENLAW_SECRET_KEY_PREVIOUS, recreate, and verify again",
+      "expected": "The saved configuration works under the new key alone.",
+      "actual": "After removing OPENLAW_SECRET_KEY_PREVIOUS and up: the test email was delivered, the S3 Document downloaded with identical bytes, and the log has no \"No configured key opens\" warning. Saved Advanced values in use: {\"MAX_UPLOAD_MB\":\"2 (app)\",\"STORAGE_DRIVER\":\"azure-blob (deployment)\",\"S3_BUCKET\":\"doc030-app (app)\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:48:25.997Z",
+      "at": "2026-09-25T13:48:40.198Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Mismatched key: set OPENLAW_SECRET_KEY to a different valid key and recreate; check startup, Advanced values, storage, the relay and the start log",
+      "expected": "App and worker still start. Saved Advanced values fall back and show Default; storage becomes local, so the saved-bucket Document fails to download; a test email fails with the SMTP-not-configured message; the start log names the affected columns in a No configured key opens line and says device notifications are off.",
+      "actual": "Check did not pass: App readyz 200; worker running. Advanced values now: {\"MAX_UPLOAD_MB\":\"100 (default)\",\"STORAGE_DRIVER\":\"azure-blob (deployment)\",\"S3_BUCKET\":\" (default)\"} (before: {\"MAX_UPLOAD_MB\":\"2 (app)\",\"STORAGE_DRIVER\":\"azure-blob (deployment)\",\"S3_BUCKET\":\"doc030-app (app)\"}); Maximum file size source \"default\". System status storage driver: azure-blob. The app-saved S3 Document's download answered 500; the local Document downloaded with identical bytes. Test email: 502 \"The test email could not be sent. SMTP is not configured — save a relay first.\". Start log: \"No configured key opens these stored credentials: smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recoverable: boot once with the old key in OPENLAW_SECRET_KEY_PREVIOUS, or paste the credentials again in\"; \"Device notifications are off until the VAPID pair can be read: The stored VAPID pair is incomplete or unreadable. Check OPENLAW_SECRET_KEY.\".",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:48:40.198Z",
+      "at": "2026-09-25T13:48:57.766Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "With the mismatched key still set, run the recovery command for one section (processing), then restore the correct key and recreate",
+      "expected": "The command still exits successfully but replaces the whole saved configuration with an empty one; after the correct key is back, every section's saved values are gone.",
+      "actual": "The recovery command for processing exited 0: \"Saved processing overrides removed. Restart both app and worker to use their deployment configuration.\". After restoring the correct key and up: Advanced values {\"MAX_UPLOAD_MB\":\"100 (default)\",\"STORAGE_DRIVER\":\"azure-blob (deployment)\",\"S3_BUCKET\":\" (default)\"} (before: {\"MAX_UPLOAD_MB\":\"2 (app)\",\"STORAGE_DRIVER\":\"azure-blob (deployment)\",\"S3_BUCKET\":\"doc030-app (app)\"}); the S3 Document download answered 500; the saved relay delivered a test email (the relay is sealed in its own column); unreadable-credential warning at start: true.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:48:57.768Z",
+      "at": "2026-09-25T13:49:15.237Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "After the lost saved values: save the S3 store again in Document storage (Test connection, Save), then docker compose restart app worker",
+      "expected": "A value saved again replaces the unreadable one; the older S3 Document reads again.",
+      "actual": "The S3 fields are hidden while the pinned driver is azure-blob and no bucket is saved, so the reviewer tested and saved them through the same API the page uses. After docker compose restart app worker, the older S3 Document downloaded with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:49:15.238Z",
+      "at": "2026-09-25T13:49:41.363Z"
+    },
+    {
+      "phase": "keys",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Change AUTH_SECRET and recreate while a session is open; then restore it",
+      "expected": "Changing AUTH_SECRET invalidates the existing session.",
+      "actual": "Check did not pass: 404 404",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:49:41.364Z",
+      "at": "2026-09-25T13:50:13.285Z"
+    },
+    {
+      "phase": "wrong-key-note",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Re-read the failed mismatched-key check against the corrected guide text",
+      "expected": "Each symptom the guide lists for a wrong OPENLAW_SECRET_KEY appears; storage falls back to the deployment environment or the default.",
+      "actual": "The earlier attempt failed only on the reviewer's expectation that storage becomes local. On this installation .env pins STORAGE_DRIVER=azure-blob, so the fallback is the deployment value, which the guide's first bullet covers (\"fall back to the deployment environment or the default\"); the second sentence \"Storage becomes the local driver\" holds only when the deployment sets no driver. Observed with the wrong key: app and worker started (readyz 200, worker running); the saved upload limit 2 and the saved S3 bucket read as 100 and empty with source default; the Document stored only in the saved S3 bucket answered 500 while local and Azure Documents still downloaded; the test email answered 502 \"The test email could not be sent. SMTP is not configured — save a relay first.\"; the start log said \"No configured key opens these stored credentials: smtp_url (1), vapid_private_key (1), advanced_settings (1). ...\" and \"Device notifications are off until the VAPID pair can be read: ...\". Signing, AI and SSO were not configured on this installation, so those bullets were not observed. The recovery command under the wrong key exited 0; after the correct key was back, the saved upload limit and S3 reader were gone and the start log still reported advanced_settings as unreadable until a new save replaced it. Note for the author: with the driver pinned in .env to azure-blob and no bucket saved, Document storage hides the S3 fields, so \"save the Advanced values again\" cannot re-add an S3 reader from the page; the reviewer used the page's own API, and an operator can pin the S3 variables in .env instead.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:50:35.066Z",
+      "at": "2026-09-25T13:50:35.066Z"
+    },
+    {
+      "phase": "auth-secret",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Change AUTH_SECRET and recreate while a session is open; then restore it",
+      "expected": "Changing AUTH_SECRET invalidates the existing session.",
+      "actual": "An open Administrator session answered 200 on /api/v1/me/notification-preferences; after a new AUTH_SECRET and up it answered 401. The original AUTH_SECRET was restored and the containers recreated.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:50:35.271Z",
+      "at": "2026-09-25T13:51:03.235Z"
+    },
+    {
+      "phase": "vapid",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Web Push keys: read the generated public key, set only VAPID_PUBLIC_KEY, then both keys, then neither",
+      "expected": "Unset, OpenLaw serves a generated pair; one key alone stops startup; both keys pin the pair for app and worker; removing them returns to the stored pair.",
+      "actual": "Unset: the API served a generated public key (prefix BKIAVuZIhB…). With only VAPID_PUBLIC_KEY: app restarting (Restarting (1) Less than a second ago), worker restarting (Restarting (1) Less than a second ago); both logs \"throw new Error(\"VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together.\");\". With both keys: the API served the pinned public key (prefix BCj114eSfx…) and the worker received the same pair. With both removed: the API served the earlier generated key again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:51:03.493Z",
+      "at": "2026-09-25T13:51:44.742Z"
+    },
+    {
+      "phase": "mail",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SMTP_URL=smtp://relay:1025 without SMTP_FROM and recreate; check the test email, the sign-in pages, Send invite and Resend invite",
+      "expected": "No email can be sent: the test is refused, the sign-in pages hide both email links, Send invite refuses with a message naming the environment and leaves no Invited row, Resend invite shows the same message, and the relay receives nothing.",
+      "actual": "Test email: 502 \"The test email could not be sent. SMTP is not configured — save a relay first.\". Sign-in pages offer: /auth/login [], /portal/login []. Settings → Users → Invite user → Send invite for the fictional Dana Newcomer: 409 \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\"; after reload 0 row for her. Resend invite on Casey Invitee's Invited row: no Resend invite on Casey's row: \"CI Casey Invitee casey.invitee@doc030-cfg.example Legal team member No Department Invited — Resend invite Revoke invite\". Relay message count 5 before and 5 after. Screenshot invite-without-smtp-from.png.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:51:50.388Z",
+      "at": "2026-09-25T13:52:12.690Z"
+    },
+    {
+      "phase": "mail",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SMTP_FROM as well, recreate, and invite a test address",
+      "expected": "The invitation reaches the relay from SMTP_FROM with a link on BASE_URL.",
+      "actual": "The invite answered 201; \"Set your OpenLaw password\" arrived at the relay from env-relay@doc030-cfg.example with a link on https://openlaw-cfg.localhost:25711.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:52:12.691Z",
+      "at": "2026-09-25T13:52:25.745Z"
+    },
+    {
+      "phase": "mail",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "With SMTP_URL pointing at an unreachable relay and SMTP_FROM set, send a test email; then remove both and send again",
+      "expected": "A set SMTP_URL wins over the saved wizard relay even when it cannot deliver; removing it restores the saved relay.",
+      "actual": "Unreachable env relay: the test answered 502 \"The test email could not be sent. The relay host could not be found. Check the SMTP server name.\"; email settings report source env. After removing SMTP_URL and SMTP_FROM and up, source app, and the test email was delivered from openlaw@doc030-cfg.example (the relay saved in the wizard).",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:52:25.746Z",
+      "at": "2026-09-25T13:52:52.117Z"
+    },
+    {
+      "phase": "resend",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Repeat of the Resend invite check (the earlier attempt looked for the wrong accessible name): SMTP_URL set, SMTP_FROM unset, recreate, Resend invite on Casey Invitee's Invited row",
+      "expected": "Resend invite shows the same message that names the environment beside the row, and the relay receives nothing.",
+      "actual": "Resend invite (accessible name \"Resend the invite to casey.invitee@doc030-cfg.example\") answered 409; the row reads \"CI Casey Invitee casey.invitee@doc030-cfg.example Legal team member No Department Invited — The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment. Resend invite Revoke invite\". Relay count 7 before and 7 after. SMTP_URL was removed again afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:53:14.069Z",
+      "at": "2026-09-25T13:53:48.145Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set DATABASE_URL to the external postgres:16 and recreate",
+      "expected": "The app migrates the empty external database and starts; the bundled Postgres keeps running; the external database has no users yet.",
+      "actual": "readyz 200; GET /api/v1/auth/setup answered needsSetup=true; the external database holds 172 applied migration rows; the bundled postgres service is still running; a new setup token was printed: true. No records moved from the bundled database.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:53:53.100Z",
+      "at": "2026-09-25T13:54:08.373Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "On the external database, set STORAGE_DRIVER=s3 in .env with no S3_BUCKET and recreate",
+      "expected": "Startup stops and names the missing bucket.",
+      "actual": "App restarting (Restarting (1) Less than a second ago); log \"Set S3_BUCKET when STORAGE_DRIVER is s3.\". STORAGE_DRIVER was put back to azure-blob and the app started again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:54:08.375Z",
+      "at": "2026-09-25T13:54:34.295Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "On the fresh external database with SMTP_URL set and SMTP_FROM unset: create the Administrator and open the welcome wizard's email step",
+      "expected": "The email step warns that the environment sets SMTP_URL but not SMTP_FROM, shows no Send test email, and the wizard cannot finish.",
+      "actual": "After Create Administrator for the fictional Jordan External, the wizard's email step showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\", no Send test email button, Continue disabled: true. A completion request answered 409. Screenshot wizard-email-without-smtp-from.png.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:54:34.296Z",
+      "at": "2026-09-25T13:54:51.894Z"
+    },
+    {
+      "phase": "database",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Point DATABASE_URL at an unresolvable host, then remove DATABASE_URL",
+      "expected": "An unreachable database stops readiness; removing DATABASE_URL returns the bundled database and its records.",
+      "actual": "With an unresolvable host: /readyz unreachable (ECONNREFUSED), app restarting (Restarting (1) 1 second ago), log \"Error: getaddrinfo ENOTFOUND extdb-missing.invalid\". After removing DATABASE_URL and up: readyz 200, the bundled Administrator signs in and Contract 3 is there.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:54:51.895Z",
+      "at": "2026-09-25T13:55:27.755Z"
+    },
+    {
+      "phase": "lan-setup",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Private HTTPS on the LAN and Tailscale addresses: fictional corporate CA and certificate, the guide's Caddyfile adapted (bind, tls, headers, reverse_proxy 127.0.0.1), caddy validate, BASE_URL set to the private origin, app and worker recreated",
+      "expected": "The adapted Caddyfile validates; the private origin answers over HTTPS with a certificate the CA verifies on both private addresses; the app port stays on loopback.",
+      "actual": "A fictional CA signed a certificate for openlaw-cfg.company.example. The adapted Caddyfile site binds 192.168.0.59 (LAN) and 100.68.96.37 (Tailscale) on port 25716 (443 needs root on this host), uses tls with the certificate files, the three headers, and reverse_proxy 127.0.0.1:25710; \"caddy validate\" printed \"Valid configuration\". BASE_URL=https://openlaw-cfg.company.example:25716 and up. From this machine, curl with only the fictional CA trusted reached https://openlaw-cfg.company.example:25716/readyz on the LAN address: 200 0 (HTTP, verify result), headers referrer-policy: strict-origin-when-cross-origin; x-content-type-options: nosniff; x-frame-options: DENY; on the Tailscale address: 200 0. Without the CA, curl refused the certificate (exit 60). The app port on 192.168.0.59:25710 got no connection (000). Hostname resolution used curl --resolve and browser host rules in place of internal DNS.",
+      "result": "pass",
+      "startedAt": "2026-09-25T13:55:33.135Z",
+      "at": "2026-09-25T13:55:46.761Z"
+    },
+    {
+      "phase": "lan-setup",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+      "expected": "Server address reads the private origin with /mcp; each change shows Settings saved.",
+      "actual": "Check did not pass: locator.fill: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByLabel('Email')\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:55:46.762Z",
+      "at": "2026-09-25T13:56:16.904Z"
+    },
+    {
+      "phase": "lan-setup",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+      "expected": "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+      "actual": "Check did not pass: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: 'Request a key' })\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:56:16.906Z",
+      "at": "2026-09-25T13:56:47.967Z"
+    },
+    {
+      "phase": "lan-setup",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+      "expected": "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+      "actual": "Check did not pass: 401 0 401 401",
+      "result": "fail",
+      "startedAt": "2026-09-25T13:56:47.968Z",
+      "at": "2026-09-25T13:56:48.009Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+      "expected": "Server address reads the private origin with /mcp; each change shows Settings saved.",
+      "actual": "Server address reads https://openlaw-cfg.company.example:25716/mcp. Enable MCP turned the title to \"MCP is on\"; the Legal Users API keys switch saved with \"Settings saved.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:06:07.110Z",
+      "at": "2026-09-25T14:06:07.939Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+      "expected": "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('row').filter({ hasText: 'Claude Code' }).filter({ hasText: 'Active' }).first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:07.941Z",
+      "at": "2026-09-25T14:06:30.796Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+      "expected": "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+      "actual": "Check did not pass: 401 0 401 401",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:30.798Z",
+      "at": "2026-09-25T14:06:30.841Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Administrator at the private origin: Settings → Organization → MCP, read Server address, turn on MCP and Legal Users API keys",
+      "expected": "Server address reads the private origin with /mcp; each change shows Settings saved.",
+      "actual": "Check did not pass: locator.waitFor: Timeout 15000ms exceeded. Call log: \u001b[2m  - waiting for getByText('Settings saved.').first() to be visible\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:06:48.981Z",
+      "at": "2026-09-25T14:07:05.150Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "The Legal Team Member requests a key (Client name Claude Code, Contracts, Read), the Administrator approves it, and the owner reads it once",
+      "expected": "The request is Pending approval, then Active; the key dialog shows once and not after reload.",
+      "actual": "Request an API key: Client name \"Claude Code\", Toolset Contracts, Scope Read; the dialog said \"(read in the earlier attempt)\". The row read Pending approval; the Administrator selected Approve on the MCP page (approved in the earlier attempt, which then waited for an Active label that the MCP page does not show). The owner's API keys page showed \"Your key is ready\" with the key (67 characters, not recorded); after Done and a reload it did not show again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:05.152Z",
+      "at": "2026-09-25T14:07:07.448Z"
+    },
+    {
+      "phase": "lan-keys",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "From this machine on the LAN address and on the Tailscale address, connect a Streamable HTTP Client with x-api-key and list Tools; also call openlaw_whoami",
+      "expected": "The Client connects over private HTTPS with certificate verification and lists Tools on both private addresses.",
+      "actual": "On 192.168.0.59: initialize and tools/list answered 200 with 7 Tools (openlaw_whoami, openlaw_vocabulary, openlaw_docs_search, openlaw_docs_read, openlaw_form_get, openlaw_contracts_list…). On 100.68.96.37: 200 with the same 7 Tools. openlaw_whoami answered 200: {\"content\":[{\"type\":\"text\",\"text\":\"{\\\"person\\\":{\\\"id\\\":\\\"01a0d850-2d21-7f9d-b559-252d74abbead\\\",\\\"email\\\":\\\"rowan.operator@doc030-cfg.example\\\",\\\"displayName\\\":\\\"Rowan Operator\\\"},\\\"accountType\\\":\\\"le. curl verified the certificate against the fictional CA only.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:07.449Z",
+      "at": "2026-09-25T14:07:07.592Z"
+    },
+    {
+      "phase": "m41-https",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "At the private HTTPS origin: request every discovery path in the forwarding table and an unauthenticated /mcp",
+      "expected": "Discovery returns JSON, not the web app; /mcp without credentials answers 401 with WWW-Authenticate pointing to resource discovery.",
+      "actual": "/.well-known/oauth-authorization-server 200 application/json JSON; /.well-known/oauth-authorization-server/api/auth 200 application/json JSON; /.well-known/openid-configuration 200 application/json JSON; /.well-known/openid-configuration/api/auth 200 application/json JSON; /.well-known/oauth-protected-resource 200 application/json JSON; /.well-known/oauth-protected-resource/mcp 200 application/json JSON; /api/auth/.well-known/openid-configuration 200 application/json JSON; /api/auth/jwks 200 application/json JSON. Unauthenticated POST /mcp: \"HTTP/2 401\" with \"www-authenticate: Bearer resource_metadata=\"https://openlaw-cfg.company.example:25716/.well-known/oauth-protected-resource\" scope=\"toolset:workspace toolset:contracts toolset:matters toolset:tasks toolset:requests toolset:comments toolset:documents toolset:auto-docs toolset:entities toolset:knowledge toolset:people toolset:team toolset:administration write offline_access\"\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:15.141Z",
+      "at": "2026-09-25T14:07:15.263Z"
+    },
+    {
+      "phase": "m41-https",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Turn on Legal Users OAuth Clients at the private HTTPS origin and read the pill beside Server address",
+      "expected": "The switch saves while the authorization server runs; the pill names the failed checks for a private address and does not prove a vendor connection.",
+      "actual": "Legal Users OAuth Clients saved (\"Settings saved.\", switch on). The pill reads \"Not reachable · IPv4 record, Public IPv4 address\". The API resolves the private hostname from inside its container; this deployment has no public address, so the pill warns as the guide says it may.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:07:15.265Z",
+      "at": "2026-09-25T14:07:18.093Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for getByRole('button', { name: /Allow|Approve|Connect|Continue/ }).first()\u001b[22m \u001b[2m    - locator resolved to <button disabled class=\"inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-button text-base transition-[filter,background-color] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50 bg-cta-primary font-semibold text-on-cta hover:brightness-95 active:brightness-90 h-8 px-3\">Allow</button>\u001b[22m \u001b[2m  - attempting click action\u001b[22m \u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m \u001b[2m      - element is not enabled\u001b[22m \u001b[2m    - retrying click action\u001b[22m",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:07:23.409Z",
+      "at": "2026-09-25T14:07:56.254Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: page.goto: Navigation to \"https://openlaw-cfg.company.example:25716/settings/api-keys\" is interrupted by another navigation to \"http://127.0.0.1:36529/callback?code=[redacted]&state=[redacted]&iss=https%3A%2F%2Fopenlaw-cfg.company.example%3A25716%2Fapi%2Fauth\" Call log: \u001b[2m  - navigating to \"https://openlaw-cfg.company.example:25716/settings/api-keys\", waiting until \"load\"\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:08:20.396Z",
+      "at": "2026-09-25T14:08:23.987Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: locator.click: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for locator('main label').filter({ hasText: /^Contracts$/ }).first()\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:09:07.488Z",
+      "at": "2026-09-25T14:09:40.561Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Check did not pass: 200 200 with 7 Tools 200",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:09:51.428Z",
+      "at": "2026-09-25T14:09:58.344Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Discovery named https://openlaw-cfg.company.example:25716/api/auth/oauth2/authorize and https://openlaw-cfg.company.example:25716/api/auth/oauth2/token. The authorization request with client_id https://claude.ai/oauth/claude-code-client-metadata and redirect http://127.0.0.1:<port>/callback for the signed-in Legal Team Member: no consent page: an existing grant for this Client answered at once (\"ok…\"). After consent the browser returned to the loopback callback with a code; the token exchange with the PKCE verifier answered 200; tools/list with the Bearer token answered 200 with 7 Tools. On API keys the Claude Code grant row was revoked (\"Connected Clients showed \"CC Claude Code Contracts Read Granted Sep 25, 2026 Las\"); the next tools/list answered 401. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:10:40.789Z",
+      "at": "2026-09-25T14:10:45.838Z"
+    },
+    {
+      "phase": "m41-cc-oauth",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "LAN profile, Claude Code loopback OAuth at the protocol level: authorize with Claude Code's published client ID and a 127.0.0.1 callback, sign in and consent in the browser as the Legal Team Member, exchange the code with PKCE, list Tools with the token, then revoke the grant",
+      "expected": "The API fetches Claude Code's published identity, consent completes, the browser returns to the loopback callback, the token lists Tools, and after revocation the next call is refused.",
+      "actual": "Discovery named https://openlaw-cfg.company.example:25716/api/auth/oauth2/authorize and https://openlaw-cfg.company.example:25716/api/auth/oauth2/token. The authorization request with client_id https://claude.ai/oauth/claude-code-client-metadata and redirect http://127.0.0.1:<port>/callback for the signed-in Legal Team Member: consent page shown (\"Skip to content openlaw DOC-030 operator Organization CC Claude Code wants to work in OpenLaw as you Published identity https://claude.ai/oauth/claude-code-clie…\"). The browser then returned to the loopback callback with a code; the token exchange with the PKCE verifier answered 200; tools/list with the Bearer token answered 200 with 7 Tools. On API keys the Claude Code grant row was revoked (\"Connected Clients showed \"CC Claude Code Contracts Read Granted Sep 25, 2026 Las\"); the next tools/list answered 401. This drives the server side with Claude Code's real published identity; the Claude Code binary itself was not run (pending the joint live session).",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:10:54.948Z",
+      "at": "2026-09-25T14:11:04.979Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Plain-HTTP LAN boot: serve http://<LAN IP>:<port> through Caddy on the LAN address, set BASE_URL to it and recreate",
+      "expected": "The app boots; the well-known documents answer 404; API keys still work.",
+      "actual": "BASE_URL=http://192.168.0.59:25717; up and readyz 200. Well-known: /.well-known/oauth-authorization-server 404; /.well-known/oauth-authorization-server/api/auth 404; /.well-known/openid-configuration 404; /.well-known/openid-configuration/api/auth 404; /.well-known/oauth-protected-resource 404; /.well-known/oauth-protected-resource/mcp 404. tools/list with a key issued at the HTTPS origin just before (Client name Plain check) answered over plain HTTP 200 with 7 Tools.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:11:47.746Z",
+      "at": "2026-09-25T14:12:11.133Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "At the plain-HTTP address: read the MCP page, try to turn on Business Users OAuth Clients, and try Add Client",
+      "expected": "The OAuth Clients switches stay off and refuse with failed checks named including HTTPS scheme; Add Client fails.",
+      "actual": "The pill reads \"Not reachable · HTTPS scheme, Public IPv4 address\"; Legal Users OAuth Clients shows aria-checked=true (it was on before the change of address). Turning on Business Users OAuth Clients answered 400 with \"\", and the switch stayed off. Add Client: 400 \"The Client could not be saved. Check the callback URLs and try again.\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:11.134Z",
+      "at": "2026-09-25T14:12:14.763Z"
+    },
+    {
+      "phase": "m41-plain",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Return to the private HTTPS origin",
+      "expected": "BASE_URL is the private HTTPS origin again and OAuth discovery answers.",
+      "actual": "BASE_URL=https://openlaw-cfg.company.example:25716, up; discovery answered 200; the plain-HTTP Caddy site was removed.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:14.765Z",
+      "at": "2026-09-25T14:12:27.857Z"
+    },
+    {
+      "phase": "m41-plain-detail",
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "action": "Plain-HTTP LAN boot again: read what the page and the API say when Business Users OAuth Clients is turned on",
+      "expected": "The refusal names the failed checks.",
+      "actual": "PATCH answered 400 with detail \"BASE_URL scheme http: prevented the OAuth authorization server from starting. Configure HTTPS and restart before enabling OAuth Clients.\". The page's alert and status texts: [\"Not reachable · HTTPS scheme, Public IPv4 address\"]. Switch after: false. Screenshot plain-http-oauth-refused.png. Afterwards BASE_URL went back to https://openlaw-cfg.company.example:25716.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:12:45.946Z",
+      "at": "2026-09-25T14:13:14.912Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Revoke a test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+      "expected": "The row says Revoked and the next request is unauthorized.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:13:21.207Z",
+      "at": "2026-09-25T14:14:03.575Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
+      "expected": "The expired key cannot connect.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:14:03.576Z",
+      "at": "2026-09-25T14:14:45.905Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Revoke a test key in API keys (Revoke, then Revoke in Revoke API key) and make the next Client request",
+      "expected": "The row says Revoked and the next request is unauthorized.",
+      "actual": "Before: tools/list 200. Revoke API key → Revoke; the row reads \"Revoke check Contracts Read Revoked Dec 24, 2026\". The next initialize answered 401.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:23:52.339Z",
+      "at": "2026-09-25T14:23:54.624Z"
+    },
+    {
+      "phase": "lan-revoke",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Expired key: request, approve and read a second key (Client name Script), call once, then move its expiry into the past (fixture shortcut in the database) and call again",
+      "expected": "The expired key cannot connect.",
+      "actual": "The Script key listed Tools (200). After its expires_at was set a minute in the past (a database fixture step; the shortest lifetime is one day), the next initialize answered 401. Its row reads \"Script Contracts Read Expired Sep 25, 2026\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:23:54.626Z",
+      "at": "2026-09-25T14:24:00.444Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
+      "expected": "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
+      "actual": "Check did not pass: page.waitForURL: Timeout 30000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:24:05.368Z",
+      "at": "2026-09-25T14:24:41.751Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set MCP_OAUTH_GRANT_LIFETIME_DAYS=400 and recreate; then set 45 and read Advanced → MCP",
+      "expected": "An out-of-range pinned grant lifetime stops the app at startup; a valid pin shows Deployment configuration · Read only.",
+      "actual": "400: app restarting (Restarting (1) Less than a second ago), log \"throw new Error(\"MCP_OAUTH_GRANT_LIFETIME_DAYS must be a whole number from 1 to 365 days.\");\". 45: Advanced → MCP → OAuth grant lifetime (days) reads \"45 Deployment configuration · Read only\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:24:41.752Z",
+      "at": "2026-09-25T14:25:21.577Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "MCP pins: MCP_RATE_LIMIT_PER_HOUR=3 with a fresh key, four Tool calls; then MCP_RATE_LIMIT_PER_HOUR=abc and Tool calls until refused",
+      "expected": "A pinned rate limit applies; a value that is not a positive whole number falls back to 600.",
+      "actual": "With MCP_RATE_LIMIT_PER_HOUR=3: four openlaw_whoami calls gave \"ok\" | \"ok\" | \"ok\" | \"rate_limited: The limit is 3 Tool calls per hour per credential. It resets at 2026-09-25T15:00:00.000Z.\". With MCP_RATE_LIMIT_PER_HOUR=abc: after 597 more successful calls in the hour (3 already counted) the next answered \"The limit is 600 Tool calls per hour per credential. It resets at 2026-09-25T15:00:00.000Z.\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:45:26.846Z",
+      "at": "2026-09-25T14:46:30.184Z"
+    },
+    {
+      "phase": "lan-pins",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set MCP_OAUTH_GRANT_LIFETIME_DAYS=400 and recreate; then set 45 and read Advanced → MCP",
+      "expected": "An out-of-range pinned grant lifetime stops the app at startup; a valid pin shows Deployment configuration · Read only.",
+      "actual": "400: app restarting (Restarting (1) Less than a second ago), log \"throw new Error(\"MCP_OAUTH_GRANT_LIFETIME_DAYS must be a whole number from 1 to 365 days.\");\". 45: Advanced → MCP → OAuth grant lifetime (days) reads \"45 Deployment configuration · Read only\". The pin was removed afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:46:30.186Z",
+      "at": "2026-09-25T14:47:22.038Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
+      "expected": "The private address no longer answers and the app port stays unreachable from other addresses.",
+      "actual": "Check did not pass: 200 7 7 000 000,000",
+      "result": "fail",
+      "startedAt": "2026-09-25T14:55:54.709Z",
+      "at": "2026-09-25T14:55:57.000Z"
+    },
+    {
+      "phase": "lan-withdraw",
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Withdraw private access: remove the private site from Caddy and try the private origin on both addresses, the direct app port, and the still-valid key",
+      "expected": "The private address no longer answers and the app port stays unreachable from other addresses.",
+      "actual": "While private access was up, the Plain check key listed Tools (200). After removing the private Caddy site: the private origin on 192.168.0.59 failed (curl exit 7: curl: (7) Failed to connect to openlaw-cfg.company.example:25716 after 0 ms: Could not connect to server); on 100.68.96.37 failed (exit 7); the Client request got no connection (curl code 000); the app port on 192.168.0.59 and 100.68.96.37 got no connection (000, 000). Listening sockets on those ports: 127.0.0.1:25710. No public forwarding or tunnel was used at any point.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:06.853Z",
+      "at": "2026-09-25T14:56:11.308Z"
+    },
+    {
+      "phase": "topology",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Compare the app and worker containers, and inspect the document engine and Postgres",
+      "expected": "App and worker run the same image with different commands and the same database, file configuration, origin, credential key and Web Push settings; the engine has no database or credential access; Postgres and the engine publish no ports.",
+      "actual": "App and worker image sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; commands [\"node\",\"apps/api/dist/index.js\"] and [\"node\",\"apps/worker/dist/index.js\"]. Identical in both (values compared, not recorded): DATABASE_URL, STORAGE_DRIVER, STORAGE_PATH, BASE_URL, OPENLAW_SECRET_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, DOC_ENGINE_URL, AZURE_BLOB_CONTAINER. doc-engine: no variable naming a database, key, secret or relay (its variables include DOC_ENGINE_COMPARE_TIMEOUT_MS, DOC_ENGINE_MAX_CONCURRENT, DOC_ENGINE_MAX_QUEUED); network openlaw-doc030-cfg-1_openlaw-doc-engine; published ports {}. postgres published ports {}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:39.162Z",
+      "at": "2026-09-25T14:56:39.445Z"
+    },
+    {
+      "phase": "vendor-lists",
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Read the vendor egress sources the guide names (outbound reads only; nothing is exposed)",
+      "expected": "Anthropic's page lists 160.79.104.0/21; OpenAI's chatgpt-connectors.json returns prefixes a scheduled job can apply; Microsoft's managed connector page answers.",
+      "actual": "Anthropic outbound IP page: 200, lists 160.79.104.0/21: true. OpenAI chatgpt-connectors.json: 200, 278 entries, creationTime 2026-09-22T18:18:05.915327. OpenAI egress guidance: 200. Microsoft managed connector outbound addresses: 200, mentions AzureConnectors. Applying these to a firewall in front of a public listener is part of the pending live session: this lab has no public listener.",
+      "result": "pass",
+      "startedAt": "2026-09-25T14:56:39.669Z",
+      "at": "2026-09-25T14:56:47.584Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Prepare a production-like installation directory from the pinned commit, as install.md establishes it",
+      "expected": "A directory with the pinned source, a .env made by the installation guide's grouped commands, the project name and file list in .env, and a compose.operator.yml naming revision-tagged images.",
+      "actual": "git archive of 067c1646829df85e62b809ee9157921e867c84e7 extracted into the installation directory (outside the repository). install.md's grouped .env commands exited 0; .env has mode 600 with two generated keys (not recorded). .env has COMPOSE_PROJECT_NAME=openlaw-doc030-cfg-2, COMPOSE_FILE=compose.yml:compose.operator.yml, OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7, OPENLAW_BUILD_DIRTY=false, BASE_URL=https://openlaw-cfg.localhost:25731, PORT=25730. No TRUSTED_PROXIES yet, to see the start warning first. compose.operator.yml names openlaw-doc030-cfg-app:067c1646829df85e62b809ee9157921e867c84e7 and openlaw-doc030-cfg-engine:067c1646829df85e62b809ee9157921e867c84e7, which are sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba and sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e, both labelled revision 067c1646829df85e62b809ee9157921e867c84e7. docker compose config --quiet exited 0 and printed nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:32:07.745Z",
+      "at": "2026-09-25T20:32:08.135Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start the installation, then owned fixtures: an SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and Caddy on the host",
+      "expected": "docker compose up -d --no-build --pull never starts app, worker, postgres and doc-engine; readyz answers 200; the fixture project joins the installation's backend network without changing its services.",
+      "actual": "Check did not pass: up exited 1: Volume openlaw-doc030-cfg-2_openlaw-files Creating | Volume openlaw-doc030-cfg-2_openlaw-files Creating | Network openlaw-doc030-cfg-2_openlaw-doc-engine Creating | Network openlaw-doc030-cfg-2_openlaw-doc-engine Creating | Network openlaw-doc030-cfg-2_openlaw-backend Creating | Network openlaw-doc030-cfg-2_openlaw-backend Creating",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:32:08.137Z",
+      "at": "2026-09-25T20:32:08.196Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SETUP_TOKEN unset: restart the app twice while the installation has no users and compare the printed tokens",
+      "expected": "While there are no users the app prints a setup token at each start, and each start prints a new one.",
+      "actual": "Check did not pass: not ready",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:32:08.199Z",
+      "at": "2026-09-25T20:35:08.492Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start without TRUSTED_PROXIES and read the app's start log",
+      "expected": "Without TRUSTED_PROXIES the app logs a warning at start.",
+      "actual": "Check did not pass: no TRUSTED_PROXIES warning in the log",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.494Z",
+      "at": "2026-09-25T20:35:08.576Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SETUP_TOKEN in .env, recreate with up -d --no-build --pull never, and check the setup screen accepts only that token",
+      "expected": "The app logs that setup asks for SETUP_TOKEN; the previously printed token is refused; the chosen token creates the first Administrator.",
+      "actual": "Check did not pass: up exited 1",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.579Z",
+      "at": "2026-09-25T20:35:08.665Z"
+    },
+    {
+      "phase": "r2-setup",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restart with SETUP_TOKEN still set after a user exists",
+      "expected": "The app ignores SETUP_TOKEN once a user exists: no setup line in the log, and setup is closed.",
+      "actual": "Check did not pass: not ready",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:35:08.666Z",
+      "at": "2026-09-25T20:38:09.037Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start the installation, then owned fixtures: an SMTP relay stand-in, MinIO, Azurite, a separate Postgres 16, and Caddy on the host",
+      "expected": "docker compose up -d --no-build --pull never starts app, worker, postgres and doc-engine; readyz answers 200; the fixture project joins the installation's backend network without changing its services.",
+      "actual": "up -d --no-build --pull never exited 0; readyz 200; docker compose ps: app running; doc-engine running; postgres running; worker running. Fixture project openlaw-doc030-cfg-fx2 started: Mailpit as the relay stand-in (relay:1025 on the installation's backend network, UI http://127.0.0.1:25733), MinIO (http://127.0.0.1:25734, alias minio), Azurite (http://127.0.0.1:25735, alias azurite), a separate postgres:16 (extdb, backend network only), and caddy:2-alpine on the host network serving https://openlaw-cfg.localhost:25731 with \"reverse_proxy 127.0.0.1:25730\" and its internal CA. Fixture image IDs: {\"relay\":\"sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0\",\"minio\":\"sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9\",\"azurite\":\"sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1\",\"extdb\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\",\"proxy\":\"sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:38:41.650Z",
+      "at": "2026-09-25T20:39:14.564Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "SETUP_TOKEN unset: restart the app twice while the installation has no users and compare the printed tokens",
+      "expected": "While there are no users the app prints a setup token at each start, and each start prints a new one.",
+      "actual": "Two docker compose restart app runs each logged \"First-run setup is open. Paste this setup token into the setup screen:\" with a token (values not recorded) and \"It is printed once per boot and a restart makes a new one.\" The two tokens differ (SHA-256 prefixes 14fe0728 and 79db6193).",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:14.567Z",
+      "at": "2026-09-25T20:39:43.725Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Start without TRUSTED_PROXIES and read the app's start log",
+      "expected": "Without TRUSTED_PROXIES the app logs a warning at start.",
+      "actual": "The app log carries \"TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket.\"",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:43.728Z",
+      "at": "2026-09-25T20:39:43.818Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set SETUP_TOKEN in .env, recreate with up -d --no-build --pull never, and check the setup screen accepts only that token",
+      "expected": "The app logs that setup asks for SETUP_TOKEN; the previously printed token is refused; the chosen token creates the first Administrator.",
+      "actual": "After up, the app logged \"First-run setup is open. The setup screen asks for the token in SETUP_TOKEN.\" and printed no generated token. On https://openlaw-cfg.localhost:25731 the \"Set up OpenLaw\" form with the earlier printed token showed \"The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.\" and stayed on setup. With the SETUP_TOKEN value, Create Administrator created the fictional Avery Morgan and opened \"Welcome to OpenLaw\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:39:43.823Z",
+      "at": "2026-09-25T20:40:01.823Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Restart with SETUP_TOKEN still set after a user exists",
+      "expected": "The app ignores SETUP_TOKEN once a user exists: no setup line in the log, and setup is closed.",
+      "actual": "After docker compose restart app with SETUP_TOKEN still in .env, the log had no \"First-run setup is open\" line and GET /api/v1/auth/setup answered needsSetup=false. SETUP_TOKEN was then removed from .env.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:40:01.825Z",
+      "at": "2026-09-25T20:40:14.612Z"
+    },
+    {
+      "phase": "r2-setup-2",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Complete the welcome wizard with an app-saved relay (fixture for the email and key checks)",
+      "expected": "The relay saved in the wizard delivers a test email; the wizard finishes.",
+      "actual": "Wizard: organization \"DOC-030 operator Organization\"; Outbound email relay \"relay\", port 1025, no TLS, no authentication, sender openlaw@doc030-cfg.example; Send test email delivered \"OpenLaw test email\". The invitation to the fictional Rowan Operator arrived with a link on https://openlaw-cfg.localhost:25731. Finish entered /.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:40:15.206Z",
+      "at": "2026-09-25T20:40:23.668Z"
+    },
+    {
+      "phase": "r2-status",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "System status (corrected text, fresh installation): docker compose stop worker, wait over a minute, Refresh; then start it",
+      "expected": "A cleanly stopped worker removes its own row; the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "Check did not pass: locator.innerText: Timeout 30000ms exceeded. Call log: \u001b[2m  - waiting for locator('main')\u001b[22m ",
+      "result": "fail",
+      "startedAt": "2026-09-25T20:40:30.615Z",
+      "at": "2026-09-25T20:42:40.952Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Find the trusted proxy address (corrected text, fresh installation): with the non-matching 127.0.0.1,::1, sign in from a browser that reaches Caddy on the LAN address and run the log check",
+      "expected": "Apart from the 127.0.0.1 health-check lines, every request shows the gateway, so the list does not match.",
+      "actual": "docker network inspect openlaw-doc030-cfg-2_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}' printed \"192.168.240.1 192.168.240.0/20\". After a browser sign-in through Caddy on 192.168.0.59, the log check printed: 10× \"remoteAddress\":\"127.0.0.1\"; 15× \"remoteAddress\":\"192.168.240.1\". The 127.0.0.1 lines are only \"path\":\"/readyz\" (the container health check). Every other line is the gateway 192.168.240.1.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:42:41.781Z",
+      "at": "2026-09-25T20:48:02.310Z"
+    },
+    {
+      "phase": "r2-trusted",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Set TRUSTED_PROXIES to the gateway, up -d --no-build --pull never, sign in again from the LAN-side browser and run the log check",
+      "expected": "Ignoring the 127.0.0.1 lines, the other lines show the browser's address.",
+      "actual": "TRUSTED_PROXIES=192.168.240.1. The log check printed: 10× \"remoteAddress\":\"127.0.0.1\"; 15× \"remoteAddress\":\"192.168.0.59\". Ignoring the 127.0.0.1 health-check lines, every other line is the browser's address 192.168.0.59.",
+      "result": "pass",
+      "startedAt": "2026-09-25T20:48:02.312Z",
+      "at": "2026-09-25T20:53:21.453Z"
+    },
+    {
+      "phase": "r2-status",
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "System status (corrected text, fresh installation): docker compose stop worker, wait over a minute, Refresh; then start it",
+      "expected": "A cleanly stopped worker removes its own row; the page warns that a heartbeat is missing; after start the worker is Running and Current.",
+      "actual": "75 s after docker compose stop worker, Refresh showed only: API Running Current 1:04 AM (no Worker row), with \"An API or worker heartbeat is missing. Check that both services are running.\" After docker compose start worker and Refresh: API Running Current 1:05 AM | Worker Running Current 1:04 AM.",
+      "result": "pass",
+      "startedAt": "2026-09-25T21:03:23.767Z",
+      "at": "2026-09-25T21:05:04.211Z"
+    },
+    {
+      "phase": "r2-wrongkey",
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "action": "Wrong key with no STORAGE_DRIVER in .env (corrected text, fresh installation): save an S3 store in Document storage, restart, upload; then set a different OPENLAW_SECRET_KEY and recreate",
+      "expected": "Storage uses the local driver because .env sets no STORAGE_DRIVER; the Document stored only in the app-saved bucket fails to download; the correct key restores it.",
+      "actual": ".env sets no STORAGE_DRIVER. Document storage saved S3-compatible storage for bucket doc030-r2 (Test connection passed, Save, restart); a new PDF was stored under s3: and downloaded. With a different OPENLAW_SECRET_KEY and up: readyz 200; System status reports storage driver local; Store new documents in shows local with source default; the S3 Document's download answered 500; start log \"No configured key opens these stored credentials: smtp_url (1), vapid_private_key (1), advanced_settings (1). They are left as they are, so they are still recov\". With the correct key restored and up, the S3 Document downloaded with identical bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-25T21:05:09.098Z",
+      "at": "2026-09-25T21:06:07.729Z"
+    }
+  ],
+  "fixtureImages": {
+    "relay": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0",
+    "minio": "sha256:69b2ec208575b69597784255eec6fa6a2985ee9e1a47f4411a51f7f5fdd193a9",
+    "azurite": "sha256:b20c44edff38619087ef4d70a08098d694c4e18f62850675d35a48fb76a142e1",
+    "extdb": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c",
+    "proxy": "sha256:af555904a0961945f16bb323a501457b13a4f7e9bde969b145b97da80b38ecbe"
+  },
+  "contentSha256History": [
+    {
+      "sha256": "af0ef822f497f373442f33696ced87f33aa23f340d0d97fe3662fc9f9ff307f9",
+      "note": "Bytes at a9f1ffdb when the walk started (the author's technical-review.json names 3f8cb58b, which did not match the file). Walked: first run, origin, uploads, Advanced pages, storage, instance address, engine limits."
+    },
+    {
+      "sha256": "97bf7342ce8354077e4308d7e7112894bbcf327277b1c8275c2304e6450910e0",
+      "note": "Corrected at b167dba0 after this walk and operator-2 reported the TRUSTED_PROXIES and wrong-key failures. Re-walked: Find the trusted proxy address (phases trusted-proxy, trusted-proxy-note), the private VM .env block (lan-setup set TRUSTED_PROXIES to the gateway after first start), the wrong-key symptoms and recovery-command warning (keys, wrong-key-note), and removing a saved address leaving http://localhost:3000 (instance). All remaining phases ran against these bytes."
+    },
+    {
+      "sha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+      "note": "Owner corrections after the live session (recorded in operator/technical-review.json). Re-walked on a fresh installation openlaw-doc030-cfg-2 from the same images (phases r2-*): worker clean stop removes its System status row (r2-status), the trusted-proxy log check ignoring the 127.0.0.1 health-check lines (r2-trusted), wrong-key storage falls back to STORAGE_DRIVER from .env or local (r2-wrongkey; the .env-set case is from round 1). Publicly reachable step 1 (serve on 443, no port in BASE_URL) rests on the claude-live observation."
+    }
+  ],
+  "finalContentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+  "effectiveValues": {
+    "note": "Final non-secret .env entries of the installation before teardown. Secrets were set and are not recorded. Variables changed and removed during the walk are in the steps.",
+    "env": {
+      "COMPOSE_PROJECT_NAME": "openlaw-doc030-cfg-1",
+      "COMPOSE_FILE": "compose.yml:compose.operator.yml",
+      "OPENLAW_BUILD_COMMIT": "067c1646829df85e62b809ee9157921e867c84e7",
+      "OPENLAW_BUILD_DIRTY": "false",
+      "PORT": "25710",
+      "BASE_URL": "https://openlaw-cfg.company.example:25716",
+      "TRUSTED_PROXIES": "192.168.96.1 (gateway of openlaw-doc030-cfg-1_openlaw-backend, 192.168.96.0/20)",
+      "OPENLAW_PLAIN_HTTP_HOSTS": "minio,azurite",
+      "STORAGE_DRIVER": "azure-blob",
+      "AZURE_BLOB_CONTAINER": "doc030-env",
+      "AZURE_BLOB_ACCOUNT": "devstoreaccount1",
+      "AZURE_BLOB_ENDPOINT": "http://azurite:10000/devstoreaccount1",
+      "AUTH_SECRET, OPENLAW_SECRET_KEY, AZURE_BLOB_ACCOUNT_KEY": "set, not recorded"
+    },
+    "appSaved": "Document storage S3 reader doc030-app at http://minio:9000, path style, region eu-west-1, keys write-only (saved again after the wrong-key recovery command erased the saved configuration).",
+    "containerLimitsDefault": "app and worker 2 CPUs, 1073741824 bytes, 256 pids; doc-engine 2 CPUs, 4294967296 bytes, 512 pids, /tmp size=2g"
+  },
+  "fileHashes": {
+    "compose.yml (pinned source)": "b5d434e580f637bbcdc5df544345d7f1dee6265d140318033a916e92b20f11d8",
+    "compose.operator.yml": "f3ec8930e4eaa4880555562110fde9ad578f8b2591e35fcab547a9b6a3091f97",
+    ".env.example (pinned source)": "87c811f1f9e6b7809a91542843e68ee91f3a3a9d751f65e1fd19cc1a97d69f62",
+    "fixture compose.yml": "20bef9ecd840f6827b3bcba45c1876f7bf759a575250c4cfc33a2182133feab7",
+    "Caddyfile (final, private site removed)": "e448d53ef441b136b37432d3f48ce73ed1c85ff8608bbeaeb63753b42d2dc29a",
+    "Document doc030-local.pdf (local driver)": "2336bf7ba945ccf8c9c7c4f49aeb9b46f1e6ba88ee2b2fe939a016606415a89a",
+    "Document doc030-s3-app.pdf (app-saved S3)": "3b1f66205f3a6ca456da7cc2d22c0fcbe643ac14493d69e04bc9cf7f482cee50",
+    "Document doc030-azure-env.pdf (azure-blob via .env)": "b6eb54fd56814a5ea6a7993435d55db9263a33699b81cc6370963b1d8ca5f2e3"
+  },
+  "combinations": [
+    {
+      "scenario": "V-C45",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Against the corrected bytes 97bf7342. At af0ef822 it failed: TRUSTED_PROXIES=127.0.0.1,::1 matched nothing (see guideFailures)."
+    },
+    {
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-C45-advanced-settings",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M40-LAN",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M40-LAN",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass"
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Every part that needs no public exposure."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "container-operation",
+      "result": "pass",
+      "note": "Every part that needs no public exposure."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "operator",
+      "method": "live-provider-check",
+      "result": "pass",
+      "note": "From the claude-live walker's session (claude-live/v-m41-public.json): on 443 claude.ai connected and three roles consented; its failure on :8443 is the guide failure fixed in 01f46836. ChatGPT and Copilot not tested (owner decision)."
+    },
+    {
+      "scenario": "V-M41-PUBLIC",
+      "role": "administrator",
+      "method": "live-provider-check",
+      "result": "pass",
+      "note": "From the claude-live walker's session (claude-live/v-m41-public.json): on 443 claude.ai connected and three roles consented; its failure on :8443 is the guide failure fixed in 01f46836. ChatGPT and Copilot not tested (owner decision)."
+    }
+  ],
+  "pending": null,
+  "guideFailures": [
+    {
+      "bytes": "af0ef822",
+      "step": "Serve the intended origin / private VM .env block: TRUSTED_PROXIES=127.0.0.1,::1 for a proxy on the same host",
+      "expected": "The app reads the client address from X-Forwarded-For through Caddy on the host.",
+      "observed": "Every session recorded 192.168.96.1, the Compose backend gateway; a client-sent X-Forwarded-For was ignored; no warning was logged. Listing the gateway made the app record the client address. Corrected in 97bf7342 and re-walked (pass)."
+    },
+    {
+      "bytes": "af0ef822",
+      "step": "An unreadable saved Advanced configuration stops startup; the recovery command with a wrong key stops with the startup message",
+      "expected": "Startup stops.",
+      "observed": "Walked only against 97bf7342, which already describes the observed behavior: app and worker start, saved values read as default, the recovery command exits 0 and erases every section. Operator-2 reported the failure first."
+    },
+    {
+      "bytes": "97bf7342 / db828042",
+      "step": "Publicly reachable, step 1",
+      "expected": "Any public HTTPS origin that passes the guide's checks serves claude.ai.",
+      "observed": "Observed by DOC-030 independent live-provider walkthrough agent (claude-live): an origin on :8443 passed every guide check, but claude.ai said \"Couldn't reach this address\"; on 443 it connected. Corrected in 01f46836 (serve on 443, no port in BASE_URL)."
+    }
+  ],
+  "guideNotes": [
+    "Fixed in 01f46836 and re-walked: the log-check health-check lines, the wrong-key storage fallback, and the cleanly stopped worker's row.",
+    "Lost-key recovery: with STORAGE_DRIVER pinned in .env to another driver and no bucket saved, Document storage hides the S3 fields, so an S3 reader cannot be saved again from the page.",
+    "Plain-HTTP LAN boot: turning on an OAuth Clients switch answers 400 with a clear detail, but the page shows no message; only the pill (Not reachable · HTTPS scheme, Public IPv4 address) names the checks.",
+    "The reset script's usage line lists instance|uploads|storage|processing but it accepts mcp (confirms the author's limitation)."
+  ],
+  "productBugs": [
+    "reset-advanced-settings.js run with a wrong OPENLAW_SECRET_KEY exits 0 and replaces the whole saved configuration with an empty one; the correct key cannot recover it (data loss; the corrected guide warns about it).",
+    "Settings → Organization → MCP on a plain-HTTP BASE_URL: PATCH /api/v1/mcp-settings answers 400 'BASE_URL scheme http: prevented the OAuth authorization server from starting...' but the page shows no error; the switch silently stays off (screenshot plain-http-oauth-refused.png).",
+    "The upload refusal says 'That file is over the 1 MB upload limit.' while the limit is 1 MiB (1,048,577 bytes refused, 1,048,576 accepted).",
+    "The API never deletes its runtime_status heartbeat row on shutdown (every past API process row stays for 24 h); the worker deletes its row on a clean stop."
+  ],
+  "limitations": [
+    "Agent walkthrough, not a human operator study. One agent acted as operator and Administrator; the Legal Team Member Rowan Operator was the key owner and the non-administrator for negative checks.",
+    "No new images were built: compose.operator.yml named tags pointing at the images lab.mjs built from 067c1646 (app sha256:506e20d1..., engine sha256:eabde72b...).",
+    "HTTPS used Caddy's internal CA (openlaw-cfg.localhost:25711) and a fictional corporate CA for openlaw-cfg.company.example:25716 on the LAN address 192.168.0.59 and the Tailscale address 100.68.96.37. Port 443 needs root on this host. Internal DNS was replaced by curl --resolve and browser host rules. Host port 3000 belongs to an unrelated service, so PORT was 25710 and the default http://localhost:3000 origin was served through Caddy on [::1]:3000.",
+    "All private-address requests came from this machine. No second device, office network, VPN, firewall rule or IPv6 rule was tested; 'unreachable outside the permitted network' was shown only as connection refused after the private site was withdrawn.",
+    "The API key Client was curl speaking Streamable HTTP with x-api-key (the guide's 'other SDK Clients' path). claude mcp add was not run: the private hostname does not resolve for the Claude Code binary without system DNS changes.",
+    "Claude Code loopback OAuth was driven at the protocol level with Claude Code's published client ID (https://claude.ai/oauth/claude-code-client-metadata), a 127.0.0.1 callback, PKCE and the real consent page; the Claude Code binary's own OAuth run is part of the pending live session.",
+    "The expired-key check moved the key's expires_at into the past in the database; the shortest lifetime is one day.",
+    "Signing, AI analysis and SSO were not configured, so their wrong-key bullets were not observed.",
+    "The host rebooted mid-walk; the fixture containers were started again and no state was lost. Chromium's ERR_NETWORK_CHANGED during Docker network changes caused several failed attempts; each failed attempt stays in the log beside its passing repeat.",
+    "A failed attempt of m41-cc-oauth revoked the Claude Code API key by selecting the wrong row; later key checks used fresh keys (Plain check, Revoke check, Script, Rate check)."
+  ],
+  "teardown": {
+    "at": "2026-09-25T14:58:31.635Z",
+    "actions": "docker compose down -v --remove-orphans for openlaw-doc030-cfg-fx and openlaw-doc030-cfg-1 (containers, networks, named and anonymous volumes); image tags openlaw-doc030-cfg-app and openlaw-doc030-cfg-engine removed (the lab images stay); ~/.cache/openlaw-doc030/operator-cfg removed with its .env, fictional CA and state. No image was pulled."
+  },
+  "counts": {
+    "steps": 149,
+    "pass": 108,
+    "fail": 41
+  },
+  "summary": "deployment-configuration passes every required role × method pair against 01f46836. The live-provider-check rows rest on the claude-live walker's claude.ai session. Evidence written to docs/documentation/evidence/deployment-configuration.json.",
+  "failureNotes": [
+    "proxy: the genuine guide failure at af0ef822 (TRUSTED_PROXIES=127.0.0.1,::1); superseded by trusted-proxy and trusted-proxy-note against 97bf7342.",
+    "keys (mismatched key): failed only on the reviewer's 'storage becomes local' expectation; see wrong-key-note. keys (AUTH_SECRET): the reviewer used a nonexistent /api/v1/auth/me; repeated in auth-secret (pass).",
+    "advanced (restart): the saved values applied (2,097,153 bytes refused 413, 2,097,152 accepted 201); it failed on an extra API row still marked Restart required during the first minute; advanced-restart shows it clears after 60 s. advanced (stop worker): a clean stop removes the worker row; advanced-restart shows No recent heartbeat after docker compose kill.",
+    "All other failed attempts are reviewer-script faults (selectors, a login view, an eager error message, a Docker template) or Chromium ERR_NETWORK_CHANGED during Docker network changes; each has a passing repeat in a later phase: accept, origin-upload, advanced-nav, storage-recheck, instance-link, limits, lan-keys, m41-cc-oauth, lan-revoke, lan-pins, lan-withdraw."
+  ],
+  "round2": {
+    "lab": "openlaw-doc030-cfg-2 (installation, app 127.0.0.1:25730, proxy https://openlaw-cfg.localhost:25731) and openlaw-doc030-cfg-fx2 (Caddy, MinIO, Azurite, Mailpit, postgres:16)",
+    "images": "app and worker sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e (same lab.mjs images, tagged, not rebuilt)",
+    "hostWorkaround": "Docker's default address pools were exhausted on this host, so the reviewer created openlaw-doc030-cfg-2_openlaw-doc-engine with an explicit subnet 10.241.91.0/24 (internal, Compose labels). Not an article step.",
+    "effectiveValues": {
+      "TRUSTED_PROXIES": "192.168.240.1 (gateway of 192.168.240.0/20)",
+      "BASE_URL": "https://openlaw-cfg.localhost:25731",
+      "PORT": "25730",
+      "STORAGE_DRIVER": "unset",
+      "OPENLAW_PLAIN_HTTP_HOSTS": "minio"
+    }
+  },
+  "teardown2": {
+    "at": "2026-09-25T21:08:15.814Z",
+    "actions": "docker compose down -v --remove-orphans for openlaw-doc030-cfg-fx2 and openlaw-doc030-cfg-2 (the pre-created engine network included); image tags openlaw-doc030-cfg-app and openlaw-doc030-cfg-engine removed; ~/.cache/openlaw-doc030/operator-cfg removed."
+  }
+}

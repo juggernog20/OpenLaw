@@ -1,0 +1,501 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "issue": 1157,
+  "group": "inbox",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (inbox)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": "inboxai",
+  "environment": "openlaw-docs-80ceef9e-inboxai",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48465",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-25T10:23:18.931Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-25T10:23:36.405Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules, headless, 1440x1000 staff and 1280x900 Portal; one isolated browser context per identity",
+  "articleHashesAtStart": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  },
+  "fixtures": {
+    "contractType": {
+      "id": "01a0d818-f3eb-79a1-b022-f6b5c83243ce",
+      "name": "DOC-030 inbox Supplier agreement",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "contract_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "entity",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "counterparties",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "owning_department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "term_type",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "effective_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "expiry_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "renewal_period_months",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "notice_period_days",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "value",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_supplier_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_budget_note",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_contracting_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_contract_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "matterType": {
+      "id": "01a0d818-f3fd-7515-bb25-987d6fc4b57d",
+      "name": "DOC-030 inbox Advisory",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "matter_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_adviser_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_030_inbox_matter_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_region_choice",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_030_inbox_engagement_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "requestTypes": {
+      "contract": {
+        "id": "01a0d818-f4ce-7d27-bedd-38f7b9f71114",
+        "name": "DOC-030 inbox Supplier contract request"
+      },
+      "matter": {
+        "id": "01a0d818-f4d9-7ece-be9b-2c2d2e126f82",
+        "name": "DOC-030 inbox Advisory matter request"
+      }
+    },
+    "fields": {
+      "carry": {
+        "id": "01a0d818-f40c-7549-84c3-967cbb35e015",
+        "slug": "doc_030_inbox_supplier_name",
+        "name": "DOC-030 inbox Supplier name",
+        "type": "text"
+      },
+      "stay": {
+        "id": "01a0d818-f41a-70e2-84e9-d3527d1d48aa",
+        "slug": "doc_030_inbox_budget_note",
+        "name": "DOC-030 inbox Budget note",
+        "type": "text"
+      },
+      "required": {
+        "id": "01a0d818-f426-784a-a933-d820f81be4c0",
+        "slug": "doc_030_inbox_cost_centre",
+        "name": "DOC-030 inbox Cost centre",
+        "type": "text"
+      },
+      "entity": {
+        "id": "01a0d818-f432-7768-b352-ac899e9c9a22",
+        "slug": "doc_030_inbox_contracting_entity",
+        "name": "DOC-030 inbox Contracting entity",
+        "type": "entity"
+      },
+      "recordC": {
+        "id": "01a0d818-f443-750b-9d1d-b54e7393df87",
+        "slug": "doc_030_inbox_contract_summary",
+        "name": "DOC-030 inbox Contract summary",
+        "type": "text"
+      },
+      "mCarry": {
+        "id": "01a0d818-f452-7385-8831-35f610de3595",
+        "slug": "doc_030_inbox_adviser_name",
+        "name": "DOC-030 inbox Adviser name",
+        "type": "text"
+      },
+      "mRequired": {
+        "id": "01a0d818-f467-7842-aa82-7bc130135918",
+        "slug": "doc_030_inbox_matter_cost_centre",
+        "name": "DOC-030 inbox Matter cost centre",
+        "type": "text"
+      },
+      "mEntity": {
+        "id": "01a0d818-f476-783b-b4e6-00b7e68d0934",
+        "slug": "doc_030_inbox_matter_entity",
+        "name": "DOC-030 inbox Matter entity",
+        "type": "entity"
+      },
+      "choice": {
+        "id": "01a0d818-f487-7ece-b94a-7f7dd00e6ec3",
+        "slug": "doc_030_inbox_region_choice",
+        "name": "DOC-030 inbox Region choice",
+        "type": "single_select"
+      },
+      "record": {
+        "id": "01a0d818-f499-7db6-9d23-e7b659a106b9",
+        "slug": "doc_030_inbox_engagement_summary",
+        "name": "DOC-030 inbox Engagement summary",
+        "type": "text"
+      }
+    },
+    "templates": {
+      "good": {
+        "id": "01a0d818-f53f-7fd4-b779-00db8025e9b9",
+        "name": "DOC-030 inbox Advisory template"
+      },
+      "stale": {
+        "id": "01a0d818-f563-751e-8ece-722bbaedbcbb",
+        "name": "DOC-030 inbox Stale template"
+      }
+    }
+  },
+  "requests": {
+    "administrator:ai-matter": {
+      "number": 37,
+      "reference": "R-37",
+      "id": "01a0d846-3d8f-7bb6-9aa5-65c377b66f67",
+      "title": "DOC-030 inbox Admin ai-matter 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-matter-1.pdf",
+          "bytes": 942
+        },
+        {
+          "name": "doc030-inbox-admin-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.137Z"
+    },
+    "administrator:ai-matter-edit": {
+      "number": 38,
+      "reference": "R-38",
+      "id": "01a0d846-3ddf-774c-992d-d3d28a12a093",
+      "title": "DOC-030 inbox Admin ai-matter-edit 876878",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.166Z"
+    },
+    "administrator:ai-contract": {
+      "number": 39,
+      "reference": "R-39",
+      "id": "01a0d846-3dfa-7749-8b32-4e8efa135aed",
+      "title": "DOC-030 inbox Admin ai-contract 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-1.pdf",
+          "bytes": 946
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.206Z"
+    },
+    "administrator:ai-contract-fail": {
+      "number": 40,
+      "reference": "R-40",
+      "id": "01a0d846-3e1f-735e-aebb-5b8cfc807724",
+      "title": "DOC-030 inbox Admin ai-contract-fail 876878",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-admin-ai-contract-fail-1.pdf",
+          "bytes": 956
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.238Z"
+    },
+    "legal_team_member:ai-matter": {
+      "number": 41,
+      "reference": "R-41",
+      "id": "01a0d846-3e9e-7a5e-80b0-298fd1ec87df",
+      "title": "DOC-030 inbox Member ai-matter 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-matter-1.pdf",
+          "bytes": 944
+        },
+        {
+          "name": "doc030-inbox-member-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.384Z"
+    },
+    "legal_team_member:ai-matter-edit": {
+      "number": 42,
+      "reference": "R-42",
+      "id": "01a0d846-3ed3-7173-8ee1-e3d608367a39",
+      "title": "DOC-030 inbox Member ai-matter-edit 876878",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.410Z"
+    },
+    "legal_team_member:ai-contract": {
+      "number": 43,
+      "reference": "R-43",
+      "id": "01a0d846-3eed-76d8-be83-b05b4c96ec74",
+      "title": "DOC-030 inbox Member ai-contract 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-1.pdf",
+          "bytes": 948
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.453Z"
+    },
+    "legal_team_member:ai-contract-fail": {
+      "number": 44,
+      "reference": "R-44",
+      "id": "01a0d846-3f1a-7ef1-b2cb-d9210bb911eb",
+      "title": "DOC-030 inbox Member ai-contract-fail 876878",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc030-inbox-member-ai-contract-fail-1.pdf",
+          "bytes": 958
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-25T11:14:37.500Z"
+    }
+  },
+  "phases": ["ai-record"],
+  "roles": ["administrator", "legal_team_member"],
+  "startedAt": "2026-09-25T11:18:48.354Z",
+  "finishedAt": "2026-09-25T11:18:51.559Z",
+  "steps": [
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Prepare Matter Rows after conversion: M-24's empty Record Row fills in the background with an Unverified value, with no progress or retry control; sparkle and Confirm work",
+      "expected": "DOC-030 inbox Engagement summary filled from the Request with Unverified; typed values untouched; Confirm clears the marker",
+      "page": "/matters/24",
+      "actual": "Within the wait, M-24's DOC-030 inbox Engagement summary (a Record Row: not on intake, not required) read \"Quarterly advisory retainer for supplier onboarding\" with Unverified and the AI border (data-ai-generated true) (aiUnverified keys [\"field:doc_030_inbox_engagement_summary\"]); DOC-030 inbox Matter cost centre and DOC-030 inbox Region choice kept the typed values. The Matter page shows no progress or retry control for this run. The sparkle opened \"Unverified value Why this value The source names this value. Sources R-37 description Confirm\". Confirm cleared the marker (value kept: \"Quarterly advisory retainer for supplier onboarding\").",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:18:49.120Z",
+      "at": "2026-09-25T11:18:50.097Z"
+    },
+    {
+      "article": "convert-request",
+      "scenario": "V-C13",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Prepare Matter Rows after conversion: M-26's empty Record Row fills in the background with an Unverified value, with no progress or retry control; sparkle and Confirm work",
+      "expected": "DOC-030 inbox Engagement summary filled from the Request with Unverified; typed values untouched; Confirm clears the marker",
+      "page": "/matters/26",
+      "actual": "Within the wait, M-26's DOC-030 inbox Engagement summary (a Record Row: not on intake, not required) read \"Quarterly advisory retainer for supplier onboarding\" with Unverified and the AI border (data-ai-generated true) (aiUnverified keys [\"field:doc_030_inbox_engagement_summary\"]); DOC-030 inbox Matter cost centre and DOC-030 inbox Region choice kept the typed values. The Matter page shows no progress or retry control for this run. The sparkle opened \"Unverified value Why this value The source names this value. Sources R-41 description Confirm\". Confirm cleared the marker (value kept: \"Quarterly advisory retainer for supplier onboarding\").",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:18:50.613Z",
+      "at": "2026-09-25T11:18:51.558Z"
+    }
+  ],
+  "records": [],
+  "productBugs": [],
+  "guideFailures": [],
+  "articleHashesAtEnd": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  }
+}

@@ -1,36 +1,48 @@
 {
   "articleId": "create-matter",
-  "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (matters, round 1)",
+  "contentSha256": "27c935b35a5a7c80c8cd0ef80251dab68145a0bf9c8950f1505e7881c726bbf7",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (matters)",
+  "technicalReviewer": "DOC-030 source-review author agent (matters)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (matters)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-029 source-review author agent (matters)",
-  "verifiedAt": "2026-09-16T15:38:37.588Z",
+  "verifiedAt": "2026-09-25T11:02:20.097Z",
   "status": "pass",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (matters)",
   "sources": [
     "docs/user-guides/create-matter.md",
+    "docs/documentation/batches/DOC-030/matters/technical-review.json",
+    "docs/documentation/batches/DOC-030/matters/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/matters/wt-create-matter.mjs",
+    "docs/documentation/batches/DOC-030/matters/lib.mjs",
+    "docs/documentation/batches/DOC-030/matters/setup.mjs",
+    "docs/documentation/batches/DOC-030/matters/walkthrough.json",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
     "docs/decision-records/DECISIONS-MATTERS.md",
+    "messages/en-US.json",
     "apps/web/src/components/matters/create-matter-dialog.tsx",
+    "apps/web/src/components/type-form/creation-rows.tsx",
+    "apps/web/src/components/type-form/record-rows.tsx",
+    "apps/web/src/components/type-form/needed-by-field.tsx",
     "apps/web/src/components/documents/create-attachments.tsx",
     "apps/web/src/components/department-picker.tsx",
     "apps/web/src/components/confidential-toggle.tsx",
     "apps/web/src/routes/matters.tsx",
     "apps/web/src/routes/matter-record.tsx",
-    "apps/web/src/components/record-person-field.tsx",
     "apps/web/src/components/matters/team-applet.tsx",
     "apps/web/src/components/record-team-applet.tsx",
-    "apps/web/src/components/team-roster.tsx",
+    "packages/shared/src/form-builtins.ts",
+    "packages/shared/src/form-evaluator.ts",
+    "packages/db/migrations/0157_type-forms.sql",
+    "apps/api/src/lib/type-form-routes.ts",
+    "apps/api/src/lib/creation-form.ts",
+    "apps/api/src/lib/custom-fields.ts",
     "apps/api/src/modules/matters/create.ts",
     "apps/api/src/modules/matters/routes.ts",
-    "apps/api/src/lib/custom-fields.ts",
-    "apps/api/src/lib/matter-access.ts",
-    "apps/api/src/lib/contract-term.ts",
-    "docs/documentation/batches/DOC-029/matters/technical-review.json",
-    "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json"
+    "apps/api/src/modules/matters/service.ts"
   ],
   "scenarios": [
     {
@@ -39,19 +51,22 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Daniel Okafor (Administrator) signs in with a password in an isolated browser context; Nadia Haddad is the second legal session for restricted-record fixtures.",
-        "Jonas Weber (Business User) signs in to the Portal with a fresh magic link from the lab Mailpit.",
-        "Fixtures from setup-r1.mjs: DOC-029 matters type (required text, optional text, Entity reference and person reference Fields), DOC-029 matters retype (extra required number Field), and alpha, beta and gamma templates on the first type."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z). Other walkthrough agents used the same lab at the same time; only records named DOC-030 matters were created.",
+        "Fixtures from setup.mjs (fixtures.json): Matter types DOC-030 matters type, DOC-030 matters retype and DOC-030 matters department required with the Forms recorded in walkthrough.json, five DOC-030 matters Fields, and four DOC-030 matters templates.",
+        "Priya Raman (Legal Team Member) is the comparison reader; Jonas Weber (Business User) signs in to the Portal with a fresh magic link read from the lab Mailpit.",
+        "Daniel Okafor (Administrator) signs in with a password in an isolated browser context.",
+        "Each direct-create step added a Matter Document type named DOC-030 matters paper <stamp> <role> through the Administrator API and archived it at the end of the step; the gamma template was archived and restored inside its step. An NDA with a Counterparty was created through the API as the linked-Contract fixture."
       ],
-      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
-      "actual": "13 recorded browser steps passed for this role (Daniel Okafor). New matter started Matter Manager on Daniel Okafor with only Legal Team Members and Administrators offered, No Department, Priority Medium, Risk Not assessed, and Matter template (after a type) on No template. Create was refused with \"Fill Title, DOC-029 matters required note.\" and \"Fill DOC-029 matters required note.\"; Cancel created nothing. M-118 was created with Manager Priya Raman, Department Finance, an Entity reference and a person reference (Jonas Weber, who still could not read it: 404); an aborted document upload left the dialog open with Retry failed uploads and Continue while the Matter already existed, and Retry uploaded the file and opened M-118 with Status Open (open Category). A second Matter with Confidential switched on used Continue after a failed upload and opened M-121 with Confidential true. In the dialog, alpha prefilled title, Priority High, Risk Critical, both Fields and \"Template adds 2 tasks and 2 key dates.\"; switching to beta replaced a typed Field value and the prefix title; No template reset Priority, Risk and Fields but kept a typed title. M-119 from alpha (created 2026-09-16T15:30:49.419Z) kept the cleared optional Field empty, copied Tasks due +3 UTC days and undated, Key dates +0 and +7, the Manager-targeted Task assigned to Daniel Okafor, the Manager chosen at creation, Status Open, and no extra team. A template archived after the form opened was refused with \"The template must be live and belong to the selected matter type.\" and a fresh form omitted it. Overview order was title, type, Matter Manager, Business Owner, Department, Region, Priority, Risk; Region EMEA and No Region saved; both owner pickers searched people and showed avatars; renaming kept M-118; clearing the required Field was refused (\"Fill DOC-029 matters required note first — the type requires it.\"); Change matter type Cancel kept the type, Change type saved it, and switching back kept the detached value stored but hidden. The Matter team roster showed one row per person with Matter Manager, Business Owner and Creator statements; Jonas Weber as Business Owner had no Portal read (404) until Add team member added him (200). On Confidential M-120, Priya Raman could read and edit after being added but Add team member was disabled and her team and flag writes answered 403. Linking a Contract with a Counterparty changed none of the Matter team, Fields or Documents, and History listed the changes. A Business User had no New matter and a direct create answered 403.",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior. The dialog draws only the Rows the type's Form collects at creation.",
+      "actual": "14 recorded browser steps passed for this role (run 1790333890346). Daniel Okafor (Administrator) opened Matters > New matter; Create matter started on the default type \"Default\" with Matter Manager on the reader, Unassigned first and no Business Users. On \"DOC-030 matters type\" (Form: Description, Department, Priority, Risk and Needed by On intake form, required note Required for creation, optional note, Entity and person Fields On intake form) the dialog drew Description, Department (No Department), Priority (Medium), Risk (empty choice \"Not set\"), Needed by and the four Fields, and not Region; Matter template started on No template. \"DOC-030 matters retype\" (a new type's built-in Rows) drew only Description; \"DOC-030 matters department required\" drew Department on \"Choose a Department\", and Create stayed in the dialog with the browser's \"Please select an item in the list.\" until Finance was chosen. Missing values showed \"Fill Title, DOC-030 matters required note.\" then \"Fill DOC-030 matters required note.\"; Cancel created nothing. With a fixture Matter Document type live, staging a PDF showed Document type on \"No type\"; with the first upload failed by a browser-route stand-in the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and Retry opened M-85: Status Open, Priority High, Risk Low, Manager Priya Raman, Department Finance, Entity and person references, the Document with the chosen type, and one Key date named Needed by on the picked date. Templates prefilled title, Priority, Risk and Fields with \"Template adds 2 tasks and 2 key dates.\"; switching to beta or No template reset them and kept a typed title. M-86 from the alpha template kept the cleared optional Field empty, got Tasks at +3 days and undated and Key dates at +0 and +7 UTC days, Status Open and no team beyond the creator; its Matter Manager stayed Daniel Okafor, so the Manager-targeted Task went to him. On the retype type the undrawn template Priority High and Risk Low were saved and shown on Overview; a Matter without a template showed Priority Medium and Risk Not assessed. An archived template was refused with \"The template must be live and belong to the selected matter type.\" and left the reopened list. Overview listed Title, Matter type, Description, Department, Priority, Risk, Needed by, Region, the four Fields, then Matter Manager and Business Owner, with no custom-field section; Region EMEA and No Region saved, the Needed by Row moved the Needed by Key date, both owner pickers searched people and showed avatars, and a rename kept M-85. Clearing the required Field was refused; Change matter type to DOC-030 matters retype asked for the required number, Cancel kept the type and Change type saved; switching back kept the value stored and hidden. Naming Jonas Weber Business Owner put him on the Matter team with no remove control; Add team member > Person > Add added Tom Iwu; clearing the Business Owner left Jonas on the team with a remove control. On Confidential M-88, Priya Raman on the team could read and edit but her Add team member was disabled and her team, Confidential flag, Matter Manager and Business Owner changes were refused (403, \"Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.\"); the Administrator could change them. Linking an NDA with a Counterparty copied nothing onto the Matter and History listed the changes. The \"Confidential — restrict to the matter team\" switch saved the flag and Continue opened the Matter without the failed file. Jonas Weber (Business User) had no New matter control, was sent from /matters to /portal and his create was refused (403).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/wt-create-matter-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/setup-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/technical-review.json"
+        "docs/documentation/batches/DOC-030/matters/walkthrough.json",
+        "docs/documentation/batches/DOC-030/matters/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/matters/lib.mjs",
+        "docs/documentation/batches/DOC-030/matters/setup.mjs",
+        "docs/documentation/batches/DOC-030/matters/fixtures.json",
+        "docs/documentation/batches/DOC-030/matters/wt-create-matter.mjs"
       ]
     },
     {
@@ -60,56 +75,39 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded shared work lab openlaw-docs-41255c61-work built from 3fa407e3; Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context; Daniel Okafor is the second legal session for restricted-record fixtures.",
-        "Jonas Weber (Business User) signs in to the Portal with a fresh magic link from the lab Mailpit.",
-        "Fixtures from setup-r1.mjs: DOC-029 matters type (required text, optional text, Entity reference and person reference Fields), DOC-029 matters retype (extra required number Field), and alpha, beta and gamma templates on the first type."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z). Other walkthrough agents used the same lab at the same time; only records named DOC-030 matters were created.",
+        "Fixtures from setup.mjs (fixtures.json): Matter types DOC-030 matters type, DOC-030 matters retype and DOC-030 matters department required with the Forms recorded in walkthrough.json, five DOC-030 matters Fields, and four DOC-030 matters templates.",
+        "Priya Raman (Legal Team Member) is the comparison reader; Jonas Weber (Business User) signs in to the Portal with a fresh magic link read from the lab Mailpit.",
+        "Nadia Haddad (Legal Team Member) signs in with a password in an isolated browser context.",
+        "Each direct-create step added a Matter Document type named DOC-030 matters paper <stamp> <role> through the Administrator API and archived it at the end of the step; the gamma template was archived and restored inside its step. An NDA with a Counterparty was created through the API as the linked-Contract fixture."
       ],
-      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior.",
-      "actual": "13 recorded browser steps passed for this role (Nadia Haddad). New matter started Matter Manager on Nadia Haddad with only Legal Team Members and Administrators offered, No Department, Priority Medium, Risk Not assessed, and Matter template (after a type) on No template. Create was refused with \"Fill Title, DOC-029 matters required note.\" and \"Fill DOC-029 matters required note.\"; Cancel created nothing. M-122 was created with Manager Priya Raman, Department Finance, an Entity reference and a person reference (Jonas Weber, who still could not read it: 404); an aborted document upload left the dialog open with Retry failed uploads and Continue while the Matter already existed, and Retry uploaded the file and opened M-122 with Status Open (open Category). A second Matter with Confidential switched on used Continue after a failed upload and opened M-125 with Confidential true. In the dialog, alpha prefilled title, Priority High, Risk Critical, both Fields and \"Template adds 2 tasks and 2 key dates.\"; switching to beta replaced a typed Field value and the prefix title; No template reset Priority, Risk and Fields but kept a typed title. M-123 from alpha (created 2026-09-16T15:31:01.037Z) kept the cleared optional Field empty, copied Tasks due +3 UTC days and undated, Key dates +0 and +7, the Manager-targeted Task Unassigned because the Manager was cleared to Unassigned, Status Open, and no extra team. A template archived after the form opened was refused with \"The template must be live and belong to the selected matter type.\" and a fresh form omitted it. Overview order was title, type, Matter Manager, Business Owner, Department, Region, Priority, Risk; Region EMEA and No Region saved; both owner pickers searched people and showed avatars; renaming kept M-122; clearing the required Field was refused (\"Fill DOC-029 matters required note first — the type requires it.\"); Change matter type Cancel kept the type, Change type saved it, and switching back kept the detached value stored but hidden. The Matter team roster showed one row per person with Matter Manager, Business Owner and Creator statements; Jonas Weber as Business Owner had no Portal read (404) until Add team member added him (200). On Confidential M-124, Priya Raman could read and edit after being added but Add team member was disabled and her team and flag writes answered 403. Linking a Contract with a Counterparty changed none of the Matter team, Fields or Documents, and History listed the changes. A Business User had no New matter and a direct create answered 403.",
+      "expected": "The Matter has its intended Manager, team, references, and template defaults. Missing required values and unavailable templates produce the supported validation or selection behavior. The dialog draws only the Rows the type's Form collects at creation.",
+      "actual": "14 recorded browser steps passed for this role (run 1790333890346). Nadia Haddad (Legal Team Member) opened Matters > New matter; Create matter started on the default type \"Default\" with Matter Manager on the reader, Unassigned first and no Business Users. On \"DOC-030 matters type\" (Form: Description, Department, Priority, Risk and Needed by On intake form, required note Required for creation, optional note, Entity and person Fields On intake form) the dialog drew Description, Department (No Department), Priority (Medium), Risk (empty choice \"Not set\"), Needed by and the four Fields, and not Region; Matter template started on No template. \"DOC-030 matters retype\" (a new type's built-in Rows) drew only Description; \"DOC-030 matters department required\" drew Department on \"Choose a Department\", and Create stayed in the dialog with the browser's \"Please select an item in the list.\" until Finance was chosen. Missing values showed \"Fill Title, DOC-030 matters required note.\" then \"Fill DOC-030 matters required note.\"; Cancel created nothing. With a fixture Matter Document type live, staging a PDF showed Document type on \"No type\"; with the first upload failed by a browser-route stand-in the dialog read \"Record created. Some documents could not be uploaded.\" with Retry failed uploads and Continue, and Retry opened M-91: Status Open, Priority High, Risk Low, Manager Priya Raman, Department Finance, Entity and person references, the Document with the chosen type, and one Key date named Needed by on the picked date. Templates prefilled title, Priority, Risk and Fields with \"Template adds 2 tasks and 2 key dates.\"; switching to beta or No template reset them and kept a typed title. M-92 from the alpha template kept the cleared optional Field empty, got Tasks at +3 days and undated and Key dates at +0 and +7 UTC days, Status Open and no team beyond the creator; Matter Manager was set to Unassigned, so the Manager-targeted Task stayed unassigned. On the retype type the undrawn template Priority High and Risk Low were saved and shown on Overview; a Matter without a template showed Priority Medium and Risk Not assessed. An archived template was refused with \"The template must be live and belong to the selected matter type.\" and left the reopened list. Overview listed Title, Matter type, Description, Department, Priority, Risk, Needed by, Region, the four Fields, then Matter Manager and Business Owner, with no custom-field section; Region EMEA and No Region saved, the Needed by Row moved the Needed by Key date, both owner pickers searched people and showed avatars, and a rename kept M-91. Clearing the required Field was refused; Change matter type to DOC-030 matters retype asked for the required number, Cancel kept the type and Change type saved; switching back kept the value stored and hidden. Naming Jonas Weber Business Owner put him on the Matter team with no remove control; Add team member > Person > Add added Tom Iwu; clearing the Business Owner left Jonas on the team with a remove control. On Confidential M-94, Priya Raman on the team could read and edit but her Add team member was disabled and her team, Confidential flag, Matter Manager and Business Owner changes were refused (403, \"Only an Administrator, the matter's creator, or its Matter Manager can change the team on a confidential matter.\"); the Creator could change them. Linking an NDA with a Counterparty copied nothing onto the Matter and History listed the changes. The \"Confidential — restrict to the matter team\" switch saved the flag and Continue opened the Matter without the failed file. Jonas Weber (Business User) had no New matter control, was sent from /matters to /portal and his create was refused (403).",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/matters/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/wt-create-matter-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/setup-r1.mjs",
-        "docs/documentation/batches/DOC-029/matters/technical-review.json"
+        "docs/documentation/batches/DOC-030/matters/walkthrough.json",
+        "docs/documentation/batches/DOC-030/matters/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/matters/lib.mjs",
+        "docs/documentation/batches/DOC-030/matters/setup.mjs",
+        "docs/documentation/batches/DOC-030/matters/fixtures.json",
+        "docs/documentation/batches/DOC-030/matters/wt-create-matter.mjs"
       ]
     }
   ],
-  "authorEvidence": ["docs/documentation/batches/DOC-029/matters/technical-review.json"],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner approval.",
-    "The work lab is shared with other DOC-029 agents. A private lab could not be created (Docker address pools exhausted), so setup-r1.mjs added DOC-029-named Fields, two Matter types and three Matter templates; no existing setting changed, and teardown-r1.mjs archived them after the runs (moving the DOC-029 walkthrough Matters to the Other type). Only records named DOC-029 matters were created.",
-    "Fixture records and some state changes (closing before archive, archiving the work Matter, a person leaving the team) were set up through the lab API and are labelled Fixture in walkthrough-r1.json; the article procedures credited here used the browser controls.",
-    "In the full run, five legal_team_member steps of matter-status-and-archive timed out waiting for the Matter header to render; an immediate rerun passed every step and replaced them. The cause was not reproduced and is recorded in walkthrough-r1.json harnessNotes.",
-    "Document upload failures were simulated by aborting the browser upload request; a real storage failure was not produced.",
-    "Request conversion and AI Conversion drafts in Before you start belong to convert-request and were not walked here.",
-    "Help discovery, themes, keyboard operation and zoom were not rechecked in this round."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
+    "Upload and comment failures were browser-route stand-ins (route.abort) for network failures.",
+    "The work2 lab is shared with other DOC-030 agents. The magic-link budget (3 per address, 30 per client address in 15 minutes) is shared by all of them; the script waited out 429s and reused one Business User session per run.",
+    "The create dialog's empty Risk choice reads \"Not set\"; Overview reads \"Not assessed\". The guide names the Overview label for the saved result.",
+    "A required Department is enforced by the browser's own required-field check (\"Please select an item in the list.\"), not by an in-dialog alert. The guide's step to fill every visible required Row covers it. Other required built-in Rows were not made required in the lab Forms.",
+    "The create flow has no Counterparty control for Matters. The Contract with a Counterparty was linked on Overview (Link Contract), as the guide's last paragraph and matter-work describe.",
+    "Development runs left two DOC-030 matters paper Matter Document types live for about ten minutes before they were archived; no other organization setting changed."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "078e5ac72d41fa7ed55e02131b55dcdb86cb26d646485e64f5a494969e1aef73",
-    "verifiedAt": "2026-09-07T19:22:19.461Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "af9e06defbb30c1ea2fe16489aeb6f423922837eea8ac718eedbe8ebe5ec01c1",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (matters)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to Matter creation, templates, Overview, Matter team or Confidential audience; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C22 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 26 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/matters.json",
-        "sha256": "25e0284bc0652683b0e7de5385bb6f62942b22df3ea44d08b383b66d37481603"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:38:37.588Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

@@ -1,0 +1,468 @@
+{
+  "name": "walkthrough",
+  "batch": "DOC-030",
+  "group": "knowledge",
+  "reviewer": "DOC-030 independent walkthrough agent (knowledge)",
+  "reviewerKind": "agent",
+  "lab": "work2",
+  "labIdentity": {
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "appImage": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImage": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "articleHashes": [
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1"
+    }
+  ],
+  "fixtures": {
+    "DOC-029/knowledge/fixtures/doc029-policy-a.pdf": "a9a1378630ec94eef1d167444261e7d9128524acd8e0c3d648d4a4ccdc436ae1",
+    "DOC-029/knowledge/fixtures/doc029-policy-b.pdf": "2f583bff04f5cb7a193437299bc9dbee7c5de73169218b9c6881fdf71de7b900",
+    "DOC-029/knowledge/fixtures/doc029-playbook.docx": "9b1cac7bf1621f18113d1da816b8f468fd0c7dd35a9ca1b1df037403515bd950",
+    "DOC-029/knowledge/fixtures/doc029-checklist.pdf": "d69ff225e21422e74403363000b0cff15a113931e98bf342de1ded41d21bfa7a"
+  },
+  "accounts": {
+    "administrator": "Daniel Okafor",
+    "legal_team_member": "Nadia Haddad",
+    "reader": "Mei Tanaka",
+    "second": "Sara Haddadi"
+  },
+  "stamp": "20260925T1036",
+  "startedAt": "2026-09-25T10:36:22.805Z",
+  "completedAt": "2026-09-25T10:37:15.300Z",
+  "passed": true,
+  "steps": [
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "API fixture (publisher session)",
+      "action": "Fixture: a draft item with guidance, a primary PDF and two supporting files, plus a draft replacement, an archived item and a published Legal Only item",
+      "expected": "Fixture records exist through the publisher's session.",
+      "actual": "Nadia Haddad's session created \"DOC-030 knowledge V-C34 LTM 20260925T1036 pack\" (Draft, Legal Only, primary \"DOC-030 knowledge V-C34 LTM 20260925T1036 primary.pdf\", supporting \"DOC-030 knowledge V-C34 LTM 20260925T1036 supporting.docx\" and \"DOC-030 knowledge V-C34 LTM 20260925T1036 internal checklist.pdf\", guidance), the draft \"DOC-030 knowledge V-C34 LTM 20260925T1036 replacement\", the archived \"DOC-030 knowledge V-C34 LTM 20260925T1036 retired\" and the published Legal Only \"DOC-030 knowledge V-C34 LTM 20260925T1036 legal only\" in folder \"DOC-030 knowledge V-C34 LTM 20260925T1036 folder\". These are API fixtures, not guide steps.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:24.877Z",
+      "completedAt": "2026-09-25T10:36:25.226Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>",
+      "action": "Before you start table rows 1-2: Draft and published Legal Only are open to both staff roles and unavailable in the Portal",
+      "expected": "Both staff roles open the record; Portal readers get 404 and are returned to the Portal home.",
+      "actual": "Nadia Haddad opened the record with the Draft marker and no On the portal; Daniel Okafor opened the same record in a separate browser context. Knowledge Item actions offered [\"Publish\",\"Archive\"]. Mei Tanaka and Sara Haddadi got 404 from the Portal article read, and the Portal page returned Mei Tanaka to /portal. Publish while Legal Only removed the Draft marker and showed no On the portal; Daniel Okafor saw the same, and both readers still got 404 and the Portal home. Unpublish, with no deflection link, returned the item to Draft without a dialog.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:25.227Z",
+      "completedAt": "2026-09-25T10:36:26.685Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge (Business User)",
+      "action": "Before you start: Business Users have no staff Knowledge authoring access",
+      "expected": "A Portal reader asking for /knowledge or the record is sent away, and the staff Knowledge API refuses them.",
+      "actual": "Mei Tanaka asking for /knowledge ended on /portal, and the record address ended on /portal. The staff Knowledge list, record read and publish requests answered [403,403,403], and the item stayed Draft.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:26.686Z",
+      "completedAt": "2026-09-25T10:36:29.790Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>",
+      "action": "Publish and check the Portal steps 1-2: Audience Everyone, then Knowledge Item actions, Publish",
+      "expected": "The Draft marker disappears and On the portal appears.",
+      "actual": "Audience offered [\"Legal Only\",\"Everyone\"]. Everyone saved on the draft; the item still showed Draft and no On the portal, and the Portal read answered 404. Knowledge Item actions, Publish removed Draft and showed On the portal. Before any deflection link existed, Mei Tanaka's Portal home had no link to the item.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:29.791Z",
+      "completedAt": "2026-09-25T10:36:30.393Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/links (Administrator)",
+      "action": "Publish and check the Portal step 3: an Administrator adds a deflection link in Settings, Intake, Deflection links",
+      "expected": "Add link takes Target Knowledge item, this item, a Label and Placement Portal home; the Knowledge item list offers only live items published for Everyone.",
+      "actual": "As Daniel Okafor: Settings, Intake, Deflection links, Add link. With Target Knowledge item, the Knowledge item list offered \"DOC-030 knowledge V-C34 LTM 20260925T1036 pack\" and did not offer the draft \"DOC-030 knowledge V-C34 LTM 20260925T1036 replacement\", the archived \"DOC-030 knowledge V-C34 LTM 20260925T1036 retired\" or the published Legal Only \"DOC-030 knowledge V-C34 LTM 20260925T1036 legal only\". Placement offered Portal home and 8 request type(s). With the Label \"DOC-030 knowledge V-C34 LTM 20260925T1036 supplier pack\" and Placement Portal home, Add link added the row, and the item counted 1 deflection link.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:30.394Z",
+      "completedAt": "2026-09-25T10:36:31.140Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/portal -> /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Publish and check the Portal step 4: a signed-in Portal reader opens the link under Before you submit and checks title, guidance and downloads",
+      "expected": "Title, guidance and current downloads for the primary and supporting Documents; primary first, guidance after files; no staff controls or Version choice.",
+      "actual": "Mei Tanaka opened \"DOC-030 knowledge V-C34 LTM 20260925T1036 supplier pack\" under Before you submit and reached \"DOC-030 knowledge V-C34 LTM 20260925T1036 pack\" with its guidance heading. Documents came before Guidance and listed [\"DOC-030 knowledge V-C34 LTM 20260925T1036 primary.pdf\",\"DOC-030 knowledge V-C34 LTM 20260925T1036 supporting.docx\",\"DOC-030 knowledge V-C34 LTM 20260925T1036 internal checklist.pdf\"], primary first. All three downloads matched the uploaded files byte for byte. The page offered no staff actions, no text field and no Version choice. Sara Haddadi's Portal session read the article too (200).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:31.140Z",
+      "completedAt": "2026-09-25T10:36:31.477Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack> (Administrator), /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Before you start, Confidential paragraph, and Publish step 4: an Administrator marks one supporting Document confidential from its Actions menu",
+      "expected": "The row shows CONFI; the Portal no longer lists the file and its saved download address answers as if the item were unavailable; the other files still download; a Legal Team Member does not see the file; Clear confidential mark returns it.",
+      "actual": "Daniel Okafor opened Actions for \"DOC-030 knowledge V-C34 LTM 20260925T1036 internal checklist.pdf\" (menu [\"Set as primary\",\"Add version\",\"Edit details\",\"Mark confidential\",\"Archive\",\"Delete\"]) and selected Mark confidential. The row then showed the CONFI lock marker (accessible name \"Confidential\"). Mei Tanaka's article then listed [\"DOC-030 knowledge V-C34 LTM 20260925T1036 primary.pdf\",\"DOC-030 knowledge V-C34 LTM 20260925T1036 supporting.docx\"]; the saved download address for the Confidential file answered [404,404] for Mei Tanaka and Sara Haddadi, the same 404 as a download under an item that does not exist, while the primary and the other supporting file answered [200,200]. On the staff record Nadia Haddad saw no row for the file, her Documents list left it out, and a direct Document read answered 404. Clear confidential mark removed CONFI; the article listed the file again, its download matched byte for byte, and Nadia saw the row again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:31.477Z",
+      "completedAt": "2026-09-25T10:36:33.382Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>",
+      "action": "Limitation check: the Legal Team Member who uploaded a Knowledge Document is offered Mark confidential, and loses the file when she uses it",
+      "expected": "Confirms or refutes the author's product bug; the guide tells readers to ask an Administrator.",
+      "actual": "Nadia Haddad's Actions menu for her own upload \"DOC-030 knowledge V-C34 LTM 20260925T1036 internal checklist.pdf\" offered [\"Set as primary\",\"Add version\",\"Edit details\",\"Mark confidential\",\"Archive\"]. Mark confidential saved (Administrator read isConfidential true). The row stayed until reload (1) and was gone after it (0). Her own attempt to clear the flag through the API answered 404. Daniel Okafor's Clear confidential mark returned the file to Nadia.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:33.382Z",
+      "completedAt": "2026-09-25T10:36:36.417Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>, /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Publish and check the Portal closing text: a guidance edit and a new Version reach the Portal without another Publish",
+      "expected": "After a reload the reader sees the new guidance and downloads the new current Version; the publication state is unchanged.",
+      "actual": "A guidance edit (saved on Preview) and Add version on the primary PDF made Version 2 with no second Publish. Mei Tanaka reopened the article, saw the new guidance heading, and the download matched the Version 2 bytes. The staff chain had 2 Versions. State, audience and the first publication time did not change.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:36.418Z",
+      "completedAt": "2026-09-25T10:36:37.109Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Withdraw or restrict steps 1-3: change Audience to Legal Only; the dialog names the links; Cancel keeps it, Continue restricts it",
+      "expected": "Cancel leaves Everyone; Continue saves Legal Only; the link, the saved article address and every saved file address stop working; the link stays in Settings.",
+      "actual": "Audience Legal Only opened \"Remove this from the portal?\" reading \"Remove this from the portal? 1 deflection link points at this item. The link will stay in Settings but disappear from the portal. Cancel Continue\". Cancel left Everyone saved and shown. Continue saved Legal Only (Audience shows \"Legal Only\", no Draft, no On the portal). The Portal home no longer showed the link. The saved article address returned Mei Tanaka to /portal, and the article and all three saved download addresses answered 404 for both Portal sessions (8 denied reads). The link row stayed in Settings, Deflection links.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:37.110Z",
+      "completedAt": "2026-09-25T10:36:38.899Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Withdraw or restrict: Everyone restores a published item; Unpublish returns it to Draft; Publish makes it available again with the existing link",
+      "expected": "Setting Everyone restores access on the published item; Unpublish blocks it; Publish restores it with no link change.",
+      "actual": "Audience Everyone on the published item brought back the link, the article and all three downloads. Unpublish asked \"Remove this from the portal?\"; Continue showed the Draft marker and kept Audience Everyone. The link went, and the article and file addresses answered 404 (8 denied reads). Publish on the draft brought back On the portal, the existing deflection link, the article and the downloads.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:38.900Z",
+      "completedAt": "2026-09-25T10:36:40.891Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge, /knowledge/<LTM pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Archive and restore steps 1-4 with Replaced by",
+      "expected": "The list has no archived toggle and drops the item; Archived disables editing and removes Portal access; the saved address restores it with its earlier state, including through the link; the old Portal address does not redirect to the replacement.",
+      "actual": "The Knowledge list had no Show archived toggle. Archive Knowledge Item started at No replacement and did not offer the archived \"DOC-030 knowledge V-C34 LTM 20260925T1036 retired\". With Replaced by \"DOC-030 knowledge V-C34 LTM 20260925T1036 replacement\", Archive marked the item Archived and disabled Title, Type, Folder and Audience. Guidance, the three Documents and the replacement stayed on the item. The link, the article and the file addresses stopped working (8 denied reads), and the old Portal address returned the reader to /portal, not to the replacement. The folder list left the item out. The saved staff address still opened it, and Restore brought back Published, Everyone and On the portal with editable fields. The item was in the library again, and the existing link, the article and the downloads worked.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:40.892Z",
+      "completedAt": "2026-09-25T10:36:45.927Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<LTM pack>",
+      "action": "Check a missing item or file: the Replaced by list refreshes whenever the archive dialog opens, and a replacement that becomes unavailable while the dialog is open is refused with an explanation",
+      "expected": "An item created while the record stays open is offered the next time the dialog opens; archiving that choice from another session before Archive makes the dialog show why.",
+      "actual": "With the record left open and no reload, Daniel Okafor created \"DOC-030 knowledge V-C34 LTM 20260925T1036 late\" from another session. The next time Archive Knowledge Item opened, Replaced by offered it (42 choices). With it selected, Daniel Okafor archived it; Archive then showed the alert \"The replacement must be a live Knowledge Item.\" inside the dialog and the item stayed live. Reopened, the dialog no longer offered the archived item.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:45.927Z",
+      "completedAt": "2026-09-25T10:36:47.358Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/portal/knowledge/<pack> (no session)",
+      "action": "Before you start and Check a missing item: Everyone still requires a Portal session",
+      "expected": "A browser with no session goes to Portal sign-in; the article and a saved download address answer 401.",
+      "actual": "With no session the Portal article address went to /portal/login. The article read answered 401, and the saved download addresses answered [401,401,401], while Mei Tanaka's session still read the published Everyone item (200).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:47.359Z",
+      "completedAt": "2026-09-25T10:36:47.634Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "API fixture (publisher session)",
+      "action": "Fixture: a draft item with guidance, a primary PDF and two supporting files, plus a draft replacement, an archived item and a published Legal Only item",
+      "expected": "Fixture records exist through the publisher's session.",
+      "actual": "Daniel Okafor's session created \"DOC-030 knowledge V-C34 Admin 20260925T1036 pack\" (Draft, Legal Only, primary \"DOC-030 knowledge V-C34 Admin 20260925T1036 primary.pdf\", supporting \"DOC-030 knowledge V-C34 Admin 20260925T1036 supporting.docx\" and \"DOC-030 knowledge V-C34 Admin 20260925T1036 internal checklist.pdf\", guidance), the draft \"DOC-030 knowledge V-C34 Admin 20260925T1036 replacement\", the archived \"DOC-030 knowledge V-C34 Admin 20260925T1036 retired\" and the published Legal Only \"DOC-030 knowledge V-C34 Admin 20260925T1036 legal only\" in folder \"DOC-030 knowledge V-C34 Admin 20260925T1036 folder\". These are API fixtures, not guide steps.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:47.634Z",
+      "completedAt": "2026-09-25T10:36:47.966Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>",
+      "action": "Before you start table rows 1-2: Draft and published Legal Only are open to both staff roles and unavailable in the Portal",
+      "expected": "Both staff roles open the record; Portal readers get 404 and are returned to the Portal home.",
+      "actual": "Daniel Okafor opened the record with the Draft marker and no On the portal; Nadia Haddad opened the same record in a separate browser context. Knowledge Item actions offered [\"Publish\",\"Archive\"]. Mei Tanaka and Sara Haddadi got 404 from the Portal article read, and the Portal page returned Mei Tanaka to /portal. Publish while Legal Only removed the Draft marker and showed no On the portal; Nadia Haddad saw the same, and both readers still got 404 and the Portal home. Unpublish, with no deflection link, returned the item to Draft without a dialog.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:47.967Z",
+      "completedAt": "2026-09-25T10:36:49.264Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge (Business User)",
+      "action": "Before you start: Business Users have no staff Knowledge authoring access",
+      "expected": "A Portal reader asking for /knowledge or the record is sent away, and the staff Knowledge API refuses them.",
+      "actual": "Mei Tanaka asking for /knowledge ended on /portal, and the record address ended on /portal. The staff Knowledge list, record read and publish requests answered [403,403,403], and the item stayed Draft.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:49.264Z",
+      "completedAt": "2026-09-25T10:36:52.368Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>",
+      "action": "Publish and check the Portal steps 1-2: Audience Everyone, then Knowledge Item actions, Publish",
+      "expected": "The Draft marker disappears and On the portal appears.",
+      "actual": "Audience offered [\"Legal Only\",\"Everyone\"]. Everyone saved on the draft; the item still showed Draft and no On the portal, and the Portal read answered 404. Knowledge Item actions, Publish removed Draft and showed On the portal. Before any deflection link existed, Mei Tanaka's Portal home had no link to the item.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:52.368Z",
+      "completedAt": "2026-09-25T10:36:52.963Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/links (Administrator)",
+      "action": "Publish and check the Portal step 3: an Administrator adds a deflection link in Settings, Intake, Deflection links",
+      "expected": "Add link takes Target Knowledge item, this item, a Label and Placement Portal home; the Knowledge item list offers only live items published for Everyone.",
+      "actual": "As Daniel Okafor: Settings, Intake, Deflection links, Add link. With Target Knowledge item, the Knowledge item list offered \"DOC-030 knowledge V-C34 Admin 20260925T1036 pack\" and did not offer the draft \"DOC-030 knowledge V-C34 Admin 20260925T1036 replacement\", the archived \"DOC-030 knowledge V-C34 Admin 20260925T1036 retired\" or the published Legal Only \"DOC-030 knowledge V-C34 Admin 20260925T1036 legal only\". Placement offered Portal home and 8 request type(s). With the Label \"DOC-030 knowledge V-C34 Admin 20260925T1036 supplier pack\" and Placement Portal home, Add link added the row, and the item counted 1 deflection link.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:52.963Z",
+      "completedAt": "2026-09-25T10:36:53.675Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/portal -> /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Publish and check the Portal step 4: a signed-in Portal reader opens the link under Before you submit and checks title, guidance and downloads",
+      "expected": "Title, guidance and current downloads for the primary and supporting Documents; primary first, guidance after files; no staff controls or Version choice.",
+      "actual": "Mei Tanaka opened \"DOC-030 knowledge V-C34 Admin 20260925T1036 supplier pack\" under Before you submit and reached \"DOC-030 knowledge V-C34 Admin 20260925T1036 pack\" with its guidance heading. Documents came before Guidance and listed [\"DOC-030 knowledge V-C34 Admin 20260925T1036 primary.pdf\",\"DOC-030 knowledge V-C34 Admin 20260925T1036 supporting.docx\",\"DOC-030 knowledge V-C34 Admin 20260925T1036 internal checklist.pdf\"], primary first. All three downloads matched the uploaded files byte for byte. The page offered no staff actions, no text field and no Version choice. Sara Haddadi's Portal session read the article too (200).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:53.675Z",
+      "completedAt": "2026-09-25T10:36:53.992Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/links, /portal/new/<type> (Administrator, reader)",
+      "action": "Publish and check the Portal step 3 alternative: Placement set to one request type shows the link on that form only",
+      "expected": "The link shows under Before you submit on the chosen request form, not on the Portal home, and opens the item.",
+      "actual": "Add link with Placement \"NDA request\" saved \"DOC-030 knowledge V-C34 Admin 20260925T1036 form link\". Mei Tanaka's Portal home did not show it. The \"NDA request\" card opened /portal/new/nda_request, whose Before you submit panel listed \"DOC-030 knowledge V-C34 Admin 20260925T1036 form link\", and the link opened \"DOC-030 knowledge V-C34 Admin 20260925T1036 pack\". The item then counted 2 deflection links.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:53.992Z",
+      "completedAt": "2026-09-25T10:36:55.015Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack> (Administrator), /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Before you start, Confidential paragraph, and Publish step 4: an Administrator marks one supporting Document confidential from its Actions menu",
+      "expected": "The row shows CONFI; the Portal no longer lists the file and its saved download address answers as if the item were unavailable; the other files still download; a Legal Team Member does not see the file; Clear confidential mark returns it.",
+      "actual": "Daniel Okafor opened Actions for \"DOC-030 knowledge V-C34 Admin 20260925T1036 internal checklist.pdf\" (menu [\"Set as primary\",\"Add version\",\"Edit details\",\"Mark confidential\",\"Archive\",\"Delete\"]) and selected Mark confidential. The row then showed the CONFI lock marker (accessible name \"Confidential\"). Mei Tanaka's article then listed [\"DOC-030 knowledge V-C34 Admin 20260925T1036 primary.pdf\",\"DOC-030 knowledge V-C34 Admin 20260925T1036 supporting.docx\"]; the saved download address for the Confidential file answered [404,404] for Mei Tanaka and Sara Haddadi, the same 404 as a download under an item that does not exist, while the primary and the other supporting file answered [200,200]. On the staff record Nadia Haddad saw no row for the file, her Documents list left it out, and a direct Document read answered 404. Clear confidential mark removed CONFI; the article listed the file again, its download matched byte for byte, and Nadia saw the row again.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:55.016Z",
+      "completedAt": "2026-09-25T10:36:57.339Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>, /portal/knowledge/<pack> (Mei Tanaka)",
+      "action": "Publish and check the Portal closing text: a guidance edit and a new Version reach the Portal without another Publish",
+      "expected": "After a reload the reader sees the new guidance and downloads the new current Version; the publication state is unchanged.",
+      "actual": "A guidance edit (saved on Preview) and Add version on the primary PDF made Version 2 with no second Publish. Mei Tanaka reopened the article, saw the new guidance heading, and the download matched the Version 2 bytes. The staff chain had 2 Versions. State, audience and the first publication time did not change.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:57.339Z",
+      "completedAt": "2026-09-25T10:36:58.191Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Withdraw or restrict steps 1-3: change Audience to Legal Only; the dialog names the links; Cancel keeps it, Continue restricts it",
+      "expected": "Cancel leaves Everyone; Continue saves Legal Only; the link, the saved article address and every saved file address stop working; the link stays in Settings.",
+      "actual": "Audience Legal Only opened \"Remove this from the portal?\" reading \"Remove this from the portal? 2 deflection links point at this item. The links will stay in Settings but disappear from the portal. Cancel Continue\". Cancel left Everyone saved and shown. Continue saved Legal Only (Audience shows \"Legal Only\", no Draft, no On the portal). The Portal home and the request form no longer showed the link. The saved article address returned Mei Tanaka to /portal, and the article and all three saved download addresses answered 404 for both Portal sessions (8 denied reads). The link rows stayed in Settings, Deflection links.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:36:58.191Z",
+      "completedAt": "2026-09-25T10:37:01.638Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Withdraw or restrict: Everyone restores a published item; Unpublish returns it to Draft; Publish makes it available again with the existing link",
+      "expected": "Setting Everyone restores access on the published item; Unpublish blocks it; Publish restores it with no link change.",
+      "actual": "Audience Everyone on the published item brought back the link, the article and all three downloads. Unpublish asked \"Remove this from the portal?\"; Continue showed the Draft marker and kept Audience Everyone. The link went, and the article and file addresses answered 404 (8 denied reads). Publish on the draft brought back On the portal, the existing deflection link, the article and the downloads.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:37:01.639Z",
+      "completedAt": "2026-09-25T10:37:04.386Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge, /knowledge/<Admin pack>, /portal (Mei Tanaka, Sara Haddadi)",
+      "action": "Archive and restore steps 1-4 with Replaced by",
+      "expected": "The list has no archived toggle and drops the item; Archived disables editing and removes Portal access; the saved address restores it with its earlier state, including through the link; the old Portal address does not redirect to the replacement.",
+      "actual": "The Knowledge list had no Show archived toggle. Archive Knowledge Item started at No replacement and did not offer the archived \"DOC-030 knowledge V-C34 Admin 20260925T1036 retired\". With Replaced by \"DOC-030 knowledge V-C34 Admin 20260925T1036 replacement\", Archive marked the item Archived and disabled Title, Type, Folder and Audience. Guidance, the three Documents and the replacement stayed on the item. The link, the article and the file addresses stopped working (8 denied reads), and the old Portal address returned the reader to /portal, not to the replacement. The folder list left the item out. The saved staff address still opened it, and Restore brought back Published, Everyone and On the portal with editable fields. The item was in the library again, and the existing link, the article and the downloads worked.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:37:04.386Z",
+      "completedAt": "2026-09-25T10:37:11.105Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/<Admin pack>",
+      "action": "Check a missing item or file: the Replaced by list refreshes whenever the archive dialog opens, and a replacement that becomes unavailable while the dialog is open is refused with an explanation",
+      "expected": "An item created while the record stays open is offered the next time the dialog opens; archiving that choice from another session before Archive makes the dialog show why.",
+      "actual": "With the record left open and no reload, Nadia Haddad created \"DOC-030 knowledge V-C34 Admin 20260925T1036 late\" from another session. The next time Archive Knowledge Item opened, Replaced by offered it (45 choices). With it selected, Nadia Haddad archived it; Archive then showed the alert \"The replacement must be a live Knowledge Item.\" inside the dialog and the item stayed live. Reopened, the dialog no longer offered the archived item.",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:37:11.106Z",
+      "completedAt": "2026-09-25T10:37:12.677Z"
+    },
+    {
+      "article": "publish-knowledge",
+      "scenario": "V-C34",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/portal/knowledge/<pack> (no session)",
+      "action": "Before you start and Check a missing item: Everyone still requires a Portal session",
+      "expected": "A browser with no session goes to Portal sign-in; the article and a saved download address answer 401.",
+      "actual": "With no session the Portal article address went to /portal/login. The article read answered 401, and the saved download addresses answered [401,401,401], while Mei Tanaka's session still read the published Everyone item (200).",
+      "result": "pass",
+      "startedAt": "2026-09-25T10:37:12.677Z",
+      "completedAt": "2026-09-25T10:37:13.185Z"
+    }
+  ],
+  "records": [
+    {
+      "role": "legal_team_member",
+      "kind": "publish fixtures",
+      "names": [
+        "DOC-030 knowledge V-C34 LTM 20260925T1036 folder",
+        "DOC-030 knowledge V-C34 LTM 20260925T1036 pack",
+        "DOC-030 knowledge V-C34 LTM 20260925T1036 replacement",
+        "DOC-030 knowledge V-C34 LTM 20260925T1036 retired",
+        "DOC-030 knowledge V-C34 LTM 20260925T1036 legal only"
+      ]
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "replacement fixture",
+      "names": ["DOC-030 knowledge V-C34 LTM 20260925T1036 late"]
+    },
+    {
+      "role": "administrator",
+      "kind": "publish fixtures",
+      "names": [
+        "DOC-030 knowledge V-C34 Admin 20260925T1036 folder",
+        "DOC-030 knowledge V-C34 Admin 20260925T1036 pack",
+        "DOC-030 knowledge V-C34 Admin 20260925T1036 replacement",
+        "DOC-030 knowledge V-C34 Admin 20260925T1036 retired",
+        "DOC-030 knowledge V-C34 Admin 20260925T1036 legal only"
+      ]
+    },
+    {
+      "role": "administrator",
+      "kind": "replacement fixture",
+      "names": ["DOC-030 knowledge V-C34 Admin 20260925T1036 late"]
+    }
+  ],
+  "productBugs": [
+    "Confirmed on work2 at 067c1646: a Legal Team Member who uploaded a Knowledge Document is offered Actions, Mark confidential (documents-card.tsx canFlag); after using it the Document leaves her staff record and she cannot clear the mark (PATCH answered 404). Only an Administrator can return it. Reproduce: as Nadia Haddad upload a file to a Knowledge Item, open its Actions menu, select Mark confidential, reload the record."
+  ],
+  "limitationChecks": [
+    "Nadia Haddad's Actions menu for her own upload \"DOC-030 knowledge V-C34 LTM 20260925T1036 internal checklist.pdf\" offered [\"Set as primary\",\"Add version\",\"Edit details\",\"Mark confidential\",\"Archive\"]. Mark confidential saved (Administrator read isConfidential true). The row stayed until reload (1) and was gone after it (0). Her own attempt to clear the flag through the API answered 404. Daniel Okafor's Clear confidential mark returned the file to Nadia."
+  ],
+  "cleanup": [
+    "Removed deflection link DOC-030 knowledge V-C34 LTM 20260925T1036 supplier pack.",
+    "Removed deflection link DOC-030 knowledge V-C34 Admin 20260925T1036 supplier pack.",
+    "Removed deflection link DOC-030 knowledge V-C34 Admin 20260925T1036 form link.",
+    "Archived published fixture DOC-030 knowledge V-C34 Admin 20260925T1036 pack (200).",
+    "Archived published fixture DOC-030 knowledge V-C34 Admin 20260925T1036 legal only (200).",
+    "Archived published fixture DOC-030 knowledge V-C34 LTM 20260925T1036 pack (200).",
+    "Archived published fixture DOC-030 knowledge V-C34 LTM 20260925T1036 legal only (200)."
+  ],
+  "portalSessions": {
+    "Mei Tanaka": "fresh magic link",
+    "Sara Haddadi": "fresh magic link"
+  },
+  "harnessNotes": [
+    "Two development runs of this script (stamps 20260925T1029 and 20260925T1035) came before this recorded run and are not credited. The first failed at a harness locator for the user menu (it looked for the trigger inside a banner landmark) and cascaded; the second passed all 28 steps with reused development Portal sessions. Their fixtures carry their own stamps, their deflection links were removed, and their published fixtures were archived.",
+    "This recorded run signed both Portal readers in with fresh magic links read from the lab Mailpit."
+  ]
+}

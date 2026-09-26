@@ -43,7 +43,7 @@
     "check": "pnpm check:static && pnpm test:ci-tools && turbo run test --continue",
     "check:security": "pnpm audit --audit-level=high && pnpm licenses list",
     "check:static": "pnpm format:check && pnpm secretlint && pnpm lint:contrast && pnpm lint:migrations && pnpm lint:versions && pnpm docs:lint && turbo run lint typecheck --continue",
-    "test:ci-tools": "node --test scripts/dev-processes.test.mjs scripts/lint-migration-journal.test.mjs scripts/dev-smtp.test.mjs e2e/scripts/upgrade-baseline.test.mjs scripts/documentation/*.test.mjs",
+    "test:ci-tools": "node --test scripts/dev-processes.test.mjs scripts/lint-migration-journal.test.mjs scripts/dev-smtp.test.mjs e2e/scripts/upgrade-*.test.mjs scripts/documentation/*.test.mjs",
     "docs:lint": "eslint scripts/documentation",
     "docs:check": "node scripts/documentation/build.mjs",
     "docs:complete": "node scripts/documentation/build.mjs --complete",
@@ -68,7 +68,7 @@
     "prettier": "^3.9.9",
     "sanitize-html": "2.17.7",
     "secretlint": "^13.0.5",
-    "turbo": "^2.11.3",
+    "turbo": "^2.11.4",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.70.1"
   }

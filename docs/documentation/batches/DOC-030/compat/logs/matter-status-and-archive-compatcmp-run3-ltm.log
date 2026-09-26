@@ -1,0 +1,8 @@
+[matter-status-and-archive/legal_team_member] PASS Fixture: a Matter with an open child, a restricted Confidential child, a linked Contract, an open Task and a future Key date, with a Business User on the team
+[matter-status-and-archive/legal_team_member] PASS Change Status within the current Category: read the pill and Status strip, then move within open groups
+[matter-status-and-archive/legal_team_member] PASS Close or reopen: Closed group, close dialog with Closing note, open child Matters, Cancel then Close matter
+[matter-status-and-archive/legal_team_member] PASS Close or reopen: a closed Matter stays editable, and Filter > Show closed finds it
+[matter-status-and-archive/legal_team_member] PASS Close or reopen: choose an open Status from a closed Matter, Cancel, then Reopen matter
+[matter-status-and-archive/legal_team_member] PASS Archive or restore: Matter actions > Archive, Cancel, then Archive; archived controls and refusals
+[matter-status-and-archive/legal_team_member] PASS Archive or restore: find it with Show archived and Show closed, Restore Cancel, then Restore
+[matter-status-and-archive/legal_team_member] PASS Before you start (negative): a Business User reads the Status in the Portal but cannot change, close, reopen, archive or restore

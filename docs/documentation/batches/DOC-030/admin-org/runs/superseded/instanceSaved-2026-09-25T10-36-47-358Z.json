@@ -1,0 +1,62 @@
+{
+  "section": "instanceSaved",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "baseurl-unset applied twice by the section (overlay-baseurl-unset.json)",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:36:47.359Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://localhost:3000/settings/instance",
+      "action": "The operator removes BASE_URL from the deployment and restarts; Application address becomes editable and the API falls back to its default",
+      "expected": "Field editable with source Default; sign-in works only at the default address",
+      "startedAt": "2026-09-25T10:36:47.538Z",
+      "finishedAt": "2026-09-25T10:37:12.505Z",
+      "actual": "phase baseurl-unset applied to openlaw-docs-80ceef9e-auth2 (2026-09-25T10:37:04Z). A password sign-in at http://127.0.0.1:43310 got me 401 with \"Invalid origin\". At http://localhost:3000 Daniel signed in, and Instance address read \"Instance address The address people use to reach OpenLaw, including from email links. An internal hostname accessible over your LAN or VPN works without public internet access. Configure DNS, HTTPS and your identity provider's callback address to match. Applic\" (field value \"http://localhost:3000\", read-only false).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://localhost:3000/settings/instance",
+      "action": "An Administrator saves Application address; it waits for a restart of the API and worker",
+      "expected": "Save shows the restart notice and the pending notice; the callback still uses the old address",
+      "startedAt": "2026-09-25T10:37:12.506Z",
+      "finishedAt": "2026-09-25T10:37:13.656Z",
+      "actual": "Check failed: save answered \"Saved changes are waiting for a restart. The active values below are still in use by this API. Check System status after restarting the API and worker.\"",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": null,
+      "action": "After the API and worker restart, the saved Application address is active: new sign-ins and the SSO callback use it",
+      "expected": "Saved in OpenLaw; sign-in at the saved address works; callback on it",
+      "startedAt": "2026-09-25T10:37:13.656Z",
+      "finishedAt": "2026-09-25T10:37:34.727Z",
+      "actual": "phase baseurl-unset applied to openlaw-docs-80ceef9e-auth2 (2026-09-25T10:37:30Z). A password sign-in at http://127.0.0.1:43310 worked again. Instance address read \"Instance address The address people use to reach OpenLaw, including from email links. An internal hostname accessible over your LAN or VPN works without public internet access. Configure DNS, HTTPS and your identity provider's callback address to match. Applic\" (field value \"http://127.0.0.1:43310\"). Save provider showed the callback http://127.0.0.1:43310/api/auth/sso/callback.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:37:34.776Z"
+}

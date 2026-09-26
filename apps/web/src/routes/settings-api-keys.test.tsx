@@ -6,7 +6,8 @@ import { json, renderAt, stubApi } from "../testing/helpers";
 const policy = {
   enabled: true,
   groupEnabled: true,
-  toolsetCeiling: ["contracts", "tasks"],
+  toolsetCeiling: ["contracts", "tasks", "team", "administration"],
+  toolsets: ["contracts", "tasks"],
   readOnly: true,
   apiKeyLifetimeDays: 90,
 };
@@ -57,6 +58,10 @@ for (const [path, role] of [
     expect(within(dialog).getByRole("radio", { name: /Read/ })).not.toBeChecked();
     expect(within(dialog).queryByRole("radio", { name: /Write/ })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole("checkbox", { name: "Matters" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("checkbox", { name: "Team" })).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("checkbox", { name: "Administration" }),
+    ).not.toBeInTheDocument();
     await user.type(
       within(dialog).getByRole("textbox", { name: "Client name" }),
       "Research script",
@@ -71,6 +76,23 @@ for (const [path, role] of [
         scope: "read",
       }),
     );
+  });
+  it(`explains an empty Toolset choice on ${path}`, async () => {
+    stubApi({
+      signedIn: { id: "person", email: "person@example.com", displayName: "Person", role },
+      extra: (call) =>
+        call.url.pathname === "/api/v1/api-key-requests"
+          ? json(200, { policy: { ...policy, toolsets: [] }, requests: [] })
+          : undefined,
+    });
+    renderAt(path);
+    expect(
+      await screen.findByText(
+        "No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Request a key" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Request an API key" })).not.toBeInTheDocument();
   });
   it(`hides the request action when the group is off on ${path}`, async () => {
     stubApi({

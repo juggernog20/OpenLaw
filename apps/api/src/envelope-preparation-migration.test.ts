@@ -62,7 +62,7 @@ it("preserves sent history, timestamps, Signers and executed-copy references on 
 it("leaves the intent of older interrupted operations unknown", async () => {
   const db = await freshDb(container, "envelope_recovery_intent");
   try {
-    await migrateThrough(db, "0176_envelope-recovery", migrationEntries());
+    await migrateThrough(db, "0177_envelope-recovery", migrationEntries());
     await db.execute(
       sql`insert into users (id, email, display_name, role) values ('sender', 'sender@example.test', 'Sender', 'legal_team_member')`,
     );

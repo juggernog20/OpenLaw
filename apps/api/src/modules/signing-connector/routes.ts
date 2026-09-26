@@ -22,6 +22,7 @@ import {
   SIGNING_UPDATE_MODES,
   SIGNING_PROVIDERS,
   type Executor,
+  type Db,
   type SigningConnector,
 } from "@openlaw/db";
 import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
@@ -162,18 +163,6 @@ const needsConnector = () =>
 export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
   const ParamsSchema = z.object({ provider: z.enum(SIGNING_PROVIDERS) });
 
-  /** The stored row for one adapter, if there is one. */
-  async function storedConnector(
-    provider: SigningConnector["provider"],
-  ): Promise<SigningConnector | undefined> {
-    const [row] = await app.db
-      .select()
-      .from(signingConnectors)
-      .where(eq(signingConnectors.provider, provider))
-      .limit(1);
-    return row;
-  }
-
   app.get(
     "/signing-connectors/:provider",
     {
@@ -192,7 +181,7 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request) => {
       const { provider } = request.params;
-      return { connector: readConnector(provider, await storedConnector(provider), app.baseUrl) };
+      return readSigningSettings(app.db, provider, app.baseUrl);
     },
   );
 
@@ -631,3 +620,16 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   );
 };
+
+export async function readSigningSettings(
+  db: Db,
+  provider: SigningConnector["provider"],
+  baseUrl: string,
+) {
+  const [row] = await db
+    .select()
+    .from(signingConnectors)
+    .where(eq(signingConnectors.provider, provider))
+    .limit(1);
+  return { connector: readConnector(provider, row, baseUrl) };
+}

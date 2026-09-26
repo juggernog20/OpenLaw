@@ -452,6 +452,18 @@ The "version pin" line above stopped being true at [#340](https://github.com/jug
 
 **The rule for the routine dependency sweep from here:** `@better-auth/*` is never a drop-in bump at any semver level. 1.7.0 broke as a minor and 1.7.3 broke as a patch. A sweep that finds the three packages outdated diffs the published tarballs' `dist/db/` and `dist/api/` — and runs the adapter's own schema check against `packages/db` — before classifying, as `docs/upgrades/2026-09-06-better-auth-1.7.3.md` did.
 
+### Addendum (2026-09-25) — routine sweep: 1.7.5 → 1.7.6, and `@better-auth/api-key` joins the pin
+
+The scheduled dependency sweep found `better-auth`, `@better-auth/drizzle-adapter`, `@better-auth/sso` and `@better-auth/api-key` (added with M41, TECH-035) all one patch behind. Applying the sweep rule above — diffing the published `1.7.5`/`1.7.6` tarballs' `dist/` trees for the four packages plus the transitive `@better-auth/core` — found:
+
+- `@better-auth/api-key` and `@better-auth/sso` changed by nothing but the embedded package version string. No code or schema surface moved.
+- `better-auth`'s account-linking route (`api/routes/callback.mjs`) was refactored into a shared `linkOAuthAccount` helper (`oauth2/link-account.mjs`); a side-by-side read of the old inline block and the new helper shows the same checks in the same order — untrusted-provider, email match, existing-account merge, create — with no behaviour change. The password-length checks scattered across sign-up, sign-in, password reset, update-user and the admin plugin were pulled into two shared assertions (`assertPasswordNotTooShort` / `assertPasswordNotTooLong`); sign-in and the admin `createUser` route gained a max-length check they lacked before (rejects an oversized password before hashing rather than after), which is strictly narrower than before, not broader. The React client's query and session atoms gained a request-id guard so a stale response can no longer clobber a newer one — a bug fix in our favour.
+- `@better-auth/core`'s schema-check registration changed shape: `registerSchemaCheck` now always registers a check and takes a separate `runtimeEnabled` flag, and `ctx.checkSchema` (what `apps/api/src/index.ts` awaits once at boot per the 1.7.3 addendum above) now resolves through the new `runtimeSchemaCheckFor`, gated on that flag, instead of the old always-present `schemaCheckFor`. Read against what the Drizzle adapter passes — `runtimeEnabled: checksSchema(options)`, the same `advanced.database.validateSchema` read the old gate used — this is a rename, not a behaviour change: `checkSchema` still resolves to the same check, gated the same way, as long as `validateSchema` is left at its default. Worth the sweep rule's diff specifically because the surrounding boot-time contract is exactly what #340/1.7.3 taught this rule to watch for, even though this time it held.
+
+Classified **Patch**, landed with the rest of the routine sweep's Patch/Minor group on one PR, no code changes required. `@better-auth/api-key` is added to this addendum's scope for future sweeps — it is a fourth `@better-auth/*` package now, not a one-off.
+
+M41 (TECH-035) landed on dev while this sweep was open. It added `@better-auth/cimd`, `@better-auth/mcp` and `@better-auth/oauth-provider` at exact 1.7.5, and changed `better-auth` in `apps/api` to an exact pin. The merge moves all three plugins and `better-auth` to exact 1.7.6. `cimd` declares exact peer versions of `better-auth`, `core`, `mcp` and `oauth-provider`, so the family cannot move in parts. The same tarball diff covered the three plugins. `cimd` and `mcp` changed only the embedded version string. `oauth-provider` renamed its hashed chunk files, and with the hashes normalized the only change is the version string. The 1.7.5 plugin behaviours the TECH-035 addenda record, such as root-only protected-resource discovery and the missing client-disable endpoint, still hold. Future sweeps diff all seven `@better-auth/*` packages.
+
 ## TECH-009: Real-time — SSE on live surfaces
 
 - **Status:** Accepted
@@ -1949,6 +1961,75 @@ A new grant uses the active lifetime. An existing grant retains its absolute exp
 including across token refresh. The API rejects invalid lifetime settings at boot
 and through the settings route.
 
+### Addendum, 2026-09-25, #1166: M42 resources, prompts and the listen stream
+
+M42 is built on the same `/mcp` endpoint. Resource reads use these addresses:
+
+| Address                                   | Content                                                |
+| ----------------------------------------- | ------------------------------------------------------ |
+| `openlaw://contracts/{number}`            | Contract                                               |
+| `openlaw://matters/{number}`              | Matter                                                 |
+| `openlaw://requests/{number}`             | Request                                                |
+| `openlaw://entities/{id}`                 | Entity                                                 |
+| `openlaw://knowledge/{id}`                | Knowledge Item                                         |
+| `openlaw://document-versions/{versionId}` | Extracted Document Version text                        |
+| `openlaw://inbox`                         | Inbox for Legal Users, own Requests for Business Users |
+| `openlaw://tasks/mine`                    | Tasks assigned to the person                           |
+| `openlaw://vocabulary`                    | Configured vocabulary                                  |
+
+Record numbers accept their prefix or a positive integer, such as `C-12` or `12`.
+Entity, Knowledge Item and Version addresses require UUIDs. Each read uses the
+matching Tool's grant, record reach and output budget. Records and views return
+`application/json`. Version text returns `text/plain`, with a T26 continuation
+when more text exists. Resource content has a title in `_meta.title`.
+
+`triage_inbox` accepts an optional string `limit`, from 1 to 100, with default 25.
+It requires Requests and a Legal User. `summarize_record` requires `record`.
+It accepts a record address or a kind and number or id, such as `contract C-12`.
+Its record kinds are Contract, Matter, Request, Entity and Knowledge Item.
+Each prompt returns instructions and an embedded resource in separate user messages.
+It treats record text as data. Triage asks for confirmation before writes and
+hands conversion to the person's Convert dialog. Summary requests no changes.
+A resource read or prompt get reserves one rate-limited call and one ledger row.
+An embedded read does not reserve another call. Ledger names use `resource:<kind>`
+and `prompt:<name>` without record addresses or content.
+
+Modern Clients use `subscriptions/listen` through a long-lived POST response.
+Each stream has one scoped subscription on the shared event hub and its existing
+PostgreSQL LISTEN connection. It adds no database connection per stream.
+The SDK event bus filters the requested notification types and addresses.
+OpenLaw checks the person's grant, record reach and Visibility tiers.
+Subscriptions cover Contract, Matter, Request, Entity and Knowledge Item records,
+plus the Inbox for Legal Users. Other resource addresses do not produce updates.
+
+MCP policy changes recheck the credential and publish
+`notifications/tools/list_changed`, `notifications/resources/list_changed` and
+`notifications/prompts/list_changed`. Record events publish
+`notifications/resources/updated` at the permitted tiers.
+Inbox events publish an Inbox update for subscribed Legal Users.
+A revocation closes the affected stream. The heartbeat rechecks credentials,
+expiry and switches. A role change closes the stream so the Client must reconnect.
+The hub's capacity limit applies. Legacy Clients stay stateless and reload by hand.
+There is no GET stream, `/sse` endpoint or legacy subscription session.
+
+Discovery supplies these cache hints. They never replace a current access check.
+
+| Method                     | `ttlMs` | `cacheScope` |
+| -------------------------- | ------- | ------------ |
+| `tools/list`               | 300000  | `private`    |
+| `resources/templates/list` | 300000  | `private`    |
+| `prompts/list`             | 300000  | `private`    |
+| `resources/list`           | 0       | Not set      |
+| `resources/read`           | 0       | Not set      |
+
+The audience flags mean that an account type may run a Tool. They do not set
+ceiling defaults. T33 and T34 use `team`. T35 and T40 use `administration` and
+require an Administrator. All four declare Legal User `on` and Business User `off`.
+The migration removes both Toolsets from existing ceilings and the column default.
+API key requests and OAuth consent share `selectableToolsets`. It keeps only
+ceiling Toolsets with a Tool the account type may run. Consent also intersects
+this set with the Client's requested scopes. Guide needs no selection.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -1987,7 +2068,7 @@ and through the settings route.
 | TECH-032 | Sign-in defences: trusted proxies, password lockout, reset ends sessions      | Accepted                                                                        |
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
-| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27 and M41 addenda #1132, #1134, #1135, #1138                        |
+| TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
 
 ### TECH-007 / TECH-013 addendum, 2026-09-26, #1172. Sender View and shared checks
 

@@ -1,0 +1,400 @@
+{
+  "batch": "DOC-030",
+  "group": "admin-config",
+  "reviewer": "DOC-030 source-review author agent (admin-config)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:29:14Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+  "comparedFrom": {
+    "types-statuses-fields": {
+      "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "271ad53a"
+    },
+    "request-forms": {
+      "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "58d40076"
+    },
+    "reminders-and-audit": {
+      "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "910ca36b"
+    },
+    "auto-doc-template": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "2fb05f5c"
+    }
+  },
+  "method": "source-inspection",
+  "relevantAppChanges": [
+    "M39 type Forms (DD-028, #1007/#1020, migrations 0157-0159): Form tab with Rows, Branches, three switches, Touchpoint, intake preview; Default type per module; Request types read the destination type's Form through a read-only Intake form card with an Edit form button (58d40076).",
+    "a0682c5d: the Convert dialog no longer lists answers that do not carry; they stay on the Request.",
+    "d0d16390 (DOC-015, migrations 0160-0161): Document types per module under Settings > Documents.",
+    "1f7cca32 (NOT-004 addendum 2026-09-24, migration 0162): a person may replace the organization's reminder lead times with their own list.",
+    "ee82482c (M43, NOT addendum 2026-09-24): Comment emails card with Include comment words in email on the Organization Notifications page.",
+    "6795ccc9 / 910ca36b (M40, #1062): Audit log Activity and Tool calls tabs; abd161cc adds via-Client attribution; the Audit log strips unreached far-side records from payloads.",
+    "3a227f03 / 2fb05f5c: Auto-Doc starter template download and bold, underline, italic directives; 4eb35881 screens uploaded templates for macros, external links, outside-content fields and a 32 MiB expanded size."
+  ],
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "scenario": ["V-C38"],
+      "contentSha256Before": "c26be5bfbdf9a77672dddf1238b3b8171199740b4bc2b74a3874eb7cd3962db8",
+      "contentSha256": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS.md (DD-028 and its 2026-09-22 built addendum)",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+        "docs/decision-records/DECISIONS-SETTINGS.md (DD-028 Default type amendment)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/components/contracts-settings-tabs.tsx",
+        "apps/web/src/components/matters-settings-tabs.tsx",
+        "apps/web/src/components/entities-settings-tabs.tsx",
+        "apps/web/src/components/knowledge-settings-tabs.tsx",
+        "apps/web/src/components/documents-settings-tabs.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/components/inline-add-form.tsx",
+        "apps/web/src/components/default-fields.tsx",
+        "apps/web/src/routes/settings-contract-types.tsx",
+        "apps/web/src/routes/settings-matter-types.tsx",
+        "apps/web/src/routes/settings-entity-types.tsx",
+        "apps/web/src/routes/settings-knowledge-types.tsx",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "apps/web/src/routes/settings-officer-roles.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-matter-statuses.tsx",
+        "apps/web/src/routes/settings-contract-fields.tsx",
+        "apps/web/src/components/type-editor-screen.tsx",
+        "apps/web/src/components/type-editor-sections.tsx",
+        "apps/web/src/routes/settings-contract-type-editor.tsx",
+        "apps/web/src/routes/settings-matter-type-editor.tsx",
+        "apps/web/src/routes/settings-entity-type-editor.tsx",
+        "apps/web/src/components/type-form/builder.tsx",
+        "apps/web/src/components/type-form/conditions.tsx",
+        "apps/web/src/components/type-form/model.ts",
+        "apps/web/src/components/type-form/preview.tsx",
+        "apps/web/src/components/field-editor-dialog.tsx",
+        "apps/web/src/components/field-answer-style-select.tsx",
+        "apps/web/src/lib/field-catalog.ts",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/documents/batch-dialog.tsx",
+        "apps/api/src/lib/taxonomy-routes.ts",
+        "apps/api/src/modules/contract-types/routes.ts",
+        "apps/api/src/modules/matter-types/routes.ts",
+        "apps/api/src/modules/entity-types/routes.ts",
+        "apps/api/src/modules/officer-roles/routes.ts",
+        "apps/api/src/modules/document-types/routes.ts",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "apps/api/src/modules/matter-statuses/routes.ts",
+        "packages/db/migrations/0157_type-forms.sql",
+        "packages/db/migrations/0160_document_types.sql",
+        "messages/en-US.json",
+        "docs/user-guides/first-run.md (anchor only)",
+        "docs/user-guides/configure-analysis.md (anchor only)"
+      ],
+      "corrections": [
+        {
+          "claim": "Default type",
+          "before": "Contracts and Matters also have one **Default type**. You can rename it, but cannot archive or delete it.",
+          "after": "Contracts and Matters each have one Default type, seeded with the name Default and not marked by any label in the list. You can rename it. Its row still shows an Archive control, but the dialog refuses and says it is the Default type.",
+          "source": "packages/db/migrations/0157_type-forms.sql (seeds display_name 'Default'); apps/web/src/components/taxonomy-types-pane.tsx (lock only for protectedRow slug 'other'); apps/api/src/lib/taxonomy-routes.ts (409 'is the Default type and cannot be archived or deleted'); no 'Default type' string in messages/en-US.json"
+        },
+        {
+          "claim": "Archive reassignment target",
+          "before": "(not stated)",
+          "after": "The dialog lists only live types, so it cannot move records onto an archived type.",
+          "source": "apps/web/src/components/taxonomy-types-pane.tsx (candidates = live types but the target); apps/api/src/lib/taxonomy-routes.ts ('The reassignment target must be a live ...', 'A type can't take reassignments from itself.')"
+        },
+        {
+          "claim": "Document types (shared-file request from the documents group)",
+          "before": "No guide described Settings > Documents.",
+          "after": "New H2 'Add Document types': Documents > Matters, Contracts or Entities tab, Add type, Save; six fixed Contract types with a lock and no rename or archive; Matters and Entities start empty; upload dialogs show a type choice only when the module's list holds a live type; archive asks for no replacement; Knowledge has no list.",
+          "source": "apps/web/src/routes/settings-document-types.tsx; apps/web/src/components/documents-settings-tabs.tsx; apps/api/src/modules/document-types/routes.ts; packages/db/migrations/0160_document_types.sql; documents-card.tsx, create-attachments.tsx and batch-dialog.tsx (typeOptions.length > 0); DECISIONS-DOCUMENTS.md DOC-015"
+        },
+        {
+          "claim": "Stage and Category immutability",
+          "before": "A Status keeps the Stage chosen at creation (table only).",
+          "after": "Added: neither Statuses page has a control to change the Stage or Category of an existing Status.",
+          "source": "apps/api/src/modules/contract-statuses/routes.ts and matter-statuses/routes.ts (rename takes a strict body; a body carrying stage or category is refused)"
+        },
+        {
+          "claim": "Boolean Field in the create steps",
+          "before": "For a Boolean Field, select **Yes** or **No**. An untouched Boolean Field reads **No**.",
+          "after": "People answer a Boolean Field with Yes or No. An unanswered Boolean Field reads No.",
+          "source": "apps/web/src/components/field-editor-dialog.tsx (no Yes/No control at creation); commit 194794b9 (custom-field-control Yes/No select)"
+        },
+        {
+          "claim": "Answer style on a Contract Field (shared-file request from the analysis-live group)",
+          "before": "Only the AI prompt was mentioned, with a link to configure-analysis.md.",
+          "after": "A Contract Text or Long text Field has an Answer style choice. Keep Organisation default, or choose a style that overrides the organization's Answer style for this Field only. Link to configure-analysis.md#add-a-catalog-field-to-analysis.",
+          "source": "apps/web/src/components/field-editor-dialog.tsx (styleable = contract and text or long_text); apps/web/src/components/field-answer-style-select.tsx"
+        },
+        {
+          "claim": "Where Add condition puts the Branch",
+          "before": "Select **Add condition** below the intended preceding Rows.",
+          "after": "Select Add condition in the Form header. The new Branch appears at the end of the Form, below Term type.",
+          "source": "apps/web/src/components/type-form/builder.tsx (root toolbar lives in the card header; addBranch(null) calls appendNode, which appends at the root end); model.ts appendNode"
+        },
+        {
+          "claim": "Officer roles tab label",
+          "before": "Open **Entities**, **Officer roles**.",
+          "after": "Open Entities, Director & Officer roles.",
+          "source": "apps/web/src/components/entities-settings-tabs.tsx; apps/web/src/routes/settings-officer-roles.tsx (settings.officerRoles.title)"
+        }
+      ],
+      "confirmed": [
+        "Settings rail: Organization group is Administrator-only; Business Users are redirected out of Settings; module sections Contracts, Matters, Entities, Knowledge with Types tabs (settings.tsx, *-settings-tabs.tsx).",
+        "Add type, Save and Cancel through InlineAddForm; rename by selecting the name (Rename {name}); drag or arrow-key reorder; Show archived and Restore (taxonomy-types-pane.tsx, list-editor.tsx).",
+        "Edit {name} pencil opens the type editor with Details and Form tabs, plus People and Approval defaults on Contract types; Display name and Description save on blur or Enter (type-editor-screen.tsx, type-editor-sections.tsx). Knowledge types have no editor.",
+        "Other is protected on Contract, Matter and Entity types and Officer roles; Knowledge types have none (API protectedSlug configs).",
+        "Statuses: Add status, Save status on both pages, Matter group Open, In progress or Waiting, Stage and Category floors (settings-contract-statuses.tsx, settings-matter-statuses.tsx, unchanged since 57e77e38 except usage-count export).",
+        "Default Fields card collapsed and read-only above an expanded Custom Fields card on Contract and Matter Fields; default Fields show a lock in place of archive (default-fields.tsx, settings-contract-fields.tsx).",
+        "Field types list and immutability; Options one per line; AI prompt only on Contract Fields other than User and Entity (field-catalog.ts, field-editor-dialog.tsx).",
+        "Form builder: Attach Field with Search fields, alphabetic list, Create Field, Retry attaching {field}; switches On intake form, Required for creation, Visible on Portal; intake forces Visible on Portal on and locks it; built-in Rows show Fixed; User Row cannot be required while on intake; Detach {row}; Title and Type pinned (builder.tsx).",
+        "Touchpoint Intake, Creation, Record derived from the switches (builder.tsx formRowTouchpoint; DD-028 point 2).",
+        "Entity Forms show only Required for creation and have no intake preview (builder.tsx module === 'entity' branches).",
+        "Branch: grip menu Put under a condition… and Move out of the condition; Branch name 'Show when all of: Term type is Fixed'; Add another condition asks AND or OR once; Join conditions; Edit conditions; Retry condition change; Remove condition keeps children; one unfinished Branch at a time; Escape discards a new condition; minor-unit money operand (builder.tsx, conditions.tsx, model.ts).",
+        "Preview intake form: Submit request validates without sending; 'Preview only. No Request will be sent.' (preview.tsx).",
+        "Field archive keeps attachments and values; archive dialog never reassigns (settings-contract-fields.tsx archiveWarning).",
+        "Officer roles: Add role, Archive role with replacement, Other protected (settings-officer-roles.tsx).",
+        "Anchors first-run.md#start-blank and configure-analysis.md#add-a-catalog-field-to-analysis exist."
+      ],
+      "limitations": [
+        "Invalid reassignment (an archived or self target) cannot be chosen in the browser, because the archive dialog lists only live types other than the target. The refusal exists only on the API ('The reassignment target must be a live ...'). A browser walkthrough can show only that the choice is absent.",
+        "Stage and Category immutability has no browser control to refuse. The strict rename body refuses a stage or category change on the API only.",
+        "The Default type's Archive control is drawn and always refused with a 409 reason. DD-028 point 7 asks only that archive be refused with a reason, so this is recorded as a usability gap, not a bug.",
+        "Document types were added at the documents group's request. V-C38 names types, Statuses and Fields, and the walkthrough agent may treat the Document types steps as outside V-C38 unless the batch owner extends the scenario."
+      ],
+      "walkthroughNotes": [
+        "The NDA Branch example needs Term type and Expiry date built-in Rows on the NDA Form; the new Branch lands at the end of the Form.",
+        "The Default type row is named Default on a fresh install. Select its Archive control to see the refusal."
+      ]
+    },
+    {
+      "articleId": "request-forms",
+      "scenario": ["V-C40"],
+      "contentSha256Before": "7f3234400b89e146de9b533ea23e296eabecdbc0724cd2c47bf391d0e3420a4c",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS.md (DD-028 points 6, 7 and built addendum)",
+        "docs/decision-records/DECISIONS-INTAKE.md (INT-002 addenda 2026-08-20 and the archived target type addendum, DD-028 addendum)",
+        "apps/web/src/routes/settings-request-types.tsx",
+        "apps/web/src/routes/settings-request-type-editor.tsx",
+        "apps/web/src/components/type-form/intake-card.tsx",
+        "apps/web/src/components/type-form/preview.tsx",
+        "apps/web/src/components/type-form/model.ts",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/api/src/modules/request-types/routes.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "packages/db/src/schema/request-types.ts",
+        "packages/db/migrations/0157_type-forms.sql",
+        "messages/en-US.json",
+        "docs/user-guides/convert-request.md (consistency only)"
+      ],
+      "corrections": [
+        {
+          "claim": "Answers that do not carry at conversion (shared-file request from the inbox group)",
+          "before": "If an answer appears under **Does not carry into the contract**, or **Does not carry into the matter**, during conversion, check whether the Field is attached to the selected destination type.",
+          "after": "If an answer is missing from the new record after conversion, check whether the selected destination type's Form has a Row for that Field. An answer without a matching Row stays on the Request. The Convert dialog does not list it, so read it on the Request page.",
+          "source": "commit a0682c5d (Remove carry-over summaries from Request conversion); no 'Does not carry' string in messages/en-US.json or convert-dialog.tsx; convert-request.md line 67"
+        },
+        {
+          "claim": "Archived destination type on the Portal",
+          "before": "(not stated in If it does not work, beyond choosing a live destination in the editor)",
+          "after": "If a Business User opens the form and sees an error instead of the questions, check that the destination type is live. OpenLaw does not send the form to another type or module.",
+          "source": "apps/api/src/lib/intake-form.ts readIntakeTree (400 'This Request type needs a destination type.' when the selected type is archived); apps/web/src/routes/portal-request-form.tsx loader (throws 'The request form could not be read.' for any non-404 failure)"
+        }
+      ],
+      "confirmed": [
+        "Settings > Intake > Request types; Add request type with Save and Cancel; Edit {name}; Destination column; archive dialog reassigns used Requests to a live replacement; Show archived and Restore (settings-request-types.tsx, taxonomy-types-pane.tsx).",
+        "Request type editor: Display name and Description save on blur; Default destination Contract or Matter; Default contract type or Default matter type with Default first; module change clears the type; archived selection shows '{name} (unavailable)' (settings-request-type-editor.tsx).",
+        "New Request types start with a Matter destination (migration 0157 sets target_module default 'matter').",
+        "Target turnaround (business days) 0 to 36,500 or blank, saves on blur or Enter; Portal card shows 'Estimated turnaround: N business days' (settings-request-type-editor.tsx, portal.tsx).",
+        "Intake form card: read-only; Title, Department, Urgency, the destination Intake Rows with Branch headers, Attachments last; Required or Optional per Row; eye button Preview intake form; Edit form in the header opens the destination type's Form tab; Retry on a read failure (intake-card.tsx).",
+        "A module-only destination reads the Default type's Form (settings-request-type-editor.tsx destinationType; intake-form.ts isDefault).",
+        "Preview shows the Request type's display name and description and sends nothing (preview.tsx).",
+        "User Row on intake cannot be required (builder.tsx switch reason; DD-028 point 6).",
+        "Deflection links: Add link, Target External address or Knowledge item, Address http:// or https://, Label, Placement Portal home or a request type, Edit, Remove, reorder; Portal heading Before you submit (settings-intake-links.tsx, messages).",
+        "Built-in Contract Rows include Counterparties, Effective date, Expiry date, Term type and Value; Value is one Row (model.ts LABELS, DD-028 point 3)."
+      ],
+      "limitations": [
+        "The Portal picker still lists a Request type whose destination type is archived. Opening it shows the generic error page. See productBugs. The guide describes this built behavior as a symptom to check.",
+        "Conversion reads an archived target type as no type and lands on the module's Default type (convert.ts). The walkthrough should check that the Convert dialog keeps the module rather than switching modules."
+      ]
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "scenario": ["V-C41"],
+      "contentSha256Before": "f4ff883cad82e4eff77f8257ef019253941995c7e91eee8264ed0d95d832f8b3",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
+      "sources": [
+        "CONTEXT.md (Audit log, MCP, Client, Tool, Key date)",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-004 and addenda 2026-09-10, 2026-09-17, 2026-09-24; comment words addendum 2026-09-24)",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/lib/reminder-offsets.ts",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/routes/settings-notifications.tsx",
+        "apps/web/src/routes/settings-audit-log.tsx",
+        "apps/web/src/components/audit-settings-tabs.tsx",
+        "apps/web/src/routes/settings-tool-calls.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/modules/audit-log/tool-calls.ts",
+        "apps/api/src/lib/activity-redaction.ts",
+        "messages/en-US.json",
+        "docs/user-guides/notifications.md (anchors only)"
+      ],
+      "corrections": [
+        {
+          "claim": "Organization lead times are a default (shared-file request from the contracts-b group)",
+          "before": "This organization list applies to tracked Key dates, Contract notice deadlines and expiry, and Entity Obligation reminders. ... Expiry, notice deadlines, and Entity Obligations use only this list.",
+          "after": "This list is the organization's default. A staff member can replace it under Personal, Notifications, Reminder lead times by turning off Use the organization's default lead times; Business Users cannot. The list that applies to each person covers Key dates, notice deadlines, expiry and Entity Obligations. Key date lead times add to each recipient's list. Expiry, notice deadlines and Entity Obligations use only the recipient's list.",
+          "source": "commit 1f7cca32; apps/api/src/pipeline/morning-round.ts (cohorts by personalOffsets); my-reminder-lead-times.tsx; NOT-004 addendum 2026-09-24"
+        },
+        {
+          "claim": "Comment emails card (shared-file request from the conversations group)",
+          "before": "(not described)",
+          "after": "New H2 'Choose whether comment emails carry the words': Comment emails card, Include comment words in email, on by default, organization-wide; off sends mention, comment and reply emails without the words; saves on change; recorded as an Administrator-only Audit log event.",
+          "source": "apps/web/src/routes/settings-reminders.tsx; apps/api/src/modules/org/routes.ts (org_settings.updated, admin_only); DECISIONS-NOTIFICATIONS.md comment words addendum 2026-09-24"
+        },
+        {
+          "claim": "Delivery checks",
+          "before": "check the date, lead time, person's saved timezone ...",
+          "after": "check the date, the lead time list that applies to the person, the person's saved timezone ...; also check whether the colleague uses their own lead times.",
+          "source": "apps/api/src/pipeline/morning-round.ts"
+        },
+        {
+          "claim": "Far-side redaction in the Audit log",
+          "before": "(not stated)",
+          "after": "An entry can name a second record, such as a related Contract. If you cannot reach that second record, the entry shows without its number and title. Export CSV applies the same limits.",
+          "source": "apps/api/src/modules/audit-log/routes.ts (redactUnreachedReferences on list and export); apps/api/src/lib/activity-redaction.ts"
+        },
+        {
+          "claim": "Path from MCP settings to Tool calls",
+          "before": "**Settings → Organization → MCP** opens this tab filtered to the last 24 hours.",
+          "after": "On Settings, MCP, the Tool calls in the last day button opens this tab filtered to the last 24 hours.",
+          "source": "apps/web/src/routes/settings-mcp.tsx (settings.mcp.toolCalls link to ?range=last-day); settings-tool-calls.tsx loader"
+        },
+        {
+          "claim": "Read-failure recovery",
+          "before": "If the log reports that it could not be read, change a filter to retry.",
+          "after": "On the Activity tab, change a filter to retry. On the Tool calls tab, select Retry.",
+          "source": "messages audit.loadError; settings-tool-calls.tsx (audit.toolCalls.retry)"
+        }
+      ],
+      "confirmed": [
+        "Settings > Organization > Notifications opens the page titled Reminder lead times; Personal > Notifications holds personal preferences (settings.tsx, settings-reminders.tsx).",
+        "Add lead time, Save and Cancel; Remove {label}; last row locked; reorder by drag or arrow keys; 0 to 730, at most 20, distinct; 0 reads On the day (settings-reminders.tsx, reminder-offsets.ts).",
+        "Key date lead times and recipients add per date; a lead time in both lists fires once (NOT-004 addenda, morning-round.ts).",
+        "Round serves each person after 08:00 in the profile timezone, UTC when unset (morning-round.ts header).",
+        "Audit log under Advanced; Activity and Tool calls tabs; Person, Action, Record, From, To, Search, Show older, Clear filters, Export CSV (settings-audit-log.tsx, audit-settings-tabs.tsx, messages).",
+        "Audit log page and API are Administrator-only (settings.tsx rail, requireRole in audit-log routes and tool-calls.ts).",
+        "Tool calls columns When, Person, Client, Tool, Outcome, Duration; Pending outcome; From and To; Load more; Clear filters; Export CSV records export.performed as admin_only; ledger holds no record ids, arguments or results (settings-tool-calls.tsx, tool-calls.ts).",
+        "A change made through MCP is narrated '{actor}, via {client},' (activity.ts actorName)."
+      ],
+      "limitations": [
+        "Timezone and channel limits are source-inspected only. A walkthrough needs a controlled clock or the morning round handler to observe a reminder.",
+        "A Tool calls entry needs a Client call through MCP; the lab must hold an OAuth grant or API key to produce one."
+      ]
+    },
+    {
+      "articleId": "auto-doc-template",
+      "scenario": ["V-C56"],
+      "contentSha256Before": "e44f8a8792fbb3f2320086ad290edde37ed75ae853db94e4cd31c422397e510f",
+      "contentSha256": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f",
+      "sources": [
+        "CONTEXT.md (Placeholder, Block, Clause rule)",
+        "docs/decision-records/DECISIONS-AUTO-DOCS.md (ADO-002, ADO-004)",
+        "apps/api/src/lib/auto-doc-template.ts",
+        "apps/api/src/lib/auto-doc-fill/text-style.ts",
+        "apps/api/src/lib/auto-doc-fill/render.ts",
+        "apps/api/src/lib/auto-doc-fill/values.ts",
+        "apps/api/src/lib/auto-doc-fill/engine.ts",
+        "apps/api/src/lib/docx-package.ts",
+        "apps/api/src/modules/auto-docs/forms.ts",
+        "apps/api/src/modules/auto-docs/routes.ts",
+        "apps/web/src/routes/auto-docs.tsx",
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/web/src/components/auto-docs/rule-words.tsx",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/shell/destinations.ts",
+        "apps/web/public/downloads/openlaw-auto-doc-starter.docx (word/document.xml text)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Section order",
+          "before": "Download a starter template came before Before you start.",
+          "after": "Before you start comes first, as the how-to template requires. Neither heading changed.",
+          "source": "docs/documentation/templates/how-to.md"
+        },
+        {
+          "claim": "Disagreeing directives",
+          "before": "Two directives that disagree on one name create a text field, and Publish then names the gap.",
+          "after": "If one name has a date directive in one place and a currency directive in another, the new field is a text field, and Publish then names the gap.",
+          "source": "apps/api/src/modules/auto-docs/forms.ts detectedFields and directiveNeeds (only date and currency ask for a type; bold, underline, italic and upper never disagree)"
+        },
+        {
+          "claim": "Template package screening",
+          "before": "(not stated)",
+          "after": "OpenLaw also refuses a Word file that holds a macro, a non-hyperlink external link, or a field that pulls in outside content, such as INCLUDETEXT or DDE, and a file whose contents expand past 32 MiB. The refusal names the reason.",
+          "source": "apps/api/src/modules/auto-docs/forms.ts screenTemplatePackage (422 at upload); apps/api/src/lib/docx-package.ts screenDocxPackage, verifyZipPackage, REFUSED_FIELD_KEYWORDS; engine.ts MAX_EXPANDED_TEMPLATE_BYTES = 32 MiB; upload-dialog.tsx shows the problem detail"
+        }
+      ],
+      "confirmed": [
+        "Auto-Docs is shown to Member+ only (destinations.ts MEMBER_PLUS_ROLES).",
+        "Download starter template (.docx) sits beside the page title and serves /downloads/openlaw-auto-doc-starter.docx (auto-docs.tsx).",
+        "The starter file has an instruction page with bold, underline, italic, upper, three date and one currency example and a confidentiality Block, then a page break and a Services Agreement with start_date, provider_name, client_name, services and fee and a confidentiality Block (docx text).",
+        "Name rule /^[a-z][a-z0-9_]{0,119}$/; one directive only; bold, underline, italic, upper, date:YYYY-MM-DD, date:DD/MM/YYYY, date:MMMM D, YYYY, currency with a known three-letter code (auto-doc-template.ts).",
+        "Bold, underline and italic style only the inserted answer in its own Word run and keep surrounding formatting (text-style.ts, render.ts).",
+        "Scanned parts: body, then headers, footers, footnotes and endnotes in name order (templateTextParts).",
+        "Unclosed brace, stray closing brace, Block close without open and unclosed Block are refused with the text quoted (scanTemplateText).",
+        "Publish names a field whose type cannot print its date or currency directive, quoting the Placeholder (publicationGaps).",
+        "Field card label Template placeholder replaced Slug (form-builder.tsx, autoDocs.templatePlaceholder).",
+        "Orphaned field row reads No Placeholder in file version {number}; Clauses, Include, Always, When a rule matches, Form field, Operator; Publish pins one file version and one form version (routes.ts, form-builder.tsx, messages)."
+      ],
+      "limitations": [
+        "ADO-002 still lists only date, currency and upper as formatting directives. The bold, underline and italic directives shipped in 2fb05f5c without a decision addendum. The guide describes the built code.",
+        "The macro, external-link, field-code and size refusals need purpose-built fictional .docx fixtures. The DOC-028 fixtures do not hold them."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/api/src/lib/intake-form.ts (readIntakeTree) with apps/web/src/routes/portal-request-form.tsx and apps/api/src/modules/portal/routes.ts",
+      "symptom": "A Request type whose selected destination Contract or Matter type is archived stays in the Portal picker. Opening it fails: readIntakeTree answers 400 'This Request type needs a destination type.' and the Portal loader throws, so the Business User sees the generic error page instead of a form or a named refusal.",
+      "contradicts": "DECISIONS-INTAKE.md INT-002 addendum (2026-08-20, #354) and the later archived target type addendum: an archived target type is left alone and reads as no type. Conversion (convert.ts) follows that rule; under DD-028 point 7 no type means the module's Default type Form."
+    }
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/edition.json: the publication content hashes for types-statuses-fields, request-forms, reminders-and-audit and auto-doc-template must move to the new hashes in this record.",
+    "docs/documentation/scenarios.json: V-C38 may need its actions extended to Document types (Settings > Documents) if the batch owner accepts that section as part of C38; otherwise move it to a documents scenario."
+  ],
+  "statusChange": null,
+  "limitations": [
+    "Source inspection only. No browser walkthrough was run by this agent. An independent agent runs V-C38, V-C40, V-C41 and V-C56.",
+    "The author and the technical reviewer are the same agent.",
+    "Catalog status, edition.json, scenarios.json and evidence files were not changed. The four new content hashes must be carried into edition.json by the batch owner, or the docs build refuses them as changed publication sources."
+  ],
+  "foldedRequests": [
+    "documents group: Document types steps added to types-statuses-fields.md (Add Document types).",
+    "analysis-live group: Answer style mention and link added to types-statuses-fields.md. The requested 'stays disabled until an AI connector is saved' was not added: the Field editor's Answer style select is disabled only while the dialog saves (field-editor-dialog.tsx disabled={busy}); only the organization Answer style card waits for a connector.",
+    "contracts-b group: personal lead times described in reminders-and-audit.md.",
+    "inbox group: 'Does not carry into' reference removed from request-forms.md.",
+    "conversations group: Comment emails card described in reminders-and-audit.md."
+  ]
+}

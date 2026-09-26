@@ -23,8 +23,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/staff-sign-in.json"]
       }
     },
@@ -49,8 +49,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/portal-sign-in.json"]
       }
     },
@@ -73,8 +73,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/find-your-work.json"]
       }
     },
@@ -99,8 +99,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/search-and-views.json"]
       }
     },
@@ -123,8 +123,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/personal-settings.json"]
       }
     },
@@ -149,8 +149,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/roles-and-access.json"]
       }
     },
@@ -175,8 +175,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/comments-and-activity.json"]
       }
     },
@@ -201,8 +201,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/notifications.json"]
       }
     },
@@ -227,8 +227,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/submit-request.json"]
       }
     },
@@ -251,8 +251,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/follow-request.json"]
       }
     },
@@ -277,8 +277,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/portal-knowledge.json"]
       }
     },
@@ -303,8 +303,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/triage-requests.json"]
       }
     },
@@ -329,8 +329,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/convert-request.json"]
       }
     },
@@ -355,8 +355,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/create-contract.json"]
       }
     },
@@ -379,8 +379,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/contract-stages.json"]
       }
     },
@@ -405,8 +405,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/contract-approvals.json"]
       }
     },
@@ -429,8 +429,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/manual-signing.json"]
       }
     },
@@ -455,8 +455,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/electronic-signing.json"]
       }
     },
@@ -481,8 +481,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/terms-and-renewals.json"]
       }
     },
@@ -508,8 +508,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/contract-tasks-and-dates.json"]
       }
     },
@@ -534,8 +534,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/contract-relations-and-ending.json"]
       }
     },
@@ -560,8 +560,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/contract-analysis.json"]
       }
     },
@@ -586,8 +586,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/create-matter.json"]
       }
     },
@@ -610,8 +610,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/matter-status-and-archive.json"]
       }
     },
@@ -632,8 +632,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/matter-work.json"]
       }
     },
@@ -656,8 +656,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/contributor-guide.json"]
       }
     },
@@ -682,8 +682,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/document-versions.json"]
       }
     },
@@ -708,8 +708,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/document-folders.json"]
       }
     },
@@ -734,8 +734,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/document-previews.json"]
       }
     },
@@ -760,8 +760,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/compare-versions.json"]
       }
     },
@@ -784,8 +784,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/document-repository.json"]
       }
     },
@@ -806,8 +806,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/entities-and-counterparties.json"]
       }
     },
@@ -832,8 +832,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/entity-records.json"]
       }
     },
@@ -856,8 +856,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/create-knowledge.json"]
       }
     },
@@ -882,8 +882,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/publish-knowledge.json"]
       }
     },
@@ -906,8 +906,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/first-run.json"]
       }
     },
@@ -930,8 +930,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/organisation-and-users.json"]
       }
     },
@@ -956,8 +956,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/authentication-and-email.json"]
       }
     },
@@ -982,8 +982,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/types-statuses-fields.json"]
       }
     },
@@ -1004,8 +1004,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/matter-templates.json"]
       }
     },
@@ -1030,8 +1030,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/request-forms.json"]
       }
     },
@@ -1054,8 +1054,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/reminders-and-audit.json"]
       }
     },
@@ -1080,8 +1080,8 @@
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "DOC-029 independent live-provider walkthrough on 3fa407e3 against a real DocuSign developer account: connector configured and tested in Polling mode, a controlled Envelope signed, the executed copy filed and the Contract moved to Active. A compatibility review carries it to 432dba3a. Webhook delivery against live DocuSign Connect was not run and is tracked in #888.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/configure-signing.json"]
       }
     },
@@ -1106,8 +1106,8 @@
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "DOC-029 independent live-provider walkthrough on 3fa407e3 against a real OpenRouter connector, with credential-free checks repeated on 57e77e38 and a compatibility review to 432dba3a; no AI provider code changed in that range.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/configure-analysis.json"]
       }
     },
@@ -1132,8 +1132,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/install.json"]
       }
     },
@@ -1158,8 +1158,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
       }
     },
@@ -1184,8 +1184,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/upgrade.json"]
       }
     },
@@ -1210,8 +1210,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/backup-and-restore.json"]
       }
     },
@@ -1236,8 +1236,8 @@
       "requiredMethods": ["container-operation"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/operator-troubleshooting.json"]
       }
     },
@@ -1262,8 +1262,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/troubleshooting.json"]
       }
     },
@@ -1288,8 +1288,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/reference.json"]
       }
     },
@@ -1314,8 +1314,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in the article evidence; at least one article carries a DOC-030 compatibility review from its earlier walkthrough to 067c1646.",
         "evidence": ["docs/documentation/evidence/versions-and-support.json"]
       }
     },
@@ -1340,8 +1340,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/entity-obligations.json"]
       }
     },
@@ -1366,8 +1366,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/entity-structure-and-access.json"]
       }
     },
@@ -1392,8 +1392,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/archive-and-delete-documents.json"]
       }
     },
@@ -1418,8 +1418,8 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Reconciled from independent per-article evidence on its recorded build; not a fresh DOC-025 replay.",
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
         "evidence": ["docs/documentation/evidence/approver-groups.json"]
       }
     },
@@ -1442,9 +1442,9 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453\u2026, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
-        "evidence": ["docs/documentation/evidence/publication.json"]
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": []
       }
     },
     {
@@ -1468,9 +1468,9 @@
       "requiredMethods": ["browser-walkthrough"],
       "status": "pass",
       "acceptance": {
-        "task": "DOC-025",
-        "basis": "Independent agent browser walkthrough of the complete 57-article edition (content digest 09293453\u2026, distribution 366a78a8, app 432dba3a) by DOC-029's publication reviewer, for every required role and method. Agent check, not human approval.",
-        "evidence": ["docs/documentation/evidence/publication.json"]
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": []
       }
     },
     {
@@ -1492,7 +1492,12 @@
         "An unclosed Block, an unclosed brace, and a directive on a mismatched field type are refused with the offending text named."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "pass"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/auto-doc-template.json"]
+      }
     },
     {
       "id": "V-C45-advanced-settings",
@@ -1514,7 +1519,12 @@
         "A non-administrator cannot read or change Advanced configuration. Invalid values and stale edits are refused. Existing storage locations cannot be replaced."
       ],
       "requiredMethods": ["browser-walkthrough", "container-operation"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     },
     {
       "id": "V-M40-MCP",
@@ -1531,7 +1541,12 @@
       ],
       "negativeChecks": ["An expired or revoked key cannot connect."],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/configure-mcp.json"]
+      }
     },
     {
       "id": "V-M40-CLIENT",
@@ -1548,7 +1563,12 @@
       ],
       "negativeChecks": ["An expired or revoked key cannot connect."],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/connect-headless-client.json"]
+      }
     },
     {
       "id": "V-M40-LAN",
@@ -1565,7 +1585,12 @@
       ],
       "negativeChecks": ["An expired or revoked key cannot connect."],
       "requiredMethods": ["container-operation"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
     },
     {
       "id": "V-M41-C59",
@@ -1590,7 +1615,12 @@
         "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
       ],
       "requiredMethods": ["browser-walkthrough", "live-provider-check"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/connect-claude.json"]
+      }
     },
     {
       "id": "V-M41-C60",
@@ -1662,7 +1692,12 @@
         "Rotation invalidates the old secret without deleting grants."
       ],
       "requiredMethods": ["browser-walkthrough"],
-      "status": "pending"
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/configure-mcp.json"]
+      }
     },
     {
       "id": "V-M41-PUBLIC",
@@ -1686,6 +1721,88 @@
         "Private endpoints remain unreachable outside the permitted network."
       ],
       "requiredMethods": ["container-operation", "live-provider-check"],
+      "status": "pass",
+      "acceptance": {
+        "task": "DOC-030",
+        "basis": "Every role and method passed in a DOC-030 independent walkthrough on a lab built from 067c1646.",
+        "evidence": ["docs/documentation/evidence/deployment-configuration.json"]
+      }
+    },
+    {
+      "id": "V-M42-C59",
+      "coverage": ["C59"],
+      "articles": ["connect-claude"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance, fictional accounts with reached Contracts and Requests, and the Claude accounts the guide requires."
+      ],
+      "actions": [
+        "In Claude Code, attach a Contract with @openlaw:openlaw://contracts/{number}, then run /openlaw:triage_inbox and /openlaw:summarize_record.",
+        "In claude.ai, open the OpenLaw attachment menu and add the Inbox resource and the summary prompt.",
+        "Search for triage_inbox and read Connect Claude through Guide; compare the text with Help."
+      ],
+      "expectedResults": [
+        "The attached resource and the summary follow the person's grant and record access. Triage proposes a Disposition, type, urgency and assignee and waits for confirmation before it assigns or comments.",
+        "Conversion ends at a link to the Request; the person completes the Convert dialog in OpenLaw."
+      ],
+      "negativeChecks": [
+        "A Business User sees no triage prompt. A record outside the grant or reach is refused by address.",
+        "A Contract address is refused when the Contracts Toolset is not in the grant."
+      ],
+      "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M42-C58",
+      "coverage": ["C58"],
+      "articles": ["connect-headless-client"],
+      "roles": ["legal_team_member", "administrator", "business_user"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance, an approved API key for each account type and a script Client on Streamable HTTP."
+      ],
+      "actions": [
+        "Call resources/templates/list, resources/list and resources/read for each address in the table.",
+        "Call prompts/list, then prompts/get for triage_inbox with a limit and for summarize_record with a record address and with a kind and number.",
+        "Open subscriptions/listen, change the Toolset ceiling and update a subscribed record."
+      ],
+      "expectedResults": [
+        "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists.",
+        "Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit.",
+        "The stream receives list_changed and resources/updated notifications for reached records only."
+      ],
+      "negativeChecks": [
+        "An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused.",
+        "A revoked key closes the stream and the next call is unauthorized."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
+      "status": "pending"
+    },
+    {
+      "id": "V-M42-MCP",
+      "coverage": ["C57"],
+      "articles": ["configure-mcp"],
+      "roles": ["administrator"],
+      "environment": "disposable",
+      "prerequisites": [
+        "A built M42 instance upgraded from M41 with every Toolset in the ceiling, fictional accounts of each type, and one modern and one legacy Client connected."
+      ],
+      "actions": [
+        "Confirm Team and Administration are unchecked after the upgrade; select each and save.",
+        "Request a key and open OAuth consent as a Legal Team Member and as a Business User; note the Toolsets offered.",
+        "Change the ceiling and Read-only while the modern Client and the legacy Client are connected."
+      ],
+      "expectedResults": [
+        "The captions read Starts off. and Starts off. Administrators only. Settings saved appears and the Audit log records each change.",
+        "A Legal Team Member is offered Team but not Administration; a Business User is offered neither. Nothing is pre-selected.",
+        "The modern Client reloads its lists without reconnecting; the legacy Client shows its old list until refreshed, and a call for a removed Toolset is refused."
+      ],
+      "negativeChecks": [
+        "Enabling a ceiling row does not add it to an existing key or grant.",
+        "Removing a Toolset from the ceiling blocks its Tools on an existing key at once."
+      ],
+      "requiredMethods": ["browser-walkthrough"],
       "status": "pending"
     }
   ]

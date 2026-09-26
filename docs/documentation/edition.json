@@ -3,13 +3,30 @@
   "id": "documentation-development",
   "channel": "development",
   "supportedAppVersion": "0.0.1",
-  "supportedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+  "supportedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
   "publicationTarget": "development-app",
   "compatibilityReview": {
-    "testedAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 independent walkthrough agents (one per article group, independent of the source-review authors)",
-    "reviewedAt": "2026-09-16T16:48:55.535Z",
-    "summary": "DOC-029 re-verified the suite against labs built from 3fa407e3. Each article received a source review, then an independent agent walkthrough for every required role and method on that build. Articles whose walkthrough did not pass keep their earlier evidence and do not receive credit."
+    "testedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 independent walkthrough and compatibility reviewer agents (one seat per article group, independent of the source-review authors)",
+    "reviewedAt": "2026-09-25T21:10:28.264Z",
+    "summary": "DOC-030 (#1157) re-verified the suite against labs built from 067c1646. Each guide whose text or underlying behavior changed received a source review and an independent agent walkthrough for every required role and method on that build. Seven guides the app-diff triage left unchanged carry a compatibility review with replayed DOC-029 scripts. configure-analysis used a live OpenRouter key, and connect-claude and the public deployment profile used a live claude.ai session with the owner. 60 of 62 guides pass. connect-chatgpt and connect-microsoft-365-copilot await live vendor sessions under DOC-031 and receive no credit."
+  },
+  "publication": {
+    "status": "validation-pending",
+    "approvedBy": "Blair Wentworth",
+    "approvedAt": "2026-09-25T21:31:25.738Z",
+    "sourceCommit": "c0ce728ca319af3d7fada3e19a5d07b27a015577",
+    "reason": "User decision in DOC-030 (#1157), 2026-09-26: \"Keep them, open DOC-031\", on the option that connect-chatgpt and connect-microsoft-365-copilot stay in Help with an unverified badge until live ChatGPT and Copilot sessions under DOC-031 (#1187). This authorizes availability with validation in progress, not a claim that verification has passed.",
+    "articles": [
+      {
+        "id": "connect-chatgpt",
+        "contentSha256": "c1579bcfeb277aca236b850cc26f9d0c3a35e0376820be6066bdf74b1beee665"
+      },
+      {
+        "id": "connect-microsoft-365-copilot",
+        "contentSha256": "2922e0142463b08a8d5948d316b7a4e79296468427dd8fd84f1b682c0161c738"
+      }
+    ]
   }
 }

@@ -1,31 +1,26 @@
 {
   "articleId": "install",
-  "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
-  "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-  "buildId": "app sha256:14dcbdcd4165b2ad561b80d326e0021703be983c79c0bcc6deca7496c9737379; engine sha256:715963ab9b46fb39a084c1e5898239945e189d195e46c0c392ce058dd36ad740 (later recreations used sha256:79ac46d4f83803ecc29b11af1f885281154598930404d0a9bc54476b739c7719 and sha256:d7bc25991932159bc7e0727fd639db8500592c3f72f294dd06d0f5973b991fec after a parallel lab moved the revision tags; same layers, Cmd, Entrypoint and Env, only Compose build labels differ)",
-  "environment": "doc029r2-opinst1 (installation); doc029r2-opinst1-fx (relay, storage, database and proxy fixtures)",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (operator-install); round 2 corrections by DOC-029r2 source-review author agent (operator-install)",
-  "technicalReviewer": "DOC-029r2 source-review author agent (operator-install)",
-  "walkthroughReviewer": "DOC-029r2 independent walkthrough agent (operator-install, round 1)",
+  "contentSha256": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app and worker sha256:f0fbed974e1b354b841d96d31d7a24ed767c855b4abbbb35c43a1922ea0427c8; engine sha256:fc54681842c7edb003db483b4000273d90cd344329d63e2161ca560d90030550 (openlaw-local and openlaw-engine-local tagged 067c1646829df85e62b809ee9157921e867c84e7, built by the guide in openlaw-doc030-opinst2)",
+  "environment": "openlaw-doc030-opinst2 (round 2); openlaw-doc030-opinst (round 1); same-host Caddy proxy at https://openlaw-doc030.localhost with an internal CA",
+  "author": "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-install); DOC-030 corrections by DOC-030 source-review author agent (shared-files) and DOC-030 source-review author agent (operator-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (operator-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T18:37:07.127Z",
+  "verifiedAt": "2026-09-25T13:46:30.937Z",
   "status": "pass",
   "sources": [
+    "docs/user-guides/install.md",
+    "docs/user-guides/deployment-configuration.md",
+    "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+    "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs",
     "compose.yml",
-    ".env.example",
-    "Dockerfile",
-    "services/doc-engine/Dockerfile",
-    "docs/DEPLOYMENT.md",
     "apps/api/src/app.ts",
     "apps/api/src/index.ts",
-    "apps/api/src/lib/mailer.ts",
-    "apps/api/src/modules/onboarding/routes.ts",
-    "apps/api/src/modules/email-settings/routes.ts",
-    "apps/web/src/routes/setup.tsx",
-    "apps/web/src/components/smtp-settings-fields.tsx",
-    "apps/api/src/modules/email-settings/config.ts",
-    "docs/documentation/batches/DOC-029/operator-install/technical-review.json",
-    "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
+    "apps/api/src/logging.ts"
   ],
   "scenarios": [
     {
@@ -34,53 +29,32 @@
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Empty disposable Compose project doc029r2-opinst1 on the local Docker host, app port 23320.",
-        "Owned fixtures in doc029r2-opinst1-fx: Mailpit as the SMTP relay stand-in and caddy:2-alpine serving https://openlaw-r2.localhost:23321 with its internal CA.",
-        "Fictional Administrator Avery Morgan, invited Legal Team Member Rowan Operator, and one fictional test invitee."
+        "Disposable host project cloned from https://github.com/juggernog20/OpenLaw.git at 067c1646, built with the guide's compose.operator.yml per-revision tags; a fictional operator following install.md.",
+        "Owned Mailpit relay reachable as op2-mail; a same-host Caddy proxy for the HTTPS origin."
       ],
-      "expected": "The app reaches readiness and first-run setup with the documented production defaults and topology. Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence.",
-      "actual": "Followed install.md (bytes ce45a62c) from an empty directory on the public-hostname path. The prerequisite commands answered (Docker Engine 29.8.0, Compose 5.5.1, context default). git clone and git checkout --detach 57e77e38 succeeded. The grouped .env commands created a mode-600 .env with two different generated keys; a second run refused with \"cannot overwrite existing file\" and left the bytes unchanged. The origin, port, project and build settings were added once each, and compose.operator.yml was written as shown. config --quiet printed nothing; config --services listed app, doc-engine, postgres and worker. pull postgres and build app doc-engine succeeded (2 s, cache already warm from parallel labs). up started all four services. curl --fail /readyz answered 200, the worker ran and doc-engine became healthy, 17 s after the first prerequisite command. Caddy forwarded the HTTPS origin to 127.0.0.1:23320 and the origin showed Set up OpenLaw. The first Create Administrator attempt lost its browser answer (environment; the user was created, the page said \"The server could not be reached. Try again.\", curl through the same proxy answered 201 in 0.09 s). The reviewer emptied the database and repeated the step. Create Administrator then signed Avery Morgan in. On Outbound email, Continue was disabled, no Set up later was offered, and a direct completion request answered 409 \"Configure outbound email before finishing instance setup.\" Filling SMTP server, Connection security None, Port 1025, Authentication None, Sender name and Sender email, then Save relay and Send test email, delivered to the owned relay. Send invite delivered an invitation whose link used the HTTPS origin, and Finish on Review completed onboarding. Working-installation checks passed: password sign-in through the origin; a fictional Contract; a PDF upload whose download matched its SHA-256 and whose text reached ready; a PDF processed after docker compose restart worker. The first invitation-link check stored the password but lost the page answer; a new test invitation from Settings -> Users -> Invite user reached the relay with a link on the origin, opened to Password set, and the invitee signed in. Negative checks: a blank AUTH_SECRET made config and up exit 1 with the required-variable message while all four containers stayed up, and restoring it recovered; PORT set to a port held by an unrelated listener made up exit 1 with \"failed to bind host port 0.0.0.0:23326/tcp: address already in use\", left that listener answering, and restoring the port recovered; stopping postgres made /readyz answer 503 and starting it returned 200. No authoring lab, seed or dev overlay was used. Failed attempts and their retries stay in the log.",
+      "expected": "The app reaches readiness and first-run setup with the documented production defaults and topology. Missing secrets, occupied ports and unavailable dependencies lead to the documented recovery; the authoring lab is not counted.",
+      "actual": "Round 2 on openlaw-doc030-opinst2: Git, OpenSSL, Docker Engine 29.8.1 and Compose 5.5.1 checked; clone and git checkout --detach 067c1646; the grouped .env commands wrote mode-600 keys and a second run refused to overwrite .env; .env set once without TRUSTED_PROXIES; compose.operator.yml written; config --quiet printed nothing and config --services listed app, doc-engine, postgres, worker; pull, build (3 s, warm cache), up; curl --fail /readyz 200 in 20 s from the first command; worker running, doc-engine healthy; docker compose port app 3000 printed 127.0.0.1:24640 and the LAN address refused. Build step 4: docker network inspect openlaw-doc030-opinst2_openlaw-backend printed gateway 192.168.32.1 and subnet 192.168.32.0/20; TRUSTED_PROXIES=192.168.32.1 applied with up -d. Step 5 read the token after the documented line; a restart replaced it. Step 6: the Caddy origin showed Set up OpenLaw; the replaced token showed 'The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.'; the current token created the Administrator and opened Welcome to OpenLaw 55 s after the first command; the wizard saved and tested the relay and sent an invitation. The guide's remoteAddress command then counted 24 requests from 127.0.0.1 (the browser) and 1 from the gateway (a direct readiness probe). With the gateway value, four wrong passwords from 127.0.0.2 left a correct sign-in from 127.0.0.1 at 200; with 127.0.0.1 there was no warning and it answered 429, as the guide states. Working checks: sign-in through the origin, Create contract, Upload, download with the same SHA-256, text ready, invitation link Password set and sign-in, a new PDF processed after docker compose restart worker, no token printed once a user exists. Round 1 negatives on openlaw-doc030-opinst: blank AUTH_SECRET refused by Compose; PORT on an occupied port left app and worker created and the same up recovered after the port was corrected; a stopped Postgres gave /healthz 200 and /readyz 503 and recovered.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-1.json",
-        "docs/documentation/batches/DOC-029/operator-install/walkthrough-r2-1.mjs",
-        "docs/documentation/batches/DOC-029/operator-install/r2-1-setup-through-proxy.png",
-        "docs/documentation/batches/DOC-029/operator-install/technical-review-r2.json"
-      ],
-      "verifiedAt": "2026-09-16T18:37:07.127Z"
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
+      ]
     }
   ],
   "limitations": [
-    "Independent agent container-operation walkthrough by a different agent from the source-review author; not a human operator study and not feature-owner approval.",
-    "Timing comes from one fast host with a warm image cache: 17 s from the first prerequisite command to readiness, with a 2 s build. First-run setup needed a database reset and the invitation-link check needed a retry, so no end-to-end time to a usable instance is claimed. It is not a claim about a cold host or about DNS, TLS and proxy provisioning.",
-    "Two browser requests through the local proxy lost their answers although the app processed them. A later probe on this shared host saw Chromium abort a request with net::ERR_NETWORK_CHANGED while parallel labs changed host networks. The reviewer reset or retried, and the repeated steps passed.",
-    "A parallel lab moved the revision image tags during the run. The recorded image pairs have identical layers and configuration and differ only in Compose build labels.",
-    "HTTPS used Caddy's internal CA for openlaw-r2.localhost, accepted only in the reviewer's browser context. Public DNS and certificate issuance were not tested.",
-    "The install path used a public-style hostname. The private VM overlay that install.md points to was walked in the same run for deployment-configuration, whose V-C45 record did not pass, so it is not credited here.",
-    "The SMTP relay was an owned Mailpit container, not a production relay with authentication. Known issue #889 is open: an invitation can report success without sending, which is why the recipient's delivery was checked.",
-    "The first-run steps were followed only as far as install.md needs; first-run.md has its own evidence record.",
-    "Backup and restore after installation are covered by backup-and-restore, not by this record."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
+    "Round 1 (10:15 to 13:23 UTC) walked every step on openlaw-doc030-opinst, -opup, -oprecover, -oprestore and -opmigfix and failed the guide on TRUSTED_PROXIES, the wrong-key behavior and the saved-settings recovery command. Round 2 (13:35 to 13:59 UTC) re-walked every changed step on fresh projects openlaw-doc030-opinst2, -opup2 and -oprestore2 after the author's correction; unchanged steps keep their round 1 observations. Failed steps in the log that were walkthrough-script defects were rerun; the log's supersededAttempts note explains them.",
+    "All projects were cloned from GitHub at the named revisions and built by the guides' own docker compose build commands with a warm Docker build cache, so build times are not first-build times. Every project, support container, volume and private backup was destroyed after the walk.",
+    "Mail went to an owned Mailpit relay; the AI provider was an owned OpenAI-compatible stand-in that accepts only the saved key; object storage was an owned MinIO. None is a live provider.",
+    "Public certificate issuance and employee-device TLS trust were not tested; Caddy used its internal CA.",
+    "The proxy check used two loopback source addresses (127.0.0.1 and 127.0.0.2), not two machines."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "901abfbaf0673b8ded65013bb43d10bc65fcbc6a087073ea376377c0cfadd2fe",
-    "verifiedAt": "2026-09-16T15:37:39.461Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
     "contentSha256": "ce45a62cd8c3d9caa455d1863a6ef678667c6196a3c4ae883a6fc88706bd58cc",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. It links to first-run setup for the initial account and names Set up OpenLaw, but it makes no statement about the Authentication step or two-factor enrollment.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T18:37:07.127Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

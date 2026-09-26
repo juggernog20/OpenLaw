@@ -1,0 +1,353 @@
+{
+  "batch": "DOC-030",
+  "group": "contracts-b",
+  "reviewer": "DOC-030 source-review author agent (contracts-b)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:25:45Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "contract-tasks-and-dates": "fb860255abe1bfa816609eed6551bba17e64e7cb",
+      "contract-analysis": "271ad53a563345a09fd627d704f852d2fecacdac"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "contract-tasks-and-dates",
+      "scenario": ["V-C19"],
+      "contentSha256Before": "2b8a0f6cd0b18af91c69c049c5d9eca343a996fea81ae2e4b5137b168126d496",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-COMMENTS.md (Task comments addendum 2026-09-22)",
+        "docs/decision-records/DECISIONS-NOTIFICATIONS.md (NOT-004 addenda 2026-09-10, 2026-09-17, 2026-09-24)",
+        "messages/en-US.json",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/tasks-card.tsx",
+        "apps/web/src/components/tasks/task-dialog.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/api/src/modules/contract-tasks/service.ts",
+        "apps/api/src/modules/contract-tasks/routes.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/lib/notifications/offsets.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/lib/next-deadline.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Initial Task note audience",
+          "before": "The initial note uses the Working team audience.",
+          "after": "Everyone who can open the Task can read that note.",
+          "source": "apps/web/src/lib/comments.ts tierAudience/composerTiers for contract_task (56fe53be); DECISIONS-COMMENTS 2026-09-22"
+        },
+        {
+          "claim": "Task comment audience",
+          "before": "Use the permitted Legal Only or Working team audience.",
+          "after": "The composer has no audience choice. Everyone who can open the Task can read its comments; earlier Legal Only Task comments stay readable to the same people.",
+          "source": "apps/web/src/lib/comments.ts (contract_task returns [working_team], audience text 'Visible to everyone who can access this task.'); comment-applet.tsx TierBadge returns null for tasks; DECISIONS-COMMENTS 2026-09-22"
+        },
+        {
+          "claim": "Displayed Task order",
+          "before": "Only said there is no reordering control.",
+          "after": "Tasks keep the order in which they were added; a new Task goes to the end; completing, editing or reassigning does not move it; no reorder control.",
+          "source": "apps/api/src/modules/contract-tasks/service.ts checklistOf orderBy displayOrder, nextDisplayOrder on add; tasks-card.tsx renders in API order with only a completed filter"
+        },
+        {
+          "claim": "Done count",
+          "before": "Check the done count.",
+          "after": "Check the done count, such as 1 of 3 done, in the section header.",
+          "source": "tasks-card.tsx tasks.count.done '{done} of {total} done'"
+        },
+        {
+          "claim": "Key date reminder preview",
+          "before": "Check the global lead times and the combined schedule.",
+          "after": "Global reminders lists the organization's default lead times; This date will remind combines them with this date's additional lead times.",
+          "source": "key-date-reminder-fields.tsx keyDates.reminders.global / keyDates.reminders.effective"
+        },
+        {
+          "claim": "Personal reminder lead times",
+          "before": "Not mentioned.",
+          "after": "Staff can replace the organization default in the Reminder lead times card under Settings, Notifications; their reminders use their own list plus the Key date's additional lead times; This date will remind does not show personal lists; Business Users use the organization list.",
+          "source": "apps/api/src/lib/notifications/offsets.ts personalOffsets; morning-round.ts cohorts by personal list; my-reminder-lead-times.tsx; NOT-004 addendum 2026-09-24 (1f7cca32)"
+        },
+        {
+          "claim": "Recipients label",
+          "before": "the recipient checkboxes",
+          "after": "the checkboxes under Recipients",
+          "source": "key-date-reminder-fields.tsx keyDates.reminders.recipients 'Recipients' (b310f739)"
+        },
+        {
+          "claim": "Departed recipients",
+          "before": "If a selected recipient has left the team, the dialog says so.",
+          "after": "The dialog says so and offers Remove unavailable recipients while other selected people remain.",
+          "source": "key-date-reminder-fields.tsx keyDates.reminders.departed / removeUnavailable"
+        },
+        {
+          "claim": "Past Key date order",
+          "before": "past dates follow",
+          "after": "Past dates follow, most recent first.",
+          "source": "apps/api/src/modules/contract-key-dates/routes.ts deadline sort (past: descending by date)"
+        },
+        {
+          "claim": "Reminders on archived or ended Contracts",
+          "before": "Not stated.",
+          "after": "An archived or ended Contract sends no Key-date, expiry, or notice reminders.",
+          "source": "morning-round.ts dueDates: live = endedAt null and archivedAt null, applied to expiries, notice deadlines and contract Key dates"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Add task, Title, Description, Assignee, Unassigned, Due date, Comments & attachments, Add task, Cancel, Save, Retry note & attachments, Task details labels",
+          "source": "task-dialog.tsx; messages/en-US.json"
+        },
+        {
+          "claim": "Completed Tasks hide until Show completed; checkbox toggles done and reopen",
+          "source": "tasks-card.tsx visibleTasks; completed-toggle.tsx"
+        },
+        {
+          "claim": "Edit task and Remove task live in the row actions menu; removal refused when the Task has conversation history",
+          "source": "tasks-card.tsx DropdownMenu; DECISIONS-COMMENTS Task removal rule"
+        },
+        {
+          "claim": "Assignee picker offers active non-Business-User team members and the Legal Owner; Add someone to the team and Add to team and assign when team can be managed; Use this person in the dialog",
+          "source": "contract-record.tsx assignees and teamExpansion filters; messages taskAssignee.*"
+        },
+        {
+          "claim": "Originating Requesters receive no Task comment events; Business Users have no Task or Key date section in the Portal",
+          "source": "DECISIONS-COMMENTS; apps/web/src/components/portal/record-work.tsx"
+        },
+        {
+          "claim": "Key date dialog: Date, Event, Note, Additional lead time (days before), Add lead time, 0 to 730 days, max 20, Remove, Use the usual audience shown whenever recipients are selected",
+          "source": "key-dates-card.tsx; key-date-reminder-fields.tsx"
+        },
+        {
+          "claim": "Usual audience is Legal Owner, Business Owner and every team member including active Business Users; empty eligible selection does not widen",
+          "source": "apps/api/src/lib/key-date-reminders.ts keyDateAudienceIds; NOT-004 2026-09-17 addendum"
+        },
+        {
+          "claim": "Derived rows for expiry and notice deadline; upcoming nearest first",
+          "source": "contract-key-dates/routes.ts; key-dates-card.tsx keyDates.source.derived"
+        },
+        {
+          "claim": "Next deadline column: earliest unfinished Task due date including overdue, upcoming Key date, expiry or notice deadline, only for unarchived Contracts not ended",
+          "source": "apps/api/src/lib/next-deadline.ts; messages recordFilters.deadline"
+        },
+        {
+          "claim": "Business Users get Key-date reminders through the Portal bell and a daily email summary",
+          "source": "morning-round.ts portal branch (date.key_date_approaching only)"
+        },
+        {
+          "claim": "Archived Contract is read-only for Tasks and Key dates",
+          "source": "tasks-card.tsx frozen hides Add task and actions; contract-tasks service assertOpen 409"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C19 browser walkthrough at 067c1646 is still required.",
+        "The API exposes PUT /contracts/:number/tasks/reorder, but no Contract Task screen control calls it. The guide states the added-order rule and the absent control; the walkthrough must not credit an API reorder as a user workflow.",
+        "Reminder delivery timing was not exercised. notifications.md owns the timing rules and does not yet describe personal lead-time lists (see sharedFileRequests).",
+        "The Key date dialog's This date will remind line does not reflect a recipient's personal lead-time list. The guide says so rather than promising the shown schedule (see productBugs)."
+      ]
+    },
+    {
+      "articleId": "contract-analysis",
+      "scenario": ["V-C21"],
+      "contentSha256Before": "fec93c1aef7d6ecdd43af6c5d2b4fbf22ce80ec45fbf999d7064f7992687eff6",
+      "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
+      "sources": [
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-008 addenda 2026-09-11 and 2026-09-20, M37/6 note)",
+        "docs/decision-records/DECISIONS-DESIGN.md (DES-075 amendment 2026-09-22)",
+        "docs/decision-records/DECISIONS.md (DD-028 clause 9 and M39 built addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/components/contracts/ai-field-evidence.tsx",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/contract-analysis/service.ts",
+        "apps/api/src/modules/contract-analysis/routes.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/lib/analysis-targets.ts",
+        "apps/api/src/lib/analysis-key-dates.ts",
+        "apps/api/src/lib/conversion-draft.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "apps/api/src/modules/contracts/record.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Run control state and finished-run summary",
+          "before": "The control says Running… while the run is under way.",
+          "after": "The control says Running… and stays disabled while the run is under way. A finished run shows no summary sentence; its results are the values it wrote.",
+          "source": "analysis.tsx AnalysisRunActions disabled when running or pending; AnalysisRunNote renders only a failure or refusal; DES-075 amendment 2026-09-22"
+        },
+        {
+          "claim": "User and Entity Fields and run outcome",
+          "before": "They do not appear in a new run's results or count towards its outcome.",
+          "after": "Removed. The run results list no longer exists; the exclusion sentence stays.",
+          "source": "ai-analysis-card.tsx deleted by 8fffa64e; analysis-targets.ts isReferenceFieldType filter"
+        },
+        {
+          "claim": "Answer style",
+          "before": "Not mentioned.",
+          "after": "A text or long text Field's answer takes that Field's Answer style (Few word summary, 1-2 sentence summary, Full clause text); organization default unless the Field sets its own; a change applies to the next run and written values keep their form.",
+          "source": "CTR-008 addendum 2026-09-20 and M37/6 note; analysis-targets.ts aiAnswerStyle; messages settings.aiAnalysis.answerStyle.*"
+        },
+        {
+          "claim": "Unmatched Counterparty",
+          "before": "A Counterparty the run could not link stays unlinked.",
+          "after": "Same, plus: the record does not say that a Counterparty name went unmatched.",
+          "source": "DES-075 amendment 2026-09-22 'An unmatched Counterparty name is no longer surfaced.'"
+        },
+        {
+          "claim": "Confirm all scope",
+          "before": "Confirm all appears when more than one value is marked.",
+          "after": "Appears when more than one value on the Contract is marked, in any section; check Overview, Fields and Key dates first.",
+          "source": "analysis.tsx flagged = every aiUnverified key; confirm-all route clears every marker"
+        },
+        {
+          "claim": "Run's named Version",
+          "before": "read the updated Contract and the run's named Version again",
+          "after": "The evidence sparkle opens the Document Version that run read; read the cited Version again.",
+          "source": "The completion sentence naming the Version was removed with the card (8fffa64e); ai-field-evidence.tsx opens the cited Version"
+        },
+        {
+          "claim": "Request-context Analysis targets",
+          "before": "reads the confirmed Type's current built-in Rows and prompted catalog Fields",
+          "after": "fills the confirmed Type's Record Rows (neither On intake form nor Required for creation); a Field Row needs no saved prompt; the Conversion draft covered Intake and Creation Rows; the run can add a Needed by Key date when none exists.",
+          "source": "conversion-analysis.ts requestAnalysisTargets -> buildAnalysisTargets(recordOnly=true); form-evaluator.ts formRowTouchpoint; contract-analysis.ts record-Row writer; DD-028 clause 9"
+        },
+        {
+          "claim": "Request-context markers for Risk, Region, Department",
+          "before": "The values the run fills appear on the record with their Unverified markers.",
+          "after": "Most do; at this build Risk, Region and Department on Overview show no marker or Confirm when this run filled them; Confirm all still counts and clears them.",
+          "source": "contract-record.tsx Overview risk/region/owning_department rows render no unverifiedMarker or confirmationControl; contract-analysis.ts writes flags for those slugs"
+        },
+        {
+          "claim": "Request-context failure note",
+          "before": "a failure is reported in the Fields section header",
+          "after": "Quotes the note under the Fields header: Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.",
+          "source": "analysis.tsx contracts.analysis.requestFailed"
+        },
+        {
+          "claim": "Header with nothing to show",
+          "before": "Not stated.",
+          "after": "With no connector, no run and no marked value, the Fields header shows no Analysis controls.",
+          "source": "analysis.tsx analysisSilent"
+        },
+        {
+          "claim": "Unreadable primary Document and refusal placement",
+          "before": "A refusal can mean there is no primary Document or its text is not ready. A failed run reports its reason in the Fields section header.",
+          "after": "Adds 'you cannot read the primary Document'. A refused run from the Contract actions menu shows its reason under the Fields header. A failed run shows Analysis failed: and its reason there.",
+          "source": "contract-analysis/service.ts documentAudienceScope 404 'No readable primary Document exists on this Contract.'; analysis.tsx contracts.analysis.failedShort and runError"
+        },
+        {
+          "claim": "Confirm all and hidden Risk, Region, Department markers (walkthrough round 1 finding)",
+          "before": "Confirm all still counts and clears their markers.",
+          "after": "No page shows a marker, evidence or Confirm for those three values. They do not count towards showing Confirm all, so the Fields header can show only Run analysis. Check the three Rows on Overview. When Confirm all appears for other values, it also clears these hidden markers.",
+          "source": "apps/api/src/modules/contracts/record.ts toContract filters aiUnverified to key_date:, visible field: and BUILTIN_ANALYSIS_SLUGS (no risk, region, owning_department); analysis.tsx shows Confirm all only when the public map has more than one entry; contracts/routes.ts confirmAnalysisFields clears every stored flag when no slug is named"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Run needs Administrator or Legal Team Member, a Contract neither Ended nor archived, an enabled connector, a primary Document, ready non-empty text; one pending run at a time",
+          "source": "contract-analysis/service.ts runContractAnalysis"
+        },
+        {
+          "claim": "Target is the executed pin, else the current Version; automatic runs on text ready or pin",
+          "source": "pipeline/contract-analysis.ts analysisTargetText; automatic-contract-analysis.ts (unchanged since 3fa407e3)"
+        },
+        {
+          "claim": "Run analysis sits in the Fields section header and the Contract actions menu",
+          "source": "contract-record.tsx FieldsCard actions; record-actions-menu.tsx contracts.analysis.run"
+        },
+        {
+          "claim": "Each written value carries Unverified, purple border, evidence sparkle and Confirm on its row; confirming clears marker and sparkle",
+          "source": "contract-record.tsx confirmationControl; analysis.tsx UnverifiedMarker; ai-field-evidence.tsx"
+        },
+        {
+          "claim": "Extracted Key dates land in Key dates with a marker; duplicates add nothing; date/event edit or removal clears the marker; note-only change does not",
+          "source": "analysis-key-dates.ts applyKeyDateSuggestions; contract-key-dates/routes.ts"
+        },
+        {
+          "claim": "Editing a core value or Field clears its marker; Business Users cannot run or confirm; archived blocks confirmation; Ended can still be reviewed",
+          "source": "contracts/service.ts humanWrittenSlugs; contracts/routes.ts requireMember; contract-record.tsx analysisConfirmable"
+        },
+        {
+          "claim": "Retry Request-context Analysis shows after a failed conversion run",
+          "source": "analysis.tsx AnalysisRunActions"
+        },
+        {
+          "claim": "Fill Contract Fields after conversion label",
+          "source": "messages conversion.settingsAnalysis"
+        },
+        {
+          "claim": "History shows Analysis completed, failed and confirmation entries",
+          "source": "apps/web/src/lib/activity.ts contract.analysis_completed, contract.analysis_failed, contract.field_confirmed"
+        }
+      ],
+      "limitations": [
+        "Source inspection only. The independent V-C21 browser walkthrough at 067c1646 is still required, with a declared provider stand-in or live provider.",
+        "The per-run results list (Written, Kept, Unsupported, Invalid, Unmatched) was removed by DES-075's 2026-09-22 amendment. A walkthrough can no longer read outcomes from a card; it reads markers on Overview, Fields and Key dates, and the History entries.",
+        "Changed-source and stale-evidence states are shown only through the evidence control's 'Source evidence is unavailable' message and the doc panel. No run-level warning line remains.",
+        "Answer style's effect on a written value was not exercised; it depends on provider output."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/web/src/routes/contract-record.tsx; apps/api/src/modules/contracts/service.ts; apps/api/src/modules/contracts/record.ts",
+      "symptom": "Request-context Analysis writes Risk, Region and Department (owning_department) with Unverified markers. record.ts filters those slugs out of the public aiUnverified map, so no page shows their marker, evidence or Confirm, and they do not count towards showing Confirm all. Editing them does not clear the stored marker or record the slot as human-set. Only a Confirm all shown for other values clears them, and a human clear is not protected on retry.",
+      "contradicts": "DD-028 clause 9 (Record Rows wear the Unverified marker); CTR-008 addendum 2026-09-11 (new values carry Unverified, DES-070 treatment and sparkles; explicit clears stay protected); DES-075 amendment 2026-09-22 (marker, evidence and Confirm stay where the value is)"
+    },
+    {
+      "file": "apps/web/src/components/key-date-reminder-fields.tsx; apps/api/src/lib/key-date-reminders.ts keyDateReminderOptions",
+      "symptom": "The Key date dialog's 'Global reminders' and 'This date will remind' lines show only the organization list plus the date's own lead times. Recipients with a personal Reminder lead times list are reminded on their own list, so the dialog's schedule is wrong for them.",
+      "contradicts": "NOT-004 addendum 2026-09-24 (a person's list replaces the default; a Key date's own lead times add to whichever list applies to each recipient)"
+    }
+  ],
+  "sharedFileRequests": [
+    {
+      "articleId": "notifications",
+      "file": "docs/user-guides/notifications.md",
+      "request": "The lead-time paragraphs (Understand reminder timing) still say only Administrators configure lead times and that expiry, notice deadlines and Obligations use the global list. Add the personal Reminder lead times card under Settings, Notifications, the 'Use the organization's default lead times' switch, that a personal list replaces the default, that Key-date extra lead times add to each recipient's list, and that Business Users use the organization list.",
+      "source": "NOT-004 addendum 2026-09-24; my-reminder-lead-times.tsx; offsets.ts personalOffsets"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "file": "docs/user-guides/reminders-and-audit.md",
+      "request": "Say that the organization's lead times are the default and a staff member can replace them for their own reminders.",
+      "source": "NOT-004 addendum 2026-09-24"
+    },
+    {
+      "articleId": "convert-request",
+      "file": "docs/user-guides/convert-request.md",
+      "request": "The Fill Contract Fields after conversion section says the run uses 'core and prompted catalog Fields'. At HEAD it fills the Type's Record Rows (neither On intake form nor Required for creation), with no saved prompt needed, plus a Needed by Key date. Risk, Region and Department show no Overview marker (product bug above).",
+      "source": "conversion-analysis.ts requestAnalysisTargets; DD-028 clause 9"
+    },
+    {
+      "articleId": "configure-analysis",
+      "file": "docs/user-guides/configure-analysis.md",
+      "request": "The Fill Contract Fields after conversion bullet says 'current core/custom prompts'. Align it with the Record Rows target rule above.",
+      "source": "conversion-analysis.ts requestAnalysisTargets"
+    }
+  ],
+  "statusChange": null,
+  "notes": [
+    "No catalog status, evidence file, scenario or articles.json entry was changed. No H2 heading was renamed or removed, so redirects.json is unchanged.",
+    "After the round-1 fix the workspace structural check prints 'ok, warnings: 25'; the earlier entity-records anchor error is gone."
+  ]
+}

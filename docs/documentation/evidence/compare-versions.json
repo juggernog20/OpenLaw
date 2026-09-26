@@ -78,13 +78,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
     "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
+    "reviewer": "DOC-030 compatibility reviewer (compat)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-25T11:14:39.367Z",
+    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of document-compare.tsx, documents-card.tsx, lib/documents.ts, lib/roles.ts, documents/routes.ts and doc-engine server.ts. The Compare with previous action, the Changes view, export and the comparison pipeline did not change; the Documents card column is now Type and still shows Generated redline for an exported redline, which is the guide's wording. I replayed the DOC-029 V-C29 script and its archived-pair supplement for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/analysis-standin.json",
@@ -93,6 +93,26 @@
       {
         "path": "batches/DOC-029/compat-r3/review.json",
         "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
+      },
+      {
+        "path": "batches/DOC-030/compat/compat.json",
+        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
+      },
+      {
+        "path": "batches/DOC-030/compat/compare-versions-replay.mjs",
+        "sha256": "ec9149abcc466a4485f4cbf16c0b710ff51e027030f388758526396d01a0c850"
+      },
+      {
+        "path": "batches/DOC-030/compat/compare-versions-replay/harness.mjs",
+        "sha256": "1540b38d8e354fc1438cf40c0056e005f6372a43bc3fa6f1567a9e0d2ff66cee"
+      },
+      {
+        "path": "batches/DOC-030/compat/compare-versions-replay.json",
+        "sha256": "52312111f423683ac9b7b5bec8f12bb16efcfffd112517acc6c1b3eb47f9a9de"
+      },
+      {
+        "path": "batches/DOC-030/compat/logs/compare-versions-compatcmp.log",
+        "sha256": "14c7a1487fecca3457f80f5c216ba57bd9a68b668df207813b620e2b6c2bf817"
       }
     ]
   }

@@ -1,6 +1,6 @@
 {
-  "id": "7ebdfe42-e2ba-4cf8-a6c8-75d05644dea7",
-  "prevId": "119b2deb-4ea1-417e-9dea-51a4dd414352",
+  "id": "119b2deb-4ea1-417e-9dea-51a4dd414352",
+  "prevId": "3d4bef0b-5534-411d-b063-956a60eb20da",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -4322,24 +4322,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "creation_kind": {
-          "name": "creation_kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "creation_status_id": {
-          "name": "creation_status_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "creation_status_revision": {
-          "name": "creation_status_revision",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "recovery_attempts": {
           "name": "recovery_attempts",
           "type": "integer",
@@ -4586,14 +4568,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "contract_envelopes_creation_kind_check": {
-          "name": "contract_envelopes_creation_kind_check",
-          "value": "creation_kind is null or creation_kind in ('draft', 'send')"
-        },
-        "contract_envelopes_creation_revision_check": {
-          "name": "contract_envelopes_creation_revision_check",
-          "value": "creation_status_revision is null or creation_status_revision >= 0"
-        },
         "contract_envelopes_recovery_attempts_check": {
           "name": "contract_envelopes_recovery_attempts_check",
           "value": "recovery_attempts >= 0"
@@ -14571,7 +14545,7 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\",\"team\",\"administration\"]'::jsonb"
+          "default": "'[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"]'::jsonb"
         },
         "mcp_read_only": {
           "name": "mcp_read_only",

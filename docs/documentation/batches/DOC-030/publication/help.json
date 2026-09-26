@@ -1,0 +1,2110 @@
+{
+  "kind": "publication-walkthrough",
+  "scenario": "V-HELP",
+  "task": "DOC-030",
+  "independentReview": true,
+  "method": "browser-walkthrough",
+  "appUrl": "http://127.0.0.1:43310",
+  "edition": {
+    "id": "documentation-development",
+    "channel": "development",
+    "supportedAppVersion": "0.0.1",
+    "supportedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "distributionCommit": "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+    "workingChanges": true,
+    "publicationTarget": "development-app",
+    "contentDigest": "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef"
+  },
+  "articleCount": 62,
+  "reviewer": "DOC-030 independent publication reviewer agent",
+  "reviewerKind": "agent",
+  "steps": [
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Signed-out /documentation lists all 62 guides",
+      "startedAt": "2026-09-25T21:33:23.774Z",
+      "at": "2026-09-25T21:33:24.071Z",
+      "result": "pass",
+      "actual": {
+        "heading": "Documentation",
+        "count": 62,
+        "servedEdition": [
+          "documentation-development (Development)",
+          "0.0.1 / 067c1646829df85e62b809ee9157921e867c84e7",
+          "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+          "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef",
+          "development-app"
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "The served content digest matches the distribution commit's compile",
+      "startedAt": "2026-09-25T21:33:24.071Z",
+      "at": "2026-09-25T21:33:24.213Z",
+      "result": "pass",
+      "actual": {
+        "digest": "07a63d01fd23da5b5ca1171eb316e2215e1bc3bab02d7269d731c56091a636ef",
+        "distribution": "3ba23d39bdd52894baff7319762ee4a073b1b8be"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Only the two known-open guides carry the validation badge",
+      "startedAt": "2026-09-25T21:33:24.213Z",
+      "at": "2026-09-25T21:33:33.017Z",
+      "result": "pass",
+      "actual": {
+        "badged": [
+          "connect-chatgpt",
+          "connect-microsoft-365-copilot"
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Every guide opens at /documentation/<id> with its title",
+      "startedAt": "2026-09-25T21:33:33.017Z",
+      "at": "2026-09-25T21:33:41.172Z",
+      "result": "pass",
+      "actual": {
+        "opened": 62
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Signed-out Help deep links redirect to the formal article with the fragment",
+      "startedAt": "2026-09-25T21:33:41.172Z",
+      "at": "2026-09-25T21:33:41.626Z",
+      "result": "pass",
+      "actual": [
+        {
+          "from": "/help/triage-requests#before-you-start",
+          "to": "/documentation/triage-requests#before-you-start",
+          "focused": "before-you-start"
+        },
+        {
+          "from": "/portal/help/submit-request#before-you-start",
+          "to": "/documentation/submit-request#before-you-start",
+          "focused": "before-you-start"
+        },
+        {
+          "sessionCheckApi": [
+            "GET /api/v1/me"
+          ]
+        }
+      ]
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Sign-in screen contextual link opens formal guidance",
+      "startedAt": "2026-09-25T21:33:41.626Z",
+      "at": "2026-09-25T21:33:41.977Z",
+      "result": "pass",
+      "actual": {
+        "href": "/documentation?topic=auth",
+        "results": [
+          "Set up your account and sign in"
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"form target\" reaches request-forms; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:41.977Z",
+      "at": "2026-09-25T21:33:42.345Z",
+      "result": "pass",
+      "actual": {
+        "query": "form target",
+        "articleId": "request-forms",
+        "rank": 1,
+        "resultCount": 15,
+        "focus": "H1",
+        "pageTitle": "Configure request types and forms · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"assign request\" reaches triage-requests; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:42.345Z",
+      "at": "2026-09-25T21:33:42.665Z",
+      "result": "pass",
+      "actual": {
+        "query": "assign request",
+        "articleId": "triage-requests",
+        "rank": 1,
+        "resultCount": 22,
+        "focus": "H1",
+        "pageTitle": "Assign and triage Requests · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"convert request\" reaches convert-request; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:42.665Z",
+      "at": "2026-09-25T21:33:42.952Z",
+      "result": "pass",
+      "actual": {
+        "query": "convert request",
+        "articleId": "convert-request",
+        "rank": 1,
+        "resultCount": 15,
+        "focus": "H1",
+        "pageTitle": "Convert a Request to a Contract or Matter · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"submit request\" reaches submit-request; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:42.952Z",
+      "at": "2026-09-25T21:33:43.235Z",
+      "result": "pass",
+      "actual": {
+        "query": "submit request",
+        "articleId": "submit-request",
+        "rank": 1,
+        "resultCount": 18,
+        "focus": "H1",
+        "pageTitle": "Submit a Request to Legal · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"which version\" reaches versions-and-support; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:43.236Z",
+      "at": "2026-09-25T21:33:43.570Z",
+      "result": "pass",
+      "actual": {
+        "query": "which version",
+        "articleId": "versions-and-support",
+        "rank": 1,
+        "resultCount": 24,
+        "focus": "H1",
+        "pageTitle": "Find version information and get help · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"backup codes\" reaches staff-sign-in; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:43.570Z",
+      "at": "2026-09-25T21:33:43.829Z",
+      "result": "pass",
+      "actual": {
+        "query": "backup codes",
+        "articleId": "staff-sign-in",
+        "rank": 1,
+        "resultCount": 1,
+        "focus": "H1",
+        "pageTitle": "Set up your account and sign in · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"expired link\" reaches portal-sign-in; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:43.829Z",
+      "at": "2026-09-25T21:33:44.119Z",
+      "result": "pass",
+      "actual": {
+        "query": "expired link",
+        "articleId": "portal-sign-in",
+        "rank": 1,
+        "resultCount": 9,
+        "focus": "H1",
+        "pageTitle": "Sign in to the Business Portal · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"save a view\" reaches search-and-views; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:44.119Z",
+      "at": "2026-09-25T21:33:44.415Z",
+      "result": "pass",
+      "actual": {
+        "query": "save a view",
+        "articleId": "search-and-views",
+        "rank": 1,
+        "resultCount": 43,
+        "focus": "H1",
+        "pageTitle": "Search, filter, and save views · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"timezone\" reaches personal-settings; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:44.415Z",
+      "at": "2026-09-25T21:33:44.719Z",
+      "result": "pass",
+      "actual": {
+        "query": "timezone",
+        "articleId": "personal-settings",
+        "rank": 2,
+        "resultCount": 9,
+        "focus": "H1",
+        "pageTitle": "Manage your profile and preferences · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"your tasks\" reaches find-your-work; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:33:44.719Z",
+      "at": "2026-09-25T21:33:45.057Z",
+      "result": "pass",
+      "actual": {
+        "query": "your tasks",
+        "articleId": "find-your-work",
+        "rank": 1,
+        "resultCount": 19,
+        "focus": "H1",
+        "pageTitle": "Find your work on Home · OpenLaw",
+        "back": "results",
+        "forward": "article"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Audience filter narrows the formal index",
+      "startedAt": "2026-09-25T21:33:45.057Z",
+      "at": "2026-09-25T21:33:45.187Z",
+      "result": "pass",
+      "actual": {
+        "audience": "operator",
+        "results": 11
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Skip link and section focus by keyboard",
+      "startedAt": "2026-09-25T21:33:45.187Z",
+      "at": "2026-09-25T21:33:45.755Z",
+      "result": "pass",
+      "actual": {
+        "firstTabStop": "Skip to content",
+        "skipTarget": "docs-main",
+        "section": {
+          "hash": "#workflow-and-dates",
+          "focused": "workflow-and-dates"
+        }
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Modified click opens a guide in a new tab and leaves this page in place",
+      "startedAt": "2026-09-25T21:33:45.755Z",
+      "at": "2026-09-25T21:33:46.133Z",
+      "result": "pass",
+      "actual": {
+        "popupPath": "/documentation/backup-and-restore",
+        "original": "/documentation?q=backup"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Light, Warm and Dark theme selector at 1280px and 320px without overflow",
+      "startedAt": "2026-09-25T21:33:46.133Z",
+      "at": "2026-09-25T21:33:49.052Z",
+      "result": "pass",
+      "actual": {
+        "articleId": "backup-and-restore",
+        "layouts": [
+          {
+            "width": 1280,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": false,
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Unverified guides show the validation badge and still read (DOC-031 open)",
+      "startedAt": "2026-09-25T21:33:49.052Z",
+      "at": "2026-09-25T21:33:50.476Z",
+      "result": "pass",
+      "actual": {
+        "guides": [
+          {
+            "id": "connect-chatgpt",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-chatgpt",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          }
+        ],
+        "searchResults": [
+          {
+            "title": "Connect ChatGPT",
+            "badge": "Validation in progress"
+          },
+          {
+            "title": "Connect a headless Client",
+            "badge": null
+          },
+          {
+            "title": "Configure a deployment",
+            "badge": null
+          },
+          {
+            "title": "Configure MCP",
+            "badge": null
+          }
+        ]
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Published anchor aliases land on the renamed section",
+      "startedAt": "2026-09-25T21:33:50.476Z",
+      "at": "2026-09-25T21:33:53.062Z",
+      "result": "pass",
+      "actual": {
+        "aliases": [
+          {
+            "from": "/documentation/request-forms#choose-the-form-fields",
+            "to": "/documentation/request-forms#choose-the-intake-rows"
+          },
+          {
+            "from": "/documentation/request-forms#collect-default-contract-fields",
+            "to": "/documentation/request-forms#collect-built-in-contract-rows"
+          }
+        ],
+        "samePageHashChange": {
+          "hash": "#collect-built-in-contract-rows",
+          "focus": "H2#collect-built-in-contract-rows",
+          "targetTop": 28,
+          "targetInView": true
+        }
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Unknown article, unknown anchor, unbundled edition and unknown topic recover locally",
+      "startedAt": "2026-09-25T21:33:53.062Z",
+      "at": "2026-09-25T21:33:54.133Z",
+      "result": "pass",
+      "actual": {
+        "unknownArticle": "Article unavailable",
+        "unknownArticleRecovery": "/documentation index, 62 guides",
+        "unknownAnchor": "The requested section is unavailable. Use the page outline to find the current instructions.",
+        "unbundledEdition": "Article unavailable",
+        "unbundledEditionBody": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.",
+        "unknownTopicCount": 62,
+        "aliases": 2,
+        "aliasNote": "checked"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Unavailable external support link leaves local documentation usable",
+      "startedAt": "2026-09-25T21:33:54.133Z",
+      "at": "2026-09-25T21:33:56.340Z",
+      "result": "pass",
+      "actual": {
+        "external": "https://github.com/juggernog20/OpenLaw/issues",
+        "target": null,
+        "externalOutcome": "blocked (no internet)",
+        "afterBack": "Find version information and get help",
+        "localLink": "/documentation/upgrade",
+        "localTitle": "Upgrade a populated instance"
+      }
+    },
+    {
+      "role": "anonymous",
+      "method": "browser-walkthrough",
+      "action": "Public reading made no session or organization API request",
+      "startedAt": "2026-09-25T21:33:56.340Z",
+      "at": "2026-09-25T21:33:56.341Z",
+      "result": "pass",
+      "actual": {
+        "apiCalls": 0,
+        "blockedExternal": [
+          "https://github.com"
+        ],
+        "requests": 1440
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Staff Help index lists every eligible guide",
+      "startedAt": "2026-09-25T21:33:56.714Z",
+      "at": "2026-09-25T21:33:56.917Z",
+      "result": "pass",
+      "actual": {
+        "url": "/help",
+        "heading": "Help",
+        "count": 53,
+        "expected": 53
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Every eligible guide opens at /help/<id> with its title",
+      "startedAt": "2026-09-25T21:33:56.917Z",
+      "at": "2026-09-25T21:34:06.217Z",
+      "result": "pass",
+      "actual": {
+        "opened": 53
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Header Help from bound routes carries route topics and recommends guides",
+      "startedAt": "2026-09-25T21:34:06.217Z",
+      "at": "2026-09-25T21:34:07.629Z",
+      "result": "pass",
+      "actual": [
+        {
+          "route": "/inbox",
+          "href": "/help?topic=inbox&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "inbox",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Assign and triage Requests",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/contracts",
+          "href": "/help?topic=contracts.list&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "contracts.list",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Create and maintain a Contract",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/matters",
+          "href": "/help?topic=matters.list&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "matters.list",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Create a Matter and use a template",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/settings",
+          "href": "/help?topic=settings.personal&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "settings.personal",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Manage your profile and preferences",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/settings/intake/request-types",
+          "href": "/help?topic=settings.intake&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "settings.intake",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Configure request types and forms",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        }
+      ]
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Observe the staff Inbox contextual link that help-contexts.json marks as a pilot entry",
+      "startedAt": "2026-09-25T21:34:07.629Z",
+      "at": "2026-09-25T21:34:08.799Z",
+      "result": "pass",
+      "actual": {
+        "route": "/inbox",
+        "contextualLinks": 0,
+        "note": "Absent. Removed from the staff Inbox and Request pages in 41390ca0. Header Help still carries topic=inbox. Recorded as a finding, not a scenario check."
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Registered topic narrows Help; unknown topic falls back to the index",
+      "startedAt": "2026-09-25T21:34:08.799Z",
+      "at": "2026-09-25T21:34:09.152Z",
+      "result": "pass",
+      "actual": {
+        "topic": "inbox.convert",
+        "results": [
+          "Convert a Request to a Contract or Matter"
+        ],
+        "unknownTopicCount": 53
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"form target\" reaches request-forms; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:09.152Z",
+      "at": "2026-09-25T21:34:09.556Z",
+      "result": "pass",
+      "actual": {
+        "query": "form target",
+        "articleId": "request-forms",
+        "rank": 1,
+        "resultCount": 12,
+        "focus": "H1",
+        "pageTitle": "Configure request types and forms · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"assign request\" reaches triage-requests; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:09.556Z",
+      "at": "2026-09-25T21:34:10.011Z",
+      "result": "pass",
+      "actual": {
+        "query": "assign request",
+        "articleId": "triage-requests",
+        "rank": 1,
+        "resultCount": 15,
+        "focus": "H1",
+        "pageTitle": "Assign and triage Requests · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"convert request\" reaches convert-request; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:10.011Z",
+      "at": "2026-09-25T21:34:10.489Z",
+      "result": "pass",
+      "actual": {
+        "query": "convert request",
+        "articleId": "convert-request",
+        "rank": 1,
+        "resultCount": 13,
+        "focus": "H1",
+        "pageTitle": "Convert a Request to a Contract or Matter · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"which version\" reaches versions-and-support; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:10.489Z",
+      "at": "2026-09-25T21:34:10.889Z",
+      "result": "pass",
+      "actual": {
+        "query": "which version",
+        "articleId": "versions-and-support",
+        "rank": 1,
+        "resultCount": 18,
+        "focus": "H1",
+        "pageTitle": "Find version information and get help · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"backup codes\" reaches staff-sign-in; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:10.889Z",
+      "at": "2026-09-25T21:34:11.277Z",
+      "result": "pass",
+      "actual": {
+        "query": "backup codes",
+        "articleId": "staff-sign-in",
+        "rank": 1,
+        "resultCount": 1,
+        "focus": "H1",
+        "pageTitle": "Set up your account and sign in · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"save a view\" reaches search-and-views; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:11.277Z",
+      "at": "2026-09-25T21:34:11.673Z",
+      "result": "pass",
+      "actual": {
+        "query": "save a view",
+        "articleId": "search-and-views",
+        "rank": 1,
+        "resultCount": 37,
+        "focus": "H1",
+        "pageTitle": "Search, filter, and save views · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"timezone\" reaches personal-settings; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:11.674Z",
+      "at": "2026-09-25T21:34:12.042Z",
+      "result": "pass",
+      "actual": {
+        "query": "timezone",
+        "articleId": "personal-settings",
+        "rank": 2,
+        "resultCount": 9,
+        "focus": "H1",
+        "pageTitle": "Manage your profile and preferences · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"your tasks\" reaches find-your-work; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:12.042Z",
+      "at": "2026-09-25T21:34:12.439Z",
+      "result": "pass",
+      "actual": {
+        "query": "your tasks",
+        "articleId": "find-your-work",
+        "rank": 1,
+        "resultCount": 18,
+        "focus": "H1",
+        "pageTitle": "Find your work on Home · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/me",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Section links move focus to the section heading",
+      "startedAt": "2026-09-25T21:34:12.439Z",
+      "at": "2026-09-25T21:34:12.661Z",
+      "result": "pass",
+      "actual": {
+        "hash": "#workflow-and-dates",
+        "focused": "workflow-and-dates"
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Existing shortcuts: ? opens the sheet, Escape closes it, / focuses app search, docs search types literally",
+      "startedAt": "2026-09-25T21:34:12.661Z",
+      "at": "2026-09-25T21:34:12.907Z",
+      "result": "pass",
+      "actual": {
+        "questionMark": "Keyboard shortcuts dialog",
+        "escape": "closed",
+        "slash": {
+          "id": "",
+          "role": "combobox",
+          "label": "Search"
+        },
+        "docsSearchTyped": "?/"
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Light, Warm and Dark at 1280px and 320px without horizontal overflow",
+      "startedAt": "2026-09-25T21:34:12.907Z",
+      "at": "2026-09-25T21:34:14.971Z",
+      "result": "pass",
+      "actual": {
+        "articleId": "triage-requests",
+        "layouts": [
+          {
+            "width": 1280,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": false,
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Out-of-audience Help link offers the formal article, not an authorization error",
+      "startedAt": "2026-09-25T21:34:14.971Z",
+      "at": "2026-09-25T21:34:15.254Z",
+      "result": "pass",
+      "actual": {
+        "requested": "/help/install",
+        "title": "Install OpenLaw",
+        "notice": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions.",
+        "reached": "/documentation/install"
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unverified guides show the validation badge and still read (DOC-031 open)",
+      "startedAt": "2026-09-25T21:34:15.254Z",
+      "at": "2026-09-25T21:34:16.122Z",
+      "result": "pass",
+      "actual": {
+        "guides": [
+          {
+            "id": "connect-chatgpt",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-chatgpt",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          }
+        ],
+        "searchResults": [
+          {
+            "title": "Connect ChatGPT",
+            "badge": "Validation in progress"
+          },
+          {
+            "title": "Connect a headless Client",
+            "badge": null
+          },
+          {
+            "title": "Configure a deployment",
+            "badge": null
+          },
+          {
+            "title": "Configure MCP",
+            "badge": null
+          }
+        ]
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Published anchor aliases land on the renamed section",
+      "startedAt": "2026-09-25T21:34:16.122Z",
+      "at": "2026-09-25T21:34:18.516Z",
+      "result": "pass",
+      "actual": {
+        "aliases": [
+          {
+            "from": "/help/request-forms#choose-the-form-fields",
+            "to": "/help/request-forms#choose-the-intake-rows"
+          },
+          {
+            "from": "/help/request-forms#collect-default-contract-fields",
+            "to": "/help/request-forms#collect-built-in-contract-rows"
+          }
+        ],
+        "samePageHashChange": {
+          "hash": "#collect-built-in-contract-rows",
+          "focus": "H2#collect-built-in-contract-rows",
+          "targetTop": 138,
+          "targetInView": true
+        }
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unknown article, unknown anchor, unbundled edition and unknown topic recover locally",
+      "startedAt": "2026-09-25T21:34:18.516Z",
+      "at": "2026-09-25T21:34:19.332Z",
+      "result": "pass",
+      "actual": {
+        "unknownArticle": "Article unavailable",
+        "unknownArticleRecovery": "/help index, 53 guides",
+        "unknownAnchor": "The requested section is unavailable. Use the page outline to find the current instructions.",
+        "unbundledEdition": "Article unavailable",
+        "unbundledEditionBody": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.",
+        "unknownTopicCount": 53,
+        "aliases": 2,
+        "aliasNote": "checked"
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Unavailable external support link leaves local Help usable",
+      "startedAt": "2026-09-25T21:34:19.332Z",
+      "at": "2026-09-25T21:34:21.306Z",
+      "result": "pass",
+      "actual": {
+        "external": "https://github.com/juggernog20/OpenLaw/issues",
+        "target": null,
+        "externalOutcome": "blocked (no internet)",
+        "afterBack": "Find version information and get help",
+        "localLink": "/documentation/upgrade",
+        "localTitle": "Upgrade a populated instance"
+      }
+    },
+    {
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "No internet request was needed during the session (API paths include the app pages visited before Help)",
+      "startedAt": "2026-09-25T21:34:21.306Z",
+      "at": "2026-09-25T21:34:21.306Z",
+      "result": "pass",
+      "actual": {
+        "blockedExternal": [
+          "https://github.com"
+        ],
+        "apiPaths": [
+          "GET /api/v1/me",
+          "GET /api/v1/auth/setup",
+          "GET /api/v1/auth/methods",
+          "GET /api/v1/org/branding",
+          "POST /api/auth/sign-in/email",
+          "GET /api/v1/onboarding",
+          "GET /api/v1/home",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/events",
+          "GET /api/v1/list-views",
+          "GET /api/v1/requests",
+          "GET /api/v1/requests/filter-options",
+          "GET /api/v1/inbox/unassigned-contracts",
+          "GET /api/v1/contracts",
+          "GET /api/v1/contracts/options",
+          "GET /api/v1/entities",
+          "GET /api/v1/contracts/filter-options",
+          "GET /api/v1/matters",
+          "GET /api/v1/matters/options",
+          "GET /api/v1/matters/filter-options",
+          "GET /api/auth/get-session",
+          "GET /api/auth/list-accounts",
+          "GET /api/v1/request-types",
+          "GET /api/v1/matter-types",
+          "GET /api/v1/contract-types"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Staff Help index lists every eligible guide",
+      "startedAt": "2026-09-25T21:34:21.650Z",
+      "at": "2026-09-25T21:34:21.853Z",
+      "result": "pass",
+      "actual": {
+        "url": "/help",
+        "heading": "Help",
+        "count": 41,
+        "expected": 41
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Every eligible guide opens at /help/<id> with its title",
+      "startedAt": "2026-09-25T21:34:21.853Z",
+      "at": "2026-09-25T21:34:28.515Z",
+      "result": "pass",
+      "actual": {
+        "opened": 41
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Header Help from bound routes carries route topics and recommends guides",
+      "startedAt": "2026-09-25T21:34:28.515Z",
+      "at": "2026-09-25T21:34:29.597Z",
+      "result": "pass",
+      "actual": [
+        {
+          "route": "/inbox",
+          "href": "/help?topic=inbox&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "inbox",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Assign and triage Requests",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/contracts",
+          "href": "/help?topic=contracts.list&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "contracts.list",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Create and maintain a Contract",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/matters",
+          "href": "/help?topic=matters.list&topic=lists&topic=search&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "matters.list",
+            "lists",
+            "search",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Create a Matter and use a template",
+            "Search, filter, and save views",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        },
+        {
+          "route": "/settings",
+          "href": "/help?topic=settings.personal&topic=notifications&topic=errors&topic=reference&topic=support",
+          "topics": [
+            "settings.personal",
+            "notifications",
+            "errors",
+            "reference",
+            "support"
+          ],
+          "results": [
+            "Manage your profile and preferences",
+            "Manage notifications and reminders",
+            "Resolve common problems",
+            "Look up terms, permissions, and file behavior",
+            "Find version information and get help"
+          ]
+        }
+      ]
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Observe the staff Inbox contextual link that help-contexts.json marks as a pilot entry",
+      "startedAt": "2026-09-25T21:34:29.598Z",
+      "at": "2026-09-25T21:34:30.757Z",
+      "result": "pass",
+      "actual": {
+        "route": "/inbox",
+        "contextualLinks": 0,
+        "note": "Absent. Removed from the staff Inbox and Request pages in 41390ca0. Header Help still carries topic=inbox. Recorded as a finding, not a scenario check."
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Registered topic narrows Help; unknown topic falls back to the index",
+      "startedAt": "2026-09-25T21:34:30.757Z",
+      "at": "2026-09-25T21:34:31.114Z",
+      "result": "pass",
+      "actual": {
+        "topic": "inbox.convert",
+        "results": [
+          "Convert a Request to a Contract or Matter"
+        ],
+        "unknownTopicCount": 41
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"assign request\" reaches triage-requests; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:31.114Z",
+      "at": "2026-09-25T21:34:31.458Z",
+      "result": "pass",
+      "actual": {
+        "query": "assign request",
+        "articleId": "triage-requests",
+        "rank": 1,
+        "resultCount": 12,
+        "focus": "H1",
+        "pageTitle": "Assign and triage Requests · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"convert request\" reaches convert-request; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:31.458Z",
+      "at": "2026-09-25T21:34:31.792Z",
+      "result": "pass",
+      "actual": {
+        "query": "convert request",
+        "articleId": "convert-request",
+        "rank": 1,
+        "resultCount": 11,
+        "focus": "H1",
+        "pageTitle": "Convert a Request to a Contract or Matter · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/me",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"which version\" reaches versions-and-support; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:31.792Z",
+      "at": "2026-09-25T21:34:32.124Z",
+      "result": "pass",
+      "actual": {
+        "query": "which version",
+        "articleId": "versions-and-support",
+        "rank": 1,
+        "resultCount": 10,
+        "focus": "H1",
+        "pageTitle": "Find version information and get help · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"backup codes\" reaches staff-sign-in; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:32.124Z",
+      "at": "2026-09-25T21:34:32.481Z",
+      "result": "pass",
+      "actual": {
+        "query": "backup codes",
+        "articleId": "staff-sign-in",
+        "rank": 1,
+        "resultCount": 1,
+        "focus": "H1",
+        "pageTitle": "Set up your account and sign in · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"save a view\" reaches search-and-views; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:32.481Z",
+      "at": "2026-09-25T21:34:32.839Z",
+      "result": "pass",
+      "actual": {
+        "query": "save a view",
+        "articleId": "search-and-views",
+        "rank": 1,
+        "resultCount": 28,
+        "focus": "H1",
+        "pageTitle": "Search, filter, and save views · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/me",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"timezone\" reaches personal-settings; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:32.839Z",
+      "at": "2026-09-25T21:34:33.172Z",
+      "result": "pass",
+      "actual": {
+        "query": "timezone",
+        "articleId": "personal-settings",
+        "rank": 2,
+        "resultCount": 5,
+        "focus": "H1",
+        "pageTitle": "Manage your profile and preferences · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"your tasks\" reaches find-your-work; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:33.172Z",
+      "at": "2026-09-25T21:34:33.507Z",
+      "result": "pass",
+      "actual": {
+        "query": "your tasks",
+        "articleId": "find-your-work",
+        "rank": 1,
+        "resultCount": 14,
+        "focus": "H1",
+        "pageTitle": "Find your work on Home · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/v1/org/branding",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Section links move focus to the section heading",
+      "startedAt": "2026-09-25T21:34:33.507Z",
+      "at": "2026-09-25T21:34:33.722Z",
+      "result": "pass",
+      "actual": {
+        "hash": "#workflow-and-dates",
+        "focused": "workflow-and-dates"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Existing shortcuts: ? opens the sheet, Escape closes it, / focuses app search, docs search types literally",
+      "startedAt": "2026-09-25T21:34:33.722Z",
+      "at": "2026-09-25T21:34:33.954Z",
+      "result": "pass",
+      "actual": {
+        "questionMark": "Keyboard shortcuts dialog",
+        "escape": "closed",
+        "slash": {
+          "id": "",
+          "role": "combobox",
+          "label": "Search"
+        },
+        "docsSearchTyped": "?/"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Light, Warm and Dark at 1280px and 320px without horizontal overflow",
+      "startedAt": "2026-09-25T21:34:33.954Z",
+      "at": "2026-09-25T21:34:36.017Z",
+      "result": "pass",
+      "actual": {
+        "articleId": "triage-requests",
+        "layouts": [
+          {
+            "width": 1280,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": false,
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Out-of-audience Help link offers the formal article, not an authorization error",
+      "startedAt": "2026-09-25T21:34:36.017Z",
+      "at": "2026-09-25T21:34:36.240Z",
+      "result": "pass",
+      "actual": {
+        "requested": "/help/first-run",
+        "title": "Set up a new OpenLaw instance",
+        "notice": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions.",
+        "reached": "/documentation/first-run"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unverified guides show the validation badge and still read (DOC-031 open)",
+      "startedAt": "2026-09-25T21:34:36.240Z",
+      "at": "2026-09-25T21:34:37.139Z",
+      "result": "pass",
+      "actual": {
+        "guides": [
+          {
+            "id": "connect-chatgpt",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-chatgpt",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          }
+        ],
+        "searchResults": [
+          {
+            "title": "Connect ChatGPT",
+            "badge": "Validation in progress"
+          },
+          {
+            "title": "Connect a headless Client",
+            "badge": null
+          }
+        ]
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Published anchor aliases land on the renamed section",
+      "startedAt": "2026-09-25T21:34:37.139Z",
+      "at": "2026-09-25T21:34:37.139Z",
+      "result": "pass",
+      "actual": {
+        "aliases": [
+          {
+            "from": "/help/request-forms#choose-the-form-fields",
+            "skipped": "target guide is outside this reader's Help"
+          },
+          {
+            "from": "/help/request-forms#collect-default-contract-fields",
+            "skipped": "target guide is outside this reader's Help"
+          }
+        ],
+        "samePageHashChange": null
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unknown article, unknown anchor, unbundled edition and unknown topic recover locally",
+      "startedAt": "2026-09-25T21:34:37.139Z",
+      "at": "2026-09-25T21:34:37.933Z",
+      "result": "pass",
+      "actual": {
+        "unknownArticle": "Article unavailable",
+        "unknownArticleRecovery": "/help index, 41 guides",
+        "unknownAnchor": "The requested section is unavailable. Use the page outline to find the current instructions.",
+        "unbundledEdition": "Article unavailable",
+        "unbundledEditionBody": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.",
+        "unknownTopicCount": 41,
+        "aliases": 2,
+        "aliasNote": "checked"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Unavailable external support link leaves local Help usable",
+      "startedAt": "2026-09-25T21:34:37.933Z",
+      "at": "2026-09-25T21:34:39.898Z",
+      "result": "pass",
+      "actual": {
+        "external": "https://github.com/juggernog20/OpenLaw/issues",
+        "target": null,
+        "externalOutcome": "blocked (no internet)",
+        "afterBack": "Find version information and get help",
+        "localLink": "/documentation/upgrade",
+        "localTitle": "Upgrade a populated instance"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "No internet request was needed during the session (API paths include the app pages visited before Help)",
+      "startedAt": "2026-09-25T21:34:39.898Z",
+      "at": "2026-09-25T21:34:39.899Z",
+      "result": "pass",
+      "actual": {
+        "blockedExternal": [
+          "https://github.com"
+        ],
+        "apiPaths": [
+          "GET /api/v1/me",
+          "GET /api/v1/auth/setup",
+          "GET /api/v1/auth/methods",
+          "GET /api/v1/org/branding",
+          "POST /api/auth/sign-in/email",
+          "GET /api/v1/home",
+          "GET /api/v1/notifications/unread-count",
+          "GET /api/events",
+          "GET /api/v1/list-views",
+          "GET /api/v1/requests",
+          "GET /api/v1/requests/filter-options",
+          "GET /api/v1/inbox/unassigned-contracts",
+          "GET /api/v1/contracts",
+          "GET /api/v1/contracts/options",
+          "GET /api/v1/entities",
+          "GET /api/v1/contracts/filter-options",
+          "GET /api/v1/matters",
+          "GET /api/v1/matters/options",
+          "GET /api/v1/matters/filter-options",
+          "GET /api/auth/get-session",
+          "GET /api/auth/list-accounts"
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Business Portal Help index lists every eligible guide",
+      "startedAt": "2026-09-25T21:34:40.396Z",
+      "at": "2026-09-25T21:34:40.568Z",
+      "result": "pass",
+      "actual": {
+        "url": "/portal/help",
+        "heading": "Help",
+        "count": 16,
+        "expected": 16
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Every eligible guide opens at /portal/help/<id>",
+      "startedAt": "2026-09-25T21:34:40.568Z",
+      "at": "2026-09-25T21:34:43.081Z",
+      "result": "pass",
+      "actual": {
+        "opened": 16
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Staff /help address sends the Business User to Portal Help with its path",
+      "startedAt": "2026-09-25T21:34:43.081Z",
+      "at": "2026-09-25T21:34:43.247Z",
+      "result": "pass",
+      "actual": {
+        "url": "/portal/help/submit-request#before-you-start"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Contextual Help on Portal home, form and Request pages",
+      "startedAt": "2026-09-25T21:34:43.247Z",
+      "at": "2026-09-25T21:34:44.766Z",
+      "result": "pass",
+      "actual": {
+        "links": [
+          {
+            "route": "/portal",
+            "href": "/portal/help?topic=portal.home"
+          },
+          {
+            "route": "/portal/new/:slug",
+            "href": "/portal/help?topic=portal.form"
+          },
+          {
+            "route": "/portal/requests/:number",
+            "contextualLinks": 0,
+            "headerHelp": "/portal/help?topic=portal.request&topic=portal.files&topic=comments&topic=activity&topic=notifications&topic=errors&topic=reference&topic=support",
+            "topics": [
+              "portal.request",
+              "portal.files",
+              "comments",
+              "activity",
+              "notifications",
+              "errors",
+              "reference",
+              "support"
+            ]
+          }
+        ],
+        "requestTopicResults": [
+          "Follow a Request and reply to Legal",
+          "Read and download Documents",
+          "Choose who can read a comment",
+          "Manage notifications and reminders",
+          "Resolve common problems",
+          "Look up terms, permissions, and file behavior",
+          "Find version information and get help"
+        ],
+        "headerOnHelp": "/portal/help"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Unknown topic falls back to the Portal Help index",
+      "startedAt": "2026-09-25T21:34:44.766Z",
+      "at": "2026-09-25T21:34:44.903Z",
+      "result": "pass",
+      "actual": {
+        "count": 16
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"submit request\" reaches submit-request; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:44.904Z",
+      "at": "2026-09-25T21:34:45.189Z",
+      "result": "pass",
+      "actual": {
+        "query": "submit request",
+        "articleId": "submit-request",
+        "rank": 1,
+        "resultCount": 8,
+        "focus": "H1",
+        "pageTitle": "Submit a Request to Legal · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/portal/notifications/unread-count",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"which version\" reaches versions-and-support; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:45.189Z",
+      "at": "2026-09-25T21:34:45.471Z",
+      "result": "pass",
+      "actual": {
+        "query": "which version",
+        "articleId": "versions-and-support",
+        "rank": 1,
+        "resultCount": 7,
+        "focus": "H1",
+        "pageTitle": "Find version information and get help · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/portal/notifications/unread-count",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Keyboard search \"expired link\" reaches portal-sign-in; focus and Back/Forward",
+      "startedAt": "2026-09-25T21:34:45.471Z",
+      "at": "2026-09-25T21:34:45.724Z",
+      "result": "pass",
+      "actual": {
+        "query": "expired link",
+        "articleId": "portal-sign-in",
+        "rank": 1,
+        "resultCount": 5,
+        "focus": "H1",
+        "pageTitle": "Sign in to the Business Portal · OpenLaw",
+        "back": "results",
+        "forward": "article",
+        "apiDuringSearch": [
+          "GET /api/v1/me",
+          "GET /api/v1/org/branding",
+          "GET /api/v1/portal/notifications/unread-count",
+          "GET /api/events"
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Section links move focus to the section heading",
+      "startedAt": "2026-09-25T21:34:45.724Z",
+      "at": "2026-09-25T21:34:45.937Z",
+      "result": "pass",
+      "actual": {
+        "hash": "#submit-the-form",
+        "focused": "submit-the-form"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Portal has no global shortcuts; ? and / type literally in docs search",
+      "startedAt": "2026-09-25T21:34:45.937Z",
+      "at": "2026-09-25T21:34:46.077Z",
+      "result": "pass",
+      "actual": {
+        "docsSearchTyped": "?/",
+        "dialogs": 0
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Light, Warm and Dark at 1280px and 320px without horizontal overflow",
+      "startedAt": "2026-09-25T21:34:46.077Z",
+      "at": "2026-09-25T21:34:48.071Z",
+      "result": "pass",
+      "actual": {
+        "articleId": "submit-request",
+        "layouts": [
+          {
+            "width": 1280,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 1280,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": true,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "light",
+            "background": "rgb(255, 255, 255)",
+            "text": "rgb(31, 35, 40)",
+            "contrast": 15.8,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "warm",
+            "background": "rgb(251, 250, 247)",
+            "text": "rgb(45, 42, 36)",
+            "contrast": 13.7,
+            "navOpen": false,
+            "overflow": false
+          },
+          {
+            "width": 320,
+            "theme": "dark",
+            "background": "rgb(13, 17, 23)",
+            "text": "rgb(230, 237, 243)",
+            "contrast": 16.02,
+            "navOpen": false,
+            "overflow": false
+          }
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Out-of-audience Help link offers the formal article",
+      "startedAt": "2026-09-25T21:34:48.071Z",
+      "at": "2026-09-25T21:34:48.282Z",
+      "result": "pass",
+      "actual": {
+        "requested": "/portal/help/triage-requests",
+        "title": "Assign and triage Requests",
+        "notice": "This article is available in the full documentation. Check its audience and prerequisites before following the instructions.",
+        "reached": "/documentation/triage-requests"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Unverified guides show the validation badge and still read (DOC-031 open)",
+      "startedAt": "2026-09-25T21:34:48.282Z",
+      "at": "2026-09-25T21:34:49.027Z",
+      "result": "pass",
+      "actual": {
+        "guides": [
+          {
+            "id": "connect-chatgpt",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-chatgpt",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 7,
+            "outlineLinks": 4
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 1280,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          },
+          {
+            "id": "connect-microsoft-365-copilot",
+            "width": 320,
+            "badge": "Validation in progress",
+            "paragraphs": 13,
+            "outlineLinks": 6
+          }
+        ],
+        "searchResults": [
+          {
+            "title": "Connect ChatGPT",
+            "badge": "Validation in progress"
+          },
+          {
+            "title": "Connect a headless Client",
+            "badge": null
+          }
+        ]
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Unknown article, unknown anchor, unbundled edition and unknown topic recover locally",
+      "startedAt": "2026-09-25T21:34:49.027Z",
+      "at": "2026-09-25T21:34:49.795Z",
+      "result": "pass",
+      "actual": {
+        "unknownArticle": "Article unavailable",
+        "unknownArticleRecovery": "/portal/help index, 16 guides",
+        "unknownAnchor": "The requested section is unavailable. Use the page outline to find the current instructions.",
+        "unbundledEdition": "Article unavailable",
+        "unbundledEditionBody": "The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.",
+        "unknownTopicCount": 16,
+        "aliases": 2,
+        "aliasNote": "checked"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Unavailable external support link leaves local Help usable",
+      "startedAt": "2026-09-25T21:34:49.795Z",
+      "at": "2026-09-25T21:34:51.720Z",
+      "result": "pass",
+      "actual": {
+        "external": "https://github.com/juggernog20/OpenLaw/issues",
+        "target": null,
+        "externalOutcome": "blocked (no internet)",
+        "afterBack": "Find version information and get help",
+        "localLink": "/documentation/upgrade",
+        "localTitle": "Upgrade a populated instance"
+      }
+    },
+    {
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "No internet request was needed during the session (API paths include the app pages visited before Help)",
+      "startedAt": "2026-09-25T21:34:51.720Z",
+      "at": "2026-09-25T21:34:51.721Z",
+      "result": "pass",
+      "actual": {
+        "blockedExternal": [
+          "https://github.com"
+        ],
+        "apiPaths": [
+          "GET /api/v1/me",
+          "GET /api/v1/auth/setup",
+          "GET /api/v1/auth/methods",
+          "GET /api/v1/org/branding",
+          "POST /api/v1/auth/magic-link",
+          "GET /api/auth/magic-link/verify",
+          "GET /api/v1/portal/notifications/unread-count",
+          "GET /api/events",
+          "GET /api/v1/portal/request-types",
+          "GET /api/v1/portal/intake-links",
+          "GET /api/v1/portal/requests",
+          "GET /api/v1/portal/request-types/nda_request",
+          "GET /api/v1/portal/requests/7",
+          "GET /api/v1/comments/unread"
+        ]
+      }
+    }
+  ],
+  "startedAt": "2026-09-25T21:33:23.695Z",
+  "completedAt": "2026-09-25T21:34:51.765Z",
+  "passed": true
+}

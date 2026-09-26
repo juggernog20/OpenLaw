@@ -14,7 +14,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 4. Open the Document's actions and select **Mark as executed copy**. For an earlier Document Version, use that Version's own actions. Check its executed designation. On a Contract with several Documents, also check that the intended contract paper is the primary Document.
 5. Use the Stage control to choose the intended Active Status. Confirm a Soft gate override only if appropriate, then check the Status and Activity.
 
-A Document Version's kind and its executed designation are separate. Choosing an Executed kind during upload does not set the executed designation automatically. Marking a Document Version as executed does not itself change the Contract's Status. A later upload can become current while the executed designation still identifies the earlier signed Document Version.
+A Document Version's Document type and its executed designation are separate. Choosing the **Executed** type during upload does not set the executed designation automatically. Marking a Document Version as executed does not itself change the Contract's Status. A later upload can become current while the executed designation still identifies the earlier signed Document Version.
 
 ## Correct the wrong selection
 

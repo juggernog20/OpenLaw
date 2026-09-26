@@ -1,0 +1,232 @@
+{
+  "batch": "DOC-030",
+  "group": "matters",
+  "reviewer": "DOC-030 source-review author agent (matters)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:25:00Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "lastArticleEdit": {
+      "create-matter": "4396249d",
+      "matter-work": "fb860255"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "create-matter",
+      "scenario": ["V-C22"],
+      "contentSha256Before": "2a45b053abe650ea7bb101edba5fc9fe48d85c62526619ad914d311ed99de1e9",
+      "contentSha256": "27c935b35a5a7c80c8cd0ef80251dab68145a0bf9c8950f1505e7881c726bbf7",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-MATTERS.md",
+        "messages/en-US.json",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/type-form/record-rows.tsx",
+        "apps/web/src/components/type-form/needed-by-field.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/confidential-toggle.tsx",
+        "apps/web/src/routes/matters.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/components/matters/team-applet.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "packages/shared/src/form-builtins.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/db/migrations/0157_type-forms.sql",
+        "apps/api/src/lib/type-form-routes.ts",
+        "apps/api/src/lib/creation-form.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Create dialog, built-in Rows",
+          "before": "Choose Department from the shared list, or leave No Department selected; Priority, Risk and Description are drawn only when the Form collects them.",
+          "after": "Description, Department, Region, Priority, Risk and Needed by are all Form Rows, drawn only when the Form collects them at creation. A new type collects only Description (an Intake Row). A required Department starts on Choose a Department. Needed by becomes a Key date named Needed by. Undrawn Rows still get template defaults; without a template Priority is Medium and Risk is Not assessed.",
+          "source": "creation-rows.tsx creationRows/creationNativeValues; form-evaluator.ts formRowTouchpoint; type-form-routes.ts seedTypeForm (only description onIntakeForm); 0157_type-forms.sql; department-picker.tsx; matters/create.ts neededBy key date and priority/risk fallbacks"
+        },
+        {
+          "claim": "Create dialog, default type",
+          "before": "Not stated.",
+          "after": "The dialog can start on the type the Administrator marked as the default.",
+          "source": "create-matter-dialog.tsx matterTypes.find(t => t.isDefault)"
+        },
+        {
+          "claim": "Confidential control label",
+          "before": "Review Confidential.",
+          "after": "Review the Confidential — restrict to the matter team switch.",
+          "source": "confidential-toggle.tsx matters.confidential.field"
+        },
+        {
+          "claim": "Documents on create",
+          "before": "Attach documents only.",
+          "after": "Attach documents or drag and drop; when files are staged and Matter Document types exist, one Document type (default No type) applies to all staged files.",
+          "source": "create-attachments.tsx typeId select (d0d16390)"
+        },
+        {
+          "claim": "Template defaults on Rows the dialog does not draw",
+          "before": "Review those values before creating.",
+          "after": "Review the drawn values; defaults for undrawn Rows are also saved, check them on Overview.",
+          "source": "create-matter-dialog.tsx sends only creation Rows; matters/create.ts merges templateDefaults under input and falls back to template Priority/Risk"
+        },
+        {
+          "claim": "Overview layout",
+          "before": "Edit title, type, Matter Manager, Business Owner, Department, Region, Priority, Risk, Description and Custom fields.",
+          "after": "The Matter section starts with Title; Form Rows follow in Form order (Matter type, built-in Rows, attached Fields); no separate custom-field section; Matter Manager and Business Owner come after the Rows; a Needed by Row edits the Needed by Key date.",
+          "source": "matter-record.tsx formControls, RecordRows, NeededByField (71d3fe94, 4aaa9b98)"
+        },
+        {
+          "claim": "Change type dialog title and required rule",
+          "before": "Change matter type dialog; a required value cannot be cleared.",
+          "after": "Change matter type to {type} dialog opens when the new type has required Fields without a value; you cannot clear a required Field.",
+          "source": "messages matters.retype.title; service.ts assertRequiredCustomFields (Fields only)"
+        },
+        {
+          "claim": "Business Owner team row",
+          "before": "Change or clear that assignment before removing their membership.",
+          "after": "Their row has no remove control while they are the Business Owner; change or clear the assignment first.",
+          "source": "record-team-applet.tsx onRemove undefined for businessOwnerId"
+        },
+        {
+          "claim": "Confidential Matter owner changes",
+          "before": "The Administrator, Matter Manager, or Creator controls the audience.",
+          "after": "Also only they can change the Matter Manager or name a Business Owner on a Confidential Matter.",
+          "source": "matters/service.ts patchMatter assertAudienceActor for managerId and businessOwnerId; DECISIONS-MATTERS 2026-09-18 security review H1"
+        }
+      ],
+      "confirmed": [
+        "New matter opens the Create matter dialog; only Administrators and Legal Team Members create Matters (POST /matters requireMember). Source: matters/routes.ts.",
+        "Intake and Creation Rows are collected; Branches reveal Rows; Required is enforced on the visible creation set, client side for Fields and server side for all Rows ('Fill {fields}.'). Source: creation-rows.tsx, creation-form.ts.",
+        "Matter Manager starts with the opener when eligible; Unassigned option; only Administrators and Legal Team Members; server refuses others. Source: create-matter-dialog.tsx, matters/create.ts.",
+        "Matter template appears after a type is chosen, starts on No template, lists only live templates of that type; hint 'Template adds N tasks and N key dates.'; API refuses an archived or wrong-type template. Source: matters/routes.ts options, create-matter-dialog.tsx, matters/create.ts.",
+        "Changing or removing the template reseeds Priority, Risk and every Field draft; the title follows only while blank or equal to the previous prefix. Source: seedTemplate().",
+        "A cleared optional template Field is sent as null and stays empty. Source: create-matter-dialog.tsx submit, matters/create.ts merge order.",
+        "Template Task and Key date offsets resolve from the UTC creation date; matter_manager Tasks go to the chosen Manager or stay unassigned; no Status or team is set by the template. Source: matters/create.ts.",
+        "Upload failure after creation keeps the dialog with Continue and Retry failed uploads. Source: create-attachments.tsx.",
+        "New Matter gets the first live open-category Status and an M- number. Source: matters/create.ts.",
+        "Region uses the shared list with No Region; archived values stay visible. Source: matter-record.tsx.",
+        "A Row under a false Branch shows on the record only when it holds a value. Source: form-evaluator.ts recordFormRows.",
+        "Matter team applet: Add team member, Person, Add; Matter Manager, Business Owner and Creator statements; assigning a Business Owner adds a team row. Source: team-applet.tsx, record-team-applet.tsx, service.ts.",
+        "History applet and Matter team activity-bar labels unchanged. Source: messages/en-US.json."
+      ],
+      "limitations": [
+        "Source inspection only. The V-C22 browser walkthrough is still required at 067c1646.",
+        "The prose changes alter labels, steps and results, so DOC-029 walkthrough evidence cannot be kept as copy-only.",
+        "Which built-in Rows the dialog draws depends on each type's Form. The walkthrough setup must note the Form of the type it uses; to see Department, Priority or Risk in the dialog, the lab type needs them On intake form or Required for creation.",
+        "The create dialog's Risk control offers 'Not set' as its empty choice, while Overview shows 'Not assessed'. The guide names the Overview label for the saved result.",
+        "Required built-in Rows other than Department have no client-side check; the server refusal names them. The guide covers this with the generic refusal step.",
+        "A Matter linked to a Contract with a Counterparty: linking is covered in matter-work; the create flow has no Counterparty control for Matters."
+      ]
+    },
+    {
+      "articleId": "matter-work",
+      "scenario": ["V-C24"],
+      "contentSha256Before": "98a6895c4efa9c6dd1925eed23af1b3522766ce1ae97d345baa22eb290294a5d",
+      "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-COMMENTS.md",
+        "docs/decision-records/DECISIONS-MATTERS.md",
+        "messages/en-US.json",
+        "apps/web/src/components/matters/tasks-card.tsx",
+        "apps/web/src/components/tasks/task-dialog.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/matters/key-dates-card.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/components/matters/related-matters-card.tsx",
+        "apps/web/src/components/matters/relation-dialog.tsx",
+        "apps/web/src/components/matters/linked-contracts-card.tsx",
+        "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/type-form/needed-by-field.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/matter-tasks/routes.ts",
+        "apps/api/src/modules/matter-tasks/service.ts",
+        "apps/api/src/modules/matter-tasks/create.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/lib/notifications/offsets.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/modules/matter-relations/routes.ts",
+        "apps/api/src/modules/matters/create.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Initial Task note audience",
+          "before": "The initial note uses the Working team audience.",
+          "after": "Task comments have no audience choice; everyone who can access the Task can read them.",
+          "source": "comments.ts composerTiers for matter_task; DECISIONS-COMMENTS 2026-09-22 addendum (56fe53be)"
+        },
+        {
+          "claim": "Task thread audience",
+          "before": "Use the permitted Legal Only or Working team audience.",
+          "after": "No audience selector; the thread says 'Visible to everyone who can access this task.'; older Legal Only Task comments stay readable to the same people.",
+          "source": "comments.ts tierAudience comments.task.audience; comment-applet.tsx TierBadge returns null for tasks"
+        },
+        {
+          "claim": "Key date reminder lead times",
+          "before": "Check the global lead times; global reminders still apply.",
+          "after": "Global reminders shows the organization's defaults; This date will remind combines them with the date's own lead times; a person's own Reminder lead times list replaces the defaults for their reminders, and the date's lead times add to each recipient's list.",
+          "source": "key-date-reminder-fields.tsx; offsets.ts personalOffsets; morning-round.ts cohorts (1f7cca32); NOT-004 addendum 2026-09-24"
+        },
+        {
+          "claim": "Recipients label",
+          "before": "Leave the recipient checkboxes clear.",
+          "after": "Under Recipients, leave every checkbox clear.",
+          "source": "key-date-reminder-fields.tsx keyDates.reminders.recipients"
+        },
+        {
+          "claim": "Needed by Key date",
+          "before": "Not stated.",
+          "after": "A Needed by date from creation or the Overview Row is an ordinary Key date named Needed by.",
+          "source": "matters/create.ts neededBy insert; matter-record.tsx NeededByField commits add/update/remove Key date"
+        },
+        {
+          "claim": "Create sub-Matter dialog",
+          "before": "Complete the normal creation form.",
+          "after": "The Create sub-Matter dialog names the parent under Parent: and otherwise works like the normal creation form.",
+          "source": "create-matter-dialog.tsx matters.create.subMatterTitle, matters.create.parent"
+        }
+      ],
+      "confirmed": [
+        "Task, Key date, relation and Contract link writes are Administrator and Legal Team Member only; archived Matters refuse with 409; closed Matters stay writable. Source: matter-tasks/routes.ts, service.ts.",
+        "Task dialog labels Add a Task, Title, Description, Assignee, Due date, Comments & attachments, Add a note, Add Task, Task details, Save, Close/Cancel, Retry note & attachments. Source: task-dialog.tsx.",
+        "Assignee picker: Add someone to the team…, Use this person (saved with the Task), Add to team and assign (immediate). Source: assignee-picker.tsx.",
+        "Show completed / Hide completed; row actions menu Edit Task and Remove Task; '{done} of {total} done'. Source: tasks-card.tsx, completed-toggle.tsx.",
+        "A Task carrying any comment cannot be removed; the DELETE handler refuses without changing the Task. The DOC-029 OpenAPI summary bug is fixed at HEAD. Source: matter-tasks/routes.ts removeMatterTask summary.",
+        "Key date dialog: Date, Event, Note, Reminders, Additional lead time (days before) 0 to 730, Add lead time, up to 20, Remove; Use the usual audience whenever people are selected; Remove unavailable recipients when a selected person left and others remain. Source: key-date-reminder-fields.tsx.",
+        "Usual audience is Manager, Business Owner and every team member including active Business Users; a saved selection never falls back. Source: key-date-reminders.ts keyDateAudienceIds (fb860255).",
+        "Key dates header '{upcoming} upcoming · {overdue} overdue'; Edit date, Remove date, 'Remove Key date?'. Source: key-dates-card.tsx.",
+        "Related Matters: Set parent / Change parent, Add related Matter, Add relation, Remove on Parent and Related rows, loop refusal 'That parent would close a loop in the Matter hierarchy.', self-relation refusal, Restricted Matter rows. Source: related-matters-card.tsx, relation-dialog.tsx, matter-relations/routes.ts.",
+        "Linked Contracts: Link Contract, Link, New contract, Unlink, one Matter per Contract, Confidentiality differs with Leave them as they are, Restricted contract. Source: linked-contracts-card.tsx, contract-matter-link-dialog.tsx.",
+        "Next deadline takes the earliest unfinished Task due date or upcoming Key date on an open, unarchived Matter. Source: next-deadline.ts (unchanged since 3fa407e3)."
+      ],
+      "limitations": [
+        "Source inspection only. The V-C24 browser walkthrough is still required at 067c1646.",
+        "The prose changes alter labels and results, so DOC-029 walkthrough evidence cannot be kept as copy-only.",
+        "Administrator and Legal Team Member have the same controls here. The negative check for unauthorized changes can only differ on a Confidential Matter the Legal Team Member does not reach, and for Business Users, who have no staff record page.",
+        "Restricted targets: the relation and link searches list only reachable records; an existing link to an unreachable record shows as Restricted Matter or Restricted contract without title or navigation.",
+        "Renaming the Needed by Key date's Event detaches it from the Overview Needed by Row, which looks up the Key date by that label. The guide does not describe this edge."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    "docs/user-guides/notifications.md: the 'Administrators configure reminder lead times' paragraph still says one organization list applies. Since 1f7cca32 each person can set their own list in the Reminder lead times card (Use the organization's default lead times switch), which replaces the defaults for their reminders; a Key date's own lead times add to each recipient's list."
+  ],
+  "statusChange": null
+}

@@ -1,19 +1,35 @@
 {
   "articleId": "personal-settings",
-  "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (access, round 1)",
+  "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (access-2)",
+  "technicalReviewer": "DOC-030 source-review author agent (access-2)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access)",
-  "technicalReviewer": "DOC-029 source-review author agent (access)",
-  "verifiedAt": "2026-09-16T16:23:21Z",
+  "verifiedAt": "2026-09-25T10:24:30.223Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/personal-settings.md",
-    "docs/documentation/batches/DOC-029/access/technical-review.json",
-    "docs/documentation/batches/DOC-029/access/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-030/access-2/technical-review.json",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+    "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "apps/web/src/routes/settings.tsx",
+    "apps/web/src/routes/settings-profile.tsx",
+    "apps/web/src/lib/avatar.ts",
+    "apps/web/src/components/status-note.tsx",
+    "apps/web/src/components/ui/label.tsx",
+    "apps/web/src/components/ui/field-help.tsx",
+    "apps/web/src/routes/settings-appearance.tsx",
+    "apps/web/src/routes/settings-app-view.tsx",
+    "apps/web/src/components/portal/portal-shell.tsx",
+    "apps/web/src/components/timezone-picker.tsx",
+    "apps/api/src/auth/handler.ts (1 MB avatar body allowance)",
+    "docs/user-guides/connect-headless-client.md"
   ],
   "scenarios": [
     {
@@ -22,18 +38,17 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Fresh DOC-029 access Administrator and Legal Team Member accounts with light theme, no timezone and no photo; each is the unchanged control for the other.",
-        "Seeded Jonas Weber (Business User) for the absent-control check. The Contributor role no longer exists (DD-023)."
+        "A fresh DOC-030 access-2 Administrator account invited by the seeded Administrator and activated through the set-password page, with a second browser context for the device checks.",
+        "The other role's fresh account is the unchanged control. A throwaway Business User signs in with a fresh Portal link from Mailpit for the Business User check."
       ],
-      "expected": "Preferences persist for the intended user. Administrators and Legal Team Members open their own Portal view from View Business Portal under Personal, with a working Return to legal view link; Business Users have no such control. Another account's preferences remain unchanged.",
-      "actual": "6 recorded steps passed on 3fa407e3 for a fresh Administrator. Settings in the name menu opened the Personal group. On Profile, Full name saved on leaving the field and kept its value after reload, and the header menu showed the new name. Timezone search Tokyo selected Asia/Tokyo, saved, and kept it after reload; Use browser timezone saved and cleared the stored zone. Email was shown read-only, and Role had Roles are managed in Organization → Users. Upload in Profile photo saved a 64-pixel PNG; a 1.47 MB PNG showed The change could not be saved. Try again. Appearance saved Warm, Dark and Light for this account, Dark stayed after reload, and the session stayed open. The other fresh account's name, timezone, theme and photo did not change. View Business Portal under Personal > View as business user opened the Portal with the Viewing as business user banner and its real-work text, under this account's own email and unchanged role; Return to legal view returned to /settings/app-view. Change password refused a wrong Current password and a 6-character New password with the documented message. Save then changed the password, kept this session and sent a second browser to sign-in, and the old password was refused. Sign out other devices saved and ended a third browser's session while this one stayed. Sign out in the name menu returned to sign-in. Seeded Jonas Weber (Business User): /settings/app-view and /settings/profile sent him to /portal, and no View as business user control or banner appeared.",
+      "expected": "Preferences persist for the intended user. View Business Portal is its own Personal pane at /settings/app-view for Administrators and Legal Team Members, with a working Return to legal view link. Business Users have no such control. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
+      "actual": "8 recorded Administrator steps passed. Settings opened from the name menu. Personal listed Profile, Appearance, Notifications, API keys, View Business Portal in that order, followed by the Organization group, and API keys opened /settings/api-keys. Full name saved with Enter (Saved) and again on leaving the field, the header name menu followed, and reload kept it. Timezone search for Tokyo saved Asia/Tokyo. Use browser timezone stored no preference. Email was read-only with the account's address. Role had no control, and its More information icon showed Roles are managed in Organization → Users. The hint read JPG or PNG, up to 10 MB. Resized automatically. The picker offered image/png and image/jpeg. A 12 KB PNG through Upload saved. A 9.3 MB 1800x1800 PNG saved as a 512x512 image and Profile reloaded. A 10.3 MB PNG showed Choose a photo smaller than 10 MB. A GIF set past the picker filter showed Choose a JPG or PNG photo. Warm, Dark and Light each showed Saved and were stored. Dark survived a reload without signing out. The Legal Team Member control account's name, timezone, theme and photo stayed unchanged. View Business Portal opened /settings/app-view, and View as business user opened the Portal with the Viewing as business user banner under the same account and role. Return to legal view came back to /settings/app-view. Change password showed Current password, New password and Saving signs you out on your other devices. A wrong current password and a 6-character new password were refused. Save kept this session and sent the second browser to sign-in. Sign out other devices showed Saved and ended the other session while this one stayed. Sign out in the name menu ended this session. A throwaway Business User opening /settings, /settings/app-view or /settings/profile landed on /portal with no View Business Portal or View as business user control.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-personal-settings-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-administrator-portal-view-banner.png"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     },
     {
@@ -42,53 +57,34 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Fresh DOC-029 access Administrator and Legal Team Member accounts with light theme, no timezone and no photo; each is the unchanged control for the other.",
-        "Seeded Jonas Weber (Business User) for the absent-control check. The Contributor role no longer exists (DD-023)."
+        "A fresh DOC-030 access-2 Legal Team Member account invited by the seeded Administrator and activated through the set-password page, with a second browser context for the device checks.",
+        "The other role's fresh account is the unchanged control. A throwaway Business User signs in with a fresh Portal link from Mailpit for the Business User check."
       ],
-      "expected": "Preferences persist for the intended user. Administrators and Legal Team Members open their own Portal view from View Business Portal under Personal, with a working Return to legal view link; Business Users have no such control. Another account's preferences remain unchanged.",
-      "actual": "7 recorded steps passed on 3fa407e3 for a fresh Legal Team Member. The profile, timezone, photo, theme, View Business Portal, Change password, Sign out other devices and Sign out results matched the Administrator's, and the fresh Administrator's preferences did not change. In addition, a Legal Team Member account that signed in only by an email link (no password) had a Profile without the Password & two-factor card.",
+      "expected": "Preferences persist for the intended user. View Business Portal is its own Personal pane at /settings/app-view for Administrators and Legal Team Members, with a working Return to legal view link. Business Users have no such control. Another account's preferences remain unchanged; no absent M33 App view route is claimed.",
+      "actual": "9 recorded Legal Team Member steps passed. Settings opened from the name menu. Personal listed Profile, Appearance, Notifications, API keys, View Business Portal in that order, and API keys opened /settings/api-keys. Full name saved with Enter (Saved) and again on leaving the field, the header name menu followed, and reload kept it. Timezone search for Tokyo saved Asia/Tokyo. Use browser timezone stored no preference. Email was read-only with the account's address. Role had no control, and its More information icon showed Roles are managed in Organization → Users. The hint read JPG or PNG, up to 10 MB. Resized automatically. The picker offered image/png and image/jpeg. A 12 KB PNG through Upload saved. A 9.3 MB 1800x1800 PNG saved as a 512x512 image and Profile reloaded. A 10.3 MB PNG showed Choose a photo smaller than 10 MB. A GIF set past the picker filter showed Choose a JPG or PNG photo. Warm, Dark and Light each showed Saved and were stored. Dark survived a reload without signing out. The Administrator control account's name, timezone, theme and photo stayed unchanged. View Business Portal opened /settings/app-view, and View as business user opened the Portal with the Viewing as business user banner under the same account and role. Return to legal view came back to /settings/app-view. Change password showed Current password, New password and Saving signs you out on your other devices. A wrong current password and a 6-character new password were refused. Save kept this session and sent the second browser to sign-in. Sign out other devices showed Saved and ended the other session while this one stayed. Sign out in the name menu ended this session. An invited Legal Team Member who signed in only with a sign-in link had no Password & two-factor card. A throwaway Business User opening /settings, /settings/app-view or /settings/profile landed on /portal with no View Business Portal or View as business user control.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/access/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/wt-personal-settings-r1.mjs",
-        "docs/documentation/batches/DOC-029/access/r1-administrator-portal-view-banner.png"
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer. It is not a human user study and not feature-owner approval.",
-    "The work lab is shared with other DOC-029 agents. Seeded records and counts changed during the run. The walkthrough created only accounts and records named DOC-029 access and changed no organisation settings. Nothing was deleted. Two earlier full runs are kept as walkthrough-r1-attempt1.json and walkthrough-r1-attempt2.json; their dispositions (a reviewer script timing error and shared-lab data drift) are in walkthrough-r1.json.",
-    "The lab app container runs with AUTH_RATE_LIMIT=off (lab configuration).",
-    "The Contributor part of V-C05 no longer applies (DD-023 removed the role). The absent-control check used a Business User instead.",
-    "A JPG upload and a non-image file were not tried; a PNG within the limit and an oversize PNG were.",
-    "Profile has no photo removal control, so the fresh fixture accounts keep their test photo. Names, timezones and themes were restored."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
+    "The work2 lab (openlaw-docs-80ceef9e-work2, source 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z) is shared with other DOC-030 walkthrough agents. Counts on Home and Inbox moved during the run, so the log compares each count with the database at the same moment. This walkthrough created only records named DOC-030 access-2 and doc030.access2.* throwaway accounts, changed no organization settings, and archived only its own two Entities. walkthrough.json lists every fixture.",
+    "Fixtures (accounts invited by the seeded Administrator, Contracts, Tasks, Entities, Obligations, Grants, Requests, Knowledge Items, Confidential flags, saved search views and the Business User's first run) were written through the lab API or, for this walkthrough's own rows only, the lab database. Every guide step ran in the browser as the named role in its own browser context.",
+    "Product bug on 067c1646, recorded in walkthrough.json productBugs: a photo that is still large after the browser resizes it saves with Saved, but then Settings > Profile shows Something went wrong. The page could not load. A 512x512 detailed PNG stored as a data URL of about 1 MB caused this. GET /api/auth/get-session sends the whole photo in a set-auth-jwt response header (about 1.4 MB measured), which Chromium refuses. The walkthrough reproduced this on a separate throwaway account and used a smooth 1800x1800 photo for the guide step. dev commit 7abd2a8f (after the pinned commit) removes that header. The guide's statements are accurate to the intended behavior.",
+    "Choose a JPG or PNG photo. shows only when the picker's file-type filter is bypassed. The walkthrough set a GIF on the file input directly.",
+    "The API keys pane was only opened. Its content belongs to Connect a headless Client.",
+    "Profile has no photo removal control, as the technical review notes."
   ],
   "previousEvidence": {
-    "appCommit": "d1d098ba9f4ba6557a542857d530446b76b1847c",
-    "contentSha256": "155c97620d4f7999fa850eb2923f73ee797df09b2e62bf61cf0e5b292c16b2b8",
-    "verifiedAt": "2026-09-07T04:50:31.333Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+    "verifiedAt": "2026-09-25T10:24:30.223Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
-    "contentSha256": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (access)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, with messages/en-US.json; the new 5 MB limit is for the organization logo, and the Return to setup link does not change Profile, Appearance, View Business Portal, password or sessions. I replayed the round 1 V-C05 walkthrough on the work2 lab, and all 14 steps passed, including the 1 MB profile photo refusal. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. Read the article. Password & two-factor in Profile uses the shared two-factor component, which did not change. The wizard is not mentioned.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/access.json",
-        "sha256": "0439676e5a91edbbfd06066c56706e08609c7e99c3e074f1e90ba7c538cc1e9a"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

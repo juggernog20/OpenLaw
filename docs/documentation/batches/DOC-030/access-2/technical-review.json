@@ -1,0 +1,334 @@
+{
+  "batch": "DOC-030",
+  "group": "access-2",
+  "reviewer": "DOC-030 source-review author agent (access-2)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-25T09:50:00Z",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "comparedFrom": {
+    "staff-sign-in": {
+      "previousAppCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
+      "lastArticleEdit": "bf4ab492"
+    },
+    "find-your-work": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "0e860c81"
+    },
+    "personal-settings": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "0e860c81"
+    },
+    "portal-knowledge": {
+      "previousAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "lastArticleEdit": "6b6a1120"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "scenario": ["V-C01"],
+      "contentSha256Before": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
+      "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-032)",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/set-password.tsx",
+        "apps/web/src/routes/link-expired.tsx",
+        "apps/web/src/components/magic-link-request.tsx",
+        "apps/web/src/routes/two-factor.tsx",
+        "apps/web/src/routes/two-factor-enroll.tsx",
+        "apps/web/src/routes/settings-profile.tsx",
+        "apps/web/src/routes/auth-layout.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/components/shell/app-header.tsx",
+        "apps/web/src/components/shell/user-menu.tsx",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/auth/limits.ts",
+        "apps/api/src/auth/handler.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/auth/magic-link.test.ts",
+        "apps/api/src/modules/auth/sign-in-lockout.test.ts",
+        "node_modules better-auth 1.7.5 dist/plugins/magic-link/index.mjs (verify redirects)"
+      ],
+      "corrections": [
+        {
+          "claim": "Invitation step 1",
+          "before": "Open your invitation email and follow its set-password link.",
+          "after": "Open Set your OpenLaw password and select Set password. The link expires in one hour.",
+          "source": "apps/api/src/auth/instance.ts sendResetPassword (renderEmailLayout action label Set password, 1 hour line; 9d33ddd9)"
+        },
+        {
+          "claim": "Check after activation",
+          "before": "Check your name in the header.",
+          "after": "The name menu is the photo or initials; it shows name and email. On a wide window the header shows the organization's name, and its logo if saved.",
+          "source": "apps/web/src/components/shell/user-menu.tsx; app-header.tsx (2c028604: organization name replaces the workspace label, hidden below md; logo replaces the scale mark)"
+        },
+        {
+          "claim": "Failed invitation link",
+          "before": "If the link has expired, was already used, or is missing part of its address, ask for a fresh invitation.",
+          "after": "Names the three messages: The passwords do not match.; This link has expired or was already used. Ask for a new one.; This link is not valid. Ask for a new invitation or password reset. The last means only part of the link opened (the token now rides in the URL fragment).",
+          "source": "apps/web/src/routes/set-password.tsx (fragment read, 97ea65bc); TECH-032"
+        },
+        {
+          "claim": "Sign-in link request",
+          "before": "Request a link; follow the newest email within five minutes; it works once.",
+          "after": "Adds Send link, Check your email, the Sign in button, and the budget: three requests per email address in 15 minutes, then Too many sign-in link requests. Try again later.",
+          "source": "apps/api/src/modules/auth/routes.ts POST /auth/magic-link consumeAuthRequestBudget; limits.ts AUTH_REQUEST_BUDGET; login.tsx submitMagicLink shows problem detail"
+        },
+        {
+          "claim": "Failed sign-in link",
+          "before": "(absent)",
+          "after": "An expired or used link opens Sign-in link expired. A link OpenLaw refuses (method off for the role, archived account) returns to sign-in with This sign-in link could not be used. Request a new link or contact your administrator.",
+          "source": "login.tsx loader INVALID_TOKEN redirect and auth.login.error.linkCallback (1af918ed); instance.ts session create hook returns false on /magic-link/verify; magic-link.test.ts failed_to_create_session"
+        },
+        {
+          "claim": "Wrong two-factor code and lockout",
+          "before": "For a wrong code, check... Follow any wait time shown after repeated failures.",
+          "after": "Wrong code. Try again, or restart sign-in.; after 10 wrong codes Too many attempts. Wait 15 minutes, then try again.",
+          "source": "apps/web/src/routes/two-factor.tsx; instance.ts twoFactor accountLockout maxFailedAttempts 10, 15 minutes"
+        },
+        {
+          "claim": "Incorrect password",
+          "before": "For an incorrect password, check the email and password you entered.",
+          "after": "Check your email and password.; 10 wrong passwords for one address in 15 minutes close password sign-in for that address with Too many attempts. Wait 15 minutes, then try again.; the lock ends 15 minutes after the first wrong password; a success before the limit resets the count.",
+          "source": "apps/api/src/auth/limits.ts PASSWORD_LOCKOUT; instance.ts before/after hooks on /sign-in/email (97ea65bc); TECH-032"
+        },
+        {
+          "claim": "Forgotten password",
+          "before": "Follow the email's link within one hour and set a new password.",
+          "after": "Select Set password in the email within one hour. The new password signs out every session on every device. Three setup requests per address in 15 minutes, then Too many password setup requests. Try again later.",
+          "source": "instance.ts revokeSessionsOnPasswordReset: true; authentication-policy-routes.ts POST /auth/password-setup budget; TECH-032"
+        },
+        {
+          "claim": "Sign-in link expired page controls (walkthrough finding)",
+          "before": "Enter your email there to get a new link, or select Back to sign-in.",
+          "after": "While sign-in links are on and OpenLaw can send email, the page shows Email and Send link. Otherwise it shows only Back to sign-in.",
+          "source": "apps/web/src/routes/link-expired.tsx (MagicLinkRequest when policy magicLink and emailConfigured, else Back to sign-in card); apps/web/src/components/magic-link-request.tsx"
+        }
+      ],
+      "confirmed": [
+        "Sign-in page shows the organization name and saved logo above the form (auth-layout.tsx, unchanged in behavior by 2c028604).",
+        "Set-password labels New password, Confirm password, Set password, Password set, Sign in, and At least 8 characters. (set-password.tsx).",
+        "Continue with single sign-on, Single sign-on is not configured yet. Use administrator sign-in., Administrator sign-in, and Email me a sign-in link are offered as before (login.tsx).",
+        "Magic links expire in 5 minutes and work once (instance.ts magicLink expiresIn 300; email copy).",
+        "Password setup email link expires in one hour; Check your email copy does not reveal eligibility (login.tsx auth.passwordSetup.sent).",
+        "Enrollment dialog labels Turn on two-factor, Password, Continue, Code, Confirm, backup codes shown once, Done; Re-enroll disables first; Turn off two-factor needs the password; Required by your organization (settings-profile.tsx).",
+        "Required two-factor page text Your organization requires two-factor authentication. and a code after every sign-in method (two-factor-enroll.tsx; instance.ts two-factor policy guard).",
+        "Challenge labels Two-factor authentication, Code, Verify, Use a backup code, Backup code, Sign out (two-factor.tsx).",
+        "Sign out in the name menu and Sign out other devices in Profile Sessions (user-menu.tsx, settings-profile.tsx revokeOtherSessions).",
+        "M41 login changes (OAuth return, Business Portal sign-in link) apply only when an OAuth Client sign-in is in progress; ordinary staff sign-in lands on / as before (login.tsx)."
+      ],
+      "limitations": [
+        "The password lockout and both email budgets are database counters. They apply even when the lab sets AUTH_RATE_LIMIT=off, because that flag turns off only better-auth's own limiter. A walkthrough can observe them, but it should use a throwaway address: the lock lasts 15 minutes from the first wrong password.",
+        "The per-client-address budget (30 requests in 15 minutes across all addresses) is not described in the guide. It matters only for many people behind one address.",
+        "This sign-in link could not be used. needs an archived account or sign-in links turned off for the role, which is an organization or user change on the shared lab.",
+        "The registry's expired activation check is most practical as a used link: the invitation link lives one hour.",
+        "Session revocation after a password reset needs a second browser context that holds a session before the reset.",
+        "The organization name in the header is hidden below the md breakpoint; the walkthrough should use a desktop-width window.",
+        "The OAuth Client sign-in return (M41) is left to the Connect guides."
+      ]
+    },
+    {
+      "articleId": "find-your-work",
+      "scenario": ["V-C03"],
+      "contentSha256Before": "8edac6aa2252dc6105a8dd59fef0cd367e78487c7286f3e08844decd7ada22e1",
+      "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/home.tsx",
+        "apps/web/src/components/home/section-card.tsx",
+        "apps/web/src/components/home/inbox-card.tsx",
+        "apps/web/src/components/home/obligations-card.tsx",
+        "apps/web/src/components/home/welcome-card.tsx",
+        "apps/api/src/modules/home/routes.ts",
+        "apps/api/src/modules/home/sections/inbox.ts",
+        "apps/api/src/modules/home/sections/obligations.ts",
+        "apps/api/src/modules/home/sections/tasks.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/modules/requests/request-detail.ts (POST /requests/:number/read)",
+        "apps/api/src/modules/requests/inbox.ts",
+        "apps/web/src/routes/inbox.tsx",
+        "apps/web/src/components/shell/search-input.tsx",
+        "apps/web/src/components/search/empty-search-entries.tsx",
+        "apps/web/src/lib/recent-searches.ts",
+        "apps/web/src/routes/home-tasks.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/components/shell/keyboard-shortcuts.tsx",
+        "apps/web/src/routes/not-found.tsx",
+        "apps/web/src/routes/help.tsx",
+        "docs/user-guides/search-and-views.md"
+      ],
+      "corrections": [
+        {
+          "claim": "Section order",
+          "before": "Table in API order: Approvals, Tasks, Dates, Entity obligations, Inbox, contracts, matters.",
+          "after": "Inbox and Entity obligations first, then Approvals, Tasks, Dates, Your contracts, Your matters; the guide states the order.",
+          "source": "apps/web/src/routes/home.tsx sort (inbox -2, obligations -1)"
+        },
+        {
+          "claim": "Inbox row",
+          "before": "Requests awaiting disposition.",
+          "after": "Requests with the status New or Read; View all counts both. A New Request becomes Read when an Administrator or Legal Team Member opens it.",
+          "source": "home/sections/inbox.ts inArray(status, new, read) (cdcff1e1); request-detail.ts markRequestRead; inbox.tsx default status new,read"
+        },
+        {
+          "claim": "Entity obligations row",
+          "before": "Due Obligations within your permitted Entity access.",
+          "after": "Open Obligations assigned to you on reachable Entities, overdue first. Administrators also see Unassigned ones and ones whose assignee cannot reach the Entity; an Administrator assignee now needs a Grant on a Confidential Entity, and the viewing Administrator needs one too.",
+          "source": "home/sections/obligations.ts (c6e64518); lib/entity-access.ts entityReachScope"
+        },
+        {
+          "claim": "Header search focus",
+          "before": "Press / outside a text field to focus record search.",
+          "after": "The empty box opens Saved and Recent groups and Advanced search… when the person has saved or recent searches; selecting an entry runs it. Escape also closes the search list.",
+          "source": "shell/search-input.tsx historyOpen (748d6814, #1145)"
+        }
+      ],
+      "confirmed": [
+        "Home and Your Tasks are for Administrators and Legal Team Members; zero-total sections are omitted; Welcome to OpenLaw when none match (home.tsx, welcome-card.tsx).",
+        "Section titles Approvals waiting on you, Tasks assigned to you, Dates approaching, Entity obligations, Inbox, Your contracts, Your matters (messages/en-US.json).",
+        "View all {count} header link on each card; Home cards show up to four rows (section-card.tsx, HOME_SECTION_LIMIT 4).",
+        "Your Tasks: My Tasks nav label, Load more Tasks, No open Tasks assigned to you., Show completed and Hide completed, Undo, Completed: and Reopened: notes (home-tasks.tsx, completed-toggle.tsx; unchanged since 3fa407e3).",
+        "readAssignedTasks gained MCP parameters (assigneeId, dueWithinDays, overdue) with defaults that keep Home unchanged (home/sections/tasks.ts).",
+        "Task due dates do not feed Dates approaching; View all on Dates approaching opens Your dates (dates-calendar-dialog.tsx).",
+        "? opens Keyboard shortcuts; / focuses the header search; typing in a field is not intercepted (keyboard.ts, search-input.tsx registerSearchTarget).",
+        "Contract not found and Matter not found pages with Back to Contracts; only the Portal sign-in address changed in not-found.tsx."
+      ],
+      "limitations": [
+        "The Administrator obligation fallback needs an Obligation on a Confidential Entity assigned to an Administrator without a Grant, plus a viewing Administrator with a Grant. Setting Grants changes shared-lab data.",
+        "Recent searches live in browser storage per account, and sign-out clears them. A fresh browser context has none, so the empty-box list opens only after a search or with a saved search.",
+        "Read status needs a Request that an Administrator or Legal Team Member has opened; opening one for the check changes that Request from New to Read."
+      ]
+    },
+    {
+      "articleId": "personal-settings",
+      "scenario": ["V-C05"],
+      "contentSha256Before": "b759da8131abbac103c126591495822af3c04f42bb6b3d13d4c07a41876b4803",
+      "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-profile.tsx",
+        "apps/web/src/lib/avatar.ts",
+        "apps/web/src/components/status-note.tsx",
+        "apps/web/src/components/ui/label.tsx",
+        "apps/web/src/components/ui/field-help.tsx",
+        "apps/web/src/routes/settings-appearance.tsx",
+        "apps/web/src/routes/settings-app-view.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/timezone-picker.tsx",
+        "apps/api/src/auth/handler.ts (1 MB avatar body allowance)",
+        "docs/user-guides/connect-headless-client.md"
+      ],
+      "corrections": [
+        {
+          "claim": "Personal group contents",
+          "before": "(absent; the guide named only Profile and Appearance)",
+          "after": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal; API keys links to Connect a headless Client.",
+          "source": "apps/web/src/routes/settings.tsx PERSONAL_GROUP (api-keys added by 0c81fd59, #1120) and canViewPortal entry"
+        },
+        {
+          "claim": "Full name save",
+          "before": "leave the field to save it",
+          "after": "press Enter or leave the field",
+          "source": "settings-profile.tsx onBlur and onKeyDown commitName"
+        },
+        {
+          "claim": "Saved result",
+          "before": "Wait for the saved result",
+          "after": "Wait for Saved, which shows briefly",
+          "source": "components/status-note.tsx SavedNote fades"
+        },
+        {
+          "claim": "Photo limit",
+          "before": "choose a JPG or PNG no larger than 1 MB",
+          "after": "JPG or PNG up to 10 MB; hint JPG or PNG, up to 10 MB. Resized automatically.; the browser scales it down before saving; Choose a photo smaller than 10 MB. and Choose a JPG or PNG photo.",
+          "source": "settings-profile.tsx uploadAvatar; lib/avatar.ts AVATAR_UPLOAD_BYTE_LIMIT and prepareAvatar (ca6471ad)"
+        },
+        {
+          "claim": "Role hint",
+          "before": "(absent)",
+          "after": "The More information icon beside Role says Roles are managed in Organization → Users.",
+          "source": "settings-profile.tsx Label help (b310f739, #1040); field-help.tsx aria-label More information"
+        }
+      ],
+      "confirmed": [
+        "Settings opens from the name menu; Settings redirects a Business User to / and on to the Portal (settings.tsx settingsLoader).",
+        "Timezone picker with Use browser timezone; Email read-only (settings-profile.tsx, timezone-picker.tsx).",
+        "Appearance offers Light, Warm, Dark and saves per user (settings-appearance.tsx).",
+        "View Business Portal pane at /settings/app-view for Administrators and Legal Team Members only; View as business user; Viewing as business user banner; Return to legal view (settings.tsx canViewPortal, settings-app-view.tsx, portal-shell.tsx).",
+        "Change password dialog: Current password, New password, Save, Saving signs you out on your other devices.; error names the 8-character rule (settings-profile.tsx changePassword revokeOtherSessions true).",
+        "Password & two-factor appears only when the account has a password; Sessions card Sign out other devices ends every other session."
+      ],
+      "limitations": [
+        "The file picker accepts only JPG and PNG, so Choose a JPG or PNG photo. shows only when the picker's file-type filter is bypassed.",
+        "The browser scales every photo to at most 512 pixels on its long edge, and smaller still until the stored image fits 1 MB. The guide does not give these numbers.",
+        "The API keys pane content belongs to Connect a headless Client and Configure MCP; this guide only points to it.",
+        "Profile still has no photo removal control."
+      ]
+    },
+    {
+      "articleId": "portal-knowledge",
+      "scenario": ["V-C11"],
+      "contentSha256Before": "f44331f28896c6fbdebed9d636bb937d06330e9a52e850bb0b755f987aacb559",
+      "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "sources": [
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-KNOWLEDGE.md (KNW-004 and its 2026-09-18 addendum)",
+        "apps/api/src/modules/portal/routes.ts (getPortalKnowledge, download route, intake links)",
+        "apps/api/src/modules/knowledge/service.ts (portalKnowledgeScope)",
+        "apps/api/src/lib/contract-access.ts (documentAudienceScope)",
+        "apps/api/src/modules/portal/knowledge.test.ts",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/documents/documents-card.tsx (Mark confidential, canFlag)"
+      ],
+      "corrections": [
+        {
+          "claim": "Documents list, step 4",
+          "before": "If Legal chose a primary Document, it appears first.",
+          "after": "Adds: a Document Legal marked Confidential does not appear, even when it is the primary Document.",
+          "source": "portal/routes.ts getPortalKnowledge documentAudienceScope (7f1573c5); KNW-004 2026-09-18 addendum"
+        },
+        {
+          "claim": "Unavailable files",
+          "before": "The same access check applies to the item's files, including a download address saved earlier.",
+          "after": "Adds: a Confidential Document stays unavailable on an Everyone item, and its download address does not work.",
+          "source": "portal/routes.ts download route documentAudienceScope, 404 body identical to a missing Document (knowledge.test.ts)"
+        }
+      ],
+      "confirmed": [
+        "Only published, Everyone, non-archived Knowledge Items open; others redirect to /portal (knowledge/service.ts portalKnowledgeScope; portal-knowledge.tsx loader).",
+        "Page labels From Legal, Documents, Download, Guidance, Your requests; primary Document sorted first; current Version only (portal-knowledge.tsx, routes.ts).",
+        "Before you submit appears on the Portal home and on request forms; per-form links differ from home links; unreachable Knowledge links are hidden (portal.tsx, portal-request-form.tsx, routes.ts reachableLink).",
+        "External links open in a new tab with the hostname beneath the label (deflection-panel.tsx).",
+        "Signed-out visitors go to /portal/login (portal-knowledge.tsx loader).",
+        "The Portal nav now has Requests, Approvals, Contracts, Matters and Auto-Docs, and the header shows organization branding; the guide makes no claim about either."
+      ],
+      "limitations": [
+        "The Confidential Document fixture needs Mark confidential on a Knowledge Item Document. Only an Administrator reaches a flagged Knowledge Document afterwards (KNW-004 addendum), so a Legal Team Member who flags one loses sight of it too. Flag it as an Administrator.",
+        "If every Document on an item is Confidential, the page shows no Documents section, only the title and any Guidance. The guide does not state this case."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/components/portal/portal-nav.tsx: the Matters destination has icon ListChecks plus a stray BriefcaseBusiness shorthand property (from 588dc3f0), so Portal Matters shows the same icon as Approvals. DES-078 says the Portal bar uses the full app's icons, and the staff nav draws Matters with BriefcaseBusiness (shell/destinations.ts). Labels are unaffected."
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/evidence/staff-sign-in.json, find-your-work.json, personal-settings.json and portal-knowledge.json record the old content hashes. They need new evidence after the independent DOC-030 walkthrough of these bytes.",
+    "docs/documentation/scenarios.json: V-C01, V-C03, V-C05 and V-C11 acceptance points at that older evidence and needs updating after the walkthrough records its result."
+  ],
+  "statusChange": null
+}

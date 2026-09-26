@@ -1,0 +1,702 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-030",
+  "group": "documents",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents)",
+  "reviewerKind": "agent",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "lab": {
+    "name": "work2",
+    "project": "openlaw-docs-80ceef9e-work2",
+    "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+    "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-25T09:59:53.804Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-25T10:00:16.340Z"
+    }
+  },
+  "appUrl": "http://127.0.0.1:43300",
+  "mailUrl": "http://127.0.0.1:48425",
+  "browser": "Playwright 1.63.0 Chromium, headless, one browser context per identity",
+  "articleHashes": {
+    "document-versions": "52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444"
+  },
+  "fixtures": [
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v1.docx",
+      "sha256": "7ef62e21080b131fe52983809b9c4120003179cf4bad2616abe23ef5b559f24d"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v2.docx",
+      "sha256": "a48db865f959bb77e4dd8c954cec865721c3e80422c5dd0211cd34fe7757181a"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-a.txt",
+      "sha256": "c0dbc1f2090728af690515624fde1ce37d172b484369ff01bca40a5a4a038749"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-b.txt",
+      "sha256": "a3686c10a2d63e59d8e601e9a58c7eea07eddb39b88f1a3ed8b6df5d59b9c916"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-services-text.pdf",
+      "sha256": "dac0eda00e4fb895be58fed622322e660f7a47c8a73f4ab9e8a2a6886d7f09b4"
+    }
+  ],
+  "roles": ["administrator", "legal_team_member"],
+  "stamp": "09251116",
+  "addedDocumentTypes": [
+    {
+      "module": "matter",
+      "name": "DOC-030 documents Matter type 09251116",
+      "id": "01a0d847-c4ee-7a6e-b21f-1222a4eef5a2",
+      "leftInPlace": false,
+      "archivedAfterRun": true
+    },
+    {
+      "module": "entity",
+      "name": "DOC-030 documents Entity type 09251116",
+      "id": "01a0d847-c5e7-73af-9b07-88e8a5acade8",
+      "leftInPlace": false,
+      "archivedAfterRun": true
+    }
+  ],
+  "startedAt": "2026-09-25T11:16:12.029Z",
+  "finishedAt": "2026-09-25T11:29:05.839Z",
+  "records": [
+    {
+      "role": "administrator",
+      "kind": "entity",
+      "name": "DOC-030 documents empty-list Entity 09251116 Ltd",
+      "ref": "01a0d847-bf06-7d0f-bdb9-a2db2fa2ff4d"
+    },
+    {
+      "role": "administrator",
+      "kind": "document_type:matter",
+      "name": "DOC-030 documents Matter type 09251116",
+      "ref": "01a0d847-c4ee-7a6e-b21f-1222a4eef5a2"
+    },
+    {
+      "role": "administrator",
+      "kind": "document_type:entity",
+      "name": "DOC-030 documents Entity type 09251116",
+      "ref": "01a0d847-c5e7-73af-9b07-88e8a5acade8"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-030 documents Admin versions Contract 09251116",
+      "ref": "C-331"
+    },
+    {
+      "role": "administrator",
+      "kind": "matter",
+      "name": "DOC-030 documents Admin versions Matter 09251116",
+      "ref": "M-114"
+    },
+    {
+      "role": "administrator",
+      "kind": "entity",
+      "name": "DOC-030 documents Admin versions Entity 09251116 Ltd",
+      "ref": "01a0d847-f540-7e0d-9ac7-10bc58a2d988"
+    },
+    {
+      "role": "administrator",
+      "kind": "knowledge_item",
+      "name": "DOC-030 documents Admin Knowledge 09251116",
+      "ref": "01a0d847-f96c-748c-9cc1-5defc258837e"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-030 documents Admin archived owner 09251116",
+      "ref": "C-332"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-030 documents Legal versions Contract 09251116",
+      "ref": "C-360"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "matter",
+      "name": "DOC-030 documents Legal versions Matter 09251116",
+      "ref": "M-126"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "entity",
+      "name": "DOC-030 documents Legal versions Entity 09251116 Ltd",
+      "ref": "01a0d853-51d0-77ca-9573-fab06a61a93d"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "knowledge_item",
+      "name": "DOC-030 documents Legal Knowledge 09251116",
+      "ref": "01a0d853-57fa-7f73-ae45-ba8609f4748b"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-030 documents Legal archived owner 09251116",
+      "ref": "C-361"
+    }
+  ],
+  "productBugs": [
+    {
+      "id": "knowledge-type-picker-refuses",
+      "confirmsAuthorSuspicion": true,
+      "summary": "On a Knowledge Item the Documents Type column renders an editable select (No type plus the item's Knowledge type), but every choice is refused. DOC-015's Knowledge addendum says the label is derived from the item, so the cell should be read-only.",
+      "reproduction": "As administrator, create a Knowledge Item, upload a file in its Documents section, then choose No type in \"Type of version 1 of <title>\". Observed: the section shows \"That version already has this type.\" and the Version keeps \"Article\". Choosing the Knowledge type itself is a no-op in the browser; the same id sent to PATCH /documents/:id/versions/:versionId answers 400 \"Pick a document type from this record's list.\".",
+      "source": "apps/web/src/components/documents/documents-card.tsx TypeCell (options include the derived Knowledge type, so readOnly is false)"
+    }
+  ],
+  "limitations": [],
+  "steps": [
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/entities",
+      "action": "Before you start: open the profile menu, select Settings, then Documents; read the three type lists",
+      "expected": "Documents shows Matters, Contracts and Entities tabs; the Contract list starts with the six fixed types",
+      "actual": "Profile menu (Daniel Okafor) -> Settings -> Documents opened /settings/documents/matters with tabs Matters, Contracts, Entities. The Contracts tab listed Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment (6 fixed-row lock labels) plus types other agents added. The Entities tab held 0 active types at this moment (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:14.057Z",
+      "at": "2026-09-25T11:16:15.716Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0d847-bf06-7d0f-bdb9-a2db2fa2ff4d/documents",
+      "action": "Before you start and the Type column: with the Entity list empty, an Entity upload has no Type and the column shows a dash with no choice",
+      "expected": "No Type control in Upload document; the new Version's Type cell reads a dash and offers no select",
+      "actual": "Entity \"DOC-030 documents empty-list Entity 09251116 Ltd\": Upload document showed Choose files and Note but no Type (count 0). After Upload the row \"doc029-bulk-a.txt\" v1 had cells [\"doc029-bulk-a.txt\",\"—\",\"v1\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]; the Type cell read \"—\" with no select (0 \"Type of version 1\" controls).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:15.767Z",
+      "at": "2026-09-25T11:16:16.985Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/matters",
+      "action": "Setup as Administrator in the browser: Settings, Documents, Matters tab, Add type \"DOC-030 documents Matter type 09251116\"",
+      "expected": "The new type appears in the list",
+      "actual": "Add type, New type name \"DOC-030 documents Matter type 09251116\", Save added the row on the Matters tab (read-back active in the matter list). The run archives it after the last role (see addedDocumentTypes).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:16.986Z",
+      "at": "2026-09-25T11:16:17.298Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/entities",
+      "action": "Setup as Administrator in the browser: Settings, Documents, Entities tab, Add type \"DOC-030 documents Entity type 09251116\"",
+      "expected": "The new type appears in the list",
+      "actual": "Add type, New type name \"DOC-030 documents Entity type 09251116\", Save added the row on the Entities tab (read-back active in the entity list). The run archives it after the last role (see addedDocumentTypes).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:17.299Z",
+      "at": "2026-09-25T11:16:17.552Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/settings/profile",
+      "action": "Before you start: the Documents type lists are Administrator only",
+      "expected": "Settings shows no Documents section to a Legal Team Member; the address sends them to their profile",
+      "actual": "Nadia's Settings rail listed Profile, Appearance, Notifications, API keys, View Business Portal with no Documents. Opening /settings/documents/matters landed on /settings/profile.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:18.378Z",
+      "at": "2026-09-25T11:16:19.276Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Upload a new Document steps 1-4 on a Contract: Documents tab, Upload, Upload document dialog, Choose files (one file), Type (starts on No type), Note, Upload",
+      "expected": "One Document named from its filename at v1 with the chosen type; Type offers No type plus the Contract list and no Generated redline; the first upload takes Primary",
+      "actual": "Upload document had Choose files, Type and Note. Type started on \"No type\" and offered 8 options: No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012; no Generated redline. After Upload one row \"doc029-draft-v1.docx\" (from the filename) showed v1, the Primary mark and Type \"Draft · ours\"; read-back isPrimary true, note \"DOC-030 round one note\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:20.166Z",
+      "at": "2026-09-25T11:16:21.576Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Upload step 2 variant: choosing several files opens the bulk import dialog instead",
+      "expected": "An Import dialog replaces the one-file composer; Cancel creates nothing",
+      "actual": "Two chosen files opened the \"Import 2 files\" dialog instead of the composer. Cancel closed it; the Contract still held one Document.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:21.576Z",
+      "at": "2026-09-25T11:16:21.759Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Upload step 4: Actions, Edit details, Save changes the name and description",
+      "expected": "Name and description change; the Version chain is untouched",
+      "actual": "Actions -> Edit details -> Save stored the name \"DOC-030 Admin supply draft 09251116\" and a description. Read-back: still one Version, v1, Type Draft · ours.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:21.760Z",
+      "at": "2026-09-25T11:16:22.074Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Add another Version steps 1-3: Actions, Add version, Choose file, Type (starts on No type), Note, Upload; the arrow beside the name shows earlier Versions; read v1",
+      "expected": "Version number rises to v2 without copying v1's type; the arrow sits after the name; v1 opens in the reader and downloads its original bytes",
+      "actual": "Add version showed Choose file, Type (started on \"No type\") and Note. After Upload the row read v2 and v2's Type read \"No type\" (v1 was Draft · ours; not copied). The arrow \"Show the 1 earlier version of DOC-030 Admin supply draft 09251116\" sits to the right of the name (x 339 > 97). It listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-030 Admin supply draft 09251116, version 1\" (v1 chip visible); Download returned the original v1 bytes (SHA-256 match). v1 kept its note, type, filename and uploader.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:22.075Z",
+      "at": "2026-09-25T11:16:22.638Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "History: uploading the same paper as a new Document creates a separate chain",
+      "expected": "A second Document at v1; the first chain is not merged or changed",
+      "actual": "The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1 (not Primary: true); \"DOC-030 Admin supply draft 09251116\" still had two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:22.638Z",
+      "at": "2026-09-25T11:16:22.901Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Type column: correct v2's type from the column, then back to No type",
+      "expected": "Only the type changes; bytes, note, author, number and Executed pin stay",
+      "actual": "\"Type of version 2 of DOC-030 Admin supply draft 09251116\" offered No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012 (no Generated redline). Choosing Redline · theirs saved (read-back type Redline · theirs, kind redline_theirs); id, number, note, filename, uploader and pin were unchanged and the download answered 200. Choosing No type cleared it (read-back null). Still two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:22.902Z",
+      "at": "2026-09-25T11:16:23.672Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Executed pin: Mark as executed copy on v1; choosing the Executed type on v2 does not set the pin; correcting v1's type does not move it; a later upload does not move it; Unmark clears it",
+      "expected": "The pin stays on v1 throughout until Unmark",
+      "actual": "Actions for version 1 -> Mark as executed copy set the pin on v1 (earlier row read \"doc029-draft-v1.docx Note: DOC-030 round one note No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-030 access Admin document type 09251012 v1 Executed Sep 25 Uploaded by Daniel Okafor DO\"). Choosing Executed in v2's Type column left the pin on v1. Correcting v1's type to Draft · theirs left it on v1. A v3 upload left it on v1. Unmark as executed copy on v1 cleared it (read-back no pinned Version).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:23.673Z",
+      "at": "2026-09-25T11:16:24.941Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Primary Document: the Primary mark and Make primary move the designation",
+      "expected": "Primary moves to the other Document and back",
+      "actual": "\"DOC-030 Admin supply draft 09251116\" carried the Primary mark and its Actions had no Make primary (Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete). Make primary on \"doc029-draft-v1.docx\" moved the mark there; Make primary on \"DOC-030 Admin supply draft 09251116\" moved it back.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:24.942Z",
+      "at": "2026-09-25T11:16:25.989Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Generated redline: a Version exported from a Word Comparison shows Generated redline in the Type column, read-only; a correction attempt is refused",
+      "expected": "No Type select on the generated Version; the API answers 409 and the Version keeps its label",
+      "actual": "Fixture: Word Comparison v1 -> v2 (mode word) exported as v4 (kind generated_redline). The Documents row for \"DOC-030 Admin supply draft 09251116\" now reads [\"DOC-030 Admin supply draft 09251116 Primary Compares v1 and v2 Description: DOC-030 fictional description\",\"Generated redline\",\"v4\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]: Type \"Generated redline\" as a plain label with no \"Type of version 4\" select. A direct correction attempt answered 409 (\"A generated redline's kind records how it was made.\"); the Version read back unchanged (type null, kind generated_redline).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:25.990Z",
+      "at": "2026-09-25T11:16:28.270Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/114/documents",
+      "action": "Matter upload with a type list: Upload document shows Type with the Matter list; the Type column corrects a Matter Version; no Primary mark or Executed pin",
+      "expected": "Type starts on No type and lists the Administrator-added Matter type; the correction saves; the menu has no Make primary or Mark as executed copy",
+      "actual": "Matter M-114: Upload document showed Type starting on \"No type\" with 2 options (No type, DOC-030 documents Matter type 09251116), none of the Contract types. Uploaded with \"DOC-030 documents Matter type 09251116\"; the column headers read Name, Type, Version, Modified, Uploaded by, Actions and v1's Type read \"DOC-030 documents Matter type 09251116\". Choosing No type in the column saved (read-back null). No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:28.270Z",
+      "at": "2026-09-25T11:16:29.610Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0d847-f540-7e0d-9ac7-10bc58a2d988/documents",
+      "action": "Entity upload with a type list: Upload document shows Type with the Entity list; no Primary mark or Executed pin",
+      "expected": "Type starts on No type and lists the Administrator-added Entity type; the row menu has no Make primary or Mark as executed copy",
+      "actual": "Entity \"DOC-030 documents Admin versions Entity 09251116 Ltd\": Upload document showed Type starting on \"No type\" with No type, DOC-030 documents Entity type 09251116. The upload read back with \"DOC-030 documents Entity type 09251116\" and the column showed it. No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive, Delete.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:29.611Z",
+      "at": "2026-09-25T11:16:30.655Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/01a0d847-f96c-748c-9cc1-5defc258837e",
+      "action": "Knowledge Item: Upload in its Documents section has no Type; the first Document becomes primary paper; the Type column shows the Knowledge type, offers a choice, and OpenLaw refuses the change",
+      "expected": "No Type in Upload document; isPrimary on the first upload; a change in the Type column shows a refusal and the label stays",
+      "actual": "Knowledge Item \"DOC-030 documents Admin Knowledge 09251116\" (Knowledge type Article): Upload document had no Type (count 0). The first upload read back isPrimary true. The Type column rendered a select \"Type of version 1 of doc029-services-text.pdf\" showing \"Article\" with options [\"No type\",\"Article\"]. Choosing No type showed \"That version already has this type.\" and the Version kept \"Article\" (read-back type Article, unchanged). Sending the Knowledge type id directly answered 400 (\"Pick a document type from this record's list.\"). Matches the guide (\"offers a choice, but OpenLaw refuses the change\"); recorded as a product bug.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:30.655Z",
+      "at": "2026-09-25T11:16:32.050Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/332/documents",
+      "action": "Before you start and the Type column: an archived Document or owning record freezes the Type column; an archived record hides Upload and refuses uploads until restored",
+      "expected": "No Type select while archived; Upload hidden; a direct upload is refused with a restore message; after restore the controls return",
+      "actual": "C-332: live, v1's Type was a select. With the Document archived (Show archived on) its Type cell was a plain label ([\"doc029-bulk-a.txt Primary Archived\",\"Draft · ours\",\"v1\",\"Sep 25\",\"Uploaded by Daniel Okafor DO\",\"\"]), no select. With the Contract archived the section had no Upload button and no Type select; a direct upload answered 409 (\"This contract is archived. Restore it before uploading.\") and a direct type correction answered 409. After restore, Upload and the Type select returned; the chain still had one Version typed Draft · ours.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:32.050Z",
+      "at": "2026-09-25T11:16:35.529Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "Recover from a refusal: a failed upload shows its message and does not alter the chain",
+      "expected": "The Add version dialog shows the upload message; the Version count stays the same",
+      "actual": "With a browser-network fixture answering 413 for the Version upload, Add version stayed open with \"DOC-030 fixture: this file is larger than the upload limit.\". The chain still had 4 Versions with identical ids, numbers, types, notes and pin.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:35.529Z",
+      "at": "2026-09-25T11:16:36.675Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "File a Contract conversation attachment steps 1-4: File to Contract, File attachment, Destination New Document, Document name, Type, Confidential switch preselected for Legal Only, File",
+      "expected": "A Legal Only attachment files as a new Confidential Document with the chosen type; the comment reads Filed to",
+      "actual": "The attachment offered File to Contract. File attachment opened with Destination \"New Document\" (options New Document / New Version on an existing Document), the switch \"Confidential — restrict to the contract team\" already on, and Type starting on \"No type\" with the Contract list. File created \"DOC-030 Admin filed paper 09251116\" (Confidential, one Version, Type Draft · theirs) and the comment read \"Filed to DOC-030 Admin filed paper 09251116, version 1\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:36.748Z",
+      "at": "2026-09-25T11:16:37.973Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/331/documents",
+      "action": "File a Contract conversation attachment from the preview: File to Contract, New Version on an existing Document, Document, Note, File",
+      "expected": "The preview offers the same action; the Version is appended with its note",
+      "actual": "Selecting the attachment name opened its preview with File to Contract. New Version on an existing Document, Document \"DOC-030 Admin supply draft 09251116\" and a Note appended v5 with that note; the comment read \"Filed to DOC-030 Admin supply draft 09251116, version 5\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:37.974Z",
+      "at": "2026-09-25T11:16:38.509Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/114/documents",
+      "action": "File a Matter conversation attachment: File to Matter, Type from the Matter list, switch names the matter team",
+      "expected": "File attachment shows Type with the Matter list and Confidential — restrict to the matter team; filing creates a Matter Document",
+      "actual": "The Matter attachment offered File to Matter. File attachment showed Type starting on \"No type\" with No type, DOC-030 documents Matter type 09251116, and the switch \"Confidential — restrict to the matter team\". File created \"DOC-030 Admin matter filed 09251116\" typed \"DOC-030 documents Matter type 09251116\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:38.510Z",
+      "at": "2026-09-25T11:16:39.851Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/114/documents",
+      "action": "Insufficient access: a Business User on the Contract team sees no Type correction control in the Portal and cannot correct a type",
+      "expected": "No Type select in the Portal Documents section; a direct correction answers 403; the Version keeps its type",
+      "actual": "Amara Nwosu (Business User, on the C-331 team) opened /portal/contracts/331: the Documents section listed \"DOC-030 Admin supply draft 09251116\" with no select and no \"Type of version\" control. A direct correction of v1 answered 403; v1 kept \"Draft · theirs\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:16:39.852Z",
+      "at": "2026-09-25T11:28:43.438Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Upload a new Document steps 1-4 on a Contract: Documents tab, Upload, Upload document dialog, Choose files (one file), Type (starts on No type), Note, Upload",
+      "expected": "One Document named from its filename at v1 with the chosen type; Type offers No type plus the Contract list and no Generated redline; the first upload takes Primary",
+      "actual": "Upload document had Choose files, Type and Note. Type started on \"No type\" and offered 8 options: No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012; no Generated redline. After Upload one row \"doc029-draft-v1.docx\" (from the filename) showed v1, the Primary mark and Type \"Draft · ours\"; read-back isPrimary true, note \"DOC-030 round one note\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:44.249Z",
+      "at": "2026-09-25T11:28:45.407Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Upload step 2 variant: choosing several files opens the bulk import dialog instead",
+      "expected": "An Import dialog replaces the one-file composer; Cancel creates nothing",
+      "actual": "Two chosen files opened the \"Import 2 files\" dialog instead of the composer. Cancel closed it; the Contract still held one Document.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:45.408Z",
+      "at": "2026-09-25T11:28:45.746Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Upload step 4: Actions, Edit details, Save changes the name and description",
+      "expected": "Name and description change; the Version chain is untouched",
+      "actual": "Actions -> Edit details -> Save stored the name \"DOC-030 Legal supply draft 09251116\" and a description. Read-back: still one Version, v1, Type Draft · ours.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:45.747Z",
+      "at": "2026-09-25T11:28:45.966Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Add another Version steps 1-3: Actions, Add version, Choose file, Type (starts on No type), Note, Upload; the arrow beside the name shows earlier Versions; read v1",
+      "expected": "Version number rises to v2 without copying v1's type; the arrow sits after the name; v1 opens in the reader and downloads its original bytes",
+      "actual": "Add version showed Choose file, Type (started on \"No type\") and Note. After Upload the row read v2 and v2's Type read \"No type\" (v1 was Draft · ours; not copied). The arrow \"Show the 1 earlier version of DOC-030 Legal supply draft 09251116\" sits to the right of the name (x 332 > 97). It listed doc029-draft-v1.docx; selecting it opened the reader \"DOC-030 Legal supply draft 09251116, version 1\" (v1 chip visible); Download returned the original v1 bytes (SHA-256 match). v1 kept its note, type, filename and uploader.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:45.967Z",
+      "at": "2026-09-25T11:28:46.611Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "History: uploading the same paper as a new Document creates a separate chain",
+      "expected": "A second Document at v1; the first chain is not merged or changed",
+      "actual": "The same file uploaded again made a second Document \"doc029-draft-v1.docx\" at v1 (not Primary: true); \"DOC-030 Legal supply draft 09251116\" still had two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:46.612Z",
+      "at": "2026-09-25T11:28:47.005Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Type column: correct v2's type from the column, then back to No type",
+      "expected": "Only the type changes; bytes, note, author, number and Executed pin stay",
+      "actual": "\"Type of version 2 of DOC-030 Legal supply draft 09251116\" offered No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, Amendment, DOC-030 access Admin document type 09251012 (no Generated redline). Choosing Redline · theirs saved (read-back type Redline · theirs, kind redline_theirs); id, number, note, filename, uploader and pin were unchanged and the download answered 200. Choosing No type cleared it (read-back null). Still two Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:47.005Z",
+      "at": "2026-09-25T11:28:47.884Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Executed pin: Mark as executed copy on v1; choosing the Executed type on v2 does not set the pin; correcting v1's type does not move it; a later upload does not move it; Unmark clears it",
+      "expected": "The pin stays on v1 throughout until Unmark",
+      "actual": "Actions for version 1 -> Mark as executed copy set the pin on v1 (earlier row read \"doc029-draft-v1.docx Note: DOC-030 round one note No type Draft · ours Draft · theirs Redline · theirs Redline · ours Executed Amendment DOC-030 access Admin document type 09251012 v1 Executed Sep 25 Uploaded by Nadia Haddad NH\"). Choosing Executed in v2's Type column left the pin on v1. Correcting v1's type to Draft · theirs left it on v1. A v3 upload left it on v1. Unmark as executed copy on v1 cleared it (read-back no pinned Version).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:47.885Z",
+      "at": "2026-09-25T11:28:49.309Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Primary Document: the Primary mark and Make primary move the designation",
+      "expected": "Primary moves to the other Document and back",
+      "actual": "\"DOC-030 Legal supply draft 09251116\" carried the Primary mark and its Actions had no Make primary (Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive). Make primary on \"doc029-draft-v1.docx\" moved the mark there; Make primary on \"DOC-030 Legal supply draft 09251116\" moved it back.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:49.310Z",
+      "at": "2026-09-25T11:28:50.251Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Generated redline: a Version exported from a Word Comparison shows Generated redline in the Type column, read-only; a correction attempt is refused",
+      "expected": "No Type select on the generated Version; the API answers 409 and the Version keeps its label",
+      "actual": "Fixture: Word Comparison v1 -> v2 (mode word) exported as v4 (kind generated_redline). The Documents row for \"DOC-030 Legal supply draft 09251116\" now reads [\"DOC-030 Legal supply draft 09251116 Primary Compares v1 and v2 Description: DOC-030 fictional description\",\"Generated redline\",\"v4\",\"Sep 25\",\"Uploaded by Nadia Haddad NH\",\"\"]: Type \"Generated redline\" as a plain label with no \"Type of version 4\" select. A direct correction attempt answered 409 (\"A generated redline's kind records how it was made.\"); the Version read back unchanged (type null, kind generated_redline).",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:50.252Z",
+      "at": "2026-09-25T11:28:52.784Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/matters/126/documents",
+      "action": "Matter upload with a type list: Upload document shows Type with the Matter list; the Type column corrects a Matter Version; no Primary mark or Executed pin",
+      "expected": "Type starts on No type and lists the Administrator-added Matter type; the correction saves; the menu has no Make primary or Mark as executed copy",
+      "actual": "Matter M-126: Upload document showed Type starting on \"No type\" with 5 options (No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents Matter type 09251116, DOC-030 documents-2 Matter type 09251124), none of the Contract types. Uploaded with \"DOC-030 documents Matter type 09251116\"; the column headers read Name, Type, Version, Modified, Uploaded by, Actions and v1's Type read \"DOC-030 documents Matter type 09251116\". Choosing No type in the column saved (read-back null). No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:52.785Z",
+      "at": "2026-09-25T11:28:54.198Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0d853-51d0-77ca-9573-fab06a61a93d/documents",
+      "action": "Entity upload with a type list: Upload document shows Type with the Entity list; no Primary mark or Executed pin",
+      "expected": "Type starts on No type and lists the Administrator-added Entity type; the row menu has no Make primary or Mark as executed copy",
+      "actual": "Entity \"DOC-030 documents Legal versions Entity 09251116 Ltd\": Upload document showed Type starting on \"No type\" with No type, DOC-030 documents Entity type 09251116. The upload read back with \"DOC-030 documents Entity type 09251116\" and the column showed it. No Primary mark; Actions offered Add version, Edit details, Move to folder, Mark confidential, Archive.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:54.199Z",
+      "at": "2026-09-25T11:28:55.755Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/knowledge/01a0d853-57fa-7f73-ae45-ba8609f4748b",
+      "action": "Knowledge Item: Upload in its Documents section has no Type; the first Document becomes primary paper; the Type column shows the Knowledge type, offers a choice, and OpenLaw refuses the change",
+      "expected": "No Type in Upload document; isPrimary on the first upload; a change in the Type column shows a refusal and the label stays",
+      "actual": "Knowledge Item \"DOC-030 documents Legal Knowledge 09251116\" (Knowledge type Precedent): Upload document had no Type (count 0). The first upload read back isPrimary true. The Type column rendered a select \"Type of version 1 of doc029-services-text.pdf\" showing \"Precedent\" with options [\"No type\",\"Precedent\"]. Choosing No type showed \"That version already has this type.\" and the Version kept \"Precedent\" (read-back type Precedent, unchanged). Sending the Knowledge type id directly answered 400 (\"Pick a document type from this record's list.\"). Matches the guide (\"offers a choice, but OpenLaw refuses the change\"); recorded as a product bug.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:55.755Z",
+      "at": "2026-09-25T11:28:57.102Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/361/documents",
+      "action": "Before you start and the Type column: an archived Document or owning record freezes the Type column; an archived record hides Upload and refuses uploads until restored",
+      "expected": "No Type select while archived; Upload hidden; a direct upload is refused with a restore message; after restore the controls return",
+      "actual": "C-361: live, v1's Type was a select. With the Document archived (Show archived on) its Type cell was a plain label ([\"doc029-bulk-a.txt Primary Archived\",\"Draft · ours\",\"v1\",\"Sep 25\",\"Uploaded by Nadia Haddad NH\",\"\"]), no select. With the Contract archived the section had no Upload button and no Type select; a direct upload answered 409 (\"This contract is archived. Restore it before uploading.\") and a direct type correction answered 409. After restore, Upload and the Type select returned; the chain still had one Version typed Draft · ours.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:28:57.102Z",
+      "at": "2026-09-25T11:29:00.980Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "Recover from a refusal: a failed upload shows its message and does not alter the chain",
+      "expected": "The Add version dialog shows the upload message; the Version count stays the same",
+      "actual": "With a browser-network fixture answering 413 for the Version upload, Add version stayed open with \"DOC-030 fixture: this file is larger than the upload limit.\". The chain still had 4 Versions with identical ids, numbers, types, notes and pin.",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:00.981Z",
+      "at": "2026-09-25T11:29:02.069Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "File a Contract conversation attachment steps 1-4: File to Contract, File attachment, Destination New Document, Document name, Type, Confidential switch preselected for Legal Only, File",
+      "expected": "A Legal Only attachment files as a new Confidential Document with the chosen type; the comment reads Filed to",
+      "actual": "The attachment offered File to Contract. File attachment opened with Destination \"New Document\" (options New Document / New Version on an existing Document), the switch \"Confidential — restrict to the contract team\" already on, and Type starting on \"No type\" with the Contract list. File created \"DOC-030 Legal filed paper 09251116\" (Confidential, one Version, Type Draft · theirs) and the comment read \"Filed to DOC-030 Legal filed paper 09251116, version 1\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:02.130Z",
+      "at": "2026-09-25T11:29:03.235Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/360/documents",
+      "action": "File a Contract conversation attachment from the preview: File to Contract, New Version on an existing Document, Document, Note, File",
+      "expected": "The preview offers the same action; the Version is appended with its note",
+      "actual": "Selecting the attachment name opened its preview with File to Contract. New Version on an existing Document, Document \"DOC-030 Legal supply draft 09251116\" and a Note appended v5 with that note; the comment read \"Filed to DOC-030 Legal supply draft 09251116, version 5\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:03.236Z",
+      "at": "2026-09-25T11:29:03.450Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/matters/126/documents",
+      "action": "File a Matter conversation attachment: File to Matter, Type from the Matter list, switch names the matter team",
+      "expected": "File attachment shows Type with the Matter list and Confidential — restrict to the matter team; filing creates a Matter Document",
+      "actual": "The Matter attachment offered File to Matter. File attachment showed Type starting on \"No type\" with No type, DOC-030 admin-config V-C38 Board resolution renamed 0925112134, DOC-030 admin-config V-C38 Board resolution renamed 0925112257, DOC-030 documents Matter type 09251116, DOC-030 documents-2 Matter type 09251124, and the switch \"Confidential — restrict to the matter team\". File created \"DOC-030 Legal matter filed 09251116\" typed \"DOC-030 documents Matter type 09251116\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:03.451Z",
+      "at": "2026-09-25T11:29:04.745Z"
+    },
+    {
+      "article": "document-versions",
+      "scenario": "V-C26",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/matters/126/documents",
+      "action": "Insufficient access: a Business User on the Contract team sees no Type correction control in the Portal and cannot correct a type",
+      "expected": "No Type select in the Portal Documents section; a direct correction answers 403; the Version keeps its type",
+      "actual": "Amara Nwosu (Business User, on the C-360 team) opened /portal/contracts/360: the Documents section listed \"DOC-030 Legal supply draft 09251116\" with no select and no \"Type of version\" control. A direct correction of v1 answered 403; v1 kept \"Draft · theirs\".",
+      "result": "pass",
+      "startedAt": "2026-09-25T11:29:04.746Z",
+      "at": "2026-09-25T11:29:05.427Z"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-030/documents/administrator-generated-redline-type.png",
+    "docs/documentation/batches/DOC-030/documents/administrator-knowledge-type-refused.png",
+    "docs/documentation/batches/DOC-030/documents/legal_team_member-generated-redline-type.png",
+    "docs/documentation/batches/DOC-030/documents/legal_team_member-knowledge-type-refused.png"
+  ]
+}

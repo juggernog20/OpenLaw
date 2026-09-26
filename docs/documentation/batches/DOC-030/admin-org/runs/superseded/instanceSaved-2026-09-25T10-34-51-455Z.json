@@ -1,0 +1,62 @@
+{
+  "section": "instanceSaved",
+  "reviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "auth2",
+  "labProject": "openlaw-docs-80ceef9e-auth2",
+  "appUrl": "http://127.0.0.1:43310",
+  "mailUrl": "http://127.0.0.1:48435",
+  "appImageId": "sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba",
+  "engineImageId": "sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "phase": "base, then baseurl-unset applied twice by the section",
+  "articleHashes": {
+    "organisation-and-users": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+    "authentication-and-email": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733"
+  },
+  "startedAt": "2026-09-25T10:34:51.456Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/instance",
+      "action": "The operator removes BASE_URL from the deployment and restarts; Application address becomes editable and the API falls back to its default",
+      "expected": "Field editable; active default http://localhost:3000; sign-in from the lab address refused",
+      "startedAt": "2026-09-25T10:34:52.551Z",
+      "finishedAt": "2026-09-25T10:35:16.108Z",
+      "actual": "phase baseurl-unset applied to openlaw-docs-80ceef9e-auth2 (2026-09-25T10:35:08Z). Instance address then read \"Instance address The address people use to reach OpenLaw, including from email links. An internal hostname accessible over your LAN or VPN works without public internet access. Configure DNS, HTTPS and your identity provider's callback address to match. Applic\" (field value \"http://localhost:3000\", read-only false). A new password sign-in from http://127.0.0.1:43310 got me 401 with \"Invalid origin\", because the active address no longer matched.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/instance",
+      "action": "An Administrator saves Application address; it waits for a restart of the API and worker",
+      "expected": "Save shows the restart notice; the pending notice; the callback still uses the old address",
+      "startedAt": "2026-09-25T10:35:16.108Z",
+      "finishedAt": "2026-09-25T10:35:16.957Z",
+      "actual": "Check failed: save answered \"This request did not come from this OpenLaw instance's own origin.\"",
+      "result": "fail"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "auth2",
+      "page": "http://127.0.0.1:43310/settings/authentication",
+      "action": "After the API and worker restart, the saved Application address is active: the SSO callback and new sign-ins use it",
+      "expected": "Saved in OpenLaw; active saved address; callback on it; a new sign-in works",
+      "startedAt": "2026-09-25T10:35:16.958Z",
+      "finishedAt": "2026-09-25T10:35:57.560Z",
+      "actual": "Check failed: page.waitForURL: Timeout 20000ms exceeded. =========================== logs =========================== waiting for navigation until \"load\" ============================================================",
+      "result": "fail"
+    }
+  ],
+  "finishedAt": "2026-09-25T10:35:57.565Z"
+}

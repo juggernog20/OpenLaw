@@ -1,31 +1,39 @@
 {
   "articleId": "comments-and-activity",
-  "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (conversations, round 1)",
+  "contentSha256": "71aad5ef98b19a27bd910f8421a569a20aaba7e4288ab8ca1f11364768239de4",
+  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
+  "environment": "openlaw-docs-80ceef9e-work2",
+  "author": "DOC-030 source-review author agent (conversations)",
+  "technicalReviewer": "DOC-030 source-review author agent (conversations)",
+  "walkthroughReviewer": "DOC-030 independent walkthrough agent (conversations)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (conversations)",
-  "technicalReviewer": "DOC-029 source-review author agent (conversations)",
-  "verifiedAt": "2026-09-16T15:50:11.279Z",
+  "verifiedAt": "2026-09-25T11:11:32.845Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/comments-and-activity.md",
-    "docs/documentation/batches/DOC-029/conversations/technical-review.json",
-    "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
+    "docs/documentation/batches/DOC-030/conversations/technical-review.json",
+    "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+    "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/batches/DOC-029/conversations/technical-review.json",
     "docs/decision-records/DECISIONS-COMMENTS.md",
+    "docs/decision-records/DECISIONS.md",
+    "docs/decision-records/DECISIONS-NOTIFICATIONS.md",
     "apps/web/src/components/comments/comment-applet.tsx",
     "apps/web/src/components/comments/comment-attachments.tsx",
-    "apps/web/src/components/comments/attachment-preview.tsx",
-    "apps/web/src/components/activity/activity-applet.tsx",
+    "apps/web/src/lib/comments.ts",
+    "apps/web/src/lib/activity.ts",
     "apps/web/src/components/portal/record-shell.tsx",
     "apps/web/src/routes/portal-request.tsx",
     "apps/web/src/routes/inbox-request.tsx",
-    "apps/api/src/modules/comments/routes.ts",
-    "apps/api/src/modules/comments/audience.ts",
-    "apps/api/src/modules/activity/routes.ts"
+    "apps/api/src/modules/portal/applets.ts",
+    "apps/api/src/modules/activity/routes.ts",
+    "apps/api/src/lib/activity-redaction.ts",
+    "apps/api/src/lib/notifications/comment-email.ts",
+    "messages/en-US.json"
   ],
   "scenarios": [
     {
@@ -34,17 +42,19 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
-        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Nadia Haddad (seed Legal Team Member) on the team of C-263 and M-68, converted from Requests raised by the fresh Business User; open Request R-80 kept unconverted; DOC-029 fictional PDF and text fixtures."
       ],
-      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "On C-147 Comments offered Legal Only and Contract Team with Contract Team checked; the description below the composer read \"Visible to Legal and all Contract team members.\" and, for Legal Only, \"Visible to Administrators and Legal Team Members.\" No Internal team option was offered. Posts showed under Nadia Haddad with Legal Only or Contract Team badges; M-132 offered Legal Only and Matter Team, Matter Team first. Typing @Dan opened People and Files tabs; choosing Daniel Okafor filled Mentioned, Remove Daniel Okafor emptied it, and the re-picked mention posted without a prompt. A plain typed name gave no Mentioned list. A Legal Only mention of Jonas Weber raised Widen the audience?; Cancel kept the draft and posted nothing; Widen and post posted at Contract Team. Attach files (Up to 5 files.) listed two PDFs, Remove dropped one, six chosen files listed five; the post carried the notice PDF, its filename opened a preview with Download and File to Contract, and Download returned fixture-identical bytes. With the post request aborted the composer showed \"The comment could not be posted. Try again.\", kept text and paper, showed no Filed to marker, a reload found no post, and the retry posted once. File to Contract (also in the preview) opened File attachment with New Document and New Version on an existing Document; filing as a New Document left the attachment on the thread with \"Filed to ..., version 1\" and the Document on the record. Her own menu offered Edit and Delete only; Cancel kept the text, Save showed edited with no audience control, Delete asked Delete this comment? and left Comment deleted by its author. On M-132 the Comments button read 56 unread (her own two posts excluded), the first load held 50 rows, Show older loaded the rest, and reading set unread to 0. History listed 25 entries and Show older 50. Blocked reads showed \"The conversation could not be read. Reopen the panel to try again.\", \"The earlier comments could not be read. Try again.\" (loaded rows kept, retry loaded more) and \"The history could not be read. Reopen the panel to try again.\"; reopening recovered. R-125 in the Inbox offered Legal only (checked) and Shared with requester with a Comments applet only; converted R-123 showed no applets and a Status link that opened C-147. A stand-in older working_team comment showed Internal team on C-147 and Working team on R-125.",
+      "expected": "Contract and Matter composers offer Legal Only and Contract Team or Matter Team, starting on the team audience; mentions, widen prompt, attachments (up to five), filing, edit and delete, Show older, unread badge, History, Inbox audiences, Task conversation, and load failures behave as the guide says.",
+      "actual": "21 recorded browser steps passed for this role. Comments offered Legal Only and Contract Team (Matter Team on the Matter) with the team audience checked first and the description below the composer; posts showed her name and the audience badge. @Dan opened People and Files tabs; the Mentioned list and Remove worked; plain text selected no one. A Legal Only mention of the Business User opened Widen the audience?; Cancel posted nothing and kept the draft, Widen and post posted at Contract Team. Attach files read Up to 5 files., Remove {filename} worked, six files listed at most five, the preview opened by filename and Download returned identical bytes. A blocked post showed \"The comment could not be posted. Try again.\", kept text and paper, filed nothing, and the retry posted once. File to Contract (also in the preview) opened File attachment with Destination (New Document, New Version on an existing Document), Document name and Type; both filings showed Filed to with the Document. Edit showed edited; Delete asked first and left Comment deleted by its author.; no Redact. Show older and the unread badge worked on a Matter with more than 55 comments; History listed entries with Show older. The Inbox Request offered Legal Only and Shared with requester starting on Legal Only, with no History; the converted Request had no conversation. Older working_team comments read Internal team (Contract) and Working team (Request) and were not choosable. The Task conversation had no audience radios and no badge. Load failures showed the documented messages and recovered. Her History for a link to a Confidential Contract she cannot reach named no number or title, and an MCP comment read \"DOC-030 conversations Legal Own List 040441, via Claude, commented\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/conversations/r1-member-contract-comments.png"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     },
     {
@@ -53,16 +63,19 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
-        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Daniel Okafor (seed Administrator) converted the Requests and reaches all records."
       ],
-      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Daniel Okafor posted on C-147 at Contract Team and at Legal Only with doc029-conv-legal-memo.pdf; the rows showed his name, the badges and the attachment. On Nadia's live Contract Team comment Comment actions offered Redact only. On M-132 a Matter Team post with paper offered File to Matter, whose File attachment dialog closed on Cancel with no Filed to marker. On the Inbox R-125 conversation his Shared with requester post with paper showed no File to control; his menu offered Edit, Delete and Redact; Save showed edited; deleting a Legal only note after the confirmation left Comment deleted by its author. Redact on Nadia's comment with paper asked \"Redact this comment? The text and every earlier version of it are removed for good. ...\"; confirming left Comment removed by an Administrator. and the attachment URL changed from 200 to 404. Redact was offered on her author-deleted comment and replaced that tombstone. Redacting the comment whose attachment had been filed left the filed Document on the record. On C-148 a Contract Team attachment offered File to Contract before archiving and no File to control after the archive.",
+      "expected": "Administrators post at both audiences, see Redact but not Edit on another author's comment, file from Matter conversations, edit and delete their own Request comments, redact with the documented results, and get no filing on Request or archived paper.",
+      "actual": "7 recorded browser steps passed for this role. He posted Contract Team and a Legal Only comment with a PDF. Comment actions on Nadia's comment offered only Redact. File to Matter opened File attachment and Cancel filed nothing. On the Request his Shared with requester paper had no File control; Edit/Save showed edited and Delete left the author tombstone. Redact asked \"Redact this comment?\" and replaced his memo, Nadia's author-deleted comment, and the filed notice-letter comment with Comment removed by an Administrator.; the attachment URL went from 200 to 404 and the filed Document stayed on the record. After archiving C-264 the attachment offered no File to Contract.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     },
     {
@@ -71,51 +84,34 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded work lab openlaw-docs-41255c61-work built from 3fa407e3. Daniel Okafor and Nadia Haddad sign in with passwords; Jonas Weber and Amara Nwosu sign in to the Portal with fresh magic links; each identity has its own browser context.",
-        "Jonas submitted DOC-029 conversations Requests R-123 to R-126 through the API. Daniel converted R-123 to Contract C-147, R-124 to Matter M-132 and R-126 to Contract C-148, and added Nadia to the C-147 and M-132 teams. R-125 stays unconverted. Small fictional PDF and text fixtures are in batches/DOC-029/conversations/fixtures."
+        "Shared work2 lab openlaw-docs-80ceef9e-work2 built from 067c1646829df85e62b809ee9157921e867c84e7 (Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z); app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e.",
+        "Playwright 1.63.0 Chromium, one isolated browser context per identity; staff by password, Business Users by fresh magic links read from the work2 Mailpit and never stored.",
+        "Fresh Business User DOC-030 conversations Business 040441 (Portal magic link, onboarding completed) raised the Requests; Amara Nwosu (seed) as later-added reader. Legal made Stage, Status, title, Field and Task changes through the API as Portal History fixtures."
       ],
-      "expected": "Allowed recipients see the intended conversation and attachments; the activity records the action. Legal Only and Working Team content stay outside the Business User view; failed attachments do not falsely appear filed.",
-      "actual": "Jonas Weber opened R-125 in the Portal and selected Comments in the Applets bar: no audience radios, Nadia's Shared with requester reply present, her Legal only note and the working_team note absent. @Nad showed a People tab only and listed Nadia Haddad; with doc029-conv-portal-note.pdf attached, Comment posted his reply under Jonas Weber. On his own comment Comment actions offered Edit and Delete; Save showed edited; Delete left Comment deleted by its author.; Nadia's reply had no actions. /portal/requests/123 redirected to /portal/contracts/147, whose Comments held the Contract Team notes, the widened mention and the notice PDF with its Filed to line, and omitted every Legal Only comment and the Legal Only memo; there were no audience radios or File to controls, and the notice PDF downloaded with fixture-identical bytes. On M-132 the Comments button read 57 and Show older loaded the earliest bulk comment while both Legal Only notes stayed absent. Portal History on C-147 listed 9 entries, all shared comment actions, and no Legal Only activity. /portal/requests/126 for archived C-148 showed \"The record created from this Request was archived. Your original request is shown below.\" with no Comments, and the C-148 record read answered 404. Amara Nwosu, added to the C-147 team later, read Nadia's earlier Contract Team note and not her Legal Only note; after removal her Portal page read Contract not found (404). After Jonas's own removal /portal/requests/123 showed no conversation and his record read answered 404; he was then restored.",
+      "expected": "Portal replies use Full Thread with no picker; Legal Only and Working Team content and attachments stay out; no Redact or filing; the Request address follows conversion; Portal History shows shared comment activity and record progress the Portal shows, excluding hidden changes.",
+      "actual": "9 recorded browser steps passed for this role. On the unconverted Request, Comments had no audience radios, showed the Shared with requester reply and not the Legal Only or Working team notes; @ and Attach files posted a reply under his name. Comment actions offered Edit and Delete only on his own words. The Request address redirected to /portal/contracts/263, where team comments and the notice letter (identical download) appeared and Legal Only rows, the memo and the Internal team note did not; no File to controls. The Portal Matter hid both Legal Only notes. Portal History on the Contract showed \"changed the stage Draft → Review\", the title and Deal desk reference changes, the Task added with its due date and the Task completed, and comment activity, but not the same-Stage Status move, Governing law, Task edit, reorder or removal, or Legal Only comment activity (7 comment entries against Legal's 11). On the Matter it showed Status moves and Budget approved, not External counsel or the closing note. The unconverted Request's History showed comment activity only. The archived destination showed the original request with no conversation. Amara read earlier team comments after being added and lost access after removal; with the Business Owner cleared and the requester removed, the old Request link showed no conversation.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/conversations/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/conversations/lib-r1.mjs"
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.json",
+        "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+        "docs/documentation/batches/DOC-030/conversations/lib.mjs",
+        "docs/documentation/batches/DOC-030/conversations/fixtures.json",
+        "docs/documentation/batches/DOC-030/conversations/technical-review.json"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by a different agent from the author and the technical reviewer; not a human user study and not the feature owner's approval.",
-    "The work lab is shared with other DOC-029 agents. Only records and accounts named DOC-029 conversations were created; no organisation settings changed. Debug runs before the recorded run left further DOC-029 conversations records; they are not credited.",
-    "Fixture Requests, conversions, team changes, the C-148 archive, 56 bulk Matter comments, and one stand-in working_team comment per thread were made through the API as the acting role; the article steps under test were followed in the browser.",
-    "Recovery checks used browser route interception to fail a comment post, a thread read, an earlier page, and a History read.",
-    "Not exercised: filing an attachment as a New Version, Portal History entries for business Field edits and for Fields that are now legal-only, and the unread badge's exclusion of removed comments in isolation.",
-    "The first attempts of two supplementary checks failed on reviewer-script errors and passed after correction; both attempts are kept in the walkthrough log with their dispositions."
+    "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study.",
+    "The work2 lab is shared with other DOC-030 agents. Only records and accounts named DOC-030 conversations (stamp 040441) were created. Script and fixture problems during the walk are kept in the log as superseded entries with their passing reruns.",
+    "Jonas Weber reached the lab's limit of 20 Requests an hour, so a fresh Business User walked the Portal steps. Removing the requester from the team first needed the Business Owner cleared; the API refuses to remove the Business Owner (\"Change the Business Owner before removing this person from the team.\"). The guide does not describe that fixture step.",
+    "The MCP attribution was produced by a comment posted through an approved API key for the Client \"Claude\" with MCP enabled for the check and restored afterwards.",
+    "The Files tab file reference (no access, no notification) and a mention granting no record access were not exercised."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "91b235629a33bd9e798fc887f6d92226d007ed7673ec767d55f65f04c85ab67f",
-    "verifiedAt": "2026-09-07T08:53:41.841Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "432dba3a835863091791fbac429a6a66777bdc40",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
-    "applicationSha256": "9e8b316321c219b1c2c68fb3dff63708a5f9be87f33455b687e52d6aa56ae13c",
-    "reviewer": "DOC-029 round 3 compatibility reviewer",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-16T19:11:55Z",
-    "summary": "From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (conversations)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38, and its only comments change is the colour of an archived author's name, which the article does not describe. I replayed the round 1 V-C07 comment checks for all three roles on the work2 lab, and all 30 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/conversations.json",
-        "sha256": "58d5e06a8606776ccfff26c3ff93a53767a63f764127de4cf688fe84b265824d"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:50:11.279Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

@@ -8,32 +8,33 @@ Use your Request to follow Legal's response. Once Legal converts it, use the sam
 
 ## Open your Request
 
-1. On the Portal home, find the Request under **Your requests**.
-2. Open it and check the title and R- reference.
-3. Read its status and **Owner**. The same owner appears under **Your requests**. **Not assigned yet** means no triage assignee is recorded.
-4. Open **Comments** in the applet bar on the right for Legal's replies. Select **Show older** when you need older messages.
+1. On the Portal home, find the Request under **Your requests**. Each row shows the R- reference, the title, the request type, the age, **Legal Owner**, and the status.
+2. Open it and check the title. The line under the title shows the R- reference, the request type, and the submission date.
+3. Read its status and the **Legal Owner** card. **Not assigned yet** means no triage assignee is recorded. The banner below the card explains the status.
+4. Open **Comments** in the applet bar on the right for Legal's replies. Select **Show older** when you need older messages. **History** in the same applet bar lists the shared conversation activity.
 5. Check **What you submitted** for the saved description, original attachments, Department, urgency, and available additional answers. Select an attachment's filename to download it.
 
-| Status       | Meaning in the Portal                                                                      |
-| ------------ | ------------------------------------------------------------------------------------------ |
-| **Open**     | Legal has received the Request and has not yet decided it.                                 |
-| **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Comments. |
-| **Declined** | Legal declined the Request. Read the reason shown beneath the status.                      |
+| Status       | Meaning in the Portal                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------- |
+| **Open**     | Legal has received the Request. Nobody in Legal has opened it in the Inbox yet.                         |
+| **Read**     | A Legal Team Member or Administrator has opened the Request in the Inbox. Legal has not decided it yet. |
+| **Resolved** | Legal answered and closed the Request without conversion. Read the resolution in Comments.              |
+| **Declined** | Legal declined the Request. Read the reason in the status banner.                                       |
 
-A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter while it is active and you remain on its team. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Comments**. The live record shows Fields whose Rows have **Visible on Portal** on. A Branch can hide an empty Row; a stored value remains readable when its Branch no longer holds, provided its Row keeps Visible on Portal on and you can still reach the record. The original submitted answers and Legal's current record values can differ. Legal may add other Business Users to that same record later.
+A converted Request leaves **Your requests**. Its address redirects to the resulting Contract or Matter while it is active and you remain on its team. Conversion adds you to that record's team and records you as Business Owner. Read the original ask under **Original request** and continue in the record's **Comments**. The record's **Fields** card lists each Field whose Row has **Visible on Portal** on. A Field without a value shows **Not recorded**. The original submitted answers and Legal's current record values can differ. Legal may add other Business Users to that same record later.
 
 If Legal removes your team row, the old Request link no longer opens the live record. If the destination is archived, the Request address shows your original ask and an archived notice. That stub has no conversation or Document access.
 
-The Request's **Owner** is its current triage assignee, separate from a resulting Contract's Business Owner or Legal Owner. Clearing triage assignment clears the requester-facing name. Read Legal's updates in Comments. After conversion, follow the resulting Contract or Matter; resolved and declined Requests keep their own conversations.
+The Request's **Legal Owner** is its current triage assignee. That person does not automatically become the resulting Contract's Legal Owner or Matter Manager, and is separate from its Business Owner. Clearing triage assignment shows **Not assigned yet** again. Read Legal's updates in Comments. After conversion, follow the resulting Contract or Matter; resolved and declined Requests keep their own conversations.
 
 ## Reply and send further files
 
 1. Open **Comments** in the applet bar on the right and enter your message in **New comment**.
 2. Select **Attach files** if you need to send further paper. Check the selected filenames and remove any you did not intend to send.
 3. Select **Comment**. It stays unavailable until you have entered a message, so files cannot be sent on their own.
-4. Check that your reply and its attachments appear in the conversation. Select an attachment to download it.
+4. Check that your reply and its attachments appear in the conversation. Select an attachment's filename to preview it, or select its download control to save it.
 
-You can reply while the Request is Open, Resolved or Declined. After conversion, reply on the record. The **Attach new files to a reply** link on a Resolved or Declined Request takes you to its composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
+You can reply while the Request is Open, Read, Resolved or Declined. After conversion, reply on the record. The **Attach new files to a reply** link on a Resolved or Declined Request takes you to its composer. A reply does not reopen a Resolved or Declined Request or change submitted answers; explain the correction or further help you need to Legal.
 
 The Portal shows the conversation shared with the Requester. You do not choose an audience or see Legal Only and Working Team messages. See [Choose who can read a comment](comments-and-activity.md) for the shared attachment limits and conversation behavior.
 
