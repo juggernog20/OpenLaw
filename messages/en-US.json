@@ -455,11 +455,17 @@
   "activity.entityShareEntry.updated": {
     "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
   },
+  "activity.envelope.confirmed": {
+    "defaultMessage": "This contract's envelope status was confirmed by the provider"
+  },
   "activity.envelope.declined": {
     "defaultMessage": "This contract's envelope was declined{hasReason, select, yes { — {reason}} other {}}"
   },
   "activity.envelope.discarded": {
     "defaultMessage": "{hasActor, select, yes {{actor} discarded this contract's envelope} other {This contract's envelope was discarded}}{hasReason, select, yes { — {reason}} other {}}"
+  },
+  "activity.envelope.restored": {
+    "defaultMessage": "This contract's envelope was restored in DocuSign"
   },
   "activity.envelope.sent": {
     "defaultMessage": "{hasActor, select, yes {{actor} sent this contract for signature} other {This contract was sent for signature}}"
@@ -12434,6 +12440,9 @@
   "signing.executedFiling": {
     "defaultMessage": "Filing the executed copy…"
   },
+  "signing.externallyRestored": {
+    "defaultMessage": "Restored outside OpenLaw. Review this Envelope in DocuSign."
+  },
   "signing.launchFailed": {
     "defaultMessage": "DocuSign could not open this draft. Try again from Signatures."
   },
@@ -12511,6 +12520,9 @@
   },
   "signing.returnUnavailable": {
     "defaultMessage": "This signing return is unavailable"
+  },
+  "signing.scheduled": {
+    "defaultMessage": "Scheduled in DocuSign"
   },
   "signing.section": {
     "defaultMessage": "Signatures"

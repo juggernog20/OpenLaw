@@ -1,73 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * The reconciliation sweep (M15/6, CTR-013, TECH-007): the fallback feed
- * that makes an install the provider cannot reach converge anyway.
- *
- * DocuSign Connect needs a publicly reachable address, and many
- * self-hosted installs have none. Connect is still the **primary** feed —
- * it is immediate, and it costs nothing when it works. This sweep is the
- * **fallback**: every so often it asks the provider where each live
- * envelope stands and applies what it is told. A deployer behind a
- * firewall therefore loses latency and nothing else.
- *
- * **Neither feed knows about the other, and both are safe together.**
- * They funnel into `applyEnvelopeStatus`, which locks the row, refuses
- * to move an envelope that has already ended, and writes the row and its
- * narration in one transaction. A status the webhook already delivered
- * answers `unchanged` here and writes nothing — no second row, no second
- * entry on the feed. That one property is what lets this run beside
- * Connect with no coordination between them at all.
- *
- * It also recovers a delivery that was **dropped rather than retried**.
- * A Connect delivery that arrives before the send transaction commits
- * names an envelope this install does not hold yet, and the route
- * acknowledges it — refusing would make our own log the provider's retry
- * queue. Nothing more is coming for that envelope, so without this sweep
- * it would sit `sent` for ever while the provider held a signed one.
- *
- * Four rules shape it, three of them M12/6's applied to a feed rather
- * than to a queue.
- *
- * **It asks; it never decides.** The provider's answer is the whole
- * input, and the funnel is the only writer. There is no second path for
- * a status that arrived this way, so a swept envelope ends exactly as a
- * webhooked one does — the same row, the same entry, the same
- * executed-copy fetch hanging off the same `applied` result.
- *
- * **A provider that cannot be reached is the moment's, not the
- * envelope's.** An outage is logged and nothing is marked: no row is
- * failed, no envelope is given up on, and the next round asks again. The
- * bound below is what keeps a sweep from spending minutes learning the
- * same thing once per envelope.
- *
- * **A live envelope is not a change.** The provider saying "still out"
- * is the record's own answer already, so the funnel is not called for
- * it. The funnel is for changes, and a transaction per unchanged
- * envelope per round would be a lock taken to write nothing.
- *
- * **It reads the record, never a cursor it kept.** Whatever one round
- * misses — a stopped container, a provider outage, a page it never
- * reached — is still `sent` at the next round, so there is no progress
- * to persist and nothing to get wrong about resuming.
- *
- * **A round belongs to the install, not to a process.** The other two
- * sweeps ask for work the rows already say is owed, so a second worker
- * replica walks the same table and finds nothing left to ask for. This
- * one asks a third party the same question every round, so an in-process
- * timer meant that replica count multiplied the provider requests — and
- * this is the endpoint DocuSign rate-limits hardest. It is therefore a
- * scheduled pg-boss job on {@link RECONCILIATION_SWEEP_CRON}, the shape
- * the backfill sweep already has: pg-boss elects one cron worker per
- * queue, so N replicas produce one round. The queue is a singleton, so a
- * tick that lands while a round is still going waits for it rather than
- * joining it.
- *
- * The cost of that move is named rather than hidden: **there is no round
- * at boot any more.** A worker that has just restarted waits for the
- * next tick. That is the right trade for a fallback feed measured in
- * minutes, and a boot round per replica would have put the duplication
- * straight back on every rolling deploy.
+/** Browser-independent provider status recovery (CTR-013, TECH-007).
+ * The five-minute job checks only due rows. Drafts, sent Envelopes and
+ * discarded preparations share the durable 15-minute provider-read allowance
+ * with browser returns and Resume. Discarded rows remain observable on that
+ * cadence for as long as they exist, because they can be restored or sent
+ * outside OpenLaw at any age and a Polling install has no other way to learn
+ * it. Interrupted creation uses its recovery claim. Every observation passes through the same transactional status writer.
  */
 
 import {
@@ -75,7 +14,6 @@ import {
   asc,
   contractEnvelopes,
   envelopeLaunches,
-  eq,
   gt,
   inArray,
   ne,
@@ -286,13 +224,11 @@ export async function runReconciliationSweep(
       .from(contractEnvelopes)
       .where(
         and(
-          // The only status anything can move out of. An ending is an
-          // ending (see `transitions.ts`), so a finished envelope has
-          // nothing left for this sweep to learn.
+          // Discarded drafts remain observable for external restoration.
           or(
             recoveryDue(),
             and(
-              inArray(contractEnvelopes.status, ["draft", "sent"]),
+              inArray(contractEnvelopes.status, ["draft", "sent", "discarded"]),
               reconciliationDue(),
               pollableDraft(),
             ),
@@ -427,17 +363,6 @@ export async function runReconciliationSweep(
         continue;
       }
 
-      // Still out. The record already says so, and the funnel is for
-      // changes.
-      if (state.status === envelope.status) {
-        await deps.db
-          .update(contractEnvelopes)
-          .set({ confirmationPending: false })
-          .where(eq(contractEnvelopes.id, envelope.id));
-        summary.live += 1;
-        continue;
-      }
-
       // One funnel, its own transaction, no wrapper around it — and no
       // actor, which is what attributes the entry to the integration
       // rather than to somebody who happened to be logged in.
@@ -445,6 +370,7 @@ export async function runReconciliationSweep(
         provider: envelope.provider,
         providerEnvelopeId: envelope.providerEnvelopeId,
         status: state.status,
+        ...(state.scheduled !== undefined ? { scheduled: state.scheduled } : {}),
         ...(state.sentAt !== undefined ? { sentAt: state.sentAt } : {}),
         ...(state.reason !== undefined ? { reason: state.reason } : {}),
         ...(state.completedAt !== undefined ? { completedAt: state.completedAt } : {}),
@@ -459,7 +385,8 @@ export async function runReconciliationSweep(
         // The webhook got here first, or another worker's round did.
         // Nothing was written, which is exactly what makes the two feeds
         // safe together.
-        summary.alreadyEnded += 1;
+        if (state.status === envelope.status) summary.live += 1;
+        else summary.alreadyEnded += 1;
       }
       // The completion's follow-on work, hung off the commit (M15/5).
       // Only an `applied` signature asks for anything, so the sweep

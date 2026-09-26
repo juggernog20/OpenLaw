@@ -164,8 +164,11 @@ export const signingWebhookRoutes: FastifyPluginAsync = async (app) => {
         throw error;
       }
 
+      if (delivery.status === null) return reply.status(204).send();
+
       const result = await applyEnvelopeStatus(app.notifier, {
         provider,
+        verifiedDelivery: true,
         providerEnvelopeId: delivery.providerEnvelopeId,
         status: delivery.status,
         ...(delivery.sentAt !== undefined ? { sentAt: delivery.sentAt } : {}),

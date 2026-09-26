@@ -1072,6 +1072,8 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     reason: "The indemnity cap is wrong",
   },
   "envelope.voided": { ...ENVELOPE_ENDING, status: "voided", reason: "Superseded" },
+  "envelope.restored": { ...ENVELOPE_ENDING, status: "draft" },
+  "envelope.confirmed": { ...ENVELOPE_ENDING, status: "draft" },
   "envelope.discarded": { ...ENVELOPE_ENDING, status: "discarded" },
 
   // Data export

@@ -39,7 +39,7 @@ export async function checkEnvelopeStatus(db: Db, signing: SigningProvider, enve
     .where(
       and(
         eq(contractEnvelopes.id, envelopeId),
-        inArray(contractEnvelopes.status, ["draft", "sent"]),
+        inArray(contractEnvelopes.status, ["draft", "sent", "discarded"]),
         reconciliationDue(),
       ),
     )

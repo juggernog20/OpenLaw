@@ -21,7 +21,7 @@
  * address (the CTR-013 September 25 addendum). There is no routing
  * order in v1: the stored order is the order they were entered.
  *
- * **At most one live envelope per contract.** Live means `preparing`,
+ * **One local live reservation per Contract.** Live means `preparing`,
  * `draft`, or `sent` (`LIVE_ENVELOPE_STATUSES`). The route checks it
  * under the contract's row lock, and a partial unique index on the same
  * statuses backs it, so a preparation and a direct send racing on one
@@ -238,6 +238,8 @@ const EnvelopeSchema = z.object({
   sentBy: PersonSchema,
   sentAt: z.iso.datetime().nullable(),
   confirmationPending: z.boolean(),
+  scheduled: z.boolean(),
+  externallyRestored: z.boolean(),
   preparationState: z.enum(["pending", "uncertain", "created", "failed"]).nullable(),
   recoveryAttempts: z.number().int(),
   nextRecoveryAt: z.iso.datetime().nullable(),
@@ -427,6 +429,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         nextRecoveryAt: contractEnvelopes.nextRecoveryAt,
         recoveryStopped: contractEnvelopes.recoveryStopped,
         confirmationPending: contractEnvelopes.confirmationPending,
+        scheduled: contractEnvelopes.scheduled,
+        externallyRestored: contractEnvelopes.externallyRestored,
         subject: contractEnvelopes.subject,
         documentVersionId: contractEnvelopes.documentVersionId,
         documentId: contractEnvelopes.documentId,
@@ -491,6 +495,8 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         row.status === "preparing" ? (row.nextRecoveryAt?.toISOString() ?? null) : null,
       recoveryStopped: row.recoveryStopped,
       confirmationPending: row.confirmationPending,
+      scheduled: row.scheduled,
+      externallyRestored: row.externallyRestored,
       subject: row.subject,
       documentId: row.documentId,
       documentVersionId: row.documentVersionId,
@@ -1110,8 +1116,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                   preparationState: "failed",
                   completedAt: new Date(),
                 })
-                .where(eq(contractEnvelopes.id, envelopeId))
-            : app.db.delete(contractEnvelopes).where(eq(contractEnvelopes.id, envelopeId));
+                .where(
+                  and(
+                    eq(contractEnvelopes.id, envelopeId),
+                    eq(contractEnvelopes.status, "preparing"),
+                  ),
+                )
+            : app.db
+                .delete(contractEnvelopes)
+                .where(
+                  and(
+                    eq(contractEnvelopes.id, envelopeId),
+                    eq(contractEnvelopes.status, "preparing"),
+                  ),
+                );
 
         // The stream is opened before the provider is dialled, so a
         // storage failure is confirmed noncreation and nothing else.
@@ -1157,9 +1175,19 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           await app.db
             .update(contractEnvelopes)
             .set({ preparationState: "uncertain" })
-            .where(eq(contractEnvelopes.id, envelopeId));
+            .where(
+              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+            );
           throw sendFailure(error, "reserved");
         }
+
+        // Keep correlation before finalization so verified callbacks can settle it.
+        await app.db
+          .update(contractEnvelopes)
+          .set({ providerEnvelopeId: sent.providerEnvelopeId })
+          .where(
+            and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+          );
 
         if (preparing) {
           // The provider id is kept before the route answers, so no later
@@ -1171,7 +1199,9 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               providerEnvelopeId: sent.providerEnvelopeId,
               preparationState: "created",
             })
-            .where(eq(contractEnvelopes.id, envelopeId));
+            .where(
+              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+            );
           return reply.status(201).send(await signingStateOf(request.user, contract, true));
         }
 
@@ -1196,9 +1226,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                 providerEnvelopeId: sent.providerEnvelopeId,
                 preparationState: "created",
               })
-              .where(eq(contractEnvelopes.id, envelopeId))
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
               .returning({ id: contractEnvelopes.id });
-            if (!envelope) throw httpError(500, "The Envelope could not be recorded.");
+            if (!envelope)
+              return {
+                envelopes: await envelopesOf(tx, locked.id),
+                signingConfigured: true,
+                updateMode: await signingUpdateMode(tx),
+                primaryDocument,
+              };
 
             await recordActivity(tx, {
               entityType: "contract",
@@ -1285,16 +1326,20 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           // The provider holds a sent envelope, and the record could not
           // say so. Its id is kept on the reservation first, so a crash
           // from here on still leaves the record able to name it.
-          await app.db
+          const kept = await app.db
             .update(contractEnvelopes)
             .set({ providerEnvelopeId: sent.providerEnvelopeId, preparationState: "uncertain" })
-            .where(eq(contractEnvelopes.id, envelopeId))
+            .where(
+              and(eq(contractEnvelopes.id, envelopeId), eq(contractEnvelopes.status, "preparing")),
+            )
+            .returning({ id: contractEnvelopes.id })
             .catch((keepError: unknown) => {
               request.log.error(
                 { err: keepError, envelopeId, providerEnvelopeId: sent.providerEnvelopeId },
                 "signing: could not keep the provider id of a send whose record failed",
               );
             });
+          if (kept && kept.length === 0) throw error;
           // The compensating void. It is attempted, not guaranteed: the
           // provider may be exactly what has just gone away. Only a void
           // the provider confirms is a terminal outcome, and only that
@@ -1326,7 +1371,12 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
                 sentAt: now,
                 completedAt: now,
               })
-              .where(eq(contractEnvelopes.id, envelopeId))
+              .where(
+                and(
+                  eq(contractEnvelopes.id, envelopeId),
+                  eq(contractEnvelopes.status, "preparing"),
+                ),
+              )
               .catch((endError: unknown) => {
                 request.log.error(
                   { err: endError, envelopeId },

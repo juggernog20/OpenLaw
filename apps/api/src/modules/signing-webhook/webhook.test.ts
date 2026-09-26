@@ -29,7 +29,9 @@
  * DocuSign, and nothing here opens the provider's internals.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createHmac } from "node:crypto";
+import { createDocuSignProvider } from "../../lib/signing/docusign.js";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   activityLog,
   and,
@@ -624,4 +626,88 @@ describe("a delivery about an envelope the record has finished with", () => {
       "envelope.signed",
     ]);
   });
+});
+
+describe("DocuSign deliveries for durable preparations", () => {
+  async function rawDelivery(providerEnvelopeId: string, status: string) {
+    const body = JSON.stringify({
+      data: { envelopeId: providerEnvelopeId, envelopeSummary: { status } },
+    });
+    const driver = createDocuSignProvider(CONNECTOR);
+    const verify = vi
+      .spyOn(provider(), "verifyWebhook")
+      .mockImplementation((bytes, headers) => driver.verifyWebhook(bytes, headers));
+    try {
+      return await harness.app.inject({
+        method: "POST",
+        url: WEBHOOK_URL,
+        payload: body,
+        headers: {
+          "content-type": "application/json",
+          "x-docusign-signature-1": createHmac("sha256", HMAC_SECRET).update(body).digest("base64"),
+        },
+      });
+    } finally {
+      verify.mockRestore();
+    }
+  }
+
+  it.each(["draft", "preparing", "sent"] as const)(
+    "only completed finishes a %s Envelope",
+    async (status) => {
+      const record = await recordWithEnvelopeOut(`Early completion from ${status}`);
+      await harness.db
+        .update(contractEnvelopes)
+        .set({
+          status,
+          sentAt: status === "sent" ? new Date() : null,
+          confirmationPending: status === "draft",
+          preparationState: status === "preparing" ? "uncertain" : null,
+        })
+        .where(eq(contractEnvelopes.providerEnvelopeId, record.providerEnvelopeId));
+      for (const ignored of ["created", "deleted"]) {
+        expect((await rawDelivery(record.providerEnvelopeId, ignored)).statusCode).toBe(204);
+        expect((await envelopeOn(record.number)).status).toBe(status);
+      }
+      expect((await rawDelivery(record.providerEnvelopeId, "signed")).statusCode).toBe(204);
+      expect(await envelopeOn(record.number)).toMatchObject({
+        status: "sent",
+        completedAt: null,
+        executedFetch: "pending",
+      });
+      provider().complete(record.providerEnvelopeId);
+      expect((await rawDelivery(record.providerEnvelopeId, "completed")).statusCode).toBe(204);
+      expect(await settledFetch(record.number)).toMatchObject({
+        status: "signed",
+        executedFetch: "ready",
+      });
+      for (const late of ["sent", "signed", "completed", "created", "deleted"])
+        expect((await rawDelivery(record.providerEnvelopeId, late)).statusCode).toBe(204);
+      expect(
+        (await entriesOn(record.contractId)).filter((e) => e.action === "envelope.signed"),
+      ).toHaveLength(1);
+    },
+  );
+
+  it.each(["draft", "preparing"] as const)(
+    "applies completed before sent from %s",
+    async (status) => {
+      const record = await recordWithEnvelopeOut(`Completion arrives first ${status}`);
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ status, sentAt: null, confirmationPending: true })
+        .where(eq(contractEnvelopes.providerEnvelopeId, record.providerEnvelopeId));
+      provider().complete(record.providerEnvelopeId);
+      expect((await rawDelivery(record.providerEnvelopeId, "completed")).statusCode).toBe(204);
+      expect(await settledFetch(record.number)).toMatchObject({
+        status: "signed",
+        executedFetch: "ready",
+      });
+      expect((await rawDelivery(record.providerEnvelopeId, "sent")).statusCode).toBe(204);
+      expect((await envelopeOn(record.number)).status).toBe("signed");
+      expect(
+        (await entriesOn(record.contractId)).filter((e) => e.action === "envelope.signed"),
+      ).toHaveLength(1);
+    },
+  );
 });

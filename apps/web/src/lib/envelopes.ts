@@ -88,9 +88,8 @@ export const ENVELOPE_PILL: Record<EnvelopeStatus, string> = {
   voided: "bg-status-neutral-bg text-status-neutral-fg",
 };
 
-/** The one envelope the record is waiting on, or none (CTR-013). At
- * most one is live at a time, which is the rule the seam holds and the
- * database backs. */
+/** The newest live Envelope. Restored external rounds may also be live;
+ * every live row blocks local creation and remains visible in the history. */
 export const liveEnvelope = (envelopes: readonly ContractEnvelope[]): ContractEnvelope | null =>
   envelopes.find((envelope) => isLiveEnvelopeStatus(envelope.status)) ?? null;
 

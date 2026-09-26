@@ -137,7 +137,7 @@ interface DocumentRow {
 }
 
 beforeAll(async () => {
-  harness = await startHarness();
+  harness = await startHarness({ signingPreparationEnabled: true });
   const setup = await harness.app.inject({
     method: "POST",
     url: "/api/v1/auth/setup",
@@ -813,3 +813,275 @@ async function until(check: () => boolean | Promise<boolean>, timeoutMs = 10_000
   }
   throw new Error(`the condition was still false after ${String(timeoutMs)}ms`);
 }
+
+describe("preparations reconciled without a browser return", () => {
+  async function prepare(number: number) {
+    const state = await signingState(number);
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${number}/envelopes/prepare`,
+      cookies: as(SENDER),
+      payload: {
+        documentVersionId: state.primaryDocument!.versions[0]!.id,
+        signers: [...SIGNERS],
+        idempotencyKey: crypto.randomUUID(),
+      },
+    });
+    expect(response.statusCode, response.body).toBe(201);
+    return response.json().envelopes[0] as EnvelopeRow;
+  }
+  async function due(id: string) {
+    await harness.db
+      .update(contractEnvelopes)
+      .set({
+        createdAt: new Date(Date.now() - 16 * 60_000),
+        nextReconcileAt: new Date(0),
+      })
+      .where(eq(contractEnvelopes.id, id));
+  }
+  async function held(id: string) {
+    return (
+      await harness.db.select().from(contractEnvelopes).where(eq(contractEnvelopes.id, id))
+    )[0]!;
+  }
+
+  it("files early completion once on the original Document and advances only Signature", async () => {
+    const contract = await recordAtSignature("No-return early completion");
+    const envelope = await prepare(contract.number);
+    const primary = await primaryOf(contract.number);
+    const providerId = await providerIdOf(envelope.id);
+    provider().complete(providerId);
+    await due(envelope.id);
+    await Promise.all([sweep(), sweep()]);
+    const settled = await settledFetch(contract.number, envelope.id);
+    expect(settled).toMatchObject({ status: "signed", executedFetch: "ready" });
+    expect((await primaryOf(contract.number)).id).toBe(primary.id);
+    expect(
+      (await primaryOf(contract.number)).versions.filter((v) => v.kind === "executed"),
+    ).toHaveLength(1);
+    expect(await stageOf(contract.id)).toBe("active");
+    await deliver({ providerEnvelopeId: providerId, status: "sent" });
+    await deliver({ providerEnvelopeId: providerId, status: "signed" });
+    await sweep();
+    expect(await entriesFor(contract.id, "envelope.signed")).toHaveLength(1);
+    expect(await entriesFor(contract.id, "envelope.sent")).toHaveLength(0);
+    expect(
+      (await primaryOf(contract.number)).versions.filter((v) => v.kind === "executed"),
+    ).toHaveLength(1);
+  });
+
+  it.each([false, true])(
+    "keeps discard history separate from completion timestamps, provider dates: %s",
+    async (withDates) => {
+      const contract = await recordAtSignature("Completion after discard");
+      const envelope = await prepare(contract.number);
+      const providerId = await providerIdOf(envelope.id);
+      provider().discardDraft(providerId);
+      await due(envelope.id);
+      await sweep();
+      const discardedAt = new Date("2001-01-01T00:00:00Z");
+      await harness.db
+        .update(contractEnvelopes)
+        .set({ completedAt: discardedAt })
+        .where(eq(contractEnvelopes.id, envelope.id));
+      provider().complete(providerId);
+      const observedAfter = Date.now();
+      const sentAt = new Date("2026-09-20T10:00:00Z");
+      const completedAt = new Date("2026-09-21T10:00:00Z");
+      const response = await deliver({
+        providerEnvelopeId: providerId,
+        status: "signed",
+        ...(withDates ? { sentAt, completedAt } : {}),
+      });
+      expect(response.statusCode).toBe(204);
+      const row = await held(envelope.id);
+      expect(row).toMatchObject({
+        status: "signed",
+        confirmationPending: false,
+        externallyRestored: true,
+      });
+      expect(row.completedAt).not.toEqual(discardedAt);
+      if (withDates) {
+        expect(row.completedAt).toEqual(completedAt);
+        expect(row.sentAt).toEqual(sentAt);
+      } else expect(row.completedAt!.getTime()).toBeGreaterThanOrEqual(observedAfter);
+      expect(await settledFetch(contract.number, envelope.id)).toMatchObject({
+        executedFetch: "ready",
+      });
+    },
+  );
+
+  it.each(["draft", "sent"] as const)(
+    "discovers a discarded Envelope restored as %s outside OpenLaw long after its discard",
+    async (restoredStatus) => {
+      const contract = await recordAtSignature(`Old discard restored as ${restoredStatus}`);
+      const envelope = await prepare(contract.number);
+      const providerId = await providerIdOf(envelope.id);
+      provider().discardDraft(providerId);
+      await due(envelope.id);
+      await sweep();
+      expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
+      // Discarded well over a month ago, then restored or sent in the
+      // provider's console. No browser return, no Connect delivery: only
+      // the sweep, on its ordinary cadence, can learn it.
+      await harness.db
+        .update(contractEnvelopes)
+        .set({
+          completedAt: new Date(Date.now() - 45 * 86_400_000),
+          nextReconcileAt: new Date(0),
+        })
+        .where(eq(contractEnvelopes.id, envelope.id));
+      const original = provider().readEnvelope.bind(provider());
+      const read = vi
+        .spyOn(provider(), "readEnvelope")
+        .mockImplementation(async (id) =>
+          id === providerId ? { status: restoredStatus, scheduled: false } : original(id),
+        );
+      try {
+        await sweep();
+        expect(read.mock.calls.filter(([id]) => id === providerId)).toHaveLength(1);
+        expect(await held(envelope.id)).toMatchObject({
+          status: restoredStatus,
+          externallyRestored: true,
+          completedAt: null,
+          confirmationPending: false,
+        });
+        expect(
+          await entriesFor(
+            contract.id,
+            restoredStatus === "draft" ? "envelope.restored" : "envelope.sent",
+          ),
+        ).toHaveLength(1);
+      } finally {
+        read.mockRestore();
+      }
+      // Its completion is also discovered by polling alone and files one copy.
+      provider().sendDraft(providerId);
+      provider().complete(providerId);
+      await due(envelope.id);
+      await sweep();
+      expect(await settledFetch(contract.number, envelope.id)).toMatchObject({
+        status: "signed",
+        executedFetch: "ready",
+      });
+      expect(await entriesFor(contract.id, "envelope.signed")).toHaveLength(1);
+      expect(
+        (await primaryOf(contract.number)).versions.filter((v) => v.kind === "executed"),
+      ).toHaveLength(1);
+    },
+  );
+
+  it("holds a scheduled draft without a sent time or a Resume action", async () => {
+    const contract = await recordAtSignature("Scheduled without a return");
+    const envelope = await prepare(contract.number);
+    const providerId = await providerIdOf(envelope.id);
+    await due(envelope.id);
+    const original = provider().readEnvelope.bind(provider());
+    const read = vi
+      .spyOn(provider(), "readEnvelope")
+      .mockImplementation(async (id) =>
+        id === providerId ? { status: "draft", scheduled: true } : original(id),
+      );
+    try {
+      await sweep();
+      expect(await held(envelope.id)).toMatchObject({
+        status: "draft",
+        scheduled: true,
+        sentAt: null,
+      });
+      const launch = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/envelopes/${envelope.id}/launch`,
+        cookies: as(SENDER),
+      });
+      expect(launch.statusCode).toBe(409);
+      await sweep();
+      expect(read.mock.calls.filter(([id]) => id === providerId)).toHaveLength(1);
+      expect(await entriesFor(contract.id, "envelope.sent")).toHaveLength(0);
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  it.each(
+    (["preparing", "draft", "sent"] as const).flatMap((newStatus) =>
+      (["draft", "sent"] as const).map((restoredStatus) => ({ newStatus, restoredStatus })),
+    ),
+  )(
+    "keeps a newer $newStatus reservation when a discarded Envelope returns as $restoredStatus",
+    async ({ newStatus, restoredStatus }) => {
+      const contract = await recordAtSignature(`Restored beside ${newStatus}`);
+      const old = await prepare(contract.number);
+      const oldProviderId = await providerIdOf(old.id);
+      provider().discardDraft(oldProviderId);
+      await due(old.id);
+      await sweep();
+      expect(await held(old.id)).toMatchObject({ status: "discarded", sentAt: null });
+      const newer = await prepare(contract.number);
+      if (newStatus !== "draft")
+        await harness.db
+          .update(contractEnvelopes)
+          .set({
+            status: newStatus,
+            sentAt: newStatus === "sent" ? new Date() : null,
+          })
+          .where(eq(contractEnvelopes.id, newer.id));
+      const original = provider().readEnvelope.bind(provider());
+      const read = vi
+        .spyOn(provider(), "readEnvelope")
+        .mockImplementation(async (id) =>
+          id === oldProviderId ? { status: restoredStatus, scheduled: false } : original(id),
+        );
+      try {
+        await due(old.id);
+        await sweep();
+        expect(await held(old.id)).toMatchObject({
+          status: restoredStatus,
+          externallyRestored: true,
+          completedAt: null,
+        });
+        if (restoredStatus === "draft") expect((await held(old.id)).sentAt).toBeNull();
+        else expect((await held(old.id)).sentAt).not.toBeNull();
+        expect((await held(newer.id)).status).toBe(newStatus);
+        await due(old.id);
+        await sweep();
+        expect(
+          await entriesFor(
+            contract.id,
+            restoredStatus === "draft" ? "envelope.restored" : "envelope.sent",
+          ),
+        ).toHaveLength(1);
+      } finally {
+        read.mockRestore();
+      }
+      provider().sendDraft(oldProviderId);
+      const sent = await deliver({ providerEnvelopeId: oldProviderId, status: "sent" });
+      expect(sent.statusCode).toBe(204);
+      expect(await held(old.id)).toMatchObject({ status: "sent", externallyRestored: true });
+      expect((await held(newer.id)).status).toBe(newStatus);
+      // The existing reservation is untouched and blocks a third local creation.
+      const refused = await harness.app.inject({
+        method: "POST",
+        url: `/api/v1/contracts/${contract.number}/envelopes/prepare`,
+        cookies: as(SENDER),
+        payload: {
+          documentVersionId: (await signingState(contract.number)).primaryDocument!.versions[0]!.id,
+          signers: [...SIGNERS],
+          idempotencyKey: crypto.randomUUID(),
+        },
+      });
+      expect(refused.statusCode).toBe(409);
+      provider().complete(oldProviderId);
+      await deliver({ providerEnvelopeId: oldProviderId, status: "signed" });
+      expect(await settledFetch(contract.number, old.id)).toMatchObject({
+        status: "signed",
+        executedFetch: "ready",
+      });
+      expect((await held(newer.id)).status).toBe(newStatus);
+      expect(
+        (await primaryOf(contract.number)).versions.filter((v) => v.kind === "executed"),
+      ).toHaveLength(1);
+      expect(await entriesFor(contract.id, "envelope.signed")).toHaveLength(1);
+    },
+  );
+});

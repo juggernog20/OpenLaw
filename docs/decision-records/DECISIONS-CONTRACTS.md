@@ -768,3 +768,43 @@ An explicit move away and back is a newer choice; unrelated field edits are not.
 A confirmed compensating Void does not advance the Stage. Migration 0177 leaves
 old operation kinds and Status snapshots unknown, so recovery of those rows never
 invents a Stage change. An Administrator can set their Stage after verification.
+
+### CTR-013 addendum (2026-09-26, #1175): reconciliation without a browser return
+
+Only DocuSign `completed` means the OpenLaw Envelope is `signed`. DocuSign `signed`
+is intermediate and remains `sent`. Verified `created` and `deleted` Connect
+notifications are acknowledged without changing local status. Draft discard still
+requires #1173's single authenticated read of created status, no sent time, and
+recycle-bin membership. A missing or inaccessible Envelope is not a discard.
+
+The worker includes drafts, pending confirmations and discarded preparations in
+its existing durable status-read allowance. Fresh creation and launch grace periods
+remain bounded. A discarded preparation stays in the sweep for as long as it exists,
+on the same cadence, because a Polling install has no other way to learn that it was
+restored or sent outside OpenLaw. No age limit applies; a slower cadence for old
+discards was considered and declined for this slice because it would change how
+soon a restoration is noticed. Browser returns, Resume and worker replicas share that allowance.
+Verified sending and completion can settle a preparing row with a recorded provider
+ID. Recovery claims remain fenced; late creation and compensation writes cannot
+replace a confirmed status. Completion uses the existing executed-copy pipeline,
+explicit executed pin and conditional Signature-to-Active advancement.
+
+The adapter reads `folders,workflow` together. A created Envelope with
+`workflow.scheduledSending.status` of `pending`, `started` or `completed` remains a draft and
+carries a Scheduled in DocuSign label. It has no Sent timestamp and no Resume
+control. OpenLaw does not modify the schedule. The scheduling job's `completed`
+status is not Envelope completion. A created Envelope remains non-editable even
+when that job reports completed, until its own status confirms sending. These shapes follow the [pinned official
+OpenAPI](https://github.com/docusign/OpenAPI-Specifications/blob/858a3ae59b0edbc8beea4fa3a6d7fe803833dd68/esignature.rest.swagger-v2.1.json).
+Live account verification remains #1178.
+
+OpenLaw cannot prevent a person restoring an older discarded Envelope in DocuSign.
+An authenticated read or sending event restores its truthful status and sets an
+`externally_restored` fact, shown on the row. The database's unique index continues
+to protect the one local preparation reservation, excluding externally restored
+rows. A newer reservation is neither released nor voided. All live Envelopes,
+including restored ones, still block new creation under the Contract lock. Thus
+multiple external live Envelopes can be represented without permitting another
+local creation. Restored drafts are reviewed in DocuSign and cannot Resume here.
+Repeated observations of one Envelope do not add Activity or file another executed
+copy. Separate Envelopes that complete each file their own executed copy.
