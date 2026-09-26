@@ -779,10 +779,11 @@ recycle-bin membership. A missing or inaccessible Envelope is not a discard.
 
 The worker includes drafts, pending confirmations and discarded preparations in
 its existing durable status-read allowance. Fresh creation and launch grace periods
-remain bounded. A discarded preparation stays in the sweep for 30 days after the
-confirmed discard, then only a verified Connect delivery can restore it; without
-that bound every discard ever confirmed would cost one provider read per round for
-the life of the install. Browser returns, Resume and worker replicas share that allowance.
+remain bounded. A discarded preparation stays in the sweep for as long as it exists,
+on the same cadence, because a Polling install has no other way to learn that it was
+restored or sent outside OpenLaw. No age limit applies; a slower cadence for old
+discards was considered and declined for this slice because it would change how
+soon a restoration is noticed. Browser returns, Resume and worker replicas share that allowance.
 Verified sending and completion can settle a preparing row with a recorded provider
 ID. Recovery claims remain fenced; late creation and compensation writes cannot
 replace a confirmed status. Completion uses the existing executed-copy pipeline,

@@ -24,18 +24,6 @@ export const LAUNCH_RETURN_GRACE_MINUTES = 15;
  * sweep would learn it. After the grace it is polled like any other.
  */
 export const CREATION_READ_GRACE_MINUTES = 15;
-/**
- * How long after a confirmed discard the sweep keeps asking about the row.
- * A discarded preparation can be restored in the provider's console, so it
- * stays observable for this window, measured from the discard's
- * `completed_at`. The bound keeps the install's discard history from
- * becoming a permanent per-round provider bill: without it every
- * preparation ever discarded would be read every fifteen minutes for the
- * life of the install, against the endpoint the provider rate-limits
- * hardest. A verified Connect delivery restores a discarded row at any age;
- * only the polling stops.
- */
-export const DISCARD_OBSERVATION_DAYS = 30;
 
 export const reconciliationDue = () =>
   or(

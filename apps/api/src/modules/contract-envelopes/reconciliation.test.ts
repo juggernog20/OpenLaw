@@ -51,7 +51,6 @@ import { provisionUser } from "../../auth/instance.js";
 import type { ActivityAction } from "../../lib/activity.js";
 import { FAKE_SIGNATURE_HEADER, FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
 import type { WebhookDelivery } from "../../lib/signing/provider.js";
-import { DISCARD_OBSERVATION_DAYS } from "../../lib/signing/status-check.js";
 import { JOB_QUEUES } from "../../pipeline/jobs.js";
 import { startPipeline } from "../../pipeline/pg-boss.js";
 import {
@@ -912,37 +911,65 @@ describe("preparations reconciled without a browser return", () => {
     },
   );
 
-  it("stops polling a discarded preparation once its observation window has passed", async () => {
-    const contract = await recordAtSignature("Discard observed for a bounded window");
-    const envelope = await prepare(contract.number);
-    const providerId = await providerIdOf(envelope.id);
-    provider().discardDraft(providerId);
-    await due(envelope.id);
-    await sweep();
-    expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
-    const discardedDaysAgo = async (days: number) => {
+  it.each(["draft", "sent"] as const)(
+    "discovers a discarded Envelope restored as %s outside OpenLaw long after its discard",
+    async (restoredStatus) => {
+      const contract = await recordAtSignature(`Old discard restored as ${restoredStatus}`);
+      const envelope = await prepare(contract.number);
+      const providerId = await providerIdOf(envelope.id);
+      provider().discardDraft(providerId);
+      await due(envelope.id);
+      await sweep();
+      expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
+      // Discarded well over a month ago, then restored or sent in the
+      // provider's console. No browser return, no Connect delivery: only
+      // the sweep, on its ordinary cadence, can learn it.
       await harness.db
         .update(contractEnvelopes)
         .set({
-          completedAt: new Date(Date.now() - days * 86_400_000),
+          completedAt: new Date(Date.now() - 45 * 86_400_000),
           nextReconcileAt: new Date(0),
         })
         .where(eq(contractEnvelopes.id, envelope.id));
-    };
-    const read = vi.spyOn(provider(), "readEnvelope");
-    const reads = () => read.mock.calls.filter(([id]) => id === providerId).length;
-    try {
-      await discardedDaysAgo(DISCARD_OBSERVATION_DAYS + 1);
+      const original = provider().readEnvelope.bind(provider());
+      const read = vi
+        .spyOn(provider(), "readEnvelope")
+        .mockImplementation(async (id) =>
+          id === providerId ? { status: restoredStatus, scheduled: false } : original(id),
+        );
+      try {
+        await sweep();
+        expect(read.mock.calls.filter(([id]) => id === providerId)).toHaveLength(1);
+        expect(await held(envelope.id)).toMatchObject({
+          status: restoredStatus,
+          externallyRestored: true,
+          completedAt: null,
+          confirmationPending: false,
+        });
+        expect(
+          await entriesFor(
+            contract.id,
+            restoredStatus === "draft" ? "envelope.restored" : "envelope.sent",
+          ),
+        ).toHaveLength(1);
+      } finally {
+        read.mockRestore();
+      }
+      // Its completion is also discovered by polling alone and files one copy.
+      provider().sendDraft(providerId);
+      provider().complete(providerId);
+      await due(envelope.id);
       await sweep();
-      expect(reads()).toBe(0);
-      await discardedDaysAgo(DISCARD_OBSERVATION_DAYS - 1);
-      await sweep();
-      expect(reads()).toBe(1);
-      expect(await held(envelope.id)).toMatchObject({ status: "discarded" });
-    } finally {
-      read.mockRestore();
-    }
-  });
+      expect(await settledFetch(contract.number, envelope.id)).toMatchObject({
+        status: "signed",
+        executedFetch: "ready",
+      });
+      expect(await entriesFor(contract.id, "envelope.signed")).toHaveLength(1);
+      expect(
+        (await primaryOf(contract.number)).versions.filter((v) => v.kind === "executed"),
+      ).toHaveLength(1);
+    },
+  );
 
   it("holds a scheduled draft without a sent time or a Resume action", async () => {
     const contract = await recordAtSignature("Scheduled without a return");
