@@ -16,7 +16,7 @@
     "status": "validation-pending",
     "approvedBy": "Blair Wentworth",
     "approvedAt": "2026-09-25T21:31:25.738Z",
-    "sourceCommit": "1009e1311a2d2964be47a529cc86e362484a7dd1",
+    "sourceCommit": "c0ce728ca319af3d7fada3e19a5d07b27a015577",
     "reason": "User decision in DOC-030 (#1157), 2026-09-26: \"Keep them, open DOC-031\", on the option that connect-chatgpt and connect-microsoft-365-copilot stay in Help with an unverified badge until live ChatGPT and Copilot sessions under DOC-031 (#1187). This authorizes availability with validation in progress, not a claim that verification has passed.",
     "articles": [
       {

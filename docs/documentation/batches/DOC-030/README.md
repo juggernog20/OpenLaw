@@ -110,7 +110,7 @@ pass. V-M41-C60 and V-M41-C61 wait for DOC-031.
 
 ## Publication checks
 
-An independent agent ran V-HELP and V-OFFLINE on a lab built from `3ba23d39`,
+An independent agent ran V-HELP and V-OFFLINE on a lab built from `3ba23d39` (now `e85bc4b7`, see below),
 with content digest `07a63d01…`. All six role and method pairs passed. A clean
 archive of that commit compiles 60 verified guides. The two DOC-031 guides show
 "Validation in progress" and read correctly at 1280px and 320px. The scripts and
@@ -125,6 +125,12 @@ The first run failed on two batch defects, both fixed before the rerun:
 - `docs:export` failed on the links from configure-mcp to connect-chatgpt,
   because an export leaves out guides in review. The owner chose to keep both
   vendor guides published, and `edition.json` now records that under TECH-027.
+
+Before the push, a Playwright session file (`state-admin.json`) turned up at
+the repository root, committed by a walkthrough agent. It held a lab session
+cookie. The branch history was rewritten to drop it, so the tested commit
+`3ba23d39` is now `e85bc4b7`, with an identical tree apart from that file. The
+logs keep the hash the lab was built from.
 
 It noted three things that do not block:
 

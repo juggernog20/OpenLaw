@@ -10,12 +10,12 @@
   "observedFrom": "2026-09-25T21:33:23.695Z",
   "task": "DOC-030",
   "acceptanceTask": "DOC-030",
-  "distributionCommit": "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+  "distributionCommit": "e85bc4b746dfe6d8adf0ff170fa7695c667fac48",
   "publicationTarget": "development-app",
   "environment": {
     "lab": "openlaw-docs-80ceef9e-pub3",
     "appUrl": "http://127.0.0.1:43310",
-    "sourceCommit": "3ba23d39bdd52894baff7319762ee4a073b1b8be",
+    "sourceCommit": "e85bc4b746dfe6d8adf0ff170fa7695c667fac48",
     "appImage": "sha256:f4171ba3c0e3970867d00ee02cd77366f015e29790c2ca9f4dea734d9392cfaa",
     "engineImage": "sha256:2efdb23e528f53ce0e0f149784c7cfc6cc2660b1fdc8815fbc066c597366ace9",
     "seed": "Helix light profile, random seed 7, seeded 2026-09-25T21:32:51Z to 21:33:08Z",
@@ -195,6 +195,7 @@
     "Internet was blocked inside the browser by a request guard that allowed only the loopback lab and by Chromium DNS refusal. The host itself still had internet access.",
     "The standalone edition ships no completeness checker. The completeness check here is sha256sum --check against a SHA256SUMS manifest written at retention, plus a browser crawl from the index.",
     "The scripts are DOC-029's with these changes: addresses, the guide counts (read from articles.json), the password variable, the branding shell request and the removed Portal Request link. Steps for the validation badge, the served digest and anchor aliases are new. The bundle comes from compileWorkspace({development: true}), because that is what the image compiles.",
-    "Real browser zoom was sampled on one guide per reader. Theme and 320px checks used one guide per reader plus the two review guides. The link check covered every guide in the formal reader."
+    "Real browser zoom was sampled on one guide per reader. Theme and 320px checks used one guide per reader plus the two review guides. The link check covered every guide in the formal reader.",
+    "The lab was built from 3ba23d39bdd52894baff7319762ee4a073b1b8be. Before the push, the branch history was rewritten to drop a stray Playwright session file (state-admin.json) committed at the repository root. The distribution commit e85bc4b746dfe6d8adf0ff170fa7695c667fac48 has the same tree apart from that file, so the documentation content and digest are unchanged."
   ]
 }
