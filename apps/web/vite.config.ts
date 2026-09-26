@@ -7,6 +7,7 @@ import { pdfjsAssets } from "./vite-pdfjs-assets.ts";
 import { documentation } from "./vite-documentation.ts";
 
 const apiOrigin = process.env.DEV_API_ORIGIN ?? "http://localhost:3000";
+const appOrigin = process.env.BASE_URL ?? apiOrigin;
 const webPort = process.env.WEB_PORT ? Number(process.env.WEB_PORT) : undefined;
 
 export default defineConfig({
@@ -42,7 +43,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: apiOrigin,
-        headers: { origin: apiOrigin },
+        headers: { origin: appOrigin },
       },
     },
   },
