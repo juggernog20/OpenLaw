@@ -696,14 +696,17 @@ export function SignaturesCard({
           </Button>
         </div>
       )}
-      {signing.preparationEnabled && live?.status === "draft" && (
-        <p className="px-4 py-2 text-sm text-muted">
-          <FormattedMessage
-            id="signing.resumeHelp"
-            defaultMessage="Save and Close keeps your fields in DocuSign. If a link expires or you close the browser, return here and Resume. A fresh link does not close an earlier editing session."
-          />
-        </p>
-      )}
+      {signing.preparationEnabled &&
+        live?.status === "draft" &&
+        !live.scheduled &&
+        !live.externallyRestored && (
+          <p className="px-4 py-2 text-sm text-muted">
+            <FormattedMessage
+              id="signing.resumeHelp"
+              defaultMessage="Save and Close keeps your fields in DocuSign. If a link expires or you close the browser, return here and Resume. A fresh link does not close an earlier editing session."
+            />
+          </p>
+        )}
       {launchError && (
         <p role="alert" className="px-4 py-2 text-sm text-status-danger-fg">
           {launchError}
@@ -711,6 +714,8 @@ export function SignaturesCard({
       )}
       {signing.preparationEnabled &&
         live?.status === "draft" &&
+        !live.scheduled &&
+        !live.externallyRestored &&
         !frozen &&
         signing.signingConfigured &&
         (viewerRole === "administrator" || viewerRole === "legal_team_member") &&
@@ -943,7 +948,9 @@ function EnvelopeRow({
           <span
             className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${ENVELOPE_PILL[envelope.status]}`}
           >
-            {envelope.confirmationPending && envelope.status === "draft" ? (
+            {envelope.scheduled && envelope.status === "draft" ? (
+              <FormattedMessage id="signing.scheduled" defaultMessage="Scheduled in DocuSign" />
+            ) : envelope.confirmationPending && envelope.status === "draft" ? (
               <FormattedMessage id="signing.waiting" defaultMessage="Waiting for confirmation" />
             ) : envelope.preparationState === "uncertain" ? (
               <FormattedMessage
@@ -954,6 +961,14 @@ function EnvelopeRow({
               <FormattedMessage {...ENVELOPE_STATUS_LABEL[envelope.status]} />
             )}
           </span>
+          {envelope.externallyRestored && (
+            <span className="text-xs text-muted">
+              <FormattedMessage
+                id="signing.externallyRestored"
+                defaultMessage="Restored outside OpenLaw. Review this Envelope in DocuSign."
+              />
+            </span>
+          )}
           {/* Why it ended, under the pill that says it did. The seam
               keeps a reason only for a decline or a void, so nothing
               here has to ask which status it belongs to — a reason is

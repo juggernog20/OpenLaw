@@ -2070,6 +2070,20 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     values: (_intl, payload) => reasonValues(payload),
   },
+  "envelope.restored": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.restored",
+      defaultMessage: "This contract's envelope was restored in DocuSign",
+    }),
+  },
+  "envelope.confirmed": {
+    icon: Undo2,
+    message: defineMessage({
+      id: "activity.envelope.confirmed",
+      defaultMessage: "This contract's envelope status was confirmed by the provider",
+    }),
+  },
   "envelope.discarded": {
     icon: Undo2,
     message: defineMessage({

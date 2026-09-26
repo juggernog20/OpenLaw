@@ -230,6 +230,15 @@ describe("the Connect delivery body", () => {
     expect(parseConnectDelivery(delivery({ status: "delivered" })).status).toBe("sent");
   });
 
+  it.each(["created", "deleted"])("acknowledges verified %s without a transition", (status) => {
+    expect(parseConnectDelivery(delivery({ status })).status).toBeNull();
+  });
+
+  it("keeps DocuSign signed intermediate until completed", () => {
+    expect(parseConnectDelivery(delivery({ status: "signed" })).status).toBe("sent");
+    expect(mapEnvelopeStatus("signed")).toBe("sent");
+  });
+
   it("refuses a body that is not JSON", () => {
     expect(() => parseConnectDelivery(Buffer.from("<xml/>", "utf8"))).toThrow(
       WebhookSignatureError,
@@ -376,7 +385,8 @@ describe("the envelope payload", () => {
 /** What the stub is holding, in DocuSign's own vocabulary. */
 interface StubEnvelope {
   transactionId?: string;
-  status: "created" | "sent" | "completed" | "declined" | "voided";
+  status: "created" | "sent" | "signed" | "completed" | "declined" | "voided";
+  workflow?: { scheduledSending: { status: string; resumeDate?: string } };
   folders?: { type: string }[];
   sentDateTime?: string;
   refusal?: { status: number; errorCode: string };
@@ -899,6 +909,26 @@ describe("resume and native discard through DocuSign HTTP", () => {
       { hosts: { auth: stub.origin, api: stub.origin } },
     );
     try {
+      stub.envelopes.set("intermediate", { status: "signed" });
+      expect((await provider.readEnvelope("intermediate")).status).toBe("sent");
+      for (const status of ["pending", "started"]) {
+        stub.envelopes.set("scheduled", {
+          status: "created",
+          workflow: { scheduledSending: { status } },
+        });
+        expect(await provider.readEnvelope("scheduled")).toMatchObject({
+          status: "draft",
+          scheduled: true,
+        });
+      }
+      stub.envelopes.set("scheduled", {
+        status: "created",
+        workflow: { scheduledSending: { status: "completed" } },
+      });
+      expect(await provider.readEnvelope("scheduled")).toMatchObject({
+        status: "draft",
+        scheduled: false,
+      });
       stub.envelopes.set("saved", { status: "created" });
       expect((await provider.readEnvelope("saved")).status).toBe("draft");
       stub.envelopes.set("saved", { status: "created", folders: [{ type: "recyclebin" }] });

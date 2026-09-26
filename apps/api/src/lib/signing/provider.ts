@@ -202,6 +202,8 @@ export interface SentEnvelope {
 /** An envelope as the provider currently sees it. */
 export interface EnvelopeState {
   status: EnvelopeStatus;
+  /** Provider scheduled sending remains an unsent, reserved draft. */
+  scheduled?: boolean;
   /** Why it was declined or voided; absent for every other status. */
   reason?: string;
   /** When it reached a terminal status, if the provider says. */
@@ -213,7 +215,8 @@ export interface EnvelopeState {
 /** One verified webhook delivery, reduced to what the record needs. */
 export interface WebhookDelivery {
   providerEnvelopeId: string;
-  status: EnvelopeStatus;
+  /** Null acknowledges a verified event with no actionable status. */
+  status: EnvelopeStatus | null;
   reason?: string;
   completedAt?: Date;
   /** Provider-reported send time, when available. */

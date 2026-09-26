@@ -28656,6 +28656,8 @@ export interface operations {
               };
               sentAt: string | null;
               confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               recoveryAttempts: number;
               nextRecoveryAt: string | null;
@@ -28766,6 +28768,8 @@ export interface operations {
               };
               sentAt: string | null;
               confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               recoveryAttempts: number;
               nextRecoveryAt: string | null;
@@ -28903,6 +28907,8 @@ export interface operations {
               };
               sentAt: string | null;
               confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               recoveryAttempts: number;
               nextRecoveryAt: string | null;
@@ -29028,6 +29034,8 @@ export interface operations {
               };
               sentAt: string | null;
               confirmationPending: boolean;
+              scheduled: boolean;
+              externallyRestored: boolean;
               preparationState: ("pending" | "uncertain" | "created" | "failed") | null;
               recoveryAttempts: number;
               nextRecoveryAt: string | null;

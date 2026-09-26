@@ -1252,6 +1252,8 @@ type EnvelopePayloads = {
   "envelope.declined": EnvelopeEndingPayload;
   "envelope.voided": EnvelopeEndingPayload;
   "envelope.discarded": EnvelopeEndingPayload;
+  "envelope.restored": EnvelopeEndingPayload;
+  "envelope.confirmed": EnvelopeEndingPayload;
 };
 
 /**

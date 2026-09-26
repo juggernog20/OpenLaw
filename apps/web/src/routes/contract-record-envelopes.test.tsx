@@ -1007,6 +1007,47 @@ describe("preparing an unsent Envelope", () => {
     expect(screen.getByRole("button", { name: "Prepare Envelope" })).toBeInTheDocument();
   });
 
+  it.each([
+    { scheduled: true, text: "Scheduled in DocuSign" },
+    {
+      externallyRestored: true,
+      text: "Restored outside OpenLaw. Review this Envelope in DocuSign.",
+    },
+  ])("keeps $text reserved without Resume", async ({ text, ...facts }) => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", sentAt: null, ...facts })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText(text)).toBeInTheDocument();
+    expect(screen.getByText("Not sent")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Prepare Envelope" })).not.toBeInTheDocument();
+  });
+
+  it("converges a waiting preparation through the record event without a return", async () => {
+    const sources = stubEventSource();
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [envelopeRow({ status: "draft", sentAt: null, confirmationPending: true })],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText("Waiting for confirmation")).toBeInTheDocument();
+    api.replaceEnvelopes([envelopeRow({ status: "sent", confirmationPending: false })]);
+    sources[0]!.emit({
+      kind: "record",
+      action: "envelope.sent",
+      entityType: "contract",
+      entityId: "c1",
+      entryId: "worker-sent",
+      visibility: "working_team",
+    });
+    expect(await screen.findByText("Out for signature")).toBeInTheDocument();
+    expect(screen.queryByText("Waiting for confirmation")).not.toBeInTheDocument();
+  });
+
   it("offers Resume while confirmation is pending and never offers Send or Void for the draft", async () => {
     const api = recordApi({
       preparationEnabled: true,

@@ -24,9 +24,9 @@
  * all. That is what the record's surfaces read to decide whether to
  * draw an envelope at all.
  *
- * **At most one live envelope per contract**, held by a partial unique
+ * **At most one local live reservation per contract**, held by a partial unique
  * index on `LIVE_ENVELOPE_STATUSES` (`preparing`, `draft`, `sent`) —
- * the same predicate the send control and connector removal read. A
+ * excluding externally restored rounds. All live rounds still block new creation. A
  * declined, voided, or failed round blocks nothing: the next round is a
  * new row, and the earlier one stays on the record.
  *
@@ -145,9 +145,13 @@ export const contractEnvelopes = pgTable(
     recoveryStopped: text("recovery_stopped", {
       enum: ["lookup_expired", "attempts_exhausted", "identity_missing"],
     }),
-    /** Next permitted provider status check, shared by all worker replicas. */
+    /** Provider schedule, read without modifying its workflow. */
+    scheduled: boolean("scheduled").notNull().default(false),
+    /** A discarded round restored outside OpenLaw does not reclaim another reservation. */
+    externallyRestored: boolean("externally_restored").notNull().default(false),
     confirmationPending: boolean("confirmation_pending").notNull().default(false),
     launchClaimExpiresAt: timestamp("launch_claim_expires_at", { withTimezone: true }),
+    /** Next permitted provider status check, shared by all worker replicas. */
     nextReconcileAt: timestamp("next_reconcile_at", { withTimezone: true }),
     status: text("status", { enum: ENVELOPE_STATUSES }).notNull().default("sent"),
     /**
@@ -215,9 +219,9 @@ export const contractEnvelopes = pgTable(
      */
     uniqueIndex("contract_envelopes_provider_id_idx").on(table.provider, table.providerEnvelopeId),
     /**
-     * At most one **live** envelope per contract (CTR-013), as the
-     * database's own last word behind the check the send route makes
-     * under the contract's row lock.
+     * One local live reservation per Contract (CTR-013). Externally restored
+     * rounds retain their provider status without reclaiming this reservation.
+     * The creation routes check all live rows under the Contract lock.
      *
      * Partial on purpose: a declined or voided envelope blocks nothing,
      * so the next round goes out as easily as the first and the earlier
@@ -226,7 +230,9 @@ export const contractEnvelopes = pgTable(
     uniqueIndex("contract_envelopes_live_idx")
       .on(table.contractId)
       .where(
-        sql.raw(`status in (${LIVE_ENVELOPE_STATUSES.map((status) => `'${status}'`).join(", ")})`),
+        sql.raw(
+          `status in (${LIVE_ENVELOPE_STATUSES.map((status) => `'${status}'`).join(", ")}) and not externally_restored`,
+        ),
       ),
     /** One request per key on a contract, and one creation per
      * transaction id. */

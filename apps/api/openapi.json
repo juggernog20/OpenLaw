@@ -58351,6 +58351,12 @@
                           "confirmationPending": {
                             "type": "boolean"
                           },
+                          "scheduled": {
+                            "type": "boolean"
+                          },
+                          "externallyRestored": {
+                            "type": "boolean"
+                          },
                           "preparationState": {
                             "anyOf": [
                               {
@@ -58460,6 +58466,8 @@
                           "sentBy",
                           "sentAt",
                           "confirmationPending",
+                          "scheduled",
+                          "externallyRestored",
                           "preparationState",
                           "recoveryAttempts",
                           "nextRecoveryAt",
@@ -58742,6 +58750,12 @@
                           "confirmationPending": {
                             "type": "boolean"
                           },
+                          "scheduled": {
+                            "type": "boolean"
+                          },
+                          "externallyRestored": {
+                            "type": "boolean"
+                          },
                           "preparationState": {
                             "anyOf": [
                               {
@@ -58851,6 +58865,8 @@
                           "sentBy",
                           "sentAt",
                           "confirmationPending",
+                          "scheduled",
+                          "externallyRestored",
                           "preparationState",
                           "recoveryAttempts",
                           "nextRecoveryAt",
@@ -59190,6 +59206,12 @@
                           "confirmationPending": {
                             "type": "boolean"
                           },
+                          "scheduled": {
+                            "type": "boolean"
+                          },
+                          "externallyRestored": {
+                            "type": "boolean"
+                          },
                           "preparationState": {
                             "anyOf": [
                               {
@@ -59299,6 +59321,8 @@
                           "sentBy",
                           "sentAt",
                           "confirmationPending",
+                          "scheduled",
+                          "externallyRestored",
                           "preparationState",
                           "recoveryAttempts",
                           "nextRecoveryAt",
@@ -59592,6 +59616,12 @@
                           "confirmationPending": {
                             "type": "boolean"
                           },
+                          "scheduled": {
+                            "type": "boolean"
+                          },
+                          "externallyRestored": {
+                            "type": "boolean"
+                          },
                           "preparationState": {
                             "anyOf": [
                               {
@@ -59701,6 +59731,8 @@
                           "sentBy",
                           "sentAt",
                           "confirmationPending",
+                          "scheduled",
+                          "externallyRestored",
                           "preparationState",
                           "recoveryAttempts",
                           "nextRecoveryAt",

@@ -73,6 +73,8 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
       if (
         contract.archivedAt ||
         envelope.status !== "draft" ||
+        envelope.scheduled ||
+        envelope.externallyRestored ||
         !envelope.providerEnvelopeId ||
         !envelope.documentVersionId ||
         envelope.documentId !== contract.primaryDocumentId
@@ -113,6 +115,8 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
           and(
             eq(contractEnvelopes.id, envelope.id),
             eq(contractEnvelopes.status, "draft"),
+            eq(contractEnvelopes.scheduled, false),
+            eq(contractEnvelopes.externallyRestored, false),
             or(
               isNull(contractEnvelopes.launchClaimExpiresAt),
               sql`${contractEnvelopes.launchClaimExpiresAt} <= clock_timestamp()`,
@@ -158,10 +162,10 @@ export const envelopeLaunchRoutes: FastifyPluginAsyncZod = async (app) => {
               ...checked,
             });
             await requestExecutedCopy(app.jobs, request.log, result);
-            if (checked.status !== "draft")
+            if (checked.status !== "draft" || checked.scheduled)
               throw httpError(
                 409,
-                "This Envelope is no longer a draft. Check its confirmed status in Signatures.",
+                "This Envelope is no longer editable here. Check its confirmed status and any scheduled sending in Signatures.",
               );
           }
         }

@@ -235,7 +235,7 @@ const STATUS_MAP: ReadonlyMap<string, EnvelopeStatus> = new Map([
   ["created", "draft"],
   ["sent", "sent"],
   ["delivered", "sent"],
-  ["signed", "signed"],
+  ["signed", "sent"],
   ["completed", "signed"],
   ["declined", "declined"],
   ["voided", "voided"],
@@ -290,8 +290,10 @@ export function parseConnectDelivery(body: Buffer): WebhookDelivery {
   if (!providerEnvelopeId || !rawStatus) {
     throw new WebhookSignatureError("The delivery body is not a DocuSign envelope event.");
   }
-  const status = mapEnvelopeStatus(rawStatus);
-  if (!status) {
+  const status = ["created", "deleted"].includes(rawStatus.toLowerCase())
+    ? null
+    : mapEnvelopeStatus(rawStatus);
+  if (status === undefined) {
     throw new WebhookSignatureError(`The delivery reports a status we do not track: ${rawStatus}.`);
   }
   const reason = readString(envelope, "voidedReason") ?? readString(envelope, "declinedReason");
@@ -779,9 +781,12 @@ class DocuSignProvider implements SigningProvider {
     const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
     const body =
       readObject(
-        await this.callJson(`${url}/${encodeURIComponent(providerEnvelopeId)}?include=folders`, {
-          token,
-        }),
+        await this.callJson(
+          `${url}/${encodeURIComponent(providerEnvelopeId)}?include=folders,workflow`,
+          {
+            token,
+          },
+        ),
       ) ?? {};
     const rawStatus = readString(body, "status");
     const status = rawStatus ? mapEnvelopeStatus(rawStatus) : undefined;
@@ -807,6 +812,15 @@ class DocuSignProvider implements SigningProvider {
       readDate(body.declinedDateTime);
     return {
       status: discarded ? "discarded" : status,
+      scheduled:
+        status === "draft" &&
+        !discarded &&
+        ["pending", "started"].includes(
+          readString(
+            readObject(readObject(body.workflow)?.scheduledSending) ?? {},
+            "status",
+          )?.toLowerCase() ?? "",
+        ),
       ...(readDate(body.sentDateTime) ? { sentAt: readDate(body.sentDateTime)! } : {}),
       ...(reason !== undefined ? { reason } : {}),
       ...(completedAt !== undefined ? { completedAt } : {}),

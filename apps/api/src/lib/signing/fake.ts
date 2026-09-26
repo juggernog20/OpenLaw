@@ -253,6 +253,7 @@ export class FakeSigningProvider implements SigningProvider {
       status?: unknown;
       reason?: unknown;
       completedAt?: unknown;
+      sentAt?: unknown;
     };
     if (
       typeof delivery.providerEnvelopeId !== "string" ||
@@ -265,6 +266,7 @@ export class FakeSigningProvider implements SigningProvider {
       providerEnvelopeId: delivery.providerEnvelopeId,
       status: delivery.status as EnvelopeStatus,
       ...(typeof delivery.reason === "string" ? { reason: delivery.reason } : {}),
+      ...(typeof delivery.sentAt === "string" ? { sentAt: new Date(delivery.sentAt) } : {}),
       ...(typeof delivery.completedAt === "string"
         ? { completedAt: new Date(delivery.completedAt) }
         : {}),

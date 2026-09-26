@@ -76,6 +76,9 @@ export interface EnvelopeStatusChange {
   provider: SigningProviderKey;
   /** Claim fence for recovery of an interrupted creation. */
   recoveryAttempt?: number;
+  /** Only the HMAC-verified Connect route sets this authority. */
+  verifiedDelivery?: boolean;
+  scheduled?: boolean;
   providerEnvelopeId: string;
   status: EnvelopeStatus;
   /** The signer's or the voider's own words. Kept only for a decline
@@ -125,6 +128,8 @@ type EnvelopeEndingAction = Extract<
   | "envelope.declined"
   | "envelope.voided"
   | "envelope.discarded"
+  | "envelope.restored"
+  | "envelope.confirmed"
 >;
 const TRANSITION_ACTION: Partial<Record<EnvelopeStatus, EnvelopeEndingAction>> = {
   sent: "envelope.sent",
@@ -182,7 +187,7 @@ export async function applyEnvelopeStatus(
 ): Promise<EnvelopeTransition> {
   return notifier.notifying(async (tx) => {
     // Match the direct-send writer's Contract-before-Envelope lock order.
-    if (change.recoveryAttempt !== undefined) {
+    {
       const [reservation] = await tx
         .select({ contractId: contractEnvelopes.contractId })
         .from(contractEnvelopes)
@@ -210,6 +215,9 @@ export async function applyEnvelopeStatus(
         reason: contractEnvelopes.reason,
         completedAt: contractEnvelopes.completedAt,
         recoveryAttempts: contractEnvelopes.recoveryAttempts,
+        scheduled: contractEnvelopes.scheduled,
+        confirmationPending: contractEnvelopes.confirmationPending,
+        externallyRestored: contractEnvelopes.externallyRestored,
         creationKind: contractEnvelopes.creationKind,
         creationStatusId: contractEnvelopes.creationStatusId,
         creationStatusRevision: contractEnvelopes.creationStatusRevision,
@@ -232,37 +240,37 @@ export async function applyEnvelopeStatus(
       reason: row.reason,
       completedAt: row.completedAt,
     };
-    if (row.status === "preparing") {
-      if (change.recoveryAttempt === undefined || row.recoveryAttempts !== change.recoveryAttempt)
-        return { outcome: "unchanged", envelope: held };
-      if (change.status === "draft") {
-        await tx
-          .update(contractEnvelopes)
-          .set({
-            status: "draft",
-            preparationState: "created",
-            recoveryStopped: null,
-            nextRecoveryAt: null,
-            nextReconcileAt: new Date(Date.now() + 15 * 60_000),
-          })
-          .where(eq(contractEnvelopes.id, row.id));
-        return { outcome: "applied", envelope: { ...held, status: "draft" } };
-      }
-    }
-    // A confirmed draft can become sent; terminal outcomes never regress.
+    // Worker observations cannot outlive the claim or an accepted callback.
     if (
-      !["preparing", "sent", "draft"].includes(row.status) ||
-      TERMINAL_STATUSES.has(row.status) ||
+      change.recoveryAttempt !== undefined &&
+      (row.status !== "preparing" || row.recoveryAttempts !== change.recoveryAttempt)
+    )
+      return { outcome: "unchanged", envelope: held };
+    if (
+      row.status === "preparing" &&
+      !change.verifiedDelivery &&
+      change.recoveryAttempt === undefined
+    )
+      return { outcome: "unchanged", envelope: held };
+    if (TERMINAL_STATUSES.has(row.status) || row.status === "preparation_failed")
+      return { outcome: "unchanged", envelope: held };
+    // A delayed draft/discard read never undoes an authenticated send.
+    if (row.status === "sent" && ["draft", "discarded"].includes(change.status))
+      return { outcome: "unchanged", envelope: held };
+
+    const restored = row.status === "discarded" && change.status !== "discarded";
+    const scheduled = change.status === "draft" ? (change.scheduled ?? row.scheduled) : false;
+    const metadataChanged = row.scheduled !== scheduled || row.confirmationPending;
+    if (row.status === change.status && !metadataChanged)
+      return { outcome: "unchanged", envelope: held };
+    const action =
       row.status === change.status
-    ) {
-      return { outcome: "unchanged", envelope: held };
-    }
-
-    // A deletion observation must never turn a sent round into an unsent one.
-    if (change.status === "discarded" && row.status === "sent")
-      return { outcome: "unchanged", envelope: held };
-
-    const action = TRANSITION_ACTION[change.status];
+        ? "envelope.confirmed"
+        : change.status === "draft"
+          ? restored
+            ? "envelope.restored"
+            : "envelope.confirmed"
+          : TRANSITION_ACTION[change.status];
     if (!action) return { outcome: "unchanged", envelope: held };
 
     if (row.status === "preparing" && ["sent", "signed", "declined"].includes(change.status))
@@ -272,7 +280,11 @@ export async function applyEnvelopeStatus(
     // The moment we were told, when the provider named none. The column
     // is paired with a terminal status by a check constraint, so a
     // guess is not an option here — an ending has an ending time.
-    const completedAt = change.status === "sent" ? null : (change.completedAt ?? new Date());
+    const completedAt = ["draft", "sent"].includes(change.status)
+      ? null
+      : (change.completedAt ??
+        (row.status === change.status ? row.completedAt : null) ??
+        new Date());
     await tx
       .update(contractEnvelopes)
       .set({
@@ -280,6 +292,8 @@ export async function applyEnvelopeStatus(
         reason,
         completedAt,
         confirmationPending: false,
+        scheduled,
+        externallyRestored: row.externallyRestored || restored,
         ...(row.status === "preparing"
           ? {
               preparationState: "created" as const,
@@ -288,7 +302,8 @@ export async function applyEnvelopeStatus(
               nextReconcileAt: new Date(Date.now() + 15 * 60_000),
             }
           : {}),
-        ...((row.status === "draft" || row.status === "preparing") && change.status !== "discarded"
+        ...(["draft", "preparing", "discarded"].includes(row.status) &&
+        ["sent", "signed", "declined", "voided"].includes(change.status)
           ? { sentAt: change.sentAt ?? new Date() }
           : {}),
       })
@@ -316,13 +331,13 @@ export async function applyEnvelopeStatus(
     // the default. **The actor is whoever the entry named, which is
     // usually nobody**: a provider reported the ending, and a webhook is
     // not a person, so no one is excluded and the whole team is told.
-    if (change.status !== "sent" && change.status !== "discarded")
+    if (TERMINAL_STATUSES.has(change.status))
       await notifier.envelopeEnded(tx, {
         contractId: row.contractId,
         actorId: change.actorId ?? null,
         actorName: change.actorName ?? null,
         envelopeId: row.id,
-        status: change.status,
+        status: change.status as "signed" | "declined" | "voided",
       });
 
     return {
