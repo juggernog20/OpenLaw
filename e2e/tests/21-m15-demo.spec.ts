@@ -980,7 +980,7 @@ test.describe("M15 demo path", () => {
       );
       await page.getByRole("button", { name: "Save connector" }).click();
       expect((await saved).status(), await (await saved).text()).toBe(200);
-      await expect(page.getByText("Saved")).toBeVisible();
+      await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 
       // A save rotates credentials; it does not throw the switch. The
       // manual half above turns the connector off rather than removing
