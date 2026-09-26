@@ -639,6 +639,63 @@ export function SignaturesCard({
           </div>
         </>
       )}
+      {live?.status === "preparing" && (
+        <div className="flex flex-col items-start gap-2 px-4 py-2 text-sm text-muted">
+          <p>
+            {live.recoveryStopped ? (
+              <FormattedMessage
+                id="signing.recoveryStopped"
+                defaultMessage="Automatic recovery has stopped. Ask your Administrator to resolve this Envelope. It stays reserved until its outcome is confirmed."
+              />
+            ) : (
+              <FormattedMessage
+                id="signing.recoveryWaiting"
+                defaultMessage="OpenLaw is checking the original Envelope. Checks made: {attempts}. Refreshing does not create another Envelope or speed up provider checks."
+                values={{ attempts: live.recoveryAttempts ?? 0 }}
+              />
+            )}
+          </p>
+          {!live.recoveryStopped && live.nextRecoveryAt && (
+            <p>
+              <FormattedMessage
+                id="signing.recoveryNext"
+                defaultMessage="Next check no earlier than {time}."
+                values={{
+                  time: intl.formatDate(live.nextRecoveryAt, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }),
+                }}
+              />
+            </p>
+          )}
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy}
+            onClick={async () => {
+              setStatus("saving");
+              const current = await readContractSigning(contractNumber);
+              if (current.ok) {
+                onSigning(current);
+                setLaunchError(null);
+              } else
+                setLaunchError(
+                  current.detail ??
+                    intl.formatMessage({
+                      id: "signing.refreshFailed",
+                      defaultMessage: "Status could not be refreshed. Try again.",
+                    }),
+                );
+              setStatus("idle");
+            }}
+          >
+            <FormattedMessage id="signing.refreshRecovery" defaultMessage="Refresh status" />
+          </Button>
+        </div>
+      )}
       {signing.preparationEnabled && live?.status === "draft" && (
         <p className="px-4 py-2 text-sm text-muted">
           <FormattedMessage

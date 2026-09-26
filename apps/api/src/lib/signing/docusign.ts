@@ -38,6 +38,7 @@ import {
   EnvelopeAccessError,
   EnvelopeEditConflictError,
   SigningConfigError,
+  SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
   SigningUnavailableError,
@@ -723,7 +724,9 @@ class DocuSignProvider implements SigningProvider {
       this.accessToken(),
       this.envelopesUrl(),
       collect(input.document),
-    ]);
+    ]).catch((error: unknown) => {
+      throw new SigningNotSubmittedError("DocuSign creation was not submitted.", { cause: error });
+    });
     const body = readObject(
       await this.callJson(url, {
         method: "POST",
@@ -735,6 +738,29 @@ class DocuSignProvider implements SigningProvider {
     const providerEnvelopeId = body && readString(body, "envelopeId");
     if (!providerEnvelopeId) {
       throw new SigningUnavailableError("DocuSign accepted the envelope but named no id for it.");
+    }
+    return { providerEnvelopeId };
+  }
+
+  async findEnvelope(transactionId: string): Promise<SentEnvelope | null> {
+    const [token, url] = await Promise.all([this.accessToken(), this.envelopesUrl()]);
+    const body = readObject(
+      await this.callJson(`${url}?transaction_ids=${encodeURIComponent(transactionId)}`, { token }),
+    );
+    if (!body || !Array.isArray(body.envelopes)) {
+      throw new SigningUnavailableError("DocuSign returned no usable transaction lookup.");
+    }
+    if (body.envelopes.length === 0) return null;
+    const match = readObject(body.envelopes[0]);
+    const providerEnvelopeId = match && readString(match, "envelopeId");
+    if (
+      body.envelopes.length !== 1 ||
+      !providerEnvelopeId ||
+      (match &&
+        readString(match, "transactionId") !== undefined &&
+        readString(match, "transactionId") !== transactionId)
+    ) {
+      throw new SigningUnavailableError("DocuSign returned ambiguous transaction evidence.");
     }
     return { providerEnvelopeId };
   }

@@ -64,6 +64,9 @@ function inertDriver(environment: SigningEnvironment): SigningProvider {
     provider: "docusign",
     environment,
     testConnection: unreached,
+    findEnvelope: async () => {
+      throw new Error("unused");
+    },
     prepareEnvelope: unreached,
     launchEnvelope: unreached,
     sendEnvelope: unreached,

@@ -59,6 +59,15 @@ export class SigningConfigError extends SigningError {
   }
 }
 
+/** The adapter proves it failed before submitting creation. Generic provider
+ * errors do not carry this guarantee, even when they describe credentials. */
+export class SigningNotSubmittedError extends SigningError {
+  constructor(message: string, options: { cause: unknown }) {
+    super(message, options);
+    this.name = "SigningNotSubmittedError";
+  }
+}
+
 /**
  * The provider understood the request and said no — a malformed
  * envelope, a signer it will not accept, a void of an envelope that has
@@ -254,6 +263,10 @@ export interface SigningProvider {
    * take the envelope as described.
    */
   prepareEnvelope(input: PrepareEnvelopeInput): Promise<SentEnvelope>;
+
+  /** Looks up the original creation in the current account. An empty result is
+   * inconclusive, never evidence that a replacement may be created. */
+  findEnvelope(transactionId: string): Promise<SentEnvelope | null>;
 
   /** Issues a fresh browser editing session for an existing draft. */
   launchEnvelope(providerEnvelopeId: string, returnUrl: string): Promise<string>;

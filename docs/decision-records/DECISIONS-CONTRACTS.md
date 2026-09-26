@@ -738,3 +738,33 @@ The fake and HTTP tests prove OpenLaw's handling of that evidence. They do not p
 that native Discard returns that combination for the deployment account. That live
 check, edit controls and restoration behavior remain part of #1178 and the later
 reconciliation tickets.
+
+### CTR-013 addendum, 2026-09-26, #1174. Interrupted creation recovery
+
+The reconciliation sweep recovers both unsent preparations and interrupted direct
+sends from their durable reservation. It looks up the saved transaction identity
+in the saved provider account and environment, keeps any provider Envelope ID,
+and applies confirmed status to the same row. It never calls creation again.
+Attempts and next-check times are durable, with backoff and a 32-attempt limit.
+A lost worker claim is eligible again after 20 minutes. No database lock spans a
+provider call. A failed or empty lookup keeps the live reservation.
+An unresolved preparing row blocks another preparation or direct send on the
+same Contract. Lookup expiry releases neither the reservation nor its idempotency
+record. Operator resolution requires the documented account and identity checks
+before attaching a verified ID or recording proven noncreation; SQL alone is not
+the resolution procedure.
+
+DocuSign transaction lookup expires after seven days. Local idempotency does not.
+Older unresolved operations without a provider ID stop automatic lookup and need
+explicit operator resolution. Known IDs remain readable. Signatures shows the
+waiting state and next check, or asks for an Administrator when automatic recovery
+has stopped. Refresh reads local state and cannot release the reservation or
+change the original inputs. Deployment guidance records the operator procedure.
+
+Recovered direct sends retain their existing Signature Stage behavior. New
+reservations save the operation kind, original Status ID and Status-change count.
+Recovery advances a confirmed direct send only while that choice still holds.
+An explicit move away and back is a newer choice; unrelated field edits are not.
+A confirmed compensating Void does not advance the Stage. Migration 0177 leaves
+old operation kinds and Status snapshots unknown, so recovery of those rows never
+invents a Stage change. An Administrator can set their Stage after verification.

@@ -589,3 +589,76 @@ Push uses the SMTP from address as its `mailto:` contact, or `BASE_URL` when no 
 The generated VAPID private key is a stored secret in addition to the five credentials your Administrators enter. If `OPENLAW_SECRET_KEY` cannot decrypt it, OpenLaw preserves the stored pair and both services keep running. The API and the worker each log the failure at boot. Notification preferences still return the public key, which is stored in the clear. Push jobs retry and settle skipped while the private key stays unreadable; every other queue keeps working.
 
 Restore the original `OPENLAW_SECRET_KEY`, or supply it through `OPENLAW_SECRET_KEY_PREVIOUS` with the new key for the rewrap boot. The next push after the restore uses the recovered key with no restart. If you cannot recover it, set both `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in both service environments and restart. Use the same pair for both services. Re-enrol existing browsers if you replace the pair, because their subscriptions belong to the old public key.
+
+## Interrupted Envelope creation
+
+OpenLaw keeps the original Envelope reservation when creation has no confirmed
+answer. The reconciliation sweep recovers preparations and direct sends through
+that same row. It never sends another creation request. Signatures shows the
+attempt count, the next eligible check, and **Refresh status**, which reads local
+state without spending a provider request.
+
+Initial automatic recovery starts after 15 minutes. After an operator attaches a
+verified provider Envelope ID, the next scheduled sweep can process the row.
+PostgreSQL claims each attempt before the worker
+calls the provider. A stopped worker leaves a 20-minute claim. Checks back off
+from 15 minutes to six hours, with at most 32 attempts and five recovery operations
+per sweep. The worker keeps a provider Envelope ID as soon as lookup supplies it.
+It checks the saved account and environment before every provider lookup or read.
+An outage, a missing result, or an account mismatch keeps the reservation.
+
+[DocuSign transaction lookup](https://www.docusign.com/blog/developers/common-api-tasks-use-transactionid-to-find-the-envelope-you-created)
+is available for seven days. Once that window expires, an operation without a
+provider Envelope ID needs operator resolution. An operation with a known ID can
+still be read after the window. Local idempotency keys, snapshots and reservations
+have no age-based expiry.
+
+New reservations also record whether the user asked to prepare or send, the
+Contract's original Status, and its count of Status changes. A recovered direct
+send advances to the first live Signature Status only if that Status choice has
+not changed. Moving away and back counts as a newer choice. Unrelated field edits
+do not suppress the advance. Recovery of a confirmed compensating Void does not
+advance the Stage. Embedded preparations retain their separate Stage behavior.
+
+Migration `0177_envelope-recovery-intent` leaves these fields NULL on older rows.
+It cannot infer which operation produced an old uncertain reservation. Recovery
+still attaches its provider Envelope and settles its status, but does not advance
+the Contract Stage. An Administrator can set the Stage explicitly after checking
+the outcome. No backfill guesses intent from provider status or Subject.
+
+The worker logs `signing creation recovery` with the local Envelope ID, provider,
+account, environment, transaction ID, attempt and outcome. It does not log provider
+responses, credentials, launch URLs or Signer details. Use these fields to find the
+operation. `lookup_expired`, `attempts_exhausted` and `identity_missing` identify
+operations that need an Administrator and operator to resolve them.
+
+To resolve one, stop the worker first. Read the reservation and retain its original
+identity. Confirm the saved DocuSign account and environment. Find the Envelope in
+that account using the transaction ID or provider support. Confirm its identity
+before attaching an ID. A Subject or Signer match alone is not enough evidence.
+Use a parameterized PostgreSQL update with the verified values:
+
+```sql
+UPDATE contract_envelopes
+SET provider_envelope_id = $2,
+    recovery_stopped = NULL,
+    recovery_attempts = 0,
+    next_recovery_at = now()
+WHERE id = $1 AND status = 'preparing'
+  AND (provider_envelope_id IS NULL OR provider_envelope_id = $2)
+  AND provider_account_id = $3 AND provider_environment = $4;
+```
+
+Restart the worker. It reads the provider's status and settles the same local row.
+For an account configuration fault, repair the connector to reach the original
+account. Reset the attempts and next check only after that repair. Do not change
+the saved transaction identity, Version, Subject, Signers or idempotency key.
+
+If provider support definitively confirms that creation was refused and no
+Envelope exists for the original operation, retain that evidence in the operator's
+incident record. With the worker stopped, settle only that row as
+`preparation_failed`, set `preparation_state = 'failed'`, `completed_at = now()` and
+`next_recovery_at = NULL`. This releases the live reservation while retaining the
+original idempotency record. An empty search, a missing ID, an elapsed lookup
+window or an unavailable account is not that evidence. Keep unresolved operations
+reserved until their outcome is known.

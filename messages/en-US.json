@@ -12482,6 +12482,21 @@
   "signing.reasonHelp": {
     "defaultMessage": "The provider records this with the withdrawal, and the record keeps it on the row."
   },
+  "signing.recoveryNext": {
+    "defaultMessage": "Next check no earlier than {time}."
+  },
+  "signing.recoveryStopped": {
+    "defaultMessage": "Automatic recovery has stopped. Ask your Administrator to resolve this Envelope. It stays reserved until its outcome is confirmed."
+  },
+  "signing.recoveryWaiting": {
+    "defaultMessage": "OpenLaw is checking the original Envelope. Checks made: {attempts}. Refreshing does not create another Envelope or speed up provider checks."
+  },
+  "signing.refreshFailed": {
+    "defaultMessage": "Status could not be refreshed. Try again."
+  },
+  "signing.refreshRecovery": {
+    "defaultMessage": "Refresh status"
+  },
   "signing.removeSigner": {
     "defaultMessage": "Remove signer {number}"
   },

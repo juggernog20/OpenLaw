@@ -106,6 +106,28 @@ export function describeSigningContract(
       return harness;
     }
 
+    it.each(["draft", "sent"] as const)(
+      "finds the original %s by transaction identity",
+      async (status) => {
+        const provider = held().provider;
+        const transactionId = crypto.randomUUID();
+        const input = {
+          document: document(),
+          fileName: "original.pdf",
+          subject: "Original",
+          signers: SIGNERS,
+          transactionId,
+        };
+        const created =
+          status === "draft"
+            ? await provider.prepareEnvelope(input)
+            : await provider.sendEnvelope(input);
+        expect(await provider.findEnvelope(transactionId)).toEqual(created);
+        expect(await provider.readEnvelope(created.providerEnvelopeId)).toMatchObject({ status });
+        expect(await provider.findEnvelope(crypto.randomUUID())).toBeNull();
+      },
+    );
+
     it("names the adapter it is and the estate it points at", () => {
       expect(held().provider.provider).toBe(held().adapter);
       expect(["demo", "production"]).toContain(held().provider.environment);

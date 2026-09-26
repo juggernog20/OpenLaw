@@ -1104,6 +1104,56 @@ describe("preparing an unsent Envelope", () => {
     expect(keys[2]).not.toBe(keys[0]);
   });
 
+  it("refreshes an unresolved creation into the same recovered draft without creating or launching", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          id: "recovering",
+          status: "preparing",
+          preparationState: "uncertain",
+          sentAt: null,
+          recoveryAttempts: 2,
+          nextRecoveryAt: "2026-09-27T12:00:00Z",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(await screen.findByText(/Checks made: 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Next check no earlier/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume in DocuSign" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    expect(api.writes).toHaveLength(0);
+    api.replaceEnvelopes([
+      envelopeRow({ id: "recovering", status: "draft", preparationState: "created", sentAt: null }),
+    ]);
+    await userEvent.click(screen.getByRole("button", { name: "Refresh status" }));
+    expect(await screen.findByRole("button", { name: "Resume in DocuSign" })).toBeInTheDocument();
+    expect(await envelopeRows()).toHaveLength(1);
+    expect(api.writes).toHaveLength(0);
+  });
+
+  it("explains operator resolution when the lookup window has expired", async () => {
+    const api = recordApi({
+      preparationEnabled: true,
+      envelopes: [
+        envelopeRow({
+          status: "preparing",
+          preparationState: "uncertain",
+          sentAt: null,
+          recoveryStopped: "lookup_expired",
+        }),
+      ],
+    });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/signatures");
+    expect(
+      await screen.findByText(/Ask your Administrator to resolve this Envelope/),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue to DocuSign" })).not.toBeInTheDocument();
+  });
+
   it("shows an uncertain creation without offering a second preparation", async () => {
     const api = recordApi({
       preparationEnabled: true,
