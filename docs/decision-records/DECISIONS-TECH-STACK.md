@@ -2028,7 +2028,7 @@ No provider secret is sourced from the lab helper. The owner enters it in Settin
 The DOC-029 helper snapshots a committed tree and includes the live option and
 optional independent /24 subnets in its configuration digest. Generated snapshots
 and overlays are not edited after creation. App source and image identities differ
-from guide content hashes and are recorded separately. This opt-in remains until
-#1178's live restrictions pass; retiring the gate before that would violate CTR-013.
+from guide content hashes and are recorded separately. This opt-in remains until the
+live restrictions in #1178 pass; retiring the gate before that would violate CTR-013.
 Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
 prove provider account controls, actual session expiry or signed real Connect.

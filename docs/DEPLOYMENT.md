@@ -693,13 +693,14 @@ Neither `DOCUSIGN_BASE_URL` nor `SIGNING_STANDIN` is set. Without both preparati
 switches, real deployments keep the old interface. No provider secret comes from
 the lab helper or its shell environment.
 
-The owner opens the seeded lab, then **Settings → Organization → Integrations →
-E-signature → DocuSign**. They choose **Demo** and **Polling**, enter their integration
-key, non-administrator integration user's User ID and RSA private key, save, then
-leave the secret inputs. The owner must have granted JWT consent for that user
-and control two Signer inboxes. Mailpit receives OpenLaw's lab mail, not DocuSign's
-external invitations. Pause browser automation during credential entry. Do not
-capture forms, input values, network bodies, sender URLs or return-state tokens.
+Ask the account owner to open the seeded lab, then **Settings → Organization →
+Integrations → E-signature → DocuSign**. Have them choose **Demo** and **Polling**,
+enter their integration key, non-administrator integration user's User ID and RSA
+private key, save, then leave the secret inputs. Confirm that the owner has granted
+JWT consent for that user and controls two Signer inboxes. Mailpit receives
+OpenLaw's lab mail, not DocuSign's external invitations. Pause browser automation
+during credential entry. Do not capture forms, input values, network bodies,
+sender URLs or return-state tokens.
 Use a separate browser context for provider account administration or consent so
 that the embedded editor does not share that provider web session.
 
