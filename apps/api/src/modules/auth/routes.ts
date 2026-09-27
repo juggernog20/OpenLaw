@@ -807,60 +807,70 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // A row under the same slug is left to the plugin, which refuses
       // the duplicate; excluding it here keeps that answer (and its
       // message) ahead of a domain clash with the row's own domains.
-      const domain = await resolveProviderDomains(app.db, request.body.domain, providerId);
+      // The domain check and the plugin's insert are two steps, so they
+      // run under the provider lock: two registrations, or a registration
+      // beside an update, cannot both pass the check and both land.
+      const outcome = await tryWithAdvisoryLock(
+        app.db,
+        ADVISORY_LOCK.ssoProviderUpdate,
+        async () => {
+          const domain = await resolveProviderDomains(app.db, request.body.domain, providerId);
 
-      // The plugin's register endpoint does the real work — issuer
-      // validation, discovery, persistence — under the admin's forwarded
-      // session. Its SSRF guard only fetches discovery documents from
-      // trusted origins, so the runtime-supplied issuer is trusted for
-      // exactly this call.
-      let registered: { redirectURI: string };
-      try {
-        registered = await withTrustedIssuerOrigin(app.auth, issuer, () =>
-          app.auth.api.registerSSOProvider({
-            body: { providerId, issuer, domain, oidcConfig: { clientId, clientSecret } },
-            headers: fromNodeHeaders(request.headers),
-          }),
-        );
-      } catch (error) {
-        relayAuthError(error);
+          // The plugin's register endpoint does the real work — issuer
+          // validation, discovery, persistence — under the admin's forwarded
+          // session. Its SSRF guard only fetches discovery documents from
+          // trusted origins, so the runtime-supplied issuer is trusted for
+          // exactly this call.
+          let registered: { redirectURI: string };
+          try {
+            registered = await withTrustedIssuerOrigin(app.auth, issuer, () =>
+              app.auth.api.registerSSOProvider({
+                body: { providerId, issuer, domain, oidcConfig: { clientId, clientSecret } },
+                headers: fromNodeHeaders(request.headers),
+              }),
+            );
+          } catch (error) {
+            relayAuthError(error);
+          }
+
+          // An Administrator registering the provider is OpenLaw's domain
+          // -trust decision (single tenant — there is no other tenant to
+          // protect from a false domain claim), so the row is marked verified
+          // immediately; the plugin will not link sign-ins to pre-existing
+          // users through an unverified provider, and the DNS-TXT
+          // verification flow is never exposed.
+          const [row] = await app.db
+            .update(ssoProviders)
+            .set({ name, domainVerified: true, updatedAt: new Date() })
+            .where(eq(ssoProviders.providerId, providerId))
+            .returning({
+              id: ssoProviders.id,
+              providerId: ssoProviders.providerId,
+              name: ssoProviders.name,
+              issuer: ssoProviders.issuer,
+              domain: ssoProviders.domain,
+            });
+          if (!row) throw httpError(500, "The registered provider could not be read back.");
+          const provider = publicProvider(row);
+
+          // Logged after the fact: the row itself was written by better-auth
+          // outside any transaction of ours, so exact atomicity is not on
+          // offer here. Credentials never enter the payload.
+          await recordActivity(app.db, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "sso_provider.registered",
+            visibility: "admin_only",
+            payload: { providerId: provider.providerId, name, issuer: provider.issuer, domain },
+          });
+
+          return { provider, callbackUrl: registered.redirectURI };
+        },
+      );
+      if (!outcome.acquired) {
+        throw httpError(409, "Another provider update is in progress. Try again.");
       }
-
-      // An Administrator registering the provider is OpenLaw's domain
-      // -trust decision (single tenant — there is no other tenant to
-      // protect from a false domain claim), so the row is marked verified
-      // immediately; the plugin will not link sign-ins to pre-existing
-      // users through an unverified provider, and the DNS-TXT
-      // verification flow is never exposed.
-      const [row] = await app.db
-        .update(ssoProviders)
-        .set({ name, domainVerified: true, updatedAt: new Date() })
-        .where(eq(ssoProviders.providerId, providerId))
-        .returning({
-          id: ssoProviders.id,
-          providerId: ssoProviders.providerId,
-          name: ssoProviders.name,
-          issuer: ssoProviders.issuer,
-          domain: ssoProviders.domain,
-        });
-      if (!row) throw httpError(500, "The registered provider could not be read back.");
-      const provider = publicProvider(row);
-
-      // Logged after the fact: the row itself was written by better-auth
-      // outside any transaction of ours, so exact atomicity is not on
-      // offer here. Credentials never enter the payload.
-      await recordActivity(app.db, {
-        entityType: "system",
-        actorId: request.user.id,
-        action: "sso_provider.registered",
-        visibility: "admin_only",
-        payload: { providerId: provider.providerId, name, issuer: provider.issuer, domain },
-      });
-
-      return reply.status(201).send({
-        provider,
-        callbackUrl: registered.redirectURI,
-      });
+      return reply.status(201).send(outcome.result);
     },
   );
 

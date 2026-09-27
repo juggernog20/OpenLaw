@@ -222,7 +222,7 @@ Actors: Administrator, then Invitee.
     - [ ] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
     - [ ] d. The form title becomes "Add another identity provider". Administrator registers a second provider for another domain. Both rows show. Registering a domain the first provider already owns shows "{domain} is already assigned to the identity provider {name}." A subdomain of it is refused the same way.
     - [ ] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
-    - [ ] d. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
+    - [ ] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
 - [ ] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
 - [ ] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
     - [ ] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.

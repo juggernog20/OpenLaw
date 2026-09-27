@@ -2177,6 +2177,69 @@ it("lists registered identity providers on the authentication step and removes o
   expect(calls).toEqual(["DELETE /api/v1/auth/sso-providers/family-office"]);
 });
 
+it("shows the refusal and keeps the rows when a provider removal or registration is refused", async () => {
+  const providers = [
+    {
+      id: "p1",
+      providerId: "wentworth",
+      name: "Wentworth identity provider",
+      issuer: "https://idp.wentworth.test",
+      domain: "wentworth.test",
+      domains: ["wentworth.test"],
+      clientId: "openlaw",
+    },
+    {
+      id: "p2",
+      providerId: "family-office",
+      name: "Family Office identity provider",
+      issuer: "https://idp.familyoffice.test",
+      domain: "familyoffice.test",
+      domains: ["familyoffice.test"],
+      clientId: "openlaw-family",
+    },
+  ];
+  stubApi({
+    signedIn: ADMIN,
+    onboarding: { completed: false },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
+        return json(200, { providers });
+      }
+      if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "POST") {
+        return problem(
+          409,
+          "wentworth.test is already assigned to the identity provider Wentworth identity provider. Each email domain can belong to one provider.",
+        );
+      }
+      if (call.url.pathname.startsWith("/api/v1/auth/sso-providers/")) {
+        return problem(409, "Another provider update is in progress. Try again.");
+      }
+      return wizardExtra()(call);
+    },
+  });
+  renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Identity providers" }));
+  const list = await screen.findByRole("list", { name: "Registered identity providers" });
+  await user.click(screen.getByRole("button", { name: "Remove Family Office identity provider" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Another provider update is in progress. Try again.",
+  );
+  expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+
+  await user.type(screen.getByLabelText("Provider ID"), "third");
+  await user.type(screen.getByLabelText("Issuer URL"), "https://idp.third.test");
+  await user.type(screen.getByLabelText("Email domains"), "wentworth.test");
+  await user.type(screen.getByLabelText("Client ID"), "openlaw-third");
+  await user.type(screen.getByLabelText("Client secret"), "third-secret");
+  await user.click(screen.getByRole("button", { name: "Register provider" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "wentworth.test is already assigned to the identity provider Wentworth identity provider.",
+  );
+  expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+  expect(screen.getByLabelText("Provider ID")).toHaveValue("third");
+});
+
 it("does not restore another Administrator's draft", async () => {
   const state = { signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() };
   stubApi(state);

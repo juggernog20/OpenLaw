@@ -298,7 +298,7 @@ function ProviderDialog({
               <FormattedMessage id="settings.auth.clientSecret" defaultMessage="Client secret" />
             }
             help={
-              target && (
+              target?.clientId && (
                 <FormattedMessage
                   id="settings.auth.secret.hint"
                   defaultMessage="Leave blank to keep the current secret. Paste a new value to rotate."
@@ -309,7 +309,9 @@ function ProviderDialog({
             <Input
               id="sso-client-secret"
               type="password"
-              required={!target}
+              // A row that lost its client ID lost its secret with it:
+              // the PATCH route refuses a repair without both.
+              required={!target || !target.clientId}
               placeholder={intl.formatMessage({
                 id: "settings.auth.secretPlaceholder",
                 // A visual mask, not copy. It still rides the catalog so a

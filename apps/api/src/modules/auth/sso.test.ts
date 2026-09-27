@@ -889,7 +889,7 @@ describe("several identity providers, routed by email domain", () => {
   });
 
   it("removes a provider, logs it, and the sole survivor goes back to one-click", async () => {
-    const staffCookies = await signInCookies(
+    const nonAdminCookies = await signInCookies(
       harness.app,
       "counsel@acme.example",
       "casey-sets-her-own",
@@ -897,7 +897,7 @@ describe("several identity providers, routed by email domain", () => {
     const forbidden = await harness.app.inject({
       method: "DELETE",
       url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
-      cookies: staffCookies,
+      cookies: nonAdminCookies,
     });
     expect(forbidden.statusCode).toBe(403);
 

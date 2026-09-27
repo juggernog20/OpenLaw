@@ -32,7 +32,7 @@ const PROVIDERS = [
   },
 ];
 
-function setup({ provider = true, fail = false } = {}) {
+function setup({ provider = true, fail = false, failRow = false } = {}) {
   let policy = {
     legal: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
     business: { password: false, magicLink: true, sso: false, requireTwoFactor: false },
@@ -73,6 +73,7 @@ function setup({ provider = true, fail = false } = {}) {
       }
       if (path.startsWith("/api/v1/auth/sso-providers/")) {
         providerCalls.push({ method: call.method, path, body: call.body });
+        if (failRow) return problem(409, "Another provider update is in progress. Try again.");
         if (call.method === "DELETE") return new Response(null, { status: 204 });
         const target = PROVIDERS.find((row) => path.endsWith(row.providerId))!;
         const body = call.body as { name?: string; domain?: string };
@@ -245,6 +246,9 @@ it("asks for a client ID before a provider missing credentials can be saved", as
   });
   expect(within(dialog).getByLabelText("Client ID")).toBeRequired();
   expect(within(dialog).getByLabelText("Client ID")).toHaveValue("");
+  // The secret went with the client ID, so a repair needs both.
+  expect(within(dialog).getByLabelText("Client secret")).toBeRequired();
+  expect(screen.queryByText(/Leave blank to keep the current secret/)).not.toBeInTheDocument();
   await user.click(within(dialog).getByRole("button", { name: "Save provider" }));
   expect(screen.getByRole("dialog")).toBeVisible();
   expect(providerCalls).toEqual([]);
@@ -269,4 +273,31 @@ it("removes a provider and disables SSO once none is left", async () => {
   ]);
   const legal = screen.getByRole("region", { name: "Legal User Authentication" });
   expect(within(legal).getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
+});
+
+it("keeps the edit dialog open and shows the refusal when the save is rejected", async () => {
+  const { user } = setup({ failRow: true });
+  const card = await screen.findByRole("region", { name: "Identity providers" });
+  await user.click(within(card).getByRole("button", { name: "Edit Wentworth identity provider" }));
+  const dialog = await screen.findByRole("dialog", { name: "Edit Wentworth identity provider" });
+  await user.type(within(dialog).getByLabelText("Email domains"), ", hr.wentworth.test");
+  await user.click(within(dialog).getByRole("button", { name: "Save provider" }));
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "Another provider update is in progress. Try again.",
+  );
+  expect(screen.getByRole("dialog")).toBeVisible();
+  expect(within(card).getByText("wentworth.test, legal.wentworth.test")).toBeVisible();
+});
+
+it("keeps the row and shows its error when a removal is refused", async () => {
+  const { user } = setup({ failRow: true });
+  const card = await screen.findByRole("region", { name: "Identity providers" });
+  const remove = within(card).getByRole("button", { name: "Remove Wentworth identity provider" });
+  await user.click(remove);
+  expect(
+    await within(card).findByText("Another provider update is in progress. Try again."),
+  ).toBeVisible();
+  expect(within(card).getByText("Wentworth identity provider")).toBeVisible();
+  expect(within(card).getByText("2 providers")).toBeVisible();
+  expect(remove).toHaveFocus();
 });
