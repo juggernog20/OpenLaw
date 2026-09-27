@@ -32,7 +32,7 @@
     "@better-auth/oauth-provider": "1.7.6",
     "@better-auth/sso": "1.7.6",
     "@fastify/multipart": "^10.1.2",
-    "@fastify/static": "^10.1.4",
+    "@fastify/static": "^10.1.5",
     "@fastify/swagger": "^9.9.0",
     "@kenjiuno/msgreader": "^1.28.0",
     "@modelcontextprotocol/fastify": "2.0.0",
@@ -50,9 +50,9 @@
     "fastify-type-provider-zod": "^7.0.0",
     "jose": "^6.2.12",
     "nodemailer": "^10.0.10",
-    "pg-boss": "^12.34.0",
+    "pg-boss": "^12.35.0",
     "pizzip": "^3.3.0",
-    "postal-mime": "^3.0.0",
+    "postal-mime": "^4.0.0",
     "sanitize-html": "^2.17.7",
     "sharp": "^0.35.4",
     "uuidv7": "^1.2.1",
@@ -69,6 +69,6 @@
     "oauth2-mock-server": "^9.2.0",
     "testcontainers": "^12.1.0",
     "tsx": "^4.23.15",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.2"
   }
 }
