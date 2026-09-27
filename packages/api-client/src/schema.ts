@@ -155,6 +155,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/setup/validate-token": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Check the bootstrap token before creating the first Administrator */
+    post: operations["validateSetupToken"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/invites": {
     parameters: {
       query?: never;
@@ -8558,6 +8575,43 @@ export interface operations {
             requireTwoFactor: boolean;
             emailConfigured: boolean;
             ssoProviderId: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  validateSetupToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          setupToken: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            valid: boolean;
           };
         };
       };

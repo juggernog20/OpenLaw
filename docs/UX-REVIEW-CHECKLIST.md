@@ -41,7 +41,7 @@ The code audit turned these up. Each is also marked inline with a "Watch:" line.
 ## Contents
 
 - 1. Authentication and first run
-  - 1.1 First run on a clean instance, all nine wizard steps
+  - 1.1 First run on a clean instance, all eight wizard steps
   - 1.2 First run fast path
   - 1.3 Invite activation and TOTP enrolment
   - 1.4 Password sign-in and its failures
@@ -187,7 +187,7 @@ The code audit turned these up. Each is also marked inline with a "Watch:" line.
 
 ## 1. Authentication and first run
 
-### 1.1 First run on a clean instance, all nine wizard steps
+### 1.1 First run on a clean instance, all eight wizard steps
 
 Actors: Administrator, then Invitee.
 
@@ -202,8 +202,12 @@ Actors: Administrator, then Invitee.
    - [ ] b. Administrator types a password under 8 characters. The browser refuses the submit.
    - [ ] c. Administrator types a wrong setup token. The card shows the server's refusal in one sentence.
    - [ ] d. Administrator types an invalid email. The browser refuses the submit.
+   - [ ] e. Administrator opens "Help with this page", then uses Back. All five setup fields retain their values after Back or a reload. Successful setup clears the Administrator draft.
+     Note: Returning from Help or reloading previously cleared the form. Setup drafts now persist in this tab across the whole wizard. Awaiting walk confirmation.
+   - [ ] f. Green checkmarks appear inside the inputs for a nonblank Name, a valid Email, a Password of at least eight characters, and a matching Confirm password. Setup token shows a check only after the server confirms it matches. Editing the token clears its check immediately; an incorrect token never gets one.
 - [ ] 5. Administrator presses "Create Administrator". The app signs them in and replaces the page with `/welcome`. Browser Back does not return to setup.
-- [ ] 6. Administrator sees "Step 1 of 9", a "Help with this page" link, and the card "Welcome to OpenLaw". The intro says email is required and the other steps can be skipped.
+- [ ] 6. Administrator sees "Step 1 of 8", a "Help with this page" link, and the card "Welcome to OpenLaw". The intro says email is required and the other steps can be skipped.
+   - [ ] a. On every configuring step, enter unsaved values, visit Help, and return. Repeat with a reload and with Back between steps. Values, switches, selections and the current step survive. Saved credentials are removed from the draft; Finish and Sign out clear the remaining wizard draft.
 - [ ] 7. Administrator presses "Get started". The URL gains `?step=organization`.
    - [ ] a. Fork: Administrator presses "Skip optional steps" instead. Go to Script 1.2.
 - [ ] 8. Your organization step. Administrator enters Organization name, chooses a logo with Upload, keeps Default locale "English (United States)", and searches for a Default timezone.
@@ -212,18 +216,18 @@ Actors: Administrator, then Invitee.
 - [ ] 9. Administrator presses Continue. The organization saves and the step moves to Authentication.
    - [ ] a. Administrator presses "Set up later". Nothing saves and the step moves on.
    - [ ] b. Administrator presses Back. The step returns to the splash.
-- [ ] 10. Authentication step. Administrator sees the Legal User switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
+- [ ] 10. Authentication step. The subtitle reads "How your users sign in to OpenLaw". Legal Users and Business Users are separate collapsed sections. Administrator opens Legal Users and sees the switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
     - [ ] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
-    - [ ] b. Administrator fills "Register your identity provider": Provider ID, Issuer URL, Email domain, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {id} is registered." and "Paste this callback URL into your IdP console: {url}". The SSO switch becomes available.
+    - [ ] b. Administrator opens "Shared SSO provider" and fills "Register your identity provider": Provider ID, Issuer URL, Email domain, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {id} is registered." and "Paste this callback URL into your IdP console: {url}". The SSO switch becomes available.
     - [ ] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
     - [ ] d. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
-- [ ] 11. Administrator presses Continue.
-    - [ ] a. Fork: "Require two-factor authentication" is on. The app saves the policy and goes straight to `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The app goes to `/`, and Home sends the Administrator back to `/welcome`.
-    Watch: after the forced enrolment the wizard reopens at Step 1, not at Authentication. Check that nothing already saved is lost.
-- [ ] 12. Business-user portal step. Administrator sets the Business Portal switches, the same four as step 10, then adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
-    - [ ] a. The list is empty. The step shows "No domains allowed yet. Magic-link sign-in is unavailable."
-    - [ ] b. Administrator removes a domain. It leaves the list before save.
-- [ ] 13. Administrator presses Continue. Both the policy and the domain list save.
+- [ ] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
+- [ ] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
+    - [ ] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.
+    - [ ] b. Administrator removes a domain. It leaves the list before save. Removing the last domain disables the switches again while retaining their values.
+- [ ] 13. Administrator presses Continue. Both groups' policies and the domain list save, and the wizard opens Outbound email.
+    - [ ] a. Fork: Legal Users' "Require two-factor authentication" is on. Business settings save before the legal policy enables the enrollment requirement. The app opens `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The wizard resumes at Outbound email with the saved choices retained.
+    - [ ] b. An old `/welcome?step=portal` link opens Authentication with Business Users expanded.
 - [ ] 14. Outbound email step. The Administrator sees one of three states.
     - [ ] a. Set by the environment with a sender. The step says "Outbound email is set by the deployment environment. Mail is sent from {from}."
     - [ ] b. Set by the environment without `SMTP_FROM`. The step says mail cannot be sent until `SMTP_FROM` is set. Continue stays disabled.
@@ -3470,6 +3474,7 @@ Actors: Administrator, Business User.
 - [ ] 9. A signed-out visitor opens `/help`. The app sends them to `/documentation`.
 - [ ] 10. The session check fails while opening help. The page shows "Help session unavailable" and "All documentation".
 - [ ] 11. On the wizard, the "Help with this page" link opens the matching article in `/documentation`.
+  Note: The setup help results had a chevron that did nothing when clicked. The article link now covers the whole result row, including the chevron, with a row-wide keyboard focus outline. Awaiting walk confirmation.
 
 ### 9.6 Populated Home for an Administrator
 

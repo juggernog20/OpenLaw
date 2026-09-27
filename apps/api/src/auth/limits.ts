@@ -124,7 +124,7 @@ export function clientAddress(
 
 export interface AuthRequestScopes {
   /** Which door is asking; each door has a budget of its own. */
-  route: "password-setup" | "password-setup-complete" | "magic-link";
+  route: "password-setup" | "password-setup-complete" | "magic-link" | "setup-token";
   email?: string;
   address: string | null;
 }

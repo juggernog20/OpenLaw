@@ -32,15 +32,23 @@ import { findSavedAiKey } from "../lib/ai-connector-config";
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { HelpLink } from "../components/documentation/help-link";
 import {
+  useEffect,
   useId,
   useRef,
   useState,
   type ReactNode,
   type SubmitEvent as FormSubmitEvent,
 } from "react";
-import { Link, redirect, useLoaderData, useNavigate, useSearchParams } from "react-router";
+import {
+  Link,
+  redirect,
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+  type LoaderFunctionArgs,
+} from "react-router";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
-import { History, TriangleAlert, X } from "lucide-react";
+import { ChevronDown, ChevronRight, History, TriangleAlert, X } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import {
   isCatalogRow,
@@ -56,11 +64,21 @@ import { networkError } from "../lib/messages";
 import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
 import { requireUser } from "../lib/session";
+import {
+  clearSetupDrafts,
+  readSetupDraft,
+  useSetupDraft,
+  writeSetupDraft,
+} from "../lib/setup-drafts";
 import { AuthenticationOptionsFields } from "../components/authentication-options";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
-import { SmtpSettingsFields, readSmtpSettings } from "../components/smtp-settings-fields";
+import {
+  SmtpSettingsFields,
+  readSmtpSettings,
+  EMPTY_SMTP_DRAFT,
+} from "../components/smtp-settings-fields";
 import { Alert } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -371,14 +389,32 @@ function StartBlankDialog({
   );
 }
 
-export async function welcomeLoader() {
+export async function welcomeLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser({ allowEmailSetup: true });
   if (user.role !== "administrator") return redirect("/");
   // Completion decides the redirect before anything else is fetched.
   // Most visits to this loader are bounces off a finished instance.
   const onboarding = await api.GET("/api/v1/onboarding");
   if (!onboarding.data) throw new Error("The onboarding state could not be read.");
-  if (onboarding.data.completed) return redirect("/");
+  const draftScope = `welcome-${user.id}`;
+  if (onboarding.data.completed) {
+    clearSetupDrafts(draftScope);
+    return redirect("/");
+  }
+  const requestedStep = new URL(request.url).searchParams.get("step");
+  const storedStep = readSetupDraft<string>(draftScope, "step", "welcome");
+  const previousStep = storedStep === "portal" ? "authentication" : storedStep;
+  if (requestedStep === "portal") {
+    writeSetupDraft(draftScope, "businessOpen", true);
+    return redirect("/welcome?step=authentication");
+  }
+  if (
+    !new URL(request.url).searchParams.has("step") &&
+    previousStep !== "welcome" &&
+    STEPS.some((step) => step === previousStep)
+  ) {
+    return redirect(`/welcome?step=${previousStep}`);
+  }
   const [general, methods, domains, email, signing, ai, review] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
@@ -401,6 +437,7 @@ export async function welcomeLoader() {
   return {
     // The email step's own answer, which honours TECH-011's precedence:
     // an environment-pinned relay counts exactly as an app-saved one.
+    draftScope,
     emailConfigured: onboarding.data.steps.email.done,
     general: general.data.general,
     methods: methods.data,
@@ -426,7 +463,6 @@ const STEPS = [
   "welcome",
   "organization",
   "authentication",
-  "portal",
   "email",
   "invites",
   "e-signature",
@@ -452,6 +488,42 @@ const SHIPPED_LOCALES = ["en-US"] as const;
 const selectClassName =
   "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50";
 
+function AuthenticationSection({
+  title,
+  open,
+  onOpenChange,
+  children,
+}: {
+  title: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children: ReactNode;
+}) {
+  const id = useId();
+  const Chevron = open ? ChevronDown : ChevronRight;
+  return (
+    <div className="rounded-card border border-border-default">
+      <h2 className="text-base font-semibold">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => onOpenChange(!open)}
+          className="flex w-full items-center gap-2 rounded-card p-4 text-left focus-visible:outline-2 focus-visible:outline-link"
+        >
+          <Chevron size={16} aria-hidden="true" />
+          {title}
+        </button>
+      </h2>
+      <div id={id}>
+        {open && (
+          <div className="flex flex-col gap-4 border-t border-border-default p-4">{children}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function WelcomePage() {
   const loaded = useLoaderData<typeof welcomeLoader>() as Exclude<
     Awaited<ReturnType<typeof welcomeLoader>>,
@@ -461,16 +533,24 @@ export function WelcomePage() {
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const step = STEPS.find((candidate) => candidate === searchParams.get("step")) ?? "welcome";
+  const requestedStep = searchParams.get("step");
+  const step =
+    STEPS.find(
+      (candidate) => candidate === (requestedStep === "portal" ? "authentication" : requestedStep),
+    ) ?? "welcome";
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const stepTitleId = useId();
+  const draftScope = loaded.draftScope;
+  useEffect(() => {
+    writeSetupDraft(draftScope, "step", step);
+  }, [draftScope, step]);
 
   // Organization step (#697): the same org_settings row the General
   // pane writes. Held as a draft and sent on Continue in one PATCH,
   // which is the wizard's unit of movement.
   const [savedGeneral, setSavedGeneral] = useState<General>(loaded.general);
-  const [orgDraft, setOrgDraft] = useState<General>(loaded.general);
+  const [orgDraft, setOrgDraft] = useSetupDraft<General>(draftScope, "orgDraft", loaded.general);
   const logoInput = useRef<HTMLInputElement>(null);
 
   // Authentication step.
@@ -478,13 +558,33 @@ export function WelcomePage() {
   // only when a save lands, so a step revisit compares against the
   // saved answer and not the loader's stale copy.
   const [savedPolicy, setSavedPolicy] = useState(loaded.methods.policy);
-  const [policy, setPolicy] = useState(loaded.methods.policy);
+  const [savedDomains, setSavedDomains] = useState(loaded.domains);
+  const [legalOpen, setLegalOpen] = useSetupDraft(draftScope, "legalOpen", false);
+  const [businessOpen, setBusinessOpen] = useSetupDraft(
+    draftScope,
+    "businessOpen",
+    requestedStep === "portal",
+  );
+  const [ssoOpen, setSsoOpen] = useSetupDraft(draftScope, "ssoOpen", false);
+  const [policy, setPolicy] = useSetupDraft(draftScope, "policy", loaded.methods.policy);
   const [ssoProviderId, setSsoProviderId] = useState(loaded.methods.ssoProviderId);
-  const [callbackUrl, setCallbackUrl] = useState<string | null>(null);
+  const [callbackUrl, setCallbackUrl] = useSetupDraft<string | null>(
+    draftScope,
+    "callbackUrl",
+    null,
+  );
+
+  const [ssoDraft, setSsoDraft] = useSetupDraft(draftScope, "sso", {
+    providerId: "",
+    issuer: "",
+    idpDomain: "",
+    clientId: "",
+    clientSecret: "",
+  });
 
   // Portal step.
-  const [domains, setDomains] = useState<string[]>(loaded.domains);
-  const [domainInput, setDomainInput] = useState("");
+  const [domains, setDomains] = useSetupDraft<string[]>(draftScope, "domains", loaded.domains);
+  const [domainInput, setDomainInput] = useSetupDraft(draftScope, "domainInput", "");
 
   // Email step (#37): the resolved SMTP state drives which of the three
   // faces shows: set by environment (read-only), set in the app, or a
@@ -492,12 +592,22 @@ export function WelcomePage() {
   // warning track what the instance can deliver.
   const [emailState, setEmailState] = useState(loaded.emailSettings);
   const [emailConfigured, setEmailConfigured] = useState(loaded.emailConfigured);
-  const [replacingRelay, setReplacingRelay] = useState(false);
+  const [replacingRelay, setReplacingRelay] = useSetupDraft(draftScope, "replacingRelay", false);
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
 
+  const [smtpDraft, setSmtpDraft] = useSetupDraft(draftScope, "smtp", EMPTY_SMTP_DRAFT);
+
   // Invites step.
-  const [inviteRole, setInviteRole] = useState<InviteRole>("legal_team_member");
-  const [invited, setInvited] = useState<string[]>([]);
+  const [inviteDraft, setInviteDraft] = useSetupDraft(draftScope, "invite", {
+    name: "",
+    email: "",
+  });
+  const [inviteRole, setInviteRole] = useSetupDraft<InviteRole>(
+    draftScope,
+    "inviteRole",
+    "legal_team_member",
+  );
+  const [invited, setInvited] = useSetupDraft<string[]>(draftScope, "invited", []);
 
   // E-signature step (#698): the DocuSign connector, through the PUT
   // the Integrations pane already uses. Both secrets are write-only, so
@@ -506,18 +616,28 @@ export function WelcomePage() {
   const [signingConnector, setSigningConnector] = useState<SigningConnector>(
     loaded.signingConnector,
   );
-  const [signingEnvironment, setSigningEnvironment] = useState<
+  const [signingEnvironment, setSigningEnvironment] = useSetupDraft<
     (typeof SIGNING_ENVIRONMENTS)[number]
-  >(loaded.signingConnector.environment ?? "demo");
-  const [integrationKey, setIntegrationKey] = useState(
+  >(draftScope, "signingEnvironment", loaded.signingConnector.environment ?? "demo");
+  const [integrationKey, setIntegrationKey] = useSetupDraft(
+    draftScope,
+    "integrationKey",
     loaded.signingConnector.integrationKey ?? "",
   );
-  const [apiUserId, setApiUserId] = useState(loaded.signingConnector.apiUserId ?? "");
-  const [privateKey, setPrivateKey] = useState("");
-  const [webhookSecret, setWebhookSecret] = useState("");
+  const [apiUserId, setApiUserId] = useSetupDraft(
+    draftScope,
+    "apiUserId",
+    loaded.signingConnector.apiUserId ?? "",
+  );
+  const [privateKey, setPrivateKey] = useSetupDraft(draftScope, "privateKey", "");
+  const [webhookSecret, setWebhookSecret] = useSetupDraft(draftScope, "webhookSecret", "");
   /** Whether a configured connector's form is open for new credentials.
    * A configured connector reads as configured until it is. */
-  const [replacingConnector, setReplacingConnector] = useState(false);
+  const [replacingConnector, setReplacingConnector] = useSetupDraft(
+    draftScope,
+    "replacingConnector",
+    false,
+  );
   const signingFormOpen = !signingConnector.configured || replacingConnector;
 
   // AI analysis step (#699): the AI connector, through the PUT the AI
@@ -533,7 +653,9 @@ export function WelcomePage() {
   const [review, setReview] = useState(loaded.review);
   const [startBlankOpen, setStartBlankOpen] = useState(false);
   const [reviewNotice, setReviewNotice] = useState<string | null>(null);
-  const [aiPreset, setAiPreset] = useState<AiPreset>(
+  const [aiPreset, setAiPreset] = useSetupDraft<AiPreset>(
+    draftScope,
+    "aiPreset",
     loaded.aiConnector.preset ?? DEFAULT_AI_PRESET,
   );
   /** The chosen preset's server-owned definition. The route answers
@@ -541,22 +663,38 @@ export function WelcomePage() {
    * lookup total. */
   const chosenPreset =
     loaded.aiPresets.find((option) => option.preset === aiPreset) ?? loaded.aiPresets[0];
-  const [aiProtocol, setAiProtocol] = useState<AiProtocol>(
+  const [aiProtocol, setAiProtocol] = useSetupDraft<AiProtocol>(
+    draftScope,
+    "aiProtocol",
     loaded.aiConnector.protocol ?? chosenPreset.protocol,
   );
-  const [aiBaseUrl, setAiBaseUrl] = useState(
+  const [aiBaseUrl, setAiBaseUrl] = useSetupDraft(
+    draftScope,
+    "aiBaseUrl",
     loaded.aiConnector.baseUrl ?? chosenPreset.baseUrl ?? "",
   );
-  const [aiModel, setAiModel] = useState(loaded.aiConnector.model ?? chosenPreset.defaultModel);
-  const [aiApiKey, setAiApiKey] = useState("");
-  const [manualAiModel, setManualAiModel] = useState(aiPreset === "azure_openai");
+  const [aiModel, setAiModel] = useSetupDraft(
+    draftScope,
+    "aiModel",
+    loaded.aiConnector.model ?? chosenPreset.defaultModel,
+  );
+  const [aiApiKey, setAiApiKey] = useSetupDraft(draftScope, "aiApiKey", "");
+  const [manualAiModel, setManualAiModel] = useSetupDraft(
+    draftScope,
+    "manualAiModel",
+    aiPreset === "azure_openai",
+  );
   const savedAiKey = findSavedAiKey(aiConnector.savedKeys, {
     preset: aiPreset,
     protocol: aiProtocol,
     baseUrl: aiBaseUrl,
   });
   /** Whether a configured connector's form is open for a new key. */
-  const [replacingAiConnector, setReplacingAiConnector] = useState(false);
+  const [replacingAiConnector, setReplacingAiConnector] = useSetupDraft(
+    draftScope,
+    "replacingAiConnector",
+    false,
+  );
   const aiFormOpen = !aiConnector.configured || replacingAiConnector;
 
   /** The step's boxes as they read on the stored connector, or on a
@@ -645,6 +783,7 @@ export function WelcomePage() {
       }
       const { response } = await api.POST("/api/v1/onboarding/complete");
       if (response.ok) {
+        clearSetupDrafts(draftScope);
         void navigate("/", { replace: true });
         return;
       }
@@ -772,6 +911,7 @@ export function WelcomePage() {
       if (data) {
         setSsoProviderId(data.provider.providerId);
         setCallbackUrl(data.callbackUrl);
+        setSsoDraft({ providerId: "", issuer: "", idpDomain: "", clientId: "", clientSecret: "" });
         return;
       }
       setError(
@@ -789,22 +929,45 @@ export function WelcomePage() {
   }
 
   async function applyAuthentication() {
-    if (JSON.stringify(policy.legal) === JSON.stringify(savedPolicy.legal)) return advance();
     setBusy(true);
     setError(null);
     try {
-      const result = await api.PATCH("/api/v1/auth/policy/{group}", {
-        params: { path: { group: "legal" } },
-        body: policy.legal,
-      });
-      if (!result.data) {
-        setError((await readProblem(result)).detail ?? networkError(intl));
-        return;
+      // Save Business Users first: requiring 2FA for Legal Users immediately gates later requests.
+      if (JSON.stringify(domains) !== JSON.stringify(savedDomains)) {
+        const result = await api.PUT("/api/v1/auth/allowed-domains", { body: { domains } });
+        if (!result.data) {
+          setBusinessOpen(true);
+          setError((await readProblem(result)).detail ?? networkError(intl));
+          return;
+        }
+        setSavedDomains(result.data.domains);
       }
-      setSavedPolicy(result.data);
+      if (JSON.stringify(policy.business) !== JSON.stringify(savedPolicy.business)) {
+        const result = await api.PATCH("/api/v1/auth/policy/{group}", {
+          params: { path: { group: "business" } },
+          body: policy.business,
+        });
+        if (!result.data) {
+          setBusinessOpen(true);
+          setError((await readProblem(result)).detail ?? networkError(intl));
+          return;
+        }
+        setSavedPolicy((current) => ({ ...current, business: result.data.business }));
+      }
+      if (JSON.stringify(policy.legal) !== JSON.stringify(savedPolicy.legal)) {
+        const result = await api.PATCH("/api/v1/auth/policy/{group}", {
+          params: { path: { group: "legal" } },
+          body: policy.legal,
+        });
+        if (!result.data) {
+          setLegalOpen(true);
+          setError((await readProblem(result)).detail ?? networkError(intl));
+          return;
+        }
+        setSavedPolicy(result.data);
+      }
       if (policy.legal.requireTwoFactor) {
-        // Go straight to enrollment. The /welcome route skips its loader
-        // when only ?step= changes, so the loader guard never redirects.
+        writeSetupDraft(draftScope, "step", "email");
         void navigate("/auth/two-factor/enroll", { replace: true });
         return;
       }
@@ -823,40 +986,6 @@ export function WelcomePage() {
     setDomainInput("");
   }
 
-  async function applyPortal() {
-    setBusy(true);
-    setError(null);
-    try {
-      const domainsPut = await api.PUT("/api/v1/auth/allowed-domains", { body: { domains } });
-      if (!domainsPut.data) {
-        setError(
-          (await readProblem(domainsPut)).detail ??
-            intl.formatMessage({
-              id: "welcome.portal.error.domains",
-              defaultMessage: "The domain allowlist could not be saved.",
-            }),
-        );
-        return;
-      }
-      if (JSON.stringify(policy.business) !== JSON.stringify(savedPolicy.business)) {
-        const result = await api.PATCH("/api/v1/auth/policy/{group}", {
-          params: { path: { group: "business" } },
-          body: policy.business,
-        });
-        if (!result.data) {
-          setError((await readProblem(result)).detail ?? networkError(intl));
-          return;
-        }
-        setSavedPolicy(result.data);
-      }
-      await advance();
-    } catch {
-      setError(networkError(intl));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function saveEmailSettings(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -872,6 +1001,7 @@ export function WelcomePage() {
         setEmailState(data);
         setEmailConfigured(data.source !== "unset");
         setReplacingRelay(false);
+        setSmtpDraft({ ...EMPTY_SMTP_DRAFT });
         setEmailNotice(
           intl.formatMessage({
             id: "welcome.email.saved",
@@ -979,7 +1109,7 @@ export function WelcomePage() {
       const { data } = result;
       if (data) {
         setInvited([...invited, data.user.email]);
-        form.reset();
+        setInviteDraft({ name: "", email: "" });
         return;
       }
       setError(
@@ -1156,7 +1286,6 @@ export function WelcomePage() {
   async function continueStep() {
     if (step === "organization") return applyOrganization();
     if (step === "authentication") return applyAuthentication();
-    if (step === "portal") return applyPortal();
     if (step === "e-signature") return applyESignature();
     if (step === "ai-analysis") return applyAiAnalysis();
     if (step === "review") return finish(true);
@@ -1171,7 +1300,6 @@ export function WelcomePage() {
     authentication: (
       <FormattedMessage id="welcome.step.authentication" defaultMessage="Authentication" />
     ),
-    portal: <FormattedMessage id="welcome.step.portal" defaultMessage="Business-user portal" />,
     email: <FormattedMessage id="welcome.step.email" defaultMessage="Outbound email" />,
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
     "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
@@ -1204,7 +1332,15 @@ export function WelcomePage() {
                 <CardDescription>
                   <FormattedMessage
                     id="welcome.intro"
-                    defaultMessage="A few choices get this instance ready for your team. Email is required to finish setup. You can skip the other steps and return to them later."
+                    defaultMessage="This wizard helps you set up OpenLaw to suit how your team works. OpenLaw requires an email relay to send emails to users. The remaining steps are optional, and you can return to them later."
+                  />
+                </CardDescription>
+              )}
+              {step === "authentication" && (
+                <CardDescription>
+                  <FormattedMessage
+                    id="welcome.auth.hint"
+                    defaultMessage="How your users sign in to OpenLaw"
                   />
                 </CardDescription>
               )}
@@ -1280,6 +1416,7 @@ export function WelcomePage() {
                         <input
                           ref={logoInput}
                           type="file"
+                          aria-describedby="org-logo-guidance"
                           disabled={busy}
                           accept={LOGO_TYPES.join(",")}
                           // Visually hidden but still in the accessibility
@@ -1301,10 +1438,17 @@ export function WelcomePage() {
                           size="sm"
                           disabled={busy}
                           onClick={() => logoInput.current?.click()}
+                          aria-describedby="org-logo-guidance"
                         >
                           <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
                         </Button>
                       </div>
+                      <p id="org-logo-guidance" className="text-sm text-muted">
+                        <FormattedMessage
+                          id="settings.general.logo.guidance"
+                          defaultMessage="PNG, JPEG, WebP or SVG · Max 5 MB · Recommended: 256 × 256 px, transparent background."
+                        />
+                      </p>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
@@ -1360,199 +1504,288 @@ export function WelcomePage() {
 
                 {step === "authentication" && (
                   <>
-                    <AuthenticationOptionsFields
-                      value={policy.legal}
-                      onChange={(legal) => setPolicy({ ...policy, legal })}
-                      disabled={busy}
-                      ssoConfigured={!!ssoProviderId}
-                    />
-
-                    {!ssoProviderId && (
-                      <form
-                        className="flex flex-col gap-3 rounded-card border border-border-default p-4"
-                        onSubmit={(e) => void registerProvider(e)}
-                      >
-                        <p className="text-md font-medium">
+                    <p className="text-sm text-muted">
+                      <FormattedMessage
+                        id="welcome.auth.groupsHint"
+                        defaultMessage="Legal Users and Business Users can use different sign-in methods."
+                      />
+                    </p>
+                    <AuthenticationSection
+                      title={
+                        <FormattedMessage
+                          id="welcome.auth.legalUsers"
+                          defaultMessage="Legal Users"
+                        />
+                      }
+                      open={legalOpen}
+                      onOpenChange={setLegalOpen}
+                    >
+                      <p className="text-sm text-muted">
+                        <FormattedMessage
+                          id="welcome.auth.legalUsersHint"
+                          defaultMessage="Administrators and Legal Team Members."
+                        />
+                      </p>
+                      <AuthenticationOptionsFields
+                        value={policy.legal}
+                        onChange={(legal) => setPolicy({ ...policy, legal })}
+                        disabled={busy}
+                        ssoConfigured={!!ssoProviderId}
+                      />
+                    </AuthenticationSection>
+                    <AuthenticationSection
+                      title={
+                        <FormattedMessage
+                          id="welcome.auth.businessUsers"
+                          defaultMessage="Business Users"
+                        />
+                      }
+                      open={businessOpen}
+                      onOpenChange={setBusinessOpen}
+                    >
+                      <CardDescription>
+                        <FormattedMessage
+                          id="welcome.portal.hint"
+                          defaultMessage="Add an allowed email domain, then choose how Business Users sign in."
+                        />
+                      </CardDescription>
+                      <div className="flex flex-col gap-1.5">
+                        <Label htmlFor="domain">
                           <FormattedMessage
-                            id="welcome.auth.register.title"
-                            defaultMessage="Register your identity provider"
+                            id="welcome.portal.domains"
+                            defaultMessage="Allowed email domains"
                           />
-                        </p>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="providerId">
-                            <FormattedMessage
-                              id="welcome.auth.field.providerId"
-                              defaultMessage="Provider ID"
-                            />
-                          </Label>
+                        </Label>
+                        <div className="flex gap-2">
                           <Input
-                            id="providerId"
-                            name="providerId"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.auth.field.providerIdPlaceholder",
-                              defaultMessage: "okta",
-                            })}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="issuer">
-                            <FormattedMessage
-                              id="welcome.auth.field.issuer"
-                              defaultMessage="Issuer URL"
-                            />
-                          </Label>
-                          <Input
-                            id="issuer"
-                            name="issuer"
-                            type="url"
-                            required
-                            placeholder={intl.formatMessage({
-                              id: "welcome.auth.field.issuerPlaceholder",
-                              defaultMessage: "https://idp.example.com",
-                            })}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="idpDomain">
-                            <FormattedMessage
-                              id="welcome.auth.field.domain"
-                              defaultMessage="Email domain"
-                            />
-                          </Label>
-                          <Input
-                            id="idpDomain"
-                            name="idpDomain"
-                            required
+                            id="domain"
+                            value={domainInput}
+                            onChange={(e) => setDomainInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                addDomain();
+                              }
+                            }}
                             placeholder={intl.formatMessage({
                               id: "welcome.auth.field.domainPlaceholder",
                               defaultMessage: "acme.example",
                             })}
                           />
+                          <Button type="button" variant="secondary" onClick={addDomain}>
+                            <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
+                          </Button>
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="clientId">
-                            <FormattedMessage
-                              id="welcome.auth.field.clientId"
-                              defaultMessage="Client ID"
-                            />
-                          </Label>
-                          <Input id="clientId" name="clientId" required />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label htmlFor="clientSecret">
-                            <FormattedMessage
-                              id="welcome.auth.field.clientSecret"
-                              defaultMessage="Client secret"
-                            />
-                          </Label>
-                          <Input id="clientSecret" name="clientSecret" type="password" required />
-                        </div>
-                        <Button type="submit" variant="secondary" disabled={busy}>
-                          <FormattedMessage
-                            id="welcome.auth.register.submit"
-                            defaultMessage="Register provider"
-                          />
-                        </Button>
-                      </form>
-                    )}
-
-                    {ssoProviderId && (
-                      <Alert variant="success">
-                        <FormattedMessage
-                          id="welcome.auth.registered"
-                          defaultMessage="Identity provider {providerId} is registered."
-                          values={{ providerId: ssoProviderId }}
-                        />
-                        {callbackUrl && (
-                          <span className="mt-1 block">
-                            <FormattedMessage
-                              id="welcome.auth.callback"
-                              defaultMessage="Paste this callback URL into your IdP console: {url}"
-                              values={{ url: <code className="break-all">{callbackUrl}</code> }}
-                            />
-                          </span>
-                        )}
-                      </Alert>
-                    )}
-                  </>
-                )}
-
-                {step === "portal" && (
-                  <>
-                    <CardDescription>
-                      <FormattedMessage
-                        id="welcome.portal.hint"
-                        defaultMessage="Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
-                      />
-                    </CardDescription>
-                    <AuthenticationOptionsFields
-                      value={policy.business}
-                      onChange={(business) => setPolicy({ ...policy, business })}
-                      disabled={busy}
-                      ssoConfigured={!!ssoProviderId}
-                    />
-                    <div className="flex flex-col gap-1.5">
-                      <Label htmlFor="domain">
-                        <FormattedMessage
-                          id="welcome.portal.domains"
-                          defaultMessage="Allowed email domains"
-                        />
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="domain"
-                          value={domainInput}
-                          onChange={(e) => setDomainInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addDomain();
-                            }
-                          }}
-                          placeholder={intl.formatMessage({
-                            id: "welcome.auth.field.domainPlaceholder",
-                            defaultMessage: "acme.example",
-                          })}
-                        />
-                        <Button type="button" variant="secondary" onClick={addDomain}>
-                          <FormattedMessage id="welcome.portal.add" defaultMessage="Add" />
-                        </Button>
                       </div>
-                    </div>
-                    {domains.length > 0 ? (
-                      <ul className="flex flex-wrap gap-2">
-                        {domains.map((domain) => (
-                          <li
-                            key={domain}
-                            className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
-                          >
-                            {domain}
-                            <button
-                              type="button"
-                              aria-label={intl.formatMessage(
-                                {
-                                  id: "welcome.portal.remove",
-                                  defaultMessage: "Remove {domain}",
-                                },
-                                { domain },
-                              )}
-                              className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                              onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                      {domains.length > 0 ? (
+                        <ul className="flex flex-wrap gap-2">
+                          {domains.map((domain) => (
+                            <li
+                              key={domain}
+                              className="flex items-center gap-1 rounded-chip border border-border-default bg-control px-2 py-0.5 text-sm"
                             >
-                              <X size={16} aria-hidden />
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
+                              {domain}
+                              <button
+                                type="button"
+                                aria-label={intl.formatMessage(
+                                  {
+                                    id: "welcome.portal.remove",
+                                    defaultMessage: "Remove {domain}",
+                                  },
+                                  { domain },
+                                )}
+                                className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                                onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                              >
+                                <X size={16} aria-hidden />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted">
+                          <FormattedMessage
+                            id="welcome.portal.empty"
+                            defaultMessage="Add a domain to enable sign-in options."
+                          />
+                        </p>
+                      )}
+                      <AuthenticationOptionsFields
+                        value={policy.business}
+                        onChange={(business) => setPolicy({ ...policy, business })}
+                        disabled={busy || domains.length === 0}
+                        ssoConfigured={!!ssoProviderId}
+                      />
+                    </AuthenticationSection>
+                    <AuthenticationSection
+                      title={
+                        <FormattedMessage
+                          id="welcome.auth.sharedSso"
+                          defaultMessage="Shared SSO provider"
+                        />
+                      }
+                      open={ssoOpen}
+                      onOpenChange={setSsoOpen}
+                    >
                       <p className="text-sm text-muted">
                         <FormattedMessage
-                          id="welcome.portal.empty"
-                          defaultMessage="No domains allowed yet. Magic-link sign-in is unavailable."
+                          id="welcome.auth.sharedSsoHint"
+                          defaultMessage="One identity provider, available to either group when SSO is enabled."
                         />
                       </p>
-                    )}
+                      {!ssoProviderId && (
+                        <form
+                          className="flex flex-col gap-3 rounded-card border border-border-default p-4"
+                          onSubmit={(e) => void registerProvider(e)}
+                        >
+                          <p className="text-md font-medium">
+                            <FormattedMessage
+                              id="welcome.auth.register.title"
+                              defaultMessage="Register your identity provider"
+                            />
+                          </p>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="providerId">
+                              <FormattedMessage
+                                id="welcome.auth.field.providerId"
+                                defaultMessage="Provider ID"
+                              />
+                            </Label>
+                            <Input
+                              id="providerId"
+                              name="providerId"
+                              value={ssoDraft.providerId}
+                              onChange={(event) =>
+                                setSsoDraft((current) => ({
+                                  ...current,
+                                  providerId: event.target.value,
+                                }))
+                              }
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.auth.field.providerIdPlaceholder",
+                                defaultMessage: "okta",
+                              })}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="issuer">
+                              <FormattedMessage
+                                id="welcome.auth.field.issuer"
+                                defaultMessage="Issuer URL"
+                              />
+                            </Label>
+                            <Input
+                              id="issuer"
+                              name="issuer"
+                              value={ssoDraft.issuer}
+                              onChange={(event) =>
+                                setSsoDraft((current) => ({
+                                  ...current,
+                                  issuer: event.target.value,
+                                }))
+                              }
+                              type="url"
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.auth.field.issuerPlaceholder",
+                                defaultMessage: "https://idp.example.com",
+                              })}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="idpDomain">
+                              <FormattedMessage
+                                id="welcome.auth.field.domain"
+                                defaultMessage="Email domain"
+                              />
+                            </Label>
+                            <Input
+                              id="idpDomain"
+                              name="idpDomain"
+                              value={ssoDraft.idpDomain}
+                              onChange={(event) =>
+                                setSsoDraft((current) => ({
+                                  ...current,
+                                  idpDomain: event.target.value,
+                                }))
+                              }
+                              required
+                              placeholder={intl.formatMessage({
+                                id: "welcome.auth.field.domainPlaceholder",
+                                defaultMessage: "acme.example",
+                              })}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="clientId">
+                              <FormattedMessage
+                                id="welcome.auth.field.clientId"
+                                defaultMessage="Client ID"
+                              />
+                            </Label>
+                            <Input
+                              id="clientId"
+                              name="clientId"
+                              value={ssoDraft.clientId}
+                              onChange={(event) =>
+                                setSsoDraft((current) => ({
+                                  ...current,
+                                  clientId: event.target.value,
+                                }))
+                              }
+                              required
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="clientSecret">
+                              <FormattedMessage
+                                id="welcome.auth.field.clientSecret"
+                                defaultMessage="Client secret"
+                              />
+                            </Label>
+                            <Input
+                              id="clientSecret"
+                              name="clientSecret"
+                              value={ssoDraft.clientSecret}
+                              onChange={(event) =>
+                                setSsoDraft((current) => ({
+                                  ...current,
+                                  clientSecret: event.target.value,
+                                }))
+                              }
+                              type="password"
+                              required
+                            />
+                          </div>
+                          <Button type="submit" variant="secondary" disabled={busy}>
+                            <FormattedMessage
+                              id="welcome.auth.register.submit"
+                              defaultMessage="Register provider"
+                            />
+                          </Button>
+                        </form>
+                      )}
+
+                      {ssoProviderId && (
+                        <Alert variant="success">
+                          <FormattedMessage
+                            id="welcome.auth.registered"
+                            defaultMessage="Identity provider {providerId} is registered."
+                            values={{ providerId: ssoProviderId }}
+                          />
+                          {callbackUrl && (
+                            <span className="mt-1 block">
+                              <FormattedMessage
+                                id="welcome.auth.callback"
+                                defaultMessage="Paste this callback URL into your IdP console: {url}"
+                                values={{ url: <code className="break-all">{callbackUrl}</code> }}
+                              />
+                            </span>
+                          )}
+                        </Alert>
+                      )}
+                    </AuthenticationSection>
                   </>
                 )}
 
@@ -1645,7 +1878,11 @@ export function WelcomePage() {
                           className="flex flex-col gap-3"
                           onSubmit={(e) => void saveEmailSettings(e)}
                         >
-                          <SmtpSettingsFields disabled={busy} />
+                          <SmtpSettingsFields
+                            disabled={busy}
+                            draft={smtpDraft}
+                            onDraftChange={setSmtpDraft}
+                          />
                           <div className="flex items-center gap-2">
                             <Button type="submit" variant="secondary" disabled={busy}>
                               <FormattedMessage
@@ -1658,7 +1895,10 @@ export function WelcomePage() {
                                 type="button"
                                 variant="ghost"
                                 disabled={busy}
-                                onClick={() => setReplacingRelay(false)}
+                                onClick={() => {
+                                  setReplacingRelay(false);
+                                  setSmtpDraft({ ...EMPTY_SMTP_DRAFT });
+                                }}
                               >
                                 <FormattedMessage
                                   id="welcome.email.replace.cancel"
@@ -1688,7 +1928,16 @@ export function WelcomePage() {
                         <Label htmlFor="inviteName">
                           <FormattedMessage id="auth.field.displayName" defaultMessage="Name" />
                         </Label>
-                        <Input id="inviteName" name="inviteName" autoComplete="off" required />
+                        <Input
+                          id="inviteName"
+                          name="inviteName"
+                          value={inviteDraft.name}
+                          onChange={(event) =>
+                            setInviteDraft((current) => ({ ...current, name: event.target.value }))
+                          }
+                          autoComplete="off"
+                          required
+                        />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label htmlFor="inviteEmail">
@@ -1697,6 +1946,10 @@ export function WelcomePage() {
                         <Input
                           id="inviteEmail"
                           name="inviteEmail"
+                          value={inviteDraft.email}
+                          onChange={(event) =>
+                            setInviteDraft((current) => ({ ...current, email: event.target.value }))
+                          }
                           type="email"
                           autoComplete="off"
                           required

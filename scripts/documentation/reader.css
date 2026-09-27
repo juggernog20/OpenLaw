@@ -435,6 +435,7 @@
   display: grid;
 }
 .docs-reader .docs-result {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -452,6 +453,18 @@
 .docs-result h2 a {
   color: var(--text-primary);
   text-decoration: none;
+}
+.docs-result h2 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.docs-reader .docs-result h2 a:focus-visible {
+  outline: none;
+}
+.docs-result h2 a:focus-visible::after {
+  outline: 3px solid var(--ring-color, var(--text-link));
+  outline-offset: 3px;
 }
 .docs-result h2 a:hover {
   color: var(--text-link);

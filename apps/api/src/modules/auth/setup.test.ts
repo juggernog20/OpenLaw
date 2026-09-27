@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, users } from "@openlaw/db";
 import { buildApp } from "../../app.js";
 import { testDeps } from "../../testing/deps.js";
+import { AUTH_REQUEST_BUDGET } from "../../auth/limits.js";
 import {
   startHarness,
   TEST_AUTH_CONFIG,
@@ -153,6 +154,45 @@ describe("the bootstrap token (TECH-031)", () => {
       },
     });
 
+  it("checks the token without creating an account or session", async () => {
+    for (const [setupToken, valid] of [
+      ["wrong-token", false],
+      [TEST_SETUP_TOKEN, true],
+    ] as const) {
+      const res = await gated.inject({
+        method: "POST",
+        url: "/api/v1/auth/setup/validate-token",
+        payload: { setupToken },
+      });
+      expect(res.statusCode, res.body).toBe(200);
+      expect(res.json()).toEqual({ valid });
+      expect(res.headers["cache-control"]).toBe("no-store");
+      expect(res.cookies).toHaveLength(0);
+    }
+    expect(await h.db.select({ id: users.id }).from(users)).toHaveLength(0);
+  });
+
+  it("limits token checks by client address, ignoring spoofed forwarding headers", async () => {
+    for (let n = 0; n < AUTH_REQUEST_BUDGET.perAddress; n++) {
+      const res = await gated.inject({
+        method: "POST",
+        url: "/api/v1/auth/setup/validate-token",
+        remoteAddress: "192.0.2.25",
+        headers: { "x-forwarded-for": `198.51.100.${n + 1}` },
+        payload: { setupToken: "wrong-token" },
+      });
+      expect(res.statusCode).toBe(200);
+    }
+    const blocked = await gated.inject({
+      method: "POST",
+      url: "/api/v1/auth/setup/validate-token",
+      remoteAddress: "192.0.2.25",
+      headers: { "x-forwarded-for": "198.51.100.99" },
+      payload: { setupToken: TEST_SETUP_TOKEN },
+    });
+    expect(blocked.statusCode).toBe(429);
+  });
+
   it("refuses setup without the token, in one sentence for missing and wrong", async () => {
     const missing = await attempt({});
     const wrong = await attempt({ setupToken: "not-the-token" });
@@ -172,5 +212,13 @@ describe("the bootstrap token (TECH-031)", () => {
   it("answers 409 once a user exists, token or not", async () => {
     expect((await attempt({})).statusCode).toBe(409);
     expect((await attempt({ setupToken: TEST_SETUP_TOKEN })).statusCode).toBe(409);
+    for (const setupToken of ["wrong-token", TEST_SETUP_TOKEN]) {
+      const res = await gated.inject({
+        method: "POST",
+        url: "/api/v1/auth/setup/validate-token",
+        payload: { setupToken },
+      });
+      expect(res.statusCode).toBe(409);
+    }
   });
 });

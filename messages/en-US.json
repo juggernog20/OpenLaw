@@ -11012,6 +11012,9 @@
   "settings.general.logo": {
     "defaultMessage": "Logo"
   },
+  "settings.general.logo.guidance": {
+    "defaultMessage": "PNG, JPEG, WebP or SVG · Max 5 MB · Recommended: 256 × 256 px, transparent background."
+  },
   "settings.general.name": {
     "defaultMessage": "Organization name"
   },
@@ -13364,6 +13367,9 @@
   "welcome.aiAnalysis.replace.cancel": {
     "defaultMessage": "Keep current credentials"
   },
+  "welcome.auth.businessUsers": {
+    "defaultMessage": "Business Users"
+  },
   "welcome.auth.callback": {
     "defaultMessage": "Paste this callback URL into your IdP console: {url}"
   },
@@ -13394,6 +13400,18 @@
   "welcome.auth.field.providerIdPlaceholder": {
     "defaultMessage": "okta"
   },
+  "welcome.auth.groupsHint": {
+    "defaultMessage": "Legal Users and Business Users can use different sign-in methods."
+  },
+  "welcome.auth.hint": {
+    "defaultMessage": "How your users sign in to OpenLaw"
+  },
+  "welcome.auth.legalUsers": {
+    "defaultMessage": "Legal Users"
+  },
+  "welcome.auth.legalUsersHint": {
+    "defaultMessage": "Administrators and Legal Team Members."
+  },
   "welcome.auth.register.submit": {
     "defaultMessage": "Register provider"
   },
@@ -13402,6 +13420,12 @@
   },
   "welcome.auth.registered": {
     "defaultMessage": "Identity provider {providerId} is registered."
+  },
+  "welcome.auth.sharedSso": {
+    "defaultMessage": "Shared SSO provider"
+  },
+  "welcome.auth.sharedSsoHint": {
+    "defaultMessage": "One identity provider, available to either group when SSO is enabled."
   },
   "welcome.back": {
     "defaultMessage": "Back"
@@ -13527,7 +13551,7 @@
     "defaultMessage": "Finish"
   },
   "welcome.intro": {
-    "defaultMessage": "A few choices get this instance ready for your team. Email is required to finish setup. You can skip the other steps and return to them later."
+    "defaultMessage": "This wizard helps you set up OpenLaw to suit how your team works. OpenLaw requires an email relay to send emails to users. The remaining steps are optional, and you can return to them later."
   },
   "welcome.invites.error": {
     "defaultMessage": "The invite could not be sent."
@@ -13569,13 +13593,13 @@
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
-    "defaultMessage": "No domains allowed yet. Magic-link sign-in is unavailable."
+    "defaultMessage": "Add a domain to enable sign-in options."
   },
   "welcome.portal.error.domains": {
     "defaultMessage": "The domain allowlist could not be saved."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Choose sign-in methods and two-factor requirements for Business Users. Allow domains for email-based access; an empty list prevents new email-based access."
+    "defaultMessage": "Add an allowed email domain, then choose how Business Users sign in."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"

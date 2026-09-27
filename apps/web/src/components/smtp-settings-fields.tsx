@@ -27,14 +27,48 @@ export function readSmtpSettings(form: FormData) {
 }
 
 const ports = { starttls: "587", tls: "465", none: "25" } as const;
+export interface SmtpDraft {
+  host: string;
+  port: string;
+  security: keyof typeof ports;
+  authentication: "password" | "none";
+  username: string;
+  password: string;
+  senderName: string;
+  senderEmail: string;
+}
+
+export const EMPTY_SMTP_DRAFT: SmtpDraft = {
+  host: "",
+  port: ports.starttls,
+  security: "starttls",
+  authentication: "password",
+  username: "",
+  password: "",
+  senderName: "",
+  senderEmail: "",
+};
 const selectClassName =
   "h-8 w-full rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link";
 
-export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
+export function SmtpSettingsFields({
+  disabled,
+  draft,
+  onDraftChange,
+}: {
+  disabled: boolean;
+  draft?: SmtpDraft;
+  onDraftChange?: (draft: SmtpDraft) => void;
+}) {
   const intl = useIntl();
-  const [security, setSecurity] = useState<keyof typeof ports>("starttls");
-  const [port, setPort] = useState<string>(ports.starttls);
-  const [authentication, setAuthentication] = useState("password");
+  const [localDraft, setLocalDraft] = useState(EMPTY_SMTP_DRAFT);
+  const value = draft ?? localDraft;
+  const { security, port, authentication } = value;
+  function update(patch: Partial<SmtpDraft>) {
+    const next = { ...value, ...patch };
+    if (onDraftChange) onDraftChange(next);
+    else setLocalDraft(next);
+  }
 
   return (
     <fieldset disabled={disabled} className="flex min-w-0 flex-col gap-3">
@@ -46,6 +80,8 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
           <Input
             id="smtpHost"
             name="smtpHost"
+            value={value.host}
+            onChange={(event) => update({ host: event.target.value })}
             autoComplete="off"
             required
             maxLength={253}
@@ -68,7 +104,7 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             max={65535}
             step={1}
             value={port}
-            onChange={(event) => setPort(event.target.value)}
+            onChange={(event) => update({ port: event.target.value })}
           />
         </div>
       </div>
@@ -86,8 +122,7 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
           value={security}
           onChange={(event) => {
             const next = event.target.value as keyof typeof ports;
-            if (port === ports[security]) setPort(ports[next]);
-            setSecurity(next);
+            update({ security: next, port: port === ports[security] ? ports[next] : port });
           }}
         >
           <option value="starttls">
@@ -113,7 +148,9 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
           name="smtpAuthentication"
           className={selectClassName}
           value={authentication}
-          onChange={(event) => setAuthentication(event.target.value)}
+          onChange={(event) =>
+            update({ authentication: event.target.value as SmtpDraft["authentication"] })
+          }
         >
           <option value="password">
             <FormattedMessage
@@ -135,6 +172,8 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             <Input
               id="smtpUsername"
               name="smtpUsername"
+              value={value.username}
+              onChange={(event) => update({ username: event.target.value })}
               autoComplete="off"
               required
               maxLength={1024}
@@ -147,6 +186,8 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             <Input
               id="smtpPassword"
               name="smtpPassword"
+              value={value.password}
+              onChange={(event) => update({ password: event.target.value })}
               type="password"
               autoComplete="new-password"
               required
@@ -162,7 +203,14 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
             defaultMessage="Sender name (optional)"
           />
         </Label>
-        <Input id="smtpSenderName" name="smtpSenderName" autoComplete="off" maxLength={200} />
+        <Input
+          id="smtpSenderName"
+          name="smtpSenderName"
+          autoComplete="off"
+          maxLength={200}
+          value={value.senderName}
+          onChange={(event) => update({ senderName: event.target.value })}
+        />
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="smtpSenderEmail">
@@ -171,6 +219,8 @@ export function SmtpSettingsFields({ disabled }: { disabled: boolean }) {
         <Input
           id="smtpSenderEmail"
           name="smtpSenderEmail"
+          value={value.senderEmail}
+          onChange={(event) => update({ senderEmail: event.target.value })}
           type="email"
           autoComplete="off"
           required

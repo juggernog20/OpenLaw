@@ -11,6 +11,7 @@ import { redirect, useNavigate } from "react-router";
 import { unsubscribeDevice } from "./device-notifications";
 import { api } from "./api";
 import { authClient } from "./auth-client";
+import { clearSetupDrafts } from "./setup-drafts";
 import { configureFormatting } from "./format";
 import { clearRecentSearches } from "./recent-searches";
 
@@ -107,6 +108,7 @@ export function useSignOut(to: string): () => Promise<void> {
       clearTimeout(cleanupTimer);
     }
     await ended;
+    clearSetupDrafts();
     void navigate(to, { replace: true });
   };
 }

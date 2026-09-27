@@ -10,11 +10,14 @@
  * the AI connector through the AI analysis pane's (#699).
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { paths } from "@openlaw/api-client";
-import { act, screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { clearSetupDrafts, readSetupDraft } from "../lib/setup-drafts";
+
+beforeEach(() => clearSetupDrafts());
 
 const ADMIN = {
   id: "u1",
@@ -85,12 +88,11 @@ function emailWizardExtra(handler?: (call: StubCall) => Response | undefined) {
 }
 
 /** Clicks from the welcome card to the email step; the organization,
- * authentication, and portal steps pass through unchanged, so none of
+ * authentication steps pass through unchanged, so none of
  * them sends a request. */
 async function goToEmailStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole("button", { name: "Get started" }));
   await user.click(await screen.findByRole("button", { name: "Continue" }));
-  await user.click(screen.getByRole("button", { name: "Continue" }));
   await user.click(screen.getByRole("button", { name: "Continue" }));
   expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
 }
@@ -216,6 +218,7 @@ describe("welcome wizard authentication step", () => {
 
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Legal Users" }));
     await user.click(
       await screen.findByRole("switch", { name: "Require two-factor authentication" }),
     );
@@ -249,8 +252,7 @@ describe("welcome wizard portal step", () => {
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     // Organization step: nothing entered, so Continue sends nothing.
     await user.click(await screen.findByRole("button", { name: "Continue" }));
-    // Authentication step: keep built-in and continue (no API call needed).
-    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Business Users" }));
 
     // Portal step: add a domain and continue — the PUT must carry it.
     await user.type(screen.getByLabelText("Allowed email domains"), "acme.example");
@@ -275,7 +277,7 @@ describe("welcome wizard organization step (#697)", () => {
     await user.click(await screen.findByRole("button", { name: "Get started" }));
     expect(await screen.findByRole("heading", { name: "Your organization" })).toBeInTheDocument();
     // Nine steps now, and this is the one after the splash.
-    expect(screen.getByText("Step 2 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 8")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "Your organization" })).toBeInTheDocument();
 
@@ -387,6 +389,7 @@ describe("welcome wizard organization step (#697)", () => {
     await user.type(screen.getByLabelText("Sender email"), "legal@acme.example");
     await user.click(screen.getByRole("button", { name: "Save relay" }));
     expect(await screen.findByText(/Relay saved/)).toBeInTheDocument();
+    expect(readSetupDraft("welcome-u1", "smtp", { password: "missing" }).password).toBe("");
     expect(putBody).toEqual({
       host: "mail.internal",
       port: 2525,
@@ -680,12 +683,11 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.click(await screen.findByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
-    await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByRole("heading", { name: "Invite your team" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "E-signature" })).toBeInTheDocument();
-    expect(screen.getByText("Step 7 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 6 of 8")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "E-signature" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
@@ -805,6 +807,7 @@ describe("welcome wizard e-signature step (#698)", () => {
       },
     ]);
     expect(calls.completed).toBe(1);
+    expect(readSetupDraft("welcome-u1", "step", "cleared")).toBe("cleared");
   });
 
   it("renders a configured connector as configured, not as an empty form", async () => {
@@ -1067,7 +1070,7 @@ describe("welcome wizard AI analysis step (#699)", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("heading", { name: "AI analysis" })).toBeInTheDocument();
-    expect(screen.getByText("Step 8 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 7 of 8")).toBeInTheDocument();
     // The step's fields are one region, named by the step's heading.
     expect(screen.getByRole("region", { name: "AI analysis" })).toBeInTheDocument();
     // Optional, and what an install without a connector does instead.
@@ -1643,7 +1646,7 @@ describe("welcome wizard Review step (#700)", () => {
   it("is last after AI analysis, names its region, and links all module counts without editors", async () => {
     const { user, writes, reads } = setup();
     await goToReviewStep(user);
-    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
     const review = within(screen.getByRole("region", { name: "Review" }));
     expect(review.getAllByRole("link")).toHaveLength(12);
     for (const [index, [label, path, , address]] of REVIEW_ROWS.entries()) {
@@ -1861,7 +1864,7 @@ describe("welcome wizard Review step (#700)", () => {
     await user.click(screen.getByRole("link", { name: "Reminder offsets" }));
     await user.click(await screen.findByRole("link", { name: "Return to setup" }));
     expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
-    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
     expect(
       reads.filter((call) => call.url.pathname === "/api/v1/matter-types").length,
     ).toBeGreaterThan(before);
@@ -1880,7 +1883,7 @@ describe("welcome wizard Review step (#700)", () => {
     view.unmount();
     renderAt(address);
     expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
-    expect(screen.getByText("Step 9 of 9")).toBeInTheDocument();
+    expect(screen.getByText("Step 8 of 8")).toBeInTheDocument();
   });
 
   it("marks reviewed before completing on Finish", async () => {
@@ -1972,4 +1975,254 @@ it("requires email even when optional setup is skipped or an app route is opened
   expect(screen.queryByRole("button", { name: "Set up later" })).not.toBeInTheDocument();
   expect(writes).not.toContain("/api/v1/onboarding/complete");
   expect(router.state.location.pathname).toBe("/welcome");
+});
+
+describe("setup drafts across the wizard", () => {
+  it.each([
+    {
+      step: "authentication",
+      fields: {
+        "Provider ID": "example",
+        "Issuer URL": "https://idp.example.com",
+        "Email domain": "example.com",
+        "Client ID": "example-client",
+        "Client secret": "unsaved-secret",
+      },
+    },
+    {
+      step: "email",
+      fields: {
+        "SMTP server": "smtp.example.com",
+        "SMTP username": "mailer",
+        "SMTP password": "unsaved-relay-password",
+        "Sender name (optional)": "Example",
+        "Sender email": "mail@example.com",
+      },
+    },
+    { step: "invites", fields: { Name: "New colleague", Email: "colleague@example.com" } },
+    {
+      step: "e-signature",
+      fields: {
+        "Integration key": "unsaved-integration",
+        "User ID": "unsaved-user",
+        "RSA private key": "unsaved-private-key",
+        "Connect HMAC secret": "unsaved-webhook-secret",
+      },
+    },
+    { step: "ai-analysis", fields: { "API key": "unsaved-ai-key" } },
+  ])("restores $step after Help and a new application mount", async ({ step, fields }) => {
+    const writes: string[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false, steps: { email: false } },
+      emailSettings: { source: "unset", fromAddress: null },
+      extra: (call) => {
+        if (call.method !== "GET") writes.push(call.url.pathname);
+        return wizardExtra()(call);
+      },
+    });
+    const { router, view } = renderAt(`/welcome?step=${step}`);
+    const user = userEvent.setup();
+    if (step === "authentication")
+      await user.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+    for (const [label, value] of Object.entries(fields)) {
+      await user.type(await screen.findByLabelText(label), value);
+    }
+    await user.click(screen.getByRole("link", { name: "Help with this page" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/documentation"));
+    await act(async () => {
+      await router.navigate(-1);
+    });
+    for (const [label, value] of Object.entries(fields)) {
+      expect(await screen.findByLabelText(label)).toHaveValue(value);
+    }
+    view.unmount();
+    const resumed = renderAt("/welcome");
+    for (const [label, value] of Object.entries(fields)) {
+      expect(await screen.findByLabelText(label)).toHaveValue(value);
+    }
+    expect(resumed.router.state.location.search).toBe(`?step=${step}`);
+    expect(writes).toEqual([]);
+  });
+
+  it("retains the organization logo and name without saving the step", async () => {
+    const patches: unknown[] = [];
+    const general = captureGeneral(patches);
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: (call) => wizardExtra()(call) ?? general(call),
+    });
+    const { view } = renderAt("/welcome?step=organization");
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Organization name"), "Draft organization");
+    await user.upload(screen.getByLabelText("Upload a logo"), LOGO_FILE);
+    expect(await screen.findByRole("img", { name: "Organization logo" })).toHaveAttribute(
+      "src",
+      LOGO_DATA_URI,
+    );
+    view.unmount();
+    renderAt("/welcome");
+    expect(await screen.findByLabelText("Organization name")).toHaveValue("Draft organization");
+    expect(screen.getByRole("img", { name: "Organization logo" })).toHaveAttribute(
+      "src",
+      LOGO_DATA_URI,
+    );
+    expect(patches).toEqual([]);
+  });
+
+  it("retains SMTP options and custom ports when leaving and returning to the step", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      emailSettings: { source: "unset", fromAddress: null },
+      extra: wizardExtra(),
+    });
+    const { router, view } = renderAt("/welcome?step=email");
+    const user = userEvent.setup();
+    await user.selectOptions(await screen.findByLabelText("Connection security"), "none");
+    await user.selectOptions(screen.getByLabelText("Authentication"), "none");
+    await user.clear(screen.getByLabelText("Port"));
+    await user.type(screen.getByLabelText("Port"), "1026");
+    await act(async () => {
+      await router.navigate("/welcome?step=portal");
+    });
+    await act(async () => {
+      await router.navigate("/welcome?step=email");
+    });
+    expect(screen.getByLabelText("Port")).toHaveValue(1026);
+    view.unmount();
+    renderAt("/welcome");
+    expect(await screen.findByLabelText("Connection security")).toHaveValue("none");
+    expect(screen.getByLabelText("Authentication")).toHaveValue("none");
+    expect(screen.getByLabelText("Port")).toHaveValue(1026);
+  });
+});
+
+it("restores legal and business authentication choices and unfinished domain entry", async () => {
+  stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+  const { view } = renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  expect(await screen.findByText("How your users sign in to OpenLaw")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Legal Users" }));
+  await user.click(screen.getByRole("switch", { name: "Require two-factor authentication" }));
+  await user.click(screen.getByRole("button", { name: "Legal Users" }));
+  await user.click(screen.getByRole("button", { name: "Business Users" }));
+  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  await user.click(screen.getByRole("switch", { name: "Require two-factor authentication" }));
+  await user.type(screen.getByLabelText("Allowed email domains"), "unfinished.example");
+  view.unmount();
+  renderAt("/welcome");
+  expect(await screen.findByLabelText("Allowed email domains")).toHaveValue("unfinished.example");
+  expect(screen.getByText("example.com")).toBeInTheDocument();
+  expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Business Users" }));
+  await user.click(screen.getByRole("button", { name: "Legal Users" }));
+  expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeChecked();
+});
+
+it("does not restore another Administrator's draft", async () => {
+  const state = { signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() };
+  stubApi(state);
+  const { view } = renderAt("/welcome?step=authentication");
+  await userEvent.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+  await userEvent.type(await screen.findByLabelText("Client secret"), "first-admin-secret");
+  view.unmount();
+  state.signedIn = { ...ADMIN, id: "u2", email: "second@example.com" };
+  renderAt("/welcome?step=authentication");
+  await userEvent.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+  expect(await screen.findByLabelText("Client secret")).toHaveValue("");
+});
+
+it("starts both user groups collapsed and saves business settings before requiring legal 2FA", async () => {
+  const signedIn = { ...ADMIN, twoFactorSetupRequired: false };
+  const writes: string[] = [];
+  const policy = {
+    legal: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
+    business: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+  };
+  stubApi({
+    signedIn,
+    onboarding: { completed: false },
+    extra: (call) => {
+      if (call.method === "PUT" && call.url.pathname === "/api/v1/auth/allowed-domains") {
+        writes.push(call.url.pathname);
+        expect(call.body).toEqual({ domains: ["example.com"] });
+        return json(200, call.body);
+      }
+      if (call.method === "PATCH" && call.url.pathname.startsWith("/api/v1/auth/policy/")) {
+        writes.push(call.url.pathname);
+        const group = call.url.pathname.endsWith("business") ? "business" : "legal";
+        policy[group] = call.body as typeof policy.legal;
+        if (group === "legal") signedIn.twoFactorSetupRequired = true;
+        return json(200, policy);
+      }
+      return wizardExtra()(call);
+    },
+  });
+  const { router } = renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  const legal = await screen.findByRole("button", { name: "Legal Users" });
+  const business = screen.getByRole("button", { name: "Business Users" });
+  expect(legal).toHaveAttribute("aria-expanded", "false");
+  expect(business).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  await user.click(legal);
+  await user.click(screen.getByRole("switch", { name: "Require two-factor authentication" }));
+  await user.click(legal);
+  await user.click(business);
+  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  await user.click(screen.getByRole("switch", { name: "Email magic link" }));
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/auth/two-factor/enroll"));
+  expect(writes).toEqual([
+    "/api/v1/auth/allowed-domains",
+    "/api/v1/auth/policy/business",
+    "/api/v1/auth/policy/legal",
+  ]);
+  expect(policy.business.magicLink).toBe(false);
+  expect(policy.legal.requireTwoFactor).toBe(true);
+  expect(readSetupDraft("welcome-u1", "step", "")).toBe("email");
+});
+
+it("requires an added domain before editing Business User sign-in options", async () => {
+  stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+  renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Legal Users" }));
+  expect(screen.getByRole("switch", { name: "Email and password" })).toBeEnabled();
+  await user.click(screen.getByRole("button", { name: "Legal Users" }));
+  await user.click(screen.getByRole("button", { name: "Business Users" }));
+  const switches = screen.getAllByRole("switch");
+  for (const control of switches) expect(control).toBeDisabled();
+  const magicLink = screen.getByRole("switch", { name: "Email magic link" });
+  await user.click(magicLink);
+  expect(magicLink).toBeChecked();
+  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
+  for (const control of switches) expect(control).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  expect(magicLink).toBeEnabled();
+  expect(screen.getByRole("switch", { name: "Email and password" })).toBeEnabled();
+  expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeEnabled();
+  expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
+  await user.click(magicLink);
+  expect(magicLink).not.toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Remove example.com" }));
+  for (const control of switches) expect(control).toBeDisabled();
+  expect(magicLink).not.toBeChecked();
+  expect(screen.getByText("Add a domain to enable sign-in options.")).toBeInTheDocument();
+});
+
+it("redirects old portal-step links into the Business Users section", async () => {
+  stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+  const { router } = renderAt("/welcome?step=portal");
+  expect(await screen.findByRole("heading", { name: "Authentication" })).toBeInTheDocument();
+  expect(router.state.location.search).toBe("?step=authentication");
+  expect(screen.getByRole("button", { name: "Business Users" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  expect(screen.getByLabelText("Allowed email domains")).toBeInTheDocument();
 });

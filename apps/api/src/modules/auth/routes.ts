@@ -374,6 +374,33 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.post(
+    "/auth/setup/validate-token",
+    {
+      schema: {
+        operationId: "validateSetupToken",
+        summary: "Check the bootstrap token before creating the first Administrator",
+        tags: ["auth"],
+        body: z.object({ setupToken: z.string().min(1).max(200) }),
+        response: { 200: z.object({ valid: z.boolean() }), default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      void reply.header("cache-control", "no-store");
+      const anyUser = await app.db.select({ id: users.id }).from(users).limit(1);
+      if (anyUser.length > 0) throw httpError(409, "Setup has already been completed.");
+      const allowed = await consumeAuthRequestBudget(app.db, {
+        route: "setup-token",
+        address: clientAddress(request, app.trustedProxies) ?? request.ip,
+      });
+      if (!allowed) throw httpError(429, "Too many token checks. Try again later.");
+      return {
+        valid:
+          app.setupToken === null || setupTokenMatches(request.body.setupToken, app.setupToken),
+      };
+    },
+  );
+
+  app.post(
     "/auth/setup",
     {
       schema: {

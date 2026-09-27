@@ -297,6 +297,7 @@ export function SettingsGeneralPage() {
             <input
               ref={fileInput}
               type="file"
+              aria-describedby="org-logo-guidance"
               accept={LOGO_TYPES.join(",")}
               // Visually hidden but still in the accessibility tree, so
               // it carries its own name (the Upload button drives it).
@@ -310,11 +311,22 @@ export function SettingsGeneralPage() {
                 event.target.value = "";
               }}
             />
-            <Button variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInput.current?.click()}
+              aria-describedby="org-logo-guidance"
+            >
               <FormattedMessage id="settings.general.upload" defaultMessage="Upload" />
             </Button>
             <StatusNote status={status.logo} detail={detail.logo} />
           </div>
+          <p id="org-logo-guidance" className="text-sm text-muted">
+            <FormattedMessage
+              id="settings.general.logo.guidance"
+              defaultMessage="PNG, JPEG, WebP or SVG · Max 5 MB · Recommended: 256 × 256 px, transparent background."
+            />
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">

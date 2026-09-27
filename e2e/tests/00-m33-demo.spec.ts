@@ -119,7 +119,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
 
   try {
     if (fresh) {
-      await test.step("create the Administrator and walk all nine wizard steps", async () => {
+      await test.step("create the Administrator and walk all eight wizard steps", async () => {
         await page.goto("/");
         await expect(page).toHaveURL("/auth/setup");
         // First-run setup asks for the bootstrap token (TECH-031);
@@ -134,7 +134,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
 
         async function step(heading: string, number: number) {
           await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-          await expect(page.getByText(`Step ${number} of 9`, { exact: true })).toBeVisible();
+          await expect(page.getByText(`Step ${number} of 8`, { exact: true })).toBeVisible();
         }
         const next = () => page.getByRole("button", { name: "Continue", exact: true }).click();
         await step("Welcome to OpenLaw", 1);
@@ -153,25 +153,26 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         await page.getByLabel("Default timezone").press("Enter");
         await next();
         await step("Authentication", 3);
+        await page.getByRole("button", { name: "Legal Users", exact: true }).click();
         await page.getByRole("switch", { name: "Email and password", exact: true }).check();
         await expect(
           page.getByRole("switch", { name: "Email and password", exact: true }),
         ).toBeChecked();
-        await next();
-        await step("Business-user portal", 4);
+        await page.getByRole("button", { name: "Legal Users", exact: true }).click();
+        await page.getByRole("button", { name: "Business Users", exact: true }).click();
         await page.getByLabel("Allowed email domains").fill("example.com");
         await page.getByRole("button", { name: "Add", exact: true }).click();
         await expect(
           page.getByRole("switch", { name: "Email magic link", exact: true }),
         ).toBeChecked();
         await next();
-        await step("Outbound email", 5);
+        await step("Outbound email", 4);
         // Compose supplies the relay. The invite below proves real delivery.
         await expect(
           page.getByText(/^Outbound email is set by the deployment environment\./),
         ).toBeVisible();
         await next();
-        await step("Invite your team", 6);
+        await step("Invite your team", 5);
         await page.getByLabel("Name", { exact: true }).fill("M33 Counsel");
         await page.getByLabel("Email", { exact: true }).fill(inviteEmail);
         await page.getByRole("button", { name: "Legal team member", exact: true }).click();
@@ -182,11 +183,11 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         const mail = await waitForMailTo(request, inviteEmail);
         expect(extractLink(mail.text, "/auth/set-password")).toBeTruthy();
         await next();
-        await step("E-signature", 7);
+        await step("E-signature", 6);
         await page.getByRole("button", { name: "Set up later" }).click();
-        await step("AI analysis", 8);
+        await step("AI analysis", 7);
         await page.getByRole("button", { name: "Set up later" }).click();
-        await step("Review", 9);
+        await step("Review", 8);
         const review = page.getByRole("region", { name: "Review", exact: true });
         // Every seeded list the install started with, plus the reminder
         // offsets, each linking to the pane that edits it.
@@ -241,9 +242,9 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
           await expect(defaults.getByRole("list").getByRole("button")).toHaveCount(0);
           await page.getByRole("link", { name: "Return to setup" }).click();
           await expect(page).toHaveURL("/welcome?step=review");
-          await step("Review", 9);
+          await step("Review", 8);
           await page.reload();
-          await step("Review", 9);
+          await step("Review", 8);
         }
         expect(
           await reportAxeViolations(page, testInfo, "m33-review", { include: "main" }),
