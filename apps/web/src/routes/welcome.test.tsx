@@ -2470,10 +2470,30 @@ it("lists registered identity providers on the authentication step and removes o
   expect(screen.getByText("Add another identity provider")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Legal Users" }));
   expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeEnabled();
+  await user.click(screen.getByRole("switch", { name: "Single sign-on (SSO)" }));
+  await user.click(screen.getByRole("button", { name: "Business Users" }));
+  // The business group needs an allowed domain before its methods can be changed.
+  await user.type(screen.getByLabelText("Allowed email domains"), "wentworth.test");
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  await user.click(screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })[1]!);
 
   await user.click(screen.getByRole("button", { name: "Remove Family Office identity provider" }));
   await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(1));
   expect(calls).toEqual(["DELETE /api/v1/auth/sso-providers/family-office"]);
+  for (const toggle of screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })) {
+    expect(toggle).toBeEnabled();
+    expect(toggle).toBeChecked();
+  }
+  await user.click(screen.getByRole("button", { name: "Remove Wentworth identity provider" }));
+  await waitFor(() =>
+    expect(
+      screen.queryByRole("list", { name: "Registered identity providers" }),
+    ).not.toBeInTheDocument(),
+  );
+  for (const toggle of screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })) {
+    expect(toggle).toBeDisabled();
+    expect(toggle).not.toBeChecked();
+  }
 });
 
 it("shows the refusal and keeps the rows when a provider removal or registration is refused", async () => {
@@ -2616,7 +2636,7 @@ it("requires an added domain before editing Business User sign-in options", asyn
   for (const control of switches) expect(control).toBeDisabled();
   const magicLink = screen.getByRole("switch", { name: "Email magic link" });
   await user.click(magicLink);
-  expect(magicLink).toBeChecked();
+  expect(magicLink).not.toBeChecked();
   await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
   for (const control of switches) expect(control).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Add" }));
@@ -2624,12 +2644,18 @@ it("requires an added domain before editing Business User sign-in options", asyn
   expect(screen.getByRole("switch", { name: "Email and password" })).toBeEnabled();
   expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeEnabled();
   expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
-  await user.click(magicLink);
-  expect(magicLink).not.toBeChecked();
+  expect(magicLink).toBeChecked();
+  expect(screen.getByRole("switch", { name: "Email and password" })).toBeChecked();
   await user.click(screen.getByRole("button", { name: "Remove example.com" }));
   for (const control of switches) expect(control).toBeDisabled();
   expect(magicLink).not.toBeChecked();
+  expect(screen.getByRole("switch", { name: "Email and password" })).not.toBeChecked();
   expect(screen.getByText("Add a domain to enable sign-in options.")).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
+  await user.click(screen.getByRole("button", { name: "Add" }));
+  expect(magicLink).toBeEnabled();
+  expect(magicLink).not.toBeChecked();
+  expect(screen.getByRole("switch", { name: "Email and password" })).not.toBeChecked();
 });
 
 it("redirects old portal-step links into the Business Users section", async () => {

@@ -1080,11 +1080,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // Under the same lock as an update, so a delete cannot land between
       // an update's delete and its re-register and then be undone by the
       // update's restore of the old row.
-      const outcome = await tryWithAdvisoryLock(
-        app.db,
-        ADVISORY_LOCK.ssoProviderUpdate,
-        async () => {
-          const [existing] = await app.db
+      const outcome = await tryWithAdvisoryLock(app.db, ADVISORY_LOCK.ssoProviderUpdate, () =>
+        app.db.transaction(async (tx) => {
+          const [settings] = await tx.select().from(orgSettings).for("update");
+          if (!settings) throw httpError(500, "Organization settings are unavailable.");
+          const [existing] = await tx
             .delete(ssoProviders)
             .where(eq(ssoProviders.providerId, request.params.providerId))
             .returning({
@@ -1094,7 +1094,33 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               domain: ssoProviders.domain,
             });
           if (!existing) throw httpError(404, "No identity provider is registered under this ID.");
-          await recordActivity(app.db, {
+          const remaining = await tx.select({ id: ssoProviders.id }).from(ssoProviders).limit(1);
+          if (remaining.length === 0) {
+            const previous = authenticationPolicy(settings);
+            const next = {
+              legal: { ...previous.legal, sso: false },
+              business: { ...previous.business, sso: false },
+            };
+            await tx
+              .update(orgSettings)
+              .set({ authenticationPolicy: next, updatedAt: new Date() })
+              .where(eq(orgSettings.id, settings.id));
+            for (const group of ["legal", "business"] as const) {
+              if (!previous[group].sso) continue;
+              await recordActivity(tx, {
+                entityType: "system",
+                actorId: request.user.id,
+                action: "org_settings.updated",
+                visibility: "admin_only",
+                payload: {
+                  field: group === "legal" ? "legalAuthentication" : "businessAuthentication",
+                  old: previous[group],
+                  new: next[group],
+                },
+              });
+            }
+          }
+          await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
             action: "sso_provider.removed",
@@ -1106,7 +1132,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               domain: existing.domain,
             },
           });
-        },
+        }),
       );
       if (!outcome.acquired) {
         throw httpError(409, "Another provider update is in progress. Try again.");
@@ -1248,17 +1274,20 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // stored list is just its canonical spelling.
       const domains = [...new Set(request.body.domains.map((domain) => domain.toLowerCase()))];
       const stored = await app.db.transaction(async (tx) => {
-        const [current] = await tx
-          .select({ id: orgSettings.id, domains: orgSettings.allowedEmailDomains })
-          .from(orgSettings)
-          .limit(1)
-          .for("update");
+        const [current] = await tx.select().from(orgSettings).limit(1).for("update");
         if (!current) throw httpError(500, "org_settings has no row to update.");
         // Order counts as change: the stored list is the canonical one.
-        if (JSON.stringify(current.domains) === JSON.stringify(domains)) return current.domains;
+        if (JSON.stringify(current.allowedEmailDomains) === JSON.stringify(domains))
+          return current.allowedEmailDomains;
+        const previous = authenticationPolicy(current);
+        const business = { ...previous.business, password: false, magicLink: false, sso: false };
         const [row] = await tx
           .update(orgSettings)
-          .set({ allowedEmailDomains: domains, updatedAt: new Date() })
+          .set({
+            allowedEmailDomains: domains,
+            updatedAt: new Date(),
+            ...(domains.length === 0 ? { authenticationPolicy: { ...previous, business } } : {}),
+          })
           .where(eq(orgSettings.id, current.id))
           .returning({ domains: orgSettings.allowedEmailDomains });
         if (!row) throw httpError(500, "org_settings has no row to update.");
@@ -1267,8 +1296,24 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "org_settings.updated",
           visibility: "admin_only",
-          payload: { field: "allowedEmailDomains", old: current.domains, new: row.domains },
+          payload: {
+            field: "allowedEmailDomains",
+            old: current.allowedEmailDomains,
+            new: row.domains,
+          },
         });
+        if (
+          domains.length === 0 &&
+          JSON.stringify(previous.business) !== JSON.stringify(business)
+        ) {
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: { field: "businessAuthentication", old: previous.business, new: business },
+          });
+        }
         return row.domains;
       });
       return { domains: stored };

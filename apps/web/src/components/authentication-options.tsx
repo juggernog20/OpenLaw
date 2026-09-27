@@ -3,13 +3,18 @@
 /** Shared Legal and Business authentication-policy controls for setup and Settings (TECH-008). */
 
 import { useId } from "react";
-import { defineMessages, FormattedMessage } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Tooltip } from "./ui/tooltip";
 
 export type AuthenticationOptions =
   paths["/api/v1/auth/methods"]["get"]["responses"][200]["content"]["application/json"]["policy"]["legal"];
+
+export function withoutSignInMethods(options: AuthenticationOptions): AuthenticationOptions {
+  return { ...options, password: false, magicLink: false, sso: false };
+}
 const labels = defineMessages({
   password: { id: "settings.auth.method.password", defaultMessage: "Email and password" },
   magicLink: { id: "settings.auth.method.magicLink", defaultMessage: "Email magic link" },
@@ -24,16 +29,52 @@ export function AuthenticationOptionsFields({
   onChange,
   disabled = false,
   ssoConfigured,
+  domainsConfigured = true,
 }: {
   value: AuthenticationOptions;
   onChange: (value: AuthenticationOptions) => void;
   disabled?: boolean;
   ssoConfigured: boolean;
+  domainsConfigured?: boolean;
 }) {
   const id = useId();
+  const intl = useIntl();
   return (
     <div className="flex flex-col gap-3">
-      {(["password", "magicLink", "sso", "requireTwoFactor"] as const).map((method) => (
+      {(["password", "magicLink", "sso", "requireTwoFactor"] as const).map((method) => {
+        const missingProvider = method === "sso" && !ssoConfigured;
+        const reason = !domainsConfigured
+          ? missingProvider
+            ? intl.formatMessage({
+                id: "settings.auth.domainsAndProviderRequired",
+                defaultMessage: "Add an allowed email domain and configure an identity provider to enable single sign-on.",
+              })
+            : intl.formatMessage({
+                id: "settings.auth.domainRequired",
+                defaultMessage: "Add an allowed email domain to enable Business User sign-in options.",
+              })
+          : missingProvider
+            ? intl.formatMessage({
+                id: "settings.auth.configureSso",
+                defaultMessage: "Configure an identity provider below to enable single sign-on.",
+              })
+            : disabled
+              ? intl.formatMessage({
+                  id: "settings.auth.waitForSave",
+                  defaultMessage: "Wait for the current changes to finish saving.",
+                })
+              : undefined;
+        const reasonId = `${id}-${method}-disabled-reason`;
+        const control = (
+          <Switch
+            id={`${id}-${method}`}
+            checked={value[method] && (method !== "sso" || ssoConfigured)}
+            disabled={!!reason}
+            aria-describedby={reason ? reasonId : undefined}
+            onCheckedChange={(checked) => onChange({ ...value, [method]: checked })}
+          />
+        );
+        return (
         <div key={method} className="flex items-center justify-between gap-4">
           <Label
             htmlFor={`${id}-${method}`}
@@ -53,14 +94,25 @@ export function AuthenticationOptionsFields({
           >
             <FormattedMessage {...labels[method]} />
           </Label>
-          <Switch
-            id={`${id}-${method}`}
-            checked={value[method]}
-            disabled={disabled || (method === "sso" && !ssoConfigured && !value.sso)}
-            onCheckedChange={(checked) => onChange({ ...value, [method]: checked })}
-          />
+          {reason ? (
+            <>
+              <span id={reasonId} className="sr-only">{reason}</span>
+              <Tooltip content={reason}>
+                <span
+                  role="group"
+                  tabIndex={0}
+                  aria-label={intl.formatMessage(labels[method])}
+                  aria-describedby={reasonId}
+                  className="inline-flex cursor-not-allowed rounded-full focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link [&>button]:pointer-events-none"
+                >
+                  {control}
+                </span>
+              </Tooltip>
+            </>
+          ) : control}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

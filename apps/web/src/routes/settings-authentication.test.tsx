@@ -33,6 +33,7 @@ const PROVIDERS = [
 ];
 
 function setup({ provider = true, fail = false, failRow = false } = {}) {
+  let domains = ["example.com"];
   let policy = {
     legal: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
     business: { password: false, magicLink: true, sso: false, requireTwoFactor: false },
@@ -52,7 +53,13 @@ function setup({ provider = true, fail = false, failRow = false } = {}) {
           ssoProviderId: null,
           ssoProviderCount: provider ? 2 : 0,
         });
-      if (path === "/api/v1/auth/allowed-domains") return json(200, { domains: ["example.com"] });
+      if (path === "/api/v1/auth/allowed-domains") {
+        if (call.method === "PUT") {
+          if (fail) return problem(500, "Domains could not be saved.");
+          domains = (call.body as { domains: string[] }).domains;
+        }
+        return json(200, { domains });
+      }
       if (path === "/api/v1/auth/sso-providers" && call.method === "GET")
         return json(200, { providers: provider ? PROVIDERS : [] });
       if (path === "/api/v1/auth/sso-providers" && call.method === "POST") {
@@ -139,6 +146,32 @@ it("requires an identity provider before either group can enable SSO", async () 
   expect(within(business).getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
   expect(screen.getByRole("region", { name: "Identity providers" })).toBeVisible();
   expect(screen.getByText("0 providers")).toBeVisible();
+});
+
+it("turns Business sign-in methods off after removing the last domain and keeps them off when re-added", async () => {
+  const { user } = setup();
+  const business = await screen.findByRole("region", { name: "Business Portal Authentication" });
+  const magicLink = within(business).getByRole("switch", { name: "Email magic link" });
+  expect(magicLink).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Remove example.com" }));
+  await waitFor(() => expect(magicLink).toBeDisabled());
+  expect(magicLink).not.toBeChecked();
+  const legal = screen.getByRole("region", { name: "Legal User Authentication" });
+  expect(within(legal).getByRole("switch", { name: "Email and password" })).toBeChecked();
+  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
+  await user.click(within(business).getByRole("button", { name: "Add" }));
+  await waitFor(() => expect(magicLink).toBeEnabled());
+  expect(magicLink).not.toBeChecked();
+});
+
+it("keeps Business sign-in choices when removing a domain fails", async () => {
+  const { user } = setup({ fail: true });
+  const business = await screen.findByRole("region", { name: "Business Portal Authentication" });
+  await user.click(screen.getByRole("button", { name: "Remove example.com" }));
+  await within(business).findByText("Domains could not be saved.");
+  const magicLink = within(business).getByRole("switch", { name: "Email magic link" });
+  expect(magicLink).toBeEnabled();
+  expect(magicLink).toBeChecked();
 });
 
 it("lists each provider with its name, domains and configuration status", async () => {
@@ -257,12 +290,20 @@ it("asks for a client ID before a provider missing credentials can be saved", as
 it("removes a provider and disables SSO once none is left", async () => {
   const { providerCalls, user } = setup();
   const card = await screen.findByRole("region", { name: "Identity providers" });
+  for (const toggle of screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })) {
+    await user.click(toggle);
+    await waitFor(() => expect(toggle).toBeChecked());
+  }
   await user.click(
     within(card).getByRole("button", { name: "Remove Family Office identity provider" }),
   );
   await waitFor(() =>
     expect(within(card).queryByText("Family Office identity provider")).not.toBeInTheDocument(),
   );
+  for (const toggle of screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })) {
+    expect(toggle).toBeEnabled();
+    expect(toggle).toBeChecked();
+  }
   await user.click(
     within(card).getByRole("button", { name: "Remove Wentworth identity provider" }),
   );
@@ -273,6 +314,10 @@ it("removes a provider and disables SSO once none is left", async () => {
   ]);
   const legal = screen.getByRole("region", { name: "Legal User Authentication" });
   expect(within(legal).getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
+  for (const toggle of screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })) {
+    expect(toggle).toBeDisabled();
+    expect(toggle).not.toBeChecked();
+  }
 });
 
 it("keeps the edit dialog open and shows the refusal when the save is rejected", async () => {

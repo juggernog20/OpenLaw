@@ -916,6 +916,7 @@ describe("several identity providers, routed by email domain", () => {
     expect(discovery.json()).toMatchObject({
       ssoProviderId: PROVIDER.providerId,
       ssoProviderCount: 1,
+      policy: { legal: { sso: true }, business: { sso: true } },
     });
 
     const [logged] = await harness.db
@@ -955,4 +956,39 @@ describe("several identity providers, routed by email domain", () => {
     });
     expect(cleanup.statusCode).toBe(204);
   });
+});
+
+it("removing the last provider disables SSO for both groups, even when SSO is their only method", async () => {
+  const previous = {
+    legal: { password: false, magicLink: false, sso: true, requireTwoFactor: false },
+    business: { password: true, magicLink: false, sso: true, requireTwoFactor: true },
+  };
+  await harness.db.update(orgSettings).set({ authenticationPolicy: previous });
+  const res = await harness.app.inject({
+    method: "DELETE",
+    url: `/api/v1/auth/sso-providers/${PROVIDER.providerId}`,
+    cookies: adminCookies,
+  });
+  expect(res.statusCode, res.body).toBe(204);
+  const [settings] = await harness.db.select().from(orgSettings);
+  expect(settings!.authenticationPolicy).toEqual({
+    legal: { ...previous.legal, sso: false },
+    business: { ...previous.business, sso: false },
+  });
+  const listed = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/auth/sso-providers",
+    cookies: adminCookies,
+  });
+  expect(listed.json().providers).toEqual([]);
+  const enable = await harness.app.inject({
+    method: "PATCH",
+    url: "/api/v1/auth/policy/legal",
+    cookies: adminCookies,
+    payload: previous.legal,
+  });
+  expect(enable.statusCode).toBe(400);
+  expect(enable.json().detail).toContain("Configure an identity provider");
+  // Administrators retain password recovery access when a group used only SSO.
+  expect(await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password)).toBeDefined();
 });

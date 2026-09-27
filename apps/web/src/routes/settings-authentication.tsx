@@ -13,6 +13,7 @@ import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import {
   AuthenticationOptionsFields,
+  withoutSignInMethods,
   type AuthenticationOptions,
 } from "../components/authentication-options";
 import { ListEditor } from "../components/list-editor";
@@ -413,6 +414,9 @@ export function SettingsAuthenticationPage() {
         return false;
       }
       setDomains(data.domains);
+      if (data.domains.length === 0) {
+        setPolicy((current) => ({ ...current, business: withoutSignInMethods(current.business) }));
+      }
       note("domains", "saved");
       return true;
     } catch {
@@ -462,6 +466,12 @@ export function SettingsAuthenticationPage() {
       return;
     }
     setProviders((current) => current.filter((row) => row.id !== provider.id));
+    if (providers.length === 1) {
+      setPolicy((current) => ({
+        legal: { ...current.legal, sso: false },
+        business: { ...current.business, sso: false },
+      }));
+    }
     listRef.current?.focus();
     void revalidator.revalidate();
   }
@@ -514,9 +524,15 @@ export function SettingsAuthenticationPage() {
         }
       >
         <AuthenticationOptionsFields
-          value={policy.business}
+          value={domains.length === 0 ? withoutSignInMethods(policy.business) : policy.business}
+          domainsConfigured={domains.length > 0}
           onChange={(value) => void commitPolicy("business", value)}
-          disabled={status.legal === "saving" || status.business === "saving"}
+          disabled={
+            status.legal === "saving" ||
+            status.business === "saving" ||
+            status.domains === "saving" ||
+            domains.length === 0
+          }
           ssoConfigured={providers.length > 0}
         />
         <StatusNote status={status.business} detail={detail.business} />

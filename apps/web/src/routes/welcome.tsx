@@ -70,7 +70,10 @@ import {
   useSetupDraft,
   writeSetupDraft,
 } from "../lib/setup-drafts";
-import { AuthenticationOptionsFields } from "../components/authentication-options";
+import {
+  AuthenticationOptionsFields,
+  withoutSignInMethods,
+} from "../components/authentication-options";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
@@ -1011,6 +1014,16 @@ export function WelcomePage() {
       });
       if (result.response.ok) {
         setSsoProviders((current) => current.filter((row) => row.id !== provider.id));
+        if (ssoProviders.length === 1) {
+          setPolicy((current) => ({
+            legal: { ...current.legal, sso: false },
+            business: { ...current.business, sso: false },
+          }));
+          setSavedPolicy((current) => ({
+            legal: { ...current.legal, sso: false },
+            business: { ...current.business, sso: false },
+          }));
+        }
         if (registeredProviderId === provider.providerId) {
           setRegisteredProviderId(null);
           setRegisteredName(null);
@@ -1046,7 +1059,10 @@ export function WelcomePage() {
         }
         setSavedDomains(result.data.domains);
       }
-      if (JSON.stringify(policy.business) !== JSON.stringify(savedPolicy.business)) {
+      if (
+        JSON.stringify(policy.business) !== JSON.stringify(savedPolicy.business) ||
+        (!policy.business.password && !policy.business.magicLink && !policy.business.sso)
+      ) {
         const result = await api.PATCH("/api/v1/auth/policy/{group}", {
           params: { path: { group: "business" } },
           body: policy.business,
@@ -1058,7 +1074,10 @@ export function WelcomePage() {
         }
         setSavedPolicy((current) => ({ ...current, business: result.data.business }));
       }
-      if (JSON.stringify(policy.legal) !== JSON.stringify(savedPolicy.legal)) {
+      if (
+        JSON.stringify(policy.legal) !== JSON.stringify(savedPolicy.legal) ||
+        (!policy.legal.password && !policy.legal.magicLink && !policy.legal.sso)
+      ) {
         const result = await api.PATCH("/api/v1/auth/policy/{group}", {
           params: { path: { group: "legal" } },
           body: policy.legal,
@@ -1088,6 +1107,14 @@ export function WelcomePage() {
     if (!domain) return;
     if (!domains.includes(domain)) setDomains([...domains, domain]);
     setDomainInput("");
+  }
+
+  function removeDomain(domain: string) {
+    const next = domains.filter((value) => value !== domain);
+    setDomains(next);
+    if (next.length === 0) {
+      setPolicy((current) => ({ ...current, business: withoutSignInMethods(current.business) }));
+    }
   }
 
   async function saveEmailSettings(event: FormSubmitEvent<HTMLFormElement>) {
@@ -1769,7 +1796,7 @@ export function WelcomePage() {
                                   { domain },
                                 )}
                                 className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                                onClick={() => setDomains(domains.filter((d) => d !== domain))}
+                                onClick={() => removeDomain(domain)}
                               >
                                 <X size={16} aria-hidden />
                               </button>
@@ -1785,9 +1812,14 @@ export function WelcomePage() {
                         </p>
                       )}
                       <AuthenticationOptionsFields
-                        value={policy.business}
+                        value={
+                          domains.length === 0
+                            ? withoutSignInMethods(policy.business)
+                            : policy.business
+                        }
                         onChange={(business) => setPolicy({ ...policy, business })}
                         disabled={busy || domains.length === 0}
+                        domainsConfigured={domains.length > 0}
                         ssoConfigured={ssoProviders.length > 0}
                       />
                     </AuthenticationSection>

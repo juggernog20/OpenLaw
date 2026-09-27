@@ -60,16 +60,21 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
     },
     async (request) => {
       const options = request.body;
-      if (!options.password && !options.magicLink && !options.sso)
-        throw httpError(400, "Enable at least one sign-in method.");
-      if (
-        options.sso &&
-        !(await app.db.select({ id: ssoProviders.id }).from(ssoProviders).limit(1)).length
-      )
-        throw httpError(400, "Configure an identity provider before enabling single sign-on.");
       return app.db.transaction(async (tx) => {
         const [settings] = await tx.select().from(orgSettings).for("update");
         if (!settings) throw httpError(500, "Organization settings are unavailable.");
+        if (
+          !options.password &&
+          !options.magicLink &&
+          !options.sso &&
+          !(request.params.group === "business" && settings.allowedEmailDomains.length === 0)
+        )
+          throw httpError(400, "Enable at least one sign-in method.");
+        if (
+          options.sso &&
+          !(await tx.select({ id: ssoProviders.id }).from(ssoProviders).limit(1)).length
+        )
+          throw httpError(400, "Configure an identity provider before enabling single sign-on.");
         const previous = authenticationPolicy(settings);
         const next = { ...previous, [request.params.group]: options };
         if (JSON.stringify(previous) !== JSON.stringify(next)) {

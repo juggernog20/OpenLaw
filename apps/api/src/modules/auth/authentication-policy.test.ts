@@ -207,3 +207,36 @@ it("limits completion attempts by client address", async () => {
     expect(response.statusCode, response.body).toBe(attempt < 30 ? 400 : 429);
   }
 });
+
+it("removing the last domain turns off Business methods without changing Legal or two-factor policy", async () => {
+  const domains = (values: string[]) =>
+    harness.app.inject({
+      method: "PUT",
+      url: "/api/v1/auth/allowed-domains",
+      cookies: admin,
+      payload: { domains: values },
+    });
+  const previous = {
+    legal: { ...basic },
+    business: { ...basic, sso: true, requireTwoFactor: true },
+  };
+  await harness.db.update(orgSettings).set({
+    allowedEmailDomains: ["example.com", "other.example"],
+    authenticationPolicy: previous,
+  });
+  expect((await domains(["example.com"])).statusCode).toBe(200);
+  let [settings] = await harness.db.select().from(orgSettings);
+  expect(settings!.authenticationPolicy).toEqual(previous);
+  expect((await domains([])).statusCode).toBe(200);
+  [settings] = await harness.db.select().from(orgSettings);
+  const off = { ...previous.business, password: false, magicLink: false, sso: false };
+  expect(settings!.authenticationPolicy).toEqual({ ...previous, business: off });
+  // An empty Business configuration is valid while no domains are allowed.
+  expect((await policy("business", off)).statusCode).toBe(200);
+  expect((await policy("legal", off)).statusCode).toBe(400);
+  expect((await domains(["example.com"])).statusCode).toBe(200);
+  [settings] = await harness.db.select().from(orgSettings);
+  expect(settings!.authenticationPolicy!.business).toEqual(off);
+  expect((await policy("business", off)).statusCode).toBe(400);
+  expect((await policy("business", basic)).statusCode).toBe(200);
+});

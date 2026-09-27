@@ -198,6 +198,13 @@ describe("the stored list is the magic-link policy", () => {
 
   it("admits allowed domains and silently skips others after a PUT", async () => {
     await setDomains(["acme.example"]);
+    const enabled = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/auth/policy/business",
+      cookies: adminCookies,
+      payload: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+    });
+    expect(enabled.statusCode, enabled.body).toBe(200);
 
     await requestMagicLink("client@acme.example");
     expect(harness.mailer.messagesTo("client@acme.example")).toHaveLength(1);
