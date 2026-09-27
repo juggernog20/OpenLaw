@@ -584,6 +584,8 @@ describe("GET /contracts/options — the create dialog's picker source", () => {
       "redlining",
       "awaiting_approval",
       "out_for_signature",
+      // Seeded by migration 0181 behind the last signature-stage status.
+      "partially_signed",
       "active",
       "expired",
       "terminated",
