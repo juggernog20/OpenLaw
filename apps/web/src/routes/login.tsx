@@ -199,24 +199,44 @@ export function LoginPage() {
     }
   }
 
-  async function startSso() {
-    if (!methods.ssoProviderId) return;
+  // One registered provider starts on a click. With several, the
+  // address decides: the sso plugin resolves the provider that serves
+  // its domain, and a domain no provider serves is answered here, not
+  // at an identity provider that would never have been the right one.
+  const ssoByEmail = methods.ssoProviderId === null && methods.ssoProviderCount > 0;
+
+  async function startSso(event?: FormSubmitEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    if (!methods.ssoProviderId && !ssoByEmail) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await authClient.signIn.sso({
-        providerId: methods.ssoProviderId,
+      const target = {
         callbackURL: oauthReturn ? loginURL : group === "business" ? "/portal" : "/",
         errorCallbackURL: `${loginURL}${oauthReturn ? "&" : "?"}error=sso`,
-      });
+      };
+      const res = await authClient.signIn.sso(
+        methods.ssoProviderId
+          ? { providerId: methods.ssoProviderId, ...target }
+          : { email, ...target },
+      );
       if (res.error || !res.data?.url) {
         setBusy(false);
         setError(
-          res.error?.message ??
-            intl.formatMessage({
-              id: "auth.login.error.sso",
-              defaultMessage: "Single sign-on could not start. Try again.",
-            }),
+          res.error?.status === 404 && ssoByEmail
+            ? intl.formatMessage(
+                {
+                  id: "auth.login.error.ssoNoProvider",
+                  defaultMessage:
+                    "No single sign-on provider is set up for {domain}. Check the address or contact your administrator.",
+                },
+                { domain: email.split("@")[1] ?? email },
+              )
+            : (res.error?.message ??
+                intl.formatMessage({
+                  id: "auth.login.error.sso",
+                  defaultMessage: "Single sign-on could not start. Try again.",
+                })),
         );
         return;
       }
@@ -349,6 +369,35 @@ export function LoginPage() {
                   defaultMessage="Continue with single sign-on"
                 />
               </Button>
+            ) : ssoByEmail ? (
+              <form className="flex flex-col gap-4" onSubmit={(e) => void startSso(e)}>
+                <p className="text-md text-muted">
+                  <FormattedMessage
+                    id="auth.login.ssoByEmail"
+                    defaultMessage="Enter your work email. Your organization's identity provider opens next."
+                  />
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="sso-email">
+                    <FormattedMessage id="auth.field.email" defaultMessage="Email" />
+                  </Label>
+                  <Input
+                    id="sso-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" disabled={busy}>
+                  <FormattedMessage
+                    id="auth.login.sso"
+                    defaultMessage="Continue with single sign-on"
+                  />
+                </Button>
+              </form>
             ) : (
               <Alert variant="info">
                 <FormattedMessage

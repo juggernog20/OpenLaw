@@ -2121,3 +2121,20 @@ from guide content hashes and are recorded separately. This opt-in remains until
 live restrictions in #1178 pass; retiring the gate before that would violate CTR-013.
 Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
 prove provider account controls, actual session expiry or signed real Connect.
+
+### TECH-008 addendum, 2026-09-27. Several identity providers, routed by email domain
+
+- **Status:** Accepted
+- **Date:** 2026-09-27
+
+**Context.** The schema and the sso plugin already held several `sso_providers` rows, but the wizard, the Authentication pane and `GET /auth/methods` exposed only the first one, and sign-in always started it. An organization with two identity providers (one per business, each with its own issuer and client) could not use both.
+
+**Decision.**
+
+- Administrators register any number of providers. A provider has a display name (`sso_providers.name`, migration `0183`; an empty name reads as the slug, so existing rows need no backfill), and the register and update routes accept `name`.
+- A provider owns the email domains entered for it (comma-separated, normalized to lower case, deduplicated). The routes refuse an entry that is not a bare domain (400) and a domain that another provider already owns, including a subdomain or a parent of one (409, naming the holder). The plugin resolves a sign-in address against a provider's domains with parent matching, so overlap would make the lookup depend on row order; refusing it at write time keeps the lookup deterministic. A provider may keep and reorder its own domains.
+- `GET /auth/methods` carries `ssoProviderCount` and keeps `ssoProviderId` only when exactly one provider exists. With one, the sign-in page starts it on a click as before. With several, the page asks for the email address and posts it to the plugin's `/sign-in/sso`, which resolves the provider by domain; a 404 is shown as "No single sign-on provider is set up for {domain}." The domain list is never published to the sign-in page.
+- `DELETE /auth/sso-providers/:providerId` removes a provider under the same advisory lock as an update and records `sso_provider.removed`. Account rows linked to the provider stay; the plugin's callback check already refuses a trusted link through a provider that does not serve the address's domain.
+- Unchanged: the per-group policies (`legal.sso`, `business.sso`) still gate whether a group may use any provider, allowed email domains still govern new Business User accounts through JIT provisioning, and staff still need an explicit invitation. The callback URL stays one per instance.
+
+**Consequences.** A single-provider install behaves exactly as before; its provider is listed under its slug until renamed. Docs: `authentication-and-email.md` (Several identity providers), `first-run.md`, UX checklist 1.7 and setup step 10.

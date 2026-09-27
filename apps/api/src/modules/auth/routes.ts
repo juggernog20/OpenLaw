@@ -17,6 +17,7 @@ import {
   ADVISORY_LOCK,
   AUTH_MODES,
   eq,
+  ne,
   orgSettings,
   ssoProviders,
   THEMES,
@@ -32,6 +33,11 @@ import {
 import { authenticationPolicy, authenticationForEmail } from "../../auth/authentication-policy.js";
 import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
 import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
+import {
+  findDomainConflict,
+  parseProviderDomains,
+  splitProviderDomains,
+} from "../../auth/sso-domains.js";
 import { requireAuth, requireRole, requireSession, userColumns } from "../../auth/guards.js";
 import { readTwoFactorPolicy } from "../../auth/two-factor-policy.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -91,9 +97,82 @@ const SessionSchema = z.object({
 const ProviderSchema = z.object({
   id: z.string(),
   providerId: z.string(),
+  /** The display name; a row registered before names existed reads as its slug. */
+  name: z.string(),
   issuer: z.string(),
+  /** The stored comma-separated domain string, as the plugin keeps it. */
   domain: z.string(),
+  /** The same domains, one per entry, for display. */
+  domains: z.array(z.string()),
 });
+
+/** The display name of a provider row; empty means "registered before names". */
+function providerName(row: { providerId: string; name: string }): string {
+  return row.name || row.providerId;
+}
+
+/** The public shape of a provider row: no config, no secret. */
+function publicProvider(row: {
+  id: string;
+  providerId: string;
+  name: string;
+  issuer: string;
+  domain: string;
+}) {
+  return {
+    id: row.id,
+    providerId: row.providerId,
+    name: providerName(row),
+    issuer: row.issuer,
+    domain: row.domain,
+    domains: splitProviderDomains(row.domain),
+  };
+}
+
+/** A display name as the Administrator typed it, trimmed. */
+const ProviderNameSchema = z.string().trim().min(1).max(120);
+
+/**
+ * Normalizes a domain entry and refuses one that another provider
+ * already serves. Sign-in routes by email domain, so a domain claimed
+ * twice (or a subdomain of a claimed one) would make the lookup
+ * order-dependent; the refusal names the provider that holds it.
+ */
+async function resolveProviderDomains(
+  db: Db,
+  domain: string,
+  exceptProviderId: string | null,
+): Promise<string> {
+  const parsed = parseProviderDomains(domain);
+  if (!parsed.ok) {
+    throw httpError(
+      400,
+      parsed.invalid
+        ? `"${parsed.invalid}" is not an email domain. Enter a bare domain such as acme.example.`
+        : "Enter at least one email domain.",
+    );
+  }
+  const others = await db
+    .select({
+      providerId: ssoProviders.providerId,
+      name: ssoProviders.name,
+      domain: ssoProviders.domain,
+    })
+    .from(ssoProviders)
+    .where(exceptProviderId === null ? undefined : ne(ssoProviders.providerId, exceptProviderId));
+  const conflict = findDomainConflict(parsed.domains, others);
+  if (conflict) {
+    const how =
+      conflict.domain === conflict.claimedBy
+        ? `is already assigned to`
+        : `overlaps ${conflict.claimedBy}, which is assigned to`;
+    throw httpError(
+      409,
+      `${conflict.domain} ${how} the identity provider ${conflict.providerName}. Each email domain can belong to one provider.`,
+    );
+  }
+  return parsed.domains.join(",");
+}
 
 /**
  * The stored OIDC client config (better-auth keeps it as JSON text on
@@ -342,8 +421,15 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
              * is open.
              */
             emailConfigured: z.boolean(),
-            /** Slug of the provider the SSO button starts; null when none exists. */
+            /**
+             * Slug of the provider the SSO button starts when exactly one
+             * is registered; null when none exists or when several do, in
+             * which case the sign-in page asks for the email address and
+             * the sso plugin resolves the provider by its domain.
+             */
             ssoProviderId: z.string().nullable(),
+            /** How many identity providers are registered. */
+            ssoProviderCount: z.number().int().min(0),
           }),
           default: problemResponse,
         },
@@ -356,11 +442,10 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     // admin-only GET /auth/mode stays the management surface.
     async () => {
       const settings = await getOrgSettings(app.db);
-      const [provider] = await app.db
+      const providers = await app.db
         .select({ providerId: ssoProviders.providerId })
         .from(ssoProviders)
-        .orderBy(ssoProviders.createdAt)
-        .limit(1);
+        .orderBy(ssoProviders.createdAt);
       const { mailer } = await app.resolveMailer();
       return {
         policy: authenticationPolicy(settings),
@@ -368,7 +453,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         magicLinkEnabled: settings.magicLinkEnabled,
         requireTwoFactor: settings.requireTwoFactor,
         emailConfigured: mailer.configured,
-        ssoProviderId: provider?.providerId ?? null,
+        ssoProviderId: providers.length === 1 ? providers[0]!.providerId : null,
+        ssoProviderCount: providers.length,
       };
     },
   );
@@ -697,6 +783,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
               "Lowercase letters, digits and inner hyphens only.",
             ),
+          /** What the provider is called on screen; defaults to the slug. */
+          name: ProviderNameSchema.optional(),
           issuer: z.url(),
           /** Email domain(s) the IdP serves; comma-separated for several. */
           domain: z.string().min(1),
@@ -705,12 +793,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         }),
         response: {
           201: z.object({
-            provider: z.object({
-              id: z.string(),
-              providerId: z.string(),
-              issuer: z.string(),
-              domain: z.string(),
-            }),
+            provider: ProviderSchema,
             /** The stable redirect URL to paste into the IdP console. */
             callbackUrl: z.string(),
           }),
@@ -720,7 +803,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (request, reply) => {
       const { providerId, issuer, clientId, clientSecret } = request.body;
-      const domain = request.body.domain.toLowerCase();
+      const name = request.body.name ?? providerId;
+      // A row under the same slug is left to the plugin, which refuses
+      // the duplicate; excluding it here keeps that answer (and its
+      // message) ahead of a domain clash with the row's own domains.
+      const domain = await resolveProviderDomains(app.db, request.body.domain, providerId);
 
       // The plugin's register endpoint does the real work — issuer
       // validation, discovery, persistence — under the admin's forwarded
@@ -745,17 +832,19 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // immediately; the plugin will not link sign-ins to pre-existing
       // users through an unverified provider, and the DNS-TXT
       // verification flow is never exposed.
-      const [provider] = await app.db
+      const [row] = await app.db
         .update(ssoProviders)
-        .set({ domainVerified: true, updatedAt: new Date() })
+        .set({ name, domainVerified: true, updatedAt: new Date() })
         .where(eq(ssoProviders.providerId, providerId))
         .returning({
           id: ssoProviders.id,
           providerId: ssoProviders.providerId,
+          name: ssoProviders.name,
           issuer: ssoProviders.issuer,
           domain: ssoProviders.domain,
         });
-      if (!provider) throw httpError(500, "The registered provider could not be read back.");
+      if (!row) throw httpError(500, "The registered provider could not be read back.");
+      const provider = publicProvider(row);
 
       // Logged after the fact: the row itself was written by better-auth
       // outside any transaction of ours, so exact atomicity is not on
@@ -765,7 +854,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         actorId: request.user.id,
         action: "sso_provider.registered",
         visibility: "admin_only",
-        payload: { providerId: provider.providerId, issuer: provider.issuer, domain },
+        payload: { providerId: provider.providerId, name, issuer: provider.issuer, domain },
       });
 
       return reply.status(201).send({
@@ -810,6 +899,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         params: z.object({ providerId: z.string() }),
         body: z
           .object({
+            name: ProviderNameSchema.optional(),
             issuer: z.url().optional(),
             /** Email domain(s) the IdP serves; comma-separated for several. */
             domain: z.string().min(1).optional(),
@@ -863,8 +953,12 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           }
           const merged = {
             providerId: existing.providerId,
+            name: request.body.name ?? providerName(existing),
             issuer: request.body.issuer ?? existing.issuer,
-            domain: (request.body.domain ?? existing.domain).toLowerCase(),
+            domain:
+              request.body.domain === undefined
+                ? existing.domain
+                : await resolveProviderDomains(app.db, request.body.domain, existing.providerId),
             clientId,
             clientSecret,
           };
@@ -898,19 +992,24 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
             relayAuthError(error);
           }
 
-          const [provider] = await app.db
+          const [row] = await app.db
             .update(ssoProviders)
-            .set({ domainVerified: true, updatedAt: new Date() })
+            .set({ name: merged.name, domainVerified: true, updatedAt: new Date() })
             .where(eq(ssoProviders.providerId, merged.providerId))
             .returning({
               id: ssoProviders.id,
               providerId: ssoProviders.providerId,
+              name: ssoProviders.name,
               issuer: ssoProviders.issuer,
               domain: ssoProviders.domain,
             });
-          if (!provider) throw httpError(500, "The updated provider could not be read back.");
+          if (!row) throw httpError(500, "The updated provider could not be read back.");
+          const provider = publicProvider(row);
 
           const changes: { field: string; old: unknown; new: unknown }[] = [];
+          if (provider.name !== providerName(existing)) {
+            changes.push({ field: "name", old: providerName(existing), new: provider.name });
+          }
           if (provider.issuer !== existing.issuer) {
             changes.push({ field: "issuer", old: existing.issuer, new: provider.issuer });
           }
@@ -949,6 +1048,60 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(409, "Another provider update is in progress. Try again.");
       }
       return outcome.result;
+    },
+  );
+
+  app.delete(
+    "/auth/sso-providers/:providerId",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "deleteSsoProvider",
+        summary:
+          "Remove a registered identity provider (TECH-008). Accounts that " +
+          "signed in through it keep their rows; they sign in another way " +
+          "until a provider serves their domain again",
+        tags: ["auth"],
+        params: z.object({ providerId: z.string() }),
+        response: { 204: z.null(), default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      // Under the same lock as an update, so a delete cannot land between
+      // an update's delete and its re-register and then be undone by the
+      // update's restore of the old row.
+      const outcome = await tryWithAdvisoryLock(
+        app.db,
+        ADVISORY_LOCK.ssoProviderUpdate,
+        async () => {
+          const [existing] = await app.db
+            .delete(ssoProviders)
+            .where(eq(ssoProviders.providerId, request.params.providerId))
+            .returning({
+              providerId: ssoProviders.providerId,
+              name: ssoProviders.name,
+              issuer: ssoProviders.issuer,
+              domain: ssoProviders.domain,
+            });
+          if (!existing) throw httpError(404, "No identity provider is registered under this ID.");
+          await recordActivity(app.db, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "sso_provider.removed",
+            visibility: "admin_only",
+            payload: {
+              providerId: existing.providerId,
+              name: providerName(existing),
+              issuer: existing.issuer,
+              domain: existing.domain,
+            },
+          });
+        },
+      );
+      if (!outcome.acquired) {
+        throw httpError(409, "Another provider update is in progress. Try again.");
+      }
+      return reply.status(204).send(null);
     },
   );
 
@@ -1293,10 +1446,7 @@ export async function readSsoProviders(db: Db) {
   const rows = await db.select().from(ssoProviders).orderBy(ssoProviders.createdAt);
   return {
     providers: rows.map((row) => ({
-      id: row.id,
-      providerId: row.providerId,
-      issuer: row.issuer,
-      domain: row.domain,
+      ...publicProvider(row),
       clientId: oidcConfigOf(row).clientId ?? null,
     })),
   };

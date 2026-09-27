@@ -65,11 +65,21 @@ beforeAll(async () => {
 
   // A real (in-process) OIDC issuer: discovery, authorize, token, JWKS
   // and userinfo endpoints over HTTP on a random localhost port.
-  idp = new OAuth2Server();
-  await idp.issuer.keys.generate("RS256");
-  await idp.start(0);
+  idp = await startIdp();
   issuerUrl = idp.issuer.url!;
-  idp.service.on("beforeUserinfo", (userInfoResponse) => {
+});
+
+afterAll(async () => {
+  await idp.stop();
+  await harness.stop();
+});
+
+/** One mock issuer asserting whatever `idpIdentity` holds at the time. */
+async function startIdp(): Promise<OAuth2Server> {
+  const server = new OAuth2Server();
+  await server.issuer.keys.generate("RS256");
+  await server.start(0);
+  server.service.on("beforeUserinfo", (userInfoResponse) => {
     userInfoResponse.body = {
       sub: idpIdentity.sub,
       email: idpIdentity.email,
@@ -82,16 +92,12 @@ beforeAll(async () => {
   // disagrees with the signed token is refused as
   // `id_token_userinfo_subject_mismatch`. Left to itself the mock signs
   // its own default subject, which 1.6 never looked at.
-  idp.service.on("beforeTokenSigning", (token) => {
+  server.service.on("beforeTokenSigning", (token) => {
     token.payload.sub = idpIdentity.sub;
     token.payload.email = idpIdentity.email;
   });
-});
-
-afterAll(async () => {
-  await idp.stop();
-  await harness.stop();
-});
+  return server;
+}
 
 async function registerProvider(
   cookies: Record<string, string>,
@@ -121,6 +127,7 @@ function sessionCookies(res: {
 async function ssoRoundTrip(
   identity: { sub: string; email: string; name?: string },
   signInBody: Record<string, unknown>,
+  expectedIssuer: string = issuerUrl,
 ) {
   idpIdentity = identity;
   const start = await harness.app.inject({
@@ -130,7 +137,7 @@ async function ssoRoundTrip(
   });
   expect(start.statusCode, start.body).toBe(200);
   const authUrl: string = start.json().url;
-  expect(authUrl, "authorization URL should point at the registered IdP").toContain(issuerUrl);
+  expect(authUrl, "authorization URL should point at the registered IdP").toContain(expectedIssuer);
 
   const stateCookies: Record<string, string> = {};
   for (const c of start.cookies) stateCookies[c.name] = c.value;
@@ -158,8 +165,12 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const body = res.json();
     expect(body.provider).toMatchObject({
       providerId: PROVIDER.providerId,
+      // No name given: the slug stands in, as it does for rows registered
+      // before names existed.
+      name: PROVIDER.providerId,
       issuer: issuerUrl,
       domain: PROVIDER.domain,
+      domains: [PROVIDER.domain],
     });
     // The stable, provider-independent URL an Administrator pastes into
     // the IdP console.
@@ -195,6 +206,7 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
     const methods = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
     expect(methods.statusCode, methods.body).toBe(200);
     expect(methods.json().ssoProviderId).toBe(PROVIDER.providerId);
+    expect(methods.json().ssoProviderCount).toBe(1);
   });
 
   it("rejects a duplicate provider slug through the same relayed error shape", async () => {
@@ -523,8 +535,10 @@ describe("the provider management surface (#64)", () => {
       {
         id: expect.any(String),
         providerId: PROVIDER.providerId,
+        name: PROVIDER.providerId,
         issuer: issuerUrl,
         domain: PROVIDER.domain,
+        domains: [PROVIDER.domain],
         clientId: PROVIDER.clientId,
       },
     ]);
@@ -569,6 +583,29 @@ describe("the provider management surface (#64)", () => {
     const email = "counsel@acme.example";
     const redeemed = await ssoRoundTrip({ sub: "idp-counsel", email }, { email });
     expect(sessionCookies(redeemed), "sign-in must survive a provider update").not.toBeNull();
+  });
+
+  it("renames the provider and logs the name change", async () => {
+    const res = await patchProvider(PROVIDER.providerId, { name: "  Acme identity provider " });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(res.json().provider.name).toBe("Acme identity provider");
+    const [logged] = await harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.action, "sso_provider.updated"),
+          sql`${activityLog.payload}->>'field' = 'name'`,
+        ),
+      );
+    expect(logged?.payload).toEqual({
+      providerId: PROVIDER.providerId,
+      field: "name",
+      old: PROVIDER.providerId,
+      new: "Acme identity provider",
+    });
+    const listed = await listProviders(adminCookies);
+    expect(listed.json().providers[0]).toMatchObject({ name: "Acme identity provider" });
   });
 
   it("answers 404 for a provider slug that does not exist", async () => {
@@ -682,4 +719,240 @@ it("rejects SSO when it is disabled for the authenticated user's group", async (
       .update(orgSettings)
       .set({ authenticationPolicy: settings!.authenticationPolicy });
   }
+});
+
+describe("several identity providers, routed by email domain", () => {
+  let idp2: OAuth2Server;
+  let issuer2: string;
+  const SECOND = {
+    providerId: "family-office",
+    name: "Family Office identity provider",
+    // Mixed case, stray spaces and a subdomain of its own: all one provider.
+    domain: "FamilyOffice.test, wealth.familyoffice.test ",
+    clientId: "openlaw-family",
+    clientSecret: "family-client-secret",
+  } as const;
+
+  const listProviders = () =>
+    harness.app.inject({ method: "GET", url: "/api/v1/auth/sso-providers", cookies: adminCookies });
+  const methods = () => harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+
+  beforeAll(async () => {
+    idp2 = await startIdp();
+    issuer2 = idp2.issuer.url!;
+    await harness.db
+      .update(orgSettings)
+      .set({ allowedEmailDomains: [...ALLOWED_DOMAINS, "familyoffice.test"] });
+  });
+
+  afterAll(async () => {
+    await idp2.stop();
+    await harness.db.update(orgSettings).set({ allowedEmailDomains: ALLOWED_DOMAINS });
+  });
+
+  it("registers a second provider with a display name and several domains", async () => {
+    const res = await registerProvider(adminCookies, { ...SECOND, issuer: issuer2 });
+    expect(res.statusCode, res.body).toBe(201);
+    expect(res.json().provider).toMatchObject({
+      providerId: SECOND.providerId,
+      name: SECOND.name,
+      issuer: issuer2,
+      domain: "familyoffice.test,wealth.familyoffice.test",
+      domains: ["familyoffice.test", "wealth.familyoffice.test"],
+    });
+
+    const listed = await listProviders();
+    expect(listed.json().providers.map((row: { providerId: string }) => row.providerId)).toEqual([
+      PROVIDER.providerId,
+      SECOND.providerId,
+    ]);
+
+    // With two providers the sign-in page cannot start one blindly: it
+    // asks for the address and the plugin resolves the provider by domain.
+    const discovery = await methods();
+    expect(discovery.json()).toMatchObject({ ssoProviderId: null, ssoProviderCount: 2 });
+  });
+
+  it("refuses a domain another provider already serves, subdomains included", async () => {
+    const exact = await registerProvider(adminCookies, {
+      providerId: "third",
+      issuer: issuer2,
+      domain: "acme.example",
+    });
+    expect(exact.statusCode, exact.body).toBe(409);
+    expect(exact.json().detail).toContain("acme.example is already assigned to");
+    expect(exact.json().detail).toContain("Acme identity provider");
+
+    const below = await registerProvider(adminCookies, {
+      providerId: "third",
+      issuer: issuer2,
+      domain: "legal.acme.example",
+    });
+    expect(below.statusCode, below.body).toBe(409);
+    expect(below.json().detail).toContain("overlaps acme.example");
+
+    const above = await registerProvider(adminCookies, {
+      providerId: "third",
+      issuer: issuer2,
+      domain: "test",
+    });
+    expect(above.statusCode, above.body).toBe(400);
+
+    const moved = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
+      cookies: adminCookies,
+      payload: { domain: "familyoffice.test, acme.example" },
+    });
+    expect(moved.statusCode, moved.body).toBe(409);
+
+    // A provider may keep and reorder its own domains.
+    const kept = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
+      cookies: adminCookies,
+      payload: { domain: "wealth.familyoffice.test, familyoffice.test" },
+    });
+    expect(kept.statusCode, kept.body).toBe(200);
+    expect(kept.json().provider.domains).toEqual(["wealth.familyoffice.test", "familyoffice.test"]);
+
+    const rows = await harness.db
+      .select({ id: ssoProviders.id })
+      .from(ssoProviders)
+      .where(eq(ssoProviders.providerId, "third"));
+    expect(rows).toHaveLength(0);
+  });
+
+  it("refuses an entry that is not a bare email domain", async () => {
+    for (const domain of ["https://acme.example", "acme.example/sso", "", " , "]) {
+      const res = await registerProvider(adminCookies, {
+        providerId: "third",
+        issuer: issuer2,
+        domain,
+      });
+      expect(res.statusCode, `${domain}: ${res.body}`).toBe(400);
+    }
+  });
+
+  it("routes a sign-in to the provider that serves the address's domain", async () => {
+    const family = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/sso",
+      payload: { email: "ana@familyoffice.test", callbackURL: "/portal" },
+    });
+    expect(family.statusCode, family.body).toBe(200);
+    expect(family.json().url).toContain(issuer2);
+
+    const wealth = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/sso",
+      payload: { email: "ben@wealth.familyoffice.test", callbackURL: "/portal" },
+    });
+    expect(wealth.statusCode, wealth.body).toBe(200);
+    expect(wealth.json().url).toContain(issuer2);
+
+    const acme = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/sso",
+      payload: { email: "counsel@acme.example", callbackURL: "/" },
+    });
+    expect(acme.statusCode, acme.body).toBe(200);
+    expect(acme.json().url).toContain(issuerUrl);
+  });
+
+  it("answers 404 when no provider serves the address's domain", async () => {
+    const res = await harness.app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/sso",
+      payload: { email: "someone@nowhere.test", callbackURL: "/" },
+    });
+    expect(res.statusCode, res.body).toBe(404);
+  });
+
+  it("completes the round trip through the second provider", async () => {
+    const email = "ana@familyoffice.test";
+    const redeemed = await ssoRoundTrip(
+      { sub: "family-ana", email, name: "Ana Family" },
+      { email, requestSignUp: true },
+      issuer2,
+    );
+    expect(redeemed.statusCode, redeemed.body).toBe(302);
+    const cookies = sessionCookies(redeemed);
+    expect(cookies, "callback set no session cookie").not.toBeNull();
+    const who = await me(cookies!);
+    expect(who.json().user).toMatchObject({ email, role: "business_user" });
+    const [account] = await harness.db
+      .select({ providerId: accounts.providerId })
+      .from(accounts)
+      .where(eq(accounts.accountId, "family-ana"));
+    expect(account?.providerId).toBe(SECOND.providerId);
+  });
+
+  it("removes a provider, logs it, and the sole survivor goes back to one-click", async () => {
+    const staffCookies = await signInCookies(
+      harness.app,
+      "counsel@acme.example",
+      "casey-sets-her-own",
+    );
+    const forbidden = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
+      cookies: staffCookies,
+    });
+    expect(forbidden.statusCode).toBe(403);
+
+    const res = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(204);
+
+    const listed = await listProviders();
+    expect(listed.json().providers.map((row: { providerId: string }) => row.providerId)).toEqual([
+      PROVIDER.providerId,
+    ]);
+    const discovery = await methods();
+    expect(discovery.json()).toMatchObject({
+      ssoProviderId: PROVIDER.providerId,
+      ssoProviderCount: 1,
+    });
+
+    const [logged] = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "sso_provider.removed"));
+    expect(logged).toMatchObject({
+      entityType: "system",
+      visibility: "admin_only",
+      payload: {
+        providerId: SECOND.providerId,
+        name: SECOND.name,
+        issuer: issuer2,
+        domain: "wealth.familyoffice.test,familyoffice.test",
+      },
+    });
+    expect(JSON.stringify(logged!.payload)).not.toContain(SECOND.clientSecret);
+
+    const again = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sso-providers/${SECOND.providerId}`,
+      cookies: adminCookies,
+    });
+    expect(again.statusCode).toBe(404);
+
+    // The freed domain can be claimed by a new registration.
+    const reclaimed = await registerProvider(adminCookies, {
+      providerId: "family-office-2",
+      issuer: issuer2,
+      domain: "familyoffice.test",
+    });
+    expect(reclaimed.statusCode, reclaimed.body).toBe(201);
+    const cleanup = await harness.app.inject({
+      method: "DELETE",
+      url: "/api/v1/auth/sso-providers/family-office-2",
+      cookies: adminCookies,
+    });
+    expect(cleanup.statusCode).toBe(204);
+  });
 });

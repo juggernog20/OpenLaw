@@ -734,6 +734,9 @@
   "activity.ssoProvider.registered": {
     "defaultMessage": "{actor} connected the identity provider {provider}"
   },
+  "activity.ssoProvider.removed": {
+    "defaultMessage": "{actor} removed the identity provider {provider}"
+  },
   "activity.ssoProvider.updated": {
     "defaultMessage": "{actor} changed the identity provider {provider}"
   },
@@ -1481,11 +1484,17 @@
   "auth.login.error.ssoCallback": {
     "defaultMessage": "Single sign-on failed. Try again."
   },
+  "auth.login.error.ssoNoProvider": {
+    "defaultMessage": "No single sign-on provider is set up for {domain}. Check the address or contact your administrator."
+  },
   "auth.login.magicLink": {
     "defaultMessage": "Email me a sign-in link"
   },
   "auth.login.sso": {
     "defaultMessage": "Continue with single sign-on"
+  },
+  "auth.login.ssoByEmail": {
+    "defaultMessage": "Enter your work email. Your organization's identity provider opens next."
   },
   "auth.login.ssoUnconfigured": {
     "defaultMessage": "Single sign-on is not configured yet. Use administrator sign-in."
@@ -1597,6 +1606,12 @@
   },
   "auth.setup.tokenHint": {
     "defaultMessage": "Use the value of SETUP_TOKEN. If it is not set, use the token the server printed at first start, shown by docker compose logs app under Compose."
+  },
+  "auth.setup.tokenVerified": {
+    "defaultMessage": "Setup token verified"
+  },
+  "auth.setup.validValue": {
+    "defaultMessage": "Valid value"
   },
   "auth.signOut": {
     "defaultMessage": "Sign out"
@@ -10004,6 +10019,9 @@
   "settings.auth.addDomain": {
     "defaultMessage": "Add"
   },
+  "settings.auth.addProvider": {
+    "defaultMessage": "Add provider"
+  },
   "settings.auth.adminRecovery": {
     "defaultMessage": "Administrators retain emergency password sign-in. Any required two-factor authentication still applies."
   },
@@ -10022,20 +10040,26 @@
   "settings.auth.configureSso": {
     "defaultMessage": "Configure an identity provider below to enable single sign-on."
   },
-  "settings.auth.domain": {
-    "defaultMessage": "Email domain"
-  },
   "settings.auth.domainPlaceholder": {
     "defaultMessage": "acme.example"
   },
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
   },
+  "settings.auth.domainsHint": {
+    "defaultMessage": "Separate several domains with commas. Sign-in routes by the email domain a person enters, so each domain can belong to one provider."
+  },
+  "settings.auth.domainsPlaceholder": {
+    "defaultMessage": "acme.example, acme-group.example"
+  },
+  "settings.auth.editProvider": {
+    "defaultMessage": "Edit {name}"
+  },
   "settings.auth.factorAllMethods": {
     "defaultMessage": "An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
   },
-  "settings.auth.identityProvider": {
-    "defaultMessage": "Identity provider"
+  "settings.auth.identityProviders": {
+    "defaultMessage": "Identity providers"
   },
   "settings.auth.issuer": {
     "defaultMessage": "Issuer URL"
@@ -10058,17 +10082,47 @@
   "settings.auth.portal": {
     "defaultMessage": "Business Portal Authentication"
   },
+  "settings.auth.providerConfigured": {
+    "defaultMessage": "Configured"
+  },
+  "settings.auth.providerCount": {
+    "defaultMessage": "{count, plural, one {# provider} other {# providers}}"
+  },
+  "settings.auth.providerDomains": {
+    "defaultMessage": "Email domains"
+  },
   "settings.auth.providerId": {
     "defaultMessage": "Provider ID"
   },
+  "settings.auth.providerIdHint": {
+    "defaultMessage": "Lowercase letters, digits and hyphens. Fixed after registration."
+  },
   "settings.auth.providerIdPlaceholder": {
     "defaultMessage": "okta"
+  },
+  "settings.auth.providerMissingCredentials": {
+    "defaultMessage": "Missing credentials"
+  },
+  "settings.auth.providerName": {
+    "defaultMessage": "Display name"
+  },
+  "settings.auth.providerNameHint": {
+    "defaultMessage": "Shown to Administrators. Defaults to the Provider ID."
+  },
+  "settings.auth.providerNamePlaceholder": {
+    "defaultMessage": "Acme identity provider"
+  },
+  "settings.auth.providersHelp": {
+    "defaultMessage": "Sign-in routes by the email domain a person enters, so each domain belongs to one provider. Removing a provider deletes its configuration; accounts keep their rows."
   },
   "settings.auth.registerProvider": {
     "defaultMessage": "Register provider"
   },
   "settings.auth.removeDomain": {
     "defaultMessage": "Remove {domain}"
+  },
+  "settings.auth.removeProvider": {
+    "defaultMessage": "Remove {name}"
   },
   "settings.auth.requireTwoFactor": {
     "defaultMessage": "Require two-factor authentication"
@@ -13376,23 +13430,32 @@
   "welcome.auth.error.register": {
     "defaultMessage": "The identity provider could not be registered."
   },
+  "welcome.auth.error.remove": {
+    "defaultMessage": "The identity provider could not be removed."
+  },
   "welcome.auth.field.clientId": {
     "defaultMessage": "Client ID"
   },
   "welcome.auth.field.clientSecret": {
     "defaultMessage": "Client secret"
   },
-  "welcome.auth.field.domain": {
-    "defaultMessage": "Email domain"
-  },
   "welcome.auth.field.domainPlaceholder": {
     "defaultMessage": "acme.example"
+  },
+  "welcome.auth.field.domains": {
+    "defaultMessage": "Email domains"
   },
   "welcome.auth.field.issuer": {
     "defaultMessage": "Issuer URL"
   },
   "welcome.auth.field.issuerPlaceholder": {
     "defaultMessage": "https://idp.example.com"
+  },
+  "welcome.auth.field.name": {
+    "defaultMessage": "Display name"
+  },
+  "welcome.auth.field.namePlaceholder": {
+    "defaultMessage": "Acme identity provider"
   },
   "welcome.auth.field.providerId": {
     "defaultMessage": "Provider ID"
@@ -13406,11 +13469,20 @@
   "welcome.auth.hint": {
     "defaultMessage": "How your users sign in to OpenLaw"
   },
+  "welcome.auth.identityProviders": {
+    "defaultMessage": "Identity providers"
+  },
+  "welcome.auth.identityProvidersHint": {
+    "defaultMessage": "Available to either group when SSO is enabled. Each provider serves its own email domains; sign-in routes by the address a person enters."
+  },
   "welcome.auth.legalUsers": {
     "defaultMessage": "Legal Users"
   },
   "welcome.auth.legalUsersHint": {
     "defaultMessage": "Administrators and Legal Team Members."
+  },
+  "welcome.auth.register.another": {
+    "defaultMessage": "Add another identity provider"
   },
   "welcome.auth.register.submit": {
     "defaultMessage": "Register provider"
@@ -13419,13 +13491,10 @@
     "defaultMessage": "Register your identity provider"
   },
   "welcome.auth.registered": {
-    "defaultMessage": "Identity provider {providerId} is registered."
+    "defaultMessage": "Identity provider {name} is registered."
   },
-  "welcome.auth.sharedSso": {
-    "defaultMessage": "Shared SSO provider"
-  },
-  "welcome.auth.sharedSsoHint": {
-    "defaultMessage": "One identity provider, available to either group when SSO is enabled."
+  "welcome.auth.registeredProviders": {
+    "defaultMessage": "Registered identity providers"
   },
   "welcome.back": {
     "defaultMessage": "Back"
@@ -13595,9 +13664,6 @@
   "welcome.portal.empty": {
     "defaultMessage": "Add a domain to enable sign-in options."
   },
-  "welcome.portal.error.domains": {
-    "defaultMessage": "The domain allowlist could not be saved."
-  },
   "welcome.portal.hint": {
     "defaultMessage": "Add an allowed email domain, then choose how Business Users sign in."
   },
@@ -13708,9 +13774,6 @@
   },
   "welcome.step.organization": {
     "defaultMessage": "Your organization"
-  },
-  "welcome.step.portal": {
-    "defaultMessage": "Business-user portal"
   },
   "welcome.step.review": {
     "defaultMessage": "Review"

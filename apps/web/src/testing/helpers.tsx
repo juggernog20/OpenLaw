@@ -307,6 +307,8 @@ export interface ApiState {
     /** Defaults to true — only the dead-affordance tests wire it off. */
     emailConfigured?: boolean;
     ssoProviderId: string | null;
+    /** Defaults to 1 when a provider id is set, else 0; several providers set it explicitly. */
+    ssoProviderCount?: number;
   };
   /**
    * Defaults to completed with every step done, so guard tests land on
@@ -450,6 +452,9 @@ export function stubApi(state: ApiState) {
         },
       ]);
     }
+    if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
+      return json(200, { providers: [] });
+    }
     if (call.url.pathname === "/api/v1/auth/methods" && call.method === "GET") {
       const methods = state.methods ?? {
         mode: "built_in" as const,
@@ -458,6 +463,7 @@ export function stubApi(state: ApiState) {
       };
       return json(200, {
         ...methods,
+        ssoProviderCount: methods.ssoProviderCount ?? (methods.ssoProviderId ? 1 : 0),
         policy: methods.policy ?? {
           legal: {
             password: methods.mode === "built_in",

@@ -16,16 +16,24 @@ Any account that is not archived can get a sign-in link when **Email magic link*
 
 ## Configure single sign-on
 
-1. Have your identity-provider administrator create an OpenID Connect client for this instance. Obtain its issuer URL, client ID, client secret, and email domain. The callback uses the instance address. That is the **Application address** under **Settings → Advanced → Instance address**, or `BASE_URL` when the deployment sets it. This version configures OIDC; it has no SAML setup interface.
+1. Have your identity-provider administrator create an OpenID Connect client for this instance. Obtain its issuer URL, client ID, client secret, and the email domains it serves. The callback uses the instance address. That is the **Application address** under **Settings → Advanced → Instance address**, or `BASE_URL` when the deployment sets it. This version configures OIDC; it has no SAML setup interface.
 2. Keep a working Administrator password and an existing Administrator session available while testing. Administrators retain password sign-in when password sign-in is off.
-3. In the **Identity provider** card, enter **Provider ID**, **Issuer URL**, **Email domain**, **Client ID**, and **Client secret**. Select **Register provider**. Registration does not turn on single sign-on for any group.
-4. Copy the displayed callback URL into the identity provider's allowed redirect URLs. It ends in `/api/auth/sso/callback` and must match the instance address and scheme. If you later change the instance address, restart the API and worker, then update the redirect URL in the identity provider.
-5. Turn on **Single sign-on (SSO)** under **Legal User Authentication**. Turn it on under **Business Portal Authentication** too if Business Users sign in through the identity provider.
+3. In the **Identity providers** card, select **Add provider**. Enter **Display name**, **Provider ID**, **Issuer URL**, **Email domains**, **Client ID**, and **Client secret**. Separate several domains with commas. Select **Register provider**. Registration does not turn on single sign-on for any group.
+4. Copy the displayed callback URL into the identity provider's allowed redirect URLs. It ends in `/api/auth/sso/callback` and must match the instance address and scheme. Every provider uses the same callback URL. If you later change the instance address, restart the API and worker, then update the redirect URL in each identity provider.
+5. Turn on **Single sign-on (SSO)** under **Legal User Authentication**. Turn it on under **Business Portal Authentication** too if Business Users sign in through an identity provider.
 6. In a separate browser session, sign in through the identity provider with an invited staff account. Confirm the expected account and role. Provider registration checks discovery; it does not prove that a complete sign-in will succeed.
 
 The identity provider establishes identity. OpenLaw retains the account's role and manages its own revocable sessions. Invite staff explicitly; matching an allowed email domain does not grant an uninvited person a staff role.
 
-To update a registered provider, edit its fields and select **Save provider**. Leave **Client secret** blank to retain it, or supply a replacement to rotate it. The Provider ID is fixed after registration. Test a fresh sign-in after changes. If discovery fails, correct the issuer URL or its reachability and retry; a failed update should leave the previous provider configuration available. To recover, use Administrator password sign-in, turn on **Email and password** under **Legal User Authentication**, and turn off **Single sign-on (SSO)** if needed.
+The card lists every registered provider with its display name, its email domains, and a status chip. **Configured** means the stored client ID is readable. **Missing credentials** means the stored configuration lost its client ID; edit the provider and enter the client ID and secret again.
+
+### Several identity providers
+
+Register one provider per identity provider. Each provider owns the email domains you enter for it, and an email domain can belong to one provider only. OpenLaw also refuses a domain that is a subdomain or a parent of a domain another provider owns, because a sign-in address on either could match both. The refusal names the provider that holds the domain.
+
+With one provider, the sign-in page offers **Continue with single sign-on** as a single button. With two or more, the page first asks for the person's email address and opens the provider that serves its domain. When no provider serves the domain, the page says "No single sign-on provider is set up for {domain}." and the person can use another enabled method. The group policies are unchanged: **Single sign-on (SSO)** under each group still decides whether that group may use any provider, allowed email domains still govern new Business User accounts, and staff still need an explicit invitation.
+
+To update a registered provider, select **Edit {name}** on its row, change its fields and select **Save provider**. Leave **Client secret** blank to retain it, or supply a replacement to rotate it. The Provider ID is fixed after registration. Test a fresh sign-in after changes. If discovery fails, correct the issuer URL or its reachability and retry; a failed update leaves the previous provider configuration in place. To remove a provider, select **Remove {name}** on its row. Removal deletes the provider's configuration at once. Accounts that signed in through it keep their rows and sign in another way until a provider serves their domain again. To recover, use Administrator password sign-in, turn on **Email and password** under **Legal User Authentication**, and turn off **Single sign-on (SSO)** if needed.
 
 ## Control Business Portal entry
 

@@ -1003,6 +1003,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     old: "[secret]",
     new: "[secret]",
   },
+  "sso_provider.removed": {
+    providerId: "acme-okta",
+    name: "Acme Okta",
+    issuer: "https://acme.okta.com",
+    domain: "acme.example",
+  },
 
   // E-signature connector
   "signing_connector.configured": {

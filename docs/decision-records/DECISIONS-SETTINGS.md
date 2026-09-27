@@ -322,6 +322,10 @@ The onboarding wizard and Authentication settings expose Legal User Authenticati
 
 Maintaining two group policies requires Administrators to review both sets of methods and recovery paths. This supersedes a single organization-wide authentication policy.
 
+### SET-004 amendment — several identity providers, 2026-09-27
+
+The onboarding wizard's **Identity providers** section and the Authentication pane's **Identity providers** card manage any number of OIDC providers. Each row shows the provider's display name, its email domains and a status chip (**Configured** or **Missing credentials**), with edit and remove actions. The wizard keeps its inline register form and adds a row list above it; the Settings card uses the DES-020 list editor with a dialog form. The group policies, the allowed email domains and explicit staff invitations are unchanged; a provider is available to whichever group has **Single sign-on (SSO)** turned on. TECH-008's 2026-09-27 addendum records the routing and overlap rules. This supersedes the single "Shared SSO provider" section.
+
 ## SET-012: Regions are an Administrator-managed Contract classification
 
 - **Status:** Accepted

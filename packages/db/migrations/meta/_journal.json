@@ -1282,6 +1282,13 @@
       "when": 1790442498390,
       "tag": "0182_partially-signed-document-type",
       "breakpoints": true
+    },
+    {
+      "idx": 183,
+      "version": "7",
+      "when": 1790491402017,
+      "tag": "0183_sso-provider-name",
+      "breakpoints": true
     }
   ]
 }

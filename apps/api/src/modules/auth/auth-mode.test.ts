@@ -133,6 +133,7 @@ describe("login method discovery (GET /api/v1/auth/methods)", () => {
       requireTwoFactor: false,
       emailConfigured: true,
       ssoProviderId: null,
+      ssoProviderCount: 0,
     });
   });
 

@@ -210,20 +210,21 @@ No `archived_at`: the row is neither creatable nor deletable, only edited.
 
 Source: **TECH-008** (bring-your-own IdP, configured at runtime)
 
-Runtime-registered OIDC identity providers, one row per IdP, created only through the admin-guarded registration endpoint. Mapped onto by better-auth's sso plugin.
+Runtime-registered OIDC identity providers, one row per IdP, created only through the admin-guarded registration endpoint. Mapped onto by better-auth's sso plugin. Several rows may coexist (TECH-008 addendum, 2026-09-27); each owns its email domains, and sign-in resolves the row by the address entered.
 
-| Column                     | Type        | Notes                                                                                                                   |
-| -------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `id`                       | UUID        | PK                                                                                                                      |
-| `provider_id`              | text        | unique slug; identifies the provider in sign-in and callback flows                                                      |
-| `issuer`                   | text        | OIDC issuer URL; endpoint discovery runs from it at registration                                                        |
-| `domain`                   | text        | email domain(s) served by the IdP, comma-separated for multi-domain                                                     |
-| `oidc_config`              | text (JSON) | discovered + supplied OIDC config, **including the client secret** — sealed whole, **encrypted at rest** (**TECH-022**) |
-| `saml_config`              | text (JSON) | demanded by the plugin's model; SAML is out of scope, always NULL                                                       |
-| `organization_id`          | text        | demanded by the plugin's model; organization plugin unused, always NULL                                                 |
-| `domain_verified`          | boolean     | plugin trust flag gating email-linking to existing users; set at registration (admin registration = trust decision)     |
-| `user_id`                  | UUID FK     | the registering Administrator; no cascade — the provider outlives the registrant                                        |
-| `created_at`, `updated_at` | timestamptz |                                                                                                                         |
+| Column                     | Type        | Notes                                                                                                                      |
+| -------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `id`                       | UUID        | PK                                                                                                                         |
+| `provider_id`              | text        | unique slug; identifies the provider in sign-in and callback flows                                                         |
+| `name`                     | text        | display name; defaults to `''`, read as the slug. Migration `0183`                                                         |
+| `issuer`                   | text        | OIDC issuer URL; endpoint discovery runs from it at registration                                                           |
+| `domain`                   | text        | email domain(s) served by the IdP, comma-separated for multi-domain; no domain (or subdomain of one) is shared across rows |
+| `oidc_config`              | text (JSON) | discovered + supplied OIDC config, **including the client secret** — sealed whole, **encrypted at rest** (**TECH-022**)    |
+| `saml_config`              | text (JSON) | demanded by the plugin's model; SAML is out of scope, always NULL                                                          |
+| `organization_id`          | text        | demanded by the plugin's model; organization plugin unused, always NULL                                                    |
+| `domain_verified`          | boolean     | plugin trust flag gating email-linking to existing users; set at registration (admin registration = trust decision)        |
+| `user_id`                  | UUID FK     | the registering Administrator; no cascade — the provider outlives the registrant                                           |
+| `created_at`, `updated_at` | timestamptz |                                                                                                                            |
 
 No `archived_at`: providers are deleted (future management surface), not archived.
 
