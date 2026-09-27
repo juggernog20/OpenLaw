@@ -251,7 +251,8 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    delete?: never;
+    /** Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again */
+    delete: operations["deleteSsoProvider"];
     options?: never;
     head?: never;
     /** Update the registered provider (TECH-008): omitted fields keep their stored values, endpoint discovery re-runs from the issuer, and a failed update leaves the provider untouched */
@@ -8575,6 +8576,7 @@ export interface operations {
             requireTwoFactor: boolean;
             emailConfigured: boolean;
             ssoProviderId: string | null;
+            ssoProviderCount: number;
           };
         };
       };
@@ -8789,8 +8791,10 @@ export interface operations {
             providers: {
               id: string;
               providerId: string;
+              name: string;
               issuer: string;
               domain: string;
+              domains: string[];
               clientId: string | null;
             }[];
           };
@@ -8818,6 +8822,7 @@ export interface operations {
       content: {
         "application/json": {
           providerId: string;
+          name?: string;
           /** Format: uri */
           issuer: string;
           domain: string;
@@ -8837,12 +8842,43 @@ export interface operations {
             provider: {
               id: string;
               providerId: string;
+              name: string;
               issuer: string;
               domain: string;
+              domains: string[];
             };
             callbackUrl: string;
           };
         };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteSsoProvider: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        providerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Problem details (RFC 9457) */
       default: {
@@ -8867,6 +8903,7 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          name?: string;
           /** Format: uri */
           issuer?: string;
           domain?: string;
@@ -8886,8 +8923,10 @@ export interface operations {
             provider: {
               id: string;
               providerId: string;
+              name: string;
               issuer: string;
               domain: string;
+              domains: string[];
             };
             callbackUrl: string;
           };

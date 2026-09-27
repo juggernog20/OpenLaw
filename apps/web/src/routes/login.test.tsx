@@ -8,7 +8,7 @@
  * needs both the toggle and a deployment that can send email.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -308,5 +308,67 @@ describe("landing after authentication", () => {
     } finally {
       unsubscribe();
     }
+  });
+});
+
+describe("several identity providers", () => {
+  it("asks for the email address and routes the sign-in by it", async () => {
+    const bodies: unknown[] = [];
+    const assign = vi.fn();
+    stubApi({
+      methods: {
+        mode: "oidc",
+        magicLinkEnabled: false,
+        ssoProviderId: null,
+        ssoProviderCount: 2,
+      },
+      extra: (call) => {
+        if (call.url.pathname === "/api/auth/sign-in/sso") {
+          bodies.push(call.body);
+          return json(200, { url: "https://idp.familyoffice.test/authorize", redirect: false });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/auth/login");
+    vi.stubGlobal("location", { ...window.location, assign, replace: assign });
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Email"), "ana@familyoffice.test");
+    await user.click(screen.getByRole("button", { name: "Continue with single sign-on" }));
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith("https://idp.familyoffice.test/authorize"),
+    );
+    expect(bodies).toEqual([
+      {
+        email: "ana@familyoffice.test",
+        callbackURL: "/",
+        errorCallbackURL: "/auth/login?error=sso",
+      },
+    ]);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("says which domain has no provider when none matches", async () => {
+    stubApi({
+      methods: {
+        mode: "oidc",
+        magicLinkEnabled: false,
+        ssoProviderId: null,
+        ssoProviderCount: 2,
+      },
+      extra: (call) => {
+        if (call.url.pathname === "/api/auth/sign-in/sso") {
+          return json(404, { message: "No provider found for the issuer" });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/auth/login");
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Email"), "someone@nowhere.test");
+    await user.click(screen.getByRole("button", { name: "Continue with single sign-on" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No single sign-on provider is set up for nowhere.test. Check the address or contact your administrator.",
+    );
   });
 });

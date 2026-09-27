@@ -218,9 +218,11 @@ Actors: Administrator, then Invitee.
   - [x] b. Administrator presses Back. The step returns to the splash.
 - [ ] 10. Authentication step. The subtitle reads "How your users sign in to OpenLaw". Legal Users and Business Users are separate collapsed sections. Administrator opens Legal Users and sees the switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
   - [ ] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
-  - [ ] b. Administrator opens "Shared SSO provider" and fills "Register your identity provider": Provider ID, Issuer URL, Email domain, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {id} is registered." and "Paste this callback URL into your IdP console: {url}". The SSO switch becomes available.
+  - [ ] b. Administrator opens "Identity providers" and fills "Register your identity provider": Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {name} is registered." and "Paste this callback URL into your IdP console: {url}". The provider appears in the list with its name, domains and "Configured". The SSO switch becomes available.
   - [ ] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
-  - [ ] d. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
+  - [ ] d. The form title becomes "Add another identity provider". Administrator registers a second provider for another domain. Both rows show. Registering a domain the first provider already owns shows "{domain} is already assigned to the identity provider {name}." A subdomain of it is refused the same way.
+  - [ ] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
+  - [ ] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
 - [ ] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
 - [ ] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
   - [ ] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.
@@ -378,15 +380,19 @@ Actors: Legal Team Member, Business User.
 
 Actors: Administrator, Legal Team Member, Business User. You need a test OIDC provider.
 
-- [ ] 1. Administrator registers a provider in Settings > Authentication > Identity provider: Provider ID, Issuer URL, Email domain, Client ID, Client secret. Administrator presses "Register provider". The pane shows the callback URL to paste into the provider.
+- [ ] 1. Administrator presses "Add provider" in Settings > Authentication > Identity providers and fills the dialog: Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret. Administrator presses "Register provider". The dialog closes, the row shows the name, its domains and "Configured", and the caption under the card shows the callback URL to paste into the provider.
 - [ ] 2. Administrator turns on "Single sign-on (SSO)" for Legal Users.
 - [ ] 3. Legal Team Member opens `/auth/login`. The card shows "Continue with single sign-on" first.
 - [ ] 4. Legal Team Member presses it and completes sign-in at the provider. Home opens. The account keeps its role.
 - [ ] 5. Legal Team Member cancels at the provider. The login card shows "Single sign-on failed. Try again."
 - [ ] 6. SSO is on but the provider was deleted. The card shows "Single sign-on is not configured yet. Use administrator sign-in."
 - [ ] 7. An unknown person on an allowed domain signs in through the provider on the portal side. The account is created as a Business User.
-- [ ] 8. Administrator edits the provider. Leaving Client secret blank keeps it. A new value rotates it. "Save provider" saves. A new issuer that cannot be discovered is refused and the old provider stays.
+- [ ] 8. Administrator presses "Edit {name}" on the row. Provider ID is absent. Leaving Client secret blank keeps it. A new value rotates it. "Save provider" saves. A new issuer that cannot be discovered is refused and the old provider stays.
 - [ ] 9. SSO is off for the person's group. Signing in through the provider shows a refusal.
+- [ ] 10. Administrator adds a second provider for another email domain. Entering a domain the first provider owns, or a subdomain of it, shows "{domain} is already assigned to the identity provider {name}." or "{domain} overlaps {other}, which is assigned to the identity provider {name}." A provider may list several domains separated by commas.
+- [ ] 11. With two providers, `/auth/login` shows an Email field under "Enter your work email. Your organization's identity provider opens next." and "Continue with single sign-on". An address on the second provider's domain opens the second provider. An address on a domain nobody serves shows "No single sign-on provider is set up for {domain}. Check the address or contact your administrator." The other enabled methods stay reachable.
+- [ ] 12. A row whose stored client ID is unreadable shows "Missing credentials". Its edit dialog requires Client ID and Client secret.
+- [ ] 13. Administrator presses "Remove {name}". The row leaves at once and History records "removed the identity provider {name}". Removing the last provider disables the SSO switches; a person with SSO on sees "Single sign-on is not configured yet."
 
 ### 1.8 Two-factor required by the organization
 
@@ -520,7 +526,7 @@ Actors: Administrator.
   - [ ] b. An invalid domain shows the API's refusal and the input stays.
 - [ ] 5. Administrator removes a domain with "Remove {domain}".
 - [ ] 6. The list is empty. The pane shows "No domains allowed yet. New users must be invited individually." Magic-link sign-in is closed to new addresses.
-- [ ] 7. Identity provider card: see Script 1.7 steps 1 and 8.
+- [ ] 7. Identity providers card: see Script 1.7 steps 1, 8, 10, 12 and 13.
 - [ ] 8. Administrator checks each change on `/auth/login` and `/portal/login` in a private window.
       Watch: this pane has no password policy beyond the 8-character minimum, no session length and no lockout settings. The brief expects them.
 

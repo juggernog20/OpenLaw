@@ -1102,8 +1102,9 @@ type FolderPayloads = {
  * two sides are both `[secret]`: the writer records that it was rotated
  * and never what it was. */
 type SsoProviderPayloads = {
-  "sso_provider.registered": { providerId: string; issuer: string; domain: string };
+  "sso_provider.registered": { providerId: string; name?: string; issuer: string; domain: string };
   "sso_provider.updated": { providerId: string; field: string; old: unknown; new: unknown };
+  "sso_provider.removed": { providerId: string; name: string; issuer: string; domain: string };
 };
 
 /**

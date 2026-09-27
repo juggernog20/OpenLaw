@@ -171,8 +171,9 @@ export const accounts = pgTable(
 );
 
 /**
- * Runtime-registered BYO IdPs (TECH-008). One row per identity provider,
- * created through the admin-only registration route; the OIDC config JSON
+ * Runtime-registered BYO IdPs (TECH-008). One row per identity provider
+ * (several may coexist, each owning its email domains), created through
+ * the admin-only registration route; the OIDC config JSON
  * carries the client secret, so the whole column is encrypted at rest
  * (TECH-022) — the plugin reads and writes it through our Drizzle
  * tables, so the seal applies to better-auth's own queries too.
@@ -191,8 +192,20 @@ export const ssoProviders = pgTable(
     id: uuidPk(),
     /** Stable slug identifying the provider in sign-in and callback flows. */
     providerId: text("provider_id").notNull(),
+    /**
+     * What Administrators and the sign-in page call the provider. The
+     * plugin's register endpoint never writes it, so the column defaults
+     * to empty and the registration route fills it in the same update
+     * that marks the domain verified; a row still empty reads as its slug.
+     */
+    name: text("name").notNull().default(""),
     issuer: text("issuer").notNull(),
-    /** Email domain(s) served by this IdP; comma-separated for multi-domain. */
+    /**
+     * Email domain(s) served by this IdP; comma-separated for multi-domain.
+     * Sign-in routes by the address a person enters, so no domain may be
+     * claimed by two providers (the registration routes refuse overlap,
+     * subdomains included).
+     */
     domain: text("domain").notNull(),
     /** The plugin's OIDC config JSON, client secret included. Sealed whole (TECH-022). */
     oidcConfig: encryptedText("oidc_config"),

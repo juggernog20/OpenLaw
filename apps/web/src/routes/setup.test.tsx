@@ -47,7 +47,11 @@ describe("first-run setup", () => {
 
     await userEvent.click(screen.getByRole("link", { name: "Help with this page" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/documentation"));
-    expect(screen.queryByLabelText("Confirm password")).not.toBeInTheDocument();
+    // The router state moves before the old route unmounts; wait for the
+    // form to leave rather than asserting on the same tick.
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Confirm password")).not.toBeInTheDocument(),
+    );
     await act(async () => {
       await router.navigate(-1);
     });

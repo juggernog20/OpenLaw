@@ -1982,9 +1982,10 @@ describe("setup drafts across the wizard", () => {
     {
       step: "authentication",
       fields: {
+        "Display name": "Example identity provider",
         "Provider ID": "example",
         "Issuer URL": "https://idp.example.com",
-        "Email domain": "example.com",
+        "Email domains": "example.com",
         "Client ID": "example-client",
         "Client secret": "unsaved-secret",
       },
@@ -2024,7 +2025,7 @@ describe("setup drafts across the wizard", () => {
     const { router, view } = renderAt(`/welcome?step=${step}`);
     const user = userEvent.setup();
     if (step === "authentication")
-      await user.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+      await user.click(await screen.findByRole("button", { name: "Identity providers" }));
     for (const [label, value] of Object.entries(fields)) {
       await user.type(await screen.findByLabelText(label), value);
     }
@@ -2122,16 +2123,133 @@ it("restores legal and business authentication choices and unfinished domain ent
   expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeChecked();
 });
 
+it("lists registered identity providers on the authentication step and removes one", async () => {
+  const calls: string[] = [];
+  const providers = [
+    {
+      id: "p1",
+      providerId: "wentworth",
+      name: "Wentworth identity provider",
+      issuer: "https://idp.wentworth.test",
+      domain: "wentworth.test",
+      domains: ["wentworth.test"],
+      clientId: "openlaw",
+    },
+    {
+      id: "p2",
+      providerId: "family-office",
+      name: "Family Office identity provider",
+      issuer: "https://idp.familyoffice.test",
+      domain: "familyoffice.test,wealth.familyoffice.test",
+      domains: ["familyoffice.test", "wealth.familyoffice.test"],
+      clientId: "openlaw-family",
+    },
+  ];
+  stubApi({
+    signedIn: ADMIN,
+    onboarding: { completed: false },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
+        return json(200, { providers });
+      }
+      if (call.url.pathname.startsWith("/api/v1/auth/sso-providers/")) {
+        calls.push(`${call.method} ${call.url.pathname}`);
+        return new Response(null, { status: 204 });
+      }
+      return wizardExtra()(call);
+    },
+  });
+  renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Identity providers" }));
+  const list = await screen.findByRole("list", { name: "Registered identity providers" });
+  const rows = within(list).getAllByRole("listitem");
+  expect(rows).toHaveLength(2);
+  expect(within(rows[1]!).getByText("Family Office identity provider")).toBeVisible();
+  expect(within(rows[1]!).getByText("familyoffice.test, wealth.familyoffice.test")).toBeVisible();
+  expect(within(rows[1]!).getByText("Configured")).toBeVisible();
+  expect(screen.getByText("Add another identity provider")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Legal Users" }));
+  expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeEnabled();
+
+  await user.click(screen.getByRole("button", { name: "Remove Family Office identity provider" }));
+  await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(1));
+  expect(calls).toEqual(["DELETE /api/v1/auth/sso-providers/family-office"]);
+});
+
+it("shows the refusal and keeps the rows when a provider removal or registration is refused", async () => {
+  const providers = [
+    {
+      id: "p1",
+      providerId: "wentworth",
+      name: "Wentworth identity provider",
+      issuer: "https://idp.wentworth.test",
+      domain: "wentworth.test",
+      domains: ["wentworth.test"],
+      clientId: "openlaw",
+    },
+    {
+      id: "p2",
+      providerId: "family-office",
+      name: "Family Office identity provider",
+      issuer: "https://idp.familyoffice.test",
+      domain: "familyoffice.test",
+      domains: ["familyoffice.test"],
+      clientId: "openlaw-family",
+    },
+  ];
+  stubApi({
+    signedIn: ADMIN,
+    onboarding: { completed: false },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
+        return json(200, { providers });
+      }
+      if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "POST") {
+        return problem(
+          409,
+          "wentworth.test is already assigned to the identity provider Wentworth identity provider. Each email domain can belong to one provider.",
+        );
+      }
+      if (call.url.pathname.startsWith("/api/v1/auth/sso-providers/")) {
+        return problem(409, "Another provider update is in progress. Try again.");
+      }
+      return wizardExtra()(call);
+    },
+  });
+  renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Identity providers" }));
+  const list = await screen.findByRole("list", { name: "Registered identity providers" });
+  await user.click(screen.getByRole("button", { name: "Remove Family Office identity provider" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Another provider update is in progress. Try again.",
+  );
+  expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+
+  await user.type(screen.getByLabelText("Provider ID"), "third");
+  await user.type(screen.getByLabelText("Issuer URL"), "https://idp.third.test");
+  await user.type(screen.getByLabelText("Email domains"), "wentworth.test");
+  await user.type(screen.getByLabelText("Client ID"), "openlaw-third");
+  await user.type(screen.getByLabelText("Client secret"), "third-secret");
+  await user.click(screen.getByRole("button", { name: "Register provider" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "wentworth.test is already assigned to the identity provider Wentworth identity provider.",
+  );
+  expect(within(list).getAllByRole("listitem")).toHaveLength(2);
+  expect(screen.getByLabelText("Provider ID")).toHaveValue("third");
+});
+
 it("does not restore another Administrator's draft", async () => {
   const state = { signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() };
   stubApi(state);
   const { view } = renderAt("/welcome?step=authentication");
-  await userEvent.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Identity providers" }));
   await userEvent.type(await screen.findByLabelText("Client secret"), "first-admin-secret");
   view.unmount();
   state.signedIn = { ...ADMIN, id: "u2", email: "second@example.com" };
   renderAt("/welcome?step=authentication");
-  await userEvent.click(await screen.findByRole("button", { name: "Shared SSO provider" }));
+  await userEvent.click(await screen.findByRole("button", { name: "Identity providers" }));
   expect(await screen.findByLabelText("Client secret")).toHaveValue("");
 });
 

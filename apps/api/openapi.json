@@ -1072,6 +1072,11 @@
                     },
                     "ssoProviderId": {
                       "type": ["string", "null"]
+                    },
+                    "ssoProviderCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
@@ -1080,7 +1085,8 @@
                     "magicLinkEnabled",
                     "requireTwoFactor",
                     "emailConfigured",
-                    "ssoProviderId"
+                    "ssoProviderId",
+                    "ssoProviderCount"
                   ],
                   "additionalProperties": false
                 }
@@ -1432,6 +1438,11 @@
                     "type": "string",
                     "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
                   },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
                   "issuer": {
                     "type": "string",
                     "format": "uri"
@@ -1471,14 +1482,23 @@
                         "providerId": {
                           "type": "string"
                         },
+                        "name": {
+                          "type": "string"
+                        },
                         "issuer": {
                           "type": "string"
                         },
                         "domain": {
                           "type": "string"
+                        },
+                        "domains": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
-                      "required": ["id", "providerId", "issuer", "domain"],
+                      "required": ["id", "providerId", "name", "issuer", "domain", "domains"],
                       "additionalProperties": false
                     },
                     "callbackUrl": {
@@ -1526,17 +1546,34 @@
                           "providerId": {
                             "type": "string"
                           },
+                          "name": {
+                            "type": "string"
+                          },
                           "issuer": {
                             "type": "string"
                           },
                           "domain": {
                             "type": "string"
                           },
+                          "domains": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "clientId": {
                             "type": ["string", "null"]
                           }
                         },
-                        "required": ["id", "providerId", "issuer", "domain", "clientId"],
+                        "required": [
+                          "id",
+                          "providerId",
+                          "name",
+                          "issuer",
+                          "domain",
+                          "domains",
+                          "clientId"
+                        ],
                         "additionalProperties": false
                       }
                     }
@@ -1572,6 +1609,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
                   "issuer": {
                     "type": "string",
                     "format": "uri"
@@ -1620,14 +1662,23 @@
                         "providerId": {
                           "type": "string"
                         },
+                        "name": {
+                          "type": "string"
+                        },
                         "issuer": {
                           "type": "string"
                         },
                         "domain": {
                           "type": "string"
+                        },
+                        "domains": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
-                      "required": ["id", "providerId", "issuer", "domain"],
+                      "required": ["id", "providerId", "name", "issuer", "domain", "domains"],
                       "additionalProperties": false
                     },
                     "callbackUrl": {
@@ -1639,6 +1690,36 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSsoProvider",
+        "summary": "Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again",
+        "tags": ["auth"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "providerId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Default Response"
           },
           "default": {
             "description": "Problem details (RFC 9457)",

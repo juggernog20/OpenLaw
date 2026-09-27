@@ -2975,6 +2975,14 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     // that it was rotated and never what it was.
     changes: fieldChange,
   },
+  "sso_provider.removed": {
+    icon: Globe,
+    message: defineMessage({
+      id: "activity.ssoProvider.removed",
+      defaultMessage: "{actor} removed the identity provider {provider}",
+    }),
+    values: (intl, payload) => ({ provider: named(intl, payload, "name") }),
+  },
 
   // ---- The e-signature connector (CTR-013) ----
   // Two verbs, so the audit log tells connecting an install to a

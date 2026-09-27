@@ -389,6 +389,20 @@ function StartBlankDialog({
   );
 }
 
+/**
+ * The register form's draft. `name` arrived with multiple-provider
+ * support; a draft stored before it lacks the key, which the form reads
+ * as empty.
+ */
+const EMPTY_SSO_DRAFT: {
+  name?: string;
+  providerId: string;
+  issuer: string;
+  idpDomain: string;
+  clientId: string;
+  clientSecret: string;
+} = { name: "", providerId: "", issuer: "", idpDomain: "", clientId: "", clientSecret: "" };
+
 export async function welcomeLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser({ allowEmailSetup: true });
   if (user.role !== "administrator") return redirect("/");
@@ -415,10 +429,11 @@ export async function welcomeLoader({ request }: LoaderFunctionArgs) {
   ) {
     return redirect(`/welcome?step=${previousStep}`);
   }
-  const [general, methods, domains, email, signing, ai, review] = await Promise.all([
+  const [general, methods, domains, providers, email, signing, ai, review] = await Promise.all([
     api.GET("/api/v1/org/general"),
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
+    api.GET("/api/v1/auth/sso-providers"),
     api.GET("/api/v1/email-settings"),
     api.GET("/api/v1/signing-connectors/{provider}", {
       params: { path: { provider: SIGNING_PROVIDER } },
@@ -426,7 +441,15 @@ export async function welcomeLoader({ request }: LoaderFunctionArgs) {
     api.GET("/api/v1/ai-connector"),
     readReview(),
   ]);
-  if (!general.data || !methods.data || !domains.data || !email.data || !signing.data || !ai.data) {
+  if (
+    !general.data ||
+    !methods.data ||
+    !domains.data ||
+    !providers.data ||
+    !email.data ||
+    !signing.data ||
+    !ai.data
+  ) {
     throw new Error("The onboarding state could not be read.");
   }
   // Split so the step holds a list that is known non-empty. The route
@@ -442,6 +465,7 @@ export async function welcomeLoader({ request }: LoaderFunctionArgs) {
     general: general.data.general,
     methods: methods.data,
     domains: domains.data.domains,
+    ssoProviders: providers.data.providers,
     emailSettings: email.data,
     // Read here rather than derived from the onboarding status, because
     // the step draws the stored estate and integration key and needs
@@ -567,20 +591,28 @@ export function WelcomePage() {
   );
   const [ssoOpen, setSsoOpen] = useSetupDraft(draftScope, "ssoOpen", false);
   const [policy, setPolicy] = useSetupDraft(draftScope, "policy", loaded.methods.policy);
-  const [ssoProviderId, setSsoProviderId] = useState(loaded.methods.ssoProviderId);
+  // Every registered identity provider, each owning its email domains.
+  // The list moves when a registration or removal lands.
+  const [ssoProviders, setSsoProviders] = useState(loaded.ssoProviders);
+  // The last registration's notice: the slug says which row it is
+  // (names are not unique), the name is what the notice reads.
+  const [registeredProviderId, setRegisteredProviderId] = useSetupDraft<string | null>(
+    draftScope,
+    "registeredProviderId",
+    null,
+  );
+  const [registeredName, setRegisteredName] = useSetupDraft<string | null>(
+    draftScope,
+    "registeredName",
+    null,
+  );
   const [callbackUrl, setCallbackUrl] = useSetupDraft<string | null>(
     draftScope,
     "callbackUrl",
     null,
   );
 
-  const [ssoDraft, setSsoDraft] = useSetupDraft(draftScope, "sso", {
-    providerId: "",
-    issuer: "",
-    idpDomain: "",
-    clientId: "",
-    clientSecret: "",
-  });
+  const [ssoDraft, setSsoDraft] = useSetupDraft(draftScope, "sso", EMPTY_SSO_DRAFT);
 
   // Portal step.
   const [domains, setDomains] = useSetupDraft<string[]>(draftScope, "domains", loaded.domains);
@@ -898,8 +930,10 @@ export function WelcomePage() {
     setBusy(true);
     setError(null);
     try {
+      const name = field(form, "name").trim();
       const result = await api.POST("/api/v1/auth/sso-providers", {
         body: {
+          ...(name ? { name } : {}),
           providerId: field(form, "providerId"),
           issuer: field(form, "issuer"),
           domain: field(form, "idpDomain"),
@@ -909,9 +943,14 @@ export function WelcomePage() {
       });
       const { data } = result;
       if (data) {
-        setSsoProviderId(data.provider.providerId);
+        setSsoProviders((current) => [
+          ...current,
+          { ...data.provider, clientId: field(form, "clientId") },
+        ]);
+        setRegisteredProviderId(data.provider.providerId);
+        setRegisteredName(data.provider.name);
         setCallbackUrl(data.callbackUrl);
-        setSsoDraft({ providerId: "", issuer: "", idpDomain: "", clientId: "", clientSecret: "" });
+        setSsoDraft(EMPTY_SSO_DRAFT);
         return;
       }
       setError(
@@ -919,6 +958,36 @@ export function WelcomePage() {
           intl.formatMessage({
             id: "welcome.auth.error.register",
             defaultMessage: "The identity provider could not be registered.",
+          }),
+      );
+    } catch {
+      setError(networkError(intl));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeProvider(provider: { id: string; providerId: string; name: string }) {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.DELETE("/api/v1/auth/sso-providers/{providerId}", {
+        params: { path: { providerId: provider.providerId } },
+      });
+      if (result.response.ok) {
+        setSsoProviders((current) => current.filter((row) => row.id !== provider.id));
+        if (registeredProviderId === provider.providerId) {
+          setRegisteredProviderId(null);
+          setRegisteredName(null);
+          setCallbackUrl(null);
+        }
+        return;
+      }
+      setError(
+        (await readProblem(result)).detail ??
+          intl.formatMessage({
+            id: "welcome.auth.error.remove",
+            defaultMessage: "The identity provider could not be removed.",
           }),
       );
     } catch {
@@ -1530,7 +1599,7 @@ export function WelcomePage() {
                         value={policy.legal}
                         onChange={(legal) => setPolicy({ ...policy, legal })}
                         disabled={busy}
-                        ssoConfigured={!!ssoProviderId}
+                        ssoConfigured={ssoProviders.length > 0}
                       />
                     </AuthenticationSection>
                     <AuthenticationSection
@@ -1614,14 +1683,14 @@ export function WelcomePage() {
                         value={policy.business}
                         onChange={(business) => setPolicy({ ...policy, business })}
                         disabled={busy || domains.length === 0}
-                        ssoConfigured={!!ssoProviderId}
+                        ssoConfigured={ssoProviders.length > 0}
                       />
                     </AuthenticationSection>
                     <AuthenticationSection
                       title={
                         <FormattedMessage
-                          id="welcome.auth.sharedSso"
-                          defaultMessage="Shared SSO provider"
+                          id="welcome.auth.identityProviders"
+                          defaultMessage="Identity providers"
                         />
                       }
                       open={ssoOpen}
@@ -1629,150 +1698,69 @@ export function WelcomePage() {
                     >
                       <p className="text-sm text-muted">
                         <FormattedMessage
-                          id="welcome.auth.sharedSsoHint"
-                          defaultMessage="One identity provider, available to either group when SSO is enabled."
+                          id="welcome.auth.identityProvidersHint"
+                          defaultMessage="Available to either group when SSO is enabled. Each provider serves its own email domains; sign-in routes by the address a person enters."
                         />
                       </p>
-                      {!ssoProviderId && (
-                        <form
-                          className="flex flex-col gap-3 rounded-card border border-border-default p-4"
-                          onSubmit={(e) => void registerProvider(e)}
+                      {ssoProviders.length > 0 && (
+                        <ul
+                          className="flex flex-col divide-y divide-border-default rounded-card border border-border-default"
+                          aria-label={intl.formatMessage({
+                            id: "welcome.auth.registeredProviders",
+                            defaultMessage: "Registered identity providers",
+                          })}
                         >
-                          <p className="text-md font-medium">
-                            <FormattedMessage
-                              id="welcome.auth.register.title"
-                              defaultMessage="Register your identity provider"
-                            />
-                          </p>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="providerId">
-                              <FormattedMessage
-                                id="welcome.auth.field.providerId"
-                                defaultMessage="Provider ID"
-                              />
-                            </Label>
-                            <Input
-                              id="providerId"
-                              name="providerId"
-                              value={ssoDraft.providerId}
-                              onChange={(event) =>
-                                setSsoDraft((current) => ({
-                                  ...current,
-                                  providerId: event.target.value,
-                                }))
-                              }
-                              required
-                              placeholder={intl.formatMessage({
-                                id: "welcome.auth.field.providerIdPlaceholder",
-                                defaultMessage: "okta",
-                              })}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="issuer">
-                              <FormattedMessage
-                                id="welcome.auth.field.issuer"
-                                defaultMessage="Issuer URL"
-                              />
-                            </Label>
-                            <Input
-                              id="issuer"
-                              name="issuer"
-                              value={ssoDraft.issuer}
-                              onChange={(event) =>
-                                setSsoDraft((current) => ({
-                                  ...current,
-                                  issuer: event.target.value,
-                                }))
-                              }
-                              type="url"
-                              required
-                              placeholder={intl.formatMessage({
-                                id: "welcome.auth.field.issuerPlaceholder",
-                                defaultMessage: "https://idp.example.com",
-                              })}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="idpDomain">
-                              <FormattedMessage
-                                id="welcome.auth.field.domain"
-                                defaultMessage="Email domain"
-                              />
-                            </Label>
-                            <Input
-                              id="idpDomain"
-                              name="idpDomain"
-                              value={ssoDraft.idpDomain}
-                              onChange={(event) =>
-                                setSsoDraft((current) => ({
-                                  ...current,
-                                  idpDomain: event.target.value,
-                                }))
-                              }
-                              required
-                              placeholder={intl.formatMessage({
-                                id: "welcome.auth.field.domainPlaceholder",
-                                defaultMessage: "acme.example",
-                              })}
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="clientId">
-                              <FormattedMessage
-                                id="welcome.auth.field.clientId"
-                                defaultMessage="Client ID"
-                              />
-                            </Label>
-                            <Input
-                              id="clientId"
-                              name="clientId"
-                              value={ssoDraft.clientId}
-                              onChange={(event) =>
-                                setSsoDraft((current) => ({
-                                  ...current,
-                                  clientId: event.target.value,
-                                }))
-                              }
-                              required
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <Label htmlFor="clientSecret">
-                              <FormattedMessage
-                                id="welcome.auth.field.clientSecret"
-                                defaultMessage="Client secret"
-                              />
-                            </Label>
-                            <Input
-                              id="clientSecret"
-                              name="clientSecret"
-                              value={ssoDraft.clientSecret}
-                              onChange={(event) =>
-                                setSsoDraft((current) => ({
-                                  ...current,
-                                  clientSecret: event.target.value,
-                                }))
-                              }
-                              type="password"
-                              required
-                            />
-                          </div>
-                          <Button type="submit" variant="secondary" disabled={busy}>
-                            <FormattedMessage
-                              id="welcome.auth.register.submit"
-                              defaultMessage="Register provider"
-                            />
-                          </Button>
-                        </form>
+                          {ssoProviders.map((provider) => (
+                            <li
+                              key={provider.id}
+                              className="flex items-center gap-3 px-3 py-2 text-sm"
+                            >
+                              <span className="flex min-w-0 flex-1 flex-col">
+                                <span className="truncate font-medium">{provider.name}</span>
+                                <span className="truncate text-muted">
+                                  {provider.domains.join(", ")}
+                                </span>
+                              </span>
+                              {provider.clientId ? (
+                                <span className="inline-flex rounded-chip bg-status-success-bg px-2 py-0.5 text-xs font-semibold text-status-success-fg">
+                                  <FormattedMessage
+                                    id="settings.auth.providerConfigured"
+                                    defaultMessage="Configured"
+                                  />
+                                </span>
+                              ) : (
+                                <span className="inline-flex rounded-chip bg-status-warning-bg px-2 py-0.5 text-xs font-semibold text-status-warning-fg">
+                                  <FormattedMessage
+                                    id="settings.auth.providerMissingCredentials"
+                                    defaultMessage="Missing credentials"
+                                  />
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                disabled={busy}
+                                aria-label={intl.formatMessage(
+                                  {
+                                    id: "settings.auth.removeProvider",
+                                    defaultMessage: "Remove {name}",
+                                  },
+                                  { name: provider.name },
+                                )}
+                                className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+                                onClick={() => void removeProvider(provider)}
+                              >
+                                <X size={16} aria-hidden />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
                       )}
-
-                      {ssoProviderId && (
+                      {registeredName && (
                         <Alert variant="success">
                           <FormattedMessage
                             id="welcome.auth.registered"
-                            defaultMessage="Identity provider {providerId} is registered."
-                            values={{ providerId: ssoProviderId }}
+                            defaultMessage="Identity provider {name} is registered."
+                            values={{ name: registeredName }}
                           />
                           {callbackUrl && (
                             <span className="mt-1 block">
@@ -1785,6 +1773,176 @@ export function WelcomePage() {
                           )}
                         </Alert>
                       )}
+                      <form
+                        className="flex flex-col gap-3 rounded-card border border-border-default p-4"
+                        onSubmit={(e) => void registerProvider(e)}
+                      >
+                        <p className="text-md font-medium">
+                          {ssoProviders.length > 0 ? (
+                            <FormattedMessage
+                              id="welcome.auth.register.another"
+                              defaultMessage="Add another identity provider"
+                            />
+                          ) : (
+                            <FormattedMessage
+                              id="welcome.auth.register.title"
+                              defaultMessage="Register your identity provider"
+                            />
+                          )}
+                        </p>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="ssoName">
+                            <FormattedMessage
+                              id="welcome.auth.field.name"
+                              defaultMessage="Display name"
+                            />
+                          </Label>
+                          <Input
+                            id="ssoName"
+                            name="name"
+                            value={ssoDraft.name ?? ""}
+                            maxLength={120}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                name: event.target.value,
+                              }))
+                            }
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.namePlaceholder",
+                              defaultMessage: "Acme identity provider",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="providerId">
+                            <FormattedMessage
+                              id="welcome.auth.field.providerId"
+                              defaultMessage="Provider ID"
+                            />
+                          </Label>
+                          <Input
+                            id="providerId"
+                            name="providerId"
+                            value={ssoDraft.providerId}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                providerId: event.target.value,
+                              }))
+                            }
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.providerIdPlaceholder",
+                              defaultMessage: "okta",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="issuer">
+                            <FormattedMessage
+                              id="welcome.auth.field.issuer"
+                              defaultMessage="Issuer URL"
+                            />
+                          </Label>
+                          <Input
+                            id="issuer"
+                            name="issuer"
+                            value={ssoDraft.issuer}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                issuer: event.target.value,
+                              }))
+                            }
+                            type="url"
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "welcome.auth.field.issuerPlaceholder",
+                              defaultMessage: "https://idp.example.com",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label
+                            htmlFor="idpDomain"
+                            help={
+                              <FormattedMessage
+                                id="settings.auth.domainsHint"
+                                defaultMessage="Separate several domains with commas. Sign-in routes by the email domain a person enters, so each domain can belong to one provider."
+                              />
+                            }
+                          >
+                            <FormattedMessage
+                              id="welcome.auth.field.domains"
+                              defaultMessage="Email domains"
+                            />
+                          </Label>
+                          <Input
+                            id="idpDomain"
+                            name="idpDomain"
+                            value={ssoDraft.idpDomain}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                idpDomain: event.target.value,
+                              }))
+                            }
+                            required
+                            placeholder={intl.formatMessage({
+                              id: "settings.auth.domainsPlaceholder",
+                              defaultMessage: "acme.example, acme-group.example",
+                            })}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientId">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientId"
+                              defaultMessage="Client ID"
+                            />
+                          </Label>
+                          <Input
+                            id="clientId"
+                            name="clientId"
+                            value={ssoDraft.clientId}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                clientId: event.target.value,
+                              }))
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor="clientSecret">
+                            <FormattedMessage
+                              id="welcome.auth.field.clientSecret"
+                              defaultMessage="Client secret"
+                            />
+                          </Label>
+                          <Input
+                            id="clientSecret"
+                            name="clientSecret"
+                            value={ssoDraft.clientSecret}
+                            onChange={(event) =>
+                              setSsoDraft((current) => ({
+                                ...current,
+                                clientSecret: event.target.value,
+                              }))
+                            }
+                            type="password"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" variant="secondary" disabled={busy}>
+                          <FormattedMessage
+                            id="welcome.auth.register.submit"
+                            defaultMessage="Register provider"
+                          />
+                        </Button>
+                      </form>
                     </AuthenticationSection>
                   </>
                 )}
