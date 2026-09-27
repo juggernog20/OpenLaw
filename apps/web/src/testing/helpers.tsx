@@ -332,6 +332,7 @@ export interface ApiState {
    * supply one.
    */
   signingConnector?: {
+    updateMode?: "polling" | "webhook";
     environment: "demo" | "production";
     integrationKey: string;
     apiUserId: string;
@@ -846,6 +847,8 @@ export function stubApi(state: ApiState) {
           enabled: saved?.enabled ?? saved !== undefined,
           disabledAt: saved?.disabledAt ?? null,
           environment: saved?.environment ?? null,
+          updateMode: saved?.updateMode ?? "polling",
+          webhookUrlOverride: null,
           integrationKey: saved?.integrationKey ?? null,
           apiUserId: saved?.apiUserId ?? null,
           hasPrivateKey: saved !== undefined,

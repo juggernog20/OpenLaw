@@ -216,38 +216,38 @@ Actors: Administrator, then Invitee.
 - [x] 9. Administrator presses Continue. The organization saves and the step moves to Authentication.
   - [x] a. Administrator presses "Set up later". Nothing saves and the step moves on.
   - [x] b. Administrator presses Back. The step returns to the splash.
-- [ ] 10. Authentication step. The subtitle reads "How your users sign in to OpenLaw". Legal Users and Business Users are separate collapsed sections. Administrator opens Legal Users and sees the switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
-  - [ ] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
-  - [ ] b. Administrator opens "Identity providers" and fills "Register your identity provider": Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {name} is registered." and "Paste this callback URL into your IdP console: {url}". The provider appears in the list with its name, domains and "Configured". The SSO switch becomes available.
-  - [ ] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
-  - [ ] d. The form title becomes "Add another identity provider". Administrator registers a second provider for another domain. Both rows show. Registering a domain the first provider already owns shows "{domain} is already assigned to the identity provider {name}." A subdomain of it is refused the same way.
-  - [ ] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
-  - [ ] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
-- [ ] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
-- [ ] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
-  - [ ] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.
-  - [ ] b. Administrator removes a domain. It leaves the list before save. Removing the last domain disables the switches again while retaining their values.
-- [ ] 13. Administrator presses Continue. Both groups' policies and the domain list save, and the wizard opens Outbound email.
-  - [ ] a. Fork: Legal Users' "Require two-factor authentication" is on. Business settings save before the legal policy enables the enrollment requirement. The app opens `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The wizard resumes at Outbound email with the saved choices retained.
-  - [ ] b. An old `/welcome?step=portal` link opens Authentication with Business Users expanded.
-- [ ] 14. Outbound email step. The Administrator sees one of three states.
-  - [ ] a. Set by the environment with a sender. The step says "Outbound email is set by the deployment environment. Mail is sent from {from}."
-  - [ ] b. Set by the environment without `SMTP_FROM`. The step says mail cannot be sent until `SMTP_FROM` is set. Continue stays disabled.
-  - [ ] c. Not set. The step says "Set up outbound email to finish instance setup." and shows SMTP server, Port, Connection security (STARTTLS, TLS, None), Authentication (Username and password, None), SMTP username, SMTP password, Sender name (optional) and Sender email.
-- [ ] 15. For state 14c, Administrator fills the relay and presses "Save relay". The step shows "Relay saved. The next email this instance sends will use it."
-  - [ ] a. The relay save fails. The step shows "The relay could not be saved."
-- [ ] 16. Administrator presses "Send test email". The step shows "Test email sent to {email}. Check your inbox." Administrator receives "OpenLaw test email".
-  - [ ] a. The relay host is unreachable. The step shows "The test email could not be sent." with the reason from the server.
-- [ ] 17. Administrator presses "Replace relay". The form reopens. "Keep current relay" cancels.
-- [ ] 18. Administrator presses "Clear relay". The step shows "Relay cleared. This instance can no longer send email." Continue is disabled again. Save the relay again before you go on.
+- [x] 10. Authentication step. The subtitle reads "How your users sign in to OpenLaw". Legal Users and Business Users are separate collapsed sections. Administrator opens Legal Users and sees the switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
+  - [x] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
+  - [x] b. Administrator opens "Identity providers" and fills "Register your identity provider": Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {name} is registered." and "Paste this callback URL into your IdP console: {url}". The provider appears in the list with its name, domains and "Configured". The SSO switch becomes available.
+  - [x] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
+  - [x] d. The form title becomes "Add another identity provider". Administrator registers a second provider for another domain. Both rows show. Registering a domain the first provider already owns shows "{domain} is already assigned to the identity provider {name}." A subdomain of it is refused the same way.
+  - [x] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
+  - [x] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
+- [x] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
+- [x] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
+  - [x] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.
+  - [x] b. Administrator removes a domain. It leaves the list before save. Removing the last domain disables the switches again while retaining their values.
+- [x] 13. Administrator presses Continue. Both groups' policies and the domain list save, and the wizard opens Outbound email.
+  - [x] a. Fork: Legal Users' "Require two-factor authentication" is on. Business settings save before the legal policy enables the enrollment requirement. The app opens `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The wizard resumes at Outbound email with the saved choices retained.
+  - [x] b. An old `/welcome?step=portal` link opens Authentication with Business Users expanded.
+- [x] 14. Outbound email step. The Administrator sees one of three states.
+  - [x] a. Set by the environment with a sender. The step says "Outbound email is set by the deployment environment. Mail is sent from {from}."
+  - [x] b. Set by the environment without `SMTP_FROM`. The step says mail cannot be sent until `SMTP_FROM` is set. Continue stays disabled.
+  - [x] c. Not set. The step says "Set up outbound email to finish instance setup." and shows SMTP server, Port, Connection security (STARTTLS, TLS, None), Authentication (Username and password, None), SMTP username, SMTP password, Sender name (optional) and Sender email.
+- [x] 15. For state 14c, Administrator fills the relay and presses "Save relay". The step shows "Relay saved. The next email this instance sends will use it."
+  - [x] a. The relay save fails. The step shows "The relay could not be saved."
+- [x] 16. Administrator presses "Send test email". The step shows "Test email sent to {email}. Check your inbox." Administrator receives "OpenLaw test email".
+  - [x] a. The relay host is unreachable. The step shows "The test email could not be sent." with the reason from the server.
+- [x] 17. Administrator presses "Replace relay". The form reopens. "Keep current relay" cancels.
+- [x] 18. Administrator presses "Clear relay". The step shows "Relay cleared. This instance can no longer send email." Continue is disabled again. Save the relay again before you go on.
       Watch: "Set up later" is hidden on this step only. Confirm there is no way past Email without a working mailer.
-- [ ] 19. Invite your team step. Administrator enters Name and Email, picks Role, and presses "Send invite". The step lists "1 invite sent: {email}".
-  - [ ] a. Only Legal Team Member and Administrator are offered. Business Users cannot be invited here.
-  - [ ] b. Administrator invites an address that already has an active account. The step shows the API's refusal.
-  - [ ] c. Email is not working. The step warns "Without outbound email, invited people will not receive their set-password link." and the API refuses the invite.
-- [ ] 20. Invitee receives "Set your OpenLaw password". The link expires in 1 hour. Leave it for Script 1.3.
-- [ ] 21. Administrator presses Continue to reach E-signature. The step explains that the manual hand-off stays available.
-- [ ] 22. Administrator fills Environment (Demo or Production), Integration key, User ID, RSA private key and Connect HMAC secret. The step shows the Webhook URL to paste into DocuSign Connect.
+- [x] 19. Invite your team step. Administrator enters Name and Email, picks Role, and presses "Send invite". The step lists "1 invite sent: {email}".
+  - [x] a. Only Legal Team Member and Administrator are offered. Business Users cannot be invited here.
+  - [x] b. Administrator invites an address that already has an active account. The step shows the API's refusal.
+  - [x] c. Email is not working. The step warns "Without outbound email, invited people will not receive their set-password link." and the API refuses the invite.
+- [x] 20. Invitee receives "Set your OpenLaw password". The link expires in 1 hour. Leave it for Script 1.3.
+- [x] 21. Administrator presses Continue to reach E-signature. The step explains that the manual hand-off stays available.
+- [ ] 22. Administrator fills Environment (Demo or Production), Integration key, User ID and RSA private key. A separate Signing updates card defaults to Polling and offers Webhook. Webhook reveals Public callback URL and Connect HMAC secret, explains public HTTPS access, and retains its draft when navigating away. Test DocuSign connection appears beside the credentials above Signing updates. It saves entered credentials, reports the account name and user email or an error, and stays on the step. It does not save or validate unfinished signing-update settings; those save on Continue. Polling hides the webhook fields; webhook mode requires a valid HTTPS callback URL and an HMAC secret. Test connection checks account access, not webhook delivery. Changing the update method on a saved connector does not require replacing its credentials.
   - [ ] a. Administrator leaves Integration key or User ID blank and presses Continue. The step shows "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."
   - [ ] b. A connector already exists. The step reads "DocuSign is connected in the demo environment, as integration key {key}." "Replace credentials" reopens the form. "Keep current credentials" closes it.
         Watch: the wizard has no Polling or Webhook choice. A new connector defaults to Polling, but the step labels the Connect HMAC secret "Required" and shows a Webhook URL. Compare with Script 2.9.

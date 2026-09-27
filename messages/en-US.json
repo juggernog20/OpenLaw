@@ -13413,7 +13413,19 @@
     "defaultMessage": "The AI connector could not be saved."
   },
   "welcome.aiAnalysis.hint": {
-    "defaultMessage": "Optional. Connect an AI provider to analyze Contract documents and suggest Field values. You can also enable AI to prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. AI-generated Field values stay Unverified until reviewed. Enable conversion workflows in AI analysis Settings. Relevant content is sent to your provider when an AI task runs."
+    "defaultMessage": "AI integration is optional."
+  },
+  "welcome.aiAnalysis.hint.analysis": {
+    "defaultMessage": "Analyze Contract documents and suggest Field values."
+  },
+  "welcome.aiAnalysis.hint.conversions": {
+    "defaultMessage": "Prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. Enable these workflows in AI analysis Settings."
+  },
+  "welcome.aiAnalysis.hint.review": {
+    "defaultMessage": "AI-generated Field values stay Unverified until reviewed."
+  },
+  "welcome.aiAnalysis.hint.sharing": {
+    "defaultMessage": "Relevant content is sent to your provider when an AI task runs."
   },
   "welcome.aiAnalysis.replace": {
     "defaultMessage": "Replace credentials"
@@ -13517,14 +13529,44 @@
   "welcome.eSignature.error.save": {
     "defaultMessage": "The e-signature connector could not be saved."
   },
+  "welcome.eSignature.error.webhookSecret": {
+    "defaultMessage": "Enter the Connect HMAC secret to use Webhook."
+  },
+  "welcome.eSignature.error.webhookUrl": {
+    "defaultMessage": "Enter a public HTTPS webhook URL without credentials, query parameters or fragments."
+  },
   "welcome.eSignature.hint": {
-    "defaultMessage": "Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+    "defaultMessage": "DocuSign integration is optional. Connect DocuSign to send contracts for signature directly from the contract record. Without DocuSign integration, contracts will be sent for signature and signed copies uploaded manually."
   },
   "welcome.eSignature.replace": {
     "defaultMessage": "Replace credentials"
   },
   "welcome.eSignature.replace.cancel": {
     "defaultMessage": "Keep current credentials"
+  },
+  "welcome.eSignature.test": {
+    "defaultMessage": "Test DocuSign connection"
+  },
+  "welcome.eSignature.testConnected": {
+    "defaultMessage": "Connected to {account} as {email}."
+  },
+  "welcome.eSignature.testSaves": {
+    "defaultMessage": "Saves these credentials before testing."
+  },
+  "welcome.eSignature.updateMethod": {
+    "defaultMessage": "Update method"
+  },
+  "welcome.eSignature.updatesHint": {
+    "defaultMessage": "Polling checks DocuSign for signature updates every 15 minutes. Use polling if your OpenLaw deployment will not surface a public URL to receive webhooks."
+  },
+  "welcome.eSignature.webhookHelp": {
+    "defaultMessage": "Use a public HTTPS endpoint that forwards to OpenLaw’s webhook. Localhost and private addresses cannot receive DocuSign updates. Configure this URL and HMAC secret in DocuSign Connect."
+  },
+  "welcome.eSignature.webhookHint": {
+    "defaultMessage": "Webhooks enable realtime updates from DocuSign but require your deployment to surface a public URL."
+  },
+  "welcome.eSignature.webhookSecret": {
+    "defaultMessage": "Connect HMAC secret (from DocuSign)"
   },
   "welcome.email.app": {
     "defaultMessage": "Outbound email is set in the app. Mail is sent from {from}."
@@ -13764,7 +13806,7 @@
     "defaultMessage": "Authentication"
   },
   "welcome.step.eSignature": {
-    "defaultMessage": "E-signature"
+    "defaultMessage": "E-signature (DocuSign Integration)"
   },
   "welcome.step.email": {
     "defaultMessage": "Outbound email"

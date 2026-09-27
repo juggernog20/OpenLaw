@@ -25,7 +25,7 @@
  * wizard never shows again.
  */
 
-import { AiModelSelector } from "../components/ai-model-selector";
+import { AiModelSelector, type AiModelList } from "../components/ai-model-selector";
 import { isFieldRow } from "../lib/field-catalog";
 import { AiSavedKeyControl } from "../components/ai-saved-key-control";
 import { findSavedAiKey } from "../lib/ai-connector-config";
@@ -663,6 +663,16 @@ export function WelcomePage() {
   );
   const [privateKey, setPrivateKey] = useSetupDraft(draftScope, "privateKey", "");
   const [webhookSecret, setWebhookSecret] = useSetupDraft(draftScope, "webhookSecret", "");
+  const [signingUpdateMode, setSigningUpdateMode] = useSetupDraft<"polling" | "webhook">(
+    draftScope,
+    "signingUpdateMode",
+    loaded.signingConnector.updateMode ?? "polling",
+  );
+  const [signingWebhookUrl, setSigningWebhookUrl] = useSetupDraft(
+    draftScope,
+    "signingWebhookUrl",
+    loaded.signingConnector.webhookUrl,
+  );
   /** Whether a configured connector's form is open for new credentials.
    * A configured connector reads as configured until it is. */
   const [replacingConnector, setReplacingConnector] = useSetupDraft(
@@ -671,6 +681,11 @@ export function WelcomePage() {
     false,
   );
   const signingFormOpen = !signingConnector.configured || replacingConnector;
+  const [signingTestResult, setSigningTestResult] = useState<{
+    accountName: string;
+    userEmail: string;
+  } | null>(null);
+  const [testingSigning, setTestingSigning] = useState(false);
 
   // AI analysis step (#699): the AI connector, through the PUT the AI
   // analysis pane already uses. SET-008 keeps AI analysis out of
@@ -721,6 +736,26 @@ export function WelcomePage() {
     protocol: aiProtocol,
     baseUrl: aiBaseUrl,
   });
+  const [aiModelLists, setAiModelLists] = useSetupDraft<Record<string, AiModelList>>(
+    draftScope,
+    "aiModelLists",
+    {},
+  );
+  function modelListKey(apiKey: string, connector: AiConnector) {
+    const saved = findSavedAiKey(connector.savedKeys, {
+      preset: aiPreset,
+      protocol: aiProtocol,
+      baseUrl: aiBaseUrl,
+    });
+    return JSON.stringify([
+      aiPreset,
+      aiProtocol,
+      aiBaseUrl,
+      apiKey.trim(),
+      ...(apiKey.trim() ? [] : [saved?.id ?? null, saved?.updatedAt ?? null]),
+    ]);
+  }
+  const aiModelListKey = modelListKey(aiApiKey, aiConnector);
   /** Whether a configured connector's form is open for a new key. */
   const [replacingAiConnector, setReplacingAiConnector] = useSetupDraft(
     draftScope,
@@ -1196,7 +1231,7 @@ export function WelcomePage() {
   }
 
   /**
-   * Saves the connector on Continue, if there is anything to save.
+   * Saves changed credentials before continuing or testing the connection.
    *
    * Leaving the boxes as they were is how this step is skipped from the
    * Continue button, and it writes nothing: an install with no
@@ -1205,20 +1240,21 @@ export function WelcomePage() {
    * empty, so a configured connector is never asked for a credential it
    * already holds.
    */
-  async function applyESignature() {
-    if (!signingFormOpen) {
-      await advance();
-      return;
-    }
+  async function applyESignature(test = false) {
+    if (busy) return;
     const key = integrationKey.trim();
     const userId = apiUserId.trim();
     const untouched =
       signingEnvironment === (signingConnector.environment ?? "demo") &&
       key === (signingConnector.integrationKey ?? "") &&
       userId === (signingConnector.apiUserId ?? "") &&
-      privateKey.trim() === "" &&
-      webhookSecret.trim() === "";
-    if (untouched) {
+      privateKey.trim() === "";
+    const updatesChanged =
+      signingUpdateMode !== (signingConnector.updateMode ?? "polling") ||
+      (signingUpdateMode === "webhook" &&
+        (signingWebhookUrl.trim() !== signingConnector.webhookUrl || webhookSecret.trim() !== ""));
+    const needsSave = (signingFormOpen && !untouched) || (!test && updatesChanged);
+    if (!needsSave && !test) {
       await advance();
       return;
     }
@@ -1226,7 +1262,7 @@ export function WelcomePage() {
     // which reads like a wire fault rather than an instruction. The two
     // secrets are left to the route, whose refusals are written for an
     // Administrator to act on.
-    if (!key || !userId) {
+    if (needsSave && (!key || !userId)) {
       setError(
         intl.formatMessage({
           id: "welcome.eSignature.error.incomplete",
@@ -1236,40 +1272,94 @@ export function WelcomePage() {
       );
       return;
     }
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
-        params: { path: { provider: SIGNING_PROVIDER } },
-        body: {
-          environment: signingEnvironment,
-          integrationKey: key,
-          apiUserId: userId,
-          ...(privateKey.trim() === "" ? {} : { privateKey }),
-          ...(webhookSecret.trim() === "" ? {} : { webhookSecret }),
-        },
-      });
-      const { data } = result;
-      if (data) {
-        setSigningConnector(data.connector);
-        // The boxes go back to blank because that is what they mean on
-        // a stored connector: keep what is there.
-        setPrivateKey("");
-        setWebhookSecret("");
-        setReplacingConnector(false);
-        await advance();
+    if (!test && needsSave && signingUpdateMode === "webhook") {
+      const url = URL.canParse(signingWebhookUrl.trim()) ? new URL(signingWebhookUrl.trim()) : null;
+      if (
+        !url ||
+        url.protocol !== "https:" ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash
+      ) {
+        setError(
+          intl.formatMessage({
+            id: "welcome.eSignature.error.webhookUrl",
+            defaultMessage:
+              "Enter a public HTTPS webhook URL without credentials, query parameters or fragments.",
+          }),
+        );
         return;
       }
-      setError(
-        (await readProblem(result)).detail ??
+      if (!webhookSecret.trim() && !signingConnector.hasWebhookSecret) {
+        setError(
           intl.formatMessage({
-            id: "welcome.eSignature.error.save",
-            defaultMessage: "The e-signature connector could not be saved.",
+            id: "welcome.eSignature.error.webhookSecret",
+            defaultMessage: "Enter the Connect HMAC secret to use Webhook.",
           }),
-      );
+        );
+        return;
+      }
+    }
+    setBusy(true);
+    setTestingSigning(test);
+    setSigningTestResult(null);
+    setError(null);
+    try {
+      if (needsSave) {
+        const result = await api.PUT("/api/v1/signing-connectors/{provider}", {
+          params: { path: { provider: SIGNING_PROVIDER } },
+          body: {
+            environment: signingEnvironment,
+            ...(!test ? { updateMode: signingUpdateMode } : {}),
+            ...(!test && signingUpdateMode === "webhook"
+              ? { webhookUrl: signingWebhookUrl.trim() }
+              : {}),
+            integrationKey: key,
+            apiUserId: userId,
+            ...(privateKey.trim() === "" ? {} : { privateKey }),
+            ...(test || signingUpdateMode !== "webhook" || webhookSecret.trim() === ""
+              ? {}
+              : { webhookSecret }),
+          },
+        });
+        if (!result.data) {
+          setError(
+            (await readProblem(result)).detail ??
+              intl.formatMessage({
+                id: "welcome.eSignature.error.save",
+                defaultMessage: "The e-signature connector could not be saved.",
+              }),
+          );
+          return;
+        }
+        setSigningConnector(result.data.connector);
+        setPrivateKey("");
+        if (!test) setWebhookSecret("");
+        setReplacingConnector(false);
+      }
+      if (test) {
+        const result = await api.POST("/api/v1/signing-connectors/{provider}/test", {
+          params: { path: { provider: SIGNING_PROVIDER } },
+        });
+        if (result.data) {
+          setSigningTestResult(result.data);
+        } else {
+          setError(
+            (await readProblem(result)).detail ??
+              intl.formatMessage({
+                id: "settings.eSignature.testFailed",
+                defaultMessage: "The connection test failed. Check the credentials and try again.",
+              }),
+          );
+        }
+      } else {
+        await advance();
+      }
     } catch {
       setError(networkError(intl));
     } finally {
+      setTestingSigning(false);
       setBusy(false);
     }
   }
@@ -1329,6 +1419,16 @@ export function WelcomePage() {
       });
       const { data } = result;
       if (data) {
+        const list = aiModelLists[aiModelListKey];
+        if (list) {
+          const savedListKey = modelListKey("", data.connector);
+          setAiModelLists((previous) => {
+            const next = { ...previous };
+            delete next[aiModelListKey];
+            next[savedListKey] = list;
+            return next;
+          });
+        }
         setAiConnector(data.connector);
         // The box goes back to blank because that is what it means on
         // a stored connector: keep the key that is there.
@@ -1371,7 +1471,12 @@ export function WelcomePage() {
     ),
     email: <FormattedMessage id="welcome.step.email" defaultMessage="Outbound email" />,
     invites: <FormattedMessage id="welcome.step.invites" defaultMessage="Invite your team" />,
-    "e-signature": <FormattedMessage id="welcome.step.eSignature" defaultMessage="E-signature" />,
+    "e-signature": (
+      <FormattedMessage
+        id="welcome.step.eSignature"
+        defaultMessage="E-signature (DocuSign Integration)"
+      />
+    ),
     "ai-analysis": <FormattedMessage id="welcome.step.aiAnalysis" defaultMessage="AI analysis" />,
     review: <FormattedMessage id="welcome.step.review" defaultMessage="Review" />,
   };
@@ -2156,7 +2261,7 @@ export function WelcomePage() {
                     <CardDescription>
                       <FormattedMessage
                         id="welcome.eSignature.hint"
-                        defaultMessage="Optional. Connect DocuSign and contracts are sent for signature from their own records. Skip it and nothing else is lost. The manual hand-off stays the path, so you send the paper yourself, then upload the executed PDF and pin it to the record."
+                        defaultMessage="DocuSign integration is optional. Connect DocuSign to send contracts for signature directly from the contract record. Without DocuSign integration, contracts will be sent for signature and signed copies uploaded manually."
                       />
                     </CardDescription>
 
@@ -2186,47 +2291,15 @@ export function WelcomePage() {
                             />
                           )}
                         </Alert>
-                        <div className="flex flex-col gap-1.5">
-                          <Label
-                            htmlFor="welcome-ds-webhook-url"
-                            help={
-                              <>
-                                <FormattedMessage
-                                  id="settings.eSignature.webhookUrl.hint"
-                                  defaultMessage="Paste this into a DocuSign Connect configuration so envelope status reaches this install."
-                                />
-                              </>
-                            }
-                          >
-                            <FormattedMessage
-                              id="settings.eSignature.webhookUrl"
-                              defaultMessage="Webhook URL"
-                            />
-                          </Label>
-                          <Input
-                            id="welcome-ds-webhook-url"
-                            readOnly
-                            value={signingConnector.webhookUrl}
-                          />
-                        </div>
-                        <div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            disabled={busy}
-                            onClick={() => setReplacingConnector(true)}
-                          >
-                            <FormattedMessage
-                              id="welcome.eSignature.replace"
-                              defaultMessage="Replace credentials"
-                            />
-                          </Button>
-                        </div>
                       </>
                     )}
 
                     {signingFormOpen && (
-                      <>
+                      <fieldset
+                        disabled={busy}
+                        className="flex min-w-0 flex-col gap-4"
+                        onChange={() => setSigningTestResult(null)}
+                      >
                         <div className="flex flex-col gap-1.5">
                           <Label htmlFor="welcome-ds-environment">
                             <FormattedMessage
@@ -2330,39 +2403,6 @@ export function WelcomePage() {
                             className="w-full rounded-button border border-border-default bg-raised px-2.5 py-1.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
                           />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label
-                            htmlFor="welcome-ds-webhook-secret"
-                            help={
-                              <>
-                                {signingConnector.hasWebhookSecret ? (
-                                  <FormattedMessage
-                                    id="settings.eSignature.secret.hint"
-                                    defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
-                                  />
-                                ) : (
-                                  <FormattedMessage
-                                    id="settings.eSignature.webhookSecret.hint"
-                                    defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
-                                  />
-                                )}
-                              </>
-                            }
-                          >
-                            <FormattedMessage
-                              id="settings.eSignature.webhookSecret"
-                              defaultMessage="Connect HMAC secret"
-                            />
-                          </Label>
-                          <Input
-                            id="welcome-ds-webhook-secret"
-                            type="password"
-                            autoComplete="off"
-                            value={webhookSecret}
-                            onChange={(event) => setWebhookSecret(event.target.value)}
-                          />
-                        </div>
-
                         {/* The way back from Replace credentials, the
                             email step's own shape. Without it the
                             configured summary is gone for the rest of
@@ -2379,7 +2419,6 @@ export function WelcomePage() {
                                 setIntegrationKey(signingConnector.integrationKey ?? "");
                                 setApiUserId(signingConnector.apiUserId ?? "");
                                 setPrivateKey("");
-                                setWebhookSecret("");
                               }}
                             >
                               <FormattedMessage
@@ -2389,9 +2428,199 @@ export function WelcomePage() {
                             </Button>
                           </div>
                         )}
-                      </>
+                      </fieldset>
                     )}
+                    <div className="flex flex-col items-start gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={
+                            busy ||
+                            (signingFormOpen
+                              ? !integrationKey.trim() ||
+                                !apiUserId.trim() ||
+                                (!privateKey.trim() && !signingConnector.hasPrivateKey)
+                              : !signingConnector.enabled)
+                          }
+                          onClick={() => void applyESignature(true)}
+                        >
+                          <FormattedMessage
+                            id="welcome.eSignature.test"
+                            defaultMessage="Test DocuSign connection"
+                          />
+                        </Button>
+                        {signingConnector.configured && !replacingConnector && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={busy}
+                            onClick={() => {
+                              setSigningTestResult(null);
+                              setReplacingConnector(true);
+                            }}
+                          >
+                            <FormattedMessage
+                              id="welcome.eSignature.replace"
+                              defaultMessage="Replace credentials"
+                            />
+                          </Button>
+                        )}
+                      </div>
+                      {signingFormOpen && (
+                        <p className="text-sm text-muted">
+                          <FormattedMessage
+                            id="welcome.eSignature.testSaves"
+                            defaultMessage="Saves these credentials before testing."
+                          />
+                        </p>
+                      )}
+                      <div role="status" className="text-sm">
+                        {testingSigning && (
+                          <FormattedMessage
+                            id="settings.eSignature.testing"
+                            defaultMessage="Testing the connection…"
+                          />
+                        )}
+                        {signingTestResult && (
+                          <span className="text-status-success-fg">
+                            <FormattedMessage
+                              id="welcome.eSignature.testConnected"
+                              defaultMessage="Connected to {account} as {email}."
+                              values={{
+                                account: signingTestResult.accountName,
+                                email: signingTestResult.userEmail,
+                              }}
+                            />
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
+                    <Card role="region" aria-labelledby="welcome-signing-updates-title">
+                      <CardHeader>
+                        <h2 id="welcome-signing-updates-title" className="text-lg font-semibold">
+                          <FormattedMessage
+                            id="settings.eSignature.updateMode"
+                            defaultMessage="Signing updates"
+                          />
+                        </h2>
+                      </CardHeader>
+                      <CardContent>
+                        <fieldset
+                          disabled={busy}
+                          className="flex min-w-0 flex-col gap-4"
+                          onChange={() => setSigningTestResult(null)}
+                        >
+                          <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="welcome-ds-update-mode">
+                              <FormattedMessage
+                                id="welcome.eSignature.updateMethod"
+                                defaultMessage="Update method"
+                              />
+                            </Label>
+                            <select
+                              id="welcome-ds-update-mode"
+                              className={selectClassName}
+                              value={signingUpdateMode}
+                              aria-describedby="welcome-ds-update-hint"
+                              onChange={(event) =>
+                                setSigningUpdateMode(
+                                  event.target.value === "webhook" ? "webhook" : "polling",
+                                )
+                              }
+                            >
+                              <option value="polling">
+                                {intl.formatMessage({
+                                  id: "settings.eSignature.updateMode.polling",
+                                  defaultMessage: "Polling",
+                                })}
+                              </option>
+                              <option value="webhook">
+                                {intl.formatMessage({
+                                  id: "settings.eSignature.updateMode.webhook",
+                                  defaultMessage: "Webhook",
+                                })}
+                              </option>
+                            </select>
+                            <div
+                              id="welcome-ds-update-hint"
+                              className="flex flex-col gap-2 text-sm text-muted"
+                            >
+                              <p>
+                                <FormattedMessage
+                                  id="welcome.eSignature.updatesHint"
+                                  defaultMessage="Polling checks DocuSign for signature updates every 15 minutes. Use polling if your OpenLaw deployment will not surface a public URL to receive webhooks."
+                                />
+                              </p>
+                              <p>
+                                <FormattedMessage
+                                  id="welcome.eSignature.webhookHint"
+                                  defaultMessage="Webhooks enable realtime updates from DocuSign but require your deployment to surface a public URL."
+                                />
+                              </p>
+                            </div>
+                          </div>
+                          {signingUpdateMode === "webhook" && (
+                            <>
+                              <div className="flex flex-col gap-1.5">
+                                <Label htmlFor="welcome-ds-webhook-url">
+                                  <FormattedMessage
+                                    id="settings.eSignature.publicCallback"
+                                    defaultMessage="Public callback URL"
+                                  />
+                                </Label>
+                                <Input
+                                  id="welcome-ds-webhook-url"
+                                  type="url"
+                                  value={signingWebhookUrl}
+                                  onChange={(event) => setSigningWebhookUrl(event.target.value)}
+                                  aria-describedby="welcome-ds-webhook-help"
+                                />
+                                <p id="welcome-ds-webhook-help" className="text-sm text-muted">
+                                  <FormattedMessage
+                                    id="welcome.eSignature.webhookHelp"
+                                    defaultMessage="Use a public HTTPS endpoint that forwards to OpenLaw’s webhook. Localhost and private addresses cannot receive DocuSign updates. Configure this URL and HMAC secret in DocuSign Connect."
+                                  />
+                                </p>
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                <Label
+                                  htmlFor="welcome-ds-webhook-secret"
+                                  help={
+                                    <>
+                                      {signingConnector.hasWebhookSecret ? (
+                                        <FormattedMessage
+                                          id="settings.eSignature.secret.hint"
+                                          defaultMessage="Leave blank to keep the current value. Paste a new one to rotate."
+                                        />
+                                      ) : (
+                                        <FormattedMessage
+                                          id="settings.eSignature.webhookSecret.hint"
+                                          defaultMessage="Required. OpenLaw checks it on every delivery, so nothing unsigned can change a record."
+                                        />
+                                      )}
+                                    </>
+                                  }
+                                >
+                                  <FormattedMessage
+                                    id="welcome.eSignature.webhookSecret"
+                                    defaultMessage="Connect HMAC secret (from DocuSign)"
+                                  />
+                                </Label>
+                                <Input
+                                  id="welcome-ds-webhook-secret"
+                                  type="password"
+                                  autoComplete="off"
+                                  value={webhookSecret}
+                                  onChange={(event) => setWebhookSecret(event.target.value)}
+                                />
+                              </div>
+                            </>
+                          )}
+                        </fieldset>
+                      </CardContent>
+                    </Card>
                     {/* Named rather than linked: leaving the wizard for
                         Settings mid-flow is not the offer. An
                         Administrator who skips needs the address, and
@@ -2407,12 +2636,40 @@ export function WelcomePage() {
 
                 {step === "ai-analysis" && (
                   <>
-                    <CardDescription>
-                      <FormattedMessage
-                        id="welcome.aiAnalysis.hint"
-                        defaultMessage="Optional. Connect an AI provider to analyze Contract documents and suggest Field values. You can also enable AI to prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. AI-generated Field values stay Unverified until reviewed. Enable conversion workflows in AI analysis Settings. Relevant content is sent to your provider when an AI task runs."
-                      />
-                    </CardDescription>
+                    <div className="flex flex-col gap-2 text-md text-muted">
+                      <CardDescription>
+                        <FormattedMessage
+                          id="welcome.aiAnalysis.hint"
+                          defaultMessage="AI integration is optional."
+                        />
+                      </CardDescription>
+                      <ul className="list-disc space-y-2 pl-5">
+                        <li>
+                          <FormattedMessage
+                            id="welcome.aiAnalysis.hint.analysis"
+                            defaultMessage="Analyze Contract documents and suggest Field values."
+                          />
+                        </li>
+                        <li>
+                          <FormattedMessage
+                            id="welcome.aiAnalysis.hint.conversions"
+                            defaultMessage="Prepare Matter and Contract conversions from Requests and fill Contract Fields using Request answers, conversations, and supporting documents. Enable these workflows in AI analysis Settings."
+                          />
+                        </li>
+                        <li>
+                          <FormattedMessage
+                            id="welcome.aiAnalysis.hint.review"
+                            defaultMessage="AI-generated Field values stay Unverified until reviewed."
+                          />
+                        </li>
+                        <li>
+                          <FormattedMessage
+                            id="welcome.aiAnalysis.hint.sharing"
+                            defaultMessage="Relevant content is sent to your provider when an AI task runs."
+                          />
+                        </li>
+                      </ul>
+                    </div>
 
                     {/* A configured connector reads as configured. A
                         resumed wizard must never ask for a key the
@@ -2594,13 +2851,11 @@ export function WelcomePage() {
                         </div>
 
                         <AiModelSelector
-                          key={JSON.stringify([
-                            aiPreset,
-                            aiProtocol,
-                            aiBaseUrl,
-                            aiApiKey,
-                            aiConnector.updatedAt,
-                          ])}
+                          key={aiModelListKey}
+                          initialList={aiModelLists[aiModelListKey]}
+                          onListLoaded={(list) =>
+                            setAiModelLists((previous) => ({ ...previous, [aiModelListKey]: list }))
+                          }
                           config={{
                             preset: aiPreset,
                             protocol: aiProtocol,

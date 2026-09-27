@@ -9,8 +9,8 @@
  * combobox primitive.
  *
  * The parent remounts this control when credentials or the destination
- * change, which drops the loaded list. Manual entry is the Administrator's
- * own choice, so the parent holds it and it survives that remount.
+ * change. A parent can restore a matching list after navigation. Manual
+ * entry is held by the parent and survives remounts.
  */
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -25,7 +25,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
 type Discovery = paths["/api/v1/ai-connector/models"]["post"];
-type ModelList = Discovery["responses"]["200"]["content"]["application/json"];
+export type AiModelList = Discovery["responses"]["200"]["content"]["application/json"];
 type Config = Discovery["requestBody"]["content"]["application/json"];
 
 function optionText(option: { id: string; label: string }) {
@@ -39,6 +39,8 @@ export function AiModelSelector({
   onChange,
   manualEntry,
   onManualEntryChange,
+  initialList = null,
+  onListLoaded,
 }: Readonly<{
   config: Config;
   canLoad: boolean;
@@ -46,11 +48,13 @@ export function AiModelSelector({
   onChange: (value: string) => void;
   manualEntry: boolean;
   onManualEntryChange: (manual: boolean) => void;
+  initialList?: AiModelList | null;
+  onListLoaded?: (list: AiModelList) => void;
 }>) {
   const intl = useIntl();
   const azure = config.preset === "azure_openai";
   const manual = azure || manualEntry;
-  const [list, setList] = useState<ModelList | null>(null);
+  const [list, setList] = useState<AiModelList | null>(initialList);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<{ query: string; activeIndex: number } | null>(null);
@@ -76,8 +80,10 @@ export function AiModelSelector({
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;
-      if (result.data) setList(result.data);
-      else {
+      if (result.data) {
+        setList(result.data);
+        onListLoaded?.(result.data);
+      } else {
         const failure = await problem(result);
         if (!controller.signal.aborted)
           setError(

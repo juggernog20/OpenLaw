@@ -27,7 +27,7 @@ const STEP_LABELS = {
   portal: "Business-user portal",
   email: "Email",
   invites: "Invite your team",
-  "e-signature": "E-signature",
+  "e-signature": "E-signature (DocuSign Integration)",
   "ai-analysis": "AI analysis",
   review: "Review seeded types",
 } as const;
@@ -183,7 +183,7 @@ test("M33: the first run leaves a named, populated system and skipped steps in S
         const mail = await waitForMailTo(request, inviteEmail);
         expect(extractLink(mail.text, "/auth/set-password")).toBeTruthy();
         await next();
-        await step("E-signature", 6);
+        await step("E-signature (DocuSign Integration)", 6);
         await page.getByRole("button", { name: "Set up later" }).click();
         await step("AI analysis", 7);
         await page.getByRole("button", { name: "Set up later" }).click();

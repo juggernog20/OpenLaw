@@ -175,13 +175,14 @@ test.describe("accessibility floor", () => {
     await page.getByRole("button", { name: "Get started" }).click();
     await walkWizard(page, [
       "Authentication",
-      "Business-user portal",
       "Outbound email",
       "Invite your team",
-      "E-signature",
+      "E-signature (DocuSign Integration)",
     ]);
 
-    await expect(page.getByRole("region", { name: "E-signature" })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "E-signature (DocuSign Integration)" }),
+    ).toBeVisible();
     expect(
       await reportAxeViolations(page, testInfo, "welcome-e-signature", { include: "main" }),
     ).toEqual([]);
@@ -228,10 +229,9 @@ test.describe("accessibility floor", () => {
     await page.getByRole("button", { name: "Get started" }).click();
     await walkWizard(page, [
       "Authentication",
-      "Business-user portal",
       "Outbound email",
       "Invite your team",
-      "E-signature",
+      "E-signature (DocuSign Integration)",
       "AI analysis",
     ]);
 
@@ -251,10 +251,9 @@ test.describe("accessibility floor", () => {
       page,
       [
         "Authentication",
-        "Business-user portal",
         "Outbound email",
         "Invite your team",
-        "E-signature",
+        "E-signature (DocuSign Integration)",
         "AI analysis",
         "Review",
       ],
