@@ -191,31 +191,31 @@ The code audit turned these up. Each is also marked inline with a "Watch:" line.
 
 Actors: Administrator, then Invitee.
 
-- [ ] 1. Administrator opens the root address of instance A while signed out. The app sends them to `/auth/setup`. The card reads "Set up OpenLaw".
-  - [ ] a. Administrator opens `/auth/login` instead. The app still sends them to `/auth/setup`.
-  - [ ] b. Administrator opens `/matters` or `/settings`. The app sends them to `/auth/setup`.
-- [ ] 2. Administrator reads the hint: "Create the first Administrator account. This screen disables itself once a user exists."
-- [ ] 3. Administrator opens the help icon on "Setup token" and reads where the token comes from, `SETUP_TOKEN` or the server log.
+- [x] 1. Administrator opens the root address of instance A while signed out. The app sends them to `/auth/setup`. The card reads "Set up OpenLaw".
+  - [x] a. Administrator opens `/auth/login` instead. The app still sends them to `/auth/setup`.
+  - [x] b. Administrator opens `/matters` or `/settings`. The app sends them to `/auth/setup`.
+- [x] 2. Administrator reads the hint: "Create the first Administrator account. This screen disables itself once a user exists."
+- [x] 3. Administrator opens the help icon on "Setup token" and reads where the token comes from, `SETUP_TOKEN` or the server log.
       Watch: the setup token field is required and is not in the product brief. Get the token from the operator before you start.
-- [ ] 4. Administrator fills Setup token, Name, Email, Password and Confirm password.
-  - [ ] a. Administrator types two different passwords. The card shows "The passwords do not match." Nothing is sent.
-  - [ ] b. Administrator types a password under 8 characters. The browser refuses the submit.
-  - [ ] c. Administrator types a wrong setup token. The card shows the server's refusal in one sentence.
-  - [ ] d. Administrator types an invalid email. The browser refuses the submit.
-  - [ ] e. Administrator opens "Help with this page", then uses Back. All five setup fields retain their values after Back or a reload. Successful setup clears the Administrator draft.
+- [x] 4. Administrator fills Setup token, Name, Email, Password and Confirm password.
+  - [x] a. Administrator types two different passwords. The card shows "The passwords do not match." Nothing is sent.
+  - [x] b. Administrator types a password under 8 characters. The browser refuses the submit.
+  - [x] c. Administrator types a wrong setup token. The card shows the server's refusal in one sentence.
+  - [x] d. Administrator types an invalid email. The browser refuses the submit.
+  - [x] e. Administrator opens "Help with this page", then uses Back. All five setup fields retain their values after Back or a reload. Successful setup clears the Administrator draft.
         Note: Returning from Help or reloading previously cleared the form. Setup drafts now persist in this tab across the whole wizard. Awaiting walk confirmation.
-  - [ ] f. Green checkmarks appear inside the inputs for a nonblank Name, a valid Email, a Password of at least eight characters, and a matching Confirm password. Setup token shows a check only after the server confirms it matches. Editing the token clears its check immediately; an incorrect token never gets one.
-- [ ] 5. Administrator presses "Create Administrator". The app signs them in and replaces the page with `/welcome`. Browser Back does not return to setup.
-- [ ] 6. Administrator sees "Step 1 of 8", a "Help with this page" link, and the card "Welcome to OpenLaw". The intro says email is required and the other steps can be skipped.
-  - [ ] a. On every configuring step, enter unsaved values, visit Help, and return. Repeat with a reload and with Back between steps. Values, switches, selections and the current step survive. Saved credentials are removed from the draft; Finish and Sign out clear the remaining wizard draft.
-- [ ] 7. Administrator presses "Get started". The URL gains `?step=organization`.
-  - [ ] a. Fork: Administrator presses "Skip optional steps" instead. Go to Script 1.2.
-- [ ] 8. Your organization step. Administrator enters Organization name, chooses a logo with Upload, keeps Default locale "English (United States)", and searches for a Default timezone.
-  - [ ] a. Administrator uploads a file that is not PNG, JPEG, WebP or SVG, or is over 5 MB. The step shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
-  - [ ] b. Administrator uploads a file the browser cannot read. The step shows "That file could not be read. Pick another one."
-- [ ] 9. Administrator presses Continue. The organization saves and the step moves to Authentication.
-  - [ ] a. Administrator presses "Set up later". Nothing saves and the step moves on.
-  - [ ] b. Administrator presses Back. The step returns to the splash.
+  - [x] f. Green checkmarks appear inside the inputs for a nonblank Name, a valid Email, a Password of at least eight characters, and a matching Confirm password. Setup token shows a check only after the server confirms it matches. Editing the token clears its check immediately; an incorrect token never gets one.
+- [x] 5. Administrator presses "Create Administrator". The app signs them in and replaces the page with `/welcome`. Browser Back does not return to setup.
+- [x] 6. Administrator sees "Step 1 of 8", a "Help with this page" link, and the card "Welcome to OpenLaw". The intro says email is required and the other steps can be skipped.
+  - [x] a. On every configuring step, enter unsaved values, visit Help, and return. Repeat with a reload and with Back between steps. Values, switches, selections and the current step survive. Saved credentials are removed from the draft; Finish and Sign out clear the remaining wizard draft.
+- [x] 7. Administrator presses "Get started". The URL gains `?step=organization`.
+  - [x] a. Fork: Administrator presses "Skip optional steps" instead. Go to Script 1.2.
+- [x] 8. Your organization step. Administrator enters Organization name, chooses a logo with Upload, keeps Default locale "English (United States)", and searches for a Default timezone.
+  - [x] a. Administrator uploads a file that is not PNG, JPEG, WebP or SVG, or is over 5 MB. The step shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
+  - [x] b. Administrator uploads a file the browser cannot read. The step shows "That file could not be read. Pick another one."
+- [x] 9. Administrator presses Continue. The organization saves and the step moves to Authentication.
+  - [x] a. Administrator presses "Set up later". Nothing saves and the step moves on.
+  - [x] b. Administrator presses Back. The step returns to the splash.
 - [ ] 10. Authentication step. The subtitle reads "How your users sign in to OpenLaw". Legal Users and Business Users are separate collapsed sections. Administrator opens Legal Users and sees the switches: "Email and password", "Email magic link", "Single sign-on (SSO)" and "Require two-factor authentication".
   - [ ] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
   - [ ] b. Administrator opens "Shared SSO provider" and fills "Register your identity provider": Provider ID, Issuer URL, Email domain, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {id} is registered." and "Paste this callback URL into your IdP console: {url}". The SSO switch becomes available.
