@@ -874,7 +874,7 @@ export function WelcomePage() {
         intl.formatMessage({
           id: "welcome.org.logo.rejected",
           defaultMessage:
-            "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.",
+            "Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.",
         }),
       );
       return;

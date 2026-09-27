@@ -6,7 +6,7 @@ Keep your organization details current and give each person the access they need
 
 1. Open **Settings → General**.
 2. Edit **Organization name** and press Enter or leave the field to save. Check the saved status; Escape restores the previous name before saving.
-3. Select **Upload** beside **Logo** and choose a PNG, JPEG, WebP, or SVG image of 5 MB or smaller. Any other file shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file." Choose a supported file and retry. OpenLaw also refuses an image that it cannot read or that has more than 16 million pixels. It then shows "The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels." Resize or export the image again and retry.
+3. Select **Upload** beside **Logo** and choose a PNG, JPEG, WebP, or SVG image of 5 MB or smaller. Any other file shows "Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file." Choose a supported file and retry. OpenLaw also refuses an image that it cannot read or that has more than 16 million pixels. It then shows "The logo must be a readable PNG, JPEG, WebP or SVG with no more than 16 million pixels." Resize or export the image again and retry.
 4. Select **Default timezone**. This supplies the organization default; signed-in users can set their own [account timezone](personal-settings.md).
 5. Reload to confirm the saved values. **Default locale** currently offers **English (United States)** only.
 

@@ -522,7 +522,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         if (app.setupToken !== null && !setupTokenMatches(request.body.setupToken, app.setupToken))
           throw httpError(
             403,
-            "The setup token is missing or wrong. Copy it from the server log, or from SETUP_TOKEN.",
+            "The setup token is missing or wrong. Copy it from the server log, or from the SETUP_TOKEN environment variable.",
           );
 
         const created = await provisionUser(app.auth, { email, displayName, password });

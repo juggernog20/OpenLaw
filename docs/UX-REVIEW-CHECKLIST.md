@@ -199,20 +199,22 @@ Actors: Administrator, then Invitee.
       Watch: the setup token field is required and is not in the product brief. Get the token from the operator before you start.
 - [x] 4. Administrator fills Setup token, Name, Email, Password and Confirm password.
   - [x] a. Administrator types two different passwords. The card shows "The passwords do not match." Nothing is sent.
-  - [x] b. Administrator types a password under 8 characters. The browser refuses the submit.
+  - [x] b. Administrator types a password under 8 characters. The browser refuses the submit with "Passwords must be 8 characters or more."
   - [x] c. Administrator types a wrong setup token. The card shows the server's refusal in one sentence.
-  - [x] d. Administrator types an invalid email. The browser refuses the submit.
+  - [x] d. Administrator types an invalid email, including a missing @ or domain suffix. The browser refuses the submit at the Email field with "Enter a valid email address."
   - [x] e. Administrator opens "Help with this page", then uses Back. All five setup fields retain their values after Back or a reload. Successful setup clears the Administrator draft.
         Note: Returning from Help or reloading previously cleared the form. Setup drafts now persist in this tab across the whole wizard. Awaiting walk confirmation.
   - [x] f. Green checkmarks appear inside the inputs for a nonblank Name, a valid Email, a Password of at least eight characters, and a matching Confirm password. Setup token shows a check only after the server confirms it matches. Editing the token clears its check immediately; an incorrect token never gets one.
 - [x] 5. Administrator presses "Create Administrator". The app signs them in and replaces the page with `/welcome`. Browser Back does not return to setup.
 - [x] 6. Administrator sees "Step 1 of 8", a "Help with this page" link, and the card "Welcome to OpenLaw". The intro says email is required and the other steps can be skipped.
-  - [x] a. On every configuring step, enter unsaved values, visit Help, and return. Repeat with a reload and with Back between steps. Values, switches, selections and the current step survive. Saved credentials are removed from the draft; Finish and Sign out clear the remaining wizard draft.
+  - [x] a. On every configuring step, enter unsaved values, visit Help, and return. Repeat with a reload and with Back between steps. Values, switches, selections, loaded AI model lists and the current step survive. Saving an AI key retains its loaded models; Refresh models fetches an updated list. Saved credentials are removed from the draft; Finish and Sign out clear the remaining wizard draft.
+        Progress: Organization name and timezone, Authentication's Business User domains, unfinished domain input, switches and expanded section, unsaved email relay fields including credentials, invitation name, email and role, E-signature credentials, update method, callback URL and HMAC secret, and AI connection settings, selected model and loaded model list retain their drafts on 5175. Model-list retention after saving, Refresh models and reload also confirmed; saved AI credentials leave the input empty with Key in use shown. Finish opened Home and cleared all 24 wizard draft entries (verified in browser storage). Sign out opened Sign in and cleared the fresh draft entries (verified in browser storage).
 - [x] 7. Administrator presses "Get started". The URL gains `?step=organization`.
   - [x] a. Fork: Administrator presses "Skip optional steps" instead. Go to Script 1.2.
 - [x] 8. Your organization step. Administrator enters Organization name, chooses a logo with Upload, keeps Default locale "English (United States)", and searches for a Default timezone.
-  - [x] a. Administrator uploads a file that is not PNG, JPEG, WebP or SVG, or is over 5 MB. The step shows "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
+  - [x] a. Administrator uploads a file that is not PNG, JPEG, WebP or SVG, or is over 5 MB. The step shows "Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
   - [x] b. Administrator uploads a file the browser cannot read. The step shows "That file could not be read. Pick another one."
+        Verified on 5175 using a simulated FileReader error; normal file reading was restored immediately afterward.
 - [x] 9. Administrator presses Continue. The organization saves and the step moves to Authentication.
   - [x] a. Administrator presses "Set up later". Nothing saves and the step moves on.
   - [x] b. Administrator presses Back. The step returns to the splash.
@@ -220,50 +222,51 @@ Actors: Administrator, then Invitee.
   - [x] a. SSO is disabled until an identity provider exists. The hint says "Configure an identity provider below to enable single sign-on."
   - [x] b. Administrator opens "Identity providers" and fills "Register your identity provider": Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret. Administrator presses "Register provider". The step shows "Identity provider {name} is registered." and "Paste this callback URL into your IdP console: {url}". The provider appears in the list with its name, domains and "Configured". The SSO switch becomes available.
   - [x] c. Registration fails because the issuer cannot be discovered. The step shows "The identity provider could not be registered."
+        Follow-up: The generic error UI was approved on 5175, but registration also returned 500 with the reachable local Keycloak issuer. Direct authentication-service registration succeeded; the app registration endpoint needs investigation before attributing the failure specifically to discovery. A disposable provider was seeded for the removal review.
   - [x] d. The form title becomes "Add another identity provider". Administrator registers a second provider for another domain. Both rows show. Registering a domain the first provider already owns shows "{domain} is already assigned to the identity provider {name}." A subdomain of it is refused the same way.
-  - [x] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
-  - [x] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
+  - [ ] e. Administrator presses "Remove {name}" on a row. The row leaves at once. With no rows left the SSO switches are disabled again.
+  - [ ] f. Administrator turns every method off and presses Continue. The API refuses with "Enable at least one sign-in method."
 - [x] 11. Administrator opens Business Users on the same Authentication step. Its four switches are disabled with the disabled cursor until an allowed email domain is added, then can be set independently of Legal Users. SSO also requires a registered provider. Collapsing and reopening either section retains the choices.
 - [x] 12. In Business Users, Administrator adds allowed email domains with Add or Enter. Each domain appears with a "Remove {domain}" button.
   - [x] a. The list is empty. The section shows "Add a domain to enable sign-in options." Typing without adding a domain leaves the switches disabled.
-  - [x] b. Administrator removes a domain. It leaves the list before save. Removing the last domain disables the switches again while retaining their values.
+  - [ ] b. Administrator removes a domain. It leaves the list before save. Removing the last domain disables the switches again while retaining their values.
 - [x] 13. Administrator presses Continue. Both groups' policies and the domain list save, and the wizard opens Outbound email.
-  - [x] a. Fork: Legal Users' "Require two-factor authentication" is on. Business settings save before the legal policy enables the enrollment requirement. The app opens `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The wizard resumes at Outbound email with the saved choices retained.
-  - [x] b. An old `/welcome?step=portal` link opens Authentication with Business Users expanded.
+  - [ ] a. Fork: Legal Users' "Require two-factor authentication" is on. Business settings save before the legal policy enables the enrollment requirement. The app opens `/auth/two-factor/enroll`. Do Script 1.3 steps 9 to 13, then press Continue. The wizard resumes at Outbound email with the saved choices retained.
+  - [ ] b. An old `/welcome?step=portal` link opens Authentication with Business Users expanded.
 - [x] 14. Outbound email step. The Administrator sees one of three states.
   - [x] a. Set by the environment with a sender. The step says "Outbound email is set by the deployment environment. Mail is sent from {from}."
   - [x] b. Set by the environment without `SMTP_FROM`. The step says mail cannot be sent until `SMTP_FROM` is set. Continue stays disabled.
   - [x] c. Not set. The step says "Set up outbound email to finish instance setup." and shows SMTP server, Port, Connection security (STARTTLS, TLS, None), Authentication (Username and password, None), SMTP username, SMTP password, Sender name (optional) and Sender email.
 - [x] 15. For state 14c, Administrator fills the relay and presses "Save relay". The step shows "Relay saved. The next email this instance sends will use it."
-  - [x] a. The relay save fails. The step shows "The relay could not be saved."
+  - [ ] a. The relay save fails. The step shows "The relay could not be saved."
 - [x] 16. Administrator presses "Send test email". The step shows "Test email sent to {email}. Check your inbox." Administrator receives "OpenLaw test email".
-  - [x] a. The relay host is unreachable. The step shows "The test email could not be sent." with the reason from the server.
+  - [ ] a. The relay host is unreachable. The step shows "The test email could not be sent." with the reason from the server.
 - [x] 17. Administrator presses "Replace relay". The form reopens. "Keep current relay" cancels.
-- [x] 18. Administrator presses "Clear relay". The step shows "Relay cleared. This instance can no longer send email." Continue is disabled again. Save the relay again before you go on.
+- [ ] 18. Administrator presses "Clear relay". The step shows "Relay cleared. This instance can no longer send email." Continue is disabled again. Save the relay again before you go on.
       Watch: "Set up later" is hidden on this step only. Confirm there is no way past Email without a working mailer.
 - [x] 19. Invite your team step. Administrator enters Name and Email, picks Role, and presses "Send invite". The step lists "1 invite sent: {email}".
   - [x] a. Only Legal Team Member and Administrator are offered. Business Users cannot be invited here.
-  - [x] b. Administrator invites an address that already has an active account. The step shows the API's refusal.
-  - [x] c. Email is not working. The step warns "Without outbound email, invited people will not receive their set-password link." and the API refuses the invite.
+  - [ ] b. Administrator invites an address that already has an active account. The step shows the API's refusal.
+  - [ ] c. Email is not working. The step warns "Without outbound email, invited people will not receive their set-password link." and the API refuses the invite.
 - [x] 20. Invitee receives "Set your OpenLaw password". The link expires in 1 hour. Leave it for Script 1.3.
 - [x] 21. Administrator presses Continue to reach E-signature. The step explains that the manual hand-off stays available.
-- [ ] 22. Administrator fills Environment (Demo or Production), Integration key, User ID and RSA private key. A separate Signing updates card defaults to Polling and offers Webhook. Webhook reveals Public callback URL and Connect HMAC secret, explains public HTTPS access, and retains its draft when navigating away. Test DocuSign connection appears beside the credentials above Signing updates. It saves entered credentials, reports the account name and user email or an error, and stays on the step. It does not save or validate unfinished signing-update settings; those save on Continue. Polling hides the webhook fields; webhook mode requires a valid HTTPS callback URL and an HMAC secret. Test connection checks account access, not webhook delivery. Changing the update method on a saved connector does not require replacing its credentials.
+- [x] 22. Administrator fills Environment (Demo or Production), Integration key, User ID and RSA private key. A separate Signing updates card defaults to Polling and offers Webhook. Webhook reveals Public callback URL and Connect HMAC secret, explains public HTTPS access, and retains its draft when navigating away. Test DocuSign connection appears beside the credentials above Signing updates. It saves entered credentials, reports the account name and user email or an error, and stays on the step. It does not save or validate unfinished signing-update settings; those save on Continue. Polling hides the webhook fields; webhook mode requires a valid HTTPS callback URL and an HMAC secret. Test connection checks account access, not webhook delivery. Changing the update method on a saved connector does not require replacing its credentials.
   - [ ] a. Administrator leaves Integration key or User ID blank and presses Continue. The step shows "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."
   - [ ] b. A connector already exists. The step reads "DocuSign is connected in the demo environment, as integration key {key}." "Replace credentials" reopens the form. "Keep current credentials" closes it.
         Watch: the wizard has no Polling or Webhook choice. A new connector defaults to Polling, but the step labels the Connect HMAC secret "Required" and shows a Webhook URL. Compare with Script 2.9.
-- [ ] 23. Administrator presses Continue or "Set up later" to reach AI analysis.
-- [ ] 24. AI analysis step. Administrator picks a Provider (Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Groq, Ollama, Custom endpoint), fills the API key, and picks a Model. Custom endpoint adds Protocol and Base URL. Azure adds Deployment endpoint.
+- [x] 23. Administrator presses Continue or "Set up later" to reach AI analysis.
+- [x] 24. AI analysis step. Administrator picks a Provider (Anthropic, OpenAI, Azure OpenAI, Gemini, OpenRouter, Groq, Ollama, Custom endpoint), fills the API key, and picks a Model. Custom endpoint adds Protocol and Base URL. Azure adds Deployment endpoint.
   - [ ] a. Ollama. The step says "Ollama does not require an API key."
   - [ ] b. A Saved key exists for this destination. The step shows "Key saved" and "Forget key".
   - [ ] c. Administrator presses Continue with no model. The step shows "Enter the model to analyze with, or choose Set up later."
-- [ ] 25. Administrator presses Continue to reach Review.
-- [ ] 26. Review step. Administrator reads the recommendation to keep the seeds, and a table of lists with row counts: Matter types, Matter statuses, Matter fields, Contract types, Contract statuses, Contract fields, Entity types, Entity fields, Director & Officer roles, Knowledge types, Request types and Reminder offsets.
-- [ ] 27. Administrator follows a List link. The Settings pane opens with a "Return to setup" link at the top. Administrator presses it and returns to Review.
+- [x] 25. Administrator presses Continue to reach Review.
+- [x] 26. Review step. Administrator reads the recommendation to keep the seeds, and a table of lists with row counts: Matter types, Matter statuses, Matter fields, Contract types, Contract statuses, Contract fields, Entity types, Entity fields, Director & Officer roles, Knowledge types, Request types and Reminder offsets.
+- [x] 27. Administrator follows a List link. The Settings pane opens with a "Return to setup" link at the top. Administrator presses it and returns to Review.
 - [ ] 28. Fork: Administrator presses "Start blank".
   - [ ] a. A dialog names each list and the rows it will remove, the rows it keeps, and warns the rows cannot be restored. Cancel closes it.
   - [ ] b. Administrator confirms "Start blank". The step shows "Seeded rows removed. The counts below are current." The counts drop.
   - [ ] c. On an instance where a list already has a user-created row or a seed row in use, the dialog shows the API's refusal and removes nothing.
-- [ ] 29. Administrator presses Finish. The app records the review, completes onboarding and opens Home.
+- [x] 29. Administrator presses Finish. The app records the review, completes onboarding and opens Home.
   - [ ] a. Administrator presses "Set up later" on Review. Onboarding completes without the review mark. The Setup checklist keeps "Review seeded types".
 - [ ] 30. Administrator opens `/welcome` again. The app sends them to `/`.
 - [ ] 31. Administrator opens Settings > General. Check the Setup checklist against Script 2.2.
@@ -273,8 +276,8 @@ Actors: Administrator, then Invitee.
 Actors: Administrator.
 
 - [ ] 1. On a fresh instance, Administrator completes setup and lands on the splash.
-- [ ] 2. Administrator presses "Skip optional steps".
-  - [ ] a. Email is not configured. The wizard opens the Outbound email step instead of finishing.
+- [x] 2. Administrator presses "Skip optional steps".
+  - [x] a. Email is not configured. The wizard opens the Outbound email step instead of finishing.
   - [ ] b. Email is configured by the environment. The wizard completes onboarding and opens Home.
 - [ ] 3. Administrator opens Settings > General. The Setup checklist lists every unfinished step. Authentication never appears.
 - [ ] 4. Administrator signs out and back in. Home opens. The wizard does not reopen.

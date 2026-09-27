@@ -7,7 +7,7 @@
  * of the way once a user exists.
  */
 
-import { useEffect, useState, type ComponentProps, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ComponentProps, type FormEvent } from "react";
 import { Check } from "lucide-react";
 import { z } from "zod";
 import { Link, redirect, useNavigate } from "react-router";
@@ -76,6 +76,31 @@ export function SetupPage() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useSetupDraft("administrator", "fields", emptyDraft);
   const [verifiedToken, setVerifiedToken] = useState<string | null>(null);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const confirmInput = useRef<HTMLInputElement>(null);
+  const shortPasswordMessage = intl.formatMessage({
+    id: "auth.setup.passwordTooShort",
+    defaultMessage: "Passwords must be 8 characters or more.",
+  });
+  const invalidEmailMessage = intl.formatMessage({
+    id: "auth.setup.invalidEmail",
+    defaultMessage: "Enter a valid email address.",
+  });
+
+  useEffect(() => {
+    emailInput.current?.setCustomValidity(
+      draft.email && !emailSchema.safeParse(draft.email).success ? invalidEmailMessage : "",
+    );
+  }, [draft.email, invalidEmailMessage]);
+
+  useEffect(() => {
+    for (const input of [passwordInput.current, confirmInput.current]) {
+      input?.setCustomValidity(
+        input.value.length > 0 && input.value.length < 8 ? shortPasswordMessage : "",
+      );
+    }
+  }, [draft.password, draft.confirm, shortPasswordMessage]);
 
   useEffect(() => {
     const token = draft.setupToken.trim();
@@ -244,6 +269,7 @@ export function SetupPage() {
             </Label>
             <SetupInput
               id="email"
+              ref={emailInput}
               valid={emailSchema.safeParse(draft.email).success}
               name="email"
               value={draft.email}
@@ -259,6 +285,7 @@ export function SetupPage() {
             </Label>
             <SetupInput
               id="password"
+              ref={passwordInput}
               valid={draft.password.length >= 8}
               name="password"
               value={draft.password}
@@ -278,6 +305,7 @@ export function SetupPage() {
             </Label>
             <SetupInput
               id="confirm"
+              ref={confirmInput}
               valid={draft.confirm.length >= 8 && draft.confirm === draft.password}
               name="confirm"
               value={draft.confirm}

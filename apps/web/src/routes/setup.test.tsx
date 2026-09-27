@@ -153,6 +153,36 @@ describe("first-run setup", () => {
     expect(screen.getByLabelText("Confirm password")).not.toHaveAttribute("aria-describedby");
   });
 
+  it("blocks malformed emails at the field and clears the error when corrected", async () => {
+    let setupRequests = 0;
+    stubApi({
+      signedIn: null,
+      needsSetup: true,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/auth/setup" && call.method === "POST") {
+          setupRequests++;
+          return problem(400, "Unexpected setup submission");
+        }
+        return tokenCheck(call);
+      },
+    });
+    renderAt("/auth/setup");
+    await fillForm();
+    const email = screen.getByLabelText<HTMLInputElement>("Email");
+    for (const value of ["invalid-email", "admin@example"]) {
+      await userEvent.clear(email);
+      await userEvent.type(email, value);
+      await userEvent.click(screen.getByRole("button", { name: "Create Administrator" }));
+      expect(email.validationMessage).toBe("Enter a valid email address.");
+      expect(setupRequests).toBe(0);
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    }
+    await userEvent.clear(email);
+    await userEvent.type(email, "admin@example.org");
+    expect(email.validationMessage).toBe("");
+    expect(email).toHaveAccessibleDescription("Valid value");
+  });
+
   it("only checks a server-verified token and ignores responses for an edited value", async () => {
     let resolveCheck: ((response: Response) => void) | undefined;
     stubApi({
