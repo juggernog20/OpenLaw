@@ -22,7 +22,7 @@ pnpm dev:hot     # backing services in containers, apps in watch mode
 pnpm test
 ```
 
-The [README](README.md#development) has the details: the hot-reload loop, worktrees, the demo seed, the Compose stack, and the test runtime settings. It is the reference. This file does not repeat it.
+[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) has the details: the hot-reload loop, worktrees, the demo seed, the Compose stack, and the test runtime settings. It is the reference. This file does not repeat it.
 
 ## Branches and pull requests
 

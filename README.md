@@ -1,193 +1,131 @@
 # OpenLaw
 
-Open-source, self-hosted legal operations platform: contract lifecycle management, matter management, legal intake, entity management, and knowledge for in-house legal teams.
+Open-source, self-hosted legal operations for small in-house legal teams.
 
-> Status: v0.1.0 is the first public release. [`CHANGELOG.md`](CHANGELOG.md) lists what it contains. The product and technical decision records in [`docs/decision-records/`](docs/decision-records/) explain why things are the way they are.
+[![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/juggernog20/OpenLaw)](https://github.com/juggernog20/OpenLaw/releases/latest)
 
-## Repository layout
+[Install](#install) · [User guides](docs/user-guides/) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
-```text
-apps/api                Fastify REST API (OpenAPI-described)
-apps/web                Vite + React SPA (staff app + requester portal)
-apps/worker             Background jobs (pg-boss)
-services/               Sidecar containers (doc-engine: LibreOffice + OCR)
-packages/               Database schema and migrations, shared types, generated API client
-styles/                 Theme substrate (Tailwind v4 CSS-first, three themes)
-messages/               The en-US message catalog, written by the i18n extractor
-e2e/                    Playwright browser suite and the upgrade-fidelity rehearsal
-scripts/                Dev loop, demo seed, lint checks, and the documentation build
-docs/                   Deployment, CI, and the implementation plan
-docs/decision-records/  Product & decision records (DECISIONS*.md, PRODUCT.md, SCHEMA.md)
-docs/user-guides/       The user manual, one Markdown article per guide
-docs/documentation/     How the user manual is built, checked, and published
-.agents/                Guidance that coding agents read
-CONTEXT.md              The glossary of domain terms
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/home-dark.webp">
+  <img alt="OpenLaw Home for a Legal Team Member. It shows the Inbox, Entity obligations, assigned Tasks, approaching dates, and the Contracts and Matters the person manages." src="docs/assets/readme/home-light.webp">
+</picture>
+
+OpenLaw keeps the work of a small in-house legal team in one place. It holds the team's Contracts, Matters, Entities and Knowledge. The rest of the company asks Legal for help through a Portal, so a request no longer lives in one lawyer's inbox.
+
+You run OpenLaw on your own server with Docker Compose. Your contracts and legal advice stay on a machine you control. The software costs nothing. You pay for the server.
+
+## What's in it
+
+| Module                                             | What it does                                                                                                                                                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Contracts](docs/user-guides/create-contract.md)   | Each contract from draft through approval and signature to renewal and ending. Parallel approvals, Key dates, a notice deadline that OpenLaw calculates from the term, and a Confidential flag for sensitive deals. |
+| [Matters](docs/user-guides/create-matter.md)       | Every other piece of legal work: an employment issue, a regulatory inquiry, a board matter. Matter templates add the usual Tasks and Key dates for you.                                                             |
+| [Requests](docs/user-guides/submit-request.md)     | Business Users fill in a Form in the Portal. Legal triages each Request in the Inbox, then converts it to a Contract or Matter, resolves it, or declines it. The answers and attachments carry across.              |
+| [Entities](docs/user-guides/entity-records.md)     | Your own group companies. Officers, Registrations, statutory Documents, an ownership chart, a share register, and a compliance calendar of Obligations.                                                             |
+| [Knowledge](docs/user-guides/create-knowledge.md)  | Guidance and precedents. Publish a Knowledge Item to the Portal, and it can answer a Business User's question before they submit it.                                                                                |
+| [Documents](docs/user-guides/document-versions.md) | Every file belongs to one record and keeps a chain of Versions. Previews for Word and PowerPoint, OCR for scanned PDFs, and a redline between any two Versions.                                                     |
+| [Auto-Docs](docs/user-guides/auto-doc-template.md) | Upload a Word template. OpenLaw builds a form from its Placeholders and fills it into a `.docx` and a `.pdf`. Business Users can run an Auto-Doc from the Portal too.                                               |
+
+Also in 0.1.0:
+
+- **E-signature through DocuSign.** When everyone has signed, the executed PDF comes back onto the Contract and the Contract becomes active.
+- **AI Analysis with your own API key.** It reads a Contract's Document and fills in the term, the value, the notice period and your custom Fields. Each value stays marked Unverified until a person confirms it. It works with Anthropic, OpenAI and Gemini APIs, and with other providers that use the same protocols.
+- **An MCP server.** Connect Claude, ChatGPT or Microsoft 365 Copilot. The assistant acts as the person who connected it, with that person's access, and the activity feed names the assistant.
+- **Search that reads the files.** Press `/` to search titles, descriptions and the text inside uploaded files, OCR text included.
+- **Separate sign-in for Legal and for the Portal.** Each audience gets its own methods: password, magic link, or single sign-on through one or more OIDC providers. Two-factor authentication can be required.
+- **Comments with three Visibility tiers.** Legal Only, Working Team and Full Thread. A Legal Only note never reaches the Portal.
+
+|        ![A Contract record at the Active Stage, with its Stage bar, Legal Owner, Entity and Counterparty](docs/assets/readme/contract.webp)        |              ![The Inbox with 21 Requests, each with a type, a Requester, an urgency and a triager](docs/assets/readme/inbox.webp)               |
+| :------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                                                 A Contract record                                                                  |                                                              The Inbox of Requests                                                               |
+| ![The Portal home for a Business User, with Request types, Before you submit links, and the person's own Requests](docs/assets/readme/portal.webp) | ![The Entities compliance calendar, listing Obligations by due date with the Entity and the assignee](docs/assets/readme/entities-calendar.webp) |
+|                                                           The Portal, as a Business User                                                           |                                                         The Entities compliance calendar                                                         |
+
+## Who it's for
+
+OpenLaw is for an in-house legal team of 2 to 10 people at a company of 50 to 500. That is usually a General Counsel, a few Counsels or Paralegals, and sometimes a Legal Operations lead. The team has outgrown shared folders and email. Enterprise CLM costs more than its contract volume can justify.
+
+It is the wrong tool for:
+
+- **Solo counsel.** A shared drive and a notes app are enough.
+- **Legal departments of 50 or more.** The enterprise CLM and matter management suites serve those teams well.
+- **Law firms.** OpenLaw has no client billing, conflict checks or case management.
+- **Legal aid and public-sector work.** Docassemble and A2J Author are built for that.
+
+One deployment serves one organization. OpenLaw is not multi-tenant.
+
+## Install
+
+You need a Linux host with Docker Engine and the Compose plugin. A team deployment also needs a TLS reverse proxy and an SMTP relay for invitations and sign-in links.
+
+```bash
+git clone https://github.com/juggernog20/OpenLaw.git
+cd OpenLaw
+cp .env.example .env
+# Set the two required secrets. Each gets a different value.
+sed -i "s|^AUTH_SECRET=$|AUTH_SECRET=$(openssl rand -base64 32)|" .env
+sed -i "s|^OPENLAW_SECRET_KEY=$|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|" .env
+docker compose up -d
 ```
 
-The design records cite Pencil `.pen` mock files. Those files are not in this repository.
+Open `http://<host>:3000`. A new install opens on first-run setup, which asks for a setup token. If you set `SETUP_TOKEN` in `.env`, enter that value. If you did not, the app makes a new token each time it starts and prints it to its log:
 
-## Development
-
-Requires Node ≥ 24 and pnpm.
-
-> **Note on TypeScript:** `tsc` is TypeScript 7 (native compiler) via the `@typescript/native` alias, while the `typescript` package name resolves to Microsoft's TS 6 API compat shim so typescript-eslint keeps working. This is deliberate and temporary — see TECH-015 in [`docs/decision-records/DECISIONS-TECH-STACK.md`](docs/decision-records/DECISIONS-TECH-STACK.md) before touching either alias.
-
-```sh
-pnpm install
-pnpm dev:hot    # the hot-reload loop: backing services in Docker, apps in watch mode
-pnpm build
-pnpm typecheck
-pnpm lint
-pnpm test
+```bash
+docker compose logs app | grep -A2 "setup token"
 ```
 
-API tests require Testcontainers' Ryuk cleanup helper. Do not set
-`TESTCONTAINERS_RYUK_DISABLED=true`: a killed worker or a timed-out setup hook can
-leave its database running after the suite exits. The API test config rejects
-that setting before starting any tests. Test databases are separate from the
-development Compose databases.
+Enter the token with the first Administrator's name, email and password. The onboarding wizard then asks for your organization, sign-in methods, outbound email, team and connectors.
 
-Use a container runtime that can run Ryuk. For rootless Podman on Linux, keep the
-socket setting and remove the old cleanup override:
+Keep a copy of `OPENLAW_SECRET_KEY` in a password manager, and never in the same archive as your database backup. It encrypts the credentials that Administrators save in Settings. A thief with the dump and the key can read those credentials. If you lose the key, Administrators must enter the credentials again, and the saved Advanced configuration is gone. Your Contracts, Matters and Documents do not depend on it.
 
-```sh
-env -u TESTCONTAINERS_RYUK_DISABLED \
-  DOCKER_HOST=unix:///run/user/$(id -u)/podman/podman.sock \
-  pnpm --filter @openlaw/api test
-```
+The release images are for linux/amd64. On an arm64 host, run `docker compose build` before `docker compose up -d`.
 
-Docker also works when its socket is accessible. Use
-`DOCKER_HOST=unix:///var/run/docker.sock` in that case. Do not switch runtimes just
-to disable cleanup.
+Next steps:
 
-Web and API tests default to four workers per run. The API cleanup regression test
-kills a disposable database's owner and checks that Ryuk removes that database.
+- [Install OpenLaw](docs/user-guides/install.md) is the full procedure, with the checks to run after each step.
+- [`DEPLOYMENT.md`](docs/DEPLOYMENT.md) covers the reverse proxy, file storage, email, upgrades and backups.
+- [Deploy on a private VM](docs/user-guides/deployment-configuration.md#deploy-on-a-private-vm) keeps OpenLaw on the office network or VPN, with no public address.
 
-### The hot-reload loop
+To look around before you install for real, the demo seed fills a development instance with a fictional company, with a legal team of twelve and thirty Entities. [Seeding a demo instance](docs/DEVELOPMENT.md#seeding-a-demo-instance) tells you how.
 
-`pnpm dev:hot` is the day-to-day loop (TECH-018): Postgres, the doc engine, and Mailpit run as containers with their ports published to the host, and the three apps run as watch processes beside them. Browse it on **<http://localhost:5173>** — the Vite dev server. It proxies `/api` to the API on 3000, so the session cookie stays same-origin (TECH-008), and a saved `.tsx` reaches the browser without a reload.
+## Documentation
 
-| What                              | Where                                              |
-| --------------------------------- | -------------------------------------------------- |
-| Web (Vite, hot module reload)     | <http://localhost:5173> — **browse here**          |
-| API (tsx watch, restarts on save) | <http://localhost:3000>                            |
-| Mail — every link the app sends   | <http://localhost:8025> (Mailpit)                  |
-| Postgres                          | `127.0.0.1:55432` — the built stack's own database |
+The user manual has 62 guides. Each instance also serves the manual at `/documentation` and in the in-app Help.
 
-Two things to know about it. Emailed links point at `http://localhost:3000`, because that is the origin the API is configured for; open one on 5173 by changing the port by hand. And uploaded files go to `.storage/` in the repo rather than to the stack's volume, which the container's user owns — so a file uploaded here is not visible to `pnpm stack`, or the other way round. The database _is_ the same one, so accounts and every record are shared.
+- **Legal Team Members.** Start with [Find your work on Home](docs/user-guides/find-your-work.md), [Create and maintain a Contract](docs/user-guides/create-contract.md) and [Assign and triage Requests](docs/user-guides/triage-requests.md).
+- **Business Users.** [Sign in to the Business Portal](docs/user-guides/portal-sign-in.md), then [Submit a Request to Legal](docs/user-guides/submit-request.md) and [Follow a Request](docs/user-guides/follow-request.md).
+- **Administrators.** [Set up a new OpenLaw instance](docs/user-guides/first-run.md), [Manage your organization and users](docs/user-guides/organisation-and-users.md) and [Configure request types and forms](docs/user-guides/request-forms.md).
+- **Whoever runs the server.** [Install](docs/user-guides/install.md), [Upgrade a populated instance](docs/user-guides/upgrade.md), [Back up and restore](docs/user-guides/backup-and-restore.md) and [Troubleshoot a deployment](docs/user-guides/operator-troubleshooting.md).
 
-Stop the loop from any terminal, including after its original terminal has closed:
+[Look up terms, permissions, and file behavior](docs/user-guides/reference.md) is the reference for all four.
 
-```sh
-pnpm dev:stop                  # stop the host API, web, worker, and in-progress seed/setup
-pnpm dev:down                  # stop the host loop and its backing containers; keep data
-pnpm dev:stop --isolated       # stop this checkout's isolated loop
-pnpm dev:down --isolated       # also stop that isolated instance's containers
-```
+## Project status
 
-Ctrl-C also stops the host processes. These commands use the same instance name as
-`dev:hot`, including `COMPOSE_PROJECT_NAME` overrides; the shared loop can be stopped
-from any worktree. The host process cleanup requires Linux `/proc`. Processes started
-manually with `pnpm dev` are outside this loop's tracking.
+0.1.0 is the first public release, from 28 September 2026. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
 
-### Multiple worktrees sharing data
+Some things are left out on purpose, for now:
 
-Keep the usual loop running in the main checkout, then run this from another worktree:
+- Email-to-intake and Slack or Teams capture. The Portal is the only way to submit a Request.
+- Reporting dashboards. Home shows your own work, not org-wide numbers.
+- Outside counsel spend and e-billing.
+- E-signature providers other than DocuSign.
 
-```sh
-pnpm dev:hot --worktree        # this worktree's web/API, sharing the main loop's data
-pnpm dev:stop --worktree       # stop only this worktree's host processes
-pnpm dev:down --worktree       # same; shared containers stay running
-```
+[`FUTURE-FEATURES.md`](docs/decision-records/FUTURE-FEATURES.md) lists each deferred feature and the reason. Check it before you ask for one.
 
-`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `COMPOSE_PROJECT_NAME`, `STORAGE_PATH`, or backing-service ports, export the same values here. Use `pnpm dev:hot:w --worktree` and `pnpm dev:down:w --worktree` to run the same loop against the root Docker socket.
+## Contributing
 
-Refresh another worktree's page to load shared saved data. Keep the main loop running so its worker handles jobs from all worktrees. Keep both checkouts' database migrations compatible and use the same authentication/encryption secrets; the launcher copies a missing `.env` from the main checkout. Each API still runs its branch's migrations against the shared database. Use `--isolated` for incompatible schemas or worker code; it creates separate data and seeds Helix. Do not seed with `--worktree` or combine it with `--seed`, `--fresh`, or `--isolated`; the launcher rejects these combinations.
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before you open a pull request. Branch off `dev` and target `dev`. `main` only receives releases.
 
-### Seeding a demo instance
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) sets up the local loop, the demo seed and the tests.
+- [`CONTEXT.md`](CONTEXT.md) is the glossary. A Request is not a ticket, and an Entity is one of your own companies, never a Counterparty.
+- [`docs/decision-records/`](docs/decision-records/) records why OpenLaw works the way it does. [`PRODUCT.md`](docs/decision-records/PRODUCT.md) is the place to start.
 
-`pnpm seed:demo` fills a running dev loop with a whole fictional company, Helix Software Group: a legal team of twelve, thirty group entities, a contract pipeline across every stage, matters, an intake queue with triage history, and a knowledge library. It exists for design and UX review, where an empty instance tells you nothing and a hand-made record or two tells you almost as little.
+## Security
 
-```sh
-pnpm dev:hot --fresh                    # wipe the instance, start the loop, seed it
-pnpm dev:hot --seed                     # start the loop; seed only if the instance is empty
-pnpm dev:seeded                         # the same as --seed
-pnpm dev:hot --fresh --scale medium     # a third of the data, for faster reseeding
-pnpm dev:hot --fresh --seed 42          # a different but equally repeatable instance
-```
-
-`--seed` runs the seed beside the loop once the API answers, and skips it when the instance already has an Administrator, so you can restart the loop with the flag every day and the data stays as it is. `--fresh` drops the database volume and the blob directory first, and then seeds. Anything else on the line goes to the seed. The seed also runs on its own against a loop that is already up:
-
-```sh
-pnpm seed:demo                          # about 180 contracts, 90 matters, 70 requests
-pnpm seed:demo --scale medium           # a third of that
-pnpm seed:demo --seed 42                # a different random seed
-```
-
-Sign in as `devon@helix.example` with `correct-horse-battery`. Every seeded person shares that password; the Business Users sign in through a magic link instead, which lands in Mailpit.
-
-Everything goes through the HTTP API as the person who would have done it, so the instance has the activity entries, notifications and numbering a real one has, and nothing is written behind the app's back. The seed also runs its own OpenAI-compatible stand-in for the length of the run, so a slice of the contracts carry genuine CTR-008 Analysis runs with the Unverified marker on them. The connector is switched off when the run ends, because the stand-in dies with it.
-
-E-signature is opt-in, because the DocuSign driver takes its host from the environment rather than from the connector row (TECH-013). Start the loop in stand-in mode and ask for the phase:
-
-```sh
-SIGNING_STANDIN=true DOCUSIGN_BASE_URL=http://127.0.0.1:8129 pnpm dev:hot
-pnpm seed:demo --with-signing
-```
-
-That sends real Envelopes through the real driver: some still out, some signed with the executed copy pulled back onto the document chain, some declined, some voided. The connector is switched off at the end for the same reason as the AI one. To make signing work again while you review, run `node scripts/seed/signing-stub.mjs` and turn the connector back on in Settings.
-
-It writes a lot and cleans up nothing. Point it at a database you are willing to lose. Dates are anchored to the day it runs, so deadlines stay overdue, due and upcoming however long ago you seeded. A heavy run takes two to three minutes on a laptop; the long pole is the seed waiting on the document queue, because an Analysis run cannot start until the text extraction it reads has finished.
-
-To walk through SMTP setup in the wizard, stop the loop and run `pnpm dev:hot --smtp-in-app`. This uses the relay saved in the app and overrides any `SMTP_URL` / `SMTP_FROM` environment values for the host processes. For local testing, enter server `127.0.0.1`, port `1025`, connection security **None**, authentication **None**, and sender email `openlaw@example.test`; messages appear at http://localhost:8025. Use the corresponding SMTP port if running an isolated instance. On normal restarts, `pnpm dev:hot` automatically uses a complete relay saved in the app; otherwise it falls back to Mailpit. An explicitly exported `SMTP_URL` takes precedence unless `--smtp-in-app` is supplied. Runs using `--seed`, `--fresh`, or `--isolated` pin Mailpit so generated data cannot send real email; they cannot be combined with `--smtp-in-app`. The selected email mode is printed at startup.
-
-`pnpm dev:infra` brings up only the containers, for when you start the watch processes yourself; `pnpm dev:infra:down` stops **only those containers**, leaving host watch processes running. Ports move with `POSTGRES_PORT`, `DOC_ENGINE_PORT`, `MAILPIT_SMTP_PORT`. All of it is [`compose.hostdev.yml`](compose.hostdev.yml) plus [`scripts/dev-hot.sh`](scripts/dev-hot.sh), and none of it touches what a deployment runs.
-
-`dev:hot` (including `--fresh`) and `dev:down` use the rootless Podman socket at `$XDG_RUNTIME_DIR/podman/podman.sock` when available, falling back to `/run/user/$(id -u)` when `XDG_RUNTIME_DIR` is unset. Explicit `DOCKER_HOST` or `DOCKER_CONTEXT` settings take precedence; without either setting or a Podman socket, Docker's CLI default applies. The selected connection is printed before setup. Direct Compose commands such as `dev:infra` and `stack` still need `DOCKER_HOST` exported when using Podman, so they reach the same containers.
-
-Some machines run both rootless Podman and root Docker. On those, `pnpm dev:hot:w` and `pnpm dev:down:w` run the same loop against the root Docker socket. They pin `DOCKER_HOST` to `/var/run/docker.sock`. The two engines keep separate database volumes under the same name, so each engine holds its own instance. Both engines publish the same ports, so stop one loop before starting the other.
-
-Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
-
-```sh
-pnpm stack        # build, start, then follow the logs
-pnpm stack:logs   # follow the logs of an already-running stack
-pnpm stack:down   # stop it (add -v by hand to drop the pg volume)
-```
-
-`pnpm stack` leaves the containers running in the background, so Ctrl-C detaches from the logs rather than stopping the stack — the instance's accumulated state survives between sessions. All three wrap `docker compose -f compose.yml -f compose.dev.yml`.
-
-The Playwright suite in [`e2e/`](e2e/) targets that stack's origin (`E2E_BASE_URL`, default `http://localhost:3000`) and needs no cleanup between runs — the instance's accumulated state is part of the point:
-
-```sh
-pnpm --filter @openlaw/e2e exec playwright install chromium   # once
-pnpm e2e
-```
-
-## Continuous integration
-
-Five workflows in [`.github/workflows/`](.github/workflows/). A fork gets the process along with the code — nothing here depends on a check that lives outside this repository.
-
-| Workflow       | What it guards                                                                                                                                             | Blocking                            |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `ci.yml`       | Format, lint, typecheck, unit tests, the built-image E2E gate (TECH-018), and the upgrade-fidelity job that proves a populated install survives an upgrade | Yes                                 |
-| `i18n.yml`     | `messages/en-US.json` still matches what the extractor writes (DES-013)                                                                                    | No — it reports on the pull request |
-| `codeql.yml`   | Static analysis of the JavaScript and TypeScript                                                                                                           | Yes                                 |
-| `security.yml` | Dependency review and secret scanning                                                                                                                      | Yes                                 |
-| `release.yml`  | On a `vX.Y.Z` tag, builds the two container images, publishes them to ghcr.io, and creates the GitHub release                                              | Release only                        |
-
-Both stack gates have a local command: `pnpm e2e:local` for the browser suite, `pnpm upgrade-fidelity` for the upgrade job. Each runs in its own compose project, so neither touches the instance you develop against.
-
-The i18n job is deliberately non-blocking. en-US is the only v1 locale and the `defaultMessage` at each call site is the runtime catalog, so a stale file breaks nothing today. It becomes the file translators work from the day a second locale ships, and the check is already running and quiet by then.
-
-## Deployment
-
-`docker compose up` from a clean Linux VM is the whole story — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the quickstart, the reverse-proxy contract, upgrades, and backups.
-
-## Contributing and security
-
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before you open a pull request. Report a vulnerability privately, as [`SECURITY.md`](SECURITY.md) describes. Do not open a public issue for it.
+Do not open a public issue for a vulnerability. Report it privately, as [`SECURITY.md`](SECURITY.md) describes.
 
 ## License
 
-[AGPL-3.0-only](LICENSE)
+OpenLaw is licensed under [AGPL-3.0-only](LICENSE). You can use it, change it and run it for your company at no cost. If you change OpenLaw and let people use your changed version over a network, you must offer them its source code under the same license. That includes your own employees.
