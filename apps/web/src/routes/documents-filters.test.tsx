@@ -97,7 +97,7 @@ function surface({
         ],
         uploaders: [
           { id: "u2", displayName: "Nadia Counsel", image: null, archived: false },
-          { id: "u3", displayName: "Blair Uploader", image: null, archived: false },
+          { id: "u3", displayName: "Devon Uploader", image: null, archived: false },
         ],
         records: [
           {
@@ -277,7 +277,7 @@ describe("the Documents shared filters", () => {
     expect(router.state.location.search).toContain("counterparty=counterparty-1");
     expect(screen.getByRole("button", { name: "Remove Counterparty filter" })).toBeVisible();
 
-    await choose(user, "Uploader", "Blair Uploader");
+    await choose(user, "Uploader", "Devon Uploader");
     await expectQuery(api.queries, "uploader", "u3");
     expect(router.state.location.search).toContain("uploader=u3");
     expect(screen.getByRole("button", { name: "Remove Uploader filter" })).toBeVisible();

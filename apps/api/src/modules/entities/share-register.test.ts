@@ -131,8 +131,8 @@ const holderNamed = (rows: Row[], name: string, classId?: string) =>
 
 describe("the share register", () => {
   it("derives the Register of members from entries and reads it as of a date", async () => {
-    const issuer = await newEntity("Wentworth Capital Partners Ltd", { sharesIssued: 750_000 });
-    const parent = await newEntity("Wentworth Family Office Holdings Ltd", {
+    const issuer = await newEntity("Calloway Capital Partners Ltd", { sharesIssued: 750_000 });
+    const parent = await newEntity("Calloway Family Office Holdings Ltd", {
       jurisdiction: "Jersey",
     });
     const ordinary = await newClass(issuer.id, {
@@ -171,12 +171,12 @@ describe("the share register", () => {
       effectiveOn: "2019-03-12",
       shareClassId: ordinary.id,
       quantity: 200_000,
-      to: { kind: "individual", name: "Blair Wentworth" },
+      to: { kind: "individual", name: "Devon Calloway" },
       certificatesIssued: [{ number: "002", holder: "to", quantity: 200_000 }],
     });
     expect(second.statusCode, second.body).toBe(201);
-    const blairHolderId = (second.json().holders as Row[]).find(
-      (row) => row.holder.name === "Blair Wentworth",
+    const devonHolderId = (second.json().holders as Row[]).find(
+      (row) => row.holder.name === "Devon Calloway",
     )!.holder.id;
 
     const buyback = await entry(issuer.id, {
@@ -195,7 +195,7 @@ describe("the share register", () => {
       effectiveOn: "2023-02-01",
       shareClassId: ordinary.id,
       quantity: 40_000,
-      from: { kind: "holder", holderId: blairHolderId },
+      from: { kind: "holder", holderId: devonHolderId },
       to: { kind: "individual", name: "Harbour Nominees Ltd" },
       certificatesCancelled: ["002"],
       certificatesIssued: [
@@ -218,16 +218,16 @@ describe("the share register", () => {
     expect(today.statusCode, today.body).toBe(200);
     const now = today.json();
     const rows = now.holders as Row[];
-    expect(holderNamed(rows, "Wentworth Family Office Holdings Ltd")).toMatchObject({
+    expect(holderNamed(rows, "Calloway Family Office Holdings Ltd")).toMatchObject({
       balance: 500_000,
       certificates: ["003"],
       memberSince: "2019-03-12",
     });
-    expect(holderNamed(rows, "Wentworth Family Office Holdings Ltd")?.holder).toMatchObject({
+    expect(holderNamed(rows, "Calloway Family Office Holdings Ltd")?.holder).toMatchObject({
       kind: "entity",
       jurisdiction: "Jersey",
     });
-    expect(holderNamed(rows, "Blair Wentworth")).toMatchObject({
+    expect(holderNamed(rows, "Devon Calloway")).toMatchObject({
       balance: 160_000,
       certificates: ["005"],
     });
@@ -241,7 +241,7 @@ describe("the share register", () => {
       percentOfClass: 100,
     });
     // Votes: 500,000 + 160,000 + 40,000 + 120,000 = 820,000 outstanding.
-    expect(holderNamed(rows, "Wentworth Family Office Holdings Ltd")?.percentOfVotes).toBe(60.98);
+    expect(holderNamed(rows, "Calloway Family Office Holdings Ltd")?.percentOfVotes).toBe(60.98);
     expect(now.treasury).toEqual([{ shareClassId: ordinary.id, balance: 50_000 }]);
     expect(now.totals).toEqual([
       expect.objectContaining({
@@ -268,7 +268,7 @@ describe("the share register", () => {
     expect(yearEnd.statusCode, yearEnd.body).toBe(200);
     const then = yearEnd.json();
     expect(then.asOf).toBe("2022-12-31");
-    expect(holderNamed(then.holders, "Blair Wentworth")).toMatchObject({
+    expect(holderNamed(then.holders, "Devon Calloway")).toMatchObject({
       balance: 200_000,
       balanceToday: 160_000,
       certificates: ["002"],

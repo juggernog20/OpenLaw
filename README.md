@@ -86,12 +86,12 @@ manually with `pnpm dev` are outside this loop's tracking.
 Keep the usual loop running in the main checkout, then run this from another worktree:
 
 ```sh
-pnpm dev:hot:w --worktree      # this worktree's web/API, sharing Wentworth's data
+pnpm dev:hot:w --worktree      # this worktree's web/API, sharing Calloway's data
 pnpm dev:stop --worktree       # stop only this worktree's host processes
 pnpm dev:down:w --worktree     # same; shared containers stay running
 ```
 
-`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `COMPOSE_PROJECT_NAME`, `STORAGE_PATH`, or backing-service ports, export the same values here. Use `pnpm dev:hot --worktree` for the default container engine; `:w` selects root Docker, where the personal Wentworth instance lives.
+`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `COMPOSE_PROJECT_NAME`, `STORAGE_PATH`, or backing-service ports, export the same values here. Use `pnpm dev:hot --worktree` for the default container engine; `:w` selects root Docker, where the personal Calloway instance lives.
 
 Refresh another worktree's page to load shared saved data. Keep the main loop running so its worker handles jobs from all worktrees. Keep both checkouts' database migrations compatible and use the same authentication/encryption secrets; the launcher copies a missing `.env` from the main checkout. Each API still runs its branch's migrations against the shared database. Use `--isolated` for incompatible schemas or worker code; it creates separate data and seeds Helix. Do not seed with `--worktree` or combine it with `--seed`, `--fresh`, or `--isolated`; the launcher rejects these combinations.
 
@@ -115,7 +115,7 @@ pnpm seed:demo --scale medium           # a third of that
 pnpm seed:demo --seed 42                # a different random seed
 ```
 
-Sign in as `blair@helix.example` with `correct-horse-battery`. Every seeded person shares that password; the Business Users sign in through a magic link instead, which lands in Mailpit.
+Sign in as `devon@helix.example` with `correct-horse-battery`. Every seeded person shares that password; the Business Users sign in through a magic link instead, which lands in Mailpit.
 
 Everything goes through the HTTP API as the person who would have done it, so the instance has the activity entries, notifications and numbering a real one has, and nothing is written behind the app's back. The seed also runs its own OpenAI-compatible stand-in for the length of the run, so a slice of the contracts carry genuine CTR-008 Analysis runs with the Unverified marker on them. The connector is switched off when the run ends, because the stand-in dies with it.
 

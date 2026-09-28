@@ -261,7 +261,7 @@ it("fills the downloadable agreement and its optional clause after removing the 
     answers: {
       start_date: "2026-10-01",
       provider_name: "Acme Advisory Ltd",
-      client_name: "Wentworth Family Office",
+      client_name: "Calloway Family Office",
       services: "Review and report on the Client’s supplier contracts.",
       fee: 2500,
     },
@@ -269,11 +269,11 @@ it("fills the downloadable agreement and its optional clause after removing the 
   const filled = text(output);
   expect(filled).toContain("01/10/2026");
   expect(filled).toContain("ACME ADVISORY LTD");
-  expect(filled).toContain("WENTWORTH FAMILY OFFICE");
+  expect(filled).toContain("CALLOWAY FAMILY OFFICE");
   expect(filled.split("Fees and payment")[1]).toContain("$2,500.00");
   expect(filled).toContain("Review and report on the Client’s supplier contracts.");
   expect(filled).toContain("For Acme Advisory Ltd");
-  expect(filled).toContain("For Wentworth Family Office");
+  expect(filled).toContain("For Calloway Family Office");
   expect(filled).not.toContain("{{");
   expect(filled).toContain("Confidentiality");
   definition.fields.push({

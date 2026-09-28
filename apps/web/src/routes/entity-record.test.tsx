@@ -25,7 +25,7 @@ const MEMBER = {
 const ADMIN = {
   id: "u1",
   email: "admin@example.com",
-  displayName: "Blair Wentworth",
+  displayName: "Devon Calloway",
   role: "administrator",
 };
 

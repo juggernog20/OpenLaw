@@ -284,7 +284,7 @@ describe("the contracts list's columns", () => {
           contractRow({
             isConfidential: true,
             archivedAt: "2026-08-10T00:00:00.000Z",
-            manager: { id: "u1", displayName: "Blair Wentworth", image: null, archived: false },
+            manager: { id: "u1", displayName: "Devon Calloway", image: null, archived: false },
           }),
         ],
       }).handler,
@@ -292,11 +292,11 @@ describe("the contracts list's columns", () => {
     renderAt("/contracts");
 
     // The Owner cell draws initials beside the name, and they are
-    // `aria-hidden` decoration — a tooltip reading "BWBlair Wentworth" is
+    // `aria-hidden` decoration — a tooltip reading "DCDevon Calloway" is
     // the thing `textContent` would have given us.
-    const owner = (await screen.findByText("Blair Wentworth")).closest("td");
+    const owner = (await screen.findByText("Devon Calloway")).closest("td");
     await user.hover(clip(owner));
-    expect(owner).toHaveAttribute("title", "Blair Wentworth");
+    expect(owner).toHaveAttribute("title", "Devon Calloway");
 
     // The Title cell draws "CONFI" and means "Confidential" — DES-009's
     // marker carries the word as an `aria-label` because the word does not

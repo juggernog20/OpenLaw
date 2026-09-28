@@ -6,7 +6,7 @@ import { json, renderAt, stubApi } from "../testing/helpers";
 
 const logo = "data:image/png;base64,aGVsbG8=";
 const orgGeneral = {
-  name: "Wentworth Family Office",
+  name: "Calloway Family Office",
   logo,
   defaultLocale: "en-US" as const,
   defaultTimezone: "UTC",

@@ -350,7 +350,7 @@ The Decision above defined the Portal form as basics plus `request_type_fields`.
 
 - **Status** — Accepted
 - **Date** — 2026-08-04
-- **Context** — Whether the portal gets a LawVu-style "Request a status update" button. Blair: "No — notifications suffice."
+- **Context** — Whether the portal gets a "Request a status update" button, as one dual-workspace product has. Blair: "No — notifications suffice."
 - **Decision** — Requesters receive host-configurable email notifications (creation + status changes, deep-linking to the portal per INT-001) and can reply in the request thread. No dedicated poke affordance.
 - **Rationale** — The thread already allows asking; a throttled button adds an affordance without adding a capability.
 - **Alternatives considered** — Throttled poke (recommended, declined).

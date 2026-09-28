@@ -291,7 +291,7 @@ describe("the portal chrome", () => {
     stubApi({
       signedIn: REQUESTER,
       orgGeneral: {
-        name: "Wentworth Family Office",
+        name: "Calloway Family Office",
         logo,
         defaultLocale: "en-US",
         defaultTimezone: "UTC",
@@ -299,7 +299,7 @@ describe("the portal chrome", () => {
     });
     renderAt("/portal");
     const header = await screen.findByRole("banner");
-    expect(await within(header).findByText("Wentworth Family Office")).toBeInTheDocument();
+    expect(await within(header).findByText("Calloway Family Office")).toBeInTheDocument();
     expect(within(header).getByText("openlaw")).toBeInTheDocument();
     const home = within(header).getByRole("link", { name: "Legal portal" });
     const image = home.querySelector("img")!;
@@ -307,7 +307,7 @@ describe("the portal chrome", () => {
     fireEvent.error(image);
     expect(home.querySelector("img")).toBeNull();
     expect(home.querySelector(".lucide-scale")).not.toBeNull();
-    expect(within(header).getByText("Wentworth Family Office")).toBeInTheDocument();
+    expect(within(header).getByText("Calloway Family Office")).toBeInTheDocument();
   });
 
   it("carries the signed-in identity and the way out", async () => {

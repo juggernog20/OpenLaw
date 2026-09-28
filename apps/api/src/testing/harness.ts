@@ -72,8 +72,8 @@ export const TEST_SECRET_KEY = "openlaw-test-secret-key-with-enough-entropy-0"; 
 
 /** The initial Administrator most suites create via first-run setup. */
 export const TEST_ADMIN = {
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 

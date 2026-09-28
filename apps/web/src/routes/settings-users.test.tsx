@@ -16,8 +16,8 @@ import { json, problem, renderAt, stubApi, type StubCall } from "../testing/help
 
 const ADMIN = {
   id: "u1",
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   role: "administrator",
   theme: "light",
 };
@@ -35,8 +35,8 @@ const HOUR = 60 * 60 * 1000;
 const LISTED = [
   {
     id: "u1",
-    email: "blair@example.com",
-    displayName: "Blair Wentworth",
+    email: "devon@example.com",
+    displayName: "Devon Calloway",
     role: "administrator",
     status: "active",
     lastActiveAt: new Date(Date.now() - 3 * HOUR).toISOString(),
@@ -163,10 +163,10 @@ describe("the Users pane (#65)", () => {
     stubApi({ signedIn: ADMIN, extra: usersApi(newCalls()) });
     renderAt("/settings/users");
 
-    const blairRow = (await screen.findByText("blair@example.com")).closest("tr")!;
-    expect(within(blairRow).getByText("Administrator")).toBeVisible();
-    expect(within(blairRow).getByText("Active")).toBeVisible();
-    expect(within(blairRow).getByText("3h ago")).toBeVisible();
+    const devonRow = (await screen.findByText("devon@example.com")).closest("tr")!;
+    expect(within(devonRow).getByText("Administrator")).toBeVisible();
+    expect(within(devonRow).getByText("Active")).toBeVisible();
+    expect(within(devonRow).getByText("3h ago")).toBeVisible();
 
     // The pending invite renders as a row, not a fire-and-forget: its
     // status pill, its em-dash last-active, and its two actions. Its
@@ -203,14 +203,14 @@ describe("the Users pane (#65)", () => {
     // …but your own row offers only the role select: self-archive is
     // refused and your own sessions belong to Profile.
     expect(
-      within(blairRow).getByRole("button", { name: /change the role of blair@example\.com/i }),
+      within(devonRow).getByRole("button", { name: /change the role of devon@example\.com/i }),
     ).toBeVisible();
     expect(
-      within(blairRow).queryByRole("button", { name: "Archive blair@example.com" }),
+      within(devonRow).queryByRole("button", { name: "Archive devon@example.com" }),
     ).not.toBeInTheDocument();
     expect(
-      within(blairRow).queryByRole("button", {
-        name: "More actions for blair@example.com",
+      within(devonRow).queryByRole("button", {
+        name: "More actions for devon@example.com",
       }),
     ).not.toBeInTheDocument();
 
@@ -405,15 +405,15 @@ describe("the Users pane (#65)", () => {
     renderAt("/settings/users");
 
     await user.click(
-      await screen.findByRole("button", { name: /change the role of blair@example\.com/i }),
+      await screen.findByRole("button", { name: /change the role of devon@example\.com/i }),
     );
     const menu = await screen.findByRole("menu");
     await user.click(within(menu).getByRole("menuitemradio", { name: "Business user" }));
 
     // The floor's reason, verbatim — not the generic error line.
     expect(await screen.findByText("You cannot demote the last Administrator.")).toBeVisible();
-    const blairRow = screen.getByText("blair@example.com").closest("tr")!;
-    expect(within(blairRow).getByText("Administrator")).toBeVisible();
+    const devonRow = screen.getByText("devon@example.com").closest("tr")!;
+    expect(within(devonRow).getByText("Administrator")).toBeVisible();
   });
 
   it("archives from the row; the row moves behind the Show-archived filter (#66)", async () => {
@@ -443,7 +443,7 @@ describe("the Users pane (#65)", () => {
     stubApi({ signedIn: ADMIN, extra: usersApi(newCalls()) });
     renderAt("/settings/users");
 
-    await screen.findByText("blair@example.com");
+    await screen.findByText("devon@example.com");
     expect(screen.queryByText("marcus.webb@example.com")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
@@ -467,7 +467,7 @@ describe("the Users pane (#65)", () => {
     stubApi({ signedIn: ADMIN, extra: usersApi(calls) });
     renderAt("/settings/users");
 
-    await screen.findByText("blair@example.com");
+    await screen.findByText("devon@example.com");
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     await user.click(
       await screen.findByRole("button", { name: "Restore marcus.webb@example.com" }),

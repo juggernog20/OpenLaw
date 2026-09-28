@@ -232,12 +232,12 @@ describe("POST /approver-groups", () => {
     expect(created.description).toBe("GC plus CFO on every commercial paper.");
     expect(created.archivedAt).toBeNull();
     expect(created.memberCount).toBe(2);
-    // Members come back in display-name order: Blair, then Casey.
+    // Members come back in display-name order: Casey, then Devon.
     expect(created.members.map((member) => member.displayName)).toEqual([
-      ADMIN.displayName,
       MEMBER.displayName,
+      ADMIN.displayName,
     ]);
-    expect(created.members.map((member) => member.email)).toEqual([ADMIN.email, MEMBER.email]);
+    expect(created.members.map((member) => member.email)).toEqual([MEMBER.email, ADMIN.email]);
 
     // One entry for the whole act, naming who it started with.
     expect(entries).toHaveLength(1);

@@ -262,6 +262,11 @@ async function sendEnvelope(page: Page, number: number): Promise<void> {
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Signer 1 name").fill("Evan Cho");
   await dialog.getByLabel("Signer 1 email").fill("evan.cho@counterparty.example");
+  // Send stays disabled until the sender says whether this round
+  // completes the agreement.
+  await dialog
+    .getByRole("radio", { name: "Yes, all required signatures will be in place" })
+    .check();
   const sent = page.waitForResponse(
     (response) =>
       response.url().endsWith(`/api/v1/contracts/${number}/envelopes`) &&

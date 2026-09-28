@@ -35,7 +35,7 @@ const MEMBER = {
 
 const OTHER_UPLOADER = {
   email: "repository-other-uploader@example.com",
-  displayName: "Blair Uploader",
+  displayName: "Devon Uploader",
   password: "correct-horse-battery",
 } as const;
 

@@ -678,21 +678,26 @@ test.describe.serial("M11 demo path", () => {
 
       // ---- Immutable, at the seam that would have to allow it ----
       //
-      // A correction appends a round; nothing edits or removes one
-      // (story 12, DOC-001). There is no route at a version's address to
-      // replace or remove it, and the chain is unchanged for having
-      // been asked. PATCH is the one exception, and it moves the kind
-      // alone (CTR-014's M21A addendum): asked with no kind it is a
-      // 400, and the bytes, the number, and the order stay put.
-      for (const method of ["PUT", "DELETE"] as const) {
-        const refused = await uploaderPage.request.fetch(
-          `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
-          { method },
-        );
-        expect([404, 405], `${method} on a version answered ${refused.status()}`).toContain(
-          refused.status(),
-        );
-      }
+      // A correction appends a round; nothing edits one (story 12,
+      // DOC-001). There is no route at a version's address to replace
+      // it. DELETE is a route now, but only an Administrator may remove
+      // one version, with the document's title typed as confirmation.
+      // This Legal Team Member types the title and is still refused.
+      // PATCH moves the kind alone (CTR-014's M21A addendum): asked with
+      // no kind it is a 400. The chain is unchanged for having been
+      // asked: the bytes, the number, and the order stay put.
+      const replaced = await uploaderPage.request.fetch(
+        `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
+        { method: "PUT" },
+      );
+      expect([404, 405], `PUT on a version answered ${replaced.status()}`).toContain(
+        replaced.status(),
+      );
+      const removed = await uploaderPage.request.delete(
+        `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
+        { data: { confirmTitle: document.title } },
+      );
+      expect(removed.status(), await removed.text()).toBe(403);
       const kindless = await uploaderPage.request.patch(
         `/api/v1/documents/${document.id}/versions/${versions[0]!.id}`,
         { data: {} },

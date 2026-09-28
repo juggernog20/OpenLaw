@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { screen } from "@testing-library/react";
 import { renderAt, stubApi } from "../testing/helpers";
 
-const BLAIR = {
+const DEVON = {
   id: "u1",
   email: "admin@example.com",
   displayName: "Ada Admin",
@@ -39,7 +39,7 @@ describe("route guard", () => {
   });
 
   it("shows the signed-in home to a session holder", async () => {
-    stubApi({ signedIn: BLAIR });
+    stubApi({ signedIn: DEVON });
     renderAt("/");
     // The shell's user menu carries the signed-in identity (#41): the
     // avatar trigger is named after the person.
@@ -48,7 +48,7 @@ describe("route guard", () => {
   });
 
   it("bounces a signed-in user away from the login screen", async () => {
-    stubApi({ signedIn: BLAIR });
+    stubApi({ signedIn: DEVON });
     renderAt("/auth/login");
     expect(await screen.findByRole("button", { name: "Ada Admin" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Sign in" })).not.toBeInTheDocument();

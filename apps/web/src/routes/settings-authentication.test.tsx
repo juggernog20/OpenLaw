@@ -15,10 +15,10 @@ const PROVIDERS = [
   {
     id: "p1",
     providerId: "idp",
-    name: "Wentworth identity provider",
+    name: "Calloway identity provider",
     issuer: "https://idp.example.com",
-    domain: "wentworth.test,legal.wentworth.test",
-    domains: ["wentworth.test", "legal.wentworth.test"],
+    domain: "calloway.test,legal.calloway.test",
+    domains: ["calloway.test", "legal.calloway.test"],
     clientId: "app",
   },
   {
@@ -65,7 +65,7 @@ function setup({ provider = true, fail = false, failRow = false } = {}) {
       if (path === "/api/v1/auth/sso-providers" && call.method === "POST") {
         providerCalls.push({ method: call.method, path, body: call.body });
         const body = call.body as { providerId: string; name?: string; domain: string };
-        if (fail) return problem(409, "acme.example is already assigned to Wentworth.");
+        if (fail) return problem(409, "acme.example is already assigned to Calloway.");
         return json(201, {
           provider: {
             id: "p3",
@@ -180,8 +180,8 @@ it("lists each provider with its name, domains and configuration status", async 
   expect(within(card).getByText("2 providers")).toBeVisible();
   const rows = within(card).getAllByRole("listitem");
   expect(rows).toHaveLength(2);
-  expect(within(rows[0]!).getByText("Wentworth identity provider")).toBeVisible();
-  expect(within(rows[0]!).getByText("wentworth.test, legal.wentworth.test")).toBeVisible();
+  expect(within(rows[0]!).getByText("Calloway identity provider")).toBeVisible();
+  expect(within(rows[0]!).getByText("calloway.test, legal.calloway.test")).toBeVisible();
   expect(within(rows[0]!).getByText("Configured")).toBeVisible();
   expect(within(rows[1]!).getByText("Family Office identity provider")).toBeVisible();
   expect(within(rows[1]!).getByText("familyoffice.test")).toBeVisible();
@@ -239,7 +239,7 @@ it("keeps the dialog open and shows the refusal when a domain is already taken",
   await user.type(within(dialog).getByLabelText("Client secret"), "s3cret");
   await user.click(within(dialog).getByRole("button", { name: "Register provider" }));
   expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-    "acme.example is already assigned to Wentworth.",
+    "acme.example is already assigned to Calloway.",
   );
   expect(within(card).getByText("2 providers")).toBeVisible();
 });
@@ -247,24 +247,24 @@ it("keeps the dialog open and shows the refusal when a domain is already taken",
 it("edits only the changed fields and leaves a blank secret alone", async () => {
   const { providerCalls, user } = setup();
   const card = await screen.findByRole("region", { name: "Identity providers" });
-  await user.click(within(card).getByRole("button", { name: "Edit Wentworth identity provider" }));
-  const dialog = await screen.findByRole("dialog", { name: "Edit Wentworth identity provider" });
+  await user.click(within(card).getByRole("button", { name: "Edit Calloway identity provider" }));
+  const dialog = await screen.findByRole("dialog", { name: "Edit Calloway identity provider" });
   expect(within(dialog).queryByLabelText("Provider ID")).not.toBeInTheDocument();
   expect(within(dialog).getByLabelText("Email domains")).toHaveValue(
-    "wentworth.test, legal.wentworth.test",
+    "calloway.test, legal.calloway.test",
   );
-  await user.type(within(dialog).getByLabelText("Email domains"), ", hr.wentworth.test");
+  await user.type(within(dialog).getByLabelText("Email domains"), ", hr.calloway.test");
   await user.click(within(dialog).getByRole("button", { name: "Save provider" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(providerCalls).toEqual([
     {
       method: "PATCH",
       path: "/api/v1/auth/sso-providers/idp",
-      body: { domain: "wentworth.test, legal.wentworth.test, hr.wentworth.test" },
+      body: { domain: "calloway.test, legal.calloway.test, hr.calloway.test" },
     },
   ]);
   expect(
-    within(card).getByText("wentworth.test, legal.wentworth.test, hr.wentworth.test"),
+    within(card).getByText("calloway.test, legal.calloway.test, hr.calloway.test"),
   ).toBeVisible();
 });
 
@@ -304,9 +304,7 @@ it("removes a provider and disables SSO once none is left", async () => {
     expect(toggle).toBeEnabled();
     expect(toggle).toBeChecked();
   }
-  await user.click(
-    within(card).getByRole("button", { name: "Remove Wentworth identity provider" }),
-  );
+  await user.click(within(card).getByRole("button", { name: "Remove Calloway identity provider" }));
   await waitFor(() => expect(within(card).getByText("0 providers")).toBeVisible());
   expect(providerCalls.map((call) => `${call.method} ${call.path}`)).toEqual([
     "DELETE /api/v1/auth/sso-providers/family-office",
@@ -323,26 +321,26 @@ it("removes a provider and disables SSO once none is left", async () => {
 it("keeps the edit dialog open and shows the refusal when the save is rejected", async () => {
   const { user } = setup({ failRow: true });
   const card = await screen.findByRole("region", { name: "Identity providers" });
-  await user.click(within(card).getByRole("button", { name: "Edit Wentworth identity provider" }));
-  const dialog = await screen.findByRole("dialog", { name: "Edit Wentworth identity provider" });
-  await user.type(within(dialog).getByLabelText("Email domains"), ", hr.wentworth.test");
+  await user.click(within(card).getByRole("button", { name: "Edit Calloway identity provider" }));
+  const dialog = await screen.findByRole("dialog", { name: "Edit Calloway identity provider" });
+  await user.type(within(dialog).getByLabelText("Email domains"), ", hr.calloway.test");
   await user.click(within(dialog).getByRole("button", { name: "Save provider" }));
   expect(await within(dialog).findByRole("alert")).toHaveTextContent(
     "Another provider update is in progress. Try again.",
   );
   expect(screen.getByRole("dialog")).toBeVisible();
-  expect(within(card).getByText("wentworth.test, legal.wentworth.test")).toBeVisible();
+  expect(within(card).getByText("calloway.test, legal.calloway.test")).toBeVisible();
 });
 
 it("keeps the row and shows its error when a removal is refused", async () => {
   const { user } = setup({ failRow: true });
   const card = await screen.findByRole("region", { name: "Identity providers" });
-  const remove = within(card).getByRole("button", { name: "Remove Wentworth identity provider" });
+  const remove = within(card).getByRole("button", { name: "Remove Calloway identity provider" });
   await user.click(remove);
   expect(
     await within(card).findByText("Another provider update is in progress. Try again."),
   ).toBeVisible();
-  expect(within(card).getByText("Wentworth identity provider")).toBeVisible();
+  expect(within(card).getByText("Calloway identity provider")).toBeVisible();
   expect(within(card).getByText("2 providers")).toBeVisible();
   expect(remove).toHaveFocus();
 });

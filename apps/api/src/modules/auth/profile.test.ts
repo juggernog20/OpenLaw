@@ -64,12 +64,12 @@ describe("display name and avatar (better-auth /update-user)", () => {
       method: "POST",
       url: "/api/auth/update-user",
       cookies,
-      payload: { name: "Blair W. Wentworth" },
+      payload: { name: "Devon W. Calloway" },
     });
     expect(res.statusCode, res.body).toBe(200);
 
     const who = await me(cookies);
-    expect(who.json().user.displayName).toBe("Blair W. Wentworth");
+    expect(who.json().user.displayName).toBe("Devon W. Calloway");
 
     const rows = (await rowsFor("user.display_name_changed")).slice(before);
     expect(rows).toHaveLength(1);
@@ -79,7 +79,7 @@ describe("display name and avatar (better-auth /update-user)", () => {
       entityId: userId,
       actorId: userId,
       visibility: "admin_only",
-      payload: { field: "display_name", old: ADMIN.displayName, new: "Blair W. Wentworth" },
+      payload: { field: "display_name", old: ADMIN.displayName, new: "Devon W. Calloway" },
     });
   });
 

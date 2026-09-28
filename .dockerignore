@@ -3,7 +3,6 @@ node_modules
 **/node_modules
 **/dist
 **/.turbo
-designs
 docs/**
 !docs/user-guides
 !docs/user-guides/**

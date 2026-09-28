@@ -155,7 +155,7 @@ const CONTRACT_TYPE_OPTIONS = Object.entries(FIXED_TYPE_NAMES).map(([kind, displ
 const ADMIN = {
   id: "u1",
   email: "admin@example.com",
-  displayName: "Blair Wentworth",
+  displayName: "Devon Calloway",
   role: "administrator",
 };
 const MEMBER = {

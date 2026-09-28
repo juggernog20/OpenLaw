@@ -831,7 +831,7 @@ describe("the editable matter record", () => {
       const business = {
         ...MEMBER,
         id: "u-business",
-        displayName: "Blair Business",
+        displayName: "Devon Business",
         role: "business_user",
       };
       stubApi({
@@ -861,12 +861,12 @@ describe("the editable matter record", () => {
       const dialog = screen.getByRole("dialog", { name: label });
       const picker = within(dialog);
       if (key === "managerId") {
-        expect(picker.queryByRole("button", { name: "Blair Business" })).not.toBeInTheDocument();
+        expect(picker.queryByRole("button", { name: "Devon Business" })).not.toBeInTheDocument();
       } else {
-        expect(picker.getByRole("button", { name: "Blair Business" })).toBeInTheDocument();
+        expect(picker.getByRole("button", { name: "Devon Business" })).toBeInTheDocument();
       }
       await user.type(picker.getByRole("textbox", { name: "Search people" }), "Mina");
-      expect(picker.queryByRole("button", { name: "Blair Business" })).not.toBeInTheDocument();
+      expect(picker.queryByRole("button", { name: "Devon Business" })).not.toBeInTheDocument();
       await user.click(picker.getByRole("button", { name: "Mina Member" }));
       expect(await picker.findByRole("alert")).toHaveTextContent("Please try again.");
       expect(trigger).toHaveTextContent("Unassigned");

@@ -16,8 +16,8 @@ export const ORG = {
 
 /** The Administrator the instance is set up with. */
 export const ADMIN = {
-  email: `blair@${ORG.domain}`,
-  displayName: "Blair Wentworth",
+  email: `devon@${ORG.domain}`,
+  displayName: "Devon Calloway",
   password: "correct-horse-battery",
   title: "General Counsel",
 };
@@ -465,7 +465,7 @@ export const ENTITIES = [
 
 /** The people recorded against Entities as Officers (ENT-001). */
 export const OFFICER_NAMES = [
-  "Blair Wentworth",
+  "Devon Calloway",
   "Daniel Okafor",
   "Helena Marsh",
   "Victor Anand",

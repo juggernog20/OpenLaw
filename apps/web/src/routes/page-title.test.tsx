@@ -13,8 +13,8 @@ import { json, renderAt, stubApi } from "../testing/helpers";
 
 const signedIn = {
   id: "u1",
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   role: "administrator",
 };
 

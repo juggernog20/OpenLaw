@@ -143,7 +143,7 @@ actual outcome. A failed query is useful only after private names have been remo
 Organization-specific access problems go through the reader's Administrator.
 
 During triage, link duplicates, assign coverage IDs and an owner, and use the
-[existing labels](../agents/triage-labels.md). Mark missing details as `needs-info`;
+[existing labels](../../.agents/triage-labels.md). Mark missing details as `needs-info`;
 use `ready-for-agent` for a specified correction. A repeated failed query becomes a
 findability regression case. Record a no-change decision with its reason. Verify
 the correction in the same destination before closing the report.

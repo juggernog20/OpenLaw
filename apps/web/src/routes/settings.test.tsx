@@ -31,8 +31,8 @@ const MEMBER = {
 
 const ADMIN = {
   id: "u1",
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   role: "administrator",
   theme: "light",
 };
