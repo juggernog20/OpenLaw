@@ -1,0 +1,227 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+name: Release
+
+# A release is a stable version tag on main. Pushing the tag publishes the
+# two images compose.yml names and creates the GitHub release. A manual
+# run takes an existing tag and does the same work again, so a publish
+# that failed half way can be finished without moving the tag.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The existing release tag to publish again, for example v0.1.0
+        required: true
+        type: string
+
+# One run per tag. A second run for the same tag waits instead of racing
+# the first to the registry.
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+# Contents for the GitHub release, packages for ghcr.io. Every permission
+# not named here is none, id-token included.
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.tag || github.ref_name }}
+    # A fork that pushes a tag has no right to these image names.
+    if: github.repository == 'juggernog20/OpenLaw'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      # Full history and every tag. The main guard walks the history, and
+      # the moving-tag step compares this tag with the ones before it.
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+
+      # A release is a commit that main already carries. The release
+      # process fast-forwards main to dev, then tags. A tag pushed from
+      # anywhere else stops here, before anything reaches the registry.
+      # Fetch main by name so the check does not depend on what the
+      # checkout action fetched for this event.
+      - name: Refuse a tag that is not on main
+        id: commit
+        run: |
+          git fetch --force --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          sha=$(git rev-parse HEAD)
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::$TAG points at $sha, which is not on main. Fast-forward main to that commit first, then run this workflow again for $TAG."
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      # The root package.json is the source of truth for the version, and
+      # scripts/lint-versions.mjs checks every other copy against it. A tag
+      # that disagrees with it would publish an image that reports another
+      # version. Pre-release tags stop here too. This workflow never marks
+      # a GitHub release as a pre-release, and it would move `latest`.
+      - name: Refuse a tag that does not match package.json
+        id: version
+        run: |
+          version=$(jq -r .version package.json)
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::$TAG is not a stable release tag. Use vMAJOR.MINOR.PATCH, for example v0.1.0."
+            exit 1
+          fi
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::$TAG does not match the root package.json version $version. Tag the commit as v$version, or bump the version and tag again."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # `latest` and `0.1` are moving tags. They belong to the newest
+      # release, and to the newest patch of that minor. A manual run for
+      # an older tag republishes its exact version only, and does not
+      # pull `latest` back to it.
+      - name: Decide which moving tags this release takes
+        id: moving
+        run: |
+          stable=$(git tag --list 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V)
+          newest=$(printf '%s\n' "$stable" | tail -n 1)
+          newest_in_minor=$(printf '%s\n' "$stable" | awk -v p="${TAG%.*}." 'index($0, p) == 1' | tail -n 1)
+          if [ "$TAG" = "$newest" ]; then latest=true; else latest=false; fi
+          if [ "$TAG" = "$newest_in_minor" ]; then minor=true; else minor=false; fi
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "minor=$minor" >> "$GITHUB_OUTPUT"
+          echo "Publishing $TAG from $(git rev-parse HEAD). latest: $latest. major.minor: $minor." >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The image names must match the `image:` lines in compose.yml, or
+      # `docker compose pull` finds nothing. `value=` feeds the tag in by
+      # hand because a manual run starts from a branch, not a tag.
+      - name: Name the app image tags
+        id: app-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/juggernog20/openlaw
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }},enable=${{ steps.moving.outputs.minor }}
+            type=raw,value=latest,enable=${{ steps.moving.outputs.latest }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
+
+      - name: Name the doc-engine image tags
+        id: doc-engine-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/juggernog20/openlaw-doc-engine
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }},enable=${{ steps.moving.outputs.minor }}
+            type=raw,value=latest,enable=${{ steps.moving.outputs.latest }}
+          labels: |
+            org.opencontainers.image.title=openlaw-doc-engine
+            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
+
+      # linux/amd64 only. The doc-engine image carries LibreOffice, and an
+      # arm64 build under emulation would take hours. arm64 is a follow-up.
+      #
+      # provenance off, so each tag is a plain single-platform manifest
+      # that `docker compose pull` handles without surprises.
+      #
+      # The layer cache reads the scopes the CI E2E job writes. CI runs on
+      # main, the default branch, so a tag run can read them. The release
+      # scope helps only a re-run from the same tag or branch.
+      - name: Build and push the app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.app-meta.outputs.tags }}
+          labels: ${{ steps.app-meta.outputs.labels }}
+          build-args: |
+            OPENLAW_BUILD_COMMIT=${{ steps.commit.outputs.sha }}
+            OPENLAW_BUILD_DIRTY=false
+          cache-from: |
+            type=gha,scope=ci-app-v1
+            type=gha,scope=release-app-v1
+          cache-to: type=gha,scope=release-app-v1,mode=max
+
+      - name: Build and push the doc-engine image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/doc-engine/Dockerfile
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.doc-engine-meta.outputs.tags }}
+          labels: ${{ steps.doc-engine-meta.outputs.labels }}
+          cache-from: |
+            type=gha,scope=ci-doc-engine-v1
+            type=gha,scope=release-doc-engine-v1
+          cache-to: type=gha,scope=release-doc-engine-v1,mode=max
+
+      # The notes come from the matching CHANGELOG.md section when there
+      # is one, and from GitHub's generated notes when there is not. The
+      # section heading may be `## 0.1.0`, `## v0.1.0`, `## [0.1.0]` or
+      # any of those followed by a date. A release that already exists is
+      # edited instead, so a manual run can finish a failed publish.
+      - name: Create or update the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+          LATEST: ${{ steps.moving.outputs.latest }}
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          : > "$notes"
+          if [ -f CHANGELOG.md ]; then
+            awk -v version="$VERSION" '
+              /^## / {
+                if (found) exit
+                heading = substr($0, 4)
+                sub(/^\[/, "", heading)
+                sub(/^v/, "", heading)
+                if (index(heading, version) == 1) {
+                  rest = substr(heading, length(version) + 1)
+                  if (rest == "" || rest ~ /^( |\])/) { found = 1; next }
+                }
+              }
+              found { print }
+            ' CHANGELOG.md > "$notes"
+          fi
+
+          if grep -q '[^[:space:]]' "$notes"; then
+            echo "Release notes: the CHANGELOG.md section for $VERSION."
+            has_notes=true
+          else
+            echo "Release notes: no CHANGELOG.md section for $VERSION, so GitHub generates them."
+            has_notes=false
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            args=(--title "$TAG" --prerelease=false --latest="$LATEST")
+            if [ "$has_notes" = true ]; then args+=(--notes-file "$notes"); fi
+            gh release edit "$TAG" "${args[@]}"
+          else
+            args=(--title "$TAG" --verify-tag --latest="$LATEST")
+            if [ "$has_notes" = true ]; then
+              args+=(--notes-file "$notes")
+            else
+              args+=(--generate-notes)
+            fi
+            gh release create "$TAG" "${args[@]}"
+          fi

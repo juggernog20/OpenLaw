@@ -62,6 +62,36 @@ and `origin/dev`; fetch first when those refs are stale. `BASELINE=<ref>` explic
 selects a local baseline, but cannot select the candidate itself. A repository with
 no distinct baseline fails selection rather than claiming to have tested an upgrade.
 
+## Releases
+
+`.github/workflows/release.yml` runs when a `vX.Y.Z` tag is pushed. It checks out the
+tag and applies two guards before it publishes anything. The tagged commit must be an
+ancestor of `origin/main`, which the workflow fetches by name. The tag must equal `v`
+plus the root `package.json` version, and pre-release tags such as `v0.2.0-rc.1` fail
+this guard. Either failure stops the run with an error that names the fix.
+
+The workflow then builds the app and doc-engine images from the same Dockerfiles as
+E2E and pushes them to `ghcr.io/juggernog20/openlaw` and
+`ghcr.io/juggernog20/openlaw-doc-engine`. Each image gets the exact version, the
+major.minor tag and `latest`, for linux/amd64 only. The two moving tags go only to the
+newest release, so a run for an older tag republishes its exact version and nothing
+else. The app image records the tagged commit through `OPENLAW_BUILD_COMMIT`. Builds
+read the E2E layer caches. Last, the workflow creates the GitHub release. Its notes are
+the matching `## X.Y.Z` section of `CHANGELOG.md`, or GitHub's generated notes when no
+such section exists.
+
+To finish a publish that failed, run the workflow by hand from the Actions tab and give
+it the existing tag, such as `v0.1.0`:
+
+```sh
+gh workflow run release.yml --ref main -f tag=v0.1.0
+```
+
+The run checks out that tag, applies the same guards and pushes the same image tags
+again. If the GitHub release already exists, it edits the release instead of failing.
+A tag pushed before main was fast-forwarded fails the first guard. Fast-forward main,
+then run the workflow this way. Do not move the tag.
+
 ## Measuring changes
 
 Each test shard uploads a seven-day `timings-*` artifact containing Turbo's run
