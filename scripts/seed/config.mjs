@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The configuration a legal team of this size would have built up.
  *
  * An install ships with a workable taxonomy and nothing else. What makes

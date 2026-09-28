@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Putting files onto records.
  *
  * One helper per shape of upload, because the multipart parts have to be

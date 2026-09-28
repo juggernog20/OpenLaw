@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The group structure: our own companies, and the paper that goes with
  * them (DD-008, ENT-001 to ENT-004).
  *

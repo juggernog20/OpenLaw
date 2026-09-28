@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The paper the seeded instance holds.
  *
  * A document panel with nothing in it reviews badly, and so does one

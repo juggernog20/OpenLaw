@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The know-how the team keeps (KNW-001 onward).
  *
  * Knowledge is the one destination whose value is entirely in its

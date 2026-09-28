@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Matters: the legal work whose deliverable is not a signed document
  * (DD-018, MTR-001 onward).
  *

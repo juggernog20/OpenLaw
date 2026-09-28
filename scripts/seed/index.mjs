@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Fills a dev instance with a fully developed organisation.
  *
  *   pnpm seed:demo

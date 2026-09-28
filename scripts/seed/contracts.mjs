@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The contract pipeline (CTR-001 onward).
  *
  * The biggest of the seed's phases, and the one a UX review spends most

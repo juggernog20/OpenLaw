@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* An OpenAI-compatible stand-in, so the seeded instance holds real
  * Analysis runs (CTR-008).
  *

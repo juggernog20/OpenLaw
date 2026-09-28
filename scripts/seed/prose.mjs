@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The words inside the files.
  *
  * Every generated Contract document says the same seven things in the

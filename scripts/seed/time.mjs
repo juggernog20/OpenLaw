@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Dates, relative to the day the seed runs.
  *
  * Everything the seed writes is anchored to today rather than to a fixed

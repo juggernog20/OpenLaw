@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Filling custom Fields without guessing which ones a record can hold.
  *
  * A value is only accepted for a Field the record's Type actually

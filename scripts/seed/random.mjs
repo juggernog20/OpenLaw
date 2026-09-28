@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Deterministic randomness for the demo seed.
  *
  * Every run with the same seed must produce the same instance. Two
