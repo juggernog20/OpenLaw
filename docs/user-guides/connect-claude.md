@@ -44,11 +44,14 @@ Summarize @openlaw:openlaw://contracts/C-12
 
 Replace `C-12` with a Contract you can open. The Contracts Toolset must be in
 your grant. Claude Code reads the resource and adds its content to the conversation.
+OpenLaw refuses the address if Contracts is not in your grant or you cannot open
+the Contract. To add a Toolset, connect again and select it on the consent page.
 See the [address list](connect-headless-client.md#read-resources-and-get-prompts)
 for Matters, Requests, Entities, Knowledge Items and Document Versions.
 The resource keeps the same record access as the matching Tool.
 
-Type `/` to find the two OpenLaw prompts. Run either command:
+Type `/` to find the two OpenLaw prompts. Claude Code lists them as
+`/openlaw:triage_inbox` and `/openlaw:summarize_record`. Run either command:
 
 ```text
 /openlaw:triage_inbox
@@ -56,6 +59,7 @@ Type `/` to find the two OpenLaw prompts. Run either command:
 ```
 
 The triage prompt requires the Requests Toolset and a Legal User account.
+A Business User does not see it.
 It reads up to 25 Requests by default. Add a limit from 1 to 100 after the command
 to change that number, such as `/openlaw:triage_inbox 10`.
 It proposes a Disposition, type, urgency and assignee for each Request.
@@ -66,11 +70,13 @@ and submit the Convert dialog in OpenLaw yourself.
 
 The summary prompt needs one record address. Use a Contract, Matter, Request,
 Entity or Knowledge Item that your grant and account can read.
+Claude Code splits prompt arguments on spaces, so use the address form, not `contract C-12`.
 It summarizes the embedded record and identifies missing information.
 It does not change the record. Business Users can use it within their Portal access.
 See [Claude Code's resources and prompts](https://code.claude.com/docs/en/mcp#use-mcp-resources).
 
-In claude.ai, open **+ → Connectors** and the OpenLaw attachment menu.
+In claude.ai, select **+** in the message box, then **Connectors**. Hover over
+**Add to** and your connector's Name, such as **Add to OpenLaw**, to open its attachment menu.
 The menu shows the resources and prompts available through your connection.
 The views include Inbox, My Tasks and vocabulary when your grant permits them.
 Individual records use addresses, so the menu is not a list of every record.

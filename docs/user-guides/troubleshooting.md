@@ -52,9 +52,11 @@ Check the named person and whether the Approval Request is still Pending. Only t
 
 ## Electronic signing is unavailable or the executed copy is missing
 
-Check your role, the Contract's archive state, its primary Document, and whether a live Envelope already exists. Ask your Administrator whether the Signing connector is enabled. Follow [electronic signing](electronic-signing.md) for the permitted action and its result. After an uncertain send, reload the Envelope list before retrying.
+Open the Contract's **Signatures** tab. Check your role, the Contract's archive state, its primary Document, and whether a live Envelope already exists. Ask your Administrator whether the Signing connector is enabled. Follow [electronic signing](electronic-signing.md) for the permitted action and its result.
 
-A **Signed** Envelope can still be waiting for the executed file to be stored. Check **Executed copy** and the Document Version rather than relying on the Envelope label alone. If filing failed, follow the guide's recovery or [manual signing](manual-signing.md). Manual hand-off is available without the connector. Provider connection and callback failures need Administrator/operator investigation; user workflow guidance is not evidence that a particular provider connection is healthy.
+An Envelope marked **Creation uncertain — not confirmed sent** still holds the reservation. Do not try another send. Wait for recovery and select **Refresh status**. OpenLaw does not create another provider Envelope for the same round. If the tab says **Automatic recovery has stopped**, ask your Administrator to resolve the Envelope.
+
+A **Signed** Envelope can show **Filing the signed copy…** while OpenLaw stores the returned file. Wait for **Executed copy**, then check the Document Version rather than relying on the Envelope label alone. A round that does not complete the Contract shows **Partially signed copy** instead. That file is not marked as executed, and the Contract stays in the Signature Stage. If the row shows **The signed copy could not be filed. Upload it to the record instead.**, follow the guide's recovery or [manual signing](manual-signing.md). Manual hand-off is available without the connector. Provider connection and callback failures need Administrator/operator investigation; user workflow guidance is not evidence that a particular provider connection is healthy.
 
 ## Analysis is missing, fails, or keeps an earlier value
 
@@ -74,7 +76,7 @@ Purple borders and **Unverified** identify AI-written values. A sparkle opens sa
 
 ## An API key or connected Client stops working
 
-Open **API keys** from **Personal** in staff Settings, or from **Notification settings** in the Portal. Read the key's **Status**. An **Expired** or **Revoked** key no longer works. A **Denied** or **Cancelled** request issued no key. In each case, request a new key. A key you did not copy before closing **Your key is ready** cannot be shown again; revoke it and request another. If **Request a key** is absent, ask an Administrator to check **Enable MCP** and your group's **API keys** switch. A refused write can mean the organization is **Read-only** or the key has Read scope.
+Open **API keys** from **Personal** in staff Settings, or from **Notification settings** in the Portal. Read the key's **Status**. An **Expired** or **Revoked** key no longer works. A **Denied** or **Cancelled** request issued no key. In each case, request a new key. A key you did not copy before closing **Your key is ready** cannot be shown again; revoke it and request another. If **Request a key** is absent, ask an Administrator to check **Enable MCP** and your group's **API keys** switch. **No Toolsets are available for your account.** means the Toolsets your Administrator allows include none that your role can use. Ask an Administrator to enable one. A refused write can mean the organization is **Read-only** or the key has Read scope.
 
 An OAuth Client appears under **Connected Clients** on the same page. **Disconnect** and then **Revoke** end its access at once. The Client needs a new consent to connect again. Follow [fix a connection or stop access](connect-headless-client.md#fix-a-connection-or-stop-access) or [Connect Claude](connect-claude.md#disconnect-or-fix-a-connection). Never paste a key into a report.
 

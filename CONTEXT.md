@@ -29,7 +29,7 @@ An immutable file snapshot in a document's strictly linear chain; corrections ap
 _Avoid_: revision, draft, copy
 
 **Document type**:
-What the team calls a Document Version, picked from its owning module's list (Matters, Contracts, Entities). Optional. The six Contract negotiation types are fixed because code reads the kind they stand for. A Knowledge Item's files have no list; they show the item's Knowledge type [DOC-015].
+What the team calls a Document Version, picked from its owning module's list (Matters, Contracts, Entities). Optional. The seven Contract negotiation types, including Partially signed, are fixed because code reads the kind they stand for. A Knowledge Item's files have no list; they show the item's Knowledge type [DOC-015].
 _Avoid_: document kind (the stored kind follows the type), category, tag
 
 **Comparison**:

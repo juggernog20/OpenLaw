@@ -15,7 +15,7 @@ Groups appear by name; they do not have a custom order or a sequential approval 
 
 As an Administrator or Legal Team Member with access to an unarchived Contract:
 
-1. Open **Approvals**, then **Approvals & signing**.
+1. Open the Contract's **Approvals** tab.
 2. Select **Apply group** and choose the **Approver group**. If the Contract has a default group, the dialog starts on it.
 3. Review the named people and any already-pending requests that will be skipped. Select **Apply group** in the dialog and check the resulting **Pending** rows.
 

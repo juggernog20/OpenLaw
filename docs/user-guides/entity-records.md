@@ -9,10 +9,11 @@ Sign in as a Legal Team Member or Administrator and open an Entity you can reach
 ## Record Officers and resignations
 
 1. On **Overview**, find **Directors & Officers** and select **Add director or officer**.
-2. Enter **Director or officer name**, choose **Role**, and enter **Appointed on** if known. Optionally select **Linked user**; an Officer does not need an OpenLaw account.
-3. Select **Add**. Check the saved name, role, and date.
-4. Correct an existing row's text or date and move focus away to save. Choosing another role or linked user saves that selection.
-5. To retain a resignation, enter **Resigned on**. Turn on **Show former** to read former Officers. Clear the resignation date if it was entered by mistake.
+2. In **Director or officer name**, start typing. The list shows matching OpenLaw users. Select a user to fill the name and link that user. A linked name shows a person icon.
+3. To record someone without an OpenLaw account, type the full name and choose **Use "Helena Marsh" without linking a user**, or press Enter. Typing over a name removes its user link.
+4. Choose **Role** and enter **Appointed on** if known. **Add** is available when the name and role have values. Select **Add**, then check the saved name, role, and date.
+5. To correct an existing row, change its name the same way, or change its date and move focus away. The row saves when you select a name or leave the field. Choosing another role saves that selection. If a save fails, the row shows the saved value again.
+6. To retain a resignation, enter **Resigned on**. Turn on **Show former** to read former Officers. Clear the resignation date if it was entered by mistake.
 
 A resignation date cannot precede the appointment date. The remove control deletes the Officer entry. Its label names the person, for example **Remove Ravi Menon**. Use it only for an entry made in error; use the resignation date when the appointment should remain in the corporate history. Linking a user does not grant that person Entity access.
 

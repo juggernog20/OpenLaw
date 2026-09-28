@@ -1,11 +1,11 @@
 # Sign in to the Business Portal
 
-Use the Portal to send Requests to Legal, follow your own conversations, work on Contracts and Matters shared with you, and answer approval requests. Ask Legal for your organization's Portal address. You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts.
+Use the Portal to send Requests to Legal, follow your own conversations, work on Contracts and Matters shared with you, and answer approval requests. Ask Legal for your organization's Portal address. You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts. If the Administrator removes the last allowed email domain, OpenLaw turns off every Business Portal sign-in method. The sign-in page then shows **Sign-in is unavailable. Contact your administrator.**, and existing accounts cannot sign in either. Ask Legal to add a domain and turn a sign-in method back on.
 
 ## Get a sign-in link
 
 1. Open the Portal address. The sign-in page shows your organization's name, and its logo if one is saved. If you do not see your organization's name, check the address with Legal.
-2. If the page shows a password form or **Continue with single sign-on**, select **Email me a sign-in link**. The page changes to **Get a sign-in link**. If the page already shows **Get a sign-in link**, go to the next step.
+2. If the page shows a password form or **Continue with single sign-on**, with or without an **Email** field above it, select **Email me a sign-in link**. The page changes to **Get a sign-in link**. If the page already shows **Get a sign-in link**, go to the next step.
 3. Enter your work address in **Email**.
 4. Select **Send link**.
 5. When **Check your email** appears, open the sign-in email for that address.
@@ -25,7 +25,7 @@ Do not reuse an old email to return to the Portal after signing out. Request a f
 
 ## When email links are switched off
 
-The sign-in page does not offer **Email me a sign-in link**. The link is also absent when OpenLaw cannot send email. Use the method that the page shows instead. If it shows **Email** and **Password**, enter them and select **Sign in**. If it shows **Continue with single sign-on** and you have a password, select **Sign in with a password** first. If you do not have a password yet, select **Set up or reset your password**, enter **Email**, and select **Send password setup link**. Follow the email's link within one hour, set the password, then sign in. If the page offers **Continue with single sign-on**, complete that sign-in with your organization's account. If the page says **Sign-in is unavailable. Contact your administrator.**, ask Legal or the Administrator for help.
+The sign-in page does not offer **Email me a sign-in link**. The link is also absent when OpenLaw cannot send email. Use the method that the page shows instead. If it shows **Email** and **Password**, enter them and select **Sign in**. If it shows **Continue with single sign-on** and you have a password, select **Sign in with a password** first. If you do not have a password yet, select **Set up or reset your password**, enter **Email**, and select **Send password setup link**. Follow the email's link within one hour, set the password, then sign in. If the page offers **Continue with single sign-on**, complete that sign-in with your organization's account. If your organization has more than one identity provider, enter your work address in **Email** first, then select **Continue with single sign-on**. If no provider serves your email domain, the page shows **No single sign-on provider is set up for {domain}. Check the address or contact your administrator.** If the page says **Sign-in is unavailable. Contact your administrator.**, ask Legal or the Administrator for help.
 
 Two-factor authentication applies to every sign-in method, including sign-in links. If your organization requires it for the Portal, OpenLaw asks you to set up an authenticator app before the Portal opens. After that, it asks for a code each time you sign in.
 

@@ -8,7 +8,7 @@ Use a Linux host with Git, OpenSSL, and [Docker Engine with the Compose plugin](
 
 Prepare a browser-facing hostname and TLS reverse proxy for a team deployment. The hostname can be private to the office network and VPN; public internet access is not required. For a private installation, follow [Deploy on a private VM](deployment-configuration.md#deploy-on-a-private-vm) to arrange DNS, certificates, and restricted port bindings before you start the stack. You also need an SMTP relay for invitations, sign-in links, and the welcome wizard. Creating the initial Administrator account does not send email, but the welcome wizard cannot finish until outbound email is configured. Choose an unused app port and an installation directory that will stay in place. The Compose project name identifies the installation's database and file volumes: keep it stable across restarts and upgrades.
 
-This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `067c1646829df85e62b809ee9157921e867c84e7`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
+This documentation candidate uses a committed source build, not an assumed published release. Its application revision is `4ca41822b685a2a1e58a38b4f25e421cf735c54e`. The commands below build that revision and give its app and document-engine images their own tags. Do not substitute a moving branch or `latest` tag when reproducing this edition.
 
 ## Prepare the source and configuration
 
@@ -17,7 +17,7 @@ This documentation candidate uses a committed source build, not an assumed publi
    ```bash
    git clone https://github.com/juggernog20/OpenLaw.git openlaw
    cd openlaw
-   git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7
+   git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e
    ```
 
 2. Copy the example environment file. If `.env` already exists, inspect the existing installation before proceeding; do not replace its keys.
@@ -40,7 +40,7 @@ This documentation candidate uses a committed source build, not an assumed publi
    ```dotenv
    COMPOSE_PROJECT_NAME=openlaw
    COMPOSE_FILE=compose.yml:compose.operator.yml
-   OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7
+   OPENLAW_BUILD_COMMIT=4ca41822b685a2a1e58a38b4f25e421cf735c54e
    OPENLAW_BUILD_DIRTY=false
    BASE_URL=https://legal.example.com
    PORT=3000

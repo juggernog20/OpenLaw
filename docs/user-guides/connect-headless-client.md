@@ -54,19 +54,22 @@ to an address. Each resource uses the matching Tool's grant and record access.
 | `openlaw://contracts/{number}`            | One Contract                                                  |
 | `openlaw://matters/{number}`              | One Matter                                                    |
 | `openlaw://requests/{number}`             | One Request                                                   |
-| `openlaw://entities/{id}`                 | One Entity                                                    |
+| `openlaw://entities/{id}`                 | One Entity, for Legal Users                                   |
 | `openlaw://knowledge/{id}`                | One Knowledge Item                                            |
 | `openlaw://document-versions/{versionId}` | Extracted text from one Document Version                      |
 | `openlaw://inbox`                         | The Inbox for a Legal User, or a Business User's own Requests |
-| `openlaw://tasks/mine`                    | Tasks assigned to you                                         |
+| `openlaw://tasks/mine`                    | Tasks assigned to you, for Legal Users                        |
 | `openlaw://vocabulary`                    | The organization's configured vocabulary                      |
 
 Replace `{number}` with a positive record number, with or without its prefix.
 For example, `openlaw://contracts/C-12` and `openlaw://contracts/12` read the same Contract.
 Replace `{id}` or `{versionId}` with the UUID returned by the matching Tool.
-Do not add a query or fragment to the address.
+OpenLaw refuses an address with a query, a fragment or an extra path segment.
 Records and views return JSON. Document Version text returns plain text.
-If that text has a continuation, call `openlaw_document_read` with the supplied cursor.
+When more text exists, the text ends with the `openlaw_document_read` arguments,
+including a `cursor`. Call that Tool with them to read the next part.
+A refused read returns `isError` and a message that starts with the reason, such as
+`invalid_arguments`, `tool_outside_grant` or `not_found`.
 
 Call `prompts/list` to see the prompts your grant permits. Call `prompts/get`
 with one of these names and its arguments. Argument values are strings.
@@ -77,6 +80,8 @@ with one of these names and its arguments. Argument values are strings.
 | `summarize_record` | Required `record`, such as `"openlaw://contracts/C-12"` or `"contract C-12"` | A reached record in a granted Toolset |
 
 Summary accepts a Contract, Matter, Request, Entity or Knowledge Item.
+Business Users cannot summarize an Entity.
+A `limit` outside 1 to 100 is refused.
 Each prompt returns instructions and an embedded resource for your Client to use.
 Getting a prompt does not run a model or change a record.
 Triage asks for confirmation before assignments and comments.
@@ -84,8 +89,13 @@ It leaves conversion to the person's Convert dialog. Summary requests no changes
 Each resource read or prompt get counts as one call against your credential's rate limit.
 The embedded read does not count again.
 
-Modern Clients can use `subscriptions/listen` for
+Modern Clients on protocol revision `2026-07-28` can send `subscriptions/listen` for
 [change notifications](configure-mcp.md#receive-change-notifications).
+In `params.notifications`, set `toolsListChanged`, `resourcesListChanged` and
+`promptsListChanged` to `true`. List up to 100 record or Inbox addresses in
+`resourceSubscriptions`. The stream then receives list-changed notifications and
+`notifications/resources/updated` for the subscribed records you can reach.
+Revoking the key closes the stream.
 Legacy Clients reload lists by hand. Read a resource again to get current content.
 
 ## Connect Claude Cowork or Claude Desktop
@@ -131,6 +141,7 @@ The claude.ai website and mobile apps reach a custom connector only at a public 
 | What you see                                          | What to check or do                                                                                                                                                                                                                           |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | No Request a key button                               | Ask the Administrator to turn on MCP and API keys for your account group.                                                                                                                                                                     |
+| No Toolsets are available for your account.           | Ask the Administrator to add a Toolset your account type can use to the Toolset ceiling.                                                                                                                                                      |
 | Pending approval                                      | Ask an Administrator to handle the request in Your approvals or the MCP section. To withdraw it, select **Cancel request** on its row and confirm.                                                                                            |
 | Denied                                                | Read the Administrator's note on the row. A denial is final. Send a new request if you still need a key.                                                                                                                                      |
 | Key dialog closed before you saved it                 | Revoke that key and request another. Reloading cannot recover it.                                                                                                                                                                             |
@@ -141,4 +152,4 @@ The claude.ai website and mobile apps reach a custom connector only at a public 
 | An openlaw configuration already exists               | Run `claude mcp remove --scope user openlaw`, then repeat the add command.                                                                                                                                                                    |
 | Claude Cowork or Claude Desktop does not list openlaw | Check that the JSON is valid and that the app was quit and started again. Open the log for `openlaw` from **Settings → Developer**. An `npx` error means Node.js is absent.                                                                   |
 
-To stop this Client, open **API keys** and select **Revoke** on its row. In **Revoke API key**, select **Revoke**. Its next request is refused, and the row says **Revoked**. Removing a Client configuration alone does not revoke its OpenLaw key.
+To stop this Client, open **API keys** and select **Revoke** on its row. In **Revoke API key**, select **Revoke**. Its next request is refused, any open listen stream closes, and the row says **Revoked**. Removing a Client configuration alone does not revoke its OpenLaw key.

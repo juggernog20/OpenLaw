@@ -12,7 +12,7 @@ On the **Auto-Docs** page, choose **Download starter template (.docx)** beside t
 
 ## Mark a Placeholder
 
-Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts. Edit the field's label, type, and help from its card. **Template placeholder** connects the field to the marker in Word; change it only when matching a different marker.
+Type a name in double braces where the answer goes, for example `{{counterparty_name}}`. Start the name with a lowercase letter, then use lowercase letters, digits, and underscores. Keep it to 120 characters. Type a Placeholder in the body, a header, a footer, a footnote, or an endnote. Each new Placeholder gets its own form field on upload, in the order the file on the left shows them. The body comes first, then the other parts. To edit a field, select **Edit** followed by the field's label in its row under **Fields**, for example **Edit Counterparty name**. The editor opens under that row. Change **Label**, **Type**, and **Help text** there. Select the same control again to close the editor. **Template placeholder** connects the field to the marker in Word; change it only when matching a different marker.
 
 ## Format a value
 
@@ -35,11 +35,16 @@ OpenLaw also refuses a Word file that holds a macro, a link to content outside t
 
 ## Mark a Block
 
-Wrap a span of text in `{{#block name}}` and `{{/block}}` to make a Block. A Block keeps its own formatting and is included unless a Clause rule leaves it out. Write the rule in the **Form** section: open the Block under **Clauses**, choose **When a rule matches**, and pick the form field, the operator, and the value. A Block with no rule is always included.
+Wrap a span of text in `{{#block name}}` and `{{/block}}` to make a Block. A Block keeps its own formatting and is included unless a Clause rule leaves it out. Write the rule in the **Form** section. Under **Clauses**, select **Edit the rule for** followed by the Block's name in its row, for example **Edit the rule for confidentiality**. The editor opens under that row. Choose **When a rule matches**, then pick the **Form field**, the **Operator**, and the value. With **Is one of** on a date, number, or currency field, enter each value in its own box. Use **Add value** for another box. Use **Remove value** followed by its number, for example **Remove value 2**, to delete one. A Block with no rule is always included.
 
 Every Block must close. An upload with an open Block, an unclosed brace, or a name that does not follow the naming rules above is refused, and the refusal quotes the text to fix.
 
 ## Upload a new version
+
+1. Select **Upload version**. The dialog opens on a drop zone.
+2. Drag one `.docx` file onto **Drop your Word template here**, or select **Choose file**. The dialog shows the file name and size. Use **Change file** or **Remove file** to pick again. If you pick more than one file, or a file that is not `.docx`, the dialog shows **Choose a single Word document (.docx).** and keeps no file.
+3. Select **Upload**. If OpenLaw refuses the template, the dialog shows the reason and uploads nothing.
+4. Read the report. It shows **File version N uploaded**, the number of **Placeholders detected** and **Blocks detected**, and how many form fields the upload created. When fields lost their Placeholder, it also says how many and that your existing fields have been kept for review. Select **Done**.
 
 Each upload adds a file version. A new Placeholder gets a new form field. A field whose Placeholder is gone stays on the form, marked **No Placeholder in file version N**, so a mapped answer is never dropped without you seeing it. Remove the field or put the Placeholder back.
 

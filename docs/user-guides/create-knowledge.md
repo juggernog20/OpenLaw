@@ -34,7 +34,7 @@ Guidance can stand alone without a Document. Do not use raw HTML for formatting.
 
 The primary choice changes presentation; it does not make supporting files private. When an item becomes available in the Portal, readers can download the current Version of every Document on it, except a Document marked Confidential. A Confidential Document stays off the Portal, and on the staff record only Administrators can open it. Check all supporting files before [publishing](publish-knowledge.md), and see [who can read a Confidential file](publish-knowledge.md#before-you-start).
 
-A Knowledge Item's Documents use a flat list. Knowledge Folders organize whole items, not the files inside an item. Use the Document row's actions for [archive, restore, and permanent deletion](archive-and-delete-documents.md). Archiving a Document preserves its Versions and designation; restoring it returns that Document to the ordinary list. Archiving does not choose a replacement primary Document.
+A Knowledge Item's Documents use a flat list. Knowledge Folders organize whole items, not the files inside an item. Use the Document row's actions to [archive, restore, or delete a Version](archive-and-delete-documents.md). Archiving a Document preserves its Versions and designation; restoring it returns that Document to the ordinary list. Archiving does not choose a replacement primary Document. Only an Administrator sees **Delete version**. Deleting the last Version of the primary Document removes it and clears the primary choice; OpenLaw does not choose another.
 
 ## Organize the library
 

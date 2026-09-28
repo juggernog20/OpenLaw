@@ -23,7 +23,7 @@ The dialog uploads attached files after the Contract exists. If a file fails, th
 
 ## Record the parties and ownership
 
-On **Overview**, the **Contract** card shows the built-in Rows of the type's Form, in Form order. **Title** and **Contract type** come first. The other Rows can include **Description**, **Our entity**, **Counterparties**, **Department**, **Region**, **Priority**, **Risk**, the term Rows, **Value**, and **Needed by**. A Row under a Branch whose condition does not hold appears only while it holds a value. **Legal Owner**, **Business Owner**, **Days remaining**, **Last renewal**, and the Confidential switch follow the Rows. The Fields attached to the type are on **Fields**, not here.
+On **Overview**, the **Contract** card shows the built-in Rows of the type's Form, in Form order. **Title** and **Contract type** come first. The other Rows can include **Description**, **Our entity**, **Counterparties**, **Department**, **Region**, **Priority**, **Risk**, the term Rows, **Value**, and **Needed by**. A Row under a Branch whose condition does not hold appears only while it holds a value. **Days remaining**, **Last renewal**, and the Confidential switch follow the Rows. **Legal Owner** and **Business Owner** are in their own section above the **Contract** card. The Fields attached to the type are on **Fields**, not here.
 
 Choose **Legal Owner** from the active Legal Team Members and Administrators. Choose **Business Owner** from any active person. **Unassigned** clears either owner. On a Confidential Contract, only an Administrator, the Contract's creator, or its Legal Owner can change the Legal Owner or name a Business Owner.
 
