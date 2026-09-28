@@ -9,13 +9,13 @@ This file records the notable changes in each OpenLaw release. The format follow
 ### Upgrading
 
 - This release adds no database migrations, environment variables or Compose changes. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)).
-- API clients that send for signature must handle a new refusal. `POST /api/v1/contracts/{number}/envelopes` and `.../envelopes/prepare` now return 409 `urn:openlaw:problem:approval-soft-gate` when the send would move a Contract past the approval Stage with approvals pending or rejected. Send again with `overrideSoftGate: true` to go ahead and record the override. (#1207)
+- API clients that send for signature must handle a new refusal. `POST /api/v1/contracts/{number}/envelopes` and `.../envelopes/prepare` now return 409 `urn:openlaw:problem:approval-soft-gate` when the send would move a Contract past the approval Stage while an Approval request is pending or rejected. Send again with `overrideSoftGate: true` to go ahead and record the override. (#1207)
 - `DELETE` on the last identity provider now returns 409 while Legal Users or Business Users can sign in only with SSO. Turn on another sign-in method for that group first. (#1208)
 - An empty allowed-domain list no longer turns Business sign-in off. To stop Business Users signing in, turn off their sign-in methods in Settings, Authentication. (#1209, #1210)
 
 ### Changed
 
-- Send for signature meets the soft gate. The Signatures card asks you to confirm before a send moves a Contract past approval with approvals still open, and the Activity records the override. (#1207)
+- Send for signature meets the Soft gate. The Signatures card asks you to confirm before a send moves a Contract past approval while an Approval request is pending or rejected, and the Activity records the override. (#1207)
 - A send moves the Status forward only. An Active or Ended Contract keeps its Status and end date when you send it for signature. (#1207)
 - The allowed-domain list controls only who can create a new Business User account. The Business card in Settings and in the welcome wizard shows the sign-in methods that apply when the list is empty. (#1209, #1210)
 - On an archived owning record, an Administrator can delete any Version, including the current one. (#1211)
