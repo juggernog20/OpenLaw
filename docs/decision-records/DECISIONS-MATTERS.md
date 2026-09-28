@@ -343,7 +343,7 @@ Outside counsel touch matters in two distinct ways: participating in the work (d
 ### Rationale
 
 1. **The Contributor role already fits** external counsel exactly: matter-scoped access, no browse rights. Zero-cost win.
-2. **E-billing is an entire product category** (SimpleLegal, Brightflag) — it would dominate the roadmap and drags in AP-system integrations.
+2. **E-billing is an entire product category** (with dedicated vendors) — it would dominate the roadmap and drags in AP-system integrations.
 3. **Manually-maintained money fields mislead** — a half-measure (budget + spend-to-date columns) goes stale and gives false confidence; better to have nothing than wrong numbers.
 4. Nothing in the current model blocks a future spend module; it would attach to matters and (likely) a law-firm flavored counterparty record.
 
@@ -605,14 +605,14 @@ Point 3 (per-type attachment with order) now lives on the type's Form, one order
 
 ### Context
 
-Competitive research (2026-08-02, Xakia/LawVu/Dazychain + enterprise ELM + intake-first generation) showed priority/urgency and a separate risk rating as first-class matter fields in effectively every product: Xakia's legal-risk dial (low→critical) and priority, LawVu's urgent flag + 1–5 risk slider, Dazychain's risk-assigned-at-triage, Tonkean's triage on urgency/impact/risk. OpenLaw had neither. The choice was first-class columns vs seeded MTR-011 custom fields.
+Competitive research (2026-08-02, three small-team matter products, the enterprise ELM suites and the intake-first generation) showed priority/urgency and a separate risk rating as first-class matter fields in effectively every product: a legal-risk dial (low→critical) plus priority, an urgent flag plus a 1–5 risk slider, risk assigned at triage, and triage on urgency/impact/risk. OpenLaw had neither. The choice was first-class columns vs seeded MTR-011 custom fields.
 
 ### Decision
 
 **Both are built-in default fields** (first-class columns on `matters`):
 
 - `priority` — text enum `low | medium | high | critical` _(levels renamed per **DES-018**'s severity-ramp canon; originally `low | normal | high | urgent`)_, **not null, default `medium`**.
-- `risk` — text enum `low | medium | high | critical`, **nullable** — null means "not yet assessed", which is honest until legal triages (the Dazychain pattern: risk set at triage, not by the requester).
+- `risk` — text enum `low | medium | high | critical`, **nullable** — null means "not yet assessed", which is honest until legal triages (the matter-first pattern: risk set at triage, not by the requester).
 
 Behavior:
 
@@ -626,7 +626,7 @@ Behavior:
 1. **Universal in the market** — their absence would read as a gap in the first demo.
 2. **They drive code behavior** (triage sort, routing signals, dashboard cuts), which is the documented carve-out (per project memory) where fixed enums beat configurability.
 3. **Priority ≠ risk**: priority is "how fast", risk is "how bad if it goes wrong" — a routine filing can be urgent+low-risk; a dormant dispute can be low-priority+critical-risk. Collapsing them loses triage information.
-4. Teams wanting additional axes (complexity, strategic value à la Xakia) can add them via the **MTR-011** catalog — the built-ins set the floor, not the ceiling.
+4. Teams wanting additional axes (complexity, strategic value) can add them via the **MTR-011** catalog — the built-ins set the floor, not the ceiling.
 
 ### Alternatives considered
 
@@ -653,7 +653,7 @@ Priority and risk shipped as first-class columns and as filters/columns on the m
 
 ### Context
 
-Competitive research showed template-driven matter creation as the market's most-loved matters feature (Clio Matter Templates pre-fill fields, status, custom fields, and attach task lists with relative due dates; LawVu/Xakia/Dazychain auto-apply task templates by matter type). The choice was between hanging a single default checklist off each matter type versus a separate named template entity. The user chose the **separate template entity** — its key advantage: multiple templates per type (e.g., "Employment – Termination" and "Employment – Investigation" both on the Employment type).
+Competitive research showed template-driven matter creation as the market's most-loved matters feature (practice-management templates pre-fill fields, status, custom fields, and attach task lists with relative due dates; the matter-first products auto-apply task templates by matter type). The choice was between hanging a single default checklist off each matter type versus a separate named template entity. The user chose the **separate template entity** — its key advantage: multiple templates per type (e.g., "Employment – Termination" and "Employment – Investigation" both on the Employment type).
 
 ### Decision
 
@@ -661,7 +661,7 @@ New **`matter_templates`** entity, Admin-managed:
 
 - A template belongs to exactly one **matter type** and has a name + description.
 - A template can pre-fill: **priority**, **risk**, **custom-field values** (for fields attached to its type per **MTR-011**), and a **title prefix/pattern** (optional).
-- A template carries **template tasks**: title, **relative due date** (offset in days from matter creation, optional), **role target** (`matter_manager` or unassigned — roles, not named users, per Clio's retrofit lesson), display order. Instantiated as **MTR-005** checklist items on creation.
+- A template carries **template tasks**: title, **relative due date** (offset in days from matter creation, optional), **role target** (`matter_manager` or unassigned — roles, not named users, a retrofit lesson from the practice-management market), display order. Instantiated as **MTR-005** checklist items on creation.
 - **Creation flow**: pick type → optionally pick one of its templates (types with one template can offer it as default; templates are always optional — blank matters remain first-class).
 - Template CRUD is Admin (Matters Settings); applying a template at creation is anyone who can create matters. Template changes never retroactively alter existing matters.
 - Document folder structures as template content: **deferred to the Documents grill** (flagged there).
@@ -671,7 +671,7 @@ New **`matter_templates`** entity, Admin-managed:
 1. **Multiple named templates per type** is the real-world shape — one type, several recurring playbooks.
 2. **Relative due dates + role targeting** make templates survive personnel changes and start the deadline clock correctly.
 3. **Templates compose with, not duplicate, existing decisions**: fields come from the type (MTR-011), statuses are global (MTR-002) — the template only supplies _values_ and _tasks_.
-4. Restraint kept: no workflow triggers, no stage-change automation (Clio gates that behind top tiers; our equivalent would be a future automation surface).
+4. Restraint kept: no workflow triggers, no stage-change automation (the practice-management tools gate that behind top tiers; our equivalent would be a future automation surface).
 
 ### Alternatives considered
 
@@ -703,7 +703,7 @@ Key-date templates carry no owner, reminder schedule, or named person. They pres
 
 ### Context
 
-Enterprise research flagged required-ness as the first thing users ask of a custom-field catalog (Legal Tracker's soft-required "Profile Incomplete" flags; its conditional "smart matters"). The choice: soft-required (never blocks saving, incomplete badge) vs hard-required at creation vs nothing.
+Enterprise research flagged required-ness as the first thing users ask of a custom-field catalog (soft-required "profile incomplete" flags and conditional "smart matters" in enterprise matter management). The choice: soft-required (never blocks saving, incomplete badge) vs hard-required at creation vs nothing.
 
 ### Decision
 
@@ -720,7 +720,7 @@ Enterprise research flagged required-ness as the first thing users ask of a cust
 
 ### Alternatives considered
 
-- **Soft-required with "incomplete" badge** (the original recommendation, Tracker/Xakia pattern) — overridden by the user in favor of guaranteed data quality.
+- **Soft-required with "incomplete" badge** (the original recommendation, the enterprise and matter-first pattern) — overridden by the user in favor of guaranteed data quality.
 - **No required-ness** — rejected; catalogs without it drift empty.
 
 ### Consequences
@@ -729,7 +729,7 @@ Enterprise research flagged required-ness as the first thing users ask of a cust
 - Attaching a field as required to a type with existing matters does **not** retro-block those matters; they surface in an "incomplete" filter instead (only creation/re-type/edit paths enforce).
 - Re-typing a matter (**MTR-001**) may now prompt for newly-required fields before completing.
 - Intake conversion UI (**DD-010**) must render required fields for the chosen type at triage.
-- Warning inherited from research: deactivating/archiving a field must **never** delete data (contrast Legal Tracker, where field deactivation destroys values) — MTR-011's retention semantics already guarantee this.
+- Warning inherited from research: deactivating/archiving a field must **never** delete data (one enterprise product destroys values on field deactivation) — MTR-011's retention semantics already guarantee this.
 
 ### Addendum (2026-08-23, M22 close, [#474](https://github.com/juggernog20/OpenLaw/issues/474)) — hard-required at every write that can make a gap
 
@@ -746,7 +746,7 @@ Point 3 and rationale 4 above deferred show/hide logic. DD-028 takes it: a Branc
 
 ### Context
 
-Matters had no way to reference each other. Research: TeamConnect supports full matter hierarchies (parent objects, sub-objects); LawVu has flat linked matters. Real cases: one dispute spawning multiple proceedings; a project matter with sub-workstreams; loosely connected matters worth cross-referencing.
+Matters had no way to reference each other. Research: the enterprise ELM suites support full matter hierarchies (parent objects, sub-objects); the dual-workspace product has flat linked matters. Real cases: one dispute spawning multiple proceedings; a project matter with sub-workstreams; loosely connected matters worth cross-referencing.
 
 ### Decision
 
@@ -790,7 +790,7 @@ The hierarchy and flat-link surfaces are complete with canonical undirected pair
 
 ### Context
 
-Cycle-time reporting ("avg days to close, by type") is a named metric in every product researched, and the deferred SLA engine (**MTR-004** / `FUTURE-FEATURES.md`) will need status-transition timing. The enterprise research's cheapest lesson (via TeamConnect's phase-linked Opened On/Closed On): capture the timestamps now and reporting falls out for free.
+Cycle-time reporting ("avg days to close, by type") is a named metric in every product researched, and the deferred SLA engine (**MTR-004** / `FUTURE-FEATURES.md`) will need status-transition timing. The enterprise research's cheapest lesson (via phase-linked Opened On/Closed On timestamps in the enterprise suites): capture the timestamps now and reporting falls out for free.
 
 ### Decision
 

@@ -63,7 +63,7 @@ All three share an identical layout skeleton, type stack (Inter), spacing scale,
 
 ### Rationale
 
-1. The user explicitly likes the Warm option and considers it part of the OpenLaw identity, not an exploration. Demoting it to "considered, archived" would lose a real piece of brand character that distinguishes OpenLaw from clinical SaaS competitors (Ironclad, LinkSquares).
+1. The user explicitly likes the Warm option and considers it part of the OpenLaw identity, not an exploration. Demoting it to "considered, archived" would lose a real piece of brand character that distinguishes OpenLaw from clinical SaaS competitors.
 2. Themes 1 and 3 are clearly a matched Light/Dark pair (shared accent, shared `#0D1117` surface used as header in Light and body in Dark) — shipping them together costs almost nothing once the theming substrate exists.
 3. The cost delta of 3 themes vs 2 is small **if and only if** tokens are wired through CSS variables from the first component. Retrofitting a multi-theme system onto a hard-coded palette later is the expensive path; doing it from the start is not.
 4. The reference persona is technically curious — letting the team choose Light/Warm/Dark is a small, well-bounded customization that doesn't expand support surface (no per-user color picking, no custom themes).

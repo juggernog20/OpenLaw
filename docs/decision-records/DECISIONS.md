@@ -71,7 +71,7 @@ The reference persona is a **2–10 person in-house legal team at a 50–500 per
 
 ### Rationale
 
-1. **Underserved.** Solo counsels manage with Notion + Drive; large legal departments use Ironclad/LinkSquares/Onit. The 2–10 range has volume too large for free tooling and budget too small for enterprise CLM.
+1. **Underserved.** Solo counsels manage with Notion + Drive; large legal departments use the enterprise CLM and ELM suites. The 2–10 range has volume too large for free tooling and budget too small for enterprise CLM.
 2. **Realistic dogfooding scope.** A solo persona produces a system that doesn't generalize; a 50-person persona is too complex to dogfood.
 3. **OSS ICP fit.** Open-source self-hosted tools land best with small, scrappy, technically-curious teams.
 
@@ -229,7 +229,7 @@ Reporting and analytics remain deferred as a destination. Org-wide cuts such as 
 
 ### Context
 
-After **DD-005**, it became clear that corporate entity management (Diligent Entities / Athennian / Lextree category) is a distinct first-class need for in-house legal — managing your own entities, officers, statutory docs, trade licenses, registered agents, and renewal calendars.
+After **DD-005**, it became clear that corporate entity management (the dedicated entity-management category) is a distinct first-class need for in-house legal — managing your own entities, officers, statutory docs, trade licenses, registered agents, and renewal calendars.
 
 ### Decision
 
@@ -243,7 +243,7 @@ Add **Entities** as a fourth functional module. Includes the entity-level renewa
 ### Rationale
 
 1. Universal pain at our reference persona — every small in-house team has at least one entity with annual obligations.
-2. Adjacent commercial category (Diligent Entities, Athennian) is real and well-understood.
+2. Adjacent commercial category (dedicated entity-management products) is real and well-understood.
 3. Without entity records, contracts and matters lack a critical foreign key (the contracting entity).
 
 ### Consequences
@@ -283,7 +283,7 @@ The four modules need a clear ownership and reference model. Without it, screens
 1. Matches real legal workflow — a contract negotiation produces multiple document artifacts.
 2. Allows matters to be loose containers — some have contracts (M&A), some don't (employment dispute).
 3. Lets Documents be a top-level destination (file index across the system).
-4. Matches every successful CLM/DMS that ships today (Ironclad, LinkSquares, iManage, NetDocuments).
+4. Matches every successful CLM/DMS that ships today (the enterprise CLM and DMS products).
 
 ### Alternatives considered
 
@@ -407,7 +407,7 @@ Three intake surfaces, all feeding a single `Request` entity that is triaged int
 
 ### Rationale
 
-1. The strongest adoption signals across commercial CLMs (Lexion's email-first; Ironclad / Juro / SpotDraft / Malbek's Slack-first) and adjacent tools (Halp, Linear Asks) all point to "meet users where they are."
+1. The strongest adoption signals across commercial CLMs (email-first in one, Slack-first in four others) and adjacent tools (Halp, Linear Asks) all point to "meet users where they are."
 2. Authenticated portals fail at our persona — small target companies rarely have SSO infrastructure for non-legal employees.
 3. Truly public forms are unacceptable for legal — spam, phishing, no identity. Domain-allowlisted magic-link is the right "no-account, authenticated" pattern.
 4. `legal@` is overloaded with distribution-list and legal-notice traffic; a dedicated `intake@` address is the correct convention.
@@ -919,9 +919,9 @@ DD-029 lets a person's agent work in OpenLaw as that person. The ledger keeps th
 
 ### Context
 
-The Intake grill surfaced the foundational question of where work happens: are contracts full workspaces, or child records inside matters (LawVu-style was the assumed reference)? Five models were compared (matter-only / dual / silos / universal work item / matter-first-with-hatch), and a three-stream competitive research pass was run: matter-first products (LawVu, Xakia, Dazychain), contract-first CLMs (Ironclad, SpotDraft, Juro, LinkSquares), and intake-first platforms (Streamline AI, Checkbox, Tonkean) plus JSM as reference architecture.
+The Intake grill surfaced the foundational question of where work happens: are contracts full workspaces, or child records inside matters (the dual-workspace incumbent was the assumed reference)? Five models were compared (matter-only / dual / silos / universal work item / matter-first-with-hatch), and a three-stream competitive research pass was run: three matter-first products, four contract-first CLMs, and three intake-first platforms, plus JSM as reference architecture.
 
-Research verdicts: contract-as-workspace is unanimously validated in the CLM category (and its absence — thin contract records — is the signature complaint against matter-first products); every contract-first leader failed to build a real second workspace for non-contract work (faked tickets, exiled second apps, "coming soon" bridges, or punting to competitors); LawVu (actually dual-workspace, not matter-first) ships the dual model successfully; JSM's rules: bind the routing target at request-type configuration, and make re-typing non-lossy.
+Research verdicts: contract-as-workspace is unanimously validated in the CLM category (and its absence — thin contract records — is the signature complaint against matter-first products); every contract-first leader failed to build a real second workspace for non-contract work (faked tickets, exiled second apps, "coming soon" bridges, or punting to competitors); the dual-workspace incumbent (not matter-first, as assumed) ships the dual model successfully; JSM's rules: bind the routing target at request-type configuration, and make re-typing non-lossy.
 
 ### Decision
 
@@ -935,15 +935,15 @@ Research verdicts: contract-as-workspace is unanimously validated in the CLM cat
 
 ### Rationale
 
-Every direction of the market's experiment points here: matter-only products drift toward fattening contract records into workspaces (Xakia); contract-only products fake or exile non-contract work (all four leaders); the successful dual product (LawVu) pays a parity tax OpenLaw pre-paid by building the two workspaces on shared machinery. The "matter or contract?" ambiguity that makes dual models feel arbitrary is eliminated by rule 2 — no human answers it per-request.
+Every direction of the market's experiment points here: matter-only products drift toward fattening contract records into workspaces; contract-only products fake or exile non-contract work (all four leaders); the successful dual product pays a parity tax OpenLaw pre-paid by building the two workspaces on shared machinery. The "matter or contract?" ambiguity that makes dual models feel arbitrary is eliminated by rule 2 — no human answers it per-request.
 
 ### Alternatives considered
 
-Matter-only with auto-created wrapper matters (Dazychain): documented ceiling — "you cannot build good contract workflows." Universal work item (Jira-style): 35 recorded module decisions re-mapped onto a polymorphic object; CLM depth becomes conditional bolt-ons. Matter-first with a standalone-contract escape hatch: builds everything dual builds plus a per-triage policy question.
+Matter-only with auto-created wrapper matters: documented ceiling — "you cannot build good contract workflows." Universal work item (Jira-style): 35 recorded module decisions re-mapped onto a polymorphic object; CLM depth becomes conditional bolt-ons. Matter-first with a standalone-contract escape hatch: builds everything dual builds plus a per-triage policy question.
 
 ### Consequences
 
-Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-link, and the CTR grill's contract-workspace investment — no rework. INT-006 implements the triage mechanics. Navigation/IA must make the two-workspace split legible (the LawVu complaint to avoid); the Inbox is the single queue over both. Reporting reads work across both workspace kinds (cross-cutting dashboards per DD-005).
+Confirms DD-007's layered model, MTR-007's standalone-contracts-with-optional-link, and the CTR grill's contract-workspace investment — no rework. INT-006 implements the triage mechanics. Navigation/IA must make the two-workspace split legible (the recorded complaint against the dual-workspace incumbent); the Inbox is the single queue over both. Reporting reads work across both workspace kinds (cross-cutting dashboards per DD-005).
 
 ## DD-019: Saved list views — private to one person, one `jsonb` config, saving is an act
 

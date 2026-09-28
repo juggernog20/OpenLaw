@@ -29,7 +29,7 @@ _None — queue cleared 2026-08-06 (ENT-001 through ENT-007)._
 - **Status** — Accepted
 - **Date** — 2026-08-06
 - **Decision** — First-class columns on `entities`: `legal_name`, `entity_type` (configurable list — Entities Settings → Types; seeds: corporation, llc, partnership, branch, other), formation `jurisdiction` + `formed_on`, `registration_number`, `tax_id`, `registered_agent`, `registered_address`, `status` (`active | dormant | dissolved | divested` — fixed enum; surfaces branch on it). **Officers/directors** as `entity_officers` rows: `name` text (officers are usually not app users), `role` from a configurable list (seeds: director, ceo, cfo, secretary, other), `appointed_on`, `resigned_on` (null = current), optional `user_id` link. **Share capital as three simple fields** (`shares_authorized`, `shares_issued`, `par_value`) — share registers/cap tables stay in FUTURE-FEATURES. The CTR-016 fields catalog gains an **`entity` module scope** for custom entity fields.
-- **Rationale** — The compliance calendar and registrations need typed data; full corporate-secretarial depth (Diligent parity) is months of schema for the last-shipping module.
+- **Rationale** — The compliance calendar and registrations need typed data; full corporate-secretarial depth (parity with the dedicated entity-management products) is months of schema for the last-shipping module.
 - **Alternatives considered** — Deep registry now; light card + jsonb (calendar can't key off a blob).
 - **Consequences** — SCHEMA.md entities section resolved; two configurable lists (types, officer roles) join the settings inventory; `fields.module_scope` enum gains `entity` (CTR-016 revision note).
 

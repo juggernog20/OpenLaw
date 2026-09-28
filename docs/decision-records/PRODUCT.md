@@ -9,17 +9,17 @@ _Open-source legal department management for small in-house teams._
 
 OpenLaw is an open-source, self-hosted platform for in-house legal departments at small companies. It manages the day-to-day operational work of a 2–10 person legal team: intake of legal requests from the business, contract lifecycle management, matter tracking, document management, and corporate entity management.
 
-It is the OSS alternative to Ironclad, LinkSquares, SpotDraft, and LawVu — purpose-built for teams that don't want to spend $30k+/year on enterprise CLM and don't want their legal data living in someone else's cloud.
+It is the open-source alternative to the enterprise CLM and legal-operations suites, purpose-built for teams that don't want to spend $30k+/year on enterprise CLM and don't want their legal data living in someone else's cloud.
 
 ## The problem
 
 A 2–10 person in-house legal team at a Series A–C company sits in a frustrating gap.
 
 - They have too much work for the "Drive folders + Slack + email" stack of a one-person legal department.
-- They don't have the budget or contract volume to justify enterprise CLM platforms (Ironclad starts at ~$30k/yr).
+- They don't have the budget or contract volume to justify enterprise CLM platforms.
 - They typically don't have IT-managed enterprise SSO infrastructure for non-legal employees, so even when they buy a tool, business users won't adopt it.
 - Industry research (ACC, World Commerce & Contracting, CLOC, BCLP) consistently identifies "business-user adoption failure" — _they kept using email_ — as a top-tier cause of failed legal-tech rollouts, and the dominant cause for SMB and mid-market segments specifically.
-- IDC research cited by LawVu suggests **~29% of in-house legal teams spend 3+ hours per day** on intake-related email back-and-forth alone.
+- Vendor-cited IDC research suggests **~29% of in-house legal teams spend 3+ hours per day** on intake-related email back-and-forth alone.
 - Gartner reports approximately **50% of first-time CLM implementations fail** to deliver expected benefits.
 
 The result: legal teams stay inbox-bound, contracts get lost in email threads, and the "system of record" for any given matter is whichever lawyer's brain remembers it best.
@@ -36,7 +36,7 @@ The reference user is a **2–10 person in-house legal team at a 50–500 person
 We are **not** building for:
 
 - Solo counsel — Notion + Drive is fine for them
-- Mid-to-large legal departments (50+) — well-served by Ironclad / LinkSquares / Onit
+- Mid-to-large legal departments (50+) — well-served by the enterprise CLM and ELM suites
 - Law firms — different workflow (case management, client billing, conflicts)
 - Legal aid / public sector — Docassemble and A2J Author are purpose-built for that
 

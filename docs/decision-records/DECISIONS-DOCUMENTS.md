@@ -57,7 +57,7 @@ _Revised by **DOC-015** (2026-09-23): Matters now have an optional Document type
   - The Documents **destination is a repository view across all of them**: search, filters (type, linked matter/contract, party, date, kind), recents — one place to find any file regardless of where it lives.
   - **Organization comes from links + metadata + search, not a mandatory folder tree.** No filing discipline is imposed at upload.
   - **Explicit non-goals**: OpenLaw is not the org's general file system (Drive/SharePoint stays); no check-in/check-out; templates/precedent library belongs to the **Knowledge module**, not here.
-- **Rationale** — For a 2–10 person team the painful question is "where is that NDA?", not "is our folder taxonomy enforced?" A repository view over work-attached files answers it without building a DMS product category (iManage/NetDocuments territory) or breaking PRODUCT.md's first-class-destination promise.
+- **Rationale** — For a 2–10 person team the painful question is "where is that NDA?", not "is our folder taxonomy enforced?" A repository view over work-attached files answers it without building a DMS product category (dedicated DMS territory) or breaking PRODUCT.md's first-class-destination promise.
 - **Alternatives considered** — Full DMS (workspaces/folders/check-out): months of build, entrenched competition, filing discipline a small team won't keep. Attachment-store-only: contradicts PRODUCT.md and DD-007; orphan documents homeless.
 - **Consequences** — This decision is the lens for the rest of the queue: versioning/preview/search serve the repository view; the folders question (Q8) starts from "links + metadata are primary"; templates (Q12) route to Knowledge; bulk import (Q13) matters because legacy files must get _into_ the layer. **Reorders DOC-001 conceptually** — DOC-002 is the module's root decision; DOC-001 stands as its record model.
 
@@ -67,17 +67,17 @@ M26 adds the staff `/documents` destination over one reached, flat list of Contr
 
 Recent is the first five rows from the repository's default order. It means the five reachable Documents whose current Version was uploaded most recently. It does not mean recently opened, and it adds no per-user tracking. The list is hidden while filters are active, so the page answers one question at a time.
 
-## DOC-003 — Redline compare: Workshare-style in-app view + Word track-changes export
+## DOC-003 — Redline compare: rendered in-app view + Word track-changes export
 
 - **Status** — Accepted
 - **Date** — 2026-08-04
-- **Context** — The mechanics behind CTR-014's "run a redline against the previous version" (gates K.H4). Blair: "I want to have the option of both a Litera Workshare compare style compare or to export to word track changes."
+- **Context** — The mechanics behind CTR-014's "run a redline against the previous version" (gates K.H4). Blair asked for both: a rendered compare view in the app, and an export to Word track changes.
 - **Decision** — Comparison is **dual-mode**:
-  1. **In-app compare view (Litera/Workshare-style)**: a rendered, formatted comparison of two versions — insertions/deletions highlighted in the document's real formatting, with a change list / navigation pane. This is the default result of "Run redline".
+  1. **In-app compare view (the rendered redline lawyers know from desktop compare tools)**: a rendered, formatted comparison of two versions — insertions/deletions highlighted in the document's real formatting, with a change list / navigation pane. This is the default result of "Run redline".
   2. **Export to Word track changes**: from the same comparison, generate a real .docx with tracked changes — saved into the version chain as a `generated_redline` version recording **both** comparison operands (`compared_from_version_id` + `compared_to_version_id` per DOC-001) and downloadable for counterparty exchange.
   - Non-Word pairs (e.g. PDF↔PDF) support the in-app view via extracted text (degraded: no formatting fidelity); export is Word-pairs only.
   - Comparison engine selection → tech-stack grill (queued).
-- **Rationale** — The in-app view is the daily-driver review experience (Workshare is the lawyer benchmark); the exportable artifact is how the redline leaves the building. Building the view on the same engine output as the export keeps the two consistent.
+- **Rationale** — The in-app view is the daily-driver review experience (the desktop compare tools are the lawyer benchmark); the exportable artifact is how the redline leaves the building. Building the view on the same engine output as the export keeps the two consistent.
 - **Alternatives considered** — Artifact-only (recommended initially): loses the rich review UX. View-only: redline can't be emailed. Pass-through only: contradicts CTR-014.
 - **Consequences** — Compare engine is now a load-bearing tech-stack decision (must yield both a renderable change model and a track-changes .docx). K.H4 unblocked: the Redlines pill opens compare (view mode), with export as an action inside it.
 
@@ -318,7 +318,7 @@ Supporting uploads on Matters and Contracts mint the same immutable `<driver>:<k
 - **Context** — The queue entry above, filed as #182: a Graph-backed SharePoint driver, with five open questions (auth model, source of truth, tenant setup, throttling, the M13 folder collision). Grilled 2026-08-15, with M12's derivation work in flight making the immutability question urgent.
 - **Decision** —
   - **No SharePoint driver is built.** SharePoint is a collaboration surface, not a store. Graph will not honour blob immutability. Delegated auth has no token where the background worker runs — extraction and rendition jobs execute with no user present. A browsable tree needs paths made of names people chose, and the key rule forbids that on purpose: keys are minted from ids, never from a name a person chose, so a renamed contract cannot move its blobs. And the DOC-008 / DD-014 access gates do not reach a document library.
-  - **The ask splits in two.** A Microsoft-run store, for teams that will not operate a filesystem or an S3 bucket → the `azure-blob` driver (#206). Browsing OpenLaw's files where the team already works, LawVu-style → a read-only SharePoint **mirror** over any driver, its own future feature (#207). Matter ownership arrived in M22; the complete mirror still waits on Entities (M27) and Knowledge (M28).
+  - **The ask splits in two.** A Microsoft-run store, for teams that will not operate a filesystem or an S3 bucket → the `azure-blob` driver (#206). Browsing OpenLaw's files where the team already works → a read-only SharePoint **mirror** over any driver, its own future feature (#207). Matter ownership arrived in M22; the complete mirror still waits on Entities (M27) and Knowledge (M28).
   - **Azure Blob is the third driver**: `local`, `s3`, `azure-blob`. Same interface, same shared contract suite (against Azurite, as `s3` runs against MinIO), already-exists kept atomic by conditional Put (`If-None-Match: *`). Its native container-level WORM is the one backend enforcement of "blobs are immutable", and the door to DOC-010's parked retention rules and legal holds.
   - **Fabric / OneLake** exposes the standard Blob API, so the `azure-blob` driver reaches it for free; it never gets its own driver. **Azure Files** would be zero code under the `local` driver (mount it, point `STORAGE_PATH` at it) and is deferred — future, not now.
 - **Rationale** — The `s3` driver already reaches every S3-compatible store through a custom endpoint; Azure Blob is the one major store that is not S3-compatible. That is the whole gap, and closing it serves #182's actual want with none of its five open questions — all five were artefacts of picking a collaboration product as a store.
@@ -368,7 +368,7 @@ The first cut gave Knowledge a fourth tab. Blair saw that it would be confused w
 | ------- | ------------------------------------------------------------------------------ | -------- |
 | DOC-001 | Record model: logical document + linear immutable version chain                | Accepted |
 | DOC-002 | Module identity: the legal file layer, made browsable                          | Accepted |
-| DOC-003 | Redline compare: Workshare-style in-app view + Word track-changes export       | Accepted |
+| DOC-003 | Redline compare: rendered in-app view + Word track-changes export              | Accepted |
 | DOC-004 | In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only    | Accepted |
 | DOC-005 | OCR on upload for image-only PDFs                                              | Accepted |
 | DOC-006 | Folders: inside matters/contracts only; no global tree                         | Accepted |

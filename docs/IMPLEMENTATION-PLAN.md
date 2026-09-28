@@ -629,7 +629,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       file with tracked changes.
   - One stored Comparison per Version pair, with Word mode from the doc-engine sidecar and text mode from
     extracted text
-  - Workshare-style compare screen with pair control, change pane, change model, and predecessor entry points
+  - rendered compare screen with pair control, change pane, change model, and predecessor entry points
   - Once-per-pair Word track-changes export as a Generated redline with both operands on the chain
   - Tinos closes the secondary-typeface deferral on the compare document, including the Light and Dark axe
     sweep
