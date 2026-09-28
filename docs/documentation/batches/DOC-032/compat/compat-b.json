@@ -1,0 +1,876 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-b",
+  "reviewer": "DOC-032 compatibility reviewer (compat-b)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer wrote none of these seven guides, none of their DOC-029 or DOC-030 source reviews and none of the DOC-030 walkthrough or replay scripts. It changed no guide text. It adapted the DOC-030 scripts only as each script header and this record state. A helper agent of this seat adapted and ran the manual-signing replay under the same rules.",
+  "reviewedAt": "2026-09-28T07:47:59.876Z",
+  "fromAppCommit": {
+    "manual-signing": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contract-tasks-and-dates": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contract-relations-and-ending": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contract-analysis": "067c1646829df85e62b809ee9157921e867c84e7",
+    "matter-status-and-archive": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "matter-work": "067c1646829df85e62b809ee9157921e867c84e7",
+    "matter-templates": "067c1646829df85e62b809ee9157921e867c84e7"
+  },
+  "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+  "appDiffCommand": "git diff --name-only 067c1646829df85e62b809ee9157921e867c84e7 4ca41822b685a2a1e58a38b4f25e421cf735c54e -- apps packages services styles Dockerfile scripts/documentation messages",
+  "priorRange": "contract-relations-and-ending and matter-status-and-archive carry evidence at 3fa407e3. DOC-030 (batches/DOC-030/compat/compat.json) reviewed 3fa407e3..067c1646 for both and found them compatible. This review covers 067c1646..4ca41822 for all seven articles and folds the earlier review into each record's summary.",
+  "appDiffFiles": [
+    "apps/api/openapi.json",
+    "apps/api/package.json",
+    "apps/api/src/account-issuer-migration.test.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/auth/limits.ts",
+    "apps/api/src/auth/oauth.test.ts",
+    "apps/api/src/auth/oauth.ts",
+    "apps/api/src/auth/sso-domains.ts",
+    "apps/api/src/envelope-history-migration.test.ts",
+    "apps/api/src/envelope-launch-migration.test.ts",
+    "apps/api/src/envelope-preparation-migration.test.ts",
+    "apps/api/src/index.ts",
+    "apps/api/src/lib/auto-doc-fill/engine.test.ts",
+    "apps/api/src/lib/contract-team.ts",
+    "apps/api/src/lib/document-erasure.ts",
+    "apps/api/src/lib/document-versions.ts",
+    "apps/api/src/lib/event-hub.test.ts",
+    "apps/api/src/lib/event-hub.ts",
+    "apps/api/src/lib/matter-team.ts",
+    "apps/api/src/lib/share-register.test.ts",
+    "apps/api/src/lib/signer-erasure.ts",
+    "apps/api/src/lib/signing/config.test.ts",
+    "apps/api/src/lib/signing/config.ts",
+    "apps/api/src/lib/signing/docusign.test.ts",
+    "apps/api/src/lib/signing/docusign.ts",
+    "apps/api/src/lib/signing/fake.test.ts",
+    "apps/api/src/lib/signing/fake.ts",
+    "apps/api/src/lib/signing/identity.ts",
+    "apps/api/src/lib/signing/provider.ts",
+    "apps/api/src/lib/signing/recovery-stage.ts",
+    "apps/api/src/lib/signing/recovery.ts",
+    "apps/api/src/lib/signing/resolver.test.ts",
+    "apps/api/src/lib/signing/resolver.ts",
+    "apps/api/src/lib/signing/status-check.ts",
+    "apps/api/src/lib/signing/transitions.ts",
+    "apps/api/src/lib/task-assignment.ts",
+    "apps/api/src/lib/team-person.ts",
+    "apps/api/src/mcp-settings-migration.test.ts",
+    "apps/api/src/mcp/administration.test.ts",
+    "apps/api/src/mcp/administration.ts",
+    "apps/api/src/mcp/calls.ts",
+    "apps/api/src/mcp/change-feed.ts",
+    "apps/api/src/mcp/documentation.test.ts",
+    "apps/api/src/mcp/documents.ts",
+    "apps/api/src/mcp/grant.test.ts",
+    "apps/api/src/mcp/guide.test.ts",
+    "apps/api/src/mcp/listen.test.ts",
+    "apps/api/src/mcp/matters-tasks.test.ts",
+    "apps/api/src/mcp/mcp.test.ts",
+    "apps/api/src/mcp/prompts.test.ts",
+    "apps/api/src/mcp/prompts.ts",
+    "apps/api/src/mcp/register.test.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/requests-comments-people.test.ts",
+    "apps/api/src/mcp/resources.test.ts",
+    "apps/api/src/mcp/resources.ts",
+    "apps/api/src/mcp/routes.ts",
+    "apps/api/src/mcp/selectable-toolsets.ts",
+    "apps/api/src/mcp/team.test.ts",
+    "apps/api/src/mcp/team.ts",
+    "apps/api/src/mcp/tool.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "apps/api/src/modules/ai-connector/routes.ts",
+    "apps/api/src/modules/api-keys/api-keys.test.ts",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/modules/approver-groups/approver-groups.test.ts",
+    "apps/api/src/modules/audit-log/routes.ts",
+    "apps/api/src/modules/audit-log/tool-calls.ts",
+    "apps/api/src/modules/auth/allowed-domains.test.ts",
+    "apps/api/src/modules/auth/auth-mode.test.ts",
+    "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/modules/auth/authentication-policy.test.ts",
+    "apps/api/src/modules/auth/profile.test.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/auth/setup.test.ts",
+    "apps/api/src/modules/auth/sso.test.ts",
+    "apps/api/src/modules/contract-envelopes/completion.test.ts",
+    "apps/api/src/modules/contract-envelopes/launch.ts",
+    "apps/api/src/modules/contract-envelopes/reconciliation.test.ts",
+    "apps/api/src/modules/contract-envelopes/routes.ts",
+    "apps/api/src/modules/contract-envelopes/send.test.ts",
+    "apps/api/src/modules/contract-envelopes/void.test.ts",
+    "apps/api/src/modules/contract-statuses/contract-statuses.test.ts",
+    "apps/api/src/modules/contract-statuses/routes.ts",
+    "apps/api/src/modules/contracts/contracts.test.ts",
+    "apps/api/src/modules/contracts/create.ts",
+    "apps/api/src/modules/contracts/record.ts",
+    "apps/api/src/modules/contracts/renewal-vehicle.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/contracts/service.ts",
+    "apps/api/src/modules/document-types/document-types.test.ts",
+    "apps/api/src/modules/document-types/routes.ts",
+    "apps/api/src/modules/documents/document-comparison.test.ts",
+    "apps/api/src/modules/documents/documents.test.ts",
+    "apps/api/src/modules/documents/repository-filters.test.ts",
+    "apps/api/src/modules/documents/repository.ts",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/documents/service.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/entities/linked-records.test.ts",
+    "apps/api/src/modules/entities/linked-records.ts",
+    "apps/api/src/modules/entities/share-register.test.ts",
+    "apps/api/src/modules/events/routes.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matters/service.ts",
+    "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+    "apps/api/src/modules/mcp-settings/mcp-settings.test.ts",
+    "apps/api/src/modules/mcp-settings/routes.ts",
+    "apps/api/src/modules/notifications/record-activity.test.ts",
+    "apps/api/src/modules/oauth-grants/oauth-grants.test.ts",
+    "apps/api/src/modules/oauth-grants/routes.ts",
+    "apps/api/src/modules/onboarding/onboarding.test.ts",
+    "apps/api/src/modules/org/currencies.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/api/src/modules/portal/document-service.ts",
+    "apps/api/src/modules/portal/documents.ts",
+    "apps/api/src/modules/settings/read.ts",
+    "apps/api/src/modules/signer-erasure/routes.ts",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/modules/signing-connector/signing-connector.test.ts",
+    "apps/api/src/modules/signing-webhook/routes.ts",
+    "apps/api/src/modules/signing-webhook/webhook.test.ts",
+    "apps/api/src/origin-check.test.ts",
+    "apps/api/src/pipeline/automatic-contract-analysis.ts",
+    "apps/api/src/pipeline/executed-copy.ts",
+    "apps/api/src/pipeline/reconciliation.ts",
+    "apps/api/src/testing/harness.ts",
+    "apps/api/src/testing/signing-contract.ts",
+    "apps/web/index.html",
+    "apps/web/package.json",
+    "apps/web/src/components/ai-model-selector.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/approvals/signer-name-field.tsx",
+    "apps/web/src/components/authentication-options.test.tsx",
+    "apps/web/src/components/authentication-options.tsx",
+    "apps/web/src/components/auto-docs/form-builder.tsx",
+    "apps/web/src/components/auto-docs/rule-value-input.tsx",
+    "apps/web/src/components/auto-docs/upload-dialog.tsx",
+    "apps/web/src/components/avatar.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/components/described-field.tsx",
+    "apps/web/src/components/documents/bulk-document-actions.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/entities/entity-chart.tsx",
+    "apps/web/src/components/entities/linked-records-table.tsx",
+    "apps/web/src/components/entities/officer-name-input.test.tsx",
+    "apps/web/src/components/entities/officer-name-input.tsx",
+    "apps/web/src/components/entities/officers-card.tsx",
+    "apps/web/src/components/linked-records-list.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/portal/documents-section.tsx",
+    "apps/web/src/components/shell/shell.test.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/table/managed-table.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/lib/activity.test.ts",
+    "apps/web/src/lib/activity.ts",
+    "apps/web/src/lib/documents.ts",
+    "apps/web/src/lib/envelopes.ts",
+    "apps/web/src/lib/linked-records.ts",
+    "apps/web/src/lib/oauth-return.ts",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/lib/setup-drafts.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auto-doc-publish.test.tsx",
+    "apps/web/src/routes/auto-docs.test.tsx",
+    "apps/web/src/routes/connected-clients.test.tsx",
+    "apps/web/src/routes/contract-record-envelopes.test.tsx",
+    "apps/web/src/routes/contract-record-renewal.test.tsx",
+    "apps/web/src/routes/contract-record.test.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/contracts-columns.test.tsx",
+    "apps/web/src/routes/documents-filters.test.tsx",
+    "apps/web/src/routes/documents.test.tsx",
+    "apps/web/src/routes/entity-record.test.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/entity-share-register.test.tsx",
+    "apps/web/src/routes/login.test.tsx",
+    "apps/web/src/routes/login.tsx",
+    "apps/web/src/routes/matter-record-edit.test.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/routes/page-title.test.tsx",
+    "apps/web/src/routes/portal-documents.test.tsx",
+    "apps/web/src/routes/portal.test.tsx",
+    "apps/web/src/routes/route-guard.test.tsx",
+    "apps/web/src/routes/settings-api-keys.test.tsx",
+    "apps/web/src/routes/settings-approver-groups.test.tsx",
+    "apps/web/src/routes/settings-audit-log.test.tsx",
+    "apps/web/src/routes/settings-authentication.test.tsx",
+    "apps/web/src/routes/settings-authentication.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-document-types.test.tsx",
+    "apps/web/src/routes/settings-document-types.tsx",
+    "apps/web/src/routes/settings-e-signature.test.tsx",
+    "apps/web/src/routes/settings-e-signature.tsx",
+    "apps/web/src/routes/settings-entity-types.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-intake-links.test.tsx",
+    "apps/web/src/routes/settings-matter-templates.test.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-mcp.test.tsx",
+    "apps/web/src/routes/settings-mcp.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-request-types.test.tsx",
+    "apps/web/src/routes/settings-users.test.tsx",
+    "apps/web/src/routes/settings.test.tsx",
+    "apps/web/src/routes/setup.test.tsx",
+    "apps/web/src/routes/setup.tsx",
+    "apps/web/src/routes/signing-return.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "apps/web/vite.config.ts",
+    "messages/en-US.json",
+    "packages/api-client/src/schema.ts",
+    "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+    "packages/db/migrations/0173_durable-envelope-preparation.sql",
+    "packages/db/migrations/0174_envelope-launch-return.sql",
+    "packages/db/migrations/0175_envelope-launch-timestamps.sql",
+    "packages/db/migrations/0176_envelope-resume.sql",
+    "packages/db/migrations/0177_envelope-recovery.sql",
+    "packages/db/migrations/0178_envelope-recovery-intent.sql",
+    "packages/db/migrations/0179_envelope-reconciliation.sql",
+    "packages/db/migrations/0180_document-type-colors.sql",
+    "packages/db/migrations/0181_partial-signing.sql",
+    "packages/db/migrations/0182_partially-signed-document-type.sql",
+    "packages/db/migrations/0183_sso-provider-name.sql",
+    "packages/db/migrations/meta/0172_snapshot.json",
+    "packages/db/migrations/meta/0173_snapshot.json",
+    "packages/db/migrations/meta/0174_snapshot.json",
+    "packages/db/migrations/meta/0175_snapshot.json",
+    "packages/db/migrations/meta/0176_snapshot.json",
+    "packages/db/migrations/meta/0177_snapshot.json",
+    "packages/db/migrations/meta/0178_snapshot.json",
+    "packages/db/migrations/meta/0179_snapshot.json",
+    "packages/db/migrations/meta/0180_snapshot.json",
+    "packages/db/migrations/meta/0181_snapshot.json",
+    "packages/db/migrations/meta/0182_snapshot.json",
+    "packages/db/migrations/meta/0183_snapshot.json",
+    "packages/db/migrations/meta/_journal.json",
+    "packages/db/src/schema/auth.ts",
+    "packages/db/src/schema/contract-envelopes.ts",
+    "packages/db/src/schema/document-types.ts",
+    "packages/db/src/schema/documents.ts",
+    "packages/db/src/schema/org.ts",
+    "packages/shared/src/activity.ts",
+    "packages/shared/src/document-type-colors.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/live-events.ts",
+    "packages/shared/src/mcp.ts",
+    "packages/shared/src/start-blank.ts",
+    "scripts/documentation/lab-options.mjs",
+    "scripts/documentation/lab-options.test.mjs",
+    "scripts/documentation/lab.mjs",
+    "scripts/documentation/reader.css"
+  ],
+  "labs": [
+    {
+      "name": "work",
+      "project": "openlaw-docs-9d2b1705-work",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43340",
+      "mailUrl": "http://127.0.0.1:48440",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T06:50:34.922Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T06:50:48.736Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Shared DOC-032 lab. The replays for manual-signing, contract-tasks-and-dates, contract-relations-and-ending, matter-status-and-archive, matter-work and matter-templates ran here. Records are named 'DOC-032 compat compat-b ...' (manual-signing uses 'DOC-032 compat compat-b manual-signing ...'). Personal reminder lead times and the Contracts list saved view that the C19 script changes were put back by the script."
+    },
+    {
+      "name": "compatb",
+      "project": "openlaw-docs-9d2b1705-compatb",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43394",
+      "mailUrl": "http://127.0.0.1:48494",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T07:13:08.685Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T07:13:26.503Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Created by this reviewer with scripts/documentation/lab.mjs from the pinned commit (--app-port 43394 --mail-port 48494 --backend-subnet 10.243.79.0/24 --engine-subnet 10.244.79.0/24), seeded light with random seed 7. Only the contract-analysis replay ran here, because it saves, enables, disables and removes the organization's AI connector and holds the provider for minutes, which the shared-lab rules forbid. The provider stand-in container was removed after the run and the script put the lab back to no AI connector."
+    }
+  ],
+  "browser": "Playwright 1.63.0 Chromium, headless, one isolated context per identity (viewport as each DOC-030 script sets it)",
+  "articles": [
+    {
+      "articleId": "manual-signing",
+      "scenario": "V-C17-manual",
+      "decision": "rewalk",
+      "triageDecision": "compat",
+      "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/approvals/signer-name-field.tsx",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/modules/documents/routes.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/approvals/signer-name-field.tsx",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/modules/documents/routes.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/manual-signing-replay.json",
+        "sha256": "fc6eb3c466e4d97d09c7e8973236179e662c96fb692105ec38bbbcfc1490db52",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "fail",
+        "steps": 18,
+        "failed": 2,
+        "adaptations": "Helper api.mjs in manual-signing-replay/, work lab ports and manifest (LAB_NAME), root depth, output and screenshot paths, task/issue/reviewer labels, record and file names 'DOC-032 compat compat-b manual-signing', only manual-signing run (ONLY default). No step or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/manual-signing-replay.mjs",
+            "sha256": "1ea199bf9351cfff6685b2691f4ec50e8f76a5e56edb97742e266fda3e0fab84"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/manual-signing-replay/api.mjs",
+            "sha256": "bb53000c7d3988340dbea649751781d9534c03d1f484fac59ae9c07580c00a49"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/manual-signing-replay.json",
+            "sha256": "fc6eb3c466e4d97d09c7e8973236179e662c96fb692105ec38bbbcfc1490db52"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/manual-signing-work.log",
+            "sha256": "07d66ff46f13133b692ac38b41b3be1ad7816aea6d2bb93dcec3712a3cd52969"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/manual-signing-c17-executed-designation.png",
+            "sha256": "63ed28c54a42b086855fe60eb3cd4f8ca9661430e8e70af48d1f3ffb2b64723e"
+          }
+        ]
+      },
+      "summary": "Replay on work: 16 of 18 steps passed, 8 of 9 for each role. 'Hand off step 1' failed for both roles. The Status move to Out for signature saved, but the step's check then opens Approvals and waits for the 'Approvals & signing' region to count Send for signature controls, and that region no longer exists: 879fc477 split it into the Approvals and Signatures tabs, and Send for signature now sits on the Signatures card only when a connector is configured. That locator belongs to the check that backs 'This workflow needs no Signing connector', so the check could not run as written. The guide does not name the card, and by the code the sentence still looks true, but a compatibility replay may not change a check, so this article needs a fresh walkthrough. Other changes seen: the Add version Type list now offers 'Partially signed' before Executed (229909d4), the Stage menu has 11 Statuses including 'Partially signed' in the Signature stage (DOC-030 logged 10), and Administrators see 'Delete version' (dd28e33d). The guide names none of these. The executed-copy pipeline change (partial rounds do not pin) touches only connector rounds, not manual hand-off.",
+      "outcome": "rewalk"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/web/src/components/contracts/tasks-card.tsx",
+        "apps/web/src/components/tasks/task-dialog.tsx",
+        "apps/web/src/components/contracts/key-dates-card.tsx",
+        "apps/api/src/modules/contract-tasks/service.ts",
+        "apps/api/src/modules/contract-key-dates/routes.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay.json",
+        "sha256": "79204b6f681e49c16f2fafd6c15f2ead88dd7e6132b232aebfd85c72b93cabc6",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 34,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs and c19.mjs in contract-tasks-and-dates-replay/, only C19 imported and run, work lab manifest (LAB_NAME), root depth, task/issue/reviewer labels, output path, record names 'DOC-032 compat compat-b V-C19 ...' and note texts DOC-030 to DOC-032. No step or check changed.",
+        "attempts": [
+          "logs/contract-tasks-and-dates-attempt1.json: 16 of 34 passed. The fixture Contract titles read 'DOC-032 compat compat-b contract-tasks-and-dates ...', and the word 'tasks' in the title made getByRole('region', { name: 'Tasks' }) match the page-title section as well as the Tasks section (strict mode violation) in all 18 failed steps. The title prefix was changed to 'DOC-032 compat compat-b V-C19', as DOC-030's 'DOC-030 contracts-b V-C19', and the run passed 34 of 34."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay.mjs",
+            "sha256": "d5eefe4760700ce05a444985a18e69741e2ae9b2c87369d0ea81a21d56cd809a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay/c19.mjs",
+            "sha256": "fb30a378c4c83db76e800e41441eae7fbbadafc586ae1554dedb9b03c02c6969"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay/lib.mjs",
+            "sha256": "1d5724a9c3f28591bd35168e62ae08adc8c5e9b012a8bce9cb3ac3fd19979c53"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay.json",
+            "sha256": "79204b6f681e49c16f2fafd6c15f2ead88dd7e6132b232aebfd85c72b93cabc6"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-work.log",
+            "sha256": "ad75b4d5985040d9c9442fccf6540ac15e1730cedd0aa075efa04c89567c1fed"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-attempt1.json",
+            "sha256": "dfd39d8881d381aca0fbd08f6c957e90568413a5bdeb1762a1fa3f8c04e24081"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-attempt1.log",
+            "sha256": "9ab0acf632090a57a4a04af9034450c3a5cf0001f11565de13a7ff2c5de52c8a"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 I read the diff of contract-record.tsx, task-assignment.ts, contract-team.ts and messages/en-US.json. The Tasks and Key dates cards, task dialog, key-date reminder code and their routes did not change. contract-record.tsx moved the Legal Owner and Business Owner controls into a new Owners section at the top of Overview (791ad567) and added a Signatures tab; the guide does not say where those controls sit. task-assignment.ts now always adds a Task assignee through addContractTeamMember, which it already did for Contracts; contract-team.ts only gained the shared add and remove helpers the team routes now call, with the same guards and activity. So the picker (team plus Legal Owner, no Business Users), Add someone to the team, and the Recipients default (Legal Owner, Business Owner and team) are unchanged. I replayed the DOC-030 V-C19 script for Legal Team Member and Administrator on work built from 4ca41822; all 34 steps passed after a fixture-title fix.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "scenario": "V-C20",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/web/src/components/contracts/related-contracts-card.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/web/src/components/contracts/link-dialog.tsx",
+        "apps/web/src/components/contracts/contract-matter-link-dialog.tsx",
+        "apps/web/src/components/contracts/linked-matter-card.tsx",
+        "apps/api/src/modules/contract-relations/routes.ts",
+        "apps/api/src/modules/contract-matters/routes.ts",
+        "apps/web/src/components/table/record-filter-definitions.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/modules/contracts/record.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-replay.json",
+        "sha256": "d418cbd7520d2a87b57e82bc8cd79c4cef81ca98fd40a0353af6c13a7df0e26f",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/compat/contract-relations-and-ending-replay.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 20,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs and c20.mjs in contract-relations-and-ending-replay/, root depth, work lab ports 43340/48440, task/issue/set/reviewer labels, app commit and lab project, record names 'DOC-032 compat compat-b C20 ...'; the final run passed --roles administrator,legal_team_member so the Administrator walks first. The DOC-030 fixture Matter type lookup (first type with no required Form Fields beyond Title and Matter type) still found a type. No step or check changed.",
+        "attempts": [
+          "logs/contract-relations-and-ending-attempt1.json: on work, 19 of 20 passed. The Administrator's first browser step (Set parent) timed out after 60 s waiting for the Related contracts region on the fixture Contract; the Administrator's later steps on the same card passed.",
+          "logs/contract-relations-and-ending-attempt2.json: rerun unchanged, same result at the same step.",
+          "Final run with the Administrator first: 20 of 20 passed. A separate probe as Daniel Okafor on the attempt-1 Contract rendered the Related contracts region. I did not find the cause of the two timeouts; the region and the step's controls exist on 4ca41822, so I record them as a timing failure, not an app change."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-replay.mjs",
+            "sha256": "5d98f2801fb580506cacc94a7c46e14bcc182002206db244f8c287ab3d3c9f38"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-replay/c20.mjs",
+            "sha256": "35634cf96040997c6b32761bd0f5d44ebcd1ded3a10fbf5eeb951ba2eda8c089"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-replay/lib.mjs",
+            "sha256": "ca4afe2f3b42f49420f5524403189b5741990620db530121048865cf0ee3da51"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-replay.json",
+            "sha256": "d418cbd7520d2a87b57e82bc8cd79c4cef81ca98fd40a0353af6c13a7df0e26f"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-relations-and-ending-work.log",
+            "sha256": "0c9fe826fc8573ead2e0c35e0ec2b5341203645c66fc0a9d2df151ab6f5f6364"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-relations-and-ending-attempt1.json",
+            "sha256": "9c6fab4b8285a69b9470aac8d7bc25125388b1724d34ef482968d1a88ae07270"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-relations-and-ending-attempt1.log",
+            "sha256": "bac1e353e19d0cf47a5e7c9c689ee365275816db1088e2c5e3d5cae0bd282ff0"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-relations-and-ending-attempt2.json",
+            "sha256": "a7dec39b61a0dfbdfbf036852f161f8b27e00500250eed9877a379456b3ac6e7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-relations-and-ending-attempt2.log",
+            "sha256": "bac1e353e19d0cf47a5e7c9c689ee365275816db1088e2c5e3d5cae0bd282ff0"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-administrator-restricted-related.png",
+            "sha256": "8d8c1d29d606a321f13cf9ea48b64fec6c9a42cf6897dae0ab209c784f573ff6"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-relations-and-ending-legal_team_member-restricted-related.png",
+            "sha256": "8d8c1d29d606a321f13cf9ea48b64fec6c9a42cf6897dae0ab209c784f573ff6"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of contract-record.tsx, contracts/routes.ts, contracts/service.ts, contracts/record.ts and contract-team.ts. related-contracts-card.tsx, record-actions-menu.tsx, the link dialogs, the linked Matter card, the filter definitions and the contract-relations and contract-matters routes did not change. contract-record.tsx adds the Owners section and the Signatures tab and drops the envelope chip; contracts/routes.ts only moved team writes into lib/contract-team.ts; service.ts listContracts takes an optional extra scope that the Contracts list does not pass; record.ts only moved an import. No statement in the guide changed. I replayed the DOC-030 V-C20 replay for both roles on work built from 4ca41822; all 20 steps passed in the final run (two earlier attempts timed out on one Administrator page wait). Earlier review, DOC-030 compatibility reviewer (compat) (3fa407e3 to 067c1646): From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of record-filter-bar.tsx, property-list.tsx, contracts.tsx, contract-record.tsx, contracts/routes.ts and the new activity-redaction.ts. The Related contracts and Matter cards, link dialogs, record actions menu and filter definitions did not change; the filter list moved into property-list.tsx with the same Show ended and Show archived flags; the redaction hides a far record the reader cannot reach, as the guide says. I replayed the DOC-029 V-C20 script for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Only the fixture Matter type changed in the script, because seeded Employment now requires Country. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-b)) found the article compatible: I inspected the app diff 3fa407e3..57e77e38 and found only Settings, sign-in, first-run and archived-user styling changes, none in the Contract record surfaces this article describes. I replayed the round 1 V-C20 (parent and typed links, refusals, Restricted contract, Matter link, ending, archive and restore) walkthrough for Legal Team Member and Administrator on lab openlaw-docs-41255c61-work2 built from 57e77e38, and every step passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "contract-analysis",
+      "scenario": "V-C21",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/components/contracts/ai-field-evidence.tsx",
+        "apps/api/src/modules/contract-analysis/service.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "apps/api/src/lib/analysis-targets.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay.json",
+        "sha256": "24da8f16de8e4ddb01faa89b8a18af252dbf78ea78fb633ea070cbe2b307a757",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs",
+        "lab": "compatb",
+        "outcome": "pass",
+        "steps": 38,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs, c21.mjs and provider-standin.mjs (unchanged) in contract-analysis-replay/, only C21 imported and run, lab manifest compatb (LAB_NAME), root depth, stand-in network alias doc032-compatb-provider and model name, task/issue/reviewer labels, output path, record names and paper markers DOC-030 to DOC-032. The stand-in is DOC-030's own OpenAI-compatible provider stand-in (contracts-b/provider-standin.mjs) in its own container from the compatb app image on the compatb backend network, as DOC-030 ran it; it is not the seed's ai-stub.mjs (the lab seed ran with --skip-ai). No step or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay.mjs",
+            "sha256": "8593d3c55421bb3e4eed12803ccad3971a1ae3cd210ce452b71f060fe381c633"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/c21.mjs",
+            "sha256": "040acf8d373d4c5a9399295c68c1460c40431beeabd9620cb47e7d6e53b74a1d"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/lib.mjs",
+            "sha256": "1d5724a9c3f28591bd35168e62ae08adc8c5e9b012a8bce9cb3ac3fd19979c53"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/provider-standin.mjs",
+            "sha256": "81e9ace4312025aeaac2476b1ed65cf179fa071b7c2995e0e6208c14e35bab70"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay.json",
+            "sha256": "24da8f16de8e4ddb01faa89b8a18af252dbf78ea78fb633ea070cbe2b307a757"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/contract-analysis-compatb.log",
+            "sha256": "886060dac60108923d5148fb5263e245213843dc8f4aea36ba6f44eb03919489"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 I read the diff of automatic-contract-analysis.ts, contract-record.tsx, contracts/record.ts, contracts/routes.ts, contracts/service.ts, web lib/activity.ts, ai-connector/routes.ts and executed-copy.ts. analysis.tsx, ai-field-evidence.tsx, key-dates-card.tsx, record-actions-menu.tsx, the contract-analysis module and pipelines, analysis-targets.ts, analysis-key-dates.ts and conversion-draft.ts did not change. automatic-contract-analysis.ts now skips a Version filed by a DocuSign round that does not complete the Contract, and executed-copy.ts files such a round without the executed pin; the guide says Analysis can start automatically when target text is ready or a ready Version is marked executed, which stays true for a completing round and for manual marking. ai-connector/routes.ts only shares its read code. contract-record.tsx adds the Owners section, the Signatures tab and a reload on a Status change; Run analysis, Confirm and Confirm all are unchanged. I replayed the DOC-030 V-C21 script (full run plus the Request conversion part) for Legal Team Member and Administrator on my own lab compatb built from 4ca41822, with DOC-030's provider stand-in; all 38 steps passed, 19 per role, and the script put the lab back to no AI connector.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "scenario": "V-C23",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/web/src/components/matters/matter-status-progression.tsx",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/web/src/components/status-progression.tsx",
+        "apps/web/src/components/contracts/record-actions-menu.tsx",
+        "apps/web/src/lib/matters.ts",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/routes/portal-matter.tsx",
+        "apps/api/src/lib/next-deadline.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/lib/matter-team.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/matter-status-and-archive-replay.json",
+        "sha256": "136df099cd3ae5d648b69414eac6aad97cff77c246f5b417e73b9b3439d7eb5d",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/compat/matter-status-and-archive-replay.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 16,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs and status-archive.mjs in matter-status-and-archive-replay/, root depth, work lab ports 43340/48440, log header labels (task, issue, set, reviewer, lab, app commit), record names and notes 'DOC-032 compat (compat-b)'. The seeded Advisory Matter type still has no required Form Field beyond Title and Matter type. No step or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-status-and-archive-replay.mjs",
+            "sha256": "1cf9059c791a94fff8458aaeebaf5a2bdaae0619db3be9790af1e20a4c07f210"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-status-and-archive-replay/lib.mjs",
+            "sha256": "17b74820b40c075cb508119897f296798520f5a45f7c8ce2990290b956a99b7b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-status-and-archive-replay/status-archive.mjs",
+            "sha256": "a2365ae486dd112aa2169e217c5f665ec85cccce12376f0c306d704ba60dce77"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-status-and-archive-replay.json",
+            "sha256": "136df099cd3ae5d648b69414eac6aad97cff77c246f5b417e73b9b3439d7eb5d"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/matter-status-and-archive-work.log",
+            "sha256": "d1e37ae448c9a6fec1f5074f2898e9b4f3767dd995dd90820c85c3b2f2a58d14"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of matter-record.tsx, matters/routes.ts, matters/service.ts, the new lib/matter-team.ts and web lib/activity.ts. matter-status-progression.tsx, status-progression.tsx, record-actions-menu.tsx, lib/matters.ts, the filter definitions, portal-matter.tsx and next-deadline.ts did not change. matter-record.tsx only moved the Matter Manager and Business Owner controls into a new Owners section; matters/routes.ts and service.ts only moved team writes into matter-team.ts with the same guards and activity, and listMatters takes an optional extra scope; activity.ts adds envelope and version-deletion narrations. The Status strip, close and reopen dialogs and Archive and Restore are unchanged. I replayed the DOC-030 V-C23 replay for both roles on work built from 4ca41822; all 16 steps passed (the Business User sign-in waited out the shared sign-in link budget). Earlier review, DOC-030 compatibility reviewer (compat) (3fa407e3 to 067c1646): From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of matter-record.tsx, matters/routes.ts, the new matters/service.ts, matters.tsx and lib/activity.ts. The Status strip, close and reopen dialogs, Opened and Closed facts, archive and restore actions and the Show closed and Show archived filters did not change; the lifecycle rules moved into the service unchanged. I replayed the DOC-029 V-C23 script for both roles on lab compatcmp built from 067c1646; all 16 steps passed (the Legal Team Member after two load-related page waits, rerun with no script change). Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (matters)) found the article compatible: I inspected the 3fa407e3..57e77e38 app diff and found no change to the Status strip, close, reopen, archive, restore or Matters filters; the changes are archived-person styling, sign-in branding, first-run and Settings list rows. I replayed the round 1 V-C23 walkthrough on the work2 lab as Administrator and Legal Team Member, and all 16 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "matter-work",
+      "scenario": "V-C24",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/web/src/components/matters/tasks-card.tsx",
+        "apps/web/src/components/tasks/assignee-picker.tsx",
+        "apps/web/src/components/matters/key-dates-card.tsx",
+        "apps/web/src/components/matters/related-matters-card.tsx",
+        "apps/web/src/components/matters/linked-contracts-card.tsx",
+        "apps/api/src/modules/matter-tasks/routes.ts",
+        "apps/api/src/modules/matter-relations/routes.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/matter-work-replay.json",
+        "sha256": "afd13925afc9ed5fb0b48277686c39d4acd21b5a99723469c14148931584b5b2",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/matters/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 34,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs and wt-matter-work.mjs in matter-work-replay/, only matter-work imported and run (create-matter is another article), no fixtures file (wt-matter-work.mjs reads none; setup.mjs serves create-matter), root depth, work lab ports 43340/48440, log labels, output path, record names and texts 'DOC-032 compat compat-b matter-work' and 'DOC-032 ...'. No step or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-work-replay.mjs",
+            "sha256": "0998724fb1f72dae65829c47ff451b14b7f9d77dbf5129c7414599118d26676d"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-work-replay/lib.mjs",
+            "sha256": "787fa8a39a882a858afe77dc4c395775ff93e1563ce68350799a5460ab6e859b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-work-replay/wt-matter-work.mjs",
+            "sha256": "fa90b754177ce5534bf212dd3dacf9ca993b6dcf226aafe7ec24c531b242dddc"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-work-replay.json",
+            "sha256": "afd13925afc9ed5fb0b48277686c39d4acd21b5a99723469c14148931584b5b2"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/matter-work-work.log",
+            "sha256": "0d7de3ac820d4258748b13707ee030eed5d02028783bf3b38f3dac8942874dd0"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 I read the diff of matter-record.tsx, task-assignment.ts, the new lib/matter-team.ts, matters/routes.ts, matters/service.ts and messages/en-US.json. The Matter Tasks, Key dates, Related Matters and Linked Contracts cards, the task dialog and assignee picker, and the matter-tasks and matter-relations routes did not change. 254d4d40 makes a Task assignee team add call addMatterTeamMember, which inserts the same matter_team row and writes the same matter.team_added entry as before; the Matter team routes and the Business Owner change use the same helper. matter-record.tsx only moved the Matter Manager and Business Owner controls into a new Owners section, which this guide does not place. I replayed the DOC-030 matter-work script for Administrator and Legal Team Member on work built from 4ca41822; all 34 steps passed, 17 per role, as in DOC-030.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "matter-templates",
+      "scenario": "V-C39",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/settings-matter-templates.tsx",
+        "apps/api/src/modules/matter-templates/",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/settings-matter-template-editor.tsx",
+        "apps/web/src/components/matters/create-matter-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/lib/creation-form.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/matter-record.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-replay.json",
+        "sha256": "7a26ecc585a71f99a2fc57a9c0959fe909a5d81dab8e6f2cb2e5ae3aa139bf75",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 12,
+        "failed": 0,
+        "adaptations": "Helpers lib.mjs and templates.mjs in matter-templates-replay/, only the templates part kept (signing and documents belong to other articles), lab work, root depth, seat label and recorder kind, output path, record names 'DOC-032 compat compat-b ...', title prefix 'DOC-032 CB -', fictional texts DOC-030 to DOC-032, screenshot names prefixed matter-templates-. No step or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-replay.mjs",
+            "sha256": "9cca6a0347dc541103e7594f8bce5d22e382216efadf262f764b1039e1d8ba77"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-replay/lib.mjs",
+            "sha256": "dea016093aba410b75ed84804177b72455e1b32bd59fca358598a6fb9c6ec237"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-replay/templates.mjs",
+            "sha256": "56cccffad109ce0c054ac372640ead7129c3815be817c276a68ee5cfa150f0b7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-replay.json",
+            "sha256": "7a26ecc585a71f99a2fc57a9c0959fe909a5d81dab8e6f2cb2e5ae3aa139bf75"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/logs/matter-templates-work.log",
+            "sha256": "56930be8811fc8a8a3d6f11457c27461398a26b14041dc2f671f8a701b9a5735"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-editor.png",
+            "sha256": "d0c73a11704dbf5ed1505529dcacb010d4b8ba765748a3398c9cb217bfbdac18"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-administrator-convert.png",
+            "sha256": "3443dbc71f08b39ede3c258310142a62e72aa6aee039c42c482f19b8590477ba"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-b/matter-templates-legal_team_member-convert.png",
+            "sha256": "d6c10a327464cb3cef09df456cb9b46af37b0c49483dbdaaa767480a9a0dad34"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 no template source changed: settings-matter-templates.tsx, settings-matter-template-editor.tsx, the matter-templates module, create-matter-dialog.tsx, the Convert dialog, matters/create.ts, requests/convert.ts, creation-form.ts and form-evaluator.ts have no diff. matter-record.tsx only moved the Matter Manager and Business Owner controls into an Owners section on Overview; the guide asks the reader to check the Manager on the new Matter but does not say where it sits, and the replay's Manager checks passed. messages/en-US.json changed no label the guide names. I replayed the DOC-030 V-C39 script (template editor, direct creation and Request conversion) on work built from 4ca41822; all 12 steps passed (11 Administrator, 1 Legal Team Member), as in DOC-030.",
+      "outcome": "compatible"
+    }
+  ]
+}

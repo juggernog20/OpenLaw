@@ -76,13 +76,15 @@ After each entry change, OpenLaw rewrites this Entity's owner Holdings from toda
 3. Drag to pan or use the mouse wheel to zoom. With the chart focused, use arrow keys to pan, plus or minus to zoom, and zero to fit the chart. **Fit to window** also resets the view.
 4. Click an Entity once, or focus it and press Space, to highlight its ownership chain. Select **Clear highlight** or press Escape to remove the highlight. Double-click an Entity, or focus it and press Enter, to open it. A **Confidential Entity** box is an Entity you cannot reach. It shows no name and does not open.
 
-The chart shows recorded Holdings between registered Entities and their individual owners, including Holdings written from a share register. Individuals appear by name with the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission. A warning about ownership totals over 100% means the entries need review; it does not mean they failed to save.
+The chart shows recorded Holdings between registered Entities and their individual owners, including Holdings written from a share register. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission. A warning about ownership totals over 100% means the entries need review; it does not mean they failed to save.
 
 ## Read linked Contracts and Matters
 
-Open the Entity's **Contracts** or **Matters** tab. Contracts appear through their **Our entity** selection. Matters appear through saved Entity-valued Fields. If such a Field is later detached from the Matter type, its saved value can keep the link until that value is cleared.
+Open the Entity's **Contracts** or **Matters** tab. The tab shows a table with the same columns as the main **Contracts** or **Matters** list, and the number of linked records beside its heading. Archived, ended, and closed records are included. Select a column heading to sort the table. Use **Columns** to show, hide, or reorder columns for this visit. The table shows 50 rows at a time; select **Show more** to add the next rows. **No linked records.** means that no reachable record names this Entity.
 
-Rows and tab counts reflect the work records you can reach. A Confidential Contract or Matter outside your access contributes neither a row nor a count. Linking it to a reachable Entity does not widen its audience. These tabs show relationships, not stored totals or an analytics report.
+Contracts appear through their **Our entity** selection. Matters appear through saved Entity-valued Fields. If such a Field is later detached from the Matter type, its saved value can keep the link until that value is cleared.
+
+Rows, totals, and tab counts reflect the work records you can reach, with the same access rules as the main lists. A Confidential Contract or Matter outside your access contributes neither a row nor a count. Linking it to a reachable Entity does not widen its audience. These tabs show relationships, not stored totals or an analytics report.
 
 ## Grant access to a Confidential Entity
 

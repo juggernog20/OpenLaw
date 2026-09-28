@@ -100,6 +100,57 @@
     "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
     "verifiedAt": "2026-09-25T11:34:23.683Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): no template source changed: settings-matter-templates.tsx, settings-matter-template-editor.tsx, the matter-templates module, create-matter-dialog.tsx, the Convert dialog, matters/create.ts, requests/convert.ts, creation-form.ts and form-evaluator.ts have no diff. matter-record.tsx only moved the Matter Manager and Business Owner controls into an Owners section on Overview; the guide asks the reader to check the Manager on the new Matter but does not say where it sits, and the replay's Manager checks passed. messages/en-US.json changed no label the guide names. I replayed the DOC-030 V-C39 script (template editor, direct creation and Request conversion) on work built from 4ca41822; all 12 steps passed (11 Administrator, 1 Legal Team Member), as in DOC-030; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-b.json",
+        "sha256": "59266bfee347abd819b0fe2ff7c1c1e4ecfe43bce11dd4252960dc3ed0a854fa"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-replay.mjs",
+        "sha256": "9cca6a0347dc541103e7594f8bce5d22e382216efadf262f764b1039e1d8ba77"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-replay/lib.mjs",
+        "sha256": "dea016093aba410b75ed84804177b72455e1b32bd59fca358598a6fb9c6ec237"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-replay/templates.mjs",
+        "sha256": "56cccffad109ce0c054ac372640ead7129c3815be817c276a68ee5cfa150f0b7"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-replay.json",
+        "sha256": "7a26ecc585a71f99a2fc57a9c0959fe909a5d81dab8e6f2cb2e5ae3aa139bf75"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/matter-templates-work.log",
+        "sha256": "56930be8811fc8a8a3d6f11457c27461398a26b14041dc2f671f8a701b9a5735"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-editor.png",
+        "sha256": "d0c73a11704dbf5ed1505529dcacb010d4b8ba765748a3398c9cb217bfbdac18"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-administrator-convert.png",
+        "sha256": "3443dbc71f08b39ede3c258310142a62e72aa6aee039c42c482f19b8590477ba"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-templates-legal_team_member-convert.png",
+        "sha256": "d6c10a327464cb3cef09df456cb9b46af37b0c49483dbdaaa767480a9a0dad34"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

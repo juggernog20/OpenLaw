@@ -1,0 +1,83 @@
+{
+  "section": "guards",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bwiz",
+  "labProject": "openlaw-docs-9d2b1705-bwiz",
+  "appUrl": "http://127.0.0.1:43383",
+  "mailUrl": "http://127.0.0.1:48483",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "stored (overlay-mail-stored.json)",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:08:38.757Z",
+  "steps": [
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/users",
+      "action": "Last Administrator safeguard: the only active Administrator cannot be demoted, and archiving that account is refused",
+      "expected": "\"You cannot demote the last Administrator.\" and \"You cannot archive the last Administrator.\"",
+      "startedAt": "2026-09-28T10:08:39.225Z",
+      "finishedAt": "2026-09-28T10:08:39.531Z",
+      "actual": "On bwiz DOC-032 bridge Avery Morgan is the only active Administrator (1). Choosing Legal team member on the own row showed \"You cannot demote the last Administrator.\" and the role stayed administrator. The own row has no Archive and no … button, so the archive refusal was read from the archive route: 409 \"You cannot archive the last Administrator.\".",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/users",
+      "action": "Show archived appears once at least one account is archived; archive and restore a colleague",
+      "expected": "No switch before; switch after; Restore returns the row to Active",
+      "startedAt": "2026-09-28T10:08:39.558Z",
+      "finishedAt": "2026-09-28T10:08:40.788Z",
+      "actual": "With no archived accounts, the Users header had 0 Show archived switch. After DOC-032 bridge V-C36 Jordan set a password, signed in and was archived, the switch appeared (1) and the colleague's session answered 401. Restore showed \"Saved\" and the row read Active.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/users",
+      "action": "Empty allowed-domain list on a finished fresh install: the Business Portal Authentication switches show off and are unavailable; a staff account changed to Business user tries Business Portal sign-in (the source-review author's product-bug check)",
+      "expected": "Switches off and unavailable; the Portal sign-in outcome is recorded",
+      "startedAt": "2026-09-28T10:08:40.788Z",
+      "finishedAt": "2026-09-28T10:08:45.636Z",
+      "actual": "Allowed email domains []. The Business Portal Authentication switches read [\"Email and password:false:disabled\",\"Email magic link:false:disabled\",\"Single sign-on (SSO):false:disabled\",\"Require two-factor authentication:false:disabled\"], while GET /api/v1/auth/methods stored business {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}. doc032-bridge-wiz-jordan-mul34i1w@helix.example was changed to Business user (\"Saved\"). The Business Portal sign-in page read \"OpenLaw Legal Portal Business Portal sign-in Email Password Sign in Set up or reset your password Email me a sign-in lin\" with buttons [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]; password form offered; after Sign in the page was /portal/onboarding; /api/v1/me answered 200 as business_user.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:08:45.642Z",
+  "productBugCheck": {
+    "switches": [
+      "Email and password:false:disabled",
+      "Email magic link:false:disabled",
+      "Single sign-on (SSO):false:disabled",
+      "Require two-factor authentication:false:disabled"
+    ],
+    "stored": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    },
+    "domains": [],
+    "portalText": "OpenLaw Legal Portal Business Portal sign-in Email Password Sign in Set up or reset your password Email me a sign-in link Help with this page",
+    "portalButtons": ["Sign in", "Set up or reset your password", "Email me a sign-in link"],
+    "outcome": "password form offered; after Sign in the page was /portal/onboarding",
+    "me": 200,
+    "role": "business_user"
+  }
+}

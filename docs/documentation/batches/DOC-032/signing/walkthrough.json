@@ -1,0 +1,480 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "signing",
+  "issue": 1194,
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (signing)",
+  "reviewerKind": "agent",
+  "adaptedFrom": [
+    "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/compat/compat-b/manual-signing-replay.mjs"
+  ],
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "manual-signing": "d28d44c1df641f202c0c0fe248c2c1673e6b6f7629f9c3597d0de78f03311e94"
+  },
+  "selection": {
+    "articles": ["manual-signing"],
+    "roles": ["legal_team_member", "administrator"]
+  },
+  "stamp": 1790582743689,
+  "records": [
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "purpose": "manual signing",
+      "reference": "C-528",
+      "title": "DOC-032 signing V-C17-manual legal_team_member 1790582743689"
+    },
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "purpose": "Soft gate",
+      "reference": "C-529",
+      "title": "DOC-032 signing V-C17-manual gate legal_team_member 1790582743689"
+    },
+    {
+      "article": "manual-signing",
+      "role": "administrator",
+      "purpose": "manual signing",
+      "reference": "C-530",
+      "title": "DOC-032 signing V-C17-manual administrator 1790582743689"
+    },
+    {
+      "article": "manual-signing",
+      "role": "administrator",
+      "purpose": "Soft gate",
+      "reference": "C-533",
+      "title": "DOC-032 signing V-C17-manual gate administrator 1790582743689"
+    }
+  ],
+  "screenshots": ["docs/documentation/batches/DOC-032/signing/manual-signing-executed-pin.png"],
+  "startedAt": "2026-09-28T08:05:43.689Z",
+  "finishedAt": "2026-09-28T08:06:29.679Z",
+  "steps": [
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract the actor can reach, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-28T08:05:44.720Z",
+      "finishedAt": "2026-09-28T08:05:44.809Z",
+      "actual": "C-528 \"DOC-032 signing V-C17-manual legal_team_member 1790582743689\" (MSA) created by Nadia Haddad; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\"; envelopes read-back signingConfigured false.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/{n}; Signatures",
+      "action": "Before you start: with no Signing connector the Contract's Signatures tab offers no Send for signature control. Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Signatures tab shows no Send for signature; the Contract moves to Out for signature",
+      "startedAt": "2026-09-28T08:05:44.810Z",
+      "finishedAt": "2026-09-28T08:05:46.881Z",
+      "actual": "Signatures tab region read \"Signatures No signature requests on this contract yet.\" with 0 Send for signature controls. The Stage control menu listed 11 Statuses: \"Draft Draft | Internal review Review | With counterparty Review | Awaiting approval Approval | Out for signature Signature | Partially signed Signature | Active Active | Expired Ended | Terminated Ended | Signed, awaiting countersignature Signature | Superseded Ended\"; choosing Out for signature saved it with no gate; the control reads \"Signature\"; read-back Out for signature/signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Hand off step 2 (first Document): open Documents; there is no Document yet, so upload the unsigned paper as a new Document first",
+      "expected": "One Document with v1",
+      "startedAt": "2026-09-28T08:05:46.882Z",
+      "finishedAt": "2026-09-28T08:05:47.895Z",
+      "actual": "Upload document: Type started on \"No type\"; the paper filed as Document \"doc032-signing-legal_team_member-draft-1790582743689.pdf\" with 1 Version (1 Document).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents; Stage control",
+      "action": "Partially signed rounds: file the partly signed round with Add version and the Partially signed type; move the Contract to the Partially signed Status in the Signature Stage; do not mark it as the executed copy",
+      "expected": "v2 carries the Partially signed type and no Executed mark; the Contract reads Partially signed in the signature Stage; no Version carries the Executed pin",
+      "startedAt": "2026-09-28T08:05:47.896Z",
+      "finishedAt": "2026-09-28T08:05:48.277Z",
+      "actual": "Add version Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Partially signed and uploaded doc032-signing-legal_team_member-partial-1790582743689.pdf. v2 on the same Document; Type column \"Partially signed\"; Version cell \"v2\" (no Executed mark); isExecuted all false. The Stage control listed \"Partially signed\" among 11 Statuses; choosing it saved with no gate; control reads \"Signature\"; read-back Partially signed/signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Hand off step 2: once signed, on the intended Document use Add version to upload the executed file (Type Executed)",
+      "expected": "v3 on the same chain with the Executed type",
+      "startedAt": "2026-09-28T08:05:48.277Z",
+      "finishedAt": "2026-09-28T08:05:48.572Z",
+      "actual": "Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Executed and uploaded doc032-signing-legal_team_member-executed-1790582743689.pdf. Read-back: 3 Versions on Document \"doc032-signing-legal_team_member-draft-1790582743689.pdf\"; v3 current, type Executed; the Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the intended executed copy",
+      "expected": "The reader opens version 3 and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-28T08:05:48.572Z",
+      "finishedAt": "2026-09-28T08:05:48.923Z",
+      "actual": "Selecting \"doc032-signing-legal_team_member-draft-1790582743689.pdf\" opened the reader \"doc032-signing-legal_team_member-draft-1790582743689.pdf, version 3\"; the executed text rendered. Download saved doc032-signing-legal_team_member-executed-1790582743689.pdf with SHA-256 equal to the uploaded executed file (ad1b5a84a938c018...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the Executed pin; the Type column can read Executed while the Version number shows no Executed mark",
+      "expected": "No Version carries the pin; the Version cell reads v3 with no Executed mark while the Type column reads Executed",
+      "startedAt": "2026-09-28T08:05:48.924Z",
+      "finishedAt": "2026-09-28T08:05:48.938Z",
+      "actual": "Read-back isExecuted: v1=false, v2=false, v3=false. The Type column reads \"Executed\" while the Version cell reads \"v3\" with no Executed mark.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check that Executed appears beside the Version number; with several Documents, check the paper is the primary Document",
+      "expected": "v3 carries the Executed pin and its cell reads v3 Executed; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-28T08:05:48.938Z",
+      "finishedAt": "2026-09-28T08:05:49.593Z",
+      "actual": "Actions for doc032-signing-legal_team_member-draft-1790582743689.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive\"; Mark as executed copy set the pin on v3; the Version cell reads \"v3 Executed\". After a second Document \"doc032-signing-legal_team_member-schedule-1790582743689.pdf\" was uploaded, the rows read \"doc032-signing-legal_team_member-draft-1790582743689.pdf Primary\" and \"doc032-signing-legal_team_member-schedule-1790582743689.pdf\": the contract paper keeps Primary. Status still Partially signed (marking did not change it).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round (the later upload becomes current while the pin stays); mark the correct Version (moves the pin); use the earlier Version's own actions to Mark, Unmark as executed copy and Mark again",
+      "expected": "v4 becomes current while v3 stays pinned; marking v4 moves the pin; v3's own actions offer Mark / Unmark as executed copy",
+      "startedAt": "2026-09-28T08:05:49.593Z",
+      "finishedAt": "2026-09-28T08:05:53.019Z",
+      "actual": "Add version filed doc032-signing-legal_team_member-later-1790582743689.pdf as v4 on the same Document: v4 current, v3 still pinned. Mark as executed copy on the Document moved the pin to v4. Show the earlier versions -> v3's own actions offered \"Compare with previous, Mark as executed copy\"; Mark moved the pin back to v3; then \"Compare with previous, Unmark as executed copy\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy\" -> Mark restored it. Version cells: head \"v4\", earlier \"v3 Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "If it does not work (Legal Team Member): a wrong file was uploaded and pinned. Delete version is Administrator only, so it must not appear; correct the pin with the Version's own actions instead",
+      "expected": "No Delete version item in the Document's or an earlier Version's actions; the API refuses the delete; v3 carries the pin again and v5 stays",
+      "startedAt": "2026-09-28T08:05:53.020Z",
+      "finishedAt": "2026-09-28T08:05:54.991Z",
+      "actual": "Add version filed doc032-signing-legal_team_member-wrong-1790582743689.pdf as v5 and Mark as executed copy pinned it. Actions for doc032-signing-legal_team_member-draft-1790582743689.pdf offered \"Compare with previous, Unmark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive\" (no Delete version). v3's own actions offered \"Compare with previous, Mark as executed copy\" (no Delete version); Mark as executed copy moved the pin back to v3 (cell \"v3 Executed\"). A direct DELETE of v5 as Nadia Haddad answered 403; 5 Versions remain.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/{n}; History; Signatures",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; if Move past approval appears, choose; check the Status and Activity. Manual hand-off creates no Envelope and the Signatures tab lists no signature request",
+      "expected": "The Contract reaches Active without a connector; History records the pin and the Status change; Signatures lists no signature request",
+      "startedAt": "2026-09-28T08:05:54.992Z",
+      "finishedAt": "2026-09-28T08:05:58.144Z",
+      "actual": "Stage control moved C-528 to Active; Move past approval did not appear (no approvals; the move leaves the Signature Stage, which is past the approval line). The control reads \"Active\"; read-back Active/active. History: \"Nadia Haddad changed the status Partially signed → Active this minute Nadia Haddad pinned version 3 of doc032-signing-legal_team_member-draft-1790582743689.pdf as the executed copy this minute Nadia Haddad pinned version 5 of doc032-signing-legal_team_member-draft-1790582743689.pdf as the executed copy this minute Nadia Haddad added version 5 of doc032-signing-legal_team_member-draft-1790582743689.pdf this minute Nad\". Signatures tab: \"Signatures No signature requests on this contract yet.\", 0 Send for signature controls; 0 Envelopes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Karim Aziz (Portal)"],
+      "page": "Portal and API; archived record",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses a pin change; after Restore the pin is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v3 stays pinned",
+      "startedAt": "2026-09-28T08:05:58.144Z",
+      "finishedAt": "2026-09-28T08:06:03.967Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-032 signing V-C17-manual legal_team_member 1790582743689 C-528 Overview Counterparty Not recorded Stage Active Business O\" with 0 executed-copy or Delete version controls; his direct pin of v4 answered 403. Archived C-528 showed 0 \"Actions for doc032-signing-legal_team_member-draft-1790582743689.pdf\" menus; clearing the pin answered 409. Restore answered 200; v3 still carries the Executed pin.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/{n} (gate fixture)",
+      "action": "Step 1 and step 5 with an unresolved approval: where Move past approval appears, select Cancel once, then Move anyway",
+      "expected": "Move past approval offers Move anyway and Cancel; Cancel leaves the Status; Move anyway saves it",
+      "startedAt": "2026-09-28T08:06:03.968Z",
+      "finishedAt": "2026-09-28T08:06:06.423Z",
+      "actual": "C-529 with an approval pending from Daniel Okafor. Step 1 (Draft -> Out for signature): Move past approval appeared: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\"; buttons \"Cancel, Move anyway\". Cancel left the Status Draft; the second try with Move anyway saved Out for signature. Step 5 (Out for signature -> Active): Move past approval did not appear; the Contract reads Active.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract the actor can reach, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-28T08:06:06.424Z",
+      "finishedAt": "2026-09-28T08:06:06.533Z",
+      "actual": "C-530 \"DOC-032 signing V-C17-manual administrator 1790582743689\" (MSA) created by Daniel Okafor; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\"; envelopes read-back signingConfigured false.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/{n}; Signatures",
+      "action": "Before you start: with no Signing connector the Contract's Signatures tab offers no Send for signature control. Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Signatures tab shows no Send for signature; the Contract moves to Out for signature",
+      "startedAt": "2026-09-28T08:06:06.534Z",
+      "finishedAt": "2026-09-28T08:06:08.512Z",
+      "actual": "Signatures tab region read \"Signatures No signature requests on this contract yet.\" with 0 Send for signature controls. The Stage control menu listed 11 Statuses: \"Draft Draft | Internal review Review | With counterparty Review | Awaiting approval Approval | Out for signature Signature | Partially signed Signature | Active Active | Expired Ended | Terminated Ended | Signed, awaiting countersignature Signature | Superseded Ended\"; choosing Out for signature saved it with no gate; the control reads \"Signature\"; read-back Out for signature/signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Hand off step 2 (first Document): open Documents; there is no Document yet, so upload the unsigned paper as a new Document first",
+      "expected": "One Document with v1",
+      "startedAt": "2026-09-28T08:06:08.512Z",
+      "finishedAt": "2026-09-28T08:06:09.532Z",
+      "actual": "Upload document: Type started on \"No type\"; the paper filed as Document \"doc032-signing-administrator-draft-1790582743689.pdf\" with 1 Version (1 Document).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents; Stage control",
+      "action": "Partially signed rounds: file the partly signed round with Add version and the Partially signed type; move the Contract to the Partially signed Status in the Signature Stage; do not mark it as the executed copy",
+      "expected": "v2 carries the Partially signed type and no Executed mark; the Contract reads Partially signed in the signature Stage; no Version carries the Executed pin",
+      "startedAt": "2026-09-28T08:06:09.532Z",
+      "finishedAt": "2026-09-28T08:06:09.908Z",
+      "actual": "Add version Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Partially signed and uploaded doc032-signing-administrator-partial-1790582743689.pdf. v2 on the same Document; Type column \"Partially signed\"; Version cell \"v2\" (no Executed mark); isExecuted all false. The Stage control listed \"Partially signed\" among 11 Statuses; choosing it saved with no gate; control reads \"Signature\"; read-back Partially signed/signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Hand off step 2: once signed, on the intended Document use Add version to upload the executed file (Type Executed)",
+      "expected": "v3 on the same chain with the Executed type",
+      "startedAt": "2026-09-28T08:06:09.908Z",
+      "finishedAt": "2026-09-28T08:06:10.208Z",
+      "actual": "Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Executed and uploaded doc032-signing-administrator-executed-1790582743689.pdf. Read-back: 3 Versions on Document \"doc032-signing-administrator-draft-1790582743689.pdf\"; v3 current, type Executed; the Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the intended executed copy",
+      "expected": "The reader opens version 3 and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-28T08:06:10.208Z",
+      "finishedAt": "2026-09-28T08:06:10.523Z",
+      "actual": "Selecting \"doc032-signing-administrator-draft-1790582743689.pdf\" opened the reader \"doc032-signing-administrator-draft-1790582743689.pdf, version 3\"; the executed text rendered. Download saved doc032-signing-administrator-executed-1790582743689.pdf with SHA-256 equal to the uploaded executed file (23b7552c9ee9d832...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the Executed pin; the Type column can read Executed while the Version number shows no Executed mark",
+      "expected": "No Version carries the pin; the Version cell reads v3 with no Executed mark while the Type column reads Executed",
+      "startedAt": "2026-09-28T08:06:10.523Z",
+      "finishedAt": "2026-09-28T08:06:10.535Z",
+      "actual": "Read-back isExecuted: v1=false, v2=false, v3=false. The Type column reads \"Executed\" while the Version cell reads \"v3\" with no Executed mark.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check that Executed appears beside the Version number; with several Documents, check the paper is the primary Document",
+      "expected": "v3 carries the Executed pin and its cell reads v3 Executed; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-28T08:06:10.536Z",
+      "finishedAt": "2026-09-28T08:06:10.831Z",
+      "actual": "Actions for doc032-signing-administrator-draft-1790582743689.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete version\"; Mark as executed copy set the pin on v3; the Version cell reads \"v3 Executed\". After a second Document \"doc032-signing-administrator-schedule-1790582743689.pdf\" was uploaded, the rows read \"doc032-signing-administrator-draft-1790582743689.pdf Primary\" and \"doc032-signing-administrator-schedule-1790582743689.pdf\": the contract paper keeps Primary. Status still Partially signed (marking did not change it).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round (the later upload becomes current while the pin stays); mark the correct Version (moves the pin); use the earlier Version's own actions to Mark, Unmark as executed copy and Mark again",
+      "expected": "v4 becomes current while v3 stays pinned; marking v4 moves the pin; v3's own actions offer Mark / Unmark as executed copy",
+      "startedAt": "2026-09-28T08:06:10.831Z",
+      "finishedAt": "2026-09-28T08:06:13.948Z",
+      "actual": "Add version filed doc032-signing-administrator-later-1790582743689.pdf as v4 on the same Document: v4 current, v3 still pinned. Mark as executed copy on the Document moved the pin to v4. Show the earlier versions -> v3's own actions offered \"Compare with previous, Mark as executed copy, Delete version\"; Mark moved the pin back to v3; then \"Compare with previous, Unmark as executed copy, Delete version\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy, Delete version\" -> Mark restored it. Version cells: head \"v4\", earlier \"v3 Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "If it does not work: a wrong file was uploaded (and pinned). An Administrator removes that Version with Delete version (type delete, then Delete version); deleting the pinned Version clears the pin; mark the correct Version again",
+      "expected": "The Delete version dialog names the Version; v5 goes, the other Versions stay, no Version carries the pin; marking v3 again restores the pin",
+      "startedAt": "2026-09-28T08:06:13.949Z",
+      "finishedAt": "2026-09-28T08:06:18.503Z",
+      "actual": "Add version filed doc032-signing-administrator-wrong-1790582743689.pdf as v5 and Mark as executed copy pinned it. Actions for doc032-signing-administrator-draft-1790582743689.pdf offered \"Compare with previous, Unmark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete version\". Delete version opened \"Delete version 5? Version 5 of doc032-signing-administrator-draft-1790582743689.pdf and its stored file will be removed. You cannot undo this. All other versions will remain. Type \\\"delete\\\" to confirm Cancel Delete version\"; the Delete version button was disabled until \"delete\" was typed. After confirming, 4 Versions remain (v1, v2, v3, v4), v4 is current and its cell reads \"v4\"; no Version carries the Executed pin ([]). v3's own actions offered \"Compare with previous, Mark as executed copy, Delete version\"; Mark as executed copy restored the pin (cell \"v3 Executed\"). History: \"Daniel Okafor pinned version 3 of doc032-signing-administrator-draft-1790582743689.pdf as the executed copy this minute Daniel Okafor deleted version 5 of doc032-signing-administrator-draft-1790582743689.pdf this minute Daniel Okafor pinned version 5 of doc032-signing-administrator-draft-1790582743689.pdf as the executed copy this minute Daniel Okafor added\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/{n}; History; Signatures",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; if Move past approval appears, choose; check the Status and Activity. Manual hand-off creates no Envelope and the Signatures tab lists no signature request",
+      "expected": "The Contract reaches Active without a connector; History records the pin and the Status change; Signatures lists no signature request",
+      "startedAt": "2026-09-28T08:06:18.503Z",
+      "finishedAt": "2026-09-28T08:06:21.770Z",
+      "actual": "Stage control moved C-530 to Active; Move past approval did not appear (no approvals; the move leaves the Signature Stage, which is past the approval line). The control reads \"Active\"; read-back Active/active. History: \"Daniel Okafor changed the status Partially signed → Active this minute Daniel Okafor pinned version 3 of doc032-signing-administrator-draft-1790582743689.pdf as the executed copy this minute Daniel Okafor deleted version 5 of doc032-signing-administrator-draft-1790582743689.pdf this minute Daniel Okafor pinned version 5 of doc032-signing-administrator-draft-1790582743689.pdf as the executed copy this minute Daniel Ok\". Signatures tab: \"Signatures No signature requests on this contract yet.\", 0 Send for signature controls; 0 Envelopes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Karim Aziz (Portal)"],
+      "page": "Portal and API; archived record",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses a pin change; after Restore the pin is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v3 stays pinned",
+      "startedAt": "2026-09-28T08:06:21.771Z",
+      "finishedAt": "2026-09-28T08:06:26.948Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-032 signing V-C17-manual administrator 1790582743689 C-530 Overview Counterparty Not recorded Stage Active Business Owner\" with 0 executed-copy or Delete version controls; his direct pin of v4 answered 403. Archived C-530 showed 0 \"Actions for doc032-signing-administrator-draft-1790582743689.pdf\" menus; clearing the pin answered 409. Restore answered 200; v3 still carries the Executed pin.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/{n} (gate fixture)",
+      "action": "Step 1 and step 5 with an unresolved approval: where Move past approval appears, select Cancel once, then Move anyway",
+      "expected": "Move past approval offers Move anyway and Cancel; Cancel leaves the Status; Move anyway saves it",
+      "startedAt": "2026-09-28T08:06:26.949Z",
+      "finishedAt": "2026-09-28T08:06:29.678Z",
+      "actual": "C-533 with an approval pending from Nadia Haddad. Step 1 (Draft -> Out for signature): Move past approval appeared: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\"; buttons \"Cancel, Move anyway\". Cancel left the Status Draft; the second try with Move anyway saved Out for signature. Step 5 (Out for signature -> Active): Move past approval did not appear; the Contract reads Active.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user (negative check only)",
+      "person": "Karim Aziz",
+      "entry": "new magic link from the work Mailpit, Portal sign-in"
+    }
+  ],
+  "retries": [],
+  "summary": {
+    "total": 26,
+    "pass": 26,
+    "fail": 0
+  }
+}

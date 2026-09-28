@@ -1,0 +1,306 @@
+{
+  "note": "Fixture identifiers for the DOC-032 bridge inbox walkthrough. No credentials.",
+  "lab": "http://127.0.0.1:43390",
+  "createdAt": "2026-09-28T10:16:45.180Z",
+  "contractType": {
+    "id": "01a0e784-5612-7aa7-b37e-f9a145208a92",
+    "name": "DOC-032 bridge inbox Supplier agreement",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "contract_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "entity",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "counterparties",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "owning_department",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "term_type",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "effective_date",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "expiry_date",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "renewal_period_months",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "notice_period_days",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "value",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_supplier_name",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_budget_note",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_contracting_entity",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_cost_centre",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_contract_summary",
+        "onIntakeForm": false,
+        "isRequired": false
+      }
+    ]
+  },
+  "matterType": {
+    "id": "01a0e784-561e-716c-8967-abbc4a117f9e",
+    "name": "DOC-032 bridge inbox Advisory",
+    "form": [
+      {
+        "rowRef": "title",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "matter_type",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "description",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "department",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "region",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "priority",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "risk",
+        "onIntakeForm": false,
+        "isRequired": false
+      },
+      {
+        "rowRef": "needed_by",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_adviser_name",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_matter_entity",
+        "onIntakeForm": true,
+        "isRequired": false
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_matter_cost_centre",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_region_choice",
+        "onIntakeForm": false,
+        "isRequired": true
+      },
+      {
+        "rowRef": "doc_032_bridge_inbox_engagement_summary",
+        "onIntakeForm": false,
+        "isRequired": false
+      }
+    ]
+  },
+  "requestTypes": {
+    "contract": {
+      "id": "01a0e784-56be-7eb2-8069-341f118895dd",
+      "name": "DOC-032 bridge inbox Supplier contract request"
+    },
+    "matter": {
+      "id": "01a0e784-56c7-78d9-9bff-a54ac37deb54",
+      "name": "DOC-032 bridge inbox Advisory matter request"
+    }
+  },
+  "fields": {
+    "carry": {
+      "id": "01a0e784-562e-75f9-b03e-0a9053496d85",
+      "slug": "doc_032_bridge_inbox_supplier_name",
+      "name": "DOC-032 bridge inbox Supplier name",
+      "type": "text"
+    },
+    "stay": {
+      "id": "01a0e784-5639-7112-9ba1-0c2919e23855",
+      "slug": "doc_032_bridge_inbox_budget_note",
+      "name": "DOC-032 bridge inbox Budget note",
+      "type": "text"
+    },
+    "required": {
+      "id": "01a0e784-5650-7aa2-a860-5d58bf29fab3",
+      "slug": "doc_032_bridge_inbox_cost_centre",
+      "name": "DOC-032 bridge inbox Cost centre",
+      "type": "text"
+    },
+    "entity": {
+      "id": "01a0e784-5659-7b2e-b267-11506e5098f9",
+      "slug": "doc_032_bridge_inbox_contracting_entity",
+      "name": "DOC-032 bridge inbox Contracting entity",
+      "type": "entity"
+    },
+    "recordC": {
+      "id": "01a0e784-5662-78d0-8d63-7ab13b4746f4",
+      "slug": "doc_032_bridge_inbox_contract_summary",
+      "name": "DOC-032 bridge inbox Contract summary",
+      "type": "text"
+    },
+    "mCarry": {
+      "id": "01a0e784-566a-77ec-a8af-056b93b33e5d",
+      "slug": "doc_032_bridge_inbox_adviser_name",
+      "name": "DOC-032 bridge inbox Adviser name",
+      "type": "text"
+    },
+    "mRequired": {
+      "id": "01a0e784-5673-788b-ae59-1754bfbebbd0",
+      "slug": "doc_032_bridge_inbox_matter_cost_centre",
+      "name": "DOC-032 bridge inbox Matter cost centre",
+      "type": "text"
+    },
+    "mEntity": {
+      "id": "01a0e784-567e-72b6-9bc7-16ea9a388107",
+      "slug": "doc_032_bridge_inbox_matter_entity",
+      "name": "DOC-032 bridge inbox Matter entity",
+      "type": "entity"
+    },
+    "choice": {
+      "id": "01a0e784-5688-7514-bb20-605a2e599276",
+      "slug": "doc_032_bridge_inbox_region_choice",
+      "name": "DOC-032 bridge inbox Region choice",
+      "type": "single_select"
+    },
+    "record": {
+      "id": "01a0e784-5691-7709-b260-7e129a558a74",
+      "slug": "doc_032_bridge_inbox_engagement_summary",
+      "name": "DOC-032 bridge inbox Engagement summary",
+      "type": "text"
+    }
+  },
+  "entities": {
+    "live": {
+      "id": "01a0e784-56f2-7cb0-a3e0-eb964a937be8",
+      "name": "DOC-032 bridge inbox Live Holdings Ltd"
+    },
+    "old": {
+      "id": "01a0e784-56ff-78c6-b634-eca65926a6e4",
+      "name": "DOC-032 bridge inbox Old Holdings Ltd"
+    }
+  },
+  "templates": {
+    "good": {
+      "id": "01a0e784-5730-739a-90b5-e35dd5baee8a",
+      "name": "DOC-032 bridge inbox Advisory template"
+    },
+    "stale": {
+      "id": "01a0e784-575b-7212-8658-bf19f4c24a33",
+      "name": "DOC-032 bridge inbox Stale template"
+    }
+  },
+  "contractTypeDefaultPerson": "Priya Raman",
+  "departments": [
+    {
+      "id": "01a0e763-bac3-7e3e-9e05-2bcb98b352f3",
+      "name": "Engineering"
+    },
+    {
+      "id": "01a0e763-bace-7cdf-bfee-d222c5bb59d2",
+      "name": "Finance"
+    },
+    {
+      "id": "01a0e763-bad5-77eb-9348-c5cbb810ffbe",
+      "name": "Marketing"
+    },
+    {
+      "id": "01a0e763-bac9-747b-a541-5493575c72dc",
+      "name": "People"
+    },
+    {
+      "id": "01a0e763-babc-7b99-a6b9-8289d04ac007",
+      "name": "Procurement"
+    },
+    {
+      "id": "01a0e763-bab6-7787-9ec4-54573538a2ac",
+      "name": "Sales"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "services": {
+    "oidc": {
+      "image": "node:24-slim",
+      "working_dir": "/repo",
+      "command": [
+        "node",
+        "docs/documentation/batches/DOC-032/bridge/admin-org-replay/oidc-fixture.mjs"
+      ],
+      "volumes": ["__REPO__:/repo:ro"],
+      "networks": { "openlaw-backend": { "aliases": ["oidc"] } }
+    }
+  }
+}

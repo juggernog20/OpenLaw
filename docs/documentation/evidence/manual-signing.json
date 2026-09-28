@@ -1,24 +1,36 @@
 {
   "articleId": "manual-signing",
-  "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
-  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
-  "environment": "openlaw-docs-80ceef9e-work2",
-  "author": "DOC-030 source-review author agent (shared-files)",
-  "technicalReviewer": "DOC-030 source-review author agent (shared-files)",
-  "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
+  "contentSha256": "d28d44c1df641f202c0c0fe248c2c1673e6b6f7629f9c3597d0de78f03311e94",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "author": "DOC-030 source-review author agent (shared-files); corrections by DOC-032 source-review author agent (signing)",
+  "technicalReviewer": "DOC-032 source-review author agent (signing)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (signing)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-25T11:50:28.438Z",
+  "verifiedAt": "2026-09-28T08:06:29.679Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/manual-signing.md",
-    "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
-    "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
-    "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
-    "docs/documentation/batches/DOC-030/signing-2/api.mjs",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
+    "docs/documentation/batches/DOC-032/signing/technical-review.json",
+    "docs/documentation/batches/DOC-032/signing/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/signing/walkthrough.json",
+    "docs/documentation/batches/DOC-032/signing/api.mjs",
     "docs/user-guides/document-versions.md",
-    "CONTEXT.md"
+    "CONTEXT.md",
+    "messages/en-US.json",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/lib/documents.ts",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/contract-statuses/routes.ts",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "packages/db/src/schema/documents.ts",
+    "packages/db/migrations/0181_partial-signing.sql",
+    "packages/db/migrations/0182_partially-signed-document-type.sql",
+    "packages/shared/src/start-blank.ts",
+    "apps/api/src/lib/soft-gate.ts"
   ],
   "scenarios": [
     {
@@ -27,17 +39,17 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
-        "Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work2 Mailpit.",
-        "Fixture made through the API for this run: an MSA Contract named \"DOC-030 signing-2 V-C17-manual <role> <stamp>\" in Draft, owned by Nadia Haddad (Legal Team Member), with Karim Aziz on the team. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
+        "Shared lab openlaw-docs-9d2b1705-work (work) built from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T06:50:34.922Z to 2026-09-28T06:50:48.736Z; AI disabled; Signing unconfigured (no Signing connector).",
+        "Nadia Haddad (Legal Team Member) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work Mailpit.",
+        "Fixtures made through the API for this run: an MSA Contract named \"DOC-032 signing V-C17-manual legal_team_member 1790582743689\" in Draft with Karim Aziz on the team, and a second MSA Contract \"DOC-032 signing V-C17-manual gate legal_team_member 1790582743689\" with one pending approval for the Move past approval check. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
       ],
       "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version's Executed type alone does not set the Executed pin; unsupported users cannot perform the legal action.",
-      "actual": "9 steps passed on C-467. Stage control listed 10 Statuses; Out for signature saved with no gate, 0 Send for signature controls, signingConfigured false, 0 Envelopes. Documents: Upload document's Type started on \"No type\"; the draft became the only Document; Actions -> Add version with Type \"Executed\" added v2 (Type column \"Executed\"). The reader opened \"..., version 2\" and Download matched the executed file's SHA-256. Negative: after that upload v1 and v2 had isExecuted false and the Version cell read \"v2\" with no Executed mark. Actions -> Mark as executed copy set the pin on v2 (Version cell \"v2 Executed\"); a second Document was uploaded and the contract paper kept \"Primary\"; Status stayed Out for signature. Add version for v3 left the pin on v2; Mark as executed copy on the head moved it to v3; \"Show the 2 earlier versions\" -> v2's own actions offered Mark / Unmark as executed copy, which moved, cleared and restored the pin on v2. Stage control to Active saved with no Soft gate (no approvals); History lists the status change and the pin events; 0 Envelopes. Negative: Karim Aziz saw 0 executed-copy controls in the Portal and his direct write answered 403; the archived Contract showed 0 Document action menus and a clear answered 409; after Restore v2 is still pinned.",
+      "actual": "13 steps passed on C-528 and C-529. Signatures tab read \"Signatures No signature requests on this contract yet.\" with 0 Send for signature controls; signingConfigured false. The Stage control listed 11 Statuses; Out for signature saved with no gate. Documents: Upload document (Type \"No type\") filed the paper; Actions -> Add version with Type \"Partially signed\" added v2 (Version cell \"v2\", no pin), and the Stage control moved the Contract to Partially signed (stage signature). Add version with Type \"Executed\" added v3; the reader opened \"..., version 3\" and rendered the text, and Download matched the file's SHA-256. Negative: the Type column read \"Executed\" while the Version cell read \"v3\" and v1-v3 had isExecuted false. Mark as executed copy pinned v3 (\"v3 Executed\"); a second Document was uploaded and the paper kept \"Primary\"; Status stayed Partially signed. Add version v4 left the pin on v3; marking the head moved it to v4; v3's own actions moved, cleared and restored it. Wrong file: v5 was added and pinned; the Document's actions (\"Compare with previous, Unmark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive\") and v3's actions showed no Delete version, and a direct delete answered 403; v3's Mark as executed copy moved the pin back. Stage control to Active saved with no gate; History lists the status change and the pin events; Signatures still \"No signature requests on this contract yet.\", 0 Envelopes. Negative: Karim Aziz saw 0 executed-copy controls in the Portal and his pin write answered 403; archived: 0 Document action menus, clear answered 409; after Restore v3 is still pinned. Gate fixture: Move past approval appeared at step 1 (Draft -> Out for signature) with Cancel and Move anyway; Cancel kept Draft, Move anyway saved Out for signature; the step 5 move to Active showed no gate.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
-        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
+        "docs/documentation/batches/DOC-032/signing/walkthrough.json",
+        "docs/documentation/batches/DOC-032/signing/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/signing/api.mjs"
       ]
     },
     {
@@ -46,34 +58,50 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; AI disabled; Signing unconfigured.",
-        "Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work2 Mailpit.",
-        "Fixture made through the API for this run: an MSA Contract named \"DOC-030 signing-2 V-C17-manual <role> <stamp>\" in Draft, owned by Daniel Okafor (Administrator), with Karim Aziz on the team. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
+        "Shared lab openlaw-docs-9d2b1705-work (work) built from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T06:50:34.922Z to 2026-09-28T06:50:48.736Z; AI disabled; Signing unconfigured (no Signing connector).",
+        "Daniel Okafor (Administrator) signs in with a password in an isolated Playwright Chromium context. Karim Aziz, a seeded Business User on the Contract team, signs in to the Portal with a fresh magic link read from the work Mailpit.",
+        "Fixtures made through the API for this run: an MSA Contract named \"DOC-032 signing V-C17-manual administrator 1790582743689\" in Draft with Karim Aziz on the team, and a second MSA Contract \"DOC-032 signing V-C17-manual gate administrator 1790582743689\" with one pending approval for the Move past approval check. Every guide step then runs in the browser; the fictional PDFs are generated in memory."
       ],
       "expected": "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector. A Version's Executed type alone does not set the Executed pin; unsupported users cannot perform the legal action.",
-      "actual": "9 steps passed on C-478 with the same results as the Legal Team Member: Out for signature with no connector (0 Envelopes, no Send for signature); first Upload then Add version with Type \"Executed\" on the same Document; download SHA-256 match; the Executed type left isExecuted false on v1 and v2 and the Version cell read \"v2\"; Mark as executed copy pinned v2 (\"v2 Executed\"); the paper kept Primary beside a second Document; v3 upload kept the pin on v2; marking v3 moved it; v2's own actions moved it back, unmarked and re-marked it; Active saved with no gate and History shows the pin and status events; the Document actions menu also offered Delete for the Administrator. Negative: Karim Aziz had 0 executed-copy controls and his write answered 403; archived: 0 action menus, clear answered 409; after Restore v2 is still pinned.",
+      "actual": "13 steps passed on C-530 and C-533 with the same results as the Legal Team Member for the Signatures tab (no Send for signature, no signature request, 0 Envelopes), the Partially signed round (v2 type Partially signed, no pin; Status Partially signed in the signature stage), the Executed type without a pin (\"v3\" cell, Type \"Executed\"), Mark as executed copy (\"v3 Executed\"), Primary, the v4 round and v3's own Mark / Unmark actions, and the move to Active. The Administrator's Document actions and earlier-Version actions also offered Delete version. Recovery: v5 (wrong file) was added and pinned; Actions -> Delete version opened \"Delete version 5?\" (\"Version 5 of ... and its stored file will be removed. You cannot undo this. All other versions will remain.\"); the Delete version button stayed disabled until \"delete\" was typed in Type \"delete\" to confirm. After confirming, v1-v4 remained, v4 current, and no Version carried the Executed pin; v3's own Mark as executed copy restored it (\"v3 Executed\"). History shows \"deleted version 5\" and the pin events. Negative: Karim Aziz 0 controls, write 403; archived 0 action menus, clear 409; after Restore v3 is still pinned. Gate fixture: Move past approval at step 1 with Cancel and Move anyway, as for the Legal Team Member; no gate at step 5.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/signing-2/walkthrough.json",
-        "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/signing-2/api.mjs"
+        "docs/documentation/batches/DOC-032/signing/walkthrough.json",
+        "docs/documentation/batches/DOC-032/signing/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/signing/api.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and technical reviewer; not a human user study and not the feature owner's approval.",
-    "work2 is shared with other DOC-030 agents. Only records named DOC-030 signing-2 were created (C-467 and C-478 in the final run; earlier development runs left more). No organisation setting was changed.",
+    "work is shared with other DOC-032 agents. Only records named \"DOC-032 signing\" were created (C-528, C-529, C-530, C-533 in the final run; one earlier development run left C-526 and C-527). No organisation setting was changed. The two approval requests on the gate fixtures stay pending.",
     "The Business User negative check used Karim Aziz, a seeded Business User, not Jonas Weber, to keep the shared sign-in link budget free.",
-    "No Approval was requested on the fixture Contracts, so no Soft gate opened on the move to Active. The gate itself is covered by contract-approvals.",
-    "The reader did not render the executed PDF's text within 60 s for the Legal Team Member in the final run; it did for the Administrator. The guide says read or download, and the download's SHA-256 matched in both runs.",
-    "The withdrawn or declined hand-off paragraph has no app control of its own; the walk confirmed only that manual hand-off creates no Envelope row.",
-    "The final run (2026-09-25T11:45:50.727Z to 2026-09-25T11:50:28.438Z) passed all 50 steps. It logged 3 page reloads in \"retries\": each time the app showed \"Something went wrong. The page could not load.\" because Chromium aborted in-flight API reads with net::ERR_NETWORK_CHANGED while other agents changed container networks on the host. One reload loaded the page each time. walkthrough-attempt1.json and walkthrough-attempt2.json are earlier full runs of the same script; each had one step fail on the same network abort before the reload helper covered that wait. No guide step failed in any run."
+    "Move past approval cannot appear at step 5 when the reader follows step 1 first. The gate opens only on a move from the Approval Stage or earlier to a later Stage (crossesApprovalGate in apps/api/src/lib/soft-gate.ts). On the gate fixtures it opened at step 1 (Draft -> Out for signature) and not at step 5 (Out for signature -> Active). Step 5 still applies to a reader who moves straight from an earlier Stage to Active. The guide's \"Before you start\" tells the reader to check unresolved approvals before any Status change.",
+    "Confirmed the author's limitation: deleting the pinned Version clears the pin, and History shows \"deleted version 5\" but no line saying the pin was cleared.",
+    "Confirmed the author's limitation: \"Partially signed\" is the seeded Status name (Signature Stage). Renaming it was not tried, to leave the shared seed untouched.",
+    "The withdrawn or declined hand-off paragraph has no app control of its own; the walk confirmed only that manual hand-off creates no Envelope and the Signatures tab lists no signature request.",
+    "The final run (2026-09-28T08:05:43.689Z to 2026-09-28T08:06:29.679Z) passed all 26 steps with 0 page reloads. A development run of the Legal Team Member path failed one step only because the script's direct DELETE omitted the required confirmTitle body (answered 400 on validation); the script was fixed and the full run repeated."
   ],
   "previousEvidence": {
-    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "contentSha256": "705a077cf1b9ac2c173ee2fc13e24883da656d0d407d079b74f4a34995ea63a0",
-    "verifiedAt": "2026-09-16T15:40:06.333Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+    "verifiedAt": "2026-09-25T11:50:28.438Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "d28d44c1df641f202c0c0fe248c2c1673e6b6f7629f9c3597d0de78f03311e94",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

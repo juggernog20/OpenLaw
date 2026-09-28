@@ -10,7 +10,7 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 
 1. Open the Contract and select its current Stage in the header's Stage display.
 2. Select the intended Status. Read the Stage beside it rather than relying on the Status name alone.
-3. If **Move past approval** appears, read the unresolved approvals. Select **Cancel** to keep the current Status, or **Move anyway** to make the stated override.
+3. If **Move past approval** appears, read the unresolved approvals. Select **Cancel** to keep the current Status, or **Move anyway** to make the stated override. Only this Stage control shows the warning.
 4. Check the new Status beside the C- reference and the Stage display. Select **History** to read the recorded change in the Activity feed.
 
 A Status maps to one Stage. Renaming a Status does not change that mapping. You may move backwards or skip Stages when that reflects the work; the app does not require one forward sequence.
@@ -18,6 +18,8 @@ A Status maps to one Stage. Renaming a Status does not change that mapping. You 
 ## Check what the change means
 
 A move beyond Approval can warn about pending or rejected approvals. The warning is a Soft gate: an explicit override is allowed and recorded. It does not answer those approvals. Follow [Request and give approval](contract-approvals.md).
+
+A confirmed send from the Contract's **Signatures** tab moves the Contract to a Signature Status. That move does not open **Move past approval**. It records no override, even when approvals remain Pending or Rejected. Check the **Approvals** tab before you send.
 
 Moving to Signature does not send paper. Use [manual hand-off](manual-signing.md) or [electronic signature](electronic-signing.md). Likewise, manually moving to Active does not by itself upload an executed copy or mark a Document Version as executed.
 

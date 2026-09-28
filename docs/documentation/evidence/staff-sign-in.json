@@ -1,43 +1,45 @@
 {
   "articleId": "staff-sign-in",
-  "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
-  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
-  "environment": "openlaw-docs-80ceef9e-work2",
-  "author": "DOC-030 source-review author agent (access-2)",
-  "technicalReviewer": "DOC-030 source-review author agent (access-2)",
-  "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
+  "contentSha256": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-accs",
+  "author": "DOC-030 source-review author agent (access-2); DOC-032 corrections by DOC-032 source-review author agent (access)",
+  "technicalReviewer": "DOC-032 source-review author agent (access)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (access)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-25T10:45:02.630Z",
+  "verifiedAt": "2026-09-28T07:54:54.316Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/staff-sign-in.md",
+    "docs/documentation/batches/DOC-032/access/technical-review.json",
+    "docs/documentation/batches/DOC-032/access/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/access/lib.mjs",
+    "docs/documentation/batches/DOC-032/access/walkthrough.json",
+    "docs/documentation/batches/DOC-032/access/phase.sh",
+    "docs/documentation/batches/DOC-032/access/overlay-oidc.json",
+    "docs/documentation/batches/DOC-032/access/overlay-mail-off.json",
+    "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+    "docs/documentation/evidence/staff-sign-in.json",
     "docs/documentation/batches/DOC-030/access-2/technical-review.json",
-    "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
-    "docs/documentation/batches/DOC-030/access-2/lib.mjs",
-    "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
+    "docs/documentation/batches/DOC-032/triage.json",
+    "docs/documentation/batches/DOC-032/plan.json",
+    "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+    "docs/user-guides/authentication-and-email.md",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
     "messages/en-US.json",
-    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-032)",
     "apps/web/src/routes/login.tsx",
-    "apps/web/src/routes/set-password.tsx",
-    "apps/web/src/routes/link-expired.tsx",
-    "apps/web/src/components/magic-link-request.tsx",
-    "apps/web/src/routes/two-factor.tsx",
-    "apps/web/src/routes/two-factor-enroll.tsx",
-    "apps/web/src/routes/settings-profile.tsx",
-    "apps/web/src/routes/auth-layout.tsx",
-    "apps/web/src/lib/session.ts",
-    "apps/web/src/components/shell/app-header.tsx",
-    "apps/web/src/components/shell/user-menu.tsx",
-    "apps/api/src/auth/instance.ts",
-    "apps/api/src/auth/limits.ts",
-    "apps/api/src/auth/handler.ts",
     "apps/api/src/modules/auth/routes.ts",
     "apps/api/src/modules/auth/authentication-policy-routes.ts",
-    "apps/api/src/modules/auth/magic-link.test.ts",
-    "apps/api/src/modules/auth/sign-in-lockout.test.ts",
-    "node_modules better-auth 1.7.5 dist/plugins/magic-link/index.mjs (verify redirects)"
+    "apps/api/src/auth/authentication-policy.ts",
+    "apps/api/src/auth/instance.ts",
+    "apps/api/src/auth/sso-domains.ts",
+    "apps/api/src/auth/limits.ts",
+    "apps/api/src/modules/auth/sso.test.ts",
+    "apps/web/src/lib/session.ts",
+    "node_modules @better-auth/sso 1.7.6 dist/index.mjs"
   ],
   "scenarios": [
     {
@@ -46,18 +48,22 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A fresh DOC-030 access-2 Administrator account invited by the seeded Administrator (Daniel Okafor) through the API, with its Set your OpenLaw password email read from the lab Mailpit.",
-        "Test preparation only: the account's first invitation token was expired in the lab database, on this walkthrough's own row, to exercise refusal.",
-        "A second browser context for the other-device, revoked-session and password-reset checks. The expired-link re-walk used another fresh account of the same role."
+        "A fresh DOC-032 access Administrator account invited by the seeded Administrator (Daniel Okafor) through the API; Set your OpenLaw password read from the lab Mailpit. Test preparation expired this account's first invitation token in the lab database.",
+        "Second browser contexts for the other-device, revoked-session and password-reset checks.",
+        "For the organization methods: an invited Administrator whose first sign-in is single sign-on; Daniel Okafor's session held open in a separate browser context as the Administrator who changes settings; the two-issuer OIDC fixture; a deployment phase with SMTP_URL and SMTP_FROM empty (overlay-mail-off.json)."
       ],
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": "25 recorded Administrator steps passed. An Administrator invite sent Set your OpenLaw password with a Set password control, the line The link expires in one hour., and the token in the URL fragment. An expired link showed This link has expired or was already used. Ask for a new one. Opening /auth/set-password without the fragment showed This link is not valid. Ask for a new invitation or password reset. After a fresh invitation, a mismatch showed The passwords do not match. Set password then showed Password set with Sign in. The sign-in page showed Helix Software Group above the Sign in heading and form and no logo, which matches the public branding (no logo saved). A wrong password showed Check your email and password. The right one landed on /. The name menu showed the name and email, and the header showed Helix Software Group at 1440 px but not at 700 px. The used invitation link was refused. Turn on two-factor took Password, then a QR code and manual secret. A wrong Code was refused, and Confirm showed 10 backup codes. After Done, Profile said two-factor is on. At Two-factor authentication a wrong code showed Wrong code. Try again, or restart sign-in., and the current code with Verify reached /. A backup code worked once and its reuse was refused. Sign out on the challenge restarted sign-in. Sign out other devices sent a second browser to sign-in while this one stayed. An abandoned Re-enroll left two-factor off. Turn off two-factor refused a wrong password with Check your password., then worked with the right one. Email me a sign-in link with Send link showed Check your email. Sign in to OpenLaw (5 minutes) signed in once, and the reused link opened Sign-in link expired. Re-walk against the corrected paragraph: with sign-in links on (the real lab setting), that page showed Email and Send link and no Back to sign-in, and Send link gave a new link that signed in. With links off, mocked in the browser only, it showed only Back to sign-in, which returned to sign-in, and password sign-in worked. The fourth sign-in link request showed Too many sign-in link requests. Try again later. Set up or reset your password sent a 60-minute link. Password set ended a session held by another browser, the old password was refused, and the new one worked. The fourth setup request showed Too many password setup requests. Try again later. Nine wrong passwords then a correct one cleared the counter. After 10 wrong codes across two challenges, the next attempt, and the current code, showed Too many attempts. Wait 15 minutes, then try again. After 10 wrong passwords, the next attempt and the correct password showed the same message. An ineligible address got the same Check your email page for both requests and no email. Supplementary mocked checks rendered Continue with single sign-on, Single sign-on is not configured yet and Administrator sign-in (which opens the password form).",
+      "actual": "32 recorded Administrator steps passed. Invitation: Set your OpenLaw password with Set password, The link expires in one hour. and the token in the URL fragment. An expired token showed This link has expired or was already used. Ask for a new one.; the link without its fragment showed This link is not valid. Ask for a new invitation or password reset.; a mismatch showed The passwords do not match.; Set password gave Password set with Sign in; the used link was refused. The sign-in page showed Helix Software Group above the form and no logo (none saved). A wrong password showed Check your email and password.; the right one landed on /, and the name menu showed name and email; the header showed the organization name at 1440 px, not at 700 px. Two-factor: Turn on two-factor, Password, QR code and manual secret, a wrong Code refused, 10 backup codes, Done, Profile says on; the challenge refused a wrong code with Wrong code. Try again, or restart sign-in. and accepted the current one; a backup code worked once; Sign out on the challenge restarted sign-in; Sign out other devices sent a second browser to sign-in; an abandoned Re-enroll left two-factor off; Turn off two-factor refused a wrong password with Check your password. Sign-in links: Check your email, a five-minute link that signs in once; the reused link opened Sign-in link expired with Email and Send link (no Back to sign-in) and Send link gave a working link; the fourth request showed Too many sign-in link requests. Try again later. Set up or reset your password gave a one-hour link; the new password signed out a browser signed in before; the fourth setup request showed Too many password setup requests. Try again later. Ten wrong codes and eleven wrong passwords each showed Too many attempts. Wait 15 minutes, then try again., also for the correct value; a success after nine wrong passwords reset the count. An ineligible address got the same Check your email and no mail. Organization methods on the owned lab: with no saved policy, legacy mode oidc and no provider (fault injection), the page said Single sign-on is not configured yet. Use administrator sign-in. and Administrator sign-in signed Daniel in with a password. With one provider the page showed one Continue with single sign-on button; the invited Administrator went to http://oidc:8080 and landed on / as administrator. With two providers the page said Enter your work email. Your organization's identity provider opens next.; the helix.example address went to http://oidc:8080 and signed in; unlisted.example showed No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator. with Email me a sign-in link and Sign in with a password still offered, and Daniel signed in with a password. With Legal password off, the SSO and Get a sign-in link views offered Administrator sign-in, which opened the password form and signed Daniel in. With required two-factor, the invited Administrator's first single sign-on opened Two-factor authentication with Your organization requires two-factor authentication. and no Password field; /contracts stayed on enrollment; after steps 5 to 8 the app opened; later single sign-on and a sign-in link each asked for a code. After Daniel removed both providers while single sign-on was the only Legal method, a signed-out browser showed only Sign-in is unavailable. Contact your administrator. and no Administrator sign-in; Daniel's open session turned on Email and password in Settings → Advanced → Authentication (Saved) and the password form returned. With no email relay and sign-in links as the only Legal method, the page showed only Sign-in is unavailable. Contact your administrator.; the same recovery worked.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
-        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
-        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
+        "docs/documentation/batches/DOC-032/access/walkthrough.json",
+        "docs/documentation/batches/DOC-032/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/access/lib.mjs",
+        "docs/documentation/batches/DOC-032/access/phase.sh",
+        "docs/documentation/batches/DOC-032/access/overlay-oidc.json",
+        "docs/documentation/batches/DOC-032/access/overlay-mail-off.json",
+        "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+        "docs/documentation/batches/DOC-032/access/technical-review.json"
       ]
     },
     {
@@ -66,37 +72,96 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "A fresh DOC-030 access-2 Legal Team Member account invited by the seeded Administrator (Daniel Okafor) through the API, with its Set your OpenLaw password email read from the lab Mailpit.",
-        "Test preparation only: the account's first invitation token was expired in the lab database, on this walkthrough's own row, to exercise refusal.",
-        "A second browser context for the other-device, revoked-session and password-reset checks. The expired-link re-walk used another fresh account of the same role."
+        "A fresh DOC-032 access Legal Team Member account invited by Daniel Okafor through the API, with the same test preparation as the Administrator.",
+        "A second fresh Legal Team Member archived by the Administrator after it requested a sign-in link; a third activated with a password for the required two-factor checks; invited Legal Team Members on helix.example and harbor.example whose first sign-in is single sign-on; the seeded Nadia Haddad for Administrator sign-in and recovery checks.",
+        "The same owned lab, OIDC fixture, open Administrator session and no-email phase as the Administrator scenario."
       ],
       "expected": "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects. Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account.",
-      "actual": "23 recorded Legal Team Member steps passed. An Administrator invite sent Set your OpenLaw password with a Set password control, the line The link expires in one hour., and the token in the URL fragment. An expired link showed This link has expired or was already used. Ask for a new one. Opening /auth/set-password without the fragment showed This link is not valid. Ask for a new invitation or password reset. After a fresh invitation, a mismatch showed The passwords do not match. Set password then showed Password set with Sign in. The sign-in page showed Helix Software Group above the Sign in heading and form and no logo, which matches the public branding (no logo saved). A wrong password showed Check your email and password. The right one landed on /. The name menu showed the name and email, and the header showed Helix Software Group at 1440 px but not at 700 px. The used invitation link was refused. Turn on two-factor took Password, then a QR code and manual secret. A wrong Code was refused, and Confirm showed 10 backup codes. After Done, Profile said two-factor is on. At Two-factor authentication a wrong code showed Wrong code. Try again, or restart sign-in., and the current code with Verify reached /. A backup code worked once and its reuse was refused. Sign out on the challenge restarted sign-in. Sign out other devices sent a second browser to sign-in while this one stayed. An abandoned Re-enroll left two-factor off. Turn off two-factor refused a wrong password with Check your password., then worked with the right one. Email me a sign-in link with Send link showed Check your email. Sign in to OpenLaw (5 minutes) signed in once, and the reused link opened Sign-in link expired. Re-walk against the corrected paragraph: with sign-in links on (the real lab setting), that page showed Email and Send link and no Back to sign-in, and Send link gave a new link that signed in. With links off, mocked in the browser only, it showed only Back to sign-in, which returned to sign-in, and password sign-in worked. The fourth sign-in link request showed Too many sign-in link requests. Try again later. Set up or reset your password sent a 60-minute link. Password set ended a session held by another browser, the old password was refused, and the new one worked. The fourth setup request showed Too many password setup requests. Try again later. Nine wrong passwords then a correct one cleared the counter. After 10 wrong codes across two challenges, the next attempt, and the current code, showed Too many attempts. Wait 15 minutes, then try again. After 10 wrong passwords, the next attempt and the correct password showed the same message. A throwaway Legal Team Member archived after requesting a link was returned to sign-in with This sign-in link could not be used. Request a new link or contact your administrator.",
+      "actual": "33 recorded Legal Team Member steps passed. The invitation, set-password, sign-in, name-menu, two-factor, backup-code, Sign out other devices, Re-enroll, Turn off two-factor, sign-in link, link budget, password reset, setup budget, code lockout and password lockout steps gave the same results as for the Administrator, on this account. An archived account's sign-in link ended on /auth/login with This sign-in link could not be used. Request a new link or contact your administrator. With single sign-on as the legacy mode and no provider, Administrator sign-in opened the password form and Nadia Haddad got Password sign-in is disabled for this account. With one provider the invited Legal Team Member signed in through http://oidc:8080 and landed on / as legal_team_member. With two providers the helix.example address went to http://oidc:8080 and the harbor.example address to http://oidc:8082, both signing in; unlisted.example showed the no-provider message and Nadia then signed in with Sign in with a password. With Legal password off, Administrator sign-in opened the password form and Nadia got Password sign-in is disabled for this account. With required two-factor, password sign-in opened Two-factor authentication with Your organization requires two-factor authentication. and a Password field; /contracts stayed on enrollment; after Password, Turn on two-factor, Code, Confirm and 10 backup codes, Done opened /; Profile showed Required by your organization with no Turn off two-factor or Re-enroll; the next password sign-in and a sign-in link each asked for a code. After the last provider was removed while single sign-on was the only Legal method, the page showed only Sign-in is unavailable. Contact your administrator. with no Administrator sign-in; once the Administrator turned Email and password on, Nadia signed in. With no email relay the page had no Email me a sign-in link and no Set up or reset your password; Sign-in link expired showed only Back to sign-in, which returned to sign-in, and Nadia signed in with a password.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/access-2/walkthrough.json",
-        "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/access-2/lib.mjs",
-        "docs/documentation/batches/DOC-030/access-2/technical-review.json"
+        "docs/documentation/batches/DOC-032/access/walkthrough.json",
+        "docs/documentation/batches/DOC-032/access/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/access/lib.mjs",
+        "docs/documentation/batches/DOC-032/access/phase.sh",
+        "docs/documentation/batches/DOC-032/access/overlay-oidc.json",
+        "docs/documentation/batches/DOC-032/access/overlay-mail-off.json",
+        "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+        "docs/documentation/batches/DOC-032/access/technical-review.json"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and technical reviewer. It is not a human user study and not the feature owner's approval.",
-    "The work2 lab (openlaw-docs-80ceef9e-work2, source 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7) is shared with other DOC-030 agents. Only doc030.access2.* throwaway accounts were created, and no organization setting was changed. One throwaway account was archived by this walkthrough. The lab runs with AUTH_RATE_LIMIT=off, but the lockouts and email budgets are database counters and were observed.",
-    "The first run (10:31-10:35 UTC) walked guide bytes 6a8ac93d. Its expired-link step failed on both roles because the page had no Back to sign-in while sign-in links were on. The author then corrected only that paragraph (29d19f72). The step was walked again for both roles at 10:41-10:45 UTC. walkthrough.json keeps the failed records under supersededSteps. Every other step keeps its first-run observation, because the rest of the guide text did not change (git diff: one line).",
-    "Required two-factor authentication (the organization policy, Your organization requires two-factor authentication. and Required by your organization) was not exercised: it needs an organization-wide policy change on the shared lab.",
-    "Single sign-on, Administrator sign-in, Password sign-in is disabled for this account. and Sign-in link expired with sign-in links off need organization-wide policy changes. They were checked only as browser rendering with a mocked methods answer. No live identity provider was used.",
-    "The seeded organization has no saved logo, so only the no-logo branch was observed live.",
-    "The five-minute sign-in link expiry was not waited out; used-link refusal was observed. The one-hour password setup token lifetime was read from the lab database.",
-    "An Administrator landing on unfinished organization setup was not exercised, because the lab onboarding is complete. The OAuth Client sign-in return (M41) is left to the Connect guides.",
-    "The per-client-address budget of 30 sign-in link requests in 15 minutes is shared by every agent on this lab; the walkthrough waited for room instead of exhausting it."
+    "Owned lab accs (openlaw-docs-9d2b1705-accs), created for this seat from 4ca41822b685a2a1e58a38b4f25e421cf735c54e with lab.mjs (app 127.0.0.1:43357, mail 48457, subnets 10.243.57.0/24 and 10.244.57.0/24), Helix seed light profile, random seed 7, seeded 2026-09-28T07:21:50.673Z. Every organization-wide change (identity providers, allowed domains, sign-in methods, required two-factor, logo, email relay) was made on this lab only and put back; the lab was destroyed afterwards. The shared work lab was not used. The lab runs with AUTH_RATE_LIMIT=off, but the lockouts and email budgets are database counters and were observed.",
+    "Identity providers were a local OpenID Connect fixture (oauth2-mock-server 9.2.0, DOC-032/admin-org/oidc-fixture.mjs) with two issuers, http://oidc:8080 and http://oidc:8082, beside the lab (overlay-oidc.json). No vendor identity provider was used; the fixture asserts the fictional identity the script selects.",
+    "Single sign-on is not configured yet is reachable only through the legacy unsaved-policy fallback (the author's note). It was produced by fault injection on the owned lab: org_settings.auth_mode set to oidc with no saved policy and no provider, then set back to built_in.",
+    "Required two-factor was exercised with the Administrator's first sign-in through single sign-on and the Legal Team Member's through a password; each later method (password, sign-in link, single sign-on) asked for a code.",
+    "Product behavior recorded, not a guide error: removing the last identity provider while single sign-on is the only Legal method leaves no Administrator sign-in link (the defect the author and the admin-org seat recorded). The enrollment page also shows Confirm your password to start enrollment. without a Password field for an account that has no password; the guide's Enter Password if the page asks for it still holds.",
+    "The seeded organization has no saved logo on the staff page; the saved-logo branch was observed on the Portal sign-in page (portal-sign-in evidence), which uses the same public branding.",
+    "The five-minute sign-in link lifetime was read from the lab database and a used link was refused; the five-minute wait itself was observed for the Portal (portal-sign-in evidence). The one-hour password setup token lifetime was read from the lab database.",
+    "An Administrator landing on unfinished organization setup was not exercised, because the lab onboarding is complete."
   ],
   "previousEvidence": {
-    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "contentSha256": "3a7849930fbe70f211743b1d326348416849f383a6b3102ed9d2902e3cd22b5c",
-    "verifiedAt": "2026-09-16T18:13:19Z"
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
+    "verifiedAt": "2026-09-25T10:45:02.630Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): I read the whole app diff. The hunks that reach this guide are the nodemailer patch (every invitation, password-setup and sign-in link email) and the sharp patch (the saved logo on the sign-in page is stored at save time; sharp only checks it and makes the email logo). The access replay on bacc, built from ad345da5, passed all 65 staff-sign-in steps, with links read from Mailpit, two-factor, SSO with the OIDC fixture and the no-relay case. The smoke signed in Administrator and Legal Team Member. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay.mjs",
+        "sha256": "91121ab3f30907ee98e550e8c393e598928ec2983050af24864423b8f6f8a94f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/fixtures.json",
+        "sha256": "19ecd8d43fd1e7d9fc06202f0b14bab784d6c29e3632863315e3f6bd1b6b2b49"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/lib.mjs",
+        "sha256": "e74308770e7321da719cbadd107150b8a3ff3482d495f759b476ca5fd3665bc7"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/overlay-mail-off.json",
+        "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/overlay-oidc.json",
+        "sha256": "c1e697d0b54f32f2e62cb805e5afc1d8532c8ad536421b96aa996a7a18d6dd8b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/phase.sh",
+        "sha256": "7004c1c56627c0cd19b6a80a13f1131f796947356165d4ae84aea3a65b0e0fa1"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/portal-attempt1.json",
+        "sha256": "32fb4a738e8356f30e53c9dcd64074ed621a8ad46878410b0395c9bc0b2a4262"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay.json",
+        "sha256": "b0113af405532fb3cade2737289cdd1567e863fdd32fa75866e3f8663e0c5893"
+      },
+      {
+        "path": "batches/DOC-032/bridge/smoke.mjs",
+        "sha256": "99263c02987b7108be91f1df25248d0d4a4495264edffb896eb98c1258667807"
+      },
+      {
+        "path": "batches/DOC-032/bridge/smoke.json",
+        "sha256": "7c9da8c1098ba4818a0279fedeae71f1e04bf72aad05f81118e14e32484fa09a"
+      }
+    ]
+  }
 }

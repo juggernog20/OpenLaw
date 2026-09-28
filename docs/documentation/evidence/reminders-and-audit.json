@@ -88,6 +88,57 @@
     "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
     "verifiedAt": "2026-09-25T13:34:56.886Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of audit-log/routes.ts, audit-log/tool-calls.ts, org/routes.ts, settings-mcp.tsx, list-editor.tsx, activity.ts and messages/en-US.json. settings.tsx, settings-reminders.tsx, reminder-offsets.ts, my-reminder-lead-times.tsx, settings-notifications.tsx, settings-audit-log.tsx, audit-settings-tabs.tsx, settings-tool-calls.tsx, morning-round.ts, round-trigger.ts and activity-redaction.ts did not change. 3294f749 moved the Audit log, CSV export and Tool calls reads into shared functions for the Administration Tools; the filters, audience reach, redaction of an unreached second record, the export bound and the CSV columns are unchanged. org/routes.ts moved the reminder offset and comment-words reads into functions with the same answers. settings-mcp.tsx changed captions and moved the OAuth note; the Tool calls in the last day button did not change. activity.ts adds narrations, so the Action filter offers more events; the guide does not list them. list-editor.tsx only adds an optional expanded-row slot; the lead time list keeps Add lead time, Remove and the reorder handle. No statement in the guide changed. I replayed the DOC-030 admin-config reminders, audit and Tool calls sections on c3cmp: all 15 V-C41 steps passed (Administrator, with Legal Team Member and Administrator audience checks), the same count as DOC-030, after two harness-only attempts (see attempts); from 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches the Comment emails switch and the briefing email. The admin-config replay on final (section reminders) passed 5 of 5 steps: lead times, the switch on by default and saved on change, delivery through the morning round with a \"Your daily briefing\" email for the colleague past 08:00 and none before 08:00, and the restore of the list. The comment-words effect on the email itself was also replayed by the conversations script. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/admin-config-replay.mjs",
+        "sha256": "05cb2a824e7ce9613d774b51359faabc15a181fae42087831bceba2dfa2c7e3a"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/admin-config-replay/api.mjs",
+        "sha256": "6eb6f71fd2c7033a38fb1aa9e585b923e1199ceff8e2573cfc830269a0e6b729"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.json",
+        "sha256": "175ac5bf27e3dbb981a295686bc95955b9a0a66d9c14edb0d34dc1c925e4541c"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt1.json",
+        "sha256": "6cd2fc64addadd37be6f1ca8aa393beecbf2a44ba87556c2b58a15cecfc4cedb"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt2.json",
+        "sha256": "c899d30ba4b2ab1cb7675c242d329b7be6aa220156ffa70a83edc4603914b2fb"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-config-replay.mjs",
+        "sha256": "f90ae466dda0912fa2ee7f739f6839213e57a2988448a22c15aaca19923a5b28"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-config-replay/api.mjs",
+        "sha256": "f07f7067b69e8f376b696859f2cc8d449dfbdf36264745e65792d1bfad3d3796"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-config-replay.json",
+        "sha256": "7d8ec72d4bcf062c2a84c7f39cbf1954ce43c2b47c0f40fc6136d6572d1c5855"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

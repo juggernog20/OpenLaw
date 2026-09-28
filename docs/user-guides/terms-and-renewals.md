@@ -25,7 +25,7 @@ Changing away from Auto-renewing clears a renewal period the new type cannot hol
 1. On an Auto-renewing Contract with an expiry, open **Approvals** and select **Renew**. If the **Renewal date passed — pending confirmation** banner shows, you can select **Review renewal** instead.
 2. Choose **Confirm the roll**. It is the default option.
 3. Review **New expiry date**. A known renewal period supplies a proposed date; enter the actual date if it differs. The new date must be after the current expiry.
-4. Select **Confirm renewal**. Check the new expiry, notice deadline, **Last renewal**, and the renewal row on **Approvals & signing**.
+4. Select **Confirm renewal**. Check the new expiry, notice deadline, **Last renewal**, and the new row under **Renewals** on the **Approvals** tab.
 
 The app does not advance expiry automatically. Confirmation changes the term without changing the Status or Stage. If somebody already changed the expiry, review the refreshed current expiry and your entered new date before another attempt. Cancel and reopen **Renew** to see a fresh proposed date; two competing confirmations must not record the same roll twice.
 

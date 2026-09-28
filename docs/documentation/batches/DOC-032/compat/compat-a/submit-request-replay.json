@@ -1,0 +1,321 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-a",
+  "group": "portal",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/portal/walkthrough.mjs",
+  "script": "docs/documentation/batches/DOC-032/compat/compat-a/portal-replay.mjs",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "app": "http://127.0.0.1:43340",
+  "mail": "http://127.0.0.1:48440",
+  "browser": "Playwright 1.63.0 Chromium, headless; one isolated context per identity",
+  "fixtures": {
+    "script": "docs/documentation/batches/DOC-032/compat/compat-a/portal-replay/fixtures.mjs",
+    "stamp": 1790579782116,
+    "requestType": "DOC-032 compat compat-a Evaluation review 1790579782116",
+    "contractType": "DOC-032 compat compat-a Evaluation 1790579782116",
+    "entity": "DOC-032 compat compat-a Evaluation Holdings Ltd 1790579782116",
+    "fields": [
+      "DOC-032 compat compat-a Business reason 1790579782116",
+      "DOC-032 compat compat-a Business reviewer 1790579782116"
+    ],
+    "intakeLink": "DOC-032 compat compat-a evaluation checklist 1790579782116"
+  },
+  "article": "submit-request",
+  "articleHashesTested": {
+    "submit-request": "c563d0fa9c8f17b1ba97b117516abc056c1266a980c1861f71bfd21b75a61f67"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "phases": ["submit", "department", "follow"],
+      "articles": ["submit-request", "follow-request"],
+      "runStamp": 1790579797761,
+      "fixtureStamp": 1790579782116,
+      "startedAt": "2026-09-28T07:16:37.762Z",
+      "finishedAt": "2026-09-28T07:17:32.763Z"
+    }
+  ],
+  "steps": [
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Step 1: Portal home, read Before you submit, select the request type",
+      "expected": "Home shows Before you submit links, Your requests and request type cards; the card opens /portal/new/<slug>; the form shows its own Before you submit link",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Home Before you submit links: How to ask legal for help; Contract review turnaround times; When you need a DPA; Using customer names in marketing; Helix intranet - Legal (opens in a new tab). The \"DOC-032 compat compat-a Evaluation review 1790579782116\" card opened /portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116. The form's own Before you submit panel beside the questions lists: DOC-032 compat compat-a evaluation checklist 1790579782116 (opens in a new tab).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:38.989Z",
+      "at": "2026-09-28T07:16:39.333Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Steps 2 to 6: form order under About your request, asterisks, Department and Urgency defaults",
+      "expected": "About your request lists Title, Department, Urgency, then the Form's Intake Rows (Description among them), with Attachments last; required ones carry an asterisk; Department starts at Jonas's own Department and is required; Urgency starts at Medium with Low, Medium, High, Critical",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Labels in order: Title* (required) | Department* (required) | Urgency* (required) | Description* (required) | Counterparties | Our entity | Term type | Value | Currency | Frequency | DOC-032 compat compat-a Business reason 1790579782116* (required) | DOC-032 compat compat-a Business reviewer 1790579782116 | Attachments. Required marks on: Title* (required) | Department* (required) | Urgency* (required) | Description* (required) | DOC-032 compat compat-a Business reason 1790579782116* (required). Department started at \"Marketing\" (Jonas's own Department) with options Choose a Department, Engineering, Finance, Marketing, People, Procurement, Sales. Urgency started at Medium; options Low, Medium, High, Critical.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:39.334Z",
+      "at": "2026-09-28T07:16:39.390Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Step 7 (negative): Submit request with required answers missing",
+      "expected": "Nothing is sent; the form names each missing answer and marks the question",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Alert \"Fill Title, Description, and DOC-032 compat compat-a Business reason 1790579782116 first — the form requires them.\"; marks under the questions: Title is required. / Description is required. / DOC-032 compat compat-a Business reason 1790579782116 is required.; POST /api/v1/requests sent: 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:39.392Z",
+      "at": "2026-09-28T07:16:39.982Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Answer conditional questions: Term type Fixed shows a required Expiry date; Evergreen hides it; the answer stays in the form",
+      "expected": "Expiry date is absent until Term type is Fixed; then it carries an asterisk and blocks submission when empty; Evergreen hides it; returning to Fixed shows the kept answer",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Term type options: =Not set, fixed=fixed, auto_renew=auto_renew, evergreen=evergreen. Expiry date absent before a choice; Fixed showed \"Expiry date* (required)\"; Submit request said \"Fill Title, Description, Expiry date, and DOC-032 compat compat-a Business reason 1790579782116 first — the form requires them.\" with \"Expiry date is required.\"; Evergreen hid Expiry date; Fixed again showed the kept answer 2027-03-31, and the optional \"DOC-032 compat compat-a Fixed-term note 1790579782116\" under the same Branch (1 shown). No POST sent.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:39.983Z",
+      "at": "2026-09-28T07:16:40.431Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Answer conditional questions: Our entity, person question, Value and Counterparties controls",
+      "expected": "Our entity lists only the Portal-listed Entity; the person question offers only Not set and has no asterisk; Value is one Row with amount, currency and frequency; Counterparties finds an existing Counterparty and offers Add new; the first is marked Primary",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Our entity options: Not set, DOC-032 compat compat-a Evaluation Holdings Ltd 1790579782116 (the staff registry holds 41 Entities; 1 are Portal-listed and exactly those are offered). \"DOC-032 compat compat-a Business reviewer 1790579782116\" offers Not set and has no asterisk. Value controls Amount:1, Currency:1, Frequency:1 sit in one Row; amount 25000 entered. Counterparties search \"Lit\" offered: Cirrus Observability Ltd | Add new \"Lit\"; picked \"Cirrus Observability Ltd\", then 'Add new \"DOC-032 compat compat-a Northstar Evaluation Ltd 1790579797761\"'. Selected rows: Cirrus Observability Ltd Primary | DOC-032 compat compat-a Northstar Evaluation Ltd 1790579797761.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:40.432Z",
+      "at": "2026-09-28T07:16:42.795Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Step 6: Attachments, Choose files beyond 20, then Remove",
+      "expected": "The form keeps 20 files, shows A request carries at most 20 files., and Remove takes a file off the list",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Chose 21 files: 20 listed, the 21st dropped, with \"A request carries at most 20 files.\". Remove took each listed file off; 0 remain.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:42.796Z",
+      "at": "2026-09-28T07:16:43.904Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Step 6: select one file with Choose files and drop another onto the form",
+      "expected": "Both filenames are listed",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "Listed doc032-compat-a-northstar-terms-1790579797761.pdf (Choose files) and doc032-compat-a-northstar-dropped-1790579797761.pdf (dropped onto the form).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:43.906Z",
+      "at": "2026-09-28T07:16:44.056Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Steps 2 to 8: complete the form, Submit request once, keep the confirmation open",
+      "expected": "Confirmation reads Thanks! Your request has been submitted to legal.; Attaching your files… shows while uploads run; no failure and no R- reference on the confirmation; one POST; Open request offered",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "While the two uploads were held the confirmation read \"Thanks! Your request has been submitted to legal. You can track your open requests through this portal Attaching your files… Open request Back to the portal\"; after release it read \"Thanks! Your request has been submitted to legal. You can track your open requests through this portal Open request Back to the portal\". No R- reference and no failure on the confirmation; one POST /api/v1/requests (the API numbered it R-20); Open request offered.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.058Z",
+      "at": "2026-09-28T07:16:44.633Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Step 9: Open request, read the R- reference and check saved answers and attachments",
+      "expected": "The line under the title shows the R- reference; What you submitted shows the description, Department, Urgency, answers and both files with their original bytes; no edit control",
+      "page": "/portal/requests/20",
+      "actual": "Meta line \"R-20 · DOC-032 compat compat-a Evaluation review 1790579782116 · Submitted Sep 28\". What you submitted: \"What you submitted Attachments doc032-compat-a-northstar-terms-1790579797761.pdf doc032-compat-a-northstar-dropped-1790579797761.pdf Department Procurement Urgency High Description DOC-032 compat compat-a: Northstar proposes a 60-day evaluation. Please review the evaluation terms. Counterparties Cirrus Observability Ltd and DOC-032 compat compat-a Northstar Evaluation Ltd 1790579797761 Our entity DOC-032 compat compat-a Evaluation Holdings Ltd 1790579782116 Term type fixed Expiry date Mar 31, 2027 Value amount £25,000.00 Value currency GBP Value frequency one_time DOC-032 compat compat-a Business reason 1790579782116 DOC-032 compat compat-a: evaluation before a purchase decision.\". Downloads doc032-compat-a-northstar-terms-1790579797761.pdf, doc032-compat-a-northstar-dropped-1790579797761.pdf matched the original bytes; 0 buttons and 0 inputs in the card (no edit control).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.634Z",
+      "at": "2026-09-28T07:16:44.869Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Check the result: Your requests shows the new Request as Open with Legal Owner: Not assigned yet",
+      "expected": "One row with R- reference, title, Open and Legal Owner: Not assigned yet",
+      "page": "/portal",
+      "actual": "Your requests: \"R-20 DOC-032 compat compat-a Review the Northstar evaluation terms 1790579797761 DOC-032 compat compat-a Evaluation review 1790579782116 · this minute Legal Owner: Not assigned yet Open\" (1 row).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.870Z",
+      "at": "2026-09-28T07:16:44.966Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Check the result: Legal receives a Request to triage; no Contract or Matter exists yet",
+      "expected": "Staff API read shows status new with no converted record",
+      "page": null,
+      "actual": "Nadia's API read of R-20: status \"new\", convertedRecord null, department \"Procurement\", urgency \"high\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.967Z",
+      "at": "2026-09-28T07:16:45.609Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Step 3 (negative): a Requester without a listed Department must choose one",
+      "expected": "Department starts empty and Submit request names Department as missing",
+      "page": null,
+      "actual": "Nadia (no Department on her profile) saw Department start at \"Choose a Department\"; Submit request answered \"Fill Department first — the form requires it.\". Nothing was submitted.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:45.610Z",
+      "at": "2026-09-28T07:16:46.419Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: an attachment fails; the Request still exists and the failure names the file and the R- reference",
+      "expected": "Confirmation names the file and the R- reference; the Request is saved without the file; the file goes on a reply",
+      "page": "/portal/requests/21",
+      "actual": "Confirmation alert \"This file did not attach. Quote R-21 and send it to Legal another way. doc032-compat-a-failing-1790579797761.pdf\". R-21 opened without the file in What you submitted; Jonas sent doc032-compat-a-failing-1790579797761.pdf on a reply in Comments and it appeared in the conversation.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:46.420Z",
+      "at": "2026-09-28T07:16:48.425Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: Legal decides the Request while its files upload",
+      "expected": "Confirmation links to a reply on the same Request; the link opens its composer; the submission stays saved",
+      "page": "/portal/requests/22#portal-request-composer",
+      "actual": "Confirmation alert \"This file did not attach. Add it to a reply on R-22. doc032-compat-a-race-1790579797761.pdf — This Request has already been dispositioned. Attach new paper to a reply in its thread.\"; its link opened /portal/requests/22#portal-request-composer with the Comments composer visible; Jonas sent doc032-compat-a-race-1790579797761.pdf on a reply there; status Declined; What you submitted kept the description.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:48.427Z",
+      "at": "2026-09-28T07:16:50.881Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: a form address that does not exist returns to the Portal home",
+      "expected": "Unknown form slug redirects to /portal",
+      "page": "/portal",
+      "actual": "/portal/new/doc032-compat-a-no-such-form went to /portal.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:50.882Z",
+      "at": "2026-09-28T07:16:50.998Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: submission reports an error without confirmation; Your requests shows no new Request",
+      "expected": "Error text shows, answers stay, and no Request was saved",
+      "page": "/portal",
+      "actual": "Alert \"The request could not be submitted.\"; Title kept; 0 confirmation; Your requests lists 0 Request with that title.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:50.999Z",
+      "at": "2026-09-28T07:16:51.352Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Limitation check: the built-in Department Row On intake form on the destination Form",
+      "expected": "Record what the Portal form shows when an Administrator turns on the Department Row",
+      "page": "/portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116",
+      "actual": "With the Department Row On intake form the form shows 2 Department questions. Labels: Title* (required) | Department* (required) | Urgency* (required) | Description* (required) | Counterparties | Our entity | Term type | Value | Currency | Frequency | DOC-032 compat compat-a Business reason 1790579782116* (required) | DOC-032 compat compat-a Business reviewer 1790579782116 | Department | Attachments. Controls: [{\"id\":\"request-department\",\"selected\":\"Marketing\",\"required\":\"true\"},{\"id\":\"request-field-owning_department\",\"selected\":\"Not set\",\"required\":\"false\"}].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:52.724Z",
+      "at": "2026-09-28T07:16:52.994Z",
+      "run": 1
+    },
+    {
+      "article": "submit-request",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Limitation check: submit two different Department answers and see which one Legal and conversion use",
+      "expected": "Record what the Request page, the staff read and the converted Contract hold",
+      "page": "/portal/requests/23",
+      "actual": "Sent departmentId=01a0e6c7-b0e1-7989-af4c-bafbfd777863 and customFields.owning_department=01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d. Portal What you submitted: \"What you submitted Department Procurement Urgency Medium Description DOC-032 compat compat-a: two Department answers. Term type evergreen DOC-032 compat compat-a Business reason 1790579782116 DOC-032 compat compat-a: Department check. Department Engineering\". Staff read: department \"Procurement\", customFields.owning_department \"01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d\". Converted to C-90; its Department: \"Engineering\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:52.995Z",
+      "at": "2026-09-28T07:16:53.472Z",
+      "run": 1
+    }
+  ],
+  "observations": [
+    {
+      "article": "submit-request",
+      "at": "2026-09-28T07:16:52.994Z",
+      "topic": "Built-in Department Row On intake form",
+      "observed": "Portal form labels: Title* (required) | Department* (required) | Urgency* (required) | Description* (required) | Counterparties | Our entity | Term type | Value | Currency | Frequency | DOC-032 compat compat-a Business reason 1790579782116* (required) | DOC-032 compat compat-a Business reviewer 1790579782116 | Department | Attachments. Department questions: 2; controls [{\"id\":\"request-department\",\"selected\":\"Marketing\",\"required\":\"true\"},{\"id\":\"request-field-owning_department\",\"selected\":\"Not set\",\"required\":\"false\"}]."
+    },
+    {
+      "article": "submit-request",
+      "at": "2026-09-28T07:16:53.472Z",
+      "topic": "Two Department answers on one Request",
+      "request": "R-23",
+      "observed": "Sent departmentId=01a0e6c7-b0e1-7989-af4c-bafbfd777863 and customFields.owning_department=01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d. Portal What you submitted: \"What you submitted Department Procurement Urgency Medium Description DOC-032 compat compat-a: two Department answers. Term type evergreen DOC-032 compat compat-a Business reason 1790579782116 DOC-032 compat compat-a: Department check. Department Engineering\". Staff read: department \"Procurement\", customFields.owning_department \"01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d\". Converted to C-90; its Department: \"Engineering\"."
+    }
+  ],
+  "productBugs": [
+    {
+      "article": "submit-request",
+      "symptom": "The Portal Term type question lists its raw stored values as choices (fixed, auto_renew, evergreen) instead of labels such as Fixed and Evergreen; What you submitted also shows 'Term type fixed' and 'Value frequency one_time'.",
+      "reproduction": "Portal form /portal/new/doc_032_compat_compat_a_evaluation_review_1790579782116, Term type options =Not set, fixed=fixed, auto_renew=auto_renew, evergreen=evergreen.",
+      "effect": "The guide's example says Fixed and Evergreen; a reader finds the lowercase values, so the step still works.",
+      "at": "2026-09-28T07:16:40.431Z"
+    },
+    {
+      "article": "submit-request",
+      "symptom": "With the built-in Department Row On intake form, the Portal form asks Department twice: the fixed Department basic (required) and a second Department question (optional, starts at Not set). The Request stores both. Conversion takes the second answer as the new Contract's Department and ignores the Department basic that Legal saw on the Request.",
+      "reproduction": "Sent departmentId=01a0e6c7-b0e1-7989-af4c-bafbfd777863 and customFields.owning_department=01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d. Portal What you submitted: \"What you submitted Department Procurement Urgency Medium Description DOC-032 compat compat-a: two Department answers. Term type evergreen DOC-032 compat compat-a Business reason 1790579782116 DOC-032 compat compat-a: Department check. Department Engineering\". Staff read: department \"Procurement\", customFields.owning_department \"01a0e6c7-b0e7-7a6a-98ae-b0aa9b6bbf5d\". Converted to C-90; its Department: \"Engineering\".",
+      "effect": "The guide says Department identifies the business team and that conversion carries it to the new record. Under this configuration the record gets the second answer instead.",
+      "at": "2026-09-28T07:16:53.472Z"
+    }
+  ]
+}

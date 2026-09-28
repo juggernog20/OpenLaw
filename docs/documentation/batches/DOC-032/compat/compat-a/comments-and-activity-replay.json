@@ -1,0 +1,895 @@
+{
+  "kind": "article-compatibility-replay",
+  "task": "DOC-032",
+  "issue": 1194,
+  "adaptedFrom": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+  "group": "conversations",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "scenarios": {
+    "comments-and-activity": "V-C07",
+    "notifications": "V-C08"
+  },
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "labName": "work",
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, 1440x900, one isolated browser context per identity",
+  "fixtures": {
+    "doc029-conv-notice.pdf": "7b574a6691ddc7b5388b305c1bce733777ad48cd61aa769a8ad05458459fb173",
+    "doc029-conv-schedule.pdf": "ff42a9deb8835b41d31c49140ec5d9c6a2ecfb0eca19b6a78f8a082c8c501bf6",
+    "doc029-conv-portal-note.pdf": "3fc501e60b48f758f7bf6ba46d100e8a5bd9f1caba793b205b2339bdeaee9ffc",
+    "doc029-conv-legal-memo.pdf": "9676bac39a6f02d0056c6b85aec6d8845bcd1081c6ce1991fe1cdbae67ba9535",
+    "doc029-conv-extra-1.txt": "9f29589a72d7ff0f211331344d160bca2240d0bab49e11ace60ca18fbc617c4c",
+    "doc029-conv-extra-2.txt": "320075fe4049a777ce9284010d1e537225402e4bcc1b7dc98ff8b7d71a961b55",
+    "doc029-conv-extra-3.txt": "05db08c00ea562fdfb84d8353c7f9526057ecbb1d17ef7d2d98f9e5ceb3304de",
+    "doc029-conv-extra-4.txt": "29ff59506f60e168a3ea770275c68d997df8caf6a64ebffceacad9d4adb7d0ea",
+    "doc029-conv-extra-5.txt": "fcd3935b728f1c11feee0f53b4c61493c8aee3275b006a58157ef8886400abd0",
+    "doc029-conv-extra-6.txt": "c6241f5f7926357a01e41c39de0e4f966d790610016471cf8a48092d43d9074a"
+  },
+  "runs": [
+    {
+      "sections": ["setup-n"],
+      "startedAt": "2026-09-28T07:16:05.363Z",
+      "finishedAt": "2026-09-28T07:16:24.870Z"
+    },
+    {
+      "sections": ["leadtimes", "keydate"],
+      "startedAt": "2026-09-28T07:16:29.868Z",
+      "finishedAt": "2026-09-28T07:16:44.528Z"
+    },
+    {
+      "sections": ["leadtimes-reset", "morning-ready"],
+      "startedAt": "2026-09-28T07:16:51.437Z",
+      "finishedAt": "2026-09-28T07:16:57.491Z"
+    },
+    {
+      "sections": ["setup-c", "member-comments"],
+      "startedAt": "2026-09-28T07:17:01.835Z",
+      "finishedAt": "2026-09-28T07:17:53.131Z"
+    },
+    {
+      "sections": [
+        "admin-comments",
+        "portal-comments",
+        "portal-history",
+        "linked",
+        "admin-redact",
+        "portal-after"
+      ],
+      "startedAt": "2026-09-28T07:17:57.053Z",
+      "finishedAt": "2026-09-28T07:24:58.240Z"
+    },
+    {
+      "sections": ["morning-check"],
+      "startedAt": "2026-09-28T08:00:27.374Z",
+      "finishedAt": "2026-09-28T08:00:29.130Z"
+    },
+    {
+      "sections": ["member-bell", "devices", "admin-notifications"],
+      "startedAt": "2026-09-28T08:00:32.530Z",
+      "finishedAt": "2026-09-28T08:02:09.078Z"
+    },
+    {
+      "sections": ["api-keys"],
+      "startedAt": "2026-09-28T08:02:13.542Z",
+      "finishedAt": "2026-09-28T08:02:41.336Z"
+    },
+    {
+      "sections": ["via-history", "portal-notifications", "emails"],
+      "startedAt": "2026-09-28T08:02:44.968Z",
+      "finishedAt": "2026-09-28T08:03:56.228Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:04:21.376Z",
+      "finishedAt": "2026-09-28T08:04:30.557Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:04:51.392Z",
+      "finishedAt": "2026-09-28T08:05:00.805Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:01.097Z",
+      "finishedAt": "2026-09-28T08:05:07.392Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:07.693Z",
+      "finishedAt": "2026-09-28T08:05:16.810Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:17.113Z",
+      "finishedAt": "2026-09-28T08:05:23.397Z"
+    }
+  ],
+  "fixturePreparation": [
+    {
+      "at": "2026-09-28T07:16:24.240Z",
+      "text": "The fresh Business User completed Portal onboarding once (Step 1 of 5, Step 2 of 5, Step 2 of 5, Step 3 of 5, Step 4 of 5, Step 5 of 5) with the first Department, the name DOC-032 compat compat-a conversations Business 765363, and the default theme and notification choices."
+    },
+    {
+      "at": "2026-09-28T07:16:24.258Z",
+      "text": "Daniel Okafor invited four fresh fictional staff accounts through the invites API (DOC-032 compat compat-a conversations Legal Own List, Legal Los Angeles, Legal No Date Bell, and Admin, stamp 765363); each set a derived in-memory password from its activation mail. A fresh Business User (doc032-compata-conv-765363-b1@helix.example) was created by its first Portal magic-link sign-in. Every fresh account had its timezone set to America/Los_Angeles through the preferences API so no morning round could serve it before its fixtures were ready."
+    },
+    {
+      "at": "2026-09-28T07:16:24.868Z",
+      "text": "The fresh Business User submitted R-16 and R-17 through the Requests API. Daniel Okafor converted R-16 to Sales Contract C-69, added the four fresh staff accounts to its team, made the fresh Administrator its Legal Owner (HTTP 200), created Tasks due 2026-09-28 for the fresh Administrator and Legal No Date Bell, and added the Key dates \"765363 three-day check\" on 2026-10-01 and \"765363 seven-day check\" on 2026-10-05 through the API. R-17 stays unconverted."
+    },
+    {
+      "at": "2026-09-28T07:16:57.488Z",
+      "text": "At 2026-09-28T07:16:57.488Z the fresh Legal Own List, Legal No Date Bell, Admin and Business accounts had their saved timezone cleared (so the morning process uses UTC) through the preferences API; Legal Los Angeles kept America/Los_Angeles. The next hourly morning round runs at the top of the hour UTC."
+    },
+    {
+      "at": "2026-09-28T07:17:03.088Z",
+      "text": "The fresh Business User (DOC-032 compat compat-a conversations Business 765363) submitted four Legal question Requests through the Portal API (R-30, R-31, R-32, R-33). Daniel Okafor converted R-30 to Sales Contract C-92, R-31 to Litigation Matter M-29, and R-33 to Sales Contract C-93 through the convert API; R-32 stays unconverted. Daniel added Nadia Haddad to the C-92 and M-29 teams through the team API."
+    },
+    {
+      "at": "2026-09-28T07:17:32.488Z",
+      "text": "Daniel Okafor posted 55 Matter Team comments and one Legal Only comment on M-29 through the comments API, to give the Matter more than one page of comments."
+    },
+    {
+      "at": "2026-09-28T07:17:48.033Z",
+      "text": "Nadia Haddad posted one working_team comment on C-92 and one on R-32 through the comments API to stand in for older Working Team comments; the composer does not offer that tier."
+    },
+    {
+      "at": "2026-09-28T07:17:50.497Z",
+      "text": "Nadia Haddad added the Task \"DOC-032 compat compat-a conversations 765363 prepare the signing pack\" due 2026-10-08 on C-92 through the tasks API."
+    },
+    {
+      "at": "2026-09-28T07:18:19.978Z",
+      "text": "Nadia Haddad made record progress through the API as fixtures for Portal History: C-92 Draft to Internal review (a Stage move), Internal review to With counterparty (same Stage), a title change, deal_desk_reference (Visible on Portal) and governing_law (not on the Portal) edits, two Tasks added (one due 2026-10-12), one edited, one completed, a reorder, one removed; M-29 (closed with a note in the first run) moved to In progress, then budget_approved (Visible on Portal) and external_counsel (not on the Portal) edits. Results: contract to Internal review 200, contract to With counterparty 200, contract title 200, portal-visible field 200, hidden field 200, task added 201, task added 2 201, task edited 200, task completed 200, task reordered 404, task removed 200, matter to In progress 200, matter portal-visible field 200, matter hidden field 200."
+    },
+    {
+      "at": "2026-09-28T07:18:27.564Z",
+      "text": "Nadia Haddad closed M-29 with a closing note through the API after the Matter conversation checks."
+    },
+    {
+      "at": "2026-09-28T07:18:35.139Z",
+      "text": "Daniel Okafor created C-113 \"DOC-032 compat compat-a conversations 765363 confidential side letter\", marked it Confidential (Nadia Haddad is not on its team), and linked C-92 to it as related, through the API."
+    },
+    {
+      "at": "2026-09-28T07:18:50.643Z",
+      "text": "Daniel Okafor archived C-93 through the archive API after posting a Contract Team comment with paper in the browser."
+    },
+    {
+      "at": "2026-09-28T07:24:58.237Z",
+      "text": "Daniel Okafor added Amara Nwosu (Business User) to the C-92 team through the team API, then removed her again. He then cleared the Business Owner (HTTP 200; the API refuses to take the Business Owner off the team), removed the requester from the team (HTTP 200), and afterwards restored both."
+    },
+    {
+      "at": "2026-09-28T08:00:33.011Z",
+      "text": "Nadia Haddad posted eleven Contract Team comments mentioning Legal Own List on C-69 through the comments API to give that account more than nine unread bell items."
+    },
+    {
+      "at": "2026-09-28T08:00:46.314Z",
+      "text": "Nadia Haddad requested approval of C-69 from Legal Own List through the approvals API (approval 01a0e707-d8d5-75b3-996b-4515e87853e9)."
+    },
+    {
+      "at": "2026-09-28T08:00:55.689Z",
+      "text": "Legal Own List answered approval 01a0e707-d8d5-75b3-996b-4515e87853e9 through the decision API (HTTP 200); the approval procedure itself belongs to the contract-approvals guide."
+    },
+    {
+      "at": "2026-09-28T08:00:58.388Z",
+      "text": "Nadia Haddad posted sixteen more mentions of Legal Own List on C-69 through the comments API so the bell has more than one page."
+    },
+    {
+      "at": "2026-09-28T08:01:24.331Z",
+      "text": "The fresh Business User submitted R-70 through the Requests API for the New requests and Request receipt checks."
+    },
+    {
+      "at": "2026-09-28T08:02:13.876Z",
+      "text": "Organization MCP settings before the API key checks: {\"enabled\":false,\"legalApiKeysEnabled\":false,\"businessApiKeysEnabled\":false}. Daniel Okafor set {\"enabled\":true,\"legalApiKeysEnabled\":true,\"businessApiKeysEnabled\":true} through the MCP settings API (HTTP 200) for the API key and MCP attribution checks."
+    },
+    {
+      "at": "2026-09-28T08:02:13.934Z",
+      "text": "Legal Own List requested an API key for the Client \"Claude\" (comments Toolset, write) through the API key request API (request 01a0e709-2efe-7a56-9ed1-b7b8ac88d648); the request procedure belongs to the Configure MCP guide."
+    },
+    {
+      "at": "2026-09-28T08:02:23.763Z",
+      "text": "Legal Own List read the one-time key in memory and posted one Contract Team comment on C-69 through the MCP endpoint's openlaw_comment_post tool (HTTP 200); the key was never written down."
+    },
+    {
+      "at": "2026-09-28T08:02:30.496Z",
+      "text": "Legal Own List revoked the API key after the check (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:02:30.553Z",
+      "text": "The fresh Business User requested an API key for \"Claude\" (comments, read) through the API key request API (request 01a0e709-6fea-72cc-9bfa-9a91c524dceb)."
+    },
+    {
+      "at": "2026-09-28T08:02:41.334Z",
+      "text": "Daniel Okafor restored the organization MCP settings to {\"enabled\":false,\"legalApiKeysEnabled\":false,\"businessApiKeysEnabled\":false} (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:20.334Z",
+      "text": "Daniel Okafor added Amara Nwosu to the C-69 team for the comparison and removed her afterwards (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:24.511Z",
+      "text": "Nadia Haddad requested approval of C-69 from the fresh Business User through the approvals API (approval 01a0e70a-42d2-7850-a7d9-e2a4d75f4748)."
+    },
+    {
+      "at": "2026-09-28T08:03:28.518Z",
+      "text": "Nadia Haddad cancelled that approval request through the approvals API (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:32.240Z",
+      "text": "Daniel Okafor cleared the Business Owner (HTTP 200), removed the fresh Business User from the C-69 team (HTTP 200), and restored both afterwards, through the API, for the Portal bell access check."
+    },
+    {
+      "at": "2026-09-28T08:03:34.088Z",
+      "text": "Nadia Haddad added the Task \"DOC-032 compat compat-a conversations 765363 email task\" assigned to Legal Own List on C-69 through the tasks API."
+    },
+    {
+      "at": "2026-09-28T08:03:52.769Z",
+      "text": "The fresh Administrator turned \"Include comment words in email\" off in Settings, Organization, Notifications for one mention email, then turned it back on."
+    }
+  ],
+  "records": {
+    "stamp": "765363",
+    "fresh": {
+      "l1": {
+        "key": "l1",
+        "role": "legal_team_member",
+        "label": "Legal Own List",
+        "email": "doc032-compata-conv-765363-l1@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal Own List 765363",
+        "id": "01a0e6de-f5fb-7606-8c94-df27aed69c82"
+      },
+      "l2": {
+        "key": "l2",
+        "role": "legal_team_member",
+        "label": "Legal Los Angeles",
+        "email": "doc032-compata-conv-765363-l2@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal Los Angeles 765363",
+        "id": "01a0e6de-fd68-7727-99df-f9c0dc99d0bb"
+      },
+      "l3": {
+        "key": "l3",
+        "role": "legal_team_member",
+        "label": "Legal No Date Bell",
+        "email": "doc032-compata-conv-765363-l3@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal No Date Bell 765363",
+        "id": "01a0e6df-04ad-704b-8176-01a48d15c4a4"
+      },
+      "a1": {
+        "key": "a1",
+        "role": "administrator",
+        "label": "Admin",
+        "email": "doc032-compata-conv-765363-a1@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Admin 765363",
+        "id": "01a0e6df-0b85-7cba-8cc4-825744beb321"
+      },
+      "b1": {
+        "key": "b1",
+        "role": "business_user",
+        "label": "Business",
+        "email": "doc032-compata-conv-765363-b1@helix.example",
+        "onboarded": true,
+        "displayName": "DOC-032 compat compat-a conversations Business 765363",
+        "id": "01a0e6df-1393-7077-80a2-16891c25d6ce"
+      }
+    },
+    "n": {
+      "request": 16,
+      "openRequest": 17,
+      "openRequestId": "01a0e6df-3ad4-7ac7-983e-f3d59c535987",
+      "contract": 69,
+      "contractId": "01a0e6df-3b1c-71c5-9076-6a0762fb5426",
+      "title": "DOC-032 compat compat-a conversations notifications Contract 765363",
+      "openTitle": "DOC-032 compat compat-a conversations notifications open Request 765363",
+      "keyDates": {
+        "three": "2026-10-01",
+        "seven": "2026-10-05",
+        "five": "2026-10-03"
+      },
+      "today": "2026-09-28",
+      "morningReadyAt": "2026-09-28T07:16:57.488Z",
+      "bellFill": true,
+      "staffApproval": "01a0e707-d8d5-75b3-996b-4515e87853e9",
+      "bellMore": true,
+      "bellRequest": 70,
+      "keyRequest": "01a0e709-2efe-7a56-9ed1-b7b8ac88d648",
+      "buKeyRequest": "01a0e709-6fea-72cc-9bfa-9a91c524dceb",
+      "taskId": "01a0e70a-6835-700e-9694-754922d8a044"
+    },
+    "c": {
+      "tag": "DOC-032 compat compat-a conversations 765363",
+      "contractRequest": 30,
+      "matterRequest": 31,
+      "openRequest": 32,
+      "archiveRequest": 33,
+      "contract": 92,
+      "matter": 29,
+      "archive": 93,
+      "contractTitle": "DOC-032 compat compat-a conversations 765363 Contract",
+      "matterTitle": "DOC-032 compat compat-a conversations 765363 Matter",
+      "openTitle": "DOC-032 compat compat-a conversations 765363 open Request",
+      "contractId": "01a0e6df-cfdb-762e-ac68-2208302aeec5",
+      "matterId": "01a0e6df-d01d-7000-a171-ee0ebbf7b309",
+      "archiveId": "01a0e6df-d071-7499-9f53-34cced3e4e46",
+      "openRequestId": "01a0e6df-cf0f-72a7-a44a-ca62854ac9a3",
+      "ids": {
+        "daniel": "01a0e6c7-9732-71e1-834c-8452f24236b0",
+        "nadia": "01a0e6c7-9730-78af-95e8-da76f0eb29b4",
+        "jonas": "01a0e6df-1393-7077-80a2-16891c25d6ce",
+        "amara": "01a0e6c7-99c0-70e9-a7cf-8e754139bcb8"
+      },
+      "bulkPosted": true,
+      "workingTeam": true,
+      "taskId": "01a0e6e0-8b10-7964-aebb-e14264e10bb6",
+      "progressPart1": true,
+      "progressPart2": true,
+      "progressDone": true,
+      "matterClosed": true,
+      "hidden": {
+        "number": 113,
+        "title": "DOC-032 compat compat-a conversations 765363 confidential side letter"
+      }
+    },
+    "deviceStates": {
+      "support": {
+        "sw": true,
+        "push": true,
+        "notification": true,
+        "permission": "granted"
+      },
+      "cardBefore": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+      "detailsSwitch": "true",
+      "turnOnShown": 1,
+      "cardAfter": "Devices Registration failed - permission denied Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+      "enabled": 0,
+      "subscriptions": 0,
+      "revokeButtons": 0,
+      "detailsSaved": false,
+      "deniedCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on. ",
+      "deniedPermission": "denied",
+      "portalCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on."
+    },
+    "preSendTiming": {
+      "edits": ["original", "revised"],
+      "edit": {
+        "status": 200,
+        "doneAt": "2026-09-28T08:03:46.225Z",
+        "mails": [
+          {
+            "created": "2026-09-28T08:03:46.323Z",
+            "words": "revised"
+          }
+        ],
+        "first": true
+      },
+      "del": {
+        "status": 200,
+        "doneAt": "2026-09-28T08:03:49.190Z",
+        "mails": [
+          {
+            "created": "2026-09-28T08:03:49.22Z",
+            "words": "original"
+          }
+        ],
+        "first": true
+      }
+    }
+  },
+  "steps": [
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Fixture: the fresh Business User's Requests become a Contract, a Matter, and a to-be-archived Contract; Nadia Haddad joins the teams",
+      "expected": "Records created and teams set",
+      "startedAt": "2026-09-28T07:17:02.101Z",
+      "at": "2026-09-28T07:17:03.089Z",
+      "page": null,
+      "actual": "C-92, M-29, C-93, open R-32.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a record: open the Contract, select Comments, read the audience options and the description below the composer",
+      "expected": "Legal Only and Contract Team offered, Contract Team selected first, description changes with the choice, no Internal team option",
+      "startedAt": "2026-09-28T07:17:03.092Z",
+      "at": "2026-09-28T07:17:05.223Z",
+      "page": "/contracts/92",
+      "actual": "C-92 Comments applet opened from the Applets toolbar. Audience offered \"Audience Legal Only Contract Team\" with Contract Team checked first. The description read \"Visible to Legal and all Contract team members.\" for Contract Team and \"Visible to Administrators and Legal Team Members.\" for Legal Only. No Internal team option was offered.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Write in New comment, select Comment, and check the post appears under your name with the audience badge (Legal Only and Contract Team)",
+      "expected": "Each post appears under Nadia Haddad with its audience badge",
+      "startedAt": "2026-09-28T07:17:05.234Z",
+      "at": "2026-09-28T07:17:05.778Z",
+      "page": "/contracts/92",
+      "actual": "Rows read \"NH Nadia Haddad Legal Only this minute DOC-032 compat compat-a conversations 765363 Nadia legal only note\" and \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia contract team note\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a Matter: Matter Team first, Legal Only available, post both",
+      "expected": "Matter Team is the starting audience and posts carry Matter Team or Legal Only badges",
+      "startedAt": "2026-09-28T07:17:05.781Z",
+      "at": "2026-09-28T07:17:07.668Z",
+      "page": "/matters/29",
+      "actual": "M-29 Audience offered \"Audience Legal Only Matter Team\", Matter Team checked first, description \"Visible to Legal and all Matter team members.\". Rows read \"NH Nadia Haddad Matter Team this minute DOC-032 compat compat-a conversations 765363 Nadia matter team note\" and \"NH Nadia Haddad Legal Only this minute DOC-032 compat compat-a conversations 765363 Nadia matter legal only note\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Mention a person: type @ and part of a name, choose on the People tab, check Mentioned, Remove, choose again, Comment",
+      "expected": "People tab lists reachable people, Files tab present for Legal, Mentioned list with Remove, post succeeds without a widen prompt",
+      "startedAt": "2026-09-28T07:17:07.670Z",
+      "at": "2026-09-28T07:17:12.598Z",
+      "page": "/contracts/92",
+      "actual": "Typing @Dan opened the tabs [\"People\",\"Files\"] with People selected, listing [\"DO Daniel Okafor\"]. Choosing Daniel Okafor added \"Daniel Okafor\" to the Mentioned list; Remove Daniel Okafor emptied it. After choosing him again, Comment posted \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia asks @Daniel Okafor to check the notice letter.\" at Contract Team without a widen prompt.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Typing a name as ordinary text alone does not select a recipient",
+      "expected": "No Mentioned list when the name is typed without choosing from the list",
+      "startedAt": "2026-09-28T07:17:12.599Z",
+      "at": "2026-09-28T07:17:13.148Z",
+      "page": "/contracts/92",
+      "actual": "Typing \"Daniel Okafor\" without @ and without choosing showed no Mentioned list; the draft was cleared unposted.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Widen the audience? on a Legal Only mention of a Business User: Cancel keeps editing without posting, Widen and post posts at the proposed audience",
+      "expected": "Dialog names the proposed audience; Cancel posts nothing; Widen and post posts at Contract Team",
+      "startedAt": "2026-09-28T07:17:13.150Z",
+      "at": "2026-09-28T07:17:18.730Z",
+      "page": "/contracts/92",
+      "actual": "Dialog read \"Widen the audience? DOC-032 compat compat-a conversations Business 765363 cannot see a legal only comment. Post it at contract team instead to reach them. Visible to Legal and all Contract team members. Cancel Widen and post\". Cancel closed it, kept the draft \"DOC-032 compat compat-a conversations 765363 Nadia legal only mention for @DOC-032 compat compat-a conversations Business 765363 \", and no row was posted. Widen and post published \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia legal only mention for @DOC-032 compat compat-a conversations Business 765363\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Attach paper: Attach files, choose files, check filenames, Remove one, check the audience, post, preview by filename, and Download",
+      "expected": "Up to five files; selected filenames listed with Remove; post carries the remaining attachment; preview opens; Download retrieves the file",
+      "startedAt": "2026-09-28T07:17:18.730Z",
+      "at": "2026-09-28T07:17:20.628Z",
+      "page": "/contracts/92",
+      "actual": "Composer read \"Up to 5 files.\". Choosing two PDFs listed \"doc029-conv-notice.pdf doc029-conv-schedule.pdf\"; Remove doc029-conv-schedule.pdf left \"doc029-conv-notice.pdf\". Audience line before posting: \"Visible to Legal and all Contract team members.\". Posted row \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia shares the notice letter doc029-conv-notice.pdf File to Contract\". Selecting the filename opened a preview dialog (buttons [\"File to Contract\"], links [\"Download\"]). Download doc029-conv-notice.pdf saved doc029-conv-notice.pdf with bytes identical to the fixture.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Attach files accepts up to five files",
+      "expected": "Choosing six files keeps at most five in the list",
+      "startedAt": "2026-09-28T07:17:20.629Z",
+      "at": "2026-09-28T07:17:21.552Z",
+      "page": "/contracts/92",
+      "actual": "Choosing six text files listed 5 files (alerts []; Attach files disabled: true). The draft was discarded unposted by a reload.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A failed post: keep the draft, check the error, check for an existing post, then retry once",
+      "expected": "Error shown; text and paper stay in the composer; no row and no Filed to marker; retry posts exactly once",
+      "startedAt": "2026-09-28T07:17:21.553Z",
+      "at": "2026-09-28T07:17:25.687Z",
+      "page": "/contracts/92",
+      "actual": "With the comment POST aborted once, the composer showed \"The comment could not be posted. Try again.\", kept the text and the paper \"doc029-conv-schedule.pdf\"; no row was posted and 0 Filed to markers were shown. A second tab found 0 existing posts with that text. Selecting Comment again posted exactly 1 row with the attachment.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "File to Contract: the preview also offers it; File attachment asks for Destination, a New Document name or a New Version on an existing Document, and an optional Type; File; the attachment stays and shows Filed to",
+      "expected": "Controls named in the guide; after filing, the thread row shows Filed to with the Document and Version; the Document is on the record",
+      "startedAt": "2026-09-28T07:17:25.689Z",
+      "at": "2026-09-28T07:17:28.084Z",
+      "page": "/contracts/92",
+      "actual": "The preview offered File to Contract (1). The row's File to Contract opened File attachment with Destination options [\"New Document\",\"New Version on an existing Document\"], Document name, and Type options [\"No type\",\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Partially signed\",\"Executed\",\"Amendment\"]. Filing as a New Document named \"DOC-032 compat compat-a conversations 765363 filed notice letter\" with the first Type closed the dialog; the thread row still lists doc029-conv-notice.pdf and shows \"Filed to DOC-032 compat compat-a conversations 765363 filed notice letter, version 1\", with 0 File to Contract controls left on it. Filing the retry post's schedule as a New Version on an existing Document (\"DOC-032 compat compat-a conversations 765363 filed notice letter\") left that row showing \"Filed to DOC-032 compat compat-a conversations 765363 filed notice letter, version 2\". The record's Documents read includes the new Document.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Edit or remove a post: Edit then Cancel, Edit then Save shows edited, Delete asks for confirmation and leaves the author tombstone; no Redact for a Legal Team Member",
+      "expected": "Cancel leaves the text; Save marks edited; the edit box has no audience control; Delete confirmation then Comment deleted by its author.; menu has Edit and Delete only",
+      "startedAt": "2026-09-28T07:17:28.085Z",
+      "at": "2026-09-28T07:17:28.919Z",
+      "page": "/contracts/92",
+      "actual": "Comment actions on her own comment offered [\"Edit\",\"Delete\"]. Edit opened Edit comment with 0 audience radios; Cancel left \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia wording to correct\". Save left \"NH Nadia Haddad Contract Team edited this minute DOC-032 compat compat-a conversations 765363 Nadia wording to correct corrected\". Delete asked \"Delete this comment? A tombstone keeps its place in the thread, and nobody can read what it said. You cannot undo this. Cancel Delete\"; confirming left Comment deleted by its author. and 0 rows with the text.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Show older and the unread Comments badge on a Matter with more comments than one page",
+      "expected": "The badge counts unread comments she can see; Show older loads earlier comments; reading the loaded conversation updates the count",
+      "startedAt": "2026-09-28T07:17:28.921Z",
+      "at": "2026-09-28T07:17:39.334Z",
+      "page": "/matters/29",
+      "actual": "Before opening, the Comments applet button read \"56\" (name \"Comments (56)\"). The first load listed 50 rows with Show older at the head; Show older brought 58 rows including bulk update 01. After reading, the button read \"\" (name \"Comments\").",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Read the Activity feed: History on the Matter, entries in order, Show older",
+      "expected": "History lists actions on the record, including comment actions, with Show older for earlier changes",
+      "startedAt": "2026-09-28T07:17:39.335Z",
+      "at": "2026-09-28T07:17:43.104Z",
+      "page": "/matters/29",
+      "actual": "History listed 25 entries, first \"Daniel Okafor commented this minute\". Show older brought 50 entries; the last reads \"Daniel Okafor commented this minute\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience in the Inbox: a Request offers Legal Only and Shared with requester, starting on Legal Only; the Inbox Request has no History panel",
+      "expected": "Two audiences, Legal Only first, descriptions shown; posts carry their audience; no History applet",
+      "startedAt": "2026-09-28T07:17:43.109Z",
+      "at": "2026-09-28T07:17:44.873Z",
+      "page": "/inbox/32",
+      "actual": "R-32 Applets toolbar offered [\"Comments\"]. Audience offered \"Audience Legal Only Shared with requester\" with Legal Only checked; descriptions \"Visible to Administrators and Legal Team Members.\" and \"Visible to Legal and the requester.\". Posted rows \"NH Nadia Haddad Shared with requester this minute DOC-032 compat compat-a conversations 765363 Nadia shared reply on the open Request\" and \"NH Nadia Haddad Legal Only this minute DOC-032 compat compat-a conversations 765363 Nadia legal only Request note\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A converted Request in the Inbox has no conversation; open its linked record instead",
+      "expected": "No Comments applet on the converted Request; its Status links the Contract",
+      "startedAt": "2026-09-28T07:17:44.875Z",
+      "at": "2026-09-28T07:17:47.936Z",
+      "page": "/contracts/92",
+      "actual": "R-30 in the Inbox showed 0 applet buttons and a link C-92 (/contracts/92); selecting it opened the Contract.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Internal team: an older Working Team comment stays readable to Legal with its label and cannot be chosen; on a Request it reads Working team",
+      "expected": "Contract row shows Internal team; Inbox Request row shows Working team; neither is a composer option",
+      "startedAt": "2026-09-28T07:17:47.938Z",
+      "at": "2026-09-28T07:17:50.464Z",
+      "page": "/inbox/32",
+      "actual": "Nadia's Contract row read \"NH Nadia Haddad Internal team this minute DOC-032 compat compat-a conversations 765363 older working team note\" with composer options \"Audience Legal Only Contract Team\". Her Inbox Request row read \"NH Nadia Haddad Working team this minute DOC-032 compat compat-a conversations 765363 older working team request note\" with options \"Audience Legal Only Shared with requester\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A Task has its own conversation on the Tasks tab, with no audience choice and no audience badge",
+      "expected": "Task details shows Comments & attachments with a composer and no Audience radios; the posted row has no tier badge",
+      "startedAt": "2026-09-28T07:17:50.465Z",
+      "at": "2026-09-28T07:17:51.157Z",
+      "page": "/contracts/92/tasks",
+      "actual": "Selecting the Task on the Tasks tab opened Task details (/contracts/92/tasks) with \"Comments & attachments\", 0 audience radios and the line \"Visible to everyone who can access this task.\". The posted row read \"NH Nadia Haddad this minute DOC-032 compat compat-a conversations 765363 Nadia task note\" with no audience badge.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If the conversation or History cannot load: follow the message to reopen; retry Show older when only the earlier page failed",
+      "expected": "The conversation could not be read. Reopen the panel to try again.; reopening recovers; The earlier comments could not be read. Try again. keeps loaded rows and the retry loads more; The history could not be read. Reopen the panel to try again.",
+      "startedAt": "2026-09-28T07:17:51.159Z",
+      "at": "2026-09-28T07:17:53.129Z",
+      "page": "/matters/29",
+      "actual": "A blocked thread read showed \"The conversation could not be read. Reopen the panel to try again.\"; closing and reopening Comments loaded 50 rows. A blocked earlier page showed \"The earlier comments could not be read. Try again.\" with 50 rows kept; the retry brought 58. A blocked History read showed \"The history could not be read. Reopen the panel to try again.\"; reopening listed 25 entries.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Choose an audience on a record and post at both audiences, one with Legal Only paper",
+      "expected": "Legal Only and Contract Team offered; posts show under Daniel Okafor with their badges and attachment",
+      "startedAt": "2026-09-28T07:17:57.297Z",
+      "at": "2026-09-28T07:18:00.136Z",
+      "page": "/contracts/92",
+      "actual": "Audience offered \"Audience Legal Only Contract Team\", Contract Team first (true). Rows \"DO Daniel Okafor Contract Team this minute DOC-032 compat compat-a conversations 765363 Daniel owner note\" and \"DO Daniel Okafor Legal Only this minute DOC-032 compat compat-a conversations 765363 Daniel legal only memo doc029-conv-legal-memo.pdf File to Contract\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Another author's comment: Comment actions offers Redact and no Edit",
+      "expected": "The menu on Nadia's live comment offers Redact only",
+      "startedAt": "2026-09-28T07:18:00.139Z",
+      "at": "2026-09-28T07:18:00.341Z",
+      "page": "/contracts/92",
+      "actual": "Comment actions on Nadia Haddad's Contract Team comment offered [\"Redact\"].",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "File to Matter on a Matter conversation attachment",
+      "expected": "A Matter Team post with paper offers File to Matter; the dialog opens with Destination; Cancel files nothing",
+      "startedAt": "2026-09-28T07:18:00.345Z",
+      "at": "2026-09-28T07:18:02.701Z",
+      "page": "/matters/29",
+      "actual": "The Matter Team row \"DO Daniel Okafor Matter Team this minute DOC-032 compat compat-a conversations 765363 Daniel matter paper doc029-conv-schedule.pdf File to Matter\" offered File to Matter; it opened File attachment with Destination [\"New Document\",\"New Version on an existing Document\"]; Cancel closed it with 0 Filed to markers.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Legal Request conversation: Comment actions on his own live comment edits and deletes; Request paper offers no File control",
+      "expected": "Edit then Save shows edited; Delete confirmation leaves the author tombstone; a Request attachment has no File to control",
+      "startedAt": "2026-09-28T07:18:02.703Z",
+      "at": "2026-09-28T07:18:06.206Z",
+      "page": "/inbox/32",
+      "actual": "On R-32 his Shared with requester post with paper showed 0 File controls. His menu offered [\"Edit\",\"Delete\",\"Redact\"]; Save left \"DO Daniel Okafor Shared with requester edited this minute DOC-032 compat compat-a conversations 765363 Daniel request paper revised doc029-conv-schedule.pdf\". Deleting a Legal Only note after the confirmation left 1 Comment deleted by its author. tombstones and no row with its text.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Reply from the Portal on a never-converted Request: Comments in the applet bar, no audience picker, Legal Only and Working Team comments absent, mention and attach, Comment",
+      "expected": "The Shared with requester reply is visible, Legal Only and Working team notes are absent, the reply posts under the Business User's name with paper",
+      "startedAt": "2026-09-28T07:18:06.385Z",
+      "at": "2026-09-28T07:18:12.254Z",
+      "page": "/portal/requests/32",
+      "actual": "R-32 Portal Comments showed 0 audience radios, 1 Shared with requester reply from Nadia, 0 rows of her Legal Only note and 0 of the Working team note. @Nad showed tabs [\"People\"] listing [\"NH Nadia Haddad\"]; after choosing Nadia Haddad and attaching doc029-conv-portal-note.pdf, Comment posted \"D7 DOC-032 compat compat-a conversations Business 765363 Shared with requester this minute DOC-032 compat compat-a conversations 765363 Business User replies on the open Request for @Nadia Haddad doc029-conv-portal-note.pdf\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal: Comment actions edits and deletes his own words",
+      "expected": "Edit and Delete offered on his own comment, no Redact; edited marker; author tombstone; no actions on Legal's reply",
+      "startedAt": "2026-09-28T07:18:12.255Z",
+      "at": "2026-09-28T07:18:14.702Z",
+      "page": "/portal/requests/32",
+      "actual": "His menu offered [\"Edit\",\"Delete\"]; Save left \"D7 DOC-032 compat compat-a conversations Business 765363 Shared with requester edited this minute DOC-032 compat compat-a conversations 765363 Business User second thought revised\"; Delete after confirmation left Comment deleted by its author.; Nadia's reply had 0 Comment actions buttons.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "After conversion the Request address opens the Contract; its Comments hold team comments and their paper but no Legal Only or Working Team content, no filing, no audience picker",
+      "expected": "Redirect to the Portal Contract; Contract Team rows and the widened mention visible; Legal Only rows, the memo and the Internal team note absent; Download works; no File to Contract",
+      "startedAt": "2026-09-28T07:18:14.703Z",
+      "at": "2026-09-28T07:18:15.908Z",
+      "page": "/portal/contracts/92",
+      "actual": "/portal/requests/30 redirected to /portal/contracts/92. Comments counts {\"team\":1,\"widened\":1,\"notice\":1,\"danielTeam\":1,\"legalOnly\":0,\"danielMemo\":0,\"memoFile\":0,\"workingTeam\":0}; 0 audience radios; 0 File to controls; the notice letter downloaded with fixture-identical bytes. Its row read \"NH Nadia Haddad Contract Team this minute DOC-032 compat compat-a conversations 765363 Nadia shares the notice letter doc029-conv-notice.pdf Filed to DOC-032 compat compat-a conversations 765363 filed notice letter, version 1\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Matter: Show older; Legal Only notes absent",
+      "expected": "Show older loads the earlier Matter Team comments; the Legal Only notes are not in the view",
+      "startedAt": "2026-09-28T07:18:15.909Z",
+      "at": "2026-09-28T07:18:19.021Z",
+      "page": "/portal/matters/29",
+      "actual": "Before opening, the Portal Comments button read \"57\". Show older loaded bulk update 01; Nadia's Matter Team note was present; the Legal Only notes from Daniel and Nadia were absent (0, 0).",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Fixture: Legal record progress on the Contract and the Matter for the Portal History checks",
+      "expected": "Stage move, same-Stage Status move, title and Portal-visible and hidden Field edits, Task added, edited, completed, reordered and removed, a Matter Status move and closing",
+      "startedAt": "2026-09-28T07:18:19.023Z",
+      "at": "2026-09-28T07:18:19.979Z",
+      "page": "/portal/matters/29",
+      "actual": "contract to Internal review 200, contract to With counterparty 200, contract title 200, portal-visible field 200, hidden field 200, task added 201, task added 2 201, task edited 200, task completed 200, task reordered 404, task removed 200, matter to In progress 200, matter portal-visible field 200, matter hidden field 200",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal History on the Contract: shared comment activity and the record progress the Portal record shows",
+      "expected": "Stage move named by Stage, title and Portal-visible Field changes, Task added with due date and Task completed; no same-Stage Status move, hidden Field, Task edit, reorder or removal, and no Legal Only or Working Team comment activity",
+      "startedAt": "2026-09-28T07:18:19.981Z",
+      "at": "2026-09-28T07:18:27.449Z",
+      "page": "/portal/contracts/92",
+      "actual": "The Business User's Portal History on C-92 listed 16 entries: [\"Nadia Haddad completed the task DOC-032 compat compat-a conversations 765363 collect signatures this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 draft cover note this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 collect signatures, due Oct 12 this minute\",\"Nadia Haddad changed Deal desk reference Not set → DD-765363 this minute\",\"Nadia Haddad changed Title DOC-032 compat compat-a conversations 765363 Contract → DOC-032 compat compat-a conversations 765363 Contract (renamed) this minute\",\"Nadia Haddad changed the stage Draft → Review this minute\",\"Daniel Okafor commented this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 prepare the signing pack, due Oct 8 this minute\",\"Nadia Haddad deleted a comment this minute\",\"Nadia Haddad changed a comment this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented this minute\",\"Nadia Haddad commented 1 minute ago\",\"Nadia Haddad commented 1 minute ago\",\"Nadia Haddad commented 1 minute ago\",\"Nadia Haddad commented 1 minute ago\"]. Checks {\"stage\":true,\"status\":false,\"title\":true,\"visibleField\":true,\"hiddenField\":false,\"taskAdded\":true,\"taskCompleted\":true,\"taskEdited\":false,\"taskReordered\":false,\"taskRemoved\":false,\"comments\":7}. Nadia's staff History listed 30 entries with 11 comment entries (the Portal showed 7), including [\"Nadia Haddad removed the task DOC-032 compat compat-a conversations 765363 draft cover note v2 this minute\",\"Nadia Haddad completed the task DOC-032 compat compat-a conversations 765363 collect signatures this minute\",\"Nadia Haddad changed the task DOC-032 compat compat-a conversations 765363 draft cover note v2 DOC-032 compat compat-a conversations 765363 draft cover note → DOC-032 compat compat-a conversations 765363 draft cover note v2 this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 draft cover note this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 collect signatures, due Oct 12 this minute\",\"Nadia Haddad changed Governing law Not set → England and Wales this minute\",\"Nadia Haddad changed the status Internal review → With counterparty this minute\",\"Nadia Haddad changed the status Draft → Internal review this minute\",\"Nadia Haddad added the task DOC-032 compat compat-a conversations 765363 prepare the signing pack, due Oct 8 this minute\"].",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal History on the Matter: a Status move and Portal-visible Field changes, no hidden Field; then Legal closes the Matter with a note and the note stays out",
+      "expected": "Matter Status move shown; Portal-visible Field shown; hidden Field and closing note absent",
+      "startedAt": "2026-09-28T07:18:27.451Z",
+      "at": "2026-09-28T07:18:32.857Z",
+      "page": "/portal/matters/29",
+      "actual": "Portal History on M-29 began [\"Nadia Haddad changed the status In progress → Closed this minute\",\"Nadia Haddad changed Budget approved Not set → 25,000 this minute\",\"Nadia Haddad changed the status Open → In progress this minute\",\"Daniel Okafor commented this minute\",\"Daniel Okafor commented this minute\",\"Daniel Okafor commented this minute\",\"Daniel Okafor commented this minute\",\"Daniel Okafor commented this minute\"]. Checks {\"statusMoves\":2,\"visibleField\":true,\"hiddenField\":false,\"closingNote\":false}.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal History on a Request that was never converted shows only shared comment activity",
+      "expected": "Only comment entries; no Legal Only or Working Team comment activity",
+      "startedAt": "2026-09-28T07:18:32.859Z",
+      "at": "2026-09-28T07:18:35.069Z",
+      "page": "/portal/requests/32",
+      "actual": "R-32 Portal applets [\"Comments\",\"History\"]; History listed 7 entries, all comment activity: [\"DOC-032 compat compat-a conversations Business 765363 deleted a comment this minute\",\"DOC-032 compat compat-a conversations Business 765363 changed a comment this minute\",\"DOC-032 compat compat-a conversations Business 765363 commented this minute\",\"DOC-032 compat compat-a conversations Business 765363 commented this minute\",\"Daniel Okafor changed a comment this minute\",\"Daniel Okafor commented this minute\",\"Nadia Haddad commented this minute\"]. (Staff activity read HTTP 400.)",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "An Activity entry about a linked record you cannot reach leaves out that record's number and title",
+      "expected": "Nadia's History entry for the link names no number or title of the Confidential Contract she is not on; Daniel's names it",
+      "startedAt": "2026-09-28T07:18:35.070Z",
+      "at": "2026-09-28T07:18:42.975Z",
+      "page": "/contracts/92",
+      "actual": "Nadia's read of C-113 answered HTTP 404. Her History entry read [\"Daniel Okafor linked this contract — related to another contract this minute\"]; Daniel's read [\"Daniel Okafor linked this contract — related to C-113 (DOC-032 compat compat-a conversations 765363 confidential side letter) this minute\"].",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Redact a reached comment with paper, an author-deleted comment, and the comment whose attachment was filed",
+      "expected": "Confirmation read first; the thread says Comment removed by an Administrator.; the attachment no longer serves; the filed Document stays on the record",
+      "startedAt": "2026-09-28T07:18:42.977Z",
+      "at": "2026-09-28T07:18:48.684Z",
+      "page": "/contracts/92",
+      "actual": "Redact on his own Legal Only memo (menu [\"Edit\",\"Delete\",\"Redact\"]) asked \"Redact this comment? The text and every earlier version of it are removed for good. Use this for text posted into the wrong record. You cannot undo this. Cancel Redact\". After confirming, the row became Comment removed by an Administrator. and its attachment URL answered 404 (it answered 200 before). On Nadia's author-deleted comment the menu offered [\"Redact\"] and the redaction replaced that tombstone. Redacting the notice-letter comment left the filed Document on the record (true). The thread now shows 3 administrator tombstones.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Archived record: the attachment offers no File to Contract",
+      "expected": "File to Contract before archiving; none after",
+      "startedAt": "2026-09-28T07:18:48.685Z",
+      "at": "2026-09-28T07:18:51.743Z",
+      "page": "/contracts/93",
+      "actual": "Before archiving, the row offered File to Contract (1). After archiving C-93, the same row showed 0 File to controls: \"DO Daniel Okafor Contract Team this minute DOC-032 compat compat-a conversations 765363 Daniel archive paper doc029-conv-schedule.pdf\".",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Archived destination: the Request address shows the original request with no conversation",
+      "expected": "The Portal Request page shows the archived message and no Comments",
+      "startedAt": "2026-09-28T07:18:51.745Z",
+      "at": "2026-09-28T07:18:53.870Z",
+      "page": "/portal/requests/33",
+      "actual": "/portal/requests/33 stayed at /portal/requests/33, showed \"The record created from this Request was archived. Your original request is shown below.\", and had 0 Comments buttons; the archived C-93 record read answered HTTP 404.",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "A later-added Business User reads earlier team comments; a removed person loses them, including through the old Request link",
+      "expected": "Amara sees earlier Contract Team comments after being added; after removal the requester cannot open the Contract or its conversation through /portal/requests",
+      "startedAt": "2026-09-28T07:18:53.872Z",
+      "at": "2026-09-28T07:24:58.239Z",
+      "page": "/portal",
+      "actual": "After being added, Amara Nwosu saw Nadia's earlier Contract Team note (1) and not her Legal Only note (0). After removal Amara's Portal Contract page read \"Your Contracts Contract not found This Contract does not exist, or you cannot open it.\" (record read HTTP 404). After the requester's removal, /portal/requests/30 showed \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 business days Contract review Review of a counterparty contract or redli\" with 0 Comments buttons (record read HTTP 404). The requester was restored to the team (HTTP 201).",
+      "result": "pass"
+    },
+    {
+      "article": "comments-and-activity",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Read the Activity feed: an action taken through an MCP Client shows the person and the Client",
+      "expected": "The History entry for the comment posted through the API key reads '<person>, via Claude, commented'",
+      "startedAt": "2026-09-28T08:02:45.099Z",
+      "at": "2026-09-28T08:02:49.486Z",
+      "page": "/contracts/69",
+      "actual": "Nadia Haddad's History on C-69 read [\"DOC-032 compat compat-a conversations Legal Own List 765363, via Claude, commented this minute\"] for the comment Legal Own List posted through the MCP endpoint with an API key named for the Client \"Claude\".",
+      "result": "pass"
+    }
+  ],
+  "productBugs": [],
+  "guideFailures": [],
+  "limitations": [],
+  "articles": [
+    {
+      "articleId": "comments-and-activity",
+      "articlePath": "docs/user-guides/comments-and-activity.md",
+      "contentSha256": "71aad5ef98b19a27bd910f8421a569a20aaba7e4288ab8ca1f11364768239de4"
+    }
+  ],
+  "stamp": "765363",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seed) and DOC-032 compat compat-a conversations Admin (fresh)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seed) and DOC-032 compat compat-a conversations Legal accounts (fresh)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user",
+      "account": "Amara Nwosu (seed) and DOC-032 compat compat-a conversations Business (fresh); Jonas Weber was not used because the lab refused his Requests (20 an hour, shared with other agents)",
+      "entry": "fresh magic link read from the work Mailpit, never stored"
+    }
+  ],
+  "summary": {
+    "total": 37,
+    "pass": 37,
+    "fail": 0,
+    "superseded": 0,
+    "current": 37,
+    "currentPass": 37
+  }
+}

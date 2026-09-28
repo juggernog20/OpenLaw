@@ -1,0 +1,92 @@
+{
+  "stamp": "107188",
+  "fresh": {
+    "l1": {
+      "key": "l1",
+      "role": "legal_team_member",
+      "label": "Legal Own List",
+      "email": "doc032-bridge-conv-107188-l1@helix.example",
+      "displayName": "DOC-032 bridge conversations Legal Own List 107188",
+      "id": "01a0e77c-c1a9-7583-8b37-d949f9d99e5c"
+    },
+    "l2": {
+      "key": "l2",
+      "role": "legal_team_member",
+      "label": "Legal Los Angeles",
+      "email": "doc032-bridge-conv-107188-l2@helix.example",
+      "displayName": "DOC-032 bridge conversations Legal Los Angeles 107188",
+      "id": "01a0e77c-c92e-70d5-a5a0-73d5019f4822"
+    },
+    "l3": {
+      "key": "l3",
+      "role": "legal_team_member",
+      "label": "Legal No Date Bell",
+      "email": "doc032-bridge-conv-107188-l3@helix.example",
+      "displayName": "DOC-032 bridge conversations Legal No Date Bell 107188",
+      "id": "01a0e77c-d00f-7473-84ee-39dc4ac5300a"
+    },
+    "a1": {
+      "key": "a1",
+      "role": "administrator",
+      "label": "Admin",
+      "email": "doc032-bridge-conv-107188-a1@helix.example",
+      "displayName": "DOC-032 bridge conversations Admin 107188",
+      "id": "01a0e77c-d6b1-7ccd-8d8d-2c93ce0baa8f"
+    },
+    "b1": {
+      "key": "b1",
+      "role": "business_user",
+      "label": "Business",
+      "email": "doc032-bridge-conv-107188-b1@helix.example",
+      "onboarded": true,
+      "displayName": "DOC-032 bridge conversations Business 107188",
+      "id": "01a0e77c-ddb2-71a9-ae70-89d96a463d2b"
+    }
+  },
+  "n": {
+    "request": 16,
+    "openRequest": 17,
+    "openRequestId": "01a0e77d-044b-7fea-ac30-22c6933667c9",
+    "contract": 34,
+    "contractId": "01a0e77d-0470-78f1-b760-8a33b060c912",
+    "title": "DOC-032 bridge conversations notifications Contract 107188",
+    "openTitle": "DOC-032 bridge conversations notifications open Request 107188",
+    "keyDates": {
+      "three": "2026-10-01",
+      "seven": "2026-10-05",
+      "five": "2026-10-03"
+    },
+    "today": "2026-09-28",
+    "morningReadyAt": "2026-09-28T10:09:07.391Z",
+    "bellFill": true,
+    "staffApproval": "01a0e77e-1acb-75bc-a608-50db3553c028",
+    "bellMore": true,
+    "bellRequest": 18,
+    "taskId": "01a0e780-6e49-7cd7-8e90-616c0c7993ea"
+  },
+  "preSendTiming": {
+    "edits": ["original", "original", "revised"],
+    "edit": {
+      "status": 200,
+      "doneAt": "2026-09-28T10:12:43.884Z",
+      "mails": [
+        {
+          "created": "2026-09-28T10:12:43.969Z",
+          "words": "revised"
+        }
+      ],
+      "first": true
+    },
+    "del": {
+      "status": 200,
+      "doneAt": "2026-09-28T10:12:46.878Z",
+      "mails": [
+        {
+          "created": "2026-09-28T10:12:46.911Z",
+          "words": "original"
+        }
+      ],
+      "first": true
+    }
+  }
+}

@@ -1,0 +1,563 @@
+{
+  "batch": "DOC-032",
+  "set": "compat-a",
+  "kind": "compatibility-replay",
+  "article": "portal-knowledge",
+  "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "adaptedFrom": "batches/DOC-030/access-2/walkthrough.mjs",
+  "replayScript": "batches/DOC-032/compat/compat-a/access-2-replay.mjs",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": {
+    "name": "work",
+    "project": "openlaw-docs-9d2b1705-work",
+    "appUrl": "http://127.0.0.1:43340",
+    "mailUrl": "http://127.0.0.1:48440",
+    "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T06:50:34.922Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T06:50:48.736Z"
+    },
+    "runningImages": {
+      "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "runs": [
+    {
+      "attempt": 1,
+      "article": "portal-knowledge",
+      "startedAt": "2026-09-28T07:19:44.593Z",
+      "finishedAt": "2026-09-28T07:20:02.053Z",
+      "stamp": 1790579719295,
+      "articleContentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 5,
+          "secondsLeft": 487
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 guidance\" (everyone, published, 2 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 confidential primary\" (everyone, published, 2 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 all confidential\" (everyone, published, 1 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 restricted\" (legal_only, published, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 draft\" (everyone, draft, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a V-C11 1790579719295 archived\" (everyone, published, archived, 1 Documents)",
+        "Request R-52 \"DOC-032 compat compat-a V-C11 1790579719295 request after an external link\""
+      ],
+      "productBugs": [],
+      "observations": [],
+      "summary": {
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "notRun": 0
+      },
+      "superseded": true,
+      "tag": "DOC-032 compat compat-a",
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBy": 2,
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "attempt": 2,
+      "article": "portal-knowledge",
+      "startedAt": "2026-09-28T07:31:14.053Z",
+      "finishedAt": "2026-09-28T07:31:31.233Z",
+      "stamp": 1790580606777,
+      "tag": "DOC-032 compat compat-a access-2",
+      "articleContentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 8,
+          "secondsLeft": 556
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 guidance\" (everyone, published, 2 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 confidential primary\" (everyone, published, 2 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 all confidential\" (everyone, published, 1 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 restricted\" (legal_only, published, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 draft\" (everyone, draft, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580606777 archived\" (everyone, published, archived, 1 Documents)",
+        "Request R-61 \"DOC-032 compat compat-a access-2 V-C11 1790580606777 request after an external link\""
+      ],
+      "productBugs": [],
+      "observations": [],
+      "summary": {
+        "total": 11,
+        "passed": 10,
+        "failed": 1,
+        "notRun": 0
+      },
+      "superseded": true,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBy": 3,
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "attempt": 3,
+      "article": "portal-knowledge",
+      "startedAt": "2026-09-28T07:32:21.801Z",
+      "finishedAt": "2026-09-28T07:32:39.638Z",
+      "stamp": 1790580740586,
+      "tag": "DOC-032 compat compat-a access-2",
+      "articleContentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 15,
+          "secondsLeft": 423
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 guidance\" (everyone, published, 2 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 confidential primary\" (everyone, published, 2 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 all confidential\" (everyone, published, 1 Documents, 1 marked Confidential)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 restricted\" (legal_only, published, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 draft\" (everyone, draft, 1 Documents)",
+        "Knowledge Item \"DOC-032 compat compat-a access-2 V-C11 1790580740586 archived\" (everyone, published, archived, 1 Documents)",
+        "Business User doc032.compata.bu.1790580740586@helix.example (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)",
+        "Request R-65 \"DOC-032 compat compat-a access-2 V-C11 1790580740586 request after an external link\""
+      ],
+      "productBugs": [],
+      "observations": [],
+      "summary": {
+        "total": 11,
+        "passed": 11,
+        "failed": 0,
+        "notRun": 0
+      },
+      "superseded": false
+    }
+  ],
+  "productBugs": [],
+  "observations": [],
+  "summary": {
+    "steps": 11,
+    "passed": 11,
+    "failed": 0,
+    "notRun": 0
+  },
+  "steps": [
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, step 1: Before you submit on the Portal home and a request form",
+      "page": "/portal",
+      "expected": "Before you submit lists only eligible guidance; the links can differ between the home page and a form",
+      "actual": "Home links: How to ask legal for help -> /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde; Contract review turnaround times -> /portal/knowledge/01a0e6c7-af7e-7acc-aae4-15a39b165cd6; When you need a DPA -> /portal/knowledge/01a0e6c7-afaa-7df3-b163-13cd9a82ec83; Using customer names in marketing -> /portal/knowledge/01a0e6c7-afab-74d1-9484-c39b8aa79c0f; Helix intranet - Legal -> https://intranet.helix.example/legal (_blank, shows \"intranet.helix.example\"); every Knowledge link is a published Everyone item true; Contract review form links [] differ from home true",
+      "result": "pass",
+      "at": "2026-09-28T07:32:32.162Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 2-6 from a Before you submit link",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Knowledge link opens in the same tab; From Legal above the title; Documents with Download and Guidance when present; Your requests returns to the Portal home",
+      "actual": "\"How to ask legal for help\" opened /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde in the same tab true; \"From Legal\" above \"How to ask legal for help\" true; Guidance section true; Documents section false, no Documents on this item; Your requests -> /portal true",
+      "result": "pass",
+      "at": "2026-09-28T07:32:32.367Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 4-5: primary Document first, Download gives the current Version, Guidance",
+      "page": "/portal/knowledge/:id",
+      "expected": "The primary Document (uploaded second) is listed first; Download gives each current Version; no version picker or embedded reader; Guidance shows the written instructions",
+      "actual": "Documents order: doc032-compata-primary-1790580740586.pdf | doc032-compata-supporting-1790580740586.pdf; downloads: doc032-compata-primary-1790580740586.pdf matches; doc032-compata-supporting-1790580740586.pdf matches; version pickers 0; embedded readers 0; Guidance \"Guidance Read this DOC-032 compat compat-a guidance before you ask Legal for a review. Send the latest draft with your Request.\"",
+      "result": "pass",
+      "at": "2026-09-28T07:32:32.543Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "A Document that Legal marked Confidential does not appear, even when it is the primary Document; its download address does not work",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Confidential primary is absent and the supporting Document shows; the Confidential Document's address answers 404 while the open one works",
+      "actual": "Staff primary is the Confidential Document true; Portal Documents list: doc032-compata-open-supporting-1790580740586.pdf; Confidential Document address HTTP 404; open Document address HTTP 200. Observation: an item whose only Document is Confidential shows no Documents section (true) and keeps its Guidance (true).",
+      "result": "pass",
+      "at": "2026-09-28T07:32:32.679Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Unavailable guidance: a file downloaded earlier does not update; Download gives the current Version",
+      "page": "/portal/knowledge/:id",
+      "expected": "After Legal adds a Version, reload lists the new file and Download and the saved address serve it",
+      "actual": "Version upload HTTP 201; Download gave doc032-compata-primary-v2-1790580740586.pdf with the new bytes true; saved address now serves the new bytes true",
+      "result": "pass",
+      "at": "2026-09-28T07:32:32.797Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Draft, restricted, archived and unknown items do not open; the same check applies to their files",
+      "page": "/portal",
+      "expected": "Each item returns to the Portal home; item and file addresses answer 404",
+      "actual": "draft: page -> /portal, item HTTP 404, file HTTP 404; restricted: page -> /portal, item HTTP 404, file HTTP 404; archived: page -> /portal, item HTTP 404, file HTTP 404; unknown: page -> /portal, item HTTP 404, file HTTP n/a",
+      "result": "pass",
+      "at": "2026-09-28T07:32:33.042Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "An internal Knowledge link returns you to the Portal home when the item is no longer available, including a saved download address",
+      "page": "/portal",
+      "expected": "After Legal unpublishes, the page returns home and the saved address answers 404; republishing restores it",
+      "actual": "Unpublished: page -> /portal true, saved address HTTP 404; republished: HTTP 200",
+      "result": "pass",
+      "at": "2026-09-28T07:32:33.156Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "External links: the website shows beneath the label and opens in a new tab; a broken website does not block the Request",
+      "page": "/portal",
+      "expected": "A new tab opens; the original tab stays on the Portal; the Request can still be submitted",
+      "actual": "\"Helix intranet - Legal\" shows \"intranet.helix.example\" beneath it; new tab at chrome-error://chromewebdata/ (\"\"); original tab on /portal true; the Legal question form then confirmed \"Thanks! Your request has been submitted to legal. (R-65)\"",
+      "result": "pass",
+      "at": "2026-09-28T07:32:34.614Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "The Portal does not offer the staff Knowledge library or its editing controls",
+      "page": "/portal",
+      "expected": "No Knowledge entry in the Portal navigation; the staff Knowledge address sends a Business User to the Portal; no editing controls on the item page",
+      "actual": "Portal navigation: Requests, Approvals, Contracts, Matters, Auto-Docs; /knowledge ended at /portal; staff list API HTTP 403; editing buttons 0",
+      "result": "pass",
+      "at": "2026-09-28T07:32:37.290Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "anonymous",
+      "step": "Before you start: Everyone still requires a signed-in Portal session",
+      "page": "/portal/login",
+      "expected": "A signed-out browser goes to the Portal sign-in; item and file answer 401",
+      "actual": "Page -> /portal/login true; item HTTP 401; file HTTP 401",
+      "result": "pass",
+      "at": "2026-09-28T07:32:37.490Z"
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Before you start: searching product Help does not search organization Knowledge",
+      "page": "/portal/help",
+      "expected": "Help search for the guidance title finds no Knowledge Item",
+      "actual": "Help at /portal/help; links named \"DOC-032 compat compat-a access-2 V-C11 1790580740586 guidance\" 0; page starts \"Browse guides Overview BROWSE GUIDES Business Portal Working with Legal Documents Reference and troubleshooting Help All\"",
+      "result": "pass",
+      "at": "2026-09-28T07:32:39.638Z"
+    }
+  ],
+  "supersededSteps": [
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, step 1: Before you submit on the Portal home and a request form",
+      "page": "/portal",
+      "expected": "Before you submit lists only eligible guidance; the links can differ between the home page and a form",
+      "actual": "Home links: How to ask legal for help -> /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde; Contract review turnaround times -> /portal/knowledge/01a0e6c7-af7e-7acc-aae4-15a39b165cd6; When you need a DPA -> /portal/knowledge/01a0e6c7-afaa-7df3-b163-13cd9a82ec83; Using customer names in marketing -> /portal/knowledge/01a0e6c7-afab-74d1-9484-c39b8aa79c0f; Helix intranet - Legal -> https://intranet.helix.example/legal (_blank, shows \"intranet.helix.example\"); DOC-032 compat compat-c V-C34 LTM 20260928T0719 supplier pack -> /portal/knowledge/01a0e6e1-aa8d-725a-922b-688c1f3a5a78; DOC-032 compat compat-c V-C34 Admin 20260928T0719 supplier pack -> /portal/knowledge/01a0e6e2-1dad-721e-9eb5-67fa7cf774c2; every Knowledge link is a published Everyone item true; Contract review form links [] differ from home true",
+      "result": "pass",
+      "at": "2026-09-28T07:19:54.440Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 2-6 from a Before you submit link",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Knowledge link opens in the same tab; From Legal above the title; Documents with Download and Guidance when present; Your requests returns to the Portal home",
+      "actual": "\"How to ask legal for help\" opened /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde in the same tab true; \"From Legal\" above \"How to ask legal for help\" true; Guidance section true; Documents section false, no Documents on this item; Your requests -> /portal true",
+      "result": "pass",
+      "at": "2026-09-28T07:19:54.651Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 4-5: primary Document first, Download gives the current Version, Guidance",
+      "page": "/portal/knowledge/:id",
+      "expected": "The primary Document (uploaded second) is listed first; Download gives each current Version; no version picker or embedded reader; Guidance shows the written instructions",
+      "actual": "Documents order: doc032-compata-primary-1790579719295.pdf | doc032-compata-supporting-1790579719295.pdf; downloads: doc032-compata-primary-1790579719295.pdf matches; doc032-compata-supporting-1790579719295.pdf matches; version pickers 0; embedded readers 0; Guidance \"Guidance Read this DOC-032 compat compat-a guidance before you ask Legal for a review. Send the latest draft with your Request.\"",
+      "result": "pass",
+      "at": "2026-09-28T07:19:54.847Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "A Document that Legal marked Confidential does not appear, even when it is the primary Document; its download address does not work",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Confidential primary is absent and the supporting Document shows; the Confidential Document's address answers 404 while the open one works",
+      "actual": "Staff primary is the Confidential Document true; Portal Documents list: doc032-compata-open-supporting-1790579719295.pdf; Confidential Document address HTTP 404; open Document address HTTP 200. Observation: an item whose only Document is Confidential shows no Documents section (true) and keeps its Guidance (true).",
+      "result": "pass",
+      "at": "2026-09-28T07:19:55.050Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Unavailable guidance: a file downloaded earlier does not update; Download gives the current Version",
+      "page": "/portal/knowledge/:id",
+      "expected": "After Legal adds a Version, reload lists the new file and Download and the saved address serve it",
+      "actual": "Version upload HTTP 201; Download gave doc032-compata-primary-v2-1790579719295.pdf with the new bytes true; saved address now serves the new bytes true",
+      "result": "pass",
+      "at": "2026-09-28T07:19:55.196Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Draft, restricted, archived and unknown items do not open; the same check applies to their files",
+      "page": "/portal",
+      "expected": "Each item returns to the Portal home; item and file addresses answer 404",
+      "actual": "draft: page -> /portal, item HTTP 404, file HTTP 404; restricted: page -> /portal, item HTTP 404, file HTTP 404; archived: page -> /portal, item HTTP 404, file HTTP 404; unknown: page -> /portal, item HTTP 404, file HTTP n/a",
+      "result": "pass",
+      "at": "2026-09-28T07:19:55.450Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "An internal Knowledge link returns you to the Portal home when the item is no longer available, including a saved download address",
+      "page": "/portal",
+      "expected": "After Legal unpublishes, the page returns home and the saved address answers 404; republishing restores it",
+      "actual": "Unpublished: page -> /portal true, saved address HTTP 404; republished: HTTP 200",
+      "result": "pass",
+      "at": "2026-09-28T07:19:55.555Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "External links: the website shows beneath the label and opens in a new tab; a broken website does not block the Request",
+      "page": "/portal",
+      "expected": "A new tab opens; the original tab stays on the Portal; the Request can still be submitted",
+      "actual": "\"Helix intranet - Legal\" shows \"intranet.helix.example\" beneath it; new tab at chrome-error://chromewebdata/ (\"\"); original tab on /portal true; the Legal question form then confirmed \"Thanks! Your request has been submitted to legal. (R-52)\"",
+      "result": "pass",
+      "at": "2026-09-28T07:19:57.040Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "The Portal does not offer the staff Knowledge library or its editing controls",
+      "page": "/portal",
+      "expected": "No Knowledge entry in the Portal navigation; the staff Knowledge address sends a Business User to the Portal; no editing controls on the item page",
+      "actual": "Portal navigation: Requests, Approvals, Contracts, Matters, Auto-Docs; /knowledge ended at /portal; staff list API HTTP 403; editing buttons 0",
+      "result": "pass",
+      "at": "2026-09-28T07:19:59.712Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "anonymous",
+      "step": "Before you start: Everyone still requires a signed-in Portal session",
+      "page": "/portal/login",
+      "expected": "A signed-out browser goes to the Portal sign-in; item and file answer 401",
+      "actual": "Page -> /portal/login true; item HTTP 401; file HTTP 401",
+      "result": "pass",
+      "at": "2026-09-28T07:19:59.883Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Before you start: searching product Help does not search organization Knowledge",
+      "page": "/portal/help",
+      "expected": "Help search for the guidance title finds no Knowledge Item",
+      "actual": "Help at /portal/help; links named \"DOC-032 compat compat-a V-C11 1790579719295 guidance\" 0; page starts \"Browse guides Overview BROWSE GUIDES Business Portal Working with Legal Documents Reference and troubleshooting Help All\"",
+      "result": "pass",
+      "at": "2026-09-28T07:20:02.053Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.364Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, step 1: Before you submit on the Portal home and a request form",
+      "page": "/portal",
+      "expected": "Before you submit lists only eligible guidance; the links can differ between the home page and a form",
+      "actual": "Home links: How to ask legal for help -> /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde; Contract review turnaround times -> /portal/knowledge/01a0e6c7-af7e-7acc-aae4-15a39b165cd6; When you need a DPA -> /portal/knowledge/01a0e6c7-afaa-7df3-b163-13cd9a82ec83; Using customer names in marketing -> /portal/knowledge/01a0e6c7-afab-74d1-9484-c39b8aa79c0f; Helix intranet - Legal -> https://intranet.helix.example/legal (_blank, shows \"intranet.helix.example\"); every Knowledge link is a published Everyone item false; Contract review form links [] differ from home true",
+      "result": "fail",
+      "at": "2026-09-28T07:31:23.595Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 2-6 from a Before you submit link",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Knowledge link opens in the same tab; From Legal above the title; Documents with Download and Guidance when present; Your requests returns to the Portal home",
+      "actual": "\"How to ask legal for help\" opened /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde in the same tab true; \"From Legal\" above \"How to ask legal for help\" true; Guidance section true; Documents section false, no Documents on this item; Your requests -> /portal true",
+      "result": "pass",
+      "at": "2026-09-28T07:31:23.807Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Open guidance and Documents, steps 4-5: primary Document first, Download gives the current Version, Guidance",
+      "page": "/portal/knowledge/:id",
+      "expected": "The primary Document (uploaded second) is listed first; Download gives each current Version; no version picker or embedded reader; Guidance shows the written instructions",
+      "actual": "Documents order: doc032-compata-primary-1790580606777.pdf | doc032-compata-supporting-1790580606777.pdf; downloads: doc032-compata-primary-1790580606777.pdf matches; doc032-compata-supporting-1790580606777.pdf matches; version pickers 0; embedded readers 0; Guidance \"Guidance Read this DOC-032 compat compat-a guidance before you ask Legal for a review. Send the latest draft with your Request.\"",
+      "result": "pass",
+      "at": "2026-09-28T07:31:24.048Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "A Document that Legal marked Confidential does not appear, even when it is the primary Document; its download address does not work",
+      "page": "/portal/knowledge/:id",
+      "expected": "The Confidential primary is absent and the supporting Document shows; the Confidential Document's address answers 404 while the open one works",
+      "actual": "Staff primary is the Confidential Document true; Portal Documents list: doc032-compata-open-supporting-1790580606777.pdf; Confidential Document address HTTP 404; open Document address HTTP 200. Observation: an item whose only Document is Confidential shows no Documents section (true) and keeps its Guidance (true).",
+      "result": "pass",
+      "at": "2026-09-28T07:31:24.240Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Unavailable guidance: a file downloaded earlier does not update; Download gives the current Version",
+      "page": "/portal/knowledge/:id",
+      "expected": "After Legal adds a Version, reload lists the new file and Download and the saved address serve it",
+      "actual": "Version upload HTTP 201; Download gave doc032-compata-primary-v2-1790580606777.pdf with the new bytes true; saved address now serves the new bytes true",
+      "result": "pass",
+      "at": "2026-09-28T07:31:24.402Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Draft, restricted, archived and unknown items do not open; the same check applies to their files",
+      "page": "/portal",
+      "expected": "Each item returns to the Portal home; item and file addresses answer 404",
+      "actual": "draft: page -> /portal, item HTTP 404, file HTTP 404; restricted: page -> /portal, item HTTP 404, file HTTP 404; archived: page -> /portal, item HTTP 404, file HTTP 404; unknown: page -> /portal, item HTTP 404, file HTTP n/a",
+      "result": "pass",
+      "at": "2026-09-28T07:31:24.668Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "An internal Knowledge link returns you to the Portal home when the item is no longer available, including a saved download address",
+      "page": "/portal",
+      "expected": "After Legal unpublishes, the page returns home and the saved address answers 404; republishing restores it",
+      "actual": "Unpublished: page -> /portal true, saved address HTTP 404; republished: HTTP 200",
+      "result": "pass",
+      "at": "2026-09-28T07:31:24.779Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "External links: the website shows beneath the label and opens in a new tab; a broken website does not block the Request",
+      "page": "/portal",
+      "expected": "A new tab opens; the original tab stays on the Portal; the Request can still be submitted",
+      "actual": "\"Helix intranet - Legal\" shows \"intranet.helix.example\" beneath it; new tab at chrome-error://chromewebdata/ (\"\"); original tab on /portal true; the Legal question form then confirmed \"Thanks! Your request has been submitted to legal. (R-61)\"",
+      "result": "pass",
+      "at": "2026-09-28T07:31:26.248Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "The Portal does not offer the staff Knowledge library or its editing controls",
+      "page": "/portal",
+      "expected": "No Knowledge entry in the Portal navigation; the staff Knowledge address sends a Business User to the Portal; no editing controls on the item page",
+      "actual": "Portal navigation: Requests, Approvals, Contracts, Matters, Auto-Docs; /knowledge ended at /portal; staff list API HTTP 403; editing buttons 0",
+      "result": "pass",
+      "at": "2026-09-28T07:31:28.906Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "anonymous",
+      "step": "Before you start: Everyone still requires a signed-in Portal session",
+      "page": "/portal/login",
+      "expected": "A signed-out browser goes to the Portal sign-in; item and file answer 401",
+      "actual": "Page -> /portal/login true; item HTTP 401; file HTTP 401",
+      "result": "pass",
+      "at": "2026-09-28T07:31:29.079Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    },
+    {
+      "article": "portal-knowledge",
+      "role": "business_user",
+      "step": "Before you start: searching product Help does not search organization Knowledge",
+      "page": "/portal/help",
+      "expected": "Help search for the guidance title finds no Knowledge Item",
+      "actual": "Help at /portal/help; links named \"DOC-032 compat compat-a access-2 V-C11 1790580606777 guidance\" 0; page starts \"Browse guides Overview BROWSE GUIDES Business Portal Working with Legal Documents Reference and troubleshooting Help All\"",
+      "result": "pass",
+      "at": "2026-09-28T07:31:31.233Z",
+      "attempt": 2,
+      "supersededAt": "2026-09-28T07:32:39.743Z",
+      "supersededBecause": "Fixture/state-read adaptation: attempt 2 read the staff Knowledge list with one /knowledge?limit=100 call; the list pages by 50 (unchanged since 067c1646) and the shared lab held 70 items, so the four seeded Before you submit items were on page 2 and the eligibility check read them as missing. All four are published, Everyone, not archived. Attempt 3 reads every page; the check is unchanged."
+    }
+  ]
+}

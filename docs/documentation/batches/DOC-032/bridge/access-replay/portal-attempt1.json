@@ -1,0 +1,491 @@
+{
+  "section": "portal",
+  "attempt": 1,
+  "run": {
+    "startedAt": "2026-09-28T10:14:11.656Z",
+    "finishedAt": "2026-09-28T10:19:28.567Z",
+    "stamp": "09281014",
+    "runningImages": {
+      "app": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+      "worker": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+      "doc-engine": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7"
+    },
+    "articleContentSha256": {
+      "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+      "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+    }
+  },
+  "steps": [
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "fixture.expiry-link",
+      "action": "Request a sign-in link now for the check after five minutes.",
+      "expected": "A link arrives for a new allowed-domain address.",
+      "page": "/portal/login",
+      "actual": "Link email \"Sign in to OpenLaw\" arrived for a new helix.example address at 2026-09-28T10:14:13.099Z; kept unopened for the expiry check.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:11.835Z",
+      "at": "2026-09-28T10:14:13.211Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S1.open-address",
+      "action": "Open the Portal address.",
+      "expected": "The sign-in page shows the organization's name, and its logo if one is saved.",
+      "page": "/portal/login",
+      "actual": "Signed out, /portal opened /portal/login with the heading Business Portal sign-in. The page read \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in Email Password Sign in Set up or reset your password Email me a\". Saved name \"Helix Software Group\", saved logo none, Organization logo images 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:13.236Z",
+      "at": "2026-09-28T10:14:14.494Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S2.email-me",
+      "action": "If the page shows a password form or Continue with single sign-on, select Email me a sign-in link.",
+      "expected": "The page changes to Get a sign-in link.",
+      "page": "/portal/login",
+      "actual": "Password form shown true; Continue with single sign-on false. Email me a sign-in link changed the card to Get a sign-in link.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:14.495Z",
+      "at": "2026-09-28T10:14:14.515Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S3-5.send-link",
+      "action": "Enter the work address in Email, select Send link.",
+      "expected": "Check your email appears.",
+      "page": "/portal/login",
+      "actual": "Check your email appeared: \"Check your email If <new address> is eligible, a sign-in link is on its way. It expires in 5 minutes and works once. Back to sign-in Help with this page\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:14.517Z",
+      "at": "2026-09-28T10:14:14.638Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S6.follow-link",
+      "action": "Open the sign-in email for that address and follow its link within five minutes.",
+      "expected": "The Portal opens under that identity; the first visit shows Welcome to your Business Portal; Department with Continue, Skip on later steps, Finish opens the Portal.",
+      "page": "/portal/onboarding",
+      "actual": "Subject \"Sign in to OpenLaw\". Link lifetime 5 minutes. The link opened /portal/onboarding with Welcome to your Business Portal. The Department step had Continue (disabled until a Department was chosen) and no Skip. After Full name, Skip was offered on: Name and photo | Theme | Notifications. Finish opened /portal. Header: \"openlaw / Helix Software Group Legal portal Help D0 DOC-032 bridge first Business User 09281014 <new address> Sign out\". Main: \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 business days Contract review Re\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:14.639Z",
+      "at": "2026-09-28T10:14:18.876Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S7.outside-domain",
+      "action": "Request a link for an address outside the allowed domains with no account.",
+      "expected": "Check your email is neutral; no link arrives.",
+      "page": "/portal/login",
+      "actual": "Check your email said \"If <address> is eligible, a sign-in link is on its way. It expires in \"; Mailpit held 0 messages for the address after 8 s.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:18.878Z",
+      "at": "2026-09-28T10:14:28.212Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S7b.outside-domain-existing",
+      "action": "Request a link for an existing active Business User account on a domain that is not allowed.",
+      "expected": "An address outside the allowed domains with an existing active account receives a link.",
+      "page": "/portal/login",
+      "actual": "Fixture: Daniel invited an account at partner-firm.example (not an allowed domain) and changed its role to Business User (200). Send link showed Check your email and \"Sign in to OpenLaw\" arrived; its link opened /portal.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:28.213Z",
+      "at": "2026-09-28T10:14:29.696Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S8.sign-out",
+      "action": "Select Sign out in the Portal header.",
+      "expected": "The session ends; the Portal sign-in page shows.",
+      "page": "/portal",
+      "actual": "Sign out (header button) returned to /portal/login; opening /portal again showed /portal/login.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:29.698Z",
+      "at": "2026-09-28T10:14:31.949Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S9.used-link",
+      "action": "Reuse the old email link after sign-out; on Sign-in link expired enter Email, select Send link, follow the new link once.",
+      "expected": "Sign-in link expired offers Email and Send link; the new link opens the Portal; the old link does not.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "The used link opened /auth/link-expired?portal=1: \"Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\". Email and Send link sent \"Sign in to OpenLaw\"; its link opened /portal without repeating the first-visit steps.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:31.951Z",
+      "at": "2026-09-28T10:14:33.222Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S10.bad-link",
+      "action": "Open a sign-in link whose token was altered.",
+      "expected": "A bad link offers a working recovery route.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "An altered token opened /auth/link-expired?portal=1 with \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\". Email and Send link were offered (the same recovery route as S9).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:14:33.223Z",
+      "at": "2026-09-28T10:14:34.456Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S11.own-requests",
+      "action": "Follow a fresh link as Jonas; check the signed-in identity.",
+      "expected": "The Portal opens under that identity and lists that person's Requests.",
+      "page": null,
+      "actual": "Check failed: Cannot read properties of undefined (reading 'slice') Page at failure: /portal; text \"Skip to content openlaw / Helix Software Group Legal portal Help 9+ JW Jonas Weber jonas.weber@helix.example Sign out Requests Approvals Contracts Matters Auto-Docs What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 busines\".",
+      "result": "fail",
+      "startedAt": "2026-09-28T10:16:47.181Z",
+      "at": "2026-09-28T10:16:48.336Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S12.other-request-and-staff-pages",
+      "action": "Open another Business User's Request link and the staff Inbox, Contracts and Matters pages.",
+      "expected": "Another Business User's Request link does not grant access; Business Users cannot enter the staff pages.",
+      "page": "/portal/requests/16",
+      "actual": "Amara's Request address showed /portal with \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnar\" and not its title. Staff pages ended on: {\"/inbox\":\"/portal\",\"/contracts\":\"/portal\",\"/matters\":\"/portal\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:48.337Z",
+      "at": "2026-09-28T10:16:52.741Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S13.your-contracts",
+      "action": "Select Contracts in the Portal navigation bar.",
+      "expected": "Your Contracts lists non-archived Contracts whose teams include you; Show more loads more.",
+      "page": "/portal/contracts",
+      "actual": "Your Contracts showed 25 row links; Show more raised it to 29. The archived team Contract C-40 was not listed and its address showed \"Contract not found\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:52.744Z",
+      "at": "2026-09-28T10:16:56.131Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S14.read-contract",
+      "action": "Open a row; check reference, title, Counterparty, Stage, owners, terms, dates and Value; in Documents the Primary Document label; select the name; use the download control; use Your Contracts.",
+      "expected": "The Contract page shows these; Primary Document marks the primary file; the name opens the current Version; download works; Your Contracts returns to the list.",
+      "page": "/portal/contracts/39",
+      "actual": "C-39 \"DOC-032 bridge Jonas converted contract 09281006\" showed Counterparty, Stage, Business Owner, Legal Owner, Term type, Effective date, Expiry date, Value, Documents. Overview text: \"Overview Counterparty DOC-032 bridge Fictional Partner Ltd 09281006 Stage Draft Business Owner Jonas Weber Legal Owner Nadia Haddad Department Sales Region Not recorded Term type Fixed term Value £50,000.00 Effective date Feb 1 Expiry date Jan 31, 2028 Renewal period Not recorded Notice deadline Not\". Primary Document label shown; the name opened \"doc032-bridge-jonas-paper.txt, version 1\"; \"Download doc032-bridge-jonas-paper.txt, version 1\" downloaded \"doc032-bridge-jonas-paper.txt\"; Your Contracts returned to the list.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:56.133Z",
+      "at": "2026-09-28T10:16:58.566Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S15.matters",
+      "action": "Select Matters in the Portal navigation bar and open a row.",
+      "expected": "The Matter shows its M- reference, title, Matter Type, Status, Matter Manager and Business Owner; the list uses the current-team rule.",
+      "page": null,
+      "actual": "Check failed: locator.click: Timeout 30000ms exceeded. Call log:   - waiting for locator('main a[href$=\\'/portal/matters/\\']').first()  Page at failure: /portal/matters; text \"Skip to content openlaw / Helix Software Group Legal portal Help 9+ JW Jonas Weber jonas.weber@helix.example Sign out Requests Approvals Contracts Matters Auto-Docs Your Matters Matters you are on the team for. 0 of 0 records Search Filter No records are available to you Records appear here when Leg\".",
+      "result": "fail",
+      "startedAt": "2026-09-28T10:16:58.568Z",
+      "at": "2026-09-28T10:17:29.184Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S16.record-sections",
+      "action": "Check the record page sections and applet bar.",
+      "expected": "Record pages offer Fields, Documents with Versions and read-only Original request; the applet bar holds Comments, History and Contract team or Matter team.",
+      "page": null,
+      "actual": "Check failed: {\"c\":{\"Comments\":1,\"History\":1,\"Contract team\":1},\"m\":{\"Matter team\":0}} Page at failure: /portal/matters/; text \"Skip to content openlaw / Helix Software Group Legal portal Help 9+ JW Jonas Weber jonas.weber@helix.example Sign out Requests Approvals Contracts Matters Auto-Docs Your Matters Matters you are on the team for. 0 of 0 records Search Filter No records are available to you Records appear here when Leg\".",
+      "result": "fail",
+      "startedAt": "2026-09-28T10:17:29.185Z",
+      "at": "2026-09-28T10:17:31.508Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S17.conversion",
+      "action": "Open the converted Request address; check the team.",
+      "expected": "At conversion you become Business Owner and join the team; the Request address redirects there.",
+      "page": "/portal/requests/17",
+      "actual": "/portal/requests/17 redirected to /portal/contracts/39. Contract team rows: NH Legal Owner Creator Nadia Haddad | JW Business Owner Jonas Weber.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:31.510Z",
+      "at": "2026-09-28T10:17:33.388Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S18.new-business-owner",
+      "action": "Legal assigns a new Business Owner (second actor, API).",
+      "expected": "The new Business Owner joins the team; the former owner remains a member until Legal removes them.",
+      "page": "/portal/contracts/39",
+      "actual": "Nadia set Amara Nwosu as Business Owner (200). Jonas still opened C-39; his Contract team read: NH Legal Owner Creator Nadia Haddad | AN Business Owner Amara Nwosu | JW Jonas Weber. Restored: Business Owner back to Jonas (200), Amara removed (200).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:33.390Z",
+      "at": "2026-09-28T10:17:35.316Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S19.second-business-user",
+      "action": "Sign in as Amara in a separate browser context.",
+      "expected": "Only the intended Business User session opens; each sees only their own Requests.",
+      "page": null,
+      "actual": "Check failed: Cannot read properties of undefined (reading 'slice') Page at failure: /portal/requests/; text \"Skip to content openlaw / Helix Software Group Legal portal Help 6 AN Amara Nwosu amara.nwosu@helix.example Sign out Requests Approvals Contracts Matters Auto-Docs Page not found There is nothing at this address. Back to the portal\".",
+      "result": "fail",
+      "startedAt": "2026-09-28T10:17:37.906Z",
+      "at": "2026-09-28T10:17:40.139Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S20.staff-keeps-role",
+      "action": "A Legal Team Member follows a Portal sign-in link.",
+      "expected": "The account keeps its role when it follows a sign-in link; it does not act as a Business User.",
+      "page": "/portal",
+      "actual": "Nadia's Portal sign-in link opened /portal; /me role legal_team_member; the staff page /contracts opened (/contracts).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:40.145Z",
+      "at": "2026-09-28T10:17:44.445Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V1.links-off",
+      "action": "With email links switched off for the Portal, open the sign-in page; use Set up or reset your password, Send password setup link, follow the one-hour link, set the password, sign in with Email and Password.",
+      "expected": "No Email me a sign-in link; Email and Password with Sign in; password setup works; the expired-link page offers only Back to sign-in.",
+      "page": "/portal/login",
+      "actual": "Policy saved (email links off). Sign-in page buttons: Sign in, Set up or reset your password. Send password setup link showed \"Check your email If your email address is eligible, a password setup link is on its way. It expires in one hour. Back to sign-in Help with t\"; \"Set your OpenLaw password\" arrived; Password set; Email, Password and Sign in opened /portal/onboarding. /auth/link-expired?portal=1 read \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Request a new one from the sign-in\" with no Send link; Back to sign-in returned to /portal/login.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:44.477Z",
+      "at": "2026-09-28T10:17:47.357Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V3.two-factor",
+      "action": "With two-factor required for the Portal, follow a sign-in link; set up the authenticator app; sign out; follow a new link and enter the code. Sign in with a password under the same policy.",
+      "expected": "OpenLaw asks to set up an authenticator app before the Portal opens, then asks for a code each time; this applies to sign-in links and passwords.",
+      "page": "/auth/two-factor/enroll",
+      "actual": "Policy saved (two-factor required for the Portal). The sign-in link opened /auth/two-factor/enroll: \"OpenLaw Legal Portal Two-factor authentication Confirm your password to start enrollment. Your organization requires two-factor authentication. Turn o\". Turn on two-factor showed the QR code and manual secret; Code and Confirm showed backup codes; Done opened /portal. After that, a second link opened /auth/two-factor: \"OpenLaw Legal Portal Two-factor authentication Enter the 6-digit code from your authenticator app. C\"; Code and Verify opened /portal. A password sign-in by the V1 account under the same policy opened /auth/two-factor/enroll.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:52.422Z",
+      "at": "2026-09-28T10:18:02.065Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V4.logo",
+      "action": "Open the Portal address after an Administrator saves a logo.",
+      "expected": "The sign-in page shows the organization's name and its logo.",
+      "page": "/portal/login",
+      "actual": "With a saved logo the page showed one Organization logo image and \"Helix Software Group Legal Portal Powered by OpenLaw Busines\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:02.079Z",
+      "at": "2026-09-28T10:18:03.314Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S21.expired-link",
+      "action": "Follow a link after five minutes; on Sign-in link expired enter Email, Send link, follow the new link once.",
+      "expected": "The expired link offers a fresh link; the new link works once.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "After 5 minutes the first link opened /auth/link-expired?portal=1 (Sign-in link expired). Email and Send link sent a new link, which opened /portal. The same new link in a second browser context opened Sign-in link expired (works once).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:03.345Z",
+      "at": "2026-09-28T10:19:28.541Z"
+    }
+  ],
+  "created": [
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:14:13.211Z",
+      "what": "Business User doc032.bridge.expiry.09281014@helix.example (sign-in link requested; created on first use)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:14:14.646Z",
+      "what": "Business User doc032.bridge.first.09281014@helix.example (DOC-032 bridge first Business User 09281014), created by the first sign-in link"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:14:28.282Z",
+      "what": "Business User doc032.bridge.invited.09281014@partner-firm.example (invited by Daniel, role changed to Business User)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:17:45.885Z",
+      "what": "Business User doc032.bridge.password.09281014@helix.example (created by password setup with links off)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:17:52.132Z",
+      "what": "Business User doc032.bridge.twofactor.09281014@helix.example (created by a sign-in link; first visit finished in the browser)"
+    }
+  ],
+  "settingChanges": [
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:17:44.486Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": false,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:17:47.369Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:17:52.431Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": true
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:18:02.075Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:18:02.088Z",
+      "what": "organization logo",
+      "detail": {
+        "to": "DOC-032 bridge 16x16 test logo",
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:18:03.345Z",
+      "what": "organization logo restored",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T10:19:28.553Z",
+      "what": "final check",
+      "detail": {
+        "businessPolicyRestored": true
+      }
+    }
+  ],
+  "productBugs": []
+}

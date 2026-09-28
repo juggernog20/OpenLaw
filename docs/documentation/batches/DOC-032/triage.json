@@ -1,0 +1,2515 @@
+{
+  "kind": "app-diff-triage",
+  "task": "DOC-032",
+  "issue": 1194,
+  "reviewer": "DOC-032 app-diff triage agent",
+  "reviewerKind": "agent",
+  "independence": "The triage agent wrote none of the guides and ran no walkthrough. It changed no guide text and no evidence record.",
+  "reviewedAt": "2026-09-28T07:08:11Z",
+  "fromAppCommits": [
+    "067c1646829df85e62b809ee9157921e867c84e7",
+    "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "648f99ec18c4d43882a2db32368f46b5f09d21a6"
+  ],
+  "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+  "commands": [
+    "node scripts/documentation/status.mjs",
+    "git diff --name-only 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- apps packages styles",
+    "git log --oneline --no-merges 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- apps packages styles",
+    "git diff --name-only 3fa407e3a846559914aa1a63249741f30cfb4f69..HEAD -- apps packages styles",
+    "git log --oneline --no-merges 3fa407e3a846559914aa1a63249741f30cfb4f69..HEAD -- apps packages styles",
+    "git diff --name-only 648f99ec18c4d43882a2db32368f46b5f09d21a6..HEAD -- apps packages styles",
+    "git log --oneline --no-merges 648f99ec18c4d43882a2db32368f46b5f09d21a6..HEAD -- apps packages styles",
+    "git log --merges --first-parent --format='%h %ad %s' --date=short 067c1646829df85e62b809ee9157921e867c84e7..HEAD",
+    "git log --first-parent --no-merges --format='%h %ad %s' --date=short 067c1646829df85e62b809ee9157921e867c84e7..HEAD",
+    "git rev-list --no-merges <merge>^1..<merge> (for each first-parent merge, to map commits to pull requests)",
+    "git log --no-merges --format='@@%h %s' --name-only 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- apps packages styles",
+    "git diff --stat 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- . ':!docs' ':!apps' ':!packages' ':!styles'",
+    "git diff 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- scripts/seed CONTEXT.md compose.dev.yml .env.example docs/DEPLOYMENT.md messages/en-US.json",
+    "git diff 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- <per-file inspections named in candidates[].inspectedFiles>",
+    "git show -s --format=%b <commit> (bodies of b6a0bcfd, 229909d4, dd28e33d, 46d9f1e5, d3728c9b, 183bfa99, d0e50ae4, 0e62863c, 3bc566bd, 8cd0045d, 791ad567, 1f2e77e1, b656bfb6, 184cf48a, 3e91951f, e924a3f3, 879fc477, 105728f8, 254d4d40, 8432038e, 367ae2c2)",
+    "git log --no-merges --format='@@%h %ad %s' --date=short --name-only 067c1646829df85e62b809ee9157921e867c84e7..HEAD -- docs/user-guides",
+    "git log --format=%h <range> -- docs/user-guides/<guide>.md and git show <commit>:docs/user-guides/<guide>.md | sha256sum (to find the commit whose text matches each edited guide's evidence contentSha256)",
+    "git diff --word-diff=plain <matching commit> HEAD -- docs/user-guides/<guide>.md (for the eight edited guides)",
+    "git show <commit> --word-diff=plain -- docs/user-guides/<guide>.md (per edit commit)",
+    "git merge-base --is-ancestor 067c1646829df85e62b809ee9157921e867c84e7 648f99ec18c4d43882a2db32368f46b5f09d21a6; git merge-base --is-ancestor 879fc477 648f99ec18c4d43882a2db32368f46b5f09d21a6"
+  ],
+  "method": "I listed the application diff from 067c1646, from 3fa407e3 and from 648f99ec, and mapped each of the 88 app commits since 067c1646 to its first-parent pull request or marked it a direct commit on dev. I grouped the commits by product area and read their messages, the messages/en-US.json diff, the CONTEXT.md and seed diffs, and the code diffs behind each area. For each of the 50 candidates I read the guide at HEAD and its evidence sources, intersected the sources with the diff, grepped the guide for the changed labels and concepts, and opened the code for every claim a change could reach. For the six guides with evidence at 3fa407e3, the 3fa407e3 to 067c1646 range was already reviewed compatible in DOC-030 compat (compat/compat.json); I checked 067c1646 to HEAD for them. For the eight edited guides I found the commit whose text matches the evidence hash and diffed from there.",
+  "priorRange": {
+    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "reviewedBy": [
+      "docs/documentation/batches/DOC-030/compat/compat.json",
+      "docs/documentation/batches/DOC-030/triage.json"
+    ],
+    "articles": [
+      "contract-stages",
+      "contract-relations-and-ending",
+      "matter-status-and-archive",
+      "document-previews",
+      "compare-versions",
+      "versions-and-support"
+    ],
+    "note": "All six were compatible at 067c1646. Their decisions here cover 067c1646 to 4ca41822."
+  },
+  "limitations": [
+    "Source review only. I ran no walkthrough, lab, build or test.",
+    "I judged guide text at HEAD 4ca41822. The worktree held uncommitted edits by other seats to seven of the eight edited guides and edition.json while I worked; I did not read or judge those edits.",
+    "Every compat replay runs on a lab built from 4ca41822. #1156 (00528360) changed the seed's random draws after the Business Owner pick, and 17179939 renamed the bootstrap Administrator to Devon Calloway (devon@helix.example). A replay step that relies on a seeded record's exact team, owner or name may fail; that is a script update, not a guide change. claude-live/phase-passwords.mjs still lists blair@helix.example.",
+    "DocuSign draft preparation stays off by default (SIGNING_PREPARATION_ENABLED). Claims about preparation, Resume and recovery states can only be checked on a stand-in or live lab.",
+    "configure-analysis's replay needs a live provider key, as in DOC-030."
+  ],
+  "summary": {
+    "compat": 33,
+    "rewalk": 17,
+    "edited": 8,
+    "blocked": 4
+  },
+  "findings": [
+    "Possible guide or product conflict: first-run (text added in 1f2e77e1) says removing the last allowed domain disables the Business switches without changing their values, but PUT /auth/allowed-domains (3e91951f) stores password, magic link and SSO as off for Business Users. authentication-and-email and portal-sign-in do not yet say that an empty list stops every Business User signing in.",
+    "The app no longer offers whole-Document deletion anywhere (hardDeleteDocument has no caller after dd28e33d). archive-and-delete-documents is built around that action.",
+    "electronic-signing (blocked) still says Open Signatures, then select Prepare Envelope; b6a0bcfd renamed the trigger to Send for signature in both modes."
+  ],
+  "areas": [
+    {
+      "area": "MCP resources, prompts and listen streams (M42)",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/lib/event-hub.ts",
+        "apps/api/src/mcp/calls.ts",
+        "apps/api/src/mcp/change-feed.ts",
+        "apps/api/src/mcp/prompts.ts",
+        "apps/api/src/mcp/resources.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/modules/events/routes.ts",
+        "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "packages/api-client/src/schema.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/lib/event-hub.test.ts",
+        "apps/api/src/mcp/documentation.test.ts",
+        "apps/api/src/mcp/grant.test.ts",
+        "apps/api/src/mcp/guide.test.ts",
+        "apps/api/src/mcp/listen.test.ts",
+        "apps/api/src/mcp/mcp.test.ts",
+        "apps/api/src/mcp/prompts.test.ts",
+        "apps/api/src/mcp/resources.test.ts",
+        "apps/api/src/modules/oauth-grants/oauth-grants.test.ts"
+      ],
+      "commits": [
+        "54e7eb92 feat: add MCP record resources and views (#1163) (#1188)",
+        "61cfbdb0 docs: explain MCP resource access and accounting (#1188)",
+        "a26f998f feat: add MCP triage and summary prompts (#1164) (#1188)",
+        "bbde224b docs: explain MCP prompt access and accounting (#1188)",
+        "03c617a2 fix: tighten the MCP prompt challenge, record form and Convert link (#1188)",
+        "815cc0c6 feat: add scoped MCP listen streams (#1165) (#1188)",
+        "64e97b41 fix: keep MCP listen streams inside the current grant and role (#1188)",
+        "45b6e740 Address the CodeRabbit review of the M42 pull request (#1188)",
+        "1238de78 docs: document M42 resources and prompts (#1166) (#1188)",
+        "e47a857a Regenerate the OpenAPI document after the dev merge (#1188)"
+      ],
+      "userVisibleChange": "MCP Clients can read nine record and view resources (openlaw://contracts/{number}, matters, requests, entities, knowledge, document-versions, inbox, tasks/mine, vocabulary) and get two prompts, triage_inbox and summarize_record, under the same grant, record access and rate limit as the Tools. A modern Client can open subscriptions/listen to get list-changed notices when MCP, the Toolset ceiling or Read-only change, and resource-updated notices for subscribed records; revoking the credential or losing access closes the stream. Nothing changes in the browser app."
+    },
+    {
+      "area": "MCP Team and Administration Tools, Toolset ceiling and Settings MCP page (M42)",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/app.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/event-hub.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/team-person.ts",
+        "apps/api/src/mcp/administration.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/selectable-toolsets.ts",
+        "apps/api/src/mcp/team.ts",
+        "apps/api/src/mcp/tool.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/modules/audit-log/tool-calls.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/modules/contracts/renewal-vehicle.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/modules/org/currencies.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/settings/read.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+        "packages/db/migrations/meta/0172_snapshot.json",
+        "packages/db/migrations/meta/_journal.json",
+        "packages/db/src/schema/org.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/live-events.ts",
+        "packages/shared/src/mcp.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/mcp-settings-migration.test.ts",
+        "apps/api/src/mcp/administration.test.ts",
+        "apps/api/src/mcp/grant.test.ts",
+        "apps/api/src/mcp/matters-tasks.test.ts",
+        "apps/api/src/mcp/register.test.ts",
+        "apps/api/src/mcp/requests-comments-people.test.ts",
+        "apps/api/src/mcp/team.test.ts",
+        "apps/api/src/modules/api-keys/api-keys.test.ts",
+        "apps/api/src/modules/mcp-settings/mcp-settings.test.ts",
+        "apps/api/src/modules/oauth-grants/oauth-grants.test.ts",
+        "apps/web/src/lib/activity.test.ts",
+        "apps/web/src/routes/connected-clients.test.tsx",
+        "apps/web/src/routes/settings-api-keys.test.tsx",
+        "apps/web/src/routes/settings-mcp.test.tsx"
+      ],
+      "commits": [
+        "f9481e78 feat: align MCP audience choices and ceiling (#1188)",
+        "dac203fe fix: address MCP audience review findings (#1188)",
+        "8432038e refactor: share Contract and Matter team mutations (#1188)",
+        "87080703 feat: add MCP Team Tools for Legal Users (#1161) (#1188)",
+        "eb22da33 docs: cite team service and Tool decisions (#1188)",
+        "5a607b1c test: update API key eligibility for Team Tools (#1188)",
+        "378a6477 docs: explain renewal vehicle module purpose (#1188)",
+        "044d4cb0 Let the Team remove Tool take a deactivated person (#1188)",
+        "254d4d40 Reuse the shared Matter team add for Task assignees (#1188)",
+        "3294f749 feat: add Administration MCP Tools (#1162) (#1188)",
+        "89edc978 docs: explain Administration Tool invariants (#1188)",
+        "78d0b448 docs: clarify the audit log Tool's two views (#1188)",
+        "8cd0045d Enhance Connected Clients component and update Settings MCP page (direct commit on dev)"
+      ],
+      "userVisibleChange": "Two new Toolsets: Team (openlaw_team_add, openlaw_team_remove, Legal Users with Write scope) and Administration (openlaw_audit_log_query, openlaw_settings_get, Administrators only, read-only). Both start unchecked in Settings > Organization > MCP > Toolset ceiling, on new installs and after the upgrade (migration 0172 removes them from saved ceilings); the rows carry the captions Starts off. and Starts off. Administrators only. API key requests and OAuth consent now offer only ceiling Toolsets with a Tool the account type may run; with none, the API keys page says No Toolsets are available for your account. The MCP page captions were reworded and the OAuth path list became a single note, OAuth Clients work only if this server is reachable from the internet. The Contract and Matter team routes, the Task assignee team add, and the Audit log, Tool calls, Organization, Advanced, email and AI settings reads were moved into shared functions for the Tools; their app behaviour and messages are unchanged."
+    },
+    {
+      "area": "DocuSign preparation rework, Signatures tab and partially signed rounds",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/app.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/lib/signer-erasure.ts",
+        "apps/api/src/lib/signing/config.ts",
+        "apps/api/src/lib/signing/docusign.ts",
+        "apps/api/src/lib/signing/fake.ts",
+        "apps/api/src/lib/signing/identity.ts",
+        "apps/api/src/lib/signing/provider.ts",
+        "apps/api/src/lib/signing/recovery-stage.ts",
+        "apps/api/src/lib/signing/recovery.ts",
+        "apps/api/src/lib/signing/resolver.ts",
+        "apps/api/src/lib/signing/status-check.ts",
+        "apps/api/src/lib/signing/transitions.ts",
+        "apps/api/src/mcp/documents.ts",
+        "apps/api/src/modules/contract-envelopes/launch.ts",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "apps/api/src/modules/signer-erasure/routes.ts",
+        "apps/api/src/modules/signing-connector/routes.ts",
+        "apps/api/src/modules/signing-webhook/routes.ts",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/pipeline/reconciliation.ts",
+        "apps/web/index.html",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/approvals/signer-name-field.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/envelopes.ts",
+        "apps/web/src/lib/oauth-return.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/web/src/routes/settings-e-signature.tsx",
+        "apps/web/src/routes/signing-return.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/db/migrations/0173_durable-envelope-preparation.sql",
+        "packages/db/migrations/0174_envelope-launch-return.sql",
+        "packages/db/migrations/0175_envelope-launch-timestamps.sql",
+        "packages/db/migrations/0176_envelope-resume.sql",
+        "packages/db/migrations/0177_envelope-recovery.sql",
+        "packages/db/migrations/0178_envelope-recovery-intent.sql",
+        "packages/db/migrations/0179_envelope-reconciliation.sql",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "packages/db/migrations/meta/0172_snapshot.json",
+        "packages/db/migrations/meta/0173_snapshot.json",
+        "packages/db/migrations/meta/0174_snapshot.json",
+        "packages/db/migrations/meta/0175_snapshot.json",
+        "packages/db/migrations/meta/0176_snapshot.json",
+        "packages/db/migrations/meta/0177_snapshot.json",
+        "packages/db/migrations/meta/0178_snapshot.json",
+        "packages/db/migrations/meta/0179_snapshot.json",
+        "packages/db/migrations/meta/0181_snapshot.json",
+        "packages/db/migrations/meta/0182_snapshot.json",
+        "packages/db/migrations/meta/_journal.json",
+        "packages/db/src/schema/contract-envelopes.ts",
+        "packages/db/src/schema/document-types.ts",
+        "packages/db/src/schema/documents.ts",
+        "packages/shared/src/activity.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/start-blank.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/envelope-history-migration.test.ts",
+        "apps/api/src/envelope-launch-migration.test.ts",
+        "apps/api/src/envelope-preparation-migration.test.ts",
+        "apps/api/src/lib/signing/config.test.ts",
+        "apps/api/src/lib/signing/docusign.test.ts",
+        "apps/api/src/lib/signing/fake.test.ts",
+        "apps/api/src/lib/signing/resolver.test.ts",
+        "apps/api/src/modules/contract-envelopes/completion.test.ts",
+        "apps/api/src/modules/contract-envelopes/reconciliation.test.ts",
+        "apps/api/src/modules/contract-envelopes/send.test.ts",
+        "apps/api/src/modules/contract-envelopes/void.test.ts",
+        "apps/api/src/modules/contract-statuses/contract-statuses.test.ts",
+        "apps/api/src/modules/document-types/document-types.test.ts",
+        "apps/api/src/modules/documents/document-comparison.test.ts",
+        "apps/api/src/modules/notifications/record-activity.test.ts",
+        "apps/api/src/modules/onboarding/onboarding.test.ts",
+        "apps/api/src/modules/signing-connector/signing-connector.test.ts",
+        "apps/api/src/modules/signing-webhook/webhook.test.ts",
+        "apps/api/src/origin-check.test.ts",
+        "apps/api/src/testing/harness.ts",
+        "apps/api/src/testing/signing-contract.ts",
+        "apps/web/src/lib/activity.test.ts",
+        "apps/web/src/routes/contract-record-envelopes.test.tsx",
+        "apps/web/src/routes/contract-record-renewal.test.tsx",
+        "apps/web/src/routes/contract-record.test.tsx"
+      ],
+      "commits": [
+        "e8c08d64 feat: prepare durable draft Envelopes (#1171) (#1197)",
+        "e461a927 fix: retain preparation messages in the catalog (#1197)",
+        "a81e499a fix: distinguish account checks from uncertain creation (#1197)",
+        "aed469c2 test: isolate draft connector-removal coverage (#1197)",
+        "7eefd029 fix: retain preparation availability on live refresh (#1197)",
+        "1695f26d fix: release a failed direct send's reservation (#1197)",
+        "337848f5 fix: give a corrected preparation request a new idempotency key (#1197)",
+        "00d9bcc4 docs: describe durable preparation in the schema and provider seam (#1197)",
+        "d776b4b3 fix: keep ambiguous direct-send reservations for recovery (#1197)",
+        "0e93561e test: fail only the sent version's file in the storage-failure case (#1197)",
+        "d9ebfbc0 Document Envelope API upgrade and finish review corrections (#1197)",
+        "81d2b9d0 feat: launch DocuSign drafts and confirm returns (#1172) (#1197)",
+        "9d37865d chore: format the Envelope launch migration snapshot (#1197)",
+        "25c22239 fix: preserve no-store headers on signing return pages (#1197)",
+        "a283a9c8 fix: retain sender labels for legacy Envelope responses (#1197)",
+        "de591a46 fix: keep the first draft status read for the signing return (#1197)",
+        "c5ddf2be fix: poll launched Envelopes on the ordinary cadence after a lost return (#1197)",
+        "5f2ad318 fix: harden signing return confirmation and launch metadata (#1197)",
+        "b5ab2108 fix: poll a draft only after its first launch (#1197)",
+        "9d44c169 fix: bound the new-draft polling grace to one read interval (#1197)",
+        "8214cb59 feat: resume and confirm discarded Envelope preparations (#1197)",
+        "61a6d235 fix: answer a provider access refusal on Void with guidance (#1197)",
+        "785c419e feat: recover interrupted Envelope creation (#1174) (#1197)",
+        "ae805571 fix: preserve direct-send intent during recovery (#1197)",
+        "dd46e4c9 style: format the pre-submission failure test (#1197)",
+        "fc68071c Recover Envelope status without browser returns (#1175) (#1197)",
+        "28f41778 Keep scheduled drafts reserved until Envelope status confirms sending (#1197)",
+        "1b5f5fdf Cover early sent callbacks and clarify Envelope completion history (#1197)",
+        "711cef11 Bound how long the sweep polls a discarded Envelope (#1197)",
+        "4cbdf76f Keep discarded Envelopes observable at any age (#1197)",
+        "9dc1a37a Protect Envelope preparation across access and connector changes (#1197)",
+        "c3e47008 Tighten preparation test cleanup and identity reads (#1197)",
+        "dc7cd43a Keep the disabled connector's driver and require sourceState (#1197)",
+        "9f37fd39 Preserve Envelope preparation history and Signer erasure (#1197)",
+        "51b291f9 docs: prepare real DocuSign acceptance without enabling rollout (#1197)",
+        "648f99ec fix: return keyboard focus through Envelope preparation (#1197)",
+        "27ccdee3 fix: stop the boot cleanly when a live lab names a stand-in (#1197)",
+        "367ae2c2 fix(signing): verify connector rotation without holding database locks (#1197)",
+        "105728f8 Refactor signer handling in contract envelope functionality (direct commit on dev)",
+        "879fc477 Refactor contract envelope and signing functionality (direct commit on dev)",
+        "b6a0bcfd Support partially signed DocuSign rounds (direct commit on dev)",
+        "229909d4 File partially signed rounds under a Partially signed Document type (direct commit on dev)",
+        "ebdc71b9 Merge dev into DocuSign preparation and reconcile migrations (#1197; renumbered the envelope migrations to 0173 to 0179)"
+      ],
+      "userVisibleChange": "The Contract record's Approvals & signing card is split. The Approvals tab holds the Approvals and Renewals blocks, and a new Signatures tab (/contracts/N/signatures) holds signature requests. The Envelope chip beside the status pill is gone. A Signer can be a person picked from OpenLaw (their email fills in) or an outside name and address. The send dialog asks whether this DocuSign round completes the agreement: No files the signed PDF as a Partially signed Version with no executed pin and no automatic Analysis, and moves the Contract to a new protected Partially signed Status in the Signature Stage. A confirmed send moves the Contract to its first live Signature Status. Filing copy now says signed copy. Durable draft preparation, Resume in DocuSign, recovery of uncertain creations, discarded and restored Envelopes and the /signing/return page are built but stay off unless SIGNING_PREPARATION_ENABLED is set (default off; live acceptance #1178 pending). Settings > E-signature captions now say that turning the connector off refuses new preparations and Resume links while existing sessions keep reporting."
+    },
+    {
+      "area": "Owner fields on the Contract and Matter records",
+      "files": [
+        "apps/web/src/components/described-field.tsx",
+        "apps/web/src/components/entities/entity-chart.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "testFiles": [],
+      "commits": [
+        "791ad567 Enhance contract and matter record sections with owner fields (direct commit on dev)"
+      ],
+      "userVisibleChange": "On Overview, Legal Owner and Business Owner (Contract) and Matter Manager and Business Owner (Matter) move out of the Contract or Matter card into a new Owners section above it. The ownership chart draws a person icon on individual owners."
+    },
+    {
+      "area": "Document type colours",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/document-types/routes.ts",
+        "apps/api/src/modules/documents/repository.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/documents/service.ts",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/web/src/components/entities/officer-name-input.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/db/migrations/0180_document-type-colors.sql",
+        "packages/db/migrations/meta/0180_snapshot.json",
+        "packages/db/migrations/meta/_journal.json",
+        "packages/db/src/schema/document-types.ts",
+        "packages/shared/src/document-type-colors.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/document-types/document-types.test.ts",
+        "apps/web/src/routes/auto-doc-publish.test.tsx",
+        "apps/web/src/routes/contract-record.test.tsx",
+        "apps/web/src/routes/documents.test.tsx",
+        "apps/web/src/routes/portal-documents.test.tsx",
+        "apps/web/src/routes/settings-document-types.test.tsx"
+      ],
+      "commits": [
+        "d0e50ae4 Let Administrators set a colour for each Document type (#1198)",
+        "0e62863c Address review findings on the colours, officer and table changes (#1198)"
+      ],
+      "userVisibleChange": "An Administrator can pick a colour (Grey, Blue, Amber, Green, Red, Orange, Purple or Automatic) for each Document type in Settings > Documents; it saves at once and is logged. The fixed Contract types keep their names but take a colour. Record Documents, the Documents repository and the Business Portal draw the Version pill in that colour. The Portal Documents section now shows the Document type name when a Version has one, instead of always the kind."
+    },
+    {
+      "area": "Delete one Document Version",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/lib/documents.ts",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/activity.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/documents/documents.test.ts",
+        "apps/web/src/lib/activity.test.ts",
+        "apps/web/src/routes/contract-record.test.tsx"
+      ],
+      "commits": ["dd28e33d Let Administrators delete one document version (direct commit on dev)"],
+      "userVisibleChange": "Whole-Document deletion is no longer offered in the app. An Administrator's Document row action is now Delete version, which deletes the current Version; each earlier Version's menu has Delete version too. The dialog is Delete version N? and says whether other Versions remain; deleting the last Version removes the Document. Bulk delete becomes Delete versions and removes the current Version of each selected Document. A new Activity entry reads deleted version N of the title, and deleted numbers are not reused."
+    },
+    {
+      "area": "Entity officers and the Entity Contracts and Matters table",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/entities/linked-records.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/web/src/components/entities/officer-name-input.tsx",
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/components/linked-records-list.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/linked-records.ts",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/shared/src/document-type-colors.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/document-types/document-types.test.ts",
+        "apps/api/src/modules/entities/linked-records.test.ts",
+        "apps/web/src/components/entities/officer-name-input.test.tsx",
+        "apps/web/src/routes/auto-doc-publish.test.tsx",
+        "apps/web/src/routes/entity-record.test.tsx"
+      ],
+      "commits": [
+        "d3728c9b Pick an officer's name from the user list or type a free name (#1198)",
+        "46d9f1e5 Show an Entity's Contracts and Matters as a sortable, paged table (#1198)",
+        "3bc566bd Remove LinkedRecordsList now that the Entity tabs use the managed table (#1199)",
+        "0e62863c Address review findings on the colours, officer and table changes (#1198)"
+      ],
+      "userVisibleChange": "An Officer's name is one combobox, Select a user or enter a name: choosing a user links them, and Enter on an unmatched name records an unlinked person. The separate Linked user select is gone. The Entity Contracts and Matters tabs are now sortable, paged tables with the main list columns and Show more, read through the main list scopes with archived and ended or closed records included; the Restricted record rows are gone."
+    },
+    {
+      "area": "Auto-Doc field and rule editing and template upload",
+      "files": [
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/web/src/components/auto-docs/rule-value-input.tsx",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/web/src/components/entities/officer-name-input.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "packages/shared/src/document-type-colors.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/document-types/document-types.test.ts",
+        "apps/web/src/routes/auto-doc-publish.test.tsx",
+        "apps/web/src/routes/auto-docs.test.tsx"
+      ],
+      "commits": [
+        "183bfa99 Edit Auto-Doc fields and rules in place, and rework template upload (#1198)",
+        "0e62863c Address review findings on the colours, officer and table changes (#1198)"
+      ],
+      "userVisibleChange": "In an Auto-Doc's Form section, the pencil opens a field or clause rule editor directly under its row instead of a card below the tables. A rule on a date, number or currency field that matches several values edits a list with Add value and Remove value. The template upload dialog has a drop zone and Choose file, refuses anything but one .docx before upload, then reports the file version, Placeholders and Blocks found, fields created and fields that lost their Placeholder, and focuses Done."
+    },
+    {
+      "area": "Multiple SSO identity providers",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/auth/sso-domains.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/settings-authentication.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts",
+        "packages/db/migrations/0183_sso-provider-name.sql",
+        "packages/db/migrations/meta/0183_snapshot.json",
+        "packages/db/migrations/meta/_journal.json",
+        "packages/db/src/schema/auth.ts",
+        "packages/shared/src/activity.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/auth/auth-mode.test.ts",
+        "apps/api/src/modules/auth/sso.test.ts",
+        "apps/api/src/modules/contracts/contracts.test.ts",
+        "apps/web/src/lib/activity.test.ts",
+        "apps/web/src/routes/login.test.tsx",
+        "apps/web/src/routes/settings-authentication.test.tsx",
+        "apps/web/src/routes/setup.test.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/testing/helpers.tsx"
+      ],
+      "commits": [
+        "fd8ffd71 Support several SSO identity providers, routed by email domain (#1201)",
+        "354a6b67 Address review findings on the multiple-provider PR (#1201)",
+        "15bbd129 Fix two test expectations that dev left stale (#1201)"
+      ],
+      "userVisibleChange": "Settings > Authentication and the wizard's Authentication step list several identity providers, each with Display name, Provider ID, Email domains (comma-separated) and a Configured or Missing credentials chip, with Add provider, Edit and Remove. A domain, or a parent or subdomain of it, can belong to one provider only. With two or more providers the sign-in page asks for the work email and opens the provider for that domain, or says No single sign-on provider is set up for {domain}."
+    },
+    {
+      "area": "First-run setup token validation, wizard steps and drafts",
+      "files": [
+        "apps/api/openapi.json",
+        "apps/api/src/auth/limits.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/web/src/components/ai-model-selector.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/lib/setup-drafts.ts",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/setup.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "packages/api-client/src/schema.ts"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/auth/setup.test.ts",
+        "apps/web/src/routes/setup.test.tsx",
+        "apps/web/src/routes/welcome.test.tsx",
+        "apps/web/src/testing/helpers.tsx"
+      ],
+      "commits": [
+        "1f2e77e1 Implement validate-token endpoint for setup process (direct commit on dev)",
+        "b656bfb6 Update setup process messaging and enhance validation feedback (direct commit on dev)",
+        "184cf48a Enhance AI Model Selector and E-signature Integration (direct commit on dev)"
+      ],
+      "userVisibleChange": "Set up OpenLaw checks the setup token as soon as it is entered (Setup token verified, rate-limited per client) and shows per-field validity messages. The welcome wizard has eight steps: the Business-user portal step is folded into Authentication as a Business Users section. E-signature is renamed E-signature (DocuSign Integration) and gains Test DocuSign connection and a Signing updates card. Unsaved wizard entries and loaded AI model lists persist in the browser tab and are cleared on sign-out. The setup token refusal now names the SETUP_TOKEN environment variable, and the logo refusal reads Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller."
+    },
+    {
+      "area": "Authentication options and Business Portal domains",
+      "files": [
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/routes/settings-authentication.tsx",
+        "apps/web/src/routes/welcome.tsx"
+      ],
+      "testFiles": [
+        "apps/api/src/modules/auth/allowed-domains.test.ts",
+        "apps/api/src/modules/auth/authentication-policy.test.ts",
+        "apps/api/src/modules/auth/sso.test.ts",
+        "apps/web/src/components/authentication-options.test.tsx",
+        "apps/web/src/routes/settings-authentication.test.tsx",
+        "apps/web/src/routes/welcome.test.tsx"
+      ],
+      "commits": [
+        "3e91951f Enhance authentication policy management and domain handling (direct commit on dev)",
+        "e924a3f3 Refactor authentication options component for improved user feedback and accessibility (direct commit on dev)"
+      ],
+      "userVisibleChange": "The Business Users sign-in switches stay disabled until an allowed email domain exists. Removing the last allowed domain also turns off the stored Business password, magic-link and SSO methods, so no Business User can sign in until a domain and a method are restored; the change is logged as a second Audit entry."
+    },
+    {
+      "area": "MCP OAuth sign-in header (jwt plugin)",
+      "files": ["apps/api/src/auth/oauth.ts"],
+      "testFiles": ["apps/api/src/auth/oauth.test.ts"],
+      "commits": ["7abd2a8f Stop the jwt plugin from sending set-auth-jwt (#1158)"],
+      "userVisibleChange": "Sign-in responses no longer carry the set-auth-jwt header, so a large profile photo no longer makes the header too big for a proxy. No visible change otherwise."
+    },
+    {
+      "area": "Persona rename (seed Administrator Devon Calloway)",
+      "files": [
+        "apps/web/src/components/avatar.tsx",
+        "apps/web/src/components/table/managed-table.tsx"
+      ],
+      "testFiles": [
+        "apps/api/src/account-issuer-migration.test.ts",
+        "apps/api/src/lib/auto-doc-fill/engine.test.ts",
+        "apps/api/src/lib/share-register.test.ts",
+        "apps/api/src/modules/approver-groups/approver-groups.test.ts",
+        "apps/api/src/modules/auth/profile.test.ts",
+        "apps/api/src/modules/documents/repository-filters.test.ts",
+        "apps/api/src/modules/entities/share-register.test.ts",
+        "apps/api/src/modules/org/general.test.ts",
+        "apps/api/src/testing/harness.ts",
+        "apps/web/src/components/shell/shell.test.tsx",
+        "apps/web/src/routes/auth-layout.test.tsx",
+        "apps/web/src/routes/contract-record.test.tsx",
+        "apps/web/src/routes/contracts-columns.test.tsx",
+        "apps/web/src/routes/documents-filters.test.tsx",
+        "apps/web/src/routes/entity-record.test.tsx",
+        "apps/web/src/routes/entity-share-register.test.tsx",
+        "apps/web/src/routes/matter-record-edit.test.tsx",
+        "apps/web/src/routes/page-title.test.tsx",
+        "apps/web/src/routes/portal.test.tsx",
+        "apps/web/src/routes/route-guard.test.tsx",
+        "apps/web/src/routes/settings-approver-groups.test.tsx",
+        "apps/web/src/routes/settings-audit-log.test.tsx",
+        "apps/web/src/routes/settings-authentication.test.tsx",
+        "apps/web/src/routes/settings-contract-fields.test.tsx",
+        "apps/web/src/routes/settings-contract-statuses.test.tsx",
+        "apps/web/src/routes/settings-contract-types.test.tsx",
+        "apps/web/src/routes/settings-e-signature.test.tsx",
+        "apps/web/src/routes/settings-entity-types.test.tsx",
+        "apps/web/src/routes/settings-intake-links.test.tsx",
+        "apps/web/src/routes/settings-matter-templates.test.tsx",
+        "apps/web/src/routes/settings-matter-types.test.tsx",
+        "apps/web/src/routes/settings-reminders.test.tsx",
+        "apps/web/src/routes/settings-request-types.test.tsx",
+        "apps/web/src/routes/settings-users.test.tsx",
+        "apps/web/src/routes/settings.test.tsx",
+        "apps/web/src/routes/welcome.test.tsx"
+      ],
+      "commits": [
+        "17179939 Replace the maintainer's name with a fictional test persona (direct commit on dev)"
+      ],
+      "userVisibleChange": "The seed's bootstrap Administrator is now Devon Calloway, devon@helix.example, in the Executive committee approver group, the four seeded saved views and the Officer names. The app change is two code comments. #1156 (00528360, scripts/seed only) also stops the seed adding a Business Owner to a team twice, which changes the random draws after that point."
+    },
+    {
+      "area": "Dependency upgrades",
+      "files": ["apps/api/package.json", "apps/web/package.json"],
+      "testFiles": [],
+      "commits": [
+        "16e09214 chore: routine dependency sweep — bump 16 patch/minor packages (#1152)",
+        "e4f1bc97 chore: routine dependency upgrades (patch/minor/low-effort breaking) (#1200)"
+      ],
+      "userVisibleChange": "Patch and minor upgrades in the api and web package manifests (#1152, #1200). No documented behaviour depends on them."
+    },
+    {
+      "area": "Development-only tooling and generated API artefacts",
+      "files": ["apps/web/vite.config.ts"],
+      "testFiles": ["apps/api/src/mcp/guide.test.ts", "apps/api/src/mcp/listen.test.ts"],
+      "commits": [
+        "6fcceb04 Return development browser flows to the Vite origin (#1197)",
+        "d6768fb1 fix(dev): proxy MCP discovery through the public web origin (#1197)",
+        "43894efe Update MCP test clients for protocol headers and paged guides (#1197)"
+      ],
+      "userVisibleChange": "The Vite dev server returns browser flows to its own origin and proxies MCP discovery; MCP test clients send protocol headers and page guides. openapi.json and the generated client follow the API changes above. No change to a built instance."
+    }
+  ],
+  "candidates": [
+    {
+      "articleId": "staff-sign-in",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/login.tsx",
+        "apps/api/src/auth/sso-domains.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/auth/limits.ts",
+        "apps/web/src/lib/session.ts"
+      ],
+      "reason": "#1201 (fd8ffd71, 354a6b67) changed the single sign-on path on the sign-in page. With two or more identity providers the page first asks for the work email and routes by its domain, and an unserved domain gets its own refusal. limits.ts only adds the setup-token bucket, and session.ts only clears wizard drafts on sign-out.",
+      "affectedClaims": [
+        "If the page offers Continue with single sign-on, select it and complete your organization's identity-provider sign-in. With several providers the page now shows Enter your work email. Your organization's identity provider opens next., an Email field and then Continue with single sign-on; an address no provider serves shows No single sign-on provider is set up for {domain}. Check the address or contact your administrator."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "portal-sign-in",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/login.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/portal/documents-section.tsx"
+      ],
+      "reason": "3e91951f: PUT /auth/allowed-domains now also turns off the stored Business password, magic-link and SSO methods when the list becomes empty, so an existing Business User cannot sign in at all. #1201 changed what the page shows when single sign-on is offered and several providers exist. documents-section.tsx now shows the Document type name and colour on Portal Versions.",
+      "affectedClaims": [
+        "You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts. With an empty allowed-domain list, every Business sign-in method is now off, so an existing account cannot sign in either.",
+        "An address outside the allowed domains needs an existing active account to receive a link. True only while at least one domain is allowed.",
+        "If the page shows a password form or Continue with single sign-on, select Email me a sign-in link. With several providers the SSO option is an Email field with Continue with single sign-on; check where Email me a sign-in link sits.",
+        "If it shows Continue with single sign-on and you have a password, select Sign in with a password first."
+      ],
+      "rolesToWalk": ["business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/access/walkthrough.mjs"
+    },
+    {
+      "articleId": "find-your-work",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/home.tsx (unchanged)",
+        "apps/api/src/modules/home/ (unchanged)",
+        "apps/web/src/components/shell/app-header.tsx (unchanged)",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "reason": "No Home, search box, header or not-found source changed. The record pages moved their owner controls into an Owners section, but this guide only names the Your contracts section by Owner and the Contract not found page, which did not change.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "search-and-views",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "packages/shared/src/index.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/lib/documents.ts",
+        "packages/db/src/schema/documents.ts"
+      ],
+      "reason": "packages/shared/src/index.ts only adds the Document type colour and MCP exports, and session.ts only clears setup drafts on sign-out. The Document kind list gained Partially signed, so a Kind value list can show one more option, but the guide does not enumerate kinds. The seeded saved views now belong to Devon Calloway; the guide does not name them.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/search/walkthrough.mjs"
+    },
+    {
+      "articleId": "personal-settings",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/routes/settings-profile.tsx (unchanged)",
+        "apps/api/src/auth/oauth.ts"
+      ],
+      "reason": "The guide only lists the Personal pages and points to Connect a headless Client for API keys. api-keys.tsx now offers only permitted Toolsets and can show No Toolsets are available for your account; that detail belongs to connect-headless-client. 7abd2a8f removed the set-auth-jwt header, which fixes the large-photo Profile failure DOC-030 noted and changes no guide claim.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "roles-and-access",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/team-person.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "reason": "8432038e moved the Contract and Matter team add and remove into shared functions; the refusals (This person is already on the team., Change the Business Owner before removing this person from the team.) and the Confidential audience checks are the same. The owner controls moved into an Owners section, which is still on Overview as the guide says. contracts/service.ts and matters/service.ts only take an extra scope for the Entity tables.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator", "legal_team_member", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/access/walkthrough.mjs"
+    },
+    {
+      "articleId": "comments-and-activity",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/lib/activity.ts",
+        "packages/shared/src/activity.ts",
+        "apps/api/src/modules/portal/applets.ts (unchanged)",
+        "apps/web/src/components/activity/activity-applet.tsx (unchanged)"
+      ],
+      "reason": "activity.ts only adds narrations for new actions (version deleted, Envelope preparation, confirmation, discard and restore, identity provider removed, Partially signed kind). The feed, Show older, Portal History scope and the via-Client attribution the guide describes did not change.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs"
+    },
+    {
+      "articleId": "notifications",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/lib/notifications/ (unchanged)",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/components/api-keys.tsx"
+      ],
+      "reason": "No notifier, preference or bell source changed. New Activity actions add no notification kind.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs"
+    },
+    {
+      "articleId": "submit-request",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/portal-request-form.tsx (unchanged)",
+        "apps/api/src/modules/portal/routes.ts (unchanged)"
+      ],
+      "reason": "No Portal Request or intake source changed.",
+      "affectedClaims": [],
+      "rolesToWalk": ["business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/portal/walkthrough.mjs"
+    },
+    {
+      "articleId": "follow-request",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "packages/shared/src/index.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/routes/portal-request.tsx (unchanged)"
+      ],
+      "reason": "shared/src/index.ts only adds exports. The Portal Documents section change (type name and colour) is on converted records, which this guide hands to contributor-guide; the Request page did not change.",
+      "affectedClaims": [],
+      "rolesToWalk": ["business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/portal/walkthrough.mjs"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx (unchanged)",
+        "apps/api/src/modules/portal/routes.ts (unchanged)"
+      ],
+      "reason": "documents-card.tsx changed the delete action and the pill colour; Mark confidential and canFlag, which the evidence cites, are unchanged. Portal Knowledge routes did not change.",
+      "affectedClaims": [],
+      "rolesToWalk": ["business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "triage-requests",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "packages/shared/src/index.ts",
+        "apps/web/src/routes/inbox.tsx (unchanged)",
+        "apps/api/src/mcp/prompts.ts"
+      ],
+      "reason": "No Inbox source changed. The new MCP triage_inbox prompt is a Client feature and leaves conversion to the Convert dialog.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs"
+    },
+    {
+      "articleId": "convert-request",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts"
+      ],
+      "reason": "create.ts now calls the shared team insert; conversion still makes the converter Legal Owner or Matter Manager and adds the Requester as Business Owner and team member. The guide checks Fields on a Contract and the Matter section on Overview, which still hold those values; it does not place the owner controls.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs"
+    },
+    {
+      "articleId": "create-contract",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/lib/contract-team.ts"
+      ],
+      "reason": "791ad567 moved Legal Owner and Business Owner out of the Contract card into a new Owners section above it on Overview. 879fc477 removed the Envelope chip from the header.",
+      "affectedClaims": [
+        "Legal Owner, Business Owner, Days remaining, Last renewal, and the Confidential switch follow the Rows. The two owner controls are now in the Owners section above the Contract card."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs"
+    },
+    {
+      "articleId": "contract-stages",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/web/src/components/stage-pipeline.tsx (unchanged)",
+        "apps/api/src/lib/soft-gate.ts (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then the Stage control, pipeline and soft gate are unchanged. b6a0bcfd adds a protected Partially signed Status to the Signature Stage, which is one more option in the Stage control; the guide names no Statuses beyond examples. contract-record.tsx now also revalidates on contract.status_changed and drops the Envelope chip, which the guide does not mention.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/contract-stages-replay.mjs"
+    },
+    {
+      "articleId": "manual-signing",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx"
+      ],
+      "reason": "The guide uses the Stage control and the Documents actions Add version, Mark as executed copy and Unmark as executed copy, which are unchanged. The row Delete became Delete version, and the type list gained Partially signed; neither is named here. The Approvals & signing card split does not reach this guide, which never names it.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/contract-team.ts"
+      ],
+      "reason": "Tasks and Key dates sections did not change. The Task assignee team add already used addContractTeamMember for Contracts. The owner move does not touch the Recipients defaults the guide lists.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs"
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/web/src/components/contracts/related-contracts-card.tsx (unchanged)",
+        "apps/web/src/components/contracts/record-actions-menu.tsx (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then Related contracts, Link to Matter, Archive and Restore are unchanged; contracts/routes.ts only moved team writes, and service.ts only takes an extra scope.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/contract-relations-and-ending-replay.mjs"
+    },
+    {
+      "articleId": "contract-analysis",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/contracts/record.ts"
+      ],
+      "reason": "automatic-contract-analysis.ts now skips a Version filed by a DocuSign round that does not complete the Contract; the guide says Analysis can start automatically, which stays true. Run analysis, Confirm and Confirm all are unchanged.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs"
+    },
+    {
+      "articleId": "approver-groups",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/api/src/modules/contracts/create.ts"
+      ],
+      "reason": "879fc477 split the Approvals & signing card: the Approvals tab now shows an Approvals block, and signing moved to a new Signatures tab. The seeded Executive committee now names Devon Calloway (17179939).",
+      "affectedClaims": [
+        "Open Approvals, then Approvals & signing. There is no Approvals & signing card; Apply group is in the Approvals block of the Approvals tab."
+      ],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs"
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/documents/documents-card.tsx"
+      ],
+      "reason": "879fc477 removed the Approvals & signing card. The renewal rows are in the Renewals block of the Approvals tab.",
+      "affectedClaims": [
+        "Check the new expiry, notice deadline, Last renewal, and the renewal row on Approvals & signing."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "create-matter",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/lib/matter-team.ts"
+      ],
+      "reason": "791ad567 moved Matter Manager and Business Owner out of the Matter section into a new Owners section above it on Overview.",
+      "affectedClaims": [
+        "Matter Manager and Business Owner come after the Rows. They are now in the Owners section above the Matter section."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/matters/walkthrough.mjs"
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/web/src/components/matters/matter-status-progression.tsx (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then matter-record.tsx only moved the owner controls, matters/routes.ts only moved team writes, and activity.ts only adds new narrations. The Status strip, close and reopen dialogs and Archive are unchanged.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/matter-status-and-archive-replay.mjs"
+    },
+    {
+      "articleId": "matter-work",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/api/src/lib/task-assignment.ts",
+        "apps/api/src/lib/matter-team.ts"
+      ],
+      "reason": "254d4d40 makes the Task assignee team add call addMatterTeamMember, which writes the same row and matter.team_added entry. matter-record.tsx only moved the owner controls, which this guide does not place.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/matters/walkthrough.mjs"
+    },
+    {
+      "articleId": "matter-templates",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/settings-matter-templates.tsx (unchanged)",
+        "apps/api/src/modules/matter-templates/ (unchanged)",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "reason": "No template source changed. Its page test changed only for the persona rename (17179939).",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs"
+    },
+    {
+      "articleId": "document-folders",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/components/documents/batch-dialog.tsx (unchanged)"
+      ],
+      "reason": "Folder create, move and dissolve are unchanged. documents-card.tsx changed the delete action and pill colours, which this guide only links to.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "document-previews",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/documents/doc-panel.tsx (unchanged)",
+        "apps/web/src/components/documents/pdf-preview.tsx (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then the reader and preview states are unchanged; the Portal Documents section only adds the type name and colour, and documents/routes.ts adds the Version delete route.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/document-previews-replay.mjs"
+    },
+    {
+      "articleId": "compare-versions",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/web/src/routes/document-compare.tsx (unchanged)",
+        "apps/api/src/pipeline/document-comparison.ts (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then Compare and Generated redline export are unchanged. The new Version delete refuses a Version a generated comparison depends on, which the guide does not contradict.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/compare-versions-replay.mjs"
+    },
+    {
+      "articleId": "document-repository",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/api/src/modules/documents/repository.ts",
+        "apps/web/src/routes/documents.tsx (unchanged)"
+      ],
+      "reason": "The Kind column pill takes the type colour, and the Kind filter lists Partially signed. The guide describes the filters without enumerating kinds.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/web/src/lib/documents.ts"
+      ],
+      "reason": "dd28e33d replaced whole-Document deletion with per-Version deletion. The row action, the bulk action and the dialog all changed, and the app no longer calls the whole-Document delete.",
+      "affectedClaims": [
+        "Permanent deletion removes the entire Document and needs an Administrator.",
+        "Open its Actions menu and select Delete. The item is now Delete version and deletes the current Version only.",
+        "Read Delete this document?. It names the Document and its number of Versions. The dialog is now Delete version N? and says whether other Versions remain.",
+        "Select Delete. Check that the Document is gone. It is gone only when the last Version was deleted.",
+        "To delete several Documents, select their checkboxes and select Delete in the selection bar. It is now Delete versions and removes the current Version of each.",
+        "You cannot delete just one Version."
+      ],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs"
+    },
+    {
+      "articleId": "create-knowledge",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts"
+      ],
+      "reason": "The Knowledge Item uses the shared Documents card, whose row delete is now Delete version (dd28e33d).",
+      "affectedClaims": [
+        "Use the Document row's actions for archive, restore, and permanent deletion. The row action now deletes the current Version, not the whole Document."
+      ],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/mcp/documents.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/routes/knowledge-record.tsx (unchanged)"
+      ],
+      "reason": "Publishing, audience, Set as primary and the deflection link are unchanged. mcp/documents.ts only lists partially_signed in a Tool description, and router.tsx only adds /signing/return.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs"
+    },
+    {
+      "articleId": "contributor-guide",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/contract-record.tsx"
+      ],
+      "reason": "d0e50ae4 makes the Portal Documents section show a Version's Document type name in its colour, falling back to the kind. 229909d4 adds Partially signed as a seventh fixed Contract kind, offered in the Portal Kind choice.",
+      "affectedClaims": [
+        "The Portal shows the kind, not the Document type Legal sees, so a Version of a type that an Administrator added reads General.",
+        "It starts on General and also offers the six fixed Contract types, such as Draft · theirs and Executed."
+      ],
+      "rolesToWalk": ["business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/access/walkthrough.mjs"
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/counterparty-picker.tsx (unchanged)"
+      ],
+      "reason": "Register, Overview and the Counterparty pickers are unchanged. entity-record.tsx only swapped the Contracts and Matters tab lists, which this guide does not describe.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
+    },
+    {
+      "articleId": "entity-records",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/components/entities/officer-name-input.tsx",
+        "apps/web/src/routes/entity-record.tsx"
+      ],
+      "reason": "d3728c9b replaced the Officer name field and the Linked user select with one name combobox.",
+      "affectedClaims": [
+        "Enter Director or officer name, choose Role, and enter Appointed on if known. Optionally select Linked user. The field is now Select a user or enter a name; choosing a user links them, and Enter on an unmatched name uses it without a link. There is no Linked user control."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/api/src/modules/entities/linked-records.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/components/entities/entity-chart.tsx"
+      ],
+      "reason": "46d9f1e5 and 3bc566bd made the Contracts and Matters tabs sortable, paged tables read through the main list scopes, with a total and Show more. 791ad567 draws a person icon on individual owners in the chart.",
+      "affectedClaims": [
+        "Rows and tab counts reflect the work records you can reach. A Confidential Contract or Matter outside your access contributes neither a row nor a count. The rows and total now come from the main Contracts and Matters list scopes.",
+        "Open the Entity's Contracts or Matters tab. The tab is now a sortable table with the main list columns and Show more.",
+        "Individuals appear by name with the label Individual."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
+    },
+    {
+      "articleId": "entity-obligations",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/components/table/managed-table.tsx"
+      ],
+      "reason": "activity.ts only adds narrations for other actions, and managed-table.tsx changed one code comment.",
+      "affectedClaims": [],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs"
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/settings-document-types.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/api/src/modules/document-types/routes.ts",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "apps/web/src/components/list-editor.tsx"
+      ],
+      "reason": "d0e50ae4 adds a colour swatch to every Document type row. 229909d4 adds Partially signed as a seventh fixed Contract type before Executed. b6a0bcfd adds a protected Partially signed Status to the Signature Stage that does not count towards that Stage's live Status.",
+      "affectedClaims": [
+        "The Contracts list starts with six fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment. Each shows a lock and has no rename or archive control. There are now seven, and each row also has a colour swatch.",
+        "The built-in Statuses initially named Draft (Draft Stage), Active (Active Stage), and Expired (Ended Stage) are protected. Partially signed (Signature Stage) is now protected too.",
+        "Every Stage must retain a live Status. Partially signed does not satisfy that for the Signature Stage."
+      ],
+      "rolesToWalk": ["administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs"
+    },
+    {
+      "articleId": "request-forms",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/type-form/builder.tsx (unchanged)",
+        "apps/api/src/modules/request-types/ (unchanged)",
+        "apps/web/src/components/list-editor.tsx"
+      ],
+      "reason": "No Form or Request type source changed. list-editor.tsx gained an optional expanded-row slot that only the Auto-Doc builder uses.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/modules/audit-log/tool-calls.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/lib/activity.ts"
+      ],
+      "reason": "3294f749 moved the Audit log, CSV export and Tool calls reads into shared functions for the Administration Tools; filters, reach, redaction and CSV columns are unchanged. The Tool calls button on Settings > MCP is unchanged. The reminder settings did not change.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs"
+    },
+    {
+      "articleId": "auto-doc-template",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/web/src/components/auto-docs/rule-value-input.tsx",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/list-editor.tsx"
+      ],
+      "reason": "183bfa99 reworked the Auto-Doc Form section and the template upload dialog.",
+      "affectedClaims": [
+        "Upload a .docx file with Upload version. The dialog now has a drop zone and Choose file, refuses anything but one .docx before upload, and ends with a report and Done.",
+        "Write the rule in the Form section: open the Block under Clauses, choose When a rule matches, and pick the form field. The editor now opens under the Block's row, and several date, number or currency values use Add value.",
+        "Each upload adds a file version. A field whose Placeholder is gone stays on the form, marked No Placeholder in file version N. The dialog now also counts those fields after upload."
+      ],
+      "rolesToWalk": ["legal_team_member", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs"
+    },
+    {
+      "articleId": "configure-analysis",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/ai-model-selector.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx (unchanged)",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/pipeline/automatic-contract-analysis.ts"
+      ],
+      "reason": "ai-model-selector.tsx only accepts an optional initial list, which the welcome wizard passes; the AI analysis page does not. ai-connector routes moved the read into a shared function. Automatic Analysis now skips a partially signed DocuSign copy, and the guide's can start automatically stays true.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/analysis-live/walkthrough.mjs"
+    },
+    {
+      "articleId": "install",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts",
+        "apps/web/src/routes/setup.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+        "compose.yml (unchanged)",
+        "Dockerfile (unchanged)"
+      ],
+      "reason": "The guide names app revision 067c1646 in three places (the candidate sentence, git checkout and OPENLAW_BUILD_COMMIT). Moving the edition to 4ca41822 changes those lines, and a fresh install now applies migrations 0172 to 0183. 1f2e77e1 also checks the setup token on Set up OpenLaw before the account form is sent.",
+      "affectedClaims": [
+        "Its application revision is 067c1646829df85e62b809ee9157921e867c84e7.",
+        "git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7",
+        "OPENLAW_BUILD_COMMIT=067c1646829df85e62b809ee9157921e867c84e7",
+        "Open the intended HTTPS address, check that it reaches Set up OpenLaw, and create the initial account with the setup token."
+      ],
+      "rolesToWalk": ["operator"],
+      "replayScript": "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "upgrade",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+        "packages/db/migrations/0173_durable-envelope-preparation.sql",
+        "packages/db/migrations/0179_envelope-reconciliation.sql",
+        "packages/db/migrations/0180_document-type-colors.sql",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "packages/db/migrations/0183_sso-provider-name.sql",
+        "apps/api/src/index.ts"
+      ],
+      "reason": "The candidate revision moves from 067c1646 to 4ca41822, and the target now applies twelve more migrations. Several rewrite data: 0172 removes team and administration from saved Toolset ceilings, 0173 to 0179 reshape contract_envelopes, 0181 inserts the Partially signed Status and reorders Signature Statuses, and 0182 inserts the Partially signed Document type, reorders Contract types and backfills earlier partial-round Versions.",
+      "affectedClaims": [
+        "This edition uses source revision 067c1646829df85e62b809ee9157921e867c84e7 as its candidate.",
+        "From that starting build, the candidate applies every migration up to 0171_m41-oauth-clients. Several of them rewrite existing data: (list).",
+        "git checkout --detach 067c1646829df85e62b809ee9157921e867c84e7",
+        "Check known Contracts, Matters, Entities, configured Fields, and their saved values."
+      ],
+      "rolesToWalk": ["operator"],
+      "replayScript": "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "deployment-configuration",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/app.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/lib/signing/config.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/mcp/calls.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/routes/login.tsx"
+      ],
+      "reason": "The Advanced MCP settings, the LAN and public profiles, the forwarded route list and the reachability pill are unchanged. listen streams run on /mcp, which the guide already forwards unbuffered. app.ts narrows the origin-check exemption to the signing webhook path and adds no-store headers on /signing/return, which is behind the default-off SIGNING_PREPARATION_ENABLED switch. oauth.ts only stops the set-auth-jwt header. The Settings MCP OAuth caption changed wording but the guide does not quote it. The claude-live phase-passwords.mjs rotates blair@helix.example, which the seed now names devon@helix.example.",
+      "affectedClaims": [],
+      "rolesToWalk": ["operator", "administrator"],
+      "replayScript": "docs/documentation/batches/DOC-030/operator/walkthrough.mjs"
+    },
+    {
+      "articleId": "backup-and-restore",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "packages/db/src/schema/org.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/index.ts",
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql"
+      ],
+      "reason": "The backup and restore procedure covers the whole database and file store; new columns and rows ride along. advanced-settings routes only moved the read into a shared function, and org.ts only changes the ceiling default.",
+      "affectedClaims": [],
+      "rolesToWalk": ["operator"],
+      "replayScript": "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "decision": "compat",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/lib/signing/config.ts",
+        "apps/api/src/modules/events/routes.ts",
+        "apps/api/src/lib/event-hub.ts",
+        "apps/api/src/modules/ai-connector/routes.ts",
+        "apps/api/src/modules/email-settings/routes.ts"
+      ],
+      "reason": "index.ts only adds a boot stop when SIGNING_PREPARATION_LIVE_LAB names a signing stand-in, which no documented deployment sets. events routes and event-hub now also serve MCP listen streams; the browser live-update path is unchanged. The migration failure messages the guide quotes are unchanged.",
+      "affectedClaims": [],
+      "rolesToWalk": ["operator"],
+      "replayScript": "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs"
+    },
+    {
+      "articleId": "reference",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "CONTEXT.md"
+      ],
+      "reason": "Three glossary rows and one table row no longer match. 229909d4 adds a seventh fixed Contract type; d0e50ae4 makes the Portal show the Document type name; dd28e33d adds per-Version deletion; f9481e78 filters the Toolsets a key request offers by account type; the Envelope definition in CONTEXT.md now covers preparing and draft states.",
+      "affectedClaims": [
+        "The Contract list starts with six fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment.",
+        "The Portal still shows the fixed kinds under Kind, so a Version with an added type or no type reads General there.",
+        "There is no individual-Version delete action; permanent Document deletion has wider consequences and requires an Administrator.",
+        "Envelope: One electronic-signature round on one Version of a Contract's primary Document. A Contract has at most one live Envelope.",
+        "What a request names: A Client name, one or more Toolsets from the organization's ceiling. The form now offers only ceiling Toolsets the account type can use."
+      ],
+      "rolesToWalk": ["administrator", "legal_team_member", "business_user"],
+      "replayScript": "docs/documentation/batches/DOC-030/support/walkthrough.mjs"
+    },
+    {
+      "articleId": "troubleshooting",
+      "decision": "rewalk",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/lib/envelopes.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/api-keys/routes.ts"
+      ],
+      "reason": "The electronic signing section describes the Envelope list and executed copy, which the signing rework changed: a Signatures tab, Envelope states such as Creation uncertain — not confirmed sent with Refresh status, Filing the signed copy… wording, and a Partially signed copy for a round that does not complete the Contract. The API key section can now meet No Toolsets are available for your account.",
+      "affectedClaims": [
+        "After an uncertain send, reload the Envelope list before trying again.",
+        "A Signed Envelope can still be waiting for the executed file to be stored. Check Executed copy and the Document Version rather than relying on the Envelope label alone.",
+        "Open API keys ... Read the key's Status."
+      ],
+      "rolesToWalk": ["administrator", "legal_team_member"],
+      "replayScript": "docs/documentation/batches/DOC-030/support/walkthrough.mjs"
+    },
+    {
+      "articleId": "versions-and-support",
+      "decision": "compat",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/routes/help.tsx (unchanged)",
+        "apps/web/vite-documentation.ts (unchanged)",
+        "scripts/documentation/compiler.mjs",
+        "apps/web/src/components/shell/app-header.tsx (unchanged)",
+        "apps/web/src/components/portal/portal-shell.tsx (unchanged)"
+      ],
+      "reason": "3fa407e3 to 067c1646 was reviewed compatible in DOC-030 compat. Since then no Help, edition details or standalone-download source changed. The guide names no app revision; Supported app will show the new pin from edition.json.",
+      "affectedClaims": [],
+      "rolesToWalk": ["administrator", "legal_team_member", "business_user", "operator"],
+      "replayScript": "docs/documentation/batches/DOC-030/compat/versions-and-support-replay.mjs"
+    }
+  ],
+  "groupArticles": [
+    {
+      "articleId": "first-run",
+      "group": "access",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "1f2e77e1",
+          "added": "Eight wizard steps; Business Users configured inside Authentication with Legal Users, both sections collapsed; two-factor enrollment resumes at Outbound email; allowed domains enable the Business switches."
+        },
+        {
+          "commit": "fd8ffd71",
+          "added": "Identity providers section with each provider's display name, email domains and status chip, and Add another identity provider."
+        },
+        {
+          "commit": "184cf48a",
+          "added": "E-signature (DocuSign Integration) step with Test DocuSign connection and the Signing updates card (Polling or Webhook, Connect HMAC secret)."
+        },
+        {
+          "commit": "b656bfb6",
+          "added": "Setup token refusal naming the SETUP_TOKEN environment variable; wizard keeps unfinished entries and loaded AI model lists per browser tab and clears drafts on sign-out."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/routes/setup.tsx",
+          "change": "Set up OpenLaw checks the token through POST /api/v1/auth/setup/validate-token and shows Setup token verified; too many checks answer Too many token checks. Try again later."
+        },
+        {
+          "pr": "direct commit b656bfb6",
+          "file": "apps/web/src/routes/setup.tsx",
+          "change": "Field messages Enter a valid email address. and Passwords must be 8 characters or more. and a Valid value status per field."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/routes/welcome.tsx",
+          "change": "The wizard has eight steps; the Business-user portal step is gone and its settings sit in Authentication under Business Users."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/lib/setup-drafts.ts",
+          "change": "Unsaved wizard entries persist per Administrator in the browser tab and are cleared by sign-out (session.ts)."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/routes/welcome.tsx",
+          "change": "Authentication lists Registered identity providers with Display name and Email domains and offers Add another identity provider."
+        },
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/web/src/routes/welcome.tsx",
+          "change": "Business Users switches stay disabled until a domain is added (Add a domain to enable sign-in options.)."
+        },
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/api/src/modules/auth/routes.ts",
+          "change": "Removing the last allowed domain turns the stored Business password, magic-link and SSO methods off. The guide text added in 1f2e77e1 says without changing their values; the walker must check which is true."
+        },
+        {
+          "pr": "direct commit 184cf48a",
+          "file": "apps/web/src/routes/welcome.tsx",
+          "change": "E-signature (DocuSign Integration) step: Test DocuSign connection saves the credentials and shows Connected to {account} as {email}; a Signing updates card holds Polling or Webhook, with webhook URL and Connect HMAC secret checks."
+        },
+        {
+          "pr": "direct commit 184cf48a",
+          "file": "apps/web/src/components/ai-model-selector.tsx",
+          "change": "A loaded model list is restored after navigation inside the wizard."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "packages/shared/src/start-blank.ts",
+          "change": "Start blank keeps the protected Partially signed Contract Status."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "packages/db/migrations/0182_partially-signed-document-type.sql",
+          "change": "The seeded Contract Document types include Partially signed before Executed."
+        },
+        {
+          "pr": "direct commit b656bfb6",
+          "file": "apps/web/src/routes/settings-general.tsx",
+          "change": "The logo refusal reads Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
+        }
+      ]
+    },
+    {
+      "articleId": "authentication-and-email",
+      "group": "access",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "fd8ffd71",
+          "added": "Identity providers card with Add provider, Display name and Email domains; the Several identity providers section; Edit {name} and Remove {name}; Configured and Missing credentials chips."
+        },
+        {
+          "commit": "354a6b67",
+          "added": "Review wording: domain conflict refusals, one callback URL for every provider, removal keeps account rows."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/routes/settings-authentication.tsx",
+          "change": "The Identity providers card lists each provider with Display name, Email domains and a Configured or Missing credentials chip, with Add provider, Edit {name} and Remove {name}."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/api/src/auth/sso-domains.ts",
+          "change": "A domain, or a parent or subdomain of one, that another provider serves is refused with a message naming that provider."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/routes/login.tsx",
+          "change": "With two or more providers the sign-in page asks for the work email first; an unserved domain shows No single sign-on provider is set up for {domain}."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/lib/activity.ts",
+          "change": "Removing a provider records {actor} removed the identity provider {provider}."
+        },
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/api/src/modules/auth/routes.ts",
+          "change": "Removing the last allowed email domain turns off the Business password, magic-link and SSO methods and records a second Audit entry."
+        },
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/web/src/components/authentication-options.tsx",
+          "change": "Business Portal Authentication switches stay disabled until a domain exists."
+        },
+        {
+          "pr": "direct commit e924a3f3",
+          "file": "apps/web/src/components/authentication-options.tsx",
+          "change": "Tooltip and accessible-name changes on the sign-in method switches."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/components/smtp-settings-fields.tsx",
+          "change": "Outbound email fields became a controlled draft; the labels are unchanged."
+        }
+      ]
+    },
+    {
+      "articleId": "organisation-and-users",
+      "group": "access",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "b656bfb6",
+          "added": "The logo refusal text now reads \"Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\""
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "direct commit b656bfb6",
+          "file": "apps/web/src/routes/settings-general.tsx",
+          "change": "The logo refusal wording changed and a guidance line PNG, JPEG, WebP or SVG · Max 5 MB · Recommended: 256 × 256 px, transparent background. sits under Logo."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/components/smtp-settings-fields.tsx",
+          "change": "The Outbound email fields keep their entries as a controlled draft; labels are unchanged."
+        },
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/api/src/modules/auth/routes.ts",
+          "change": "Removing the last allowed email domain turns off every Business sign-in method."
+        },
+        {
+          "pr": "direct commit 17179939",
+          "file": "scripts/seed/data.mjs",
+          "change": "The seeded bootstrap Administrator is Devon Calloway, devon@helix.example, in the Users list."
+        }
+      ]
+    },
+    {
+      "articleId": "staff-sign-in",
+      "group": "access",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/routes/login.tsx",
+          "change": "With two or more identity providers, single sign-on asks for the work email first and routes by domain; an unserved domain gets No single sign-on provider is set up for {domain}."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/api/src/auth/limits.ts",
+          "change": "A setup-token bucket is added; staff sign-in limits are unchanged."
+        }
+      ]
+    },
+    {
+      "articleId": "portal-sign-in",
+      "group": "access",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 3e91951f",
+          "file": "apps/api/src/modules/auth/routes.ts",
+          "change": "An empty allowed-domain list turns off every Business sign-in method, so no Business User can sign in."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "apps/web/src/routes/login.tsx",
+          "change": "Several providers change the SSO part of the page to an Email field and Continue with single sign-on."
+        },
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/components/portal/documents-section.tsx",
+          "change": "Portal Versions show the Document type name in its colour."
+        }
+      ]
+    },
+    {
+      "articleId": "configure-mcp",
+      "group": "mcp",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "f9481e78",
+          "added": "Team and Administration start unchecked in the ceiling; Administration is for Administrators only."
+        },
+        {
+          "commit": "1238de78",
+          "added": "Choose Team and Administration section with the row table and Toolset rules; Receive change notifications section on listen streams and legacy Clients."
+        },
+        {
+          "commit": "789d2444",
+          "added": "Merge of dev into DOC-030 that combined these additions with the DOC-030 corrections."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "apps/web/src/routes/settings-mcp.tsx",
+          "change": "Toolset ceiling has Team (Starts off.) and Administration (Starts off. Administrators only.) rows."
+        },
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+          "change": "New installs and upgraded ceilings exclude team and administration."
+        },
+        {
+          "pr": "direct commit 8cd0045d",
+          "file": "apps/web/src/routes/settings-mcp.tsx",
+          "change": "The Legal Users and Business Users captions were reworded, and the OAuth route list became OAuth Clients work only if this server is reachable from the internet. How to set this up."
+        },
+        {
+          "pr": "#1188 (87080703)",
+          "file": "apps/api/src/mcp/team.ts",
+          "change": "openlaw_team_add and openlaw_team_remove need Write scope; removal refuses the current Business Owner. 044d4cb0 lets removal name a deactivated person."
+        },
+        {
+          "pr": "#1188 (3294f749)",
+          "file": "apps/api/src/mcp/administration.ts",
+          "change": "openlaw_audit_log_query and openlaw_settings_get read the Audit log, Tool calls and settings with the panes' masking."
+        },
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/api/src/modules/api-keys/routes.ts",
+          "change": "Key requests and OAuth consent offer only ceiling Toolsets with a Tool the account type may run."
+        },
+        {
+          "pr": "#1188 (815cc0c6)",
+          "file": "apps/api/src/mcp/change-feed.ts",
+          "change": "Modern Clients get list-changed notices on MCP, ceiling or Read-only changes and resource updates for subscribed records; 64e97b41 closes streams outside the current grant and role."
+        },
+        {
+          "pr": "#1158 (7abd2a8f)",
+          "file": "apps/api/src/auth/oauth.ts",
+          "change": "Sign-in responses no longer send set-auth-jwt."
+        }
+      ]
+    },
+    {
+      "articleId": "connect-headless-client",
+      "group": "mcp",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "f9481e78",
+          "added": "The key form offers only permitted ceiling Toolsets; OAuth consent uses the same rule. dac203fe reworded it."
+        },
+        {
+          "commit": "1238de78",
+          "added": "Read resources and get prompts section: address table, prompts table, rate accounting, subscriptions/listen."
+        },
+        {
+          "commit": "789d2444",
+          "added": "Merge of dev into DOC-030."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/web/src/components/api-keys.tsx",
+          "change": "The request form lists only permitted Toolsets and otherwise shows No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use."
+        },
+        {
+          "pr": "#1188 (54e7eb92)",
+          "file": "apps/api/src/mcp/resources.ts",
+          "change": "resources/templates/list, resources/list and resources/read serve the nine addresses under the matching Tool's grant."
+        },
+        {
+          "pr": "#1188 (a26f998f)",
+          "file": "apps/api/src/mcp/prompts.ts",
+          "change": "prompts/list and prompts/get serve triage_inbox (limit 1 to 100, default 25) and summarize_record."
+        },
+        {
+          "pr": "#1188 (03c617a2)",
+          "file": "apps/api/src/mcp/prompts.ts",
+          "change": "The prompt refusal, the summarized record form and the Convert link were tightened."
+        },
+        {
+          "pr": "#1188 (815cc0c6)",
+          "file": "apps/api/src/mcp/change-feed.ts",
+          "change": "subscriptions/listen sends list-changed and resource-updated notices; revocation closes the stream."
+        },
+        {
+          "pr": "#1188 (87080703)",
+          "file": "apps/api/src/mcp/team.ts",
+          "change": "Team and Administration Toolsets exist but start off."
+        }
+      ]
+    },
+    {
+      "articleId": "connect-claude",
+      "group": "mcp",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "1238de78",
+          "added": "Attach a record and run a prompt section for Claude Code (@openlaw: resources, /openlaw: prompts) and claude.ai's attachment menu."
+        },
+        {
+          "commit": "789d2444",
+          "added": "Merge of dev into DOC-030 after the live claude.ai walk (213d0fed)."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "#1188 (54e7eb92)",
+          "file": "apps/api/src/mcp/resources.ts",
+          "change": "Claude Code lists @openlaw resources and claude.ai's attachment menu shows Inbox, My Tasks and vocabulary views when the grant permits."
+        },
+        {
+          "pr": "#1188 (a26f998f)",
+          "file": "apps/api/src/mcp/prompts.ts",
+          "change": "/openlaw:triage_inbox and /openlaw:summarize_record are offered; triage needs the Requests Toolset and a Legal User."
+        },
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/api/src/modules/oauth-grants/routes.ts",
+          "change": "OAuth consent offers only ceiling Toolsets the account type can use and the Client requested."
+        },
+        {
+          "pr": "direct commit 8cd0045d",
+          "file": "apps/web/src/components/connected-clients.tsx",
+          "change": "Connected Clients layout class change; Disconnect is unchanged."
+        },
+        {
+          "pr": "#1158 (7abd2a8f)",
+          "file": "apps/api/src/auth/oauth.ts",
+          "change": "OAuth sign-in no longer sends set-auth-jwt, which a large profile photo could push past a proxy's header limit."
+        },
+        {
+          "pr": "direct commit 17179939",
+          "file": "scripts/seed/data.mjs",
+          "change": "The seeded Administrator is devon@helix.example; claude-live/phase-passwords.mjs still lists blair@helix.example."
+        }
+      ]
+    },
+    {
+      "articleId": "create-contract",
+      "group": "contracts",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 791ad567",
+          "file": "apps/web/src/routes/contract-record.tsx",
+          "change": "Legal Owner and Business Owner sit in an Owners section above the Contract card."
+        },
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/routes/contract-record.tsx",
+          "change": "A Signatures tab is added after Approvals, and the Envelope chip is gone."
+        },
+        {
+          "pr": "#1188 (8432038e)",
+          "file": "apps/api/src/modules/contracts/create.ts",
+          "change": "Creation uses the shared team insert; outcomes unchanged."
+        }
+      ]
+    },
+    {
+      "articleId": "contract-approvals",
+      "group": "contracts",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "879fc477",
+          "added": "Step 1 now reads Open the Contract's Approvals tab (was the Approvals section and its Approvals & signing card)."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "The Approvals tab holds the Approvals block (Add approver, Apply group, Renew) and the Renewals block; signing moved to the Signatures tab."
+        },
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/api/src/modules/contract-envelopes/routes.ts",
+          "change": "A successful send moves the Contract to its first live Signature Status, without the Move past approval soft gate."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/api/src/lib/signing/recovery-stage.ts",
+          "change": "A confirmed send from a prepared DocuSign draft also advances the Contract to Signature (preparation stays off by default)."
+        },
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/routes/contract-record.tsx",
+          "change": "The Envelope chip beside the status pill is gone."
+        },
+        {
+          "pr": "direct commit 17179939",
+          "file": "scripts/seed/catalog.mjs",
+          "change": "The seeded Executive committee group names Devon Calloway and Daniel Okafor."
+        }
+      ]
+    },
+    {
+      "articleId": "approver-groups",
+      "group": "contracts",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "Apply group is in the Approvals block of the Approvals tab; there is no Approvals & signing card."
+        },
+        {
+          "pr": "#1198 (183bfa99)",
+          "file": "apps/web/src/components/list-editor.tsx",
+          "change": "Settings list rows are restructured; approver-group rows have no expanded content."
+        },
+        {
+          "pr": "direct commit 17179939",
+          "file": "scripts/seed/catalog.mjs",
+          "change": "Executive committee names Devon Calloway and Daniel Okafor."
+        }
+      ]
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "group": "contracts",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "Renew and the Renewals rows are on the Approvals tab; Approvals & signing is gone."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "Paper as amendment still opens Add version; the row delete is now Delete version."
+        }
+      ]
+    },
+    {
+      "articleId": "troubleshooting",
+      "group": "contracts",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 879fc477",
+          "file": "apps/web/src/routes/contract-record.tsx",
+          "change": "Envelopes are on the Signatures tab."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "Filing the signed copy… and The signed copy could not be filed. Upload it to the record instead.; a partial round shows Partially signed copy."
+        },
+        {
+          "pr": "#1197 (785c419e)",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "An uncertain creation shows Creation uncertain — not confirmed sent, recovery messages and Refresh status."
+        },
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/web/src/components/api-keys.tsx",
+          "change": "API keys can show No Toolsets are available for your account."
+        }
+      ]
+    },
+    {
+      "articleId": "document-versions",
+      "group": "documents",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [
+        {
+          "commit": "d0e50ae4",
+          "added": "Configure Document type colours section: Settings > Documents swatch, Automatic, where the colour shows."
+        },
+        {
+          "commit": "0e62863c",
+          "added": "Wording: the fixed Contract types keep their names but can have any of the available colours."
+        }
+      ],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/routes/settings-document-types.tsx",
+          "change": "Each Document type row has a colour swatch (Colour for {name}); a choice saves at once, with Saving colour… and a failure message."
+        },
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "The Type pill uses the configured colour; the Portal section shows the type name."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "Row Delete became Delete version; each earlier Version's menu has Delete version for Administrators; the dialog Delete version N? says whether other Versions remain."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/bulk-document-actions.tsx",
+          "change": "Bulk Delete versions removes the current Version of each selected Document."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "apps/web/src/lib/documents.ts",
+          "change": "Partially signed is a seventh fixed Contract type and kind, placed before Executed."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/api/src/pipeline/executed-copy.ts",
+          "change": "A DocuSign round that does not complete the Contract files a Partially signed Version with no Executed pin."
+        }
+      ]
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "group": "documents",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "Row action Delete version; version menus gain Delete version; dialog Delete version N? with the last-version or other-versions note; confirm button Delete version N of {title}."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/bulk-document-actions.tsx",
+          "change": "Bulk Delete versions, dialog Delete N selected versions? with Only the current version of each selected document will be deleted."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/api/src/lib/document-versions.ts",
+          "change": "Deleting the last Version removes the Document and clears a primary pin; a Version a generated comparison needs, or an Auto-Doc template, is refused."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/lib/activity.ts",
+          "change": "Activity reads {actor} deleted version {version} of {title}."
+        }
+      ]
+    },
+    {
+      "articleId": "create-knowledge",
+      "group": "documents",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "A Knowledge Item's Document row action is Delete version for Administrators."
+        }
+      ]
+    },
+    {
+      "articleId": "contributor-guide",
+      "group": "documents",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/components/portal/documents-section.tsx",
+          "change": "Portal Versions show the Document type name, in the type colour, and fall back to the kind."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "apps/web/src/lib/documents.ts",
+          "change": "The Portal Kind choice offers seven fixed Contract types, adding Partially signed."
+        }
+      ]
+    },
+    {
+      "articleId": "reference",
+      "group": "documents",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 229909d4",
+          "file": "apps/web/src/lib/documents.ts",
+          "change": "Seven fixed Contract types."
+        },
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/components/portal/documents-section.tsx",
+          "change": "The Portal shows the Document type name."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "Individual Version deletion exists; whole-Document deletion is no longer offered."
+        },
+        {
+          "pr": "#1197 (e8c08d64)",
+          "file": "CONTEXT.md",
+          "change": "The Envelope and Signer definitions changed (live means preparing, draft or sent; a Signer may be a user of the install)."
+        },
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "apps/web/src/components/api-keys.tsx",
+          "change": "A key request offers only the ceiling Toolsets the account type can use."
+        }
+      ]
+    },
+    {
+      "articleId": "create-matter",
+      "group": "records-config",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "direct commit 791ad567",
+          "file": "apps/web/src/routes/matter-record.tsx",
+          "change": "Matter Manager and Business Owner sit in an Owners section above the Matter section."
+        },
+        {
+          "pr": "#1188 (8432038e)",
+          "file": "apps/api/src/modules/matters/routes.ts",
+          "change": "Team writes use shared functions; messages unchanged."
+        }
+      ]
+    },
+    {
+      "articleId": "entity-records",
+      "group": "records-config",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (d3728c9b)",
+          "file": "apps/web/src/components/entities/officer-name-input.tsx",
+          "change": "Officer name combobox Select a user or enter a name, with People matches, Use \"{name}\" without linking a user and a User linked marker; the add form has no Linked user column."
+        },
+        {
+          "pr": "#1198 (0e62863c)",
+          "file": "apps/web/src/components/entities/officer-name-input.tsx",
+          "change": "Escape passes through when there is nothing to undo."
+        },
+        {
+          "pr": "direct commit 17179939",
+          "file": "scripts/seed/data.mjs",
+          "change": "The seeded Officer names include Devon Calloway."
+        }
+      ]
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "group": "records-config",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (46d9f1e5)",
+          "file": "apps/web/src/components/entities/linked-records-table.tsx",
+          "change": "Contracts and Matters tabs are managed tables with the main list columns, sorting and Show more."
+        },
+        {
+          "pr": "#1198 (46d9f1e5)",
+          "file": "apps/api/src/modules/entities/linked-records.ts",
+          "change": "Rows and total come from listContracts and listMatters with the Entity as extra scope, archived and ended or closed included."
+        },
+        {
+          "pr": "#1199 (3bc566bd)",
+          "file": "apps/web/src/components/linked-records-list.tsx",
+          "change": "The old list and its Restricted record row are removed."
+        },
+        {
+          "pr": "direct commit 791ad567",
+          "file": "apps/web/src/components/entities/entity-chart.tsx",
+          "change": "Individual owners carry a person icon in the chart."
+        }
+      ]
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "group": "records-config",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/routes/settings-document-types.tsx",
+          "change": "Colour swatch per row; the fixed-type lock text reads {name} has a fixed name. Its colour can be changed.; the caption adds Choose a colour for each type."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "packages/db/migrations/0182_partially-signed-document-type.sql",
+          "change": "Partially signed fixed Contract type before Executed."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/web/src/routes/settings-contract-statuses.tsx",
+          "change": "Partially signed is a protected Signature Status that does not count towards the Stage's live Status."
+        },
+        {
+          "pr": "#1198 (183bfa99)",
+          "file": "apps/web/src/components/list-editor.tsx",
+          "change": "List rows restructured for an optional expanded area."
+        }
+      ]
+    },
+    {
+      "articleId": "auto-doc-template",
+      "group": "records-config",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "#1198 (183bfa99)",
+          "file": "apps/web/src/components/auto-docs/form-builder.tsx",
+          "change": "Field and rule editors open under their row; the pencil toggles and shows a chevron."
+        },
+        {
+          "pr": "#1198 (183bfa99)",
+          "file": "apps/web/src/components/auto-docs/rule-value-input.tsx",
+          "change": "Multi-value rules on date, number or currency fields use Values with Add value and Remove value {number}."
+        },
+        {
+          "pr": "#1198 (183bfa99)",
+          "file": "apps/web/src/components/auto-docs/upload-dialog.tsx",
+          "change": "Upload dialog: Drop your Word template here, Choose file, Choose a single Word document (.docx)., Uploading…, then File version {number} uploaded, Placeholders detected, Blocks detected, fields created and orphaned-field count, and Done."
+        }
+      ]
+    },
+    {
+      "articleId": "install",
+      "group": "operator",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "edition pin change (DOC-032)",
+          "file": "docs/user-guides/install.md",
+          "change": "The revision named in three places moves to the new pin."
+        },
+        {
+          "pr": "direct commit 1f2e77e1",
+          "file": "apps/web/src/routes/setup.tsx",
+          "change": "Set up OpenLaw verifies the token before the account form is sent."
+        },
+        {
+          "pr": "#1197 (51b291f9)",
+          "file": "apps/api/src/lib/signing/config.ts",
+          "change": "SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB exist and default off; 27ccdee3 stops the boot if a live lab also names a stand-in."
+        }
+      ]
+    },
+    {
+      "articleId": "upgrade",
+      "group": "operator",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "guideEdits": [],
+      "expectedChanges": [
+        {
+          "pr": "edition pin change (DOC-032)",
+          "file": "docs/user-guides/upgrade.md",
+          "change": "The candidate revision and the last migration (0183_sso-provider-name) change."
+        },
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+          "change": "Saved ceilings lose team and administration."
+        },
+        {
+          "pr": "#1197 (e8c08d64)",
+          "file": "packages/db/migrations/0173_durable-envelope-preparation.sql",
+          "change": "contract_envelopes gains preparation columns; 0174 to 0179 add launch, resume, recovery and reconciliation columns."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "packages/db/migrations/0181_partial-signing.sql",
+          "change": "Inserts the protected Partially signed Status and shifts later Statuses' order."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "packages/db/migrations/0182_partially-signed-document-type.sql",
+          "change": "Inserts the Partially signed type, shifts Contract type order, and backfills earlier partial-round Versions."
+        },
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "packages/db/migrations/0180_document-type-colors.sql",
+          "change": "Adds document_types.color, null for every existing row."
+        },
+        {
+          "pr": "#1201 (fd8ffd71)",
+          "file": "packages/db/migrations/0183_sso-provider-name.sql",
+          "change": "Adds sso_providers.name, empty for existing providers (shown as the Provider ID)."
+        }
+      ]
+    }
+  ],
+  "blockedArticles": [
+    {
+      "articleId": "electronic-signing",
+      "evidenceStatus": "blocked",
+      "fromAppCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+      "reason": "Live DocuSign preparation acceptance (#1178) waits for owner credentials. Not decided here.",
+      "appChanges": [
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/web/src/components/approvals/approvals-signing-card.tsx",
+          "change": "The send and prepare dialogs ask Will the agreement be fully signed when this DocuSign round is complete? with no default; No files a Partially signed copy and moves the Contract to Partially signed. The trigger reads Send for signature in both modes, so the guide's Open Signatures, then select Prepare Envelope no longer matches; the dialog title is still Prepare Envelope. Filing copy says signed copy."
+        },
+        {
+          "pr": "direct commit 229909d4",
+          "file": "apps/api/src/pipeline/executed-copy.ts",
+          "change": "A partial round is filed under the Partially signed Document type with no note and no Executed pin."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/api/src/pipeline/automatic-contract-analysis.ts",
+          "change": "A partial round's Version starts no automatic Analysis."
+        },
+        {
+          "pr": "#1197 (367ae2c2)",
+          "file": "apps/api/src/modules/signing-connector/routes.ts",
+          "change": "Connector rotation is verified without holding database locks; the rotation outcome is unchanged."
+        },
+        {
+          "pr": "#1197 (27ccdee3)",
+          "file": "apps/api/src/index.ts",
+          "change": "A lab that sets SIGNING_PREPARATION_LIVE_LAB and a stand-in base URL stops at boot with a message."
+        },
+        {
+          "pr": "direct commit dd28e33d",
+          "file": "apps/web/src/components/documents/documents-card.tsx",
+          "change": "An Administrator can delete one Version, including a filed signed copy."
+        },
+        {
+          "pr": "#1198 (d0e50ae4)",
+          "file": "apps/web/src/lib/documents.ts",
+          "change": "Executed and Partially signed pills take the configured type colour."
+        },
+        {
+          "pr": "#1197 (6fcceb04)",
+          "file": "apps/web/vite.config.ts",
+          "change": "Development only: signing returns go back to the Vite origin."
+        }
+      ],
+      "guideEdits": []
+    },
+    {
+      "articleId": "configure-signing",
+      "evidenceStatus": "blocked",
+      "fromAppCommit": "648f99ec18c4d43882a2db32368f46b5f09d21a6",
+      "reason": "Live DocuSign acceptance (#1178) waits for owner credentials. Not decided here.",
+      "appChanges": [
+        {
+          "pr": "direct commit 184cf48a",
+          "file": "apps/web/src/routes/welcome.tsx",
+          "change": "The wizard step is E-signature (DocuSign Integration) with Test DocuSign connection (saves credentials, then shows Connected to {account} as {email}) and a Signing updates card (Polling or Webhook, public HTTPS URL and Connect HMAC secret checks)."
+        },
+        {
+          "pr": "#1197 (367ae2c2)",
+          "file": "apps/api/src/modules/signing-connector/routes.ts",
+          "change": "Rotation verification no longer holds database locks."
+        },
+        {
+          "pr": "direct commit b6a0bcfd",
+          "file": "apps/web/src/routes/settings-contract-statuses.tsx",
+          "change": "A protected Partially signed Status joins the Signature Stage; a completed partial round moves the Contract there."
+        },
+        {
+          "pr": "#1197 (27ccdee3)",
+          "file": "apps/api/src/index.ts",
+          "change": "Boot stops with a message when a live acceptance lab names a signing stand-in."
+        }
+      ],
+      "guideEdits": []
+    },
+    {
+      "articleId": "connect-chatgpt",
+      "evidenceStatus": "none (DOC-031, #1187)",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "reason": "No evidence yet; V-M41-C60 waits for a live ChatGPT session. Not decided here.",
+      "guideEdits": [
+        {
+          "commit": "1238de78",
+          "added": "Resources and prompts section: OpenAI's Developer mode guide documents no record-resource picker or MCP prompt commands."
+        }
+      ],
+      "appChanges": [
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/api/src/modules/oauth-grants/routes.ts",
+          "change": "OAuth consent offers only ceiling Toolsets the account type may run and the Client requested; nothing pre-selected."
+        },
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+          "change": "Team and Administration start off in the ceiling."
+        },
+        {
+          "pr": "#1188 (54e7eb92)",
+          "file": "apps/api/src/mcp/resources.ts",
+          "change": "Resources and prompts are served to every Client, subject to the grant."
+        },
+        {
+          "pr": "#1188 (815cc0c6)",
+          "file": "apps/api/src/mcp/change-feed.ts",
+          "change": "Modern Clients can open listen streams; others reload lists by hand."
+        },
+        {
+          "pr": "direct commit 8cd0045d",
+          "file": "apps/web/src/routes/settings-mcp.tsx",
+          "change": "The Settings MCP OAuth note now reads OAuth Clients work only if this server is reachable from the internet."
+        },
+        {
+          "pr": "#1158 (7abd2a8f)",
+          "file": "apps/api/src/auth/oauth.ts",
+          "change": "OAuth sign-in responses no longer carry set-auth-jwt."
+        }
+      ]
+    },
+    {
+      "articleId": "connect-microsoft-365-copilot",
+      "evidenceStatus": "none (DOC-031, #1187)",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "reason": "No evidence yet; V-M41-C61 waits for a live Copilot session. Not decided here.",
+      "guideEdits": [
+        {
+          "commit": "1238de78",
+          "added": "Resources and prompts section: Copilot Studio documents MCP tools and resources but not prompts."
+        }
+      ],
+      "appChanges": [
+        {
+          "pr": "#1188 (dac203fe)",
+          "file": "apps/api/src/modules/oauth-grants/routes.ts",
+          "change": "OAuth consent offers only ceiling Toolsets the account type may run and the Client requested; nothing pre-selected."
+        },
+        {
+          "pr": "#1188 (f9481e78)",
+          "file": "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+          "change": "Team and Administration start off in the ceiling."
+        },
+        {
+          "pr": "#1188 (54e7eb92)",
+          "file": "apps/api/src/mcp/resources.ts",
+          "change": "Resources and prompts are served to every Client, subject to the grant."
+        },
+        {
+          "pr": "#1188 (815cc0c6)",
+          "file": "apps/api/src/mcp/change-feed.ts",
+          "change": "Modern Clients can open listen streams; others reload lists by hand."
+        },
+        {
+          "pr": "direct commit 8cd0045d",
+          "file": "apps/web/src/routes/settings-mcp.tsx",
+          "change": "The Settings MCP OAuth note wording changed."
+        },
+        {
+          "pr": "#1158 (7abd2a8f)",
+          "file": "apps/api/src/auth/oauth.ts",
+          "change": "OAuth sign-in responses no longer carry set-auth-jwt."
+        }
+      ]
+    }
+  ],
+  "proposedGroups": {
+    "access": [
+      "first-run",
+      "authentication-and-email",
+      "organisation-and-users",
+      "staff-sign-in",
+      "portal-sign-in"
+    ],
+    "mcp": ["configure-mcp", "connect-headless-client", "connect-claude"],
+    "contracts": [
+      "create-contract",
+      "contract-approvals",
+      "approver-groups",
+      "terms-and-renewals",
+      "troubleshooting"
+    ],
+    "documents": [
+      "document-versions",
+      "archive-and-delete-documents",
+      "create-knowledge",
+      "contributor-guide",
+      "reference"
+    ],
+    "records-config": [
+      "create-matter",
+      "entity-records",
+      "entity-structure-and-access",
+      "types-statuses-fields",
+      "auto-doc-template"
+    ],
+    "operator": ["install", "upgrade"]
+  }
+}

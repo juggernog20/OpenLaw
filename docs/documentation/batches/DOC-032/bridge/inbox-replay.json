@@ -1,0 +1,911 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-032",
+  "issue": 1194,
+  "group": "inbox",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "lab": "final",
+  "environment": "openlaw-docs-9d2b1705-final",
+  "appUrl": "http://127.0.0.1:43390",
+  "mailUrl": "http://127.0.0.1:48490",
+  "buildId": "app sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3; engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T09:41:01.834Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T09:41:17.492Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules, headless, 1440x1000 staff and 1280x900 Portal; one isolated browser context per identity",
+  "articleHashesAtStart": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  },
+  "fixtures": {
+    "contractType": {
+      "id": "01a0e784-5612-7aa7-b37e-f9a145208a92",
+      "name": "DOC-032 bridge inbox Supplier agreement",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "contract_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "entity",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "counterparties",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "owning_department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "term_type",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "effective_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "expiry_date",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "renewal_period_months",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "notice_period_days",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "value",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_supplier_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_budget_note",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_contracting_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_contract_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "matterType": {
+      "id": "01a0e784-561e-716c-8967-abbc4a117f9e",
+      "name": "DOC-032 bridge inbox Advisory",
+      "form": [
+        {
+          "rowRef": "title",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "matter_type",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "description",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "department",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "region",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "priority",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "risk",
+          "onIntakeForm": false,
+          "isRequired": false
+        },
+        {
+          "rowRef": "needed_by",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_adviser_name",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_matter_entity",
+          "onIntakeForm": true,
+          "isRequired": false
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_matter_cost_centre",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_region_choice",
+          "onIntakeForm": false,
+          "isRequired": true
+        },
+        {
+          "rowRef": "doc_032_bridge_inbox_engagement_summary",
+          "onIntakeForm": false,
+          "isRequired": false
+        }
+      ]
+    },
+    "requestTypes": {
+      "contract": {
+        "id": "01a0e784-56be-7eb2-8069-341f118895dd",
+        "name": "DOC-032 bridge inbox Supplier contract request"
+      },
+      "matter": {
+        "id": "01a0e784-56c7-78d9-9bff-a54ac37deb54",
+        "name": "DOC-032 bridge inbox Advisory matter request"
+      }
+    },
+    "fields": {
+      "carry": {
+        "id": "01a0e784-562e-75f9-b03e-0a9053496d85",
+        "slug": "doc_032_bridge_inbox_supplier_name",
+        "name": "DOC-032 bridge inbox Supplier name",
+        "type": "text"
+      },
+      "stay": {
+        "id": "01a0e784-5639-7112-9ba1-0c2919e23855",
+        "slug": "doc_032_bridge_inbox_budget_note",
+        "name": "DOC-032 bridge inbox Budget note",
+        "type": "text"
+      },
+      "required": {
+        "id": "01a0e784-5650-7aa2-a860-5d58bf29fab3",
+        "slug": "doc_032_bridge_inbox_cost_centre",
+        "name": "DOC-032 bridge inbox Cost centre",
+        "type": "text"
+      },
+      "entity": {
+        "id": "01a0e784-5659-7b2e-b267-11506e5098f9",
+        "slug": "doc_032_bridge_inbox_contracting_entity",
+        "name": "DOC-032 bridge inbox Contracting entity",
+        "type": "entity"
+      },
+      "recordC": {
+        "id": "01a0e784-5662-78d0-8d63-7ab13b4746f4",
+        "slug": "doc_032_bridge_inbox_contract_summary",
+        "name": "DOC-032 bridge inbox Contract summary",
+        "type": "text"
+      },
+      "mCarry": {
+        "id": "01a0e784-566a-77ec-a8af-056b93b33e5d",
+        "slug": "doc_032_bridge_inbox_adviser_name",
+        "name": "DOC-032 bridge inbox Adviser name",
+        "type": "text"
+      },
+      "mRequired": {
+        "id": "01a0e784-5673-788b-ae59-1754bfbebbd0",
+        "slug": "doc_032_bridge_inbox_matter_cost_centre",
+        "name": "DOC-032 bridge inbox Matter cost centre",
+        "type": "text"
+      },
+      "mEntity": {
+        "id": "01a0e784-567e-72b6-9bc7-16ea9a388107",
+        "slug": "doc_032_bridge_inbox_matter_entity",
+        "name": "DOC-032 bridge inbox Matter entity",
+        "type": "entity"
+      },
+      "choice": {
+        "id": "01a0e784-5688-7514-bb20-605a2e599276",
+        "slug": "doc_032_bridge_inbox_region_choice",
+        "name": "DOC-032 bridge inbox Region choice",
+        "type": "single_select"
+      },
+      "record": {
+        "id": "01a0e784-5691-7709-b260-7e129a558a74",
+        "slug": "doc_032_bridge_inbox_engagement_summary",
+        "name": "DOC-032 bridge inbox Engagement summary",
+        "type": "text"
+      }
+    },
+    "templates": {
+      "good": {
+        "id": "01a0e784-5730-739a-90b5-e35dd5baee8a",
+        "name": "DOC-032 bridge inbox Advisory template"
+      },
+      "stale": {
+        "id": "01a0e784-575b-7212-8658-bf19f4c24a33",
+        "name": "DOC-032 bridge inbox Stale template"
+      }
+    }
+  },
+  "requests": {
+    "administrator:triage-review": {
+      "number": 25,
+      "reference": "R-25",
+      "id": "01a0e784-5888-76cf-a81d-eab7cb4dba68",
+      "title": "DOC-032 bridge inbox Admin triage-review 605299",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-admin-triage-review-1.pdf",
+          "bytes": 964
+        },
+        {
+          "name": "doc032-bridge-inbox-admin-triage-review-2.docx",
+          "bytes": 1095
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.495Z"
+    },
+    "administrator:triage-resolve": {
+      "number": 26,
+      "reference": "R-26",
+      "id": "01a0e784-58be-76c1-87e5-0b191667e158",
+      "title": "DOC-032 bridge inbox Admin triage-resolve 605299",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-admin-triage-resolve-1.pdf",
+          "bytes": 966
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.529Z"
+    },
+    "administrator:triage-race": {
+      "number": 27,
+      "reference": "R-27",
+      "id": "01a0e784-58e6-7d41-8ea1-3ee1341d416f",
+      "title": "DOC-032 bridge inbox Admin triage-race 605299",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.555Z"
+    },
+    "legal_team_member:triage-review": {
+      "number": 28,
+      "reference": "R-28",
+      "id": "01a0e784-5951-78cb-82d8-ee4a0a6f4aa7",
+      "title": "DOC-032 bridge inbox Member triage-review 605299",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-member-triage-review-1.pdf",
+          "bytes": 966
+        },
+        {
+          "name": "doc032-bridge-inbox-member-triage-review-2.docx",
+          "bytes": 1096
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.682Z"
+    },
+    "legal_team_member:triage-resolve": {
+      "number": 29,
+      "reference": "R-29",
+      "id": "01a0e784-5976-723d-a019-f4a7697d4f7e",
+      "title": "DOC-032 bridge inbox Member triage-resolve 605299",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-member-triage-resolve-1.pdf",
+          "bytes": 968
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.711Z"
+    },
+    "legal_team_member:triage-race": {
+      "number": 30,
+      "reference": "R-30",
+      "id": "01a0e784-5993-7338-a0c5-a8c4dada6fdc",
+      "title": "DOC-032 bridge inbox Member triage-race 605299",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.724Z"
+    }
+  },
+  "phases": ["triage"],
+  "roles": ["administrator", "legal_team_member"],
+  "startedAt": "2026-09-28T10:16:49.820Z",
+  "finishedAt": "2026-09-28T10:18:11.219Z",
+  "steps": [
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Before any legal user opens them, Oliver Grant views R-26 in the Portal and the Inbox list is browsed: both leave it New",
+      "expected": "Browsing the Inbox list and the Portal view do not mark a Request Read",
+      "page": "/inbox",
+      "actual": "R-26 stayed \"new\" after Oliver Grant's Portal view (Portal pill (no New pill)) and after the Inbox list was loaded in the browser.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:52.125Z",
+      "at": "2026-09-28T10:16:56.217Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open Inbox: Requests tab first, built-in view Status: New, Read, ordered by urgency and then age",
+      "expected": "Requests tab current; chip Status: New, Read; rows New or Read, sorted by urgency then oldest first",
+      "page": "/inbox",
+      "actual": "Tabs Requests (15) and Unassigned contracts (0); /inbox opened on Requests with the chip \"Status: New, Read\". 15 first-page rows ({\"new\":13,\"read\":2}) are ordered by urgency, then by submission time oldest first.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:56.217Z",
+      "at": "2026-09-28T10:16:56.525Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Open R-25 from its row and read Form responses (Description as a Row), Attachments, Converts to, Requester, Department, Urgency",
+      "expected": "Named facts visible; the Contract type's Form collects Description, so it shows under Form responses with no Description card; opening marks it Read",
+      "page": "/inbox/25",
+      "actual": "Opened from the list row link. Hero: Requester Oliver Grant, Converts to Contract · DOC-032 bridge inbox Supplier agreement, Department Sales, Urgency High. Form responses: \"Form responses Description Fictional description for DOC-032 bridge inbox Admin triage-review 605299. Please prepare the paperwork. Counterparties DOC-032 bridge inbox Fictional Counterparty Admin 605299 DOC-032 bridge inbox Supplier name Northwind Fictional S\". No separate Description card. Attachments doc032-bridge-inbox-admin-triage-review-1.pdf, doc032-bridge-inbox-admin-triage-review-2.docx. Opening the page changed the status from new to read.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:56.525Z",
+      "at": "2026-09-28T10:16:58.324Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "A Matter Request (R-27) whose Matter type does not collect Description shows a separate Description card",
+      "expected": "Description card present",
+      "page": "/inbox/27",
+      "actual": "R-27 (Matter · DOC-032 bridge inbox Advisory) shows a Description card: \"Description Fictional description for DOC-032 bridge inbox Admin triage-race 605299. Please prepare the paperwork.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:58.325Z",
+      "at": "2026-09-28T10:16:58.961Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+      "expected": "Viewer shows PDF and Word text; Download bytes equal the stored original",
+      "page": "/inbox/25",
+      "actual": "doc032-bridge-inbox-admin-triage-review-1.pdf opened in the viewer with its text and Download saved 964 bytes identical to the submitted file; doc032-bridge-inbox-admin-triage-review-2.docx opened in the viewer with its text and Download saved 1095 bytes identical to the submitted file. The row control \"Download doc032-bridge-inbox-admin-triage-review-2.docx\" saved 1095 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:16:58.961Z",
+      "at": "2026-09-28T10:17:01.411Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Assign R-25 from the list row: Search people, choose Nadia Haddad, Save assignment; status unchanged; the other legal session still has Triage",
+      "expected": "Row and Request page show the saved assignee; status unchanged; other session sees Triage",
+      "page": "/inbox/25",
+      "actual": "Dialog \"Assign R-25 for triage\" listed only active legal people (13: Unassigned, Daniel Okafor, Devon Calloway, D1\nDOC-032 bridge conversations Admin 107188, D1\nDOC-032 bridge conversations Legal Los Angeles 107188, D1\nDOC-032 bridge conversations Legal No Date Bell 107188, D1\nDOC-032 bridge conversations Legal Own List 107188, Ines Duarte, Marcus Oyelaran, Nadia Haddad, Priya Raman, Sofia Lindqvist, Tom Iwu); typed \"Nadia\" in Search people, chose Nadia Haddad, Save assignment. Row and Request page read \"Reassign R-25: Nadia Haddad\"; status stayed read; Nadia Haddad's own session still shows Triage on R-25.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:01.412Z",
+      "at": "2026-09-28T10:17:04.040Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Portal shows the saved triage assignee as Legal Owner, and Read once Legal opened the record",
+      "expected": "Oliver Grant's Portal page shows Legal Owner Nadia Haddad and the Read status",
+      "page": "/inbox/25",
+      "actual": "Oliver Grant's Portal page for R-25 shows \"Legal Owner Nadia Haddad\", the Read pill and \"Your request has been opened by the Legal team.\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:04.041Z",
+      "at": "2026-09-28T10:17:07.096Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+      "expected": "Cancel no change; Unassigned saves none; Portal Legal Owner Not assigned yet",
+      "page": "/inbox/25",
+      "actual": "Cancel after choosing Daniel Okafor kept Nadia Haddad; reassigning to Daniel Okafor saved; choosing Unassigned and Save assignment cleared it (button reads Assign R-25, status read); Portal shows \"Legal Owner Not assigned yet\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:07.097Z",
+      "at": "2026-09-28T10:17:11.309Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+      "expected": "Retry reloads people; failed save leaves the prior assignee",
+      "page": "/inbox/25",
+      "actual": "An aborted people load showed \"People could not be loaded.\" with Retry; Retry listed people. A 503 save showed \"The assignment could not be saved. Try again.\"; reopening the Request showed it still unassigned.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:11.310Z",
+      "at": "2026-09-28T10:17:12.900Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Clarify through Comments: audience starts on Legal Only; Shared with requester reaches the Requester; Legal Only does not; the Request stays undecided",
+      "expected": "Default Legal Only; shared text on Portal; Legal Only text absent; status unchanged",
+      "page": "/inbox/25",
+      "actual": "Composer offered Legal Only (checked) and Shared with requester; posted a Legal Only note, then a Shared with requester question with Comment. Oliver Grant's Portal page shows the question only; status stays read.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:12.900Z",
+      "at": "2026-09-28T10:17:16.757Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+      "expected": "Exactly the three actions",
+      "page": "/inbox/26",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting. No Decline.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:16.758Z",
+      "at": "2026-09-28T10:17:17.438Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Resolve R-26: blank note refused; Cancel leaves it undecided with nothing posted",
+      "expected": "Refusal message; status undecided; no comment",
+      "page": "/inbox/26",
+      "actual": "Dialog \"Resolve R-26 without converting\" with Resolution note (required); an empty submit showed \"Explain why this request is being resolved without converting.\"; Cancel with typed text left status read and posted nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:17.439Z",
+      "at": "2026-09-28T10:17:18.828Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Assign R-26 to Nadia Haddad, then resolve it as Daniel Okafor with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+      "expected": "Assignment does not reserve; Resolved; note in Comments; no Assign or Triage",
+      "page": "/inbox/26",
+      "actual": "Saved Nadia Haddad as assignee, then Daniel Okafor resolved it; assignment did not reserve it. Dialog text: \"Resolve R-26 without converting Explain why this request can be closed without creating a contract or matter. Resolution note (required) This goes on the request's thread, and to the requester by email. Cancel Resolve re\". Status card reads Resolved; Assign and Triage are gone; Nadia Haddad stays as assignee (read-only); Comments holds the note at the full_thread tier; Form responses and doc032-bridge-inbox-admin-triage-resolve-1.pdf remain.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:18.828Z",
+      "at": "2026-09-28T10:17:19.922Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-26",
+      "expected": "Note on Portal; email arrives; status stays resolved after reply",
+      "page": "/inbox/26",
+      "actual": "Portal page shows the resolution note; mail \"Your request is resolved: R-26 · DOC-032 bridge inbox Admin triage-resolve 605299\" reached Oliver Grant in the lab Mailpit; Oliver Grant's reply posted and the Request stayed resolved.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:19.922Z",
+      "at": "2026-09-28T10:17:23.027Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-27: Nadia Haddad resolves while the dialog is open; the dialog states their outcome with Close; the losing note is not posted",
+      "expected": "Somebody else already resolved this request.; Close; only the winning note",
+      "page": "/inbox/27",
+      "actual": "Nadia Haddad's resolution landed through the lab API while the browser write was held. The dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\" with Close. After Close the Status card reads Resolved; the thread holds only Nadia Haddad's note.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:23.027Z",
+      "at": "2026-09-28T10:17:23.946Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "New and Read: the Status filter shows only New or only Read Requests",
+      "expected": "R-25 (opened) under Read only; an unopened Request under New only",
+      "page": "/inbox?filters=1&view=all&status=new",
+      "actual": "Status chip > Read only > Apply showed \"Status: Read\" with R-25 and only read rows; New only showed \"Status: New\" without R-25 and only new rows (10 on the first page).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:23.946Z",
+      "at": "2026-09-28T10:17:26.615Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+      "expected": "R-26 appears under Resolved and without the Status filter; not in the built-in New, Read view",
+      "page": "/inbox?filters=1&view=all&status=resolved",
+      "actual": "The built-in view omitted R-26; Remove Status filter listed it; Filter > Status > Resolved > Apply showed the \"Status: Resolved\" chip and listed it.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:26.616Z",
+      "at": "2026-09-28T10:17:29.289Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+      "expected": "Status: Declined lists a seeded declined Request; its Status card shows Declined and the reason",
+      "page": "/inbox/10",
+      "actual": "Status: Declined listed R-10, R-23; R-10 Status card reads \"Status Declined There is not enough here to act on. Please resubmit with the counterparty's paper attached.\"; no Triage or Assign controls; Form responses kept.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:29.290Z",
+      "at": "2026-09-28T10:17:31.599Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Before any legal user opens them, Rosa Iglesias views R-29 in the Portal and the Inbox list is browsed: both leave it New",
+      "expected": "Browsing the Inbox list and the Portal view do not mark a Request Read",
+      "page": "/inbox",
+      "actual": "R-29 stayed \"new\" after Rosa Iglesias's Portal view (Portal pill (no New pill)) and after the Inbox list was loaded in the browser.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:32.470Z",
+      "at": "2026-09-28T10:17:36.527Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open Inbox: Requests tab first, built-in view Status: New, Read, ordered by urgency and then age",
+      "expected": "Requests tab current; chip Status: New, Read; rows New or Read, sorted by urgency then oldest first",
+      "page": "/inbox",
+      "actual": "Tabs Requests (13) and Unassigned contracts (0); /inbox opened on Requests with the chip \"Status: New, Read\". 13 first-page rows ({\"new\":10,\"read\":3}) are ordered by urgency, then by submission time oldest first.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:36.527Z",
+      "at": "2026-09-28T10:17:36.756Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open R-28 from its row and read Form responses (Description as a Row), Attachments, Converts to, Requester, Department, Urgency",
+      "expected": "Named facts visible; the Contract type's Form collects Description, so it shows under Form responses with no Description card; opening marks it Read",
+      "page": "/inbox/28",
+      "actual": "Opened from the list row link. Hero: Requester Rosa Iglesias, Converts to Contract · DOC-032 bridge inbox Supplier agreement, Department Finance, Urgency High. Form responses: \"Form responses Description Fictional description for DOC-032 bridge inbox Member triage-review 605299. Please prepare the paperwork. Counterparties DOC-032 bridge inbox Fictional Counterparty Member 605299 DOC-032 bridge inbox Supplier name Northwind Fictional\". No separate Description card. Attachments doc032-bridge-inbox-member-triage-review-1.pdf, doc032-bridge-inbox-member-triage-review-2.docx. Opening the page changed the status from new to read.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:36.756Z",
+      "at": "2026-09-28T10:17:38.532Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A Matter Request (R-30) whose Matter type does not collect Description shows a separate Description card",
+      "expected": "Description card present",
+      "page": "/inbox/30",
+      "actual": "R-30 (Matter · DOC-032 bridge inbox Advisory) shows a Description card: \"Description Fictional description for DOC-032 bridge inbox Member triage-race 605299. Please prepare the paperwork.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:38.533Z",
+      "at": "2026-09-28T10:17:39.137Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Select attachment filenames: PDF displays, Word file is prepared for reading, Download saves the original bytes",
+      "expected": "Viewer shows PDF and Word text; Download bytes equal the stored original",
+      "page": "/inbox/28",
+      "actual": "doc032-bridge-inbox-member-triage-review-1.pdf opened in the viewer with its text and Download saved 966 bytes identical to the submitted file; doc032-bridge-inbox-member-triage-review-2.docx opened in the viewer with its text and Download saved 1096 bytes identical to the submitted file. The row control \"Download doc032-bridge-inbox-member-triage-review-2.docx\" saved 1096 bytes.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:39.138Z",
+      "at": "2026-09-28T10:17:41.607Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assign R-28 from the list row: Search people, choose Daniel Okafor, Save assignment; status unchanged; the other legal session still has Triage",
+      "expected": "Row and Request page show the saved assignee; status unchanged; other session sees Triage",
+      "page": "/inbox/28",
+      "actual": "Dialog \"Assign R-28 for triage\" listed only active legal people (13: Unassigned, Daniel Okafor, Devon Calloway, D1\nDOC-032 bridge conversations Admin 107188, D1\nDOC-032 bridge conversations Legal Los Angeles 107188, D1\nDOC-032 bridge conversations Legal No Date Bell 107188, D1\nDOC-032 bridge conversations Legal Own List 107188, Ines Duarte, Marcus Oyelaran, Nadia Haddad, Priya Raman, Sofia Lindqvist, Tom Iwu); typed \"Daniel\" in Search people, chose Daniel Okafor, Save assignment. Row and Request page read \"Reassign R-28: Daniel Okafor\"; status stayed read; Daniel Okafor's own session still shows Triage on R-28.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:41.608Z",
+      "at": "2026-09-28T10:17:43.885Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Portal shows the saved triage assignee as Legal Owner, and Read once Legal opened the record",
+      "expected": "Rosa Iglesias's Portal page shows Legal Owner Daniel Okafor and the Read status",
+      "page": "/inbox/28",
+      "actual": "Rosa Iglesias's Portal page for R-28 shows \"Legal Owner Daniel Okafor\", the Read pill and \"Your request has been opened by the Legal team.\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:43.885Z",
+      "at": "2026-09-28T10:17:46.927Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Reassign from the avatar control; Cancel leaves the saved assignment; Unassigned clears it and the Portal shows Not assigned yet",
+      "expected": "Cancel no change; Unassigned saves none; Portal Legal Owner Not assigned yet",
+      "page": "/inbox/28",
+      "actual": "Cancel after choosing Nadia Haddad kept Daniel Okafor; reassigning to Nadia Haddad saved; choosing Unassigned and Save assignment cleared it (button reads Assign R-28, status read); Portal shows \"Legal Owner Not assigned yet\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:46.928Z",
+      "at": "2026-09-28T10:17:51.117Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If it does not work: people list failure offers Retry; a failed save shows the error and keeps the saved assignee",
+      "expected": "Retry reloads people; failed save leaves the prior assignee",
+      "page": "/inbox/28",
+      "actual": "An aborted people load showed \"People could not be loaded.\" with Retry; Retry listed people. A 503 save showed \"The assignment could not be saved. Try again.\"; reopening the Request showed it still unassigned.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:51.117Z",
+      "at": "2026-09-28T10:17:52.661Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Clarify through Comments: audience starts on Legal Only; Shared with requester reaches the Requester; Legal Only does not; the Request stays undecided",
+      "expected": "Default Legal Only; shared text on Portal; Legal Only text absent; status unchanged",
+      "page": "/inbox/28",
+      "actual": "Composer offered Legal Only (checked) and Shared with requester; posted a Legal Only note, then a Shared with requester question with Comment. Rosa Iglesias's Portal page shows the question only; status stays read.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:52.661Z",
+      "at": "2026-09-28T10:17:56.507Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Triage menu offers Convert to contract, Convert to matter, Resolve request without converting, and no Decline",
+      "expected": "Exactly the three actions",
+      "page": "/inbox/29",
+      "actual": "Menu items: Convert to contract | Convert to matter | Resolve request without converting. No Decline.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:56.508Z",
+      "at": "2026-09-28T10:17:57.201Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Resolve R-29: blank note refused; Cancel leaves it undecided with nothing posted",
+      "expected": "Refusal message; status undecided; no comment",
+      "page": "/inbox/29",
+      "actual": "Dialog \"Resolve R-29 without converting\" with Resolution note (required); an empty submit showed \"Explain why this request is being resolved without converting.\"; Cancel with typed text left status read and posted nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:57.202Z",
+      "at": "2026-09-28T10:17:58.553Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assign R-29 to Daniel Okafor, then resolve it as Nadia Haddad with a note: Status card Resolved, note in Comments, assignee kept read-only, controls gone",
+      "expected": "Assignment does not reserve; Resolved; note in Comments; no Assign or Triage",
+      "page": "/inbox/29",
+      "actual": "Saved Daniel Okafor as assignee, then Nadia Haddad resolved it; assignment did not reserve it. Dialog text: \"Resolve R-29 without converting Explain why this request can be closed without creating a contract or matter. Resolution note (required) This goes on the request's thread, and to the requester by email. Cancel Resolve re\". Status card reads Resolved; Assign and Triage are gone; Daniel Okafor stays as assignee (read-only); Comments holds the note at the full_thread tier; Form responses and doc032-bridge-inbox-member-triage-resolve-1.pdf remain.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:58.553Z",
+      "at": "2026-09-28T10:17:59.593Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Requester reads the resolution note on the Portal, receives the email, and a later reply does not reopen R-29",
+      "expected": "Note on Portal; email arrives; status stays resolved after reply",
+      "page": "/inbox/29",
+      "actual": "Portal page shows the resolution note; mail \"Your request is resolved: R-29 · DOC-032 bridge inbox Member triage-resolve 605299\" reached Rosa Iglesias in the lab Mailpit; Rosa Iglesias's reply posted and the Request stayed resolved.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:17:59.594Z",
+      "at": "2026-09-28T10:18:02.678Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Lost race on R-30: Daniel Okafor resolves while the dialog is open; the dialog states their outcome with Close; the losing note is not posted",
+      "expected": "Somebody else already resolved this request.; Close; only the winning note",
+      "page": "/inbox/30",
+      "actual": "Daniel Okafor's resolution landed through the lab API while the browser write was held. The dialog said \"Somebody else already resolved this request.\" and \"Close this to read what they recorded.\" with Close. After Close the Status card reads Resolved; the thread holds only Daniel Okafor's note.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:02.679Z",
+      "at": "2026-09-28T10:18:03.555Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "New and Read: the Status filter shows only New or only Read Requests",
+      "expected": "R-28 (opened) under Read only; an unopened Request under New only",
+      "page": "/inbox?filters=1&view=all&status=new",
+      "actual": "Status chip > Read only > Apply showed \"Status: Read\" with R-28 and only read rows; New only showed \"Status: New\" without R-28 and only new rows (7 on the first page).",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:03.555Z",
+      "at": "2026-09-28T10:18:06.260Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Find decided Requests: Status filter Resolved lists them; removing the Status filter lists all outcomes",
+      "expected": "R-29 appears under Resolved and without the Status filter; not in the built-in New, Read view",
+      "page": "/inbox?filters=1&view=all&status=resolved",
+      "actual": "The built-in view omitted R-29; Remove Status filter listed it; Filter > Status > Resolved > Apply showed the \"Status: Resolved\" chip and listed it.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:06.261Z",
+      "at": "2026-09-28T10:18:08.940Z"
+    },
+    {
+      "article": "triage-requests",
+      "scenario": "V-C12",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Historical Declined Request shows its reason and no Assign or Triage controls",
+      "expected": "Status: Declined lists a seeded declined Request; its Status card shows Declined and the reason",
+      "page": "/inbox/10",
+      "actual": "Status: Declined listed R-10, R-23; R-10 Status card reads \"Status Declined There is not enough here to act on. Please resubmit with the counterparty's paper attached.\"; no Triage or Assign controls; Form responses kept.",
+      "result": "pass",
+      "startedAt": "2026-09-28T10:18:08.940Z",
+      "at": "2026-09-28T10:18:11.219Z"
+    }
+  ],
+  "records": [],
+  "productBugs": [],
+  "guideFailures": [],
+  "resolveTimes": {
+    "R-26": 1790590639695,
+    "R-29": 1790590679344
+  },
+  "articleHashesAtEnd": {
+    "triage-requests": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "convert-request": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7"
+  }
+}

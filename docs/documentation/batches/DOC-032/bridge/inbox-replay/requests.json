@@ -1,0 +1,110 @@
+{
+  "requests": {
+    "administrator:triage-review": {
+      "number": 25,
+      "reference": "R-25",
+      "id": "01a0e784-5888-76cf-a81d-eab7cb4dba68",
+      "title": "DOC-032 bridge inbox Admin triage-review 605299",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-admin-triage-review-1.pdf",
+          "bytes": 964
+        },
+        {
+          "name": "doc032-bridge-inbox-admin-triage-review-2.docx",
+          "bytes": 1095
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.495Z"
+    },
+    "administrator:triage-resolve": {
+      "number": 26,
+      "reference": "R-26",
+      "id": "01a0e784-58be-76c1-87e5-0b191667e158",
+      "title": "DOC-032 bridge inbox Admin triage-resolve 605299",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-admin-triage-resolve-1.pdf",
+          "bytes": 966
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.529Z"
+    },
+    "administrator:triage-race": {
+      "number": 27,
+      "reference": "R-27",
+      "id": "01a0e784-58e6-7d41-8ea1-3ee1341d416f",
+      "title": "DOC-032 bridge inbox Admin triage-race 605299",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.555Z"
+    },
+    "legal_team_member:triage-review": {
+      "number": 28,
+      "reference": "R-28",
+      "id": "01a0e784-5951-78cb-82d8-ee4a0a6f4aa7",
+      "title": "DOC-032 bridge inbox Member triage-review 605299",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "high",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-member-triage-review-1.pdf",
+          "bytes": 966
+        },
+        {
+          "name": "doc032-bridge-inbox-member-triage-review-2.docx",
+          "bytes": 1096
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.682Z"
+    },
+    "legal_team_member:triage-resolve": {
+      "number": 29,
+      "reference": "R-29",
+      "id": "01a0e784-5976-723d-a019-f4a7697d4f7e",
+      "title": "DOC-032 bridge inbox Member triage-resolve 605299",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-bridge-inbox-member-triage-resolve-1.pdf",
+          "bytes": 968
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.711Z"
+    },
+    "legal_team_member:triage-race": {
+      "number": 30,
+      "reference": "R-30",
+      "id": "01a0e784-5993-7338-a0c5-a8c4dada6fdc",
+      "title": "DOC-032 bridge inbox Member triage-race 605299",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "low",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T10:16:45.724Z"
+    }
+  }
+}

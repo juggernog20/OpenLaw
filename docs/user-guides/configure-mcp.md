@@ -9,7 +9,7 @@ You must be an Administrator. Open **Settings → Organization → MCP**, after 
 1. In the **MCP** card, turn on the switch beside **MCP is off**. The title changes to **MCP is on**.
 2. Select **Copy address** beside **Server address**. Give this `/mcp` address to people connecting a Client.
 3. In the **Legal Users** row, turn on the **API keys** switch. Legal Users includes Administrators and Legal Team Members. Turn on **API keys** in the **Business Users** row only if that group should connect Clients.
-4. Expand **Toolset ceiling**. All 13 Toolsets start selected. Clear the Toolsets the organization does not permit. A key request can choose only from this set. Guide Tools are always available to an authenticated Client.
+4. Expand **Toolset ceiling**. On a new installation, 11 of the 13 Toolsets start selected, and the summary reads **11 of 13 Toolsets**. Team and Administration start unchecked; see [Choose Team and Administration](#choose-team-and-administration). Clear the Toolsets the organization does not permit. A key request can choose only from this set. Guide Tools are always available to an authenticated Client.
 5. Turn on **Read-only** in the same card if no Client should make changes. It also blocks writes from an existing key with Write scope. The key request form then hides the Write choice.
 6. Under **API key lifetime**, set **API key lifetime (days)**, from 1 to 365. The default is 90. Leave the field or press Enter to save. The lifetime applies to new keys when approved.
 
@@ -18,7 +18,8 @@ Each change saves at once and shows **Settings saved.** Each Organization change
 ## Choose Team and Administration
 
 Expand **Toolset ceiling** to find these two rows. Both start unchecked on a new
-installation and after an upgrade to M42. Select a checkbox to permit that Toolset.
+installation. An upgrade from an earlier release clears both from an existing ceiling.
+Select a checkbox to permit that Toolset.
 
 | Row            | Id               | Caption                          | What it permits                                                              |
 | -------------- | ---------------- | -------------------------------- | ---------------------------------------------------------------------------- |
@@ -44,12 +45,14 @@ The person must request a new key or give new consent for the added Toolset.
 
 ## Receive change notifications
 
-A Client that supports the modern MCP listen stream can ask for change notifications.
-When MCP switches, the Toolset ceiling or Read-only change, OpenLaw tells it to
-reload its Tools, resources and prompts lists. The lists still follow the person's grant.
+A modern Client uses MCP protocol revision `2026-07-28` and can open a listen stream
+for change notifications. When a switch in the MCP card, the Toolset ceiling or
+Read-only changes, OpenLaw tells it to reload its Tools, resources and prompts lists.
+Turning an Allowed Client on or off, or deleting one, does the same.
+The lists still follow the person's grant.
 
 The Client can also subscribe to reached Contract, Matter, Request, Entity and
-Knowledge Item resources. Legal Users can subscribe to the Inbox.
+Knowledge Item resources, up to 100 addresses per stream. Legal Users can subscribe to the Inbox.
 Updates contain the resource address, not its content. The Client reads it again.
 Record access and Visibility tiers still apply. Document Version text, My Tasks
 and vocabulary do not send resource updates.
@@ -57,7 +60,7 @@ and vocabulary do not send resource updates.
 Revoking a credential closes its stream. OpenLaw also checks expiry, account
 changes and disabled access while a stream is open. A Client must reconnect after
 a role change. These checks apply even if the Client has a cached list.
-Older, legacy Clients reload by hand. Use the Client's refresh control or reconnect
+Older, legacy Clients use an earlier protocol revision and reload by hand. Use the Client's refresh control or reconnect
 after a change. Every call checks current access, so a stale list cannot retain removed access.
 
 ## Enable OAuth Clients
@@ -102,7 +105,7 @@ People follow [Connect a headless Client](connect-headless-client.md) to submit 
 2. Select **Approve** or **Deny**. You can also handle requests in the **API key requests** card of the MCP section. The request's note shows under its Client name. There, **Approve** and **Deny** open a dialog with an optional **Note (Optional)**.
 3. Tell the requester to return to their **API keys** pane. After approval, they can copy the key once from **Your key is ready**. The approval notification alone does not collect the key.
 
-Approval checks the current policy. Approval fails if MCP or the group's API keys are now off, a Toolset is outside the ceiling, or the request asks for Write while **Read-only** is on. The card's dialog names the reason. The bell says **The request could not be handled. Try again.** Deny the request and ask for a new one.
+Approval checks the current policy. Approval fails if MCP or the group's API keys are now off, a Toolset is outside the ceiling or unavailable for the requester's account type, or the request asks for Write while **Read-only** is on. The card's dialog names the reason. The bell says **The request could not be handled. Try again.** Deny the request and ask for a new one.
 
 **Mark all read** leaves Your approvals in place. A handled request leaves the group. Administrators' own API key requests approve themselves, and their keys appear immediately in the once-shown dialog.
 
@@ -110,7 +113,7 @@ Approval checks the current policy. Approval fails if MCP or the group's API key
 
 Expand **Active keys and grants** to see the key and grant counts and the **Owner**, **Client**, **Toolsets**, **Scope**, **Status**, **Granted**, **Last used** and **Expires** columns. Select **Revoke** on a key or grant. A key opens **Revoke API key** and a grant opens **Revoke OAuth grant**. Select **Revoke** to stop it. Its next request is refused. People can revoke their own keys, or select **Disconnect** under **Connected Clients**, on their own **API keys** pane in Settings or the Portal. A lost or expired key needs a new request. A revoked or expired grant needs new consent.
 
-Select **Tool calls in the last day** to open **Audit log → Tool calls**. It lists **When**, **Person**, **Client**, **Tool**, **Outcome** and **Duration**, with **From** and **To** date filters and **Export CSV**. It records reads as well as writes, without recording Tool arguments or results. Record activity and the Audit log also identify writes as the person, via the named Client, at the same visibility tier as the corresponding app action.
+Select **Tool calls in the last day** to open **Audit log → Tool calls**. It lists **When**, **Person**, **Client**, **Tool**, **Outcome** and **Duration**, with **From** and **To** date filters and **Export CSV**. It records reads as well as writes, without recording Tool arguments or results. A resource read shows as `resource:` and its kind, such as `resource:contracts`. A prompt get shows as `prompt:` and its name, such as `prompt:triage_inbox`. Neither records the address. Record activity and the Audit log also identify writes as the person, via the named Client, at the same visibility tier as the corresponding app action.
 
 **Settings → Organization → Advanced → MCP** holds **Calls per hour per credential**. It defaults to 600. Unlike MCP policy switches, an Advanced change takes effect after the API and worker restart. A value set in the deployment configuration shows **Read only** and cannot be changed in Settings. A refused Client call names the limit and reset time.
 

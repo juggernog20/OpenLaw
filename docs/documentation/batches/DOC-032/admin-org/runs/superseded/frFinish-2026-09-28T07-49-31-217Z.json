@@ -1,0 +1,35 @@
+{
+  "section": "frFinish",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "afr2",
+  "labProject": "openlaw-docs-9d2b1705-afr2",
+  "appUrl": "http://127.0.0.1:43372",
+  "mailUrl": "http://127.0.0.1:48472",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "lab default email environment, fresh database after the reset",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:49:31.217Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "afr2",
+      "page": "http://127.0.0.1:43372/settings/general",
+      "action": "Finish on Review without Start blank records the review and ends onboarding",
+      "expected": "Home opens; review done true; the checklist has no Review seeded types row",
+      "startedAt": "2026-09-28T07:49:31.365Z",
+      "finishedAt": "2026-09-28T07:49:33.539Z",
+      "actual": "Reached Review with completed false and review done false. Finish opened Home; the API then reported completed true and review done true. Setup checklist rows [\"Organization\",\"Business-user portal\",\"Invite your team\",\"E-signature\",\"AI analysis\"].",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:49:33.545Z"
+}

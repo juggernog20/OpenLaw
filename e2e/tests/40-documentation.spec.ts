@@ -94,7 +94,14 @@ test("public documentation and export avoid API reads and all themes fit narrow 
       exact: true,
     }),
   ).toHaveCount(0);
-  // This guide is awaiting review in the development edition.
+  // DOC-032 verified this guide against the pinned build, so it carries no badge.
+  await expect(page.getByText("Validation in progress", { exact: true })).toHaveCount(0);
+  // This guide waits for a live DocuSign check (#1178). A development edition
+  // still shows it, with the validation badge.
+  await page.goto("/documentation/electronic-signing");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Send a Contract for electronic signature",
+  );
   await expect(page.getByText("Validation in progress", { exact: true })).toBeVisible();
   await expect(page.getByText(/Development preview/)).toHaveCount(0);
   expect(apiRequests).toEqual([]);

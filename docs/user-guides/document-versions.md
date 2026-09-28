@@ -8,7 +8,7 @@ Open a Contract, Matter, Entity, or Knowledge Item you can reach. Legal Team Mem
 
 Every Document belongs to one owning record. Start on that record, not the central Documents repository. Business Users supply Request or comment attachments through the [Business Portal](follow-request.md); those attachments are not automatically managed Documents.
 
-A Document Version can carry one Document type. The type is optional. An Administrator keeps one type list each for Matters, Contracts, and Entities: open your profile menu, select **Settings**, then **Documents**. The Contract list starts with six fixed types: **Draft · ours**, **Draft · theirs**, **Redline · theirs**, **Redline · ours**, **Executed**, and **Amendment**. The Matter and Entity lists start empty. Until an Administrator adds a type there, a Matter or Entity upload has no **Type** control. A Knowledge Item has no type list; its files show the item's Knowledge type.
+A Document Version can carry one Document type. The type is optional. An Administrator keeps one type list each for Matters, Contracts, and Entities: open your profile menu, select **Settings**, then **Documents**. The Contract list starts with seven fixed types: **Draft · ours**, **Draft · theirs**, **Redline · theirs**, **Redline · ours**, **Partially signed**, **Executed**, and **Amendment**. The Matter and Entity lists start empty. Until an Administrator adds a type there, a Matter or Entity upload has no **Type** control. A Knowledge Item has no type list; its files show the item's Knowledge type.
 
 ## Upload a new Document
 
@@ -27,7 +27,9 @@ Any file type can be stored, subject to the deployment's upload limit. [Preview 
 2. In **Add version**, use **Choose file**. Choose a **Type** if the dialog shows it, and enter a **Note** if useful. The new Version does not copy the earlier Version's type. Select **Upload**.
 3. Check that the Document's Version number increased. Select the arrow beside the Document name to show earlier Versions, then select a filename to read that Version. Check the Version number in the reader before downloading.
 
-Uploading the same paper as a new Document creates a separate chain. OpenLaw does not merge those chains. An added Version preserves the earlier file's bytes, note, author, and place in the history; it does not overwrite them. There is no individual-Version delete action.
+Uploading the same paper as a new Document creates a separate chain. OpenLaw does not merge those chains. An added Version preserves the earlier file's bytes, note, author, and place in the history; it does not overwrite them.
+
+Only an Administrator can delete a Version. To delete the current Version, open the Document's **Actions** menu and select **Delete version**. To delete an earlier Version, show the earlier Versions and open that Version's **Actions for version** menu. The dialog names the Version number. Type `delete` in **Type "delete" to confirm**, then select **Delete version**. OpenLaw removes that Version, its stored file, and the Comparisons that name it. The other Versions stay. OpenLaw does not reuse the deleted Version number. If you delete the Version that carries the Executed pin, the pin is cleared. If you delete the last Version, OpenLaw also removes the Document. OpenLaw refuses the delete while a **Generated redline** uses that Version, and on an Auto-Doc template. Deletion cannot be undone; see [archive and deletion](archive-and-delete-documents.md).
 
 The **Type** column shows each Version's Document type. A Legal Team Member or Administrator can correct a type from that column while the record and the Document are unarchived. Choose another type from the record's list, or **No type**. The correction changes the type only. The bytes, note, author, Version number, and Executed pin stay the same. Where the record's list is empty and a Version has no type, the column shows a dash and offers no choice.
 
@@ -58,4 +60,4 @@ The comment and its attachment retain their conversation audience; filing also c
 
 ## Recover from a refusal
 
-Read the upload message before retrying. Choose a smaller file if the deployment rejects its size. Reopen the record if its access or archive state changed. A refused upload or type correction adds no Version and leaves the chain as it was. If **Type** does not offer the type you need, ask an Administrator to add it to the module's list. Business Users should ask Legal to change a designation, move paper, or correct a type. For a failed preview after a successful upload, keep the uploaded Version and follow [preview recovery](document-previews.md).
+Read the upload message before retrying. Choose a smaller file if the deployment rejects its size. Reopen the record if its access or archive state changed. A refused upload, type correction, or Version delete leaves the chain as it was. If **Type** does not offer the type you need, ask an Administrator to add it to the module's list. Business Users should ask Legal to change a designation, move paper, or correct a type. For a failed preview after a successful upload, keep the uploaded Version and follow [preview recovery](document-previews.md).

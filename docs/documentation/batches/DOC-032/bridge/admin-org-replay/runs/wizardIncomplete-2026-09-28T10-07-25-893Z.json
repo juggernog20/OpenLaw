@@ -1,0 +1,49 @@
+{
+  "section": "wizardIncomplete",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bwiz",
+  "labProject": "openlaw-docs-9d2b1705-bwiz",
+  "appUrl": "http://127.0.0.1:43383",
+  "mailUrl": "http://127.0.0.1:48483",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "incomplete: SMTP_URL set, SMTP_FROM empty (overlay-mail-incomplete.json); wizard open; stored relay saved",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:07:25.894Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/welcome",
+      "action": "Deployment precedence: SMTP_URL without SMTP_FROM prevents delivery even though a complete relay is saved in the app; the wizard shows the warning",
+      "expected": "Warning; no relay form; no Send test email; Continue unavailable; an invitation is refused",
+      "startedAt": "2026-09-28T10:07:26.445Z",
+      "finishedAt": "2026-09-28T10:07:30.720Z",
+      "actual": "Opening Settings sent the Administrator to /welcome (email setup is required while the wizard is open). The Outbound email step read \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\" Its buttons were [\"Back\",\"Continue\"]; Continue was disabled. GET /api/v1/email-settings answered {\"source\":\"env\",\"fromAddress\":null}. An invitation through the invite route answered 409 (\"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\") and Mailpit received 0 messages.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/welcome",
+      "action": "When outbound email is not configured, the sign-in pages do not offer Email me a sign-in link",
+      "expected": "No Email me a sign-in link on the staff or Portal page",
+      "startedAt": "2026-09-28T10:07:30.720Z",
+      "finishedAt": "2026-09-28T10:07:33.317Z",
+      "actual": "With Email magic link on in both groups ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}) and emailConfigured false, the pages offered {\"/auth/login\":[\"Sign in\"],\"/portal/login\":[\"Sign in\"]}.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:07:33.320Z"
+}

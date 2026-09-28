@@ -34,6 +34,8 @@ For a pending request, its requester, the Contract's Legal Owner, or an Administ
 
 Changing from a Stage at or before Approval to one beyond it can open **Move past approval** if approvals remain Pending or Rejected. Read every unresolved row. **Cancel** keeps the current Status; **Move anyway** saves the new Status and records an override. The unresolved approvals keep their own decisions.
 
+A confirmed send from the Contract's **Signatures** tab also moves the Contract to a Signature Status. That move does not open **Move past approval**. It records no override, even when approvals remain Pending or Rejected. Check the **Approvals** tab before you send.
+
 The app provides parallel requests and reusable groups. It does not apply a sequential approval chain or automatic threshold rules. [Change a Contract Status](contract-stages.md) covers the Stage control.
 
 ## If an action is unavailable

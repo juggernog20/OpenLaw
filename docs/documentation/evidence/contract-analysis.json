@@ -105,5 +105,48 @@
     "verifiedAt": "2026-09-16T15:43:50.903773+00:00"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of automatic-contract-analysis.ts, contract-record.tsx, contracts/record.ts, contracts/routes.ts, contracts/service.ts, web lib/activity.ts, ai-connector/routes.ts and executed-copy.ts. analysis.tsx, ai-field-evidence.tsx, key-dates-card.tsx, record-actions-menu.tsx, the contract-analysis module and pipelines, analysis-targets.ts, analysis-key-dates.ts and conversion-draft.ts did not change. automatic-contract-analysis.ts now skips a Version filed by a DocuSign round that does not complete the Contract, and executed-copy.ts files such a round without the executed pin; the guide says Analysis can start automatically when target text is ready or a ready Version is marked executed, which stays true for a completing round and for manual marking. ai-connector/routes.ts only shares its read code. contract-record.tsx adds the Owners section, the Signatures tab and a reload on a Status change; Run analysis, Confirm and Confirm all are unchanged. I replayed the DOC-030 V-C21 script (full run plus the Request conversion part) for Legal Team Member and Administrator on my own lab compatb built from 4ca41822, with DOC-030's provider stand-in; all 38 steps passed, 19 per role, and the script put the lab back to no AI connector; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-b.json",
+        "sha256": "59266bfee347abd819b0fe2ff7c1c1e4ecfe43bce11dd4252960dc3ed0a854fa"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay.mjs",
+        "sha256": "8593d3c55421bb3e4eed12803ccad3971a1ae3cd210ce452b71f060fe381c633"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/c21.mjs",
+        "sha256": "040acf8d373d4c5a9399295c68c1460c40431beeabd9620cb47e7d6e53b74a1d"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/lib.mjs",
+        "sha256": "1d5724a9c3f28591bd35168e62ae08adc8c5e9b012a8bce9cb3ac3fd19979c53"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay/provider-standin.mjs",
+        "sha256": "81e9ace4312025aeaac2476b1ed65cf179fa071b7c2995e0e6208c14e35bab70"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-analysis-replay.json",
+        "sha256": "24da8f16de8e4ddb01faa89b8a18af252dbf78ea78fb633ea070cbe2b307a757"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/contract-analysis-compatb.log",
+        "sha256": "886060dac60108923d5148fb5263e245213843dc8f4aea36ba6f44eb03919489"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      }
+    ]
+  }
 }

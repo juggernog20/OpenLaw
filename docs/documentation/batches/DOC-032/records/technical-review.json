@@ -1,0 +1,358 @@
+{
+  "batch": "DOC-032",
+  "group": "records",
+  "reviewer": "DOC-032 source-review author agent (records)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:20:00Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastArticleEdits": {
+      "create-matter": "f3e11862 (DOC-030 walkthrough checkpoint; file bytes equal the evidence contentSha256, no feature PR edited the guide since)",
+      "entity-records": "f3e11862 (DOC-030 walkthrough checkpoint; file bytes equal the evidence contentSha256, no feature PR edited the guide since)",
+      "entity-structure-and-access": "f3e11862 (DOC-030 walkthrough checkpoint; file bytes equal the evidence contentSha256, no feature PR edited the guide since)",
+      "types-statuses-fields": "f3e11862 (DOC-030 walkthrough checkpoint; file bytes equal the evidence contentSha256, no feature PR edited the guide since)",
+      "auto-doc-template": "f3e11862 (DOC-030 walkthrough checkpoint; file bytes equal the evidence contentSha256, no feature PR edited the guide since)"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "create-matter",
+      "scenario": ["V-C22"],
+      "contentSha256Before": "27c935b35a5a7c80c8cd0ef80251dab68145a0bf9c8950f1505e7881c726bbf7",
+      "contentSha256": "6853f351870d5258d985c37301875646c05ac58985c233678b7c89b2db85ce5e",
+      "sources": [
+        "docs/user-guides/create-matter.md",
+        "docs/documentation/evidence/create-matter.json",
+        "docs/documentation/batches/DOC-030/matters/technical-review.json",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "messages/en-US.json",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/components/record-person-field.tsx",
+        "apps/web/src/components/described-field.tsx",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/team-person.ts",
+        "scripts/seed/data.mjs"
+      ],
+      "corrections": [
+        {
+          "claim": "Where Matter Manager and Business Owner sit on Overview",
+          "before": "On Overview, the Matter section starts with Title. [...] Matter Manager and Business Owner come after the Rows.",
+          "after": "On Overview, the first card holds the owner controls: Matter Manager and Business Owner. The Matter section comes next and starts with Title.",
+          "source": "matter-record.tsx (791ad567): an unheaded section aria-label records.people.section 'Owners' holds both RecordPersonField controls above the section headed matters.record.section 'Matter'; the two controls are gone from the Rows grid"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "The Matter section starts with Title and then the Form Rows in Form order; Opened, Closed and Confidentiality follow",
+          "source": "matter-record.tsx InlineText matter-title, orderedRows, Fact Opened/Closed, ConfidentialToggle"
+        },
+        {
+          "claim": "Both owner controls search for a person and save on selection; Business Owner options include a held owner no longer in the user list",
+          "source": "matter-record.tsx RecordPersonField people lists; record-person-field.tsx unchanged since 067c1646"
+        },
+        {
+          "claim": "Assigning a Business Owner adds them to the team; their row cannot be removed while they are Business Owner ('Change the Business Owner before removing this person from the team.')",
+          "source": "service.ts patchMatter -> addMatterTeamMember; matter-team.ts removeMatterTeamMember (8432038e refactor, same guards and messages)"
+        },
+        {
+          "claim": "On a Confidential Matter only the Administrator, Matter Manager or Creator can change the team",
+          "source": "matter-team.ts assertMayChangeTeam -> assertAudienceActor with the unchanged message"
+        },
+        {
+          "claim": "Create dialog, template behavior, Key date offsets and refusals are unchanged since the DOC-030 walkthrough",
+          "source": "git log 067c1646..4ca41822 shows no change to create-matter-dialog.tsx, type-form/*, create-attachments.tsx, matters/create.ts, creation-form.ts, custom-fields.ts, form-builtins.ts or form-evaluator.ts"
+        }
+      ],
+      "limitations": [
+        "The owner card has no visible heading. Its accessible name is Owners (records.people.section), so the guide describes it by position and its two controls."
+      ]
+    },
+    {
+      "articleId": "entity-records",
+      "scenario": ["V-C32"],
+      "contentSha256Before": "c3209b12d7c67ec167125da9a559cefc5bbe6b07d1077e922bcecc8d1deb82ed",
+      "contentSha256": "eaa170c8f107f0bc76ea54a8b57edba028727d669ad04c8d138feff3dfed1e5e",
+      "sources": [
+        "docs/user-guides/entity-records.md",
+        "docs/documentation/evidence/entity-records.json",
+        "docs/documentation/batches/DOC-030/entities/technical-review.json",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-ENTITIES.md",
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/components/entities/officer-name-input.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/lib/entities.ts",
+        "apps/api/src/modules/entities/record-routes.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "scripts/seed/data.mjs"
+      ],
+      "corrections": [
+        {
+          "claim": "Officer name and user link on the add form",
+          "before": "Enter Director or officer name, choose Role, and enter Appointed on if known. Optionally select Linked user; an Officer does not need an OpenLaw account.",
+          "after": "Steps 2-4: type in Director or officer name; select a listed user to fill the name and link that user (a person icon marks the link); or type a full name and choose Use \"Helena Marsh\" without linking a user, or press Enter; typing over a name removes the link. Choose Role and Appointed on; Add is available when name and role have values.",
+          "source": "officer-name-input.tsx (d3728c9b, 0e62863c): combobox with placeholder 'Select a user or enter a name', listbox 'People', option 'Use \"{name}\" without linking a user', icon label 'User linked'; typing sets userId null; Enter with no highlighted option commits the typed text. officers-card.tsx: Linked user select removed; Add disabled while saving or when name or role is empty"
+        },
+        {
+          "claim": "Editing an existing Officer row",
+          "before": "Correct an existing row's text or date and move focus away to save. Choosing another role or linked user saves that selection.",
+          "after": "Change the name the same way, or the date and move focus away; the row saves on selecting a name or leaving the field; a role choice saves; a failed save shows the saved value again.",
+          "source": "officers-card.tsx OfficerRow onCommit -> PATCH {name,userId}; officer-name-input.tsx commit() restores {name,userId} when onCommit returns false"
+        },
+        {
+          "claim": "Step numbering",
+          "before": "5. To retain a resignation...",
+          "after": "6. To retain a resignation...",
+          "source": "Follows the added step"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Directors & Officers card, Add director or officer, Role, Appointed on, Resigned on, Show former, Remove {officer}",
+          "source": "officers-card.tsx labels"
+        },
+        {
+          "claim": "A resignation date cannot precede the appointment date",
+          "source": "record-routes.ts assertOfficerDates on create and patch"
+        },
+        {
+          "claim": "Only live users can be linked; linking a user does not grant Entity access",
+          "source": "record-routes.ts liveUser ('The linked user must be a live person.'); entity-access.ts unchanged"
+        },
+        {
+          "claim": "Registrations, Holdings, Documents and archive/restore sections are unchanged",
+          "source": "git log 067c1646..4ca41822 shows no change to registrations-card.tsx, ownership-card.tsx, share-register-tab.tsx, holding-routes.ts, holdings-projection.ts or entities.tsx"
+        }
+      ],
+      "limitations": [
+        "The unlinked-name example uses Helena Marsh, a seeded Officer name (scripts/seed/data.mjs OFFICER_NAMES) with no OpenLaw account. Ravi Menon is a seeded user, so typing that name would list him."
+      ]
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "scenario": ["V-C53"],
+      "contentSha256Before": "0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f",
+      "contentSha256": "b9627fc5aeb90d2f34d508d2bc8066d9322e4a1564caa1bc9c6078a453af9798",
+      "sources": [
+        "docs/user-guides/entity-structure-and-access.md",
+        "docs/documentation/evidence/entity-structure-and-access.json",
+        "docs/documentation/batches/DOC-030/entities/technical-review.json",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-025 managed-table addendum)",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/api/src/modules/entities/linked-records.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/modules/matters/record.ts",
+        "apps/web/src/components/table/managed-table.tsx",
+        "apps/web/src/components/table/column-menu.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/components/entities/entity-chart.tsx",
+        "apps/api/src/modules/entities/holding-routes.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "How the Contracts and Matters tabs present linked work",
+          "before": "Open the Entity's Contracts or Matters tab. Contracts appear through their Our entity selection.",
+          "after": "The tab shows a table with the main list's columns and the number of linked records beside its heading; archived, ended and closed records are included; column headings sort; Columns shows, hides or reorders columns for this visit; 50 rows at a time with Show more; No linked records. when none is reachable.",
+          "source": "linked-records-table.tsx (46d9f1e5, 3bc566bd, 0e62863c): ManagedTable with CONTRACTS_CATALOGUE/MATTERS_CATALOGUE, heading plus page.total, ColumnMenu 'Columns' on local layout state, entities.linked.more 'Show more', entities.linked.empty; linked-records.ts passes includeArchived/includeEnded/includeClosed true; PAGE_SIZE 50 in contracts/record.ts and matters/record.ts"
+        },
+        {
+          "claim": "Access scope of rows and counts",
+          "before": "Rows and tab counts reflect the work records you can reach.",
+          "after": "Rows, totals, and tab counts reflect the work records you can reach, with the same access rules as the main lists.",
+          "source": "linked-records.ts calls listContracts/listMatters with the Entity as additionalScope, so teamScope/scope apply; linked-record-counts still uses contractTeamScope/matterTeamScope"
+        },
+        {
+          "claim": "Individual owners on the chart",
+          "before": "Individuals appear by name with the label Individual.",
+          "after": "Individuals appear by name, with a person icon and the label Individual.",
+          "source": "entity-chart.tsx (791ad567) UserRound icon for node.kind individual; holding-routes.ts type 'Individual'"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Contracts link through Our entity; Matters through saved Entity-valued Fields, including a detached Field's saved value",
+          "source": "linked-records.ts eq(contracts.entityId) and matterNamesEntity over all fields with fieldType entity"
+        },
+        {
+          "claim": "A Confidential Contract or Matter outside the reader's access contributes neither a row nor a count",
+          "source": "listContracts teamScope and listMatters scope in the WHERE clause before the limit; counts route scopes"
+        },
+        {
+          "claim": "Restricted Entity label and the chart's Confidential Entity box",
+          "source": "messages/en-US.json 'Restricted Entity'; entity-chart.tsx 'Confidential Entity'"
+        },
+        {
+          "claim": "Share capital, share register, chart controls and Grants are unchanged",
+          "source": "git log 067c1646..4ca41822 shows no change to share-capital-card.tsx, share-register-tab.tsx, share-*-dialog.tsx, share-register routes, grant-routes.ts, entity-access.ts or entity-grants-dialog.tsx"
+        }
+      ],
+      "limitations": [
+        "Column layout on these tabs lives in component state. It is not saved and resets when the tab reloads, so the guide says 'for this visit'."
+      ]
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "scenario": ["V-C38"],
+      "contentSha256Before": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060",
+      "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887",
+      "sources": [
+        "docs/user-guides/types-statuses-fields.md",
+        "docs/documentation/evidence/types-statuses-fields.json",
+        "docs/documentation/batches/DOC-030/admin-config/technical-review.json",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "messages/en-US.json",
+        "docs/user-guides/document-versions.md (Configure Document type colours heading, link target only)",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/lib/documents.ts",
+        "packages/shared/src/document-type-colors.ts",
+        "apps/api/src/modules/document-types/routes.ts",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql"
+      ],
+      "corrections": [
+        {
+          "claim": "Document type colour",
+          "before": "Not described.",
+          "after": "New step 5: select the row's color swatch (Colour for {name}), choose Grey, Blue, Amber, Green, Red, Orange, Purple or Automatic; the choice saves immediately.",
+          "source": "settings-document-types.tsx DocumentTypeColorPicker (d0e50ae4): PATCH {color} on select; DOCUMENT_TYPE_COLORS; documents.type.color labels with other = Automatic"
+        },
+        {
+          "claim": "Fixed Contract Document types",
+          "before": "The Contracts list starts with six fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment.",
+          "after": "Seven fixed types, with Partially signed before Executed; each still shows a lock with no rename or archive control, but its color can change; link to Configure Document type colours.",
+          "source": "0182_partially-signed-document-type.sql seeds partially_signed at executed's display_order - 1 (229909d4); document-types/routes.ts isProtected and fixed-name refusal, patchSchema color; settings.documentTypes.fixed '{name} has a fixed name. Its colour can be changed.'"
+        },
+        {
+          "claim": "Protected Contract Statuses and the Stage floor",
+          "before": "The built-in Statuses initially named Draft (Draft Stage), Active (Active Stage), and Expired (Ended Stage) are protected. Every Stage must retain a live Status.",
+          "after": "Adds Partially signed (Signature Stage) to the protected list and says it does not count for the Signature Stage floor, so that Stage must keep another live Status.",
+          "source": "contract-statuses/routes.ts PROTECTED_SLUGS and breaksStageFloor exclusion of partially_signed for signature (b6a0bcfd); 0181_partial-signing.sql seeds 'Partially signed' in stage signature"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Archiving a Document type asks for no replacement and Versions keep it",
+          "source": "document-types/routes.ts archiveKeepsReferences"
+        },
+        {
+          "claim": "Upload dialogs show a type choice only when the module's list has a live type",
+          "source": "create-attachments.tsx and documents-card.tsx unchanged in the type choice since 067c1646"
+        },
+        {
+          "claim": "A protected Status refuses archive: '{name} is system-protected and can't be archived'",
+          "source": "settings-contract-statuses.tsx protectedLabel; routes.ts 409"
+        },
+        {
+          "claim": "Types, Fields, Forms, Branches and Officer roles are unchanged",
+          "source": "git log 067c1646..4ca41822 shows no change to type-form/*, field-editor-dialog.tsx, default-fields.tsx, type-editor-*.tsx, taxonomy-routes.ts, officer-roles or matter-statuses; list-editor.tsx change only adds a rowContent slot"
+        }
+      ],
+      "limitations": [
+        "The Settings pane labels the control 'Colour'. The guide keeps that label in bold and uses en-US 'color' in prose, per EDITORIAL.md."
+      ]
+    },
+    {
+      "articleId": "auto-doc-template",
+      "scenario": ["V-C56"],
+      "contentSha256Before": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f",
+      "contentSha256": "4eef3f447d51058e092ada65c50670ae47e483c7a6552994e54423c6a852d496",
+      "sources": [
+        "docs/user-guides/auto-doc-template.md",
+        "docs/documentation/evidence/auto-doc-template.json",
+        "docs/documentation/batches/DOC-030/admin-config/technical-review.json",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS-AUTO-DOCS.md",
+        "apps/web/src/components/auto-docs/form-builder.tsx",
+        "apps/web/src/components/auto-docs/rule-value-input.tsx",
+        "apps/web/src/components/auto-docs/upload-dialog.tsx",
+        "apps/web/src/components/auto-docs/template-pane.tsx",
+        "apps/web/src/routes/auto-doc-record.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/api/src/modules/auto-docs/routes.ts",
+        "apps/api/src/modules/auto-docs/forms.ts",
+        "apps/web/public/downloads/openlaw-auto-doc-starter.docx (word/document.xml Block names)"
+      ],
+      "corrections": [
+        {
+          "claim": "Where field settings are edited",
+          "before": "Edit the field's label, type, and help from its card.",
+          "after": "Select Edit {label} in the field's row under Fields (for example Edit Counterparty name); the editor opens under that row with Label, Type and Help text; the same control closes it.",
+          "source": "form-builder.tsx (183bfa99): rowActions selectButton autoDocs.editField 'Edit {label}' toggles selection, rowContent renders FieldEditor under the row; forms.ts derives the label from the Placeholder name"
+        },
+        {
+          "claim": "Where the Clause rule is written",
+          "before": "open the Block under Clauses, choose When a rule matches, and pick the form field, the operator, and the value.",
+          "after": "Select Edit the rule for {Block} in its row under Clauses; the editor opens under that row; choose When a rule matches, then Form field, Operator and value; with Is one of on a date, number or currency field use one box per value, Add value and Remove value N.",
+          "source": "form-builder.tsx autoDocs.editRule, rowContent RuleEditor, autoDocs.ruleField, autoDocs.operator; rule-value-input.tsx RuleTypedList (Value {number}, Remove value {number}, Add value)"
+        },
+        {
+          "claim": "Upload dialog steps",
+          "before": "Not described beyond 'Upload a .docx file with Upload version'.",
+          "after": "Four steps under Upload a new version: drop zone or Choose file, Change file/Remove file, client refusal 'Choose a single Word document (.docx).', Upload with the refusal shown in the dialog, report with File version N uploaded, Placeholders detected, Blocks detected, fields created and orphaned-field count, then Done.",
+          "source": "upload-dialog.tsx (183bfa99, 0e62863c); routes.ts detectTemplateUpload runs before the storage transaction"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Orphaned field marker 'No Placeholder in file version N'",
+          "source": "form-builder.tsx autoDocs.orphanRow"
+        },
+        {
+          "claim": "A Block with no rule is always included",
+          "source": "form-builder.tsx autoDocs.alwaysIncluded and caption"
+        },
+        {
+          "claim": "Starter template Block name is confidentiality",
+          "source": "openlaw-auto-doc-starter.docx word/document.xml"
+        },
+        {
+          "claim": "Placeholder syntax, directives, refusals and Publish rules are unchanged",
+          "source": "git log 067c1646..4ca41822 shows no change to auto-doc-template.ts, auto-doc-fill/* (tests only in 17179939), docx-package.ts, auto-docs/routes.ts or forms.ts"
+        }
+      ],
+      "limitations": []
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/routes/settings-contract-statuses.tsx lastLiveInStage counts the protected Partially signed Status as a live Signature Status, but apps/api/src/modules/contract-statuses/routes.ts breaksStageFloor does not. When Partially signed and one other live Status remain in the Signature Stage, the archive dialog for that other Status shows the ordinary usage warning with Archive status enabled; the API then refuses with the 'last unarchived status in its stage' message after confirmation. The client check should match the CTR-001 floor as amended by b6a0bcfd."
+  ],
+  "sharedFileRequests": [
+    "docs/documentation/edition.json: the publication content hashes for create-matter, entity-records, entity-structure-and-access, types-statuses-fields and auto-doc-template must change to the new hashes in this record after the walkthrough."
+  ],
+  "statusChange": "None. The batch owner decides after the independent walkthrough."
+}

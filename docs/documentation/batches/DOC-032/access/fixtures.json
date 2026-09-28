@@ -1,0 +1,33 @@
+{
+  "stamp": "09280733",
+  "ids": {
+    "daniel": "01a0e6e3-fc90-7b8b-b7cb-2bca8f4cab5e",
+    "devon": "01a0e6e3-fbd2-756f-aad4-156e5e20bbe8",
+    "nadia": "01a0e6e3-fc92-77bb-848e-10c43b227d20",
+    "jonas": "01a0e6e3-ff7c-720a-badf-6c346edaee8d",
+    "amara": "01a0e6e3-ff7e-7954-a4ab-f0a0475b32f6",
+    "ravi": "01a0e6e3-ff0b-7a43-a742-3f352e3107d5"
+  },
+  "amaraRequest": {
+    "number": 16,
+    "title": "DOC-032 access Amara request 09280733"
+  },
+  "jonasConverted": {
+    "request": 17,
+    "number": 34,
+    "title": "DOC-032 access Jonas converted contract 09280733"
+  },
+  "archivedJ": {
+    "number": 35,
+    "title": "DOC-032 access archived team contract 09280733"
+  },
+  "mx": {
+    "number": 20,
+    "title": "DOC-032 access matter without Jonas 09280733"
+  },
+  "paging": [
+    36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+    60, 61
+  ],
+  "createdAt": "2026-09-28T07:33:58.240Z"
+}

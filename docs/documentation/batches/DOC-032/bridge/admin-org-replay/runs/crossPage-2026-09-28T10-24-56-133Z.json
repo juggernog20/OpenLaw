@@ -1,0 +1,77 @@
+{
+  "section": "crossPage",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bao",
+  "labProject": "openlaw-docs-9d2b1705-bao",
+  "appUrl": "http://127.0.0.1:43388",
+  "mailUrl": "http://127.0.0.1:48488",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "base lab environment",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:24:56.134Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": "http://127.0.0.1:43388/settings/authentication",
+      "action": "OpenLaw checks the account's actual role, whichever sign-in page the person opened",
+      "expected": "With Legal password sign-in off, a Legal Team Member is refused on the Portal page too; a Business User with a password signs in on the staff page and lands in the Portal",
+      "startedAt": "2026-09-28T10:24:56.657Z",
+      "finishedAt": "2026-09-28T10:25:00.350Z",
+      "actual": "With Email and password off under Legal User Authentication, Nadia's password sign-in on the Business Portal page was refused (\"Password sign-in is disabled for this account.\"; me 401). A Business User's password sign-in on the staff page succeeded and landed on /portal/onboarding (business_user). Legal password sign-in was turned back on.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": "http://127.0.0.1:43388/settings/authentication",
+      "action": "Business Users sign in only with the methods enabled under Business Portal Authentication",
+      "expected": "With Business Email and password off, a Business User with a password is refused on the Portal and staff pages; a sign-in link still works",
+      "startedAt": "2026-09-28T10:25:00.350Z",
+      "finishedAt": "2026-09-28T10:25:04.815Z",
+      "actual": "With Email and password off under Business Portal Authentication (\"Saved\"), the Portal page offered only [\"Send link\",\"Back to sign-in\"], with no password choice. On the staff page, where Legal users still have a password form, the Business User's password sign-in was refused with \"Password sign-in is disabled for this account.\" (me 401). A sign-in link still signed the same person in as business_user. Business password sign-in was turned back on.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:25:04.820Z",
+  "startPolicy": {
+    "legal": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    },
+    "business": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    }
+  },
+  "resetPolicy": {
+    "legal": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    },
+    "business": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    }
+  }
+}

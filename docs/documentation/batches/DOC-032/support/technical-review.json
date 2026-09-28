@@ -1,0 +1,43 @@
+{
+  "batch": "DOC-032",
+  "group": "support",
+  "reviewer": "DOC-032 batch owner agent (support copy correction)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T11:25:38Z",
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "comparedFrom": {
+    "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "trigger": "The DOC-032 bridge reviewer found that the release candidate reports version 0.1.0, while the guide gave 0.0.1 as the shared development version."
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "versions-and-support",
+      "scenario": ["V-C51"],
+      "contentSha256Before": "",
+      "contentSha256": "",
+      "sources": [
+        "packages/shared/src/index.ts",
+        "package.json",
+        "apps/api/openapi.json",
+        "docs/documentation/batches/DOC-032/bridge/bridge.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Why the package version does not identify a build",
+          "before": "The package version alone is insufficient for development builds: different builds can share `0.0.1`.",
+          "after": "The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`.",
+          "source": "packages/shared/src/index.ts OPENLAW_VERSION is 0.1.0 at ad345da5 (PR #1206); every workspace package.json carries 0.1.0."
+        }
+      ],
+      "confirmed": [],
+      "limitations": [
+        "Only this sentence changed. The rest of the guide carries the DOC-032 bridge review. A fresh walkthrough on the candidate lab covers the whole guide because the bytes changed."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [],
+  "statusChange": "none"
+}

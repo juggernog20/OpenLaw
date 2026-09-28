@@ -1,0 +1,33 @@
+{
+  "stamp": "09281006",
+  "ids": {
+    "daniel": "01a0e776-8dcc-7f54-8bad-d9e16bf695e0",
+    "devon": "01a0e776-8ccf-746a-8525-cb18efa0cb77",
+    "nadia": "01a0e776-8dcd-762b-98f9-151db26bb1eb",
+    "jonas": "01a0e776-90ca-7c75-88b0-b331c9dfddfc",
+    "amara": "01a0e776-90c9-7de4-99c8-723bf6c6a275",
+    "ravi": "01a0e776-904d-7235-be23-7f34d90e2e9b"
+  },
+  "amaraRequest": {
+    "number": 16,
+    "title": "DOC-032 bridge Amara request 09281006"
+  },
+  "jonasConverted": {
+    "request": 17,
+    "number": 39,
+    "title": "DOC-032 bridge Jonas converted contract 09281006"
+  },
+  "archivedJ": {
+    "number": 40,
+    "title": "DOC-032 bridge archived team contract 09281006"
+  },
+  "mx": {
+    "number": 19,
+    "title": "DOC-032 bridge matter without Jonas 09281006"
+  },
+  "paging": [
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+    65, 66
+  ],
+  "createdAt": "2026-09-28T10:06:05.636Z"
+}

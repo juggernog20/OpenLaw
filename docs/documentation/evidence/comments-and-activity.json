@@ -112,6 +112,57 @@
     "contentSha256": "3332f82357a178f124399d3c52f696c5b119a70812be54fe81d5976aa6b5343f",
     "verifiedAt": "2026-09-16T15:50:11.279Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "71aad5ef98b19a27bd910f8421a569a20aaba7e4288ab8ca1f11364768239de4",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/lib/activity.ts, packages/shared/src/activity.ts and messages/en-US.json. comment-applet.tsx, comment-attachments.tsx, comments.ts, portal record-shell.tsx, portal-request.tsx, inbox-request.tsx, portal/applets.ts, activity routes, activity-redaction.ts and comment-email.ts have no diff. apps/web/src/lib/activity.ts and packages/shared/src/activity.ts only add narrations for new actions (version deleted, Envelope preparation, confirmation, discard and restore, identity provider removed, Partially signed) and an actor-less 'This contract was sent for signature'. The feed, Show older, Portal History scope and the via-Client attribution did not change. The replay passed 37 of 37 steps for Legal Team Member, Administrator and Business User. Replay log: batches/DOC-032/compat/compat-a/comments-and-activity-replay.json; from 4ca41822 to ad345da5 (bridge): Only the nodemailer patch reaches this guide, through its sentence on mention, comment and reply emails. Those emails were replayed on final by the conversations script's email steps (the notifications scenario), which passed: the words appear, cut at 280 characters, only for readers of the thread's tier, and a delete before the send leaves no words. The V-C07 comment steps read no mail and were not re-run; comments code has no diff apart from a test expectation. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay.mjs",
+        "sha256": "4c7094998452a37339aefdade61d3c61a7d68a8ba622275025c45e34764ec1b3"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay/fixtures.json",
+        "sha256": "ab94cca2cf9eb2f6a9f1a6517068f0dbb2a1a70cded91d85b04e57673e731a39"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay/lib.mjs",
+        "sha256": "091138a6ae2ff1b91d1b5e5d87808c5bb1aab9aac0b63efc801c66145397db80"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/comments-and-activity-replay.json",
+        "sha256": "64b9e00b67aaf1afbe5fb1c3ef2f447471f5cfd14fc2db12d38db1effafddc32"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay.mjs",
+        "sha256": "2ee88610abead0f5e07ce6a1f2843b71c35d0d7ef9dcb4498ba23e9309f3b94c"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay/fixtures.json",
+        "sha256": "f9ea2c7a1a760c494003342e811291450cbc7c58a691800ab34d14c829711be7"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay/lib.mjs",
+        "sha256": "d5486eba2533f2b287e216f0d1b7941ae06dd0426854422e8d30e6713746d58a"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay.json",
+        "sha256": "fff3efb355bd23c9dc83908f6e91771f62a51aa7a6c5a09b8cb1b2ff3df568ed"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

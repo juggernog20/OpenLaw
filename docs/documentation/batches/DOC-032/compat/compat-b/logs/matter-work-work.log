@@ -1,0 +1,46 @@
+[matter-work/administrator] PASS Fixture: a work Matter with a Business User on the team, parent and related candidates, a Confidential Matter related by another reader, and two standalone Contracts
+[matter-work/administrator] PASS Maintain Tasks: Add Task without a title is refused; a person staged with Use this person is discarded by Cancel
+[matter-work/administrator] PASS Maintain Tasks: Add Task with a staged person, due date and Add a note saves the Task, membership and assignment; the note has no audience choice
+[matter-work/administrator] PASS Maintain Tasks: Add to team and assign on a row is immediate; clearing the assignee keeps membership; Close in Task details discards a staged person
+[matter-work/administrator] PASS Maintain Tasks: order by due date, completion with Show completed, Edit Task and Save
+[matter-work/administrator] PASS Maintain Tasks: Task details conversation has no audience selector; Remove Task on an empty Task and on a Task with conversation history
+[matter-work/administrator] PASS Maintain Tasks: a failed initial note offers Retry note & attachments without creating another Task
+[matter-work/administrator] PASS Maintain Key dates: Add date refusals, reminder lead times and recipient choices
+[matter-work/administrator] PASS Maintain Key dates: header and tab counts, a departed recipient, Remove unavailable recipients and Use the usual audience
+[matter-work/administrator] PASS Maintain Key dates: Edit date and Remove date with confirmation; a closed Matter keeps editable dates without Next deadline
+[matter-work/administrator] PASS Maintain Key dates: a Needed by date set from the Overview Row is an ordinary Key date named Needed by
+[matter-work/administrator] PASS Connect related Matters: Set parent Cancel and confirm, a hierarchy loop is refused
+[matter-work/administrator] PASS Connect related Matters: Add related Matter, Remove, New sub-Matter, detach a child, and Restricted Matter
+[matter-work/administrator] PASS Link Contracts: Link Contract with differing Confidential flags, Leave them as they are, Restricted contract for another reader
+[matter-work/administrator] PASS Link Contracts: one Matter at a time, Unlink and move, New contract with the Matter chosen, archived Contracts excluded
+[matter-work/administrator] PASS Supplementary checks: lead time 0 and the 20 lead time limit, search by title, and overdue Tasks in Next deadline
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+magic link for jonas.weber@helix.example: 429, waiting 60s
+[matter-work/administrator] PASS Before you start: an archived Matter refuses changes to this work; restore keeps the rows; History records the changes; a Business User cannot open these sections
+[matter-work/legal_team_member] PASS Fixture: a work Matter with a Business User on the team, parent and related candidates, a Confidential Matter related by another reader, and two standalone Contracts
+[matter-work/legal_team_member] PASS Maintain Tasks: Add Task without a title is refused; a person staged with Use this person is discarded by Cancel
+[matter-work/legal_team_member] PASS Maintain Tasks: Add Task with a staged person, due date and Add a note saves the Task, membership and assignment; the note has no audience choice
+[matter-work/legal_team_member] PASS Maintain Tasks: Add to team and assign on a row is immediate; clearing the assignee keeps membership; Close in Task details discards a staged person
+[matter-work/legal_team_member] PASS Maintain Tasks: order by due date, completion with Show completed, Edit Task and Save
+[matter-work/legal_team_member] PASS Maintain Tasks: Task details conversation has no audience selector; Remove Task on an empty Task and on a Task with conversation history
+[matter-work/legal_team_member] PASS Maintain Tasks: a failed initial note offers Retry note & attachments without creating another Task
+[matter-work/legal_team_member] PASS Maintain Key dates: Add date refusals, reminder lead times and recipient choices
+[matter-work/legal_team_member] PASS Maintain Key dates: header and tab counts, a departed recipient, Remove unavailable recipients and Use the usual audience
+[matter-work/legal_team_member] PASS Maintain Key dates: Edit date and Remove date with confirmation; a closed Matter keeps editable dates without Next deadline
+[matter-work/legal_team_member] PASS Maintain Key dates: a Needed by date set from the Overview Row is an ordinary Key date named Needed by
+[matter-work/legal_team_member] PASS Connect related Matters: Set parent Cancel and confirm, a hierarchy loop is refused
+[matter-work/legal_team_member] PASS Connect related Matters: Add related Matter, Remove, New sub-Matter, detach a child, and Restricted Matter
+[matter-work/legal_team_member] PASS Link Contracts: Link Contract with differing Confidential flags, Leave them as they are, Restricted contract for another reader
+[matter-work/legal_team_member] PASS Link Contracts: one Matter at a time, Unlink and move, New contract with the Matter chosen, archived Contracts excluded
+[matter-work/legal_team_member] PASS Supplementary checks: lead time 0 and the 20 lead time limit, search by title, and overdue Tasks in Next deadline
+[matter-work/legal_team_member] PASS Before you start: an archived Matter refuses changes to this work; restore keeps the rows; History records the changes; a Business User cannot open these sections

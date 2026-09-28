@@ -1,0 +1,25 @@
+# DOC-032 contracts: extra Compose file applied on top of the owned lab's compose.yml and
+# overlay.json. It points the app and worker at the e2e signing stand-in
+# (DOCUSIGN_BASE_URL + SIGNING_STANDIN, the pair signing/config.ts requires). The stand-in
+# names http://host.docker.internal:8129 as its account base URI, so it joins the lab's
+# backend network under that alias. It has no published port.
+services:
+  app:
+    environment:
+      DOCUSIGN_BASE_URL: http://host.docker.internal:8129
+      SIGNING_STANDIN: "true"
+  worker:
+    environment:
+      DOCUSIGN_BASE_URL: http://host.docker.internal:8129
+      SIGNING_STANDIN: "true"
+  signing-standin:
+    image: ${STANDIN_IMAGE:?set STANDIN_IMAGE to the lab app image}
+    entrypoint: ["node", "/fixture/standin.mjs"]
+    user: "1000:1000"
+    volumes:
+      - ${STANDIN_BUNDLE:?set STANDIN_BUNDLE to the bundled stand-in}:/fixture/standin.mjs:ro
+    networks:
+      openlaw-backend:
+        aliases:
+          - host.docker.internal
+    restart: "no"

@@ -1,0 +1,473 @@
+{
+  "kind": "independent-article-walkthrough",
+  "batch": "DOC-032",
+  "task": "DOC-032",
+  "group": "entities",
+  "set": "compat-c",
+  "replayOf": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "runningImageCheck": {
+    "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+  },
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "articleHashes": {
+    "entities-and-counterparties": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+    "entity-records": "eaa170c8f107f0bc76ea54a8b57edba028727d669ad04c8d138feff3dfed1e5e",
+    "entity-obligations": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+    "entity-structure-and-access": "b9627fc5aeb90d2f34d508d2bc8066d9322e4a1564caa1bc9c6078a453af9798"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900, one browser context per identity",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "tag": "0928-0715",
+  "phases": ["c31"],
+  "roles": ["legal_team_member", "administrator"],
+  "startedAt": "2026-09-28T07:15:48.643Z",
+  "finishedAt": "2026-09-28T07:17:24.826Z",
+  "steps": [
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 1: open Entities; its first view is Calendar; select List",
+      "expected": "Entities opens on the Compliance calendar; List shows the registry table.",
+      "actual": "Entities opened at /entities with the Compliance calendar heading (Calendar link aria-current=page). List moved to ?view=list and showed a table headed \"Legal name Type Jurisdiction Registration no. Status Portal-listed Next obligation\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:49.642Z",
+      "finishedAt": "2026-09-28T07:15:51.831Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 2: Search entities by name; Filter with Type, Status, Jurisdiction, Majority owner (one value, Apply, chips); Clear all",
+      "expected": "Search narrows by name; each filter takes one value and shows a chip; Clear all removes every filter.",
+      "actual": "Search \"DOC-032 compat compat-c Admin folders Entity 09280715 Ltd\" left 1 matching row(s). Filter listed [\"Type\",\"Status\",\"Jurisdiction\",\"Majority owner\",\"Show archived\"]. Type LLC then Status Active (one radio value each, Apply) showed chips [\"Type: LLC\",\"Status: Active\"] and left 8 of 34 rows, all LLC and Active. Jurisdiction \"Brazil\" left 1 rows with that jurisdiction. Majority owner \"Helix Analytics, Inc.\" showed chip \"Majority owner: Helix Analytics, Inc.\" and left 1 rows. Clear all removed every chip and returned 34 rows.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:51.831Z",
+      "finishedAt": "2026-09-28T07:15:59.080Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Refusals: Register with no Legal name, then no Entity type",
+      "expected": "The dialog shows 'Name the entity — its registered legal name.' then 'Pick an entity type.'; nothing is created.",
+      "actual": "Register with nothing showed \"Name the entity — its registered legal name.\"; with a name but no type it showed \"Pick an entity type.\" and the dialog stayed open. Registry rows for the prefix stayed 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:59.081Z",
+      "finishedAt": "2026-09-28T07:15:59.579Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 5: a type whose Form requires a Field for creation shows it after the identity details; blank gives 'Fill {Field}'; filled, it saves",
+      "expected": "Local counsel appears after Registered address; blank shows 'Fill Local counsel.'; filled, Register saves it on the record.",
+      "actual": "Before a type was chosen the dialog had no Local counsel control. Choosing \"DOC-032 compat compat-c V-C31 0928-0715 required type\" added Local counsel after Registered address. Register with it blank showed \"Fill Local counsel.\". Filled, Register saved \"DOC-032 compat compat-c V-C31 0928-0715 L Required Field Ltd\" with Local counsel \"Harbour & Pike LLP (fictional)\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:59.579Z",
+      "finishedAt": "2026-09-28T07:15:59.777Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6de-dbb4-74b9-b629-bf18905de895",
+      "action": "Register steps 3-4, 6-8: Add entity with identity details, Status default Active, Portal-listed (Administrators only, off by default), Attach documents with a Document type, Register, open it; creator Grant",
+      "expected": "Status defaults to Active; Portal-listed shows only to Administrators and is off; the attached file lands on the new Entity; the adder holds a Grant.",
+      "actual": "Add entity opened with Status Active. Portal-listed in the dialog: not shown. Attach documents took doc030-entities-certificate.pdf (no Document type choice was offered). Register saved \"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings\"; opened from List it read {\"Formation jurisdiction\":\"Republic of Aldoria\",\"Formed on\":\"2019-03-14\",\"Registration no.\":\"ALD-L-0928-0715\",\"Tax ID\":\"TX-L-0928-0715\",\"Registered agent\":\"Aldoria Corporate Agents\",\"Registered address\":\"1 Harbour Row, Port Aldo\"} and Status Active. Manage access was offered and the access list named [\"Nadia Haddad\"]. Portal card: \"Portal Portal-listed Only an Administrator can change Portal-listed.\" (switch on=false, disabled=true). The Documents tab listed \"doc030-entities-certificate.pdf — v1 Sep 28 Uploaded by Nadia Haddad NH\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:59.777Z",
+      "finishedAt": "2026-09-28T07:16:03.730Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6de-dbb4-74b9-b629-bf18905de895",
+      "action": "Register step 8: change a field and move focus away; a selection saves when chosen; Status Dormant does not archive",
+      "expected": "Registered agent saves on blur; Status Dormant saves on selection; no Archived mark; Archive still offered.",
+      "actual": "After a reload Registered agent read \"Aldoria Registered Agents Ltd\" and Status read Dormant. The header still offered Archive and showed no Archived mark.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:03.730Z",
+      "finishedAt": "2026-09-28T07:16:06.543Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list&q=DOC-032+compat+compat-c+V-C31+0928-0715+L+Aldoria+Holdings",
+      "action": "Names are not unique: registering the same legal name again creates another Entity",
+      "expected": "A second Register with the same name creates a distinct record; the first is unchanged.",
+      "actual": "Searching the name listed 2 rows linking to 2 records: [\"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings Corporation Republic of Aldoria ALD-L-0928-0715 Dormant No —\",\"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings LLC Duchy of Kessel — Active No —\"]. The first kept Republic of Aldoria and Dormant.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:06.543Z",
+      "finishedAt": "2026-09-28T07:16:08.668Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/66",
+      "action": "Parties step 1: choose Our entity on a Contract; check the saved name; Not known yet clears it",
+      "expected": "Our entity saves the chosen Entity; Not known yet clears it; both survive reload.",
+      "actual": "C-66 Our entity read \"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings\" after a reload. Not known yet read \"Not known yet\" after a reload (stored entity null). It was then set back to \"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:08.701Z",
+      "finishedAt": "2026-09-28T07:16:15.785Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/66",
+      "action": "Parties steps 2-3: type a new name and select Create \"<name>\"; the first Counterparty is Primary",
+      "expected": "Create adds the new Counterparty with the Primary mark.",
+      "actual": "The picker offered Create \"DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd\" and it added the Counterparty. After a reload the Contract showed 1 Primary mark; parties [\"DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd\"], primary \"DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:15.786Z",
+      "finishedAt": "2026-09-28T07:16:18.127Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/66",
+      "action": "Parties step 4: add another Counterparty and Make primary",
+      "expected": "Make primary moves the Primary mark.",
+      "actual": "After Make primary and a reload the primary Counterparty was \"DOC-032 compat compat-c V-C31 0928-0715 L Birch Logistics\"; parties [\"DOC-032 compat compat-c V-C31 0928-0715 L Birch Logistics\",\"DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:18.127Z",
+      "finishedAt": "2026-09-28T07:16:21.165Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/66",
+      "action": "Picker rules: an exact existing name in another case offers no creation; a Counterparty on the Contract is not offered again",
+      "expected": "No Create row for the case variant; the attached party is not listed.",
+      "actual": "Typing \"DOC-032 COMPAT COMPAT-C V-C31 0928-0715 L CEDAR SUPPLY LTD\" listed [\"No counterparties to add.\"]: no Create row, and DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd (already on the Contract) was not offered.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:21.166Z",
+      "finishedAt": "2026-09-28T07:16:22.702Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/66",
+      "action": "Parties step 5: Take <name> off the contract; the next remaining takes Primary; the shared record remains; the final removal leaves none",
+      "expected": "Removing the Primary passes the mark; the shared Counterparty remains; removing the last shows no Counterparties.",
+      "actual": "Take DOC-032 compat compat-c V-C31 0928-0715 L Birch Logistics off the contract left [\"DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd\"] with DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd Primary. Typing \"DOC-032 COMPAT COMPAT-C V-C31 0928-0715 L BIRCH LOGISTICS\" again offered the shared record and no Create row ([\"DOC-032 compat compat-c V-C31 0928-0715 L Birch Logistics\"]). Taking DOC-032 compat compat-c V-C31 0928-0715 L Cedar Supply Ltd off showed \"Nobody is recorded on the other side yet.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:22.703Z",
+      "finishedAt": "2026-09-28T07:16:28.736Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6de-dbb4-74b9-b629-bf18905de895",
+      "action": "Recovery: an archived Entity is not offered for a new selection; an existing Contract keeps its reference",
+      "expected": "Archive the chosen Entity; Our entity still shows it on the Contract; another Contract does not offer it.",
+      "actual": "With the first \"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings\" archived, C-66 still showed \"DOC-032 compat compat-c V-C31 0928-0715 L Aldoria Holdings\". On C-74 Our entity offered 1 option with that name, the live duplicate, not the archived record. The Entity was then restored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:28.738Z",
+      "finishedAt": "2026-09-28T07:16:33.313Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 1: open Entities; its first view is Calendar; select List",
+      "expected": "Entities opens on the Compliance calendar; List shows the registry table.",
+      "actual": "Entities opened at /entities with the Compliance calendar heading (Calendar link aria-current=page). List moved to ?view=list and showed a table headed \"Legal name Type Jurisdiction Registration no. Status Portal-listed Next obligation\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:33.313Z",
+      "finishedAt": "2026-09-28T07:16:35.493Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 2: Search entities by name; Filter with Type, Status, Jurisdiction, Majority owner (one value, Apply, chips); Clear all",
+      "expected": "Search narrows by name; each filter takes one value and shows a chip; Clear all removes every filter.",
+      "actual": "Search \"DOC-032 compat compat-a Evaluation Holdings Ltd 1790579782116\" left 1 matching row(s). Filter listed [\"Type\",\"Status\",\"Jurisdiction\",\"Majority owner\",\"Show archived\"]. Type LLC then Status Active (one radio value each, Apply) showed chips [\"Type: LLC\",\"Status: Active\"] and left 9 of 41 rows, all LLC and Active. Jurisdiction \"Brazil\" left 1 rows with that jurisdiction. Majority owner \"Helix Analytics, Inc.\" showed chip \"Majority owner: Helix Analytics, Inc.\" and left 1 rows. Clear all removed every chip and returned 41 rows.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:35.493Z",
+      "finishedAt": "2026-09-28T07:16:43.486Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Refusals: Register with no Legal name, then no Entity type",
+      "expected": "The dialog shows 'Name the entity — its registered legal name.' then 'Pick an entity type.'; nothing is created.",
+      "actual": "Register with nothing showed \"Name the entity — its registered legal name.\"; with a name but no type it showed \"Pick an entity type.\" and the dialog stayed open. Registry rows for the prefix stayed 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:43.489Z",
+      "finishedAt": "2026-09-28T07:16:44.159Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list",
+      "action": "Register step 5: a type whose Form requires a Field for creation shows it after the identity details; blank gives 'Fill {Field}'; filled, it saves",
+      "expected": "Local counsel appears after Registered address; blank shows 'Fill Local counsel.'; filled, Register saves it on the record.",
+      "actual": "Before a type was chosen the dialog had no Local counsel control. Choosing \"DOC-032 compat compat-c V-C31 0928-0715 required type\" added Local counsel after Registered address. Register with it blank showed \"Fill Local counsel.\". Filled, Register saved \"DOC-032 compat compat-c V-C31 0928-0715 A Required Field Ltd\" with Local counsel \"Harbour & Pike LLP (fictional)\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.160Z",
+      "finishedAt": "2026-09-28T07:16:44.531Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "action": "Register steps 3-4, 6-8: Add entity with identity details, Status default Active, Portal-listed (Administrators only, off by default), Attach documents with a Document type, Register, open it; creator Grant",
+      "expected": "Status defaults to Active; Portal-listed shows only to Administrators and is off; the attached file lands on the new Entity; the adder holds a Grant.",
+      "actual": "Add entity opened with Status Active. Portal-listed in the dialog: shown, off by default (false), turned on. Attach documents took doc030-entities-certificate.pdf (no Document type choice was offered). Register saved \"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings\"; opened from List it read {\"Formation jurisdiction\":\"Republic of Aldoria\",\"Formed on\":\"2019-03-14\",\"Registration no.\":\"ALD-A-0928-0715\",\"Tax ID\":\"TX-A-0928-0715\",\"Registered agent\":\"Aldoria Corporate Agents\",\"Registered address\":\"1 Harbour Row, Port Aldo\"} and Status Active. Manage access was offered and the access list named [\"Daniel Okafor\"]. Portal card: \"Portal Portal-listed Business Users can pick this Entity by name on Portal forms.\" (switch on=true, disabled=false). The Documents tab listed \"doc030-entities-certificate.pdf — v1 Sep 28 Uploaded by Daniel Okafor DO\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:44.532Z",
+      "finishedAt": "2026-09-28T07:16:48.661Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "action": "Register step 8: change a field and move focus away; a selection saves when chosen; Status Dormant does not archive",
+      "expected": "Registered agent saves on blur; Status Dormant saves on selection; no Archived mark; Archive still offered.",
+      "actual": "After a reload Registered agent read \"Aldoria Registered Agents Ltd\" and Status read Dormant. The header still offered Archive and showed no Archived mark.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:48.661Z",
+      "finishedAt": "2026-09-28T07:16:52.217Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?view=list&q=DOC-032+compat+compat-c+V-C31+0928-0715+A+Aldoria+Holdings",
+      "action": "Names are not unique: registering the same legal name again creates another Entity",
+      "expected": "A second Register with the same name creates a distinct record; the first is unchanged.",
+      "actual": "Searching the name listed 2 rows linking to 2 records: [\"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings Corporation Republic of Aldoria ALD-A-0928-0715 Dormant Yes —\",\"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings LLC Duchy of Kessel — Active No —\"]. The first kept Republic of Aldoria and Dormant.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:52.218Z",
+      "finishedAt": "2026-09-28T07:16:54.825Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/91",
+      "action": "Parties step 1: choose Our entity on a Contract; check the saved name; Not known yet clears it",
+      "expected": "Our entity saves the chosen Entity; Not known yet clears it; both survive reload.",
+      "actual": "C-91 Our entity read \"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings\" after a reload. Not known yet read \"Not known yet\" after a reload (stored entity null). It was then set back to \"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:54.895Z",
+      "finishedAt": "2026-09-28T07:17:02.410Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/91",
+      "action": "Parties steps 2-3: type a new name and select Create \"<name>\"; the first Counterparty is Primary",
+      "expected": "Create adds the new Counterparty with the Primary mark.",
+      "actual": "The picker offered Create \"DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd\" and it added the Counterparty. After a reload the Contract showed 1 Primary mark; parties [\"DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd\"], primary \"DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:02.411Z",
+      "finishedAt": "2026-09-28T07:17:05.085Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/91",
+      "action": "Parties step 4: add another Counterparty and Make primary",
+      "expected": "Make primary moves the Primary mark.",
+      "actual": "After Make primary and a reload the primary Counterparty was \"DOC-032 compat compat-c V-C31 0928-0715 A Birch Logistics\"; parties [\"DOC-032 compat compat-c V-C31 0928-0715 A Birch Logistics\",\"DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:05.086Z",
+      "finishedAt": "2026-09-28T07:17:08.888Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/91",
+      "action": "Picker rules: an exact existing name in another case offers no creation; a Counterparty on the Contract is not offered again",
+      "expected": "No Create row for the case variant; the attached party is not listed.",
+      "actual": "Typing \"DOC-032 COMPAT COMPAT-C V-C31 0928-0715 A CEDAR SUPPLY LTD\" listed [\"No counterparties to add.\"]: no Create row, and DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd (already on the Contract) was not offered.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:08.889Z",
+      "finishedAt": "2026-09-28T07:17:10.490Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/91",
+      "action": "Parties step 5: Take <name> off the contract; the next remaining takes Primary; the shared record remains; the final removal leaves none",
+      "expected": "Removing the Primary passes the mark; the shared Counterparty remains; removing the last shows no Counterparties.",
+      "actual": "Take DOC-032 compat compat-c V-C31 0928-0715 A Birch Logistics off the contract left [\"DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd\"] with DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd Primary. Typing \"DOC-032 COMPAT COMPAT-C V-C31 0928-0715 A BIRCH LOGISTICS\" again offered the shared record and no Create row ([\"DOC-032 compat compat-c V-C31 0928-0715 A Birch Logistics\"]). Taking DOC-032 compat compat-c V-C31 0928-0715 A Cedar Supply Ltd off showed \"Nobody is recorded on the other side yet.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:10.495Z",
+      "finishedAt": "2026-09-28T07:17:16.620Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "action": "Recovery: an archived Entity is not offered for a new selection; an existing Contract keeps its reference",
+      "expected": "Archive the chosen Entity; Our entity still shows it on the Contract; another Contract does not offer it.",
+      "actual": "With the first \"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings\" archived, C-91 still showed \"DOC-032 compat compat-c V-C31 0928-0715 A Aldoria Holdings\". On C-97 Our entity offered 1 option with that name, the live duplicate, not the archived record. The Entity was then restored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:16.620Z",
+      "finishedAt": "2026-09-28T07:17:21.746Z"
+    },
+    {
+      "article": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "role": "business_user (Diego Salas, magic link)",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "action": "Negative: a Business User cannot open the staff Entities destination; an Entities address returns them to their home page",
+      "expected": "No Entities navigation; /entities and /entities/<id> land on the home page; the Entities API refuses.",
+      "actual": "Signed in with a fresh magic link as Diego Salas. Home was /portal; no Entities link. /entities landed on /portal; an Entity record address landed on /portal; GET /api/v1/entities returned 403.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:21.747Z",
+      "finishedAt": "2026-09-28T07:17:24.768Z"
+    }
+  ],
+  "errorScreens": [
+    {
+      "at": "2026-09-28T07:16:51.473Z",
+      "scenario": "V-C31",
+      "url": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "requested": "/entities/01a0e6df-8b1b-7bfc-86d0-3f77b7613ac7",
+      "responses": [
+        "console: Failed to load resource: net::ERR_NETWORK_CHANGED",
+        "console: Failed to load resource: net::ERR_NETWORK_CHANGED",
+        "console: Failed to load resource: net::ERR_NETWORK_CHANGED",
+        "console: Failed to load resource: net::ERR_NETWORK_CHANGED"
+      ]
+    }
+  ],
+  "shots": [],
+  "guideFailures": [],
+  "productBugs": [],
+  "fixtures": [
+    {
+      "at": "2026-09-28T07:15:49.288Z",
+      "scenario": "V-C31",
+      "what": "Entity type DOC-032 compat compat-c V-C31 0928-0715 required type with Local counsel required for creation",
+      "how": "POST /entity-types and PUT /entity-types/:id/form as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:16:08.701Z",
+      "scenario": "V-C31",
+      "what": "Contract DOC-032 compat compat-c V-C31 0928-0715 L parties contract",
+      "how": "POST /contracts as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:16:30.256Z",
+      "scenario": "V-C31",
+      "what": "Contract DOC-032 compat compat-c V-C31 0928-0715 L second contract",
+      "how": "POST /contracts as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:16:54.894Z",
+      "scenario": "V-C31",
+      "what": "Contract DOC-032 compat compat-c V-C31 0928-0715 A parties contract",
+      "how": "POST /contracts as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:17:18.101Z",
+      "scenario": "V-C31",
+      "what": "Contract DOC-032 compat compat-c V-C31 0928-0715 A second contract",
+      "how": "POST /contracts as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:17:24.826Z",
+      "scenario": "V-C31",
+      "what": "Entity type DOC-032 compat compat-c V-C31 0928-0715 required type archived after reassigning its Entities to Corporation",
+      "how": "POST /entity-types/:id/archive answered 200"
+    }
+  ],
+  "notes": []
+}

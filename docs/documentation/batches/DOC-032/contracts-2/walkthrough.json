@@ -1,0 +1,1266 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "contracts-2",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (contracts-2)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "labName": "work",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from the worktree node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "create-contract": "8f7f98a37901c8b3f11739126a4ff202a6037b41b91d34e9cafe4161715075fd",
+    "approver-groups": "591486689995657de3bbb0dfe04ef442d97dd23cbf8376579309802a397667d1",
+    "terms-and-renewals": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414",
+    "contract-stages": "a186659b9221537bff7b995298386a5a88022f59a4f6be3e4b33a73690d73dae",
+    "troubleshooting": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616"
+  },
+  "signingCheck": false,
+  "only": [
+    "create-contract",
+    "approver-groups",
+    "terms-and-renewals",
+    "contract-stages",
+    "troubleshooting"
+  ],
+  "roles": ["legal_team_member", "administrator"],
+  "stamp": 1790582775732,
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in",
+      "context": "daniel"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in",
+      "context": "nadia"
+    },
+    {
+      "role": "legal_team_member (named approver and comparison reader)",
+      "person": "Priya Raman",
+      "entry": "password sign-in",
+      "context": "priya"
+    },
+    {
+      "role": "legal_team_member (reader outside a Confidential team, second actor)",
+      "person": "Marcus Oyelaran",
+      "entry": "password sign-in",
+      "context": "marcus"
+    },
+    {
+      "role": "legal_team_member (type default person on the fixture type, not creator or owner)",
+      "person": "Tom Iwu",
+      "entry": "password sign-in",
+      "context": "tom"
+    },
+    {
+      "role": "business_user (Business approver)",
+      "person": "Lena Vogel",
+      "entry": "fresh magic link from this lab's Mailpit, Portal sign-in",
+      "context": "lena"
+    }
+  ],
+  "fixtures": [
+    {
+      "kind": "Field",
+      "name": "DOC-032 contracts-2 Deal size 1790582775732",
+      "detail": "number, contract module"
+    },
+    {
+      "kind": "Field",
+      "name": "DOC-032 contracts-2 Escalation reason 1790582775732",
+      "detail": "text, contract module"
+    },
+    {
+      "kind": "Field",
+      "name": "DOC-032 contracts-2 Notes 1790582775732",
+      "detail": "long_text, contract module"
+    },
+    {
+      "kind": "Field",
+      "name": "DOC-032 contracts-2 Risk tier 1790582775732",
+      "detail": "single_select, contract module"
+    },
+    {
+      "kind": "Contract type",
+      "name": "DOC-032 contracts-2 Form type 1790582775732",
+      "detail": "Form: Title, Contract type, Region, Entity (required), Counterparties (required), Deal size (required number Field), Branch [Deal size greater than 100000: Escalation reason (required text Field), Needed by], Description, Department, Priority, Risk, Term type, Effective date, Expiry date, Renewal period, Notice period, Value, Notes (long text Field), Risk tier (select Field). Default person: Tom Iwu."
+    },
+    {
+      "kind": "Contract type",
+      "name": "DOC-032 contracts-2 Archived type 1790582775732",
+      "detail": "archived before the walk"
+    },
+    {
+      "kind": "Entity",
+      "name": "DOC-032 contracts-2 Archived Entity 1790582775732",
+      "detail": "archived before the walk"
+    },
+    {
+      "kind": "Approver group",
+      "name": "DOC-032 contracts-2 sign-off 1790582775732",
+      "detail": "Marcus Oyelaran and Priya Raman; used in V-C16"
+    },
+    {
+      "kind": "Contract Status",
+      "name": "DOC-032 contracts-2 V-C15 review 1790582775732",
+      "detail": "Review Stage; renamed during V-C15; archived at the end"
+    },
+    {
+      "kind": "User",
+      "name": "DOC-032 contracts-2 Approver 1790582775732",
+      "detail": "invited Legal Team Member; archived during the walk to test Can no longer approve"
+    },
+    {
+      "kind": "Contract type",
+      "name": "DOC-032 contracts-2 Approval defaults type 1790582775732",
+      "detail": "its default group is set in the browser during V-C55"
+    },
+    {
+      "kind": "Approver group",
+      "name": "DOC-032 contracts-2 Legal and business 1790582775732",
+      "detail": "created in the browser during V-C55"
+    },
+    {
+      "kind": "Approver group",
+      "name": "DOC-032 contracts-2 Empty group 1790582775732",
+      "detail": "no members; archived at the end"
+    }
+  ],
+  "records": [
+    {
+      "title": "DOC-032 contracts-2 legal_team_member create 1790582775732",
+      "reference": "C-531",
+      "note": "created in the browser dialog"
+    },
+    {
+      "title": "DOC-032 contracts-2 legal_team_member upload failure 1790582775732",
+      "reference": "C-532",
+      "note": "created in the browser dialog; the first upload was refused by a routed 503"
+    },
+    {
+      "title": "DOC-032 contracts-2 legal_team_member retype 1790582775732",
+      "reference": "C-534",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 legal_team_member retype server check 1790582775732",
+      "reference": "C-535",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 legal_team_member archived 1790582775732",
+      "reference": "C-536",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 administrator create 1790582775732",
+      "reference": "C-537",
+      "note": "created in the browser dialog"
+    },
+    {
+      "title": "DOC-032 contracts-2 administrator upload failure 1790582775732",
+      "reference": "C-538",
+      "note": "created in the browser dialog; the first upload was refused by a routed 503"
+    },
+    {
+      "title": "DOC-032 contracts-2 administrator retype 1790582775732",
+      "reference": "C-539",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 administrator retype server check 1790582775732",
+      "reference": "C-540",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 administrator archived 1790582775732",
+      "reference": "C-541",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups apply one 1790582775732",
+      "reference": "C-542",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups empty 1790582775732",
+      "reference": "C-543",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups confidential 1790582775732",
+      "reference": "C-544",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups confidential document 1790582775732",
+      "reference": "C-545",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups archived member 1790582775732",
+      "reference": "C-546",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups inherits default 1790582775732",
+      "reference": "C-547",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups retyped 1790582775732",
+      "reference": "C-548",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups after clearing 1790582775732",
+      "reference": "C-549",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 groups no default 1790582775732",
+      "reference": "C-550",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C15 legal_team_member 1790582775732",
+      "reference": "C-551",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C15 administrator 1790582775732",
+      "reference": "C-552",
+      "note": "setup through Daniel Okafor's API session"
+    }
+  ],
+  "typeForms": [
+    {
+      "type": "DOC-032 contracts-2 Form type 1790582775732",
+      "creationRows": "Entity (required), Counterparties (required), Deal size (required); Escalation reason (required) only while Deal size is greater than 100000",
+      "recordRows": "Region, Description, Department, Priority, Risk, Term type, Effective date, Expiry date, Renewal period (months), Notice period (days), Value; Needed by under the Deal size Branch; Fields Notes and Risk tier",
+      "form": [
+        {
+          "kind": "row",
+          "id": "title",
+          "rowRef": "title",
+          "fieldType": "text",
+          "onIntakeForm": false,
+          "isRequired": true,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "contract_type",
+          "rowRef": "contract_type",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": true,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "region",
+          "rowRef": "region",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "entity",
+          "rowRef": "entity",
+          "fieldType": "entity",
+          "onIntakeForm": false,
+          "isRequired": true,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "counterparties",
+          "rowRef": "counterparties",
+          "fieldType": "multi_select",
+          "onIntakeForm": false,
+          "isRequired": true,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "01a0e70c-ed66-7988-9fd6-18b488dfede3",
+          "rowRef": "doc_032_contracts_2_deal_size_1790582775732",
+          "fieldType": "number",
+          "onIntakeForm": false,
+          "isRequired": true,
+          "visibleOnPortal": false
+        },
+        {
+          "kind": "branch",
+          "id": "2f2d8ca9-0e07-4abc-8134-11d481a609a2",
+          "match": "all",
+          "conditions": [
+            {
+              "rowRef": "doc_032_contracts_2_deal_size_1790582775732",
+              "operator": "greater_than",
+              "value": 100000
+            }
+          ],
+          "children": [
+            {
+              "kind": "row",
+              "id": "01a0e70c-ed78-7de3-8d8c-41489a2b4781",
+              "rowRef": "doc_032_contracts_2_escalation_reason_1790582775732",
+              "fieldType": "text",
+              "onIntakeForm": false,
+              "isRequired": true,
+              "visibleOnPortal": false
+            },
+            {
+              "kind": "row",
+              "id": "needed_by",
+              "rowRef": "needed_by",
+              "fieldType": "date",
+              "onIntakeForm": false,
+              "isRequired": false,
+              "visibleOnPortal": true
+            }
+          ]
+        },
+        {
+          "kind": "row",
+          "id": "description",
+          "rowRef": "description",
+          "fieldType": "long_text",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "owning_department",
+          "rowRef": "owning_department",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "priority",
+          "rowRef": "priority",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "risk",
+          "rowRef": "risk",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "term_type",
+          "rowRef": "term_type",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "effective_date",
+          "rowRef": "effective_date",
+          "fieldType": "date",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "expiry_date",
+          "rowRef": "expiry_date",
+          "fieldType": "date",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "renewal_period_months",
+          "rowRef": "renewal_period_months",
+          "fieldType": "number",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "notice_period_days",
+          "rowRef": "notice_period_days",
+          "fieldType": "number",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "value",
+          "rowRef": "value",
+          "fieldType": "money",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": true
+        },
+        {
+          "kind": "row",
+          "id": "01a0e70c-ed85-7675-bf0b-562ea5a4a3a5",
+          "rowRef": "doc_032_contracts_2_notes_1790582775732",
+          "fieldType": "long_text",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": false
+        },
+        {
+          "kind": "row",
+          "id": "01a0e70c-ed93-7941-b16f-99bacc85f789",
+          "rowRef": "doc_032_contracts_2_risk_tier_1790582775732",
+          "fieldType": "single_select",
+          "onIntakeForm": false,
+          "isRequired": false,
+          "visibleOnPortal": false
+        }
+      ]
+    }
+  ],
+  "orgSettings": [
+    {
+      "at": "2026-09-28T08:08:09.336Z",
+      "setting": "Who can override a default approver group?",
+      "value": "Administrators only",
+      "by": "Daniel Okafor (browser)"
+    },
+    {
+      "at": "2026-09-28T08:08:12.037Z",
+      "setting": "Who can override a default approver group?",
+      "value": "Legal team members and administrators",
+      "by": "Daniel Okafor (browser, restored)"
+    }
+  ],
+  "productBugs": [
+    {
+      "id": "retype-dialog-ignores-branch",
+      "summary": "Re-typing a Contract requires a Field Row under a Branch whose condition does not hold. The create dialog and create API skip such a Row (DD-028); the Change contract type dialog and the PATCH seam both demand it.",
+      "reproduction": "Type DOC-032 contracts-2 Form type 1790582775732: required Deal size, then a Branch (Deal size greater than 100000) holding required Escalation reason. On an MSA Contract, choose that type on Overview, enter Deal size 42, select Change type. The dialog lists Escalation reason and refuses with \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 — the new type requires it.\". PATCH /api/v1/contracts/535 with the same type and Deal size 42 answered 400 \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 first — the type requires it.\". Creating a Contract of the same type with Deal size 5000 does not ask for or require Escalation reason.",
+      "source": "apps/web/src/routes/contract-record.tsx RetypeDialog uses unansweredRequired(target.fields) without evaluating the Form's Branches; the contract PATCH re-type check refuses the same way",
+      "guideImpact": "None found: the guide says only that Change contract type requests missing required Fields."
+    }
+  ],
+  "startedAt": "2026-09-28T08:06:15.733Z",
+  "finishedAt": "2026-09-28T08:08:44.306Z",
+  "steps": [
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts > Create contract",
+      "action": "Create the record, steps 1-5 and If a change is refused: dialog order, Default type first, Legal Owner seed and choices, archived type and Entity not offered, blank Title, missing type, blank required Rows, Branch Row, Cancel",
+      "expected": "Title, Contract type, Legal Owner, Matter, the Form's Rows, Confidential, Documents, Create; Default preselected; Legal Owner starts on the acting person with Unassigned and staff only; errors Name the contract., Pick a contract type., and named required Rows; a Branch reveals its Row only when its condition holds; nothing is created.",
+      "startedAt": "2026-09-28T08:06:19.632Z",
+      "finishedAt": "2026-09-28T08:06:22.252Z",
+      "actual": "Dialog order: [\"Title\",\"Contract type\",\"Legal Owner\",\"Matter\",\"Description\",\"Counterparties\",\"Needed by\",\"Deal value (USD)\",\"Confidential — restrict to the contract team\",\"Documents\",\"Cancel\",\"Create\"]. Contract type started on \"Default\"; the Default type's creation Rows were [\"Description\",\"Counterparties\",\"Needed by\",\"Deal value (USD)\"]. Legal Owner started on \"Nadia Haddad\" and offered 31 entries: [\"Unassigned\",\"Daniel Okafor\",\"Devon Calloway\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"] plus 22 staff accounts walkthrough agents created; no Business User and not archived Gabriel Santos. The archived fixture type was not in 23 type options. Blank Create said \"Name the contract.\"; with a Title and \"Type…\" it said \"Pick a contract type.\". \"DOC-032 contracts-2 Form type 1790582775732\" drew [\"Entity\",\"Counterparties\",\"DOC-032 contracts-2 Deal size 1790582775732\"] and not the Branch Row or the record Rows; Entity offered 113 Entities without the archived fixture Entity. Blank Create said \"Fill DOC-032 contracts-2 Deal size 1790582775732 — this contract type requires it.\"; \"twelve\" in the number Row said \"DOC-032 contracts-2 Deal size 1790582775732: enter this as a number.\"; Deal size 5000 kept the Branch Row hidden and the server refusal named the blank built-in Rows: \"Fill Our entity, Counterparties.\". Deal size 250000 revealed \"DOC-032 contracts-2 Escalation reason 1790582775732\"; with Entity and Counterparties filled, Create said \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 — this contract type requires it.\". Cancel closed the dialog and no Contract titled \"DOC-032 contracts-2 legal_team_member refusal 1790582775732\" exists.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts > Create contract > /contracts/:number",
+      "action": "Create the record, steps 1-8: Title, Contract type, Legal Owner, Matter search, Entity and Counterparties Rows, required Field and Branch Row, Confidential, Attach documents with Document type, Create",
+      "expected": "The app opens the new Contract: its title, type, Legal Owner, C- reference, Draft Status, Creator on the team, the type's default person on the team, and the attached Document.",
+      "startedAt": "2026-09-28T08:06:22.252Z",
+      "finishedAt": "2026-09-28T08:06:23.772Z",
+      "actual": "Matter search \"Restrictive co\" selected \"M-17 Restrictive covenant advice - Charlotte Reid\". Document type offered [\"No type\",\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Partially signed\",\"Executed\",\"Amendment\"]; \"Draft · ours\" chosen. Create opened /contracts/531: heading \"DOC-032 contracts-2 legal_team_member create 1790582775732\", C-531 shown, Overview Contract type \"DOC-032 contracts-2 Form type 1790582775732\", Legal Owner \"DO Daniel Okafor\". API read: Status \"Draft\", Confidential true, entity \"Helix Software Ltd\", counterparties [\"Tailspin Logistics BV\"], Fields {\"doc_032_contracts_2_deal_size_1790582775732\":250000,\"doc_032_contracts_2_escalation_reason_1790582775732\":\"Board approval above the limit\"}; Overview links Matter M-17. Contract team roster [\"DO Legal Owner Daniel Okafor\",\"NH Creator Nadia Haddad\",\"TI Tom Iwu\"]; membership [\"Nadia Haddad\",\"Tom Iwu\"] includes the default person Tom Iwu. Documents: [\"doc032-contracts-2-legal_team_member-draft.pdf (Draft · ours)\"].",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts > Create contract (Default type)",
+      "action": "Create the record: a failed upload after Create shows Record created. Some documents could not be uploaded. with Retry failed uploads and Continue; the Contract already exists",
+      "expected": "The Contract exists; Retry failed uploads uploads the file; Continue opens the Contract.",
+      "startedAt": "2026-09-28T08:06:23.773Z",
+      "finishedAt": "2026-09-28T08:06:24.536Z",
+      "actual": "With the upload answered 503, the dialog showed \"Record created. Some documents could not be uploaded.\" and buttons [\"Continue\",\"Retry failed uploads\"]. C-532 already existed. Continue opened the Contract without the file; it holds 0 Document(s).",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Marcus Oyelaran", "Tom Iwu"],
+      "page": "/contracts/:number and /matters/:number",
+      "action": "Step 4: a Matter link does not copy access. A Legal Team Member outside the Confidential team reads the Matter but not the Contract; the type's default person reads the Contract",
+      "expected": "Marcus opens the Matter; the Contract is refused for him and his page does not show its title; Tom Iwu opens it.",
+      "startedAt": "2026-09-28T08:06:24.537Z",
+      "finishedAt": "2026-09-28T08:06:27.292Z",
+      "actual": "Marcus Oyelaran: Matter M-17 answered 200; C-531 answered 404; his page read \"C-531 does not exist, or you cannot open it. Back to Contracts\". Tom Iwu (type default person) answered 200.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Overview)",
+      "action": "Record the parties and ownership: the Contract card shows the type Form's built-in Rows in Form order, then Days remaining, Last renewal and the Confidential switch; Legal Owner and Business Owner are in their own section above the Contract card; attached Fields are not on Overview",
+      "expected": "Title, Contract type, Region, Our entity, Counterparties, Needed by (Branch holds), Description, Department, Priority, Risk, the term Rows and Value, then the read-only rows and the switch; the owners sit in a separate section before the card; no Deal size, Notes or Risk tier.",
+      "startedAt": "2026-09-28T08:06:27.292Z",
+      "finishedAt": "2026-09-28T08:06:28.227Z",
+      "actual": "Contract card label order: [\"Title\",\"Contract type\",\"Region\",\"Our entity\",\"Counterparties\",\"Needed by\",\"Description\",\"Department\",\"Priority\",\"Risk\",\"Term type\",\"Effective date\",\"Expiry date\",\"Renewal period (months)\",\"Notice period (days)\",\"Value\",\"Days remaining\",\"Last renewal\",\"Confidential — restrict to the contract team\"] (all present, in this order). The fixture Form puts Region before Our entity and Needed by inside the Deal size Branch; the card followed it. The card holds no Legal Owner or Business Owner. A separate section named \"Owners\" (accessible name only; 0 headings) sits before the Contract card and reads \"Legal Owner DO Daniel Okafor Business Owner Unassigned\". No Field (\"DOC-032 contracts-2 Deal size 1790582775732\", \"DOC-032 contracts-2 Notes 1790582775732\", ...) appears on Overview.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Tom Iwu"],
+      "page": "/contracts/:number (Overview) Legal Owner and Business Owner",
+      "action": "Legal Owner offers active staff; Business Owner offers any active person; Unassigned clears either; on a Confidential Contract only an Administrator, the creator or the Legal Owner can change the Legal Owner or name a Business Owner",
+      "expected": "Legal Owner picker has no Business User or archived person; Business Owner picker includes Lena Vogel; Unassigned clears; Tom Iwu (team member only) is refused both changes.",
+      "startedAt": "2026-09-28T08:06:28.227Z",
+      "finishedAt": "2026-09-28T08:06:35.109Z",
+      "actual": "Legal Owner offered 31 entries, seeded ones [\"Unassigned\",\"Daniel Okafor\",\"Devon Calloway\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"]; Business Owner offered more people, 51 entries, seeded ones [\"Unassigned\",\"Ade Balogun\",\"Amara Nwosu\",\"Clara Fontaine\",\"Daniel Okafor\",\"Devon Calloway\",\"Diego Salas\",\"Felix Brandt\",\"Ines Duarte\",\"Jonas Weber\",\"Karim Aziz\",\"Lena Fischer\",\"Lena Vogel\",\"Marcus Oyelaran\",\"Mei Tanaka\",\"Nadia Haddad\",\"Oliver Grant\",\"Priya Raman\",\"Ravi Menon\",\"Rosa Iglesias\",\"Sara Haddadi\",\"Sofia Lindqvist\",\"Tom Iwu\"], including Business User Lena Vogel and not archived Gabriel Santos. Unassigned cleared the Legal Owner and Daniel Okafor was set again; Lena Vogel became Business Owner. Tom Iwu, a team member only, chose himself as Legal Owner: page said \"Legal Owner DO Daniel Okafor Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\", Legal Owner stayed \"Daniel Okafor\"; as Business Owner: \"Legal Owner DO Daniel Okafor Business Owner LV Lena Vogel Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\", Business Owner stayed \"Lena Vogel\"; a direct PATCH answered 403 (\"Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\"). Nadia Haddad then cleared Business Owner with Unassigned and set Lena Vogel again.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Overview) Our entity, Department, Region, Priority, Risk, Description, Value",
+      "action": "Our entity offers Not known yet and no archived Entity; Department and Region save on choice and clear with No Department and No Region; Description saves on leave and clearing removes it; Value parts save together; Other needs Custom cadence; emptying Amount removes the value",
+      "expected": "Each change is stored as described.",
+      "startedAt": "2026-09-28T08:06:35.110Z",
+      "finishedAt": "2026-09-28T08:06:42.299Z",
+      "actual": "Our entity offered [\"Not known yet\",\"DOC-032 compat compat-a confidential entity Ltd 09280716\"]... without the archived fixture Entity; Not known yet cleared it and Helix Software GmbH saved on choice. Department Finance and Region EMEA saved on choice; No Department and No Region cleared them. Priority High and Risk Low saved. Description before leaving the input read null; it saved on leave, and clearing it removed it. With Frequency Other and a blank Custom cadence, Enter left the stored value null (group text \"Value Enter a custom cadence. Currency Currency… GBP — British Pound EUR — Euro USD — US Dollar Frequency One time Monthly Annually Other\"); \"each milestone\" saved {\"amount\":1250000,\"currency\":\"EUR\",\"cadence\":\"other\",\"cadenceDescription\":\"each milestone\"}. Emptying Amount removed the value (Currency then read \"Currency…\"); it was entered again as 12500 EUR Annually.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Overview and Fields)",
+      "action": "A Row under a Branch whose condition does not hold appears only while it holds a value",
+      "expected": "Needed by shows while Deal size is 250000; after Deal size becomes 5000 it stays while it holds a date and disappears when cleared.",
+      "startedAt": "2026-09-28T08:06:42.300Z",
+      "finishedAt": "2026-09-28T08:06:48.316Z",
+      "actual": "Needed by 2026-12-01 saved while Deal size was 250000. Fields: Deal size 5000 saved on Enter, so the Branch no longer holds. Overview still showed Needed by with \"2026-12-01\". After it was emptied and the page reloaded, Overview had 0 Needed by input.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Overview) Counterparties",
+      "action": "Search and select parties; a new name offers Create \"name\"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link",
+      "expected": "Create \"name\" links a new party; Tailspin (first) is primary until Make primary moves it; removal keeps the Counterparty record.",
+      "startedAt": "2026-09-28T08:06:48.317Z",
+      "finishedAt": "2026-09-28T08:06:49.736Z",
+      "actual": "Typing a new name offered \"Create \\\"DOC-032 contracts-2 legal_team_member Counterparty 1790582775732\\\"\" and selecting it linked the party. Tailspin Logistics BV, linked first in the create dialog, was primary. Make primary moved the designation to the new party. \"Take DOC-032 contracts-2 legal_team_member Counterparty 1790582775732 off the contract\" left one linked party, and the Counterparty search still returns 1 record with that name.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number Contract team applet",
+      "action": "Contract team: Add team member, Person, Add; one row per person; Legal Owner, Business Owner and Creator statements; the Business Owner joined automatically and their row has no remove control; after the assignment is cleared the former owner stays until removed",
+      "expected": "Priya added once; Lena Vogel's row shows Business Owner without a remove button; after Unassigned she stays with a remove button; removing her works.",
+      "startedAt": "2026-09-28T08:06:49.737Z",
+      "finishedAt": "2026-09-28T08:06:52.304Z",
+      "actual": "After Add team member > Person Priya Raman > Add the roster read [\"DO Legal Owner Daniel Okafor\",\"LV Business Owner Lena Vogel\",\"NH Creator Nadia Haddad\",\"PR Priya Raman\",\"TI Tom Iwu\"]; Lena Vogel (Business Owner) had 0 remove controls. After Business Owner was set to Unassigned the roster read [\"DO Legal Owner Daniel Okafor\",\"NH Creator Nadia Haddad\",\"LV Lena Vogel\",\"PR Priya Raman\",\"TI Tom Iwu\"] and Lena had a remove control; \"Take Lena Vogel off the contract team\" removed her: [\"DO Legal Owner Daniel Okafor\",\"NH Creator Nadia Haddad\",\"PR Priya Raman\",\"TI Tom Iwu\"].",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number/fields",
+      "action": "Maintain the values: text saves on leave or Enter; a choice saves on selection; Escape abandons an unsaved text edit; long text Enter is a new line",
+      "expected": "Blur and Enter save; Escape restores the saved text with no save; the choice saves; long text keeps two lines.",
+      "startedAt": "2026-09-28T08:06:52.305Z",
+      "finishedAt": "2026-09-28T08:06:56.657Z",
+      "actual": "Fields showed the Branch Row \"DOC-032 contracts-2 Escalation reason 1790582775732\" (1). Deal size 300000 saved on Tab; Escalation reason saved on Enter; typing \"Unsaved edit\" then Escape restored \"Board approval required\" and the stored value stayed \"Board approval required\"; Risk tier Elevated saved on selection. In Notes, Enter made a new line with nothing saved yet (null); leaving saved \"Line one\\nLine two\".",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Overview) Contract type",
+      "action": "Changing Contract type opens Change contract type for missing required Fields; blank answers are refused; Cancel keeps the type; Change type applies it; the C- reference stays",
+      "expected": "The dialog lists the required Field; blank Change type is refused; Cancel keeps MSA; filling it re-types the Contract.",
+      "startedAt": "2026-09-28T08:06:56.658Z",
+      "finishedAt": "2026-09-28T08:07:04.514Z",
+      "actual": "Choosing \"DOC-032 contracts-2 Form type 1790582775732\" on C-534 (MSA) opened Change contract type: \"Change contract type DOC-032 contracts-2 Form type 1790582775732 requires these fields. Fill them to change the type. DOC-032 contracts-2 Escalation reason 1790582775732 DOC-032 contracts-2 Deal size 1790582775732 Cancel\". Change type with blanks kept the dialog open: \"Change contract type DOC-032 contracts-2 Form type 1790582775732 requires these fields. Fill them to change the type. DOC-032 contracts-2 Escalation reason 1790582775732 DOC-032 contracts-2 Deal size 1790582775732 Fill DOC-032 contracts-2 Escalation reason 179\". Cancel kept \"MSA\". With Deal size 42 only, Change type still asked: \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 — the new type requires it.\" (the Branch Row; see productBugs; a PATCH re-type of C-535 with Deal size 42 alone answered 400 \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 first — the type requires it.\"). With the required answers filled, Change type re-typed it to \"DOC-032 contracts-2 Form type 1790582775732\"; Fields {\"doc_032_contracts_2_deal_size_1790582775732\":42,\"doc_032_contracts_2_escalation_reason_1790582775732\":\"Not needed below the limit\"}; the page still shows C-534.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (archived)",
+      "action": "An archived Contract must be restored before editing",
+      "expected": "The archived Contract shows the restore note and its Overview inputs are read-only.",
+      "startedAt": "2026-09-28T08:07:04.515Z",
+      "finishedAt": "2026-09-28T08:07:05.548Z",
+      "actual": "C-536 archived (setup 200): the page said \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title editable: false. It was restored afterwards.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Lena Vogel (Portal)"],
+      "page": "/portal/contracts",
+      "action": "In the Portal, a Business User cannot create a Contract directly or assign its Legal Owner",
+      "expected": "No create control in the Portal Contracts list; the API refuses a direct create and a Legal Owner change.",
+      "startedAt": "2026-09-28T08:07:05.549Z",
+      "finishedAt": "2026-09-28T08:07:07.869Z",
+      "actual": "Lena Vogel's Portal Contracts page had 0 create controls. A direct create answered 403; a Legal Owner change on C-531 answered 403; the Legal Owner is still Daniel Okafor.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts > Create contract",
+      "action": "Create the record, steps 1-5 and If a change is refused: dialog order, Default type first, Legal Owner seed and choices, archived type and Entity not offered, blank Title, missing type, blank required Rows, Branch Row, Cancel",
+      "expected": "Title, Contract type, Legal Owner, Matter, the Form's Rows, Confidential, Documents, Create; Default preselected; Legal Owner starts on the acting person with Unassigned and staff only; errors Name the contract., Pick a contract type., and named required Rows; a Branch reveals its Row only when its condition holds; nothing is created.",
+      "startedAt": "2026-09-28T08:07:07.904Z",
+      "finishedAt": "2026-09-28T08:07:10.767Z",
+      "actual": "Dialog order: [\"Title\",\"Contract type\",\"Legal Owner\",\"Matter\",\"Description\",\"Counterparties\",\"Needed by\",\"Deal value (USD)\",\"Confidential — restrict to the contract team\",\"Documents\",\"Cancel\",\"Create\"]. Contract type started on \"Default\"; the Default type's creation Rows were [\"Description\",\"Counterparties\",\"Needed by\",\"Deal value (USD)\"]. Legal Owner started on \"Daniel Okafor\" and offered 31 entries: [\"Unassigned\",\"Daniel Okafor\",\"Devon Calloway\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"] plus 22 staff accounts walkthrough agents created; no Business User and not archived Gabriel Santos. The archived fixture type was not in 23 type options. Blank Create said \"Name the contract.\"; with a Title and \"Type…\" it said \"Pick a contract type.\". \"DOC-032 contracts-2 Form type 1790582775732\" drew [\"Entity\",\"Counterparties\",\"DOC-032 contracts-2 Deal size 1790582775732\"] and not the Branch Row or the record Rows; Entity offered 105 Entities without the archived fixture Entity. Blank Create said \"Fill DOC-032 contracts-2 Deal size 1790582775732 — this contract type requires it.\"; \"twelve\" in the number Row said \"DOC-032 contracts-2 Deal size 1790582775732: enter this as a number.\"; Deal size 5000 kept the Branch Row hidden and the server refusal named the blank built-in Rows: \"Fill Our entity, Counterparties.\". Deal size 250000 revealed \"DOC-032 contracts-2 Escalation reason 1790582775732\"; with Entity and Counterparties filled, Create said \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 — this contract type requires it.\". Cancel closed the dialog and no Contract titled \"DOC-032 contracts-2 administrator refusal 1790582775732\" exists.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts > Create contract > /contracts/:number",
+      "action": "Create the record, steps 1-8: Title, Contract type, Legal Owner, Matter search, Entity and Counterparties Rows, required Field and Branch Row, Confidential, Attach documents with Document type, Create",
+      "expected": "The app opens the new Contract: its title, type, Legal Owner, C- reference, Draft Status, Creator on the team, the type's default person on the team, and the attached Document.",
+      "startedAt": "2026-09-28T08:07:10.768Z",
+      "finishedAt": "2026-09-28T08:07:12.282Z",
+      "actual": "Matter search \"Restrictive co\" selected \"M-17 Restrictive covenant advice - Charlotte Reid\". Document type offered [\"No type\",\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Partially signed\",\"Executed\",\"Amendment\"]; \"Draft · ours\" chosen. Create opened /contracts/537: heading \"DOC-032 contracts-2 administrator create 1790582775732\", C-537 shown, Overview Contract type \"DOC-032 contracts-2 Form type 1790582775732\", Legal Owner \"NH Nadia Haddad\". API read: Status \"Draft\", Confidential true, entity \"Helix Software Ltd\", counterparties [\"Tailspin Logistics BV\"], Fields {\"doc_032_contracts_2_deal_size_1790582775732\":250000,\"doc_032_contracts_2_escalation_reason_1790582775732\":\"Board approval above the limit\"}; Overview links Matter M-17. Contract team roster [\"NH Legal Owner Nadia Haddad\",\"DO Creator Daniel Okafor\",\"TI Tom Iwu\"]; membership [\"Daniel Okafor\",\"Tom Iwu\"] includes the default person Tom Iwu. Documents: [\"doc032-contracts-2-administrator-draft.pdf (Draft · ours)\"].",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts > Create contract (Default type)",
+      "action": "Create the record: a failed upload after Create shows Record created. Some documents could not be uploaded. with Retry failed uploads and Continue; the Contract already exists",
+      "expected": "The Contract exists; Retry failed uploads uploads the file; Continue opens the Contract.",
+      "startedAt": "2026-09-28T08:07:12.283Z",
+      "finishedAt": "2026-09-28T08:07:12.962Z",
+      "actual": "With the upload answered 503, the dialog showed \"Record created. Some documents could not be uploaded.\" and buttons [\"Continue\",\"Retry failed uploads\"]. C-538 already existed. Retry failed uploads uploaded the file and opened the Contract; it holds 1 Document(s).",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Marcus Oyelaran", "Tom Iwu"],
+      "page": "/contracts/:number and /matters/:number",
+      "action": "Step 4: a Matter link does not copy access. A Legal Team Member outside the Confidential team reads the Matter but not the Contract; the type's default person reads the Contract",
+      "expected": "Marcus opens the Matter; the Contract is refused for him and his page does not show its title; Tom Iwu opens it.",
+      "startedAt": "2026-09-28T08:07:12.963Z",
+      "finishedAt": "2026-09-28T08:07:15.556Z",
+      "actual": "Marcus Oyelaran: Matter M-17 answered 200; C-537 answered 404; his page read \"C-537 does not exist, or you cannot open it. Back to Contracts\". Tom Iwu (type default person) answered 200.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Overview)",
+      "action": "Record the parties and ownership: the Contract card shows the type Form's built-in Rows in Form order, then Days remaining, Last renewal and the Confidential switch; Legal Owner and Business Owner are in their own section above the Contract card; attached Fields are not on Overview",
+      "expected": "Title, Contract type, Region, Our entity, Counterparties, Needed by (Branch holds), Description, Department, Priority, Risk, the term Rows and Value, then the read-only rows and the switch; the owners sit in a separate section before the card; no Deal size, Notes or Risk tier.",
+      "startedAt": "2026-09-28T08:07:15.557Z",
+      "finishedAt": "2026-09-28T08:07:16.303Z",
+      "actual": "Contract card label order: [\"Title\",\"Contract type\",\"Region\",\"Our entity\",\"Counterparties\",\"Needed by\",\"Description\",\"Department\",\"Priority\",\"Risk\",\"Term type\",\"Effective date\",\"Expiry date\",\"Renewal period (months)\",\"Notice period (days)\",\"Value\",\"Days remaining\",\"Last renewal\",\"Confidential — restrict to the contract team\"] (all present, in this order). The fixture Form puts Region before Our entity and Needed by inside the Deal size Branch; the card followed it. The card holds no Legal Owner or Business Owner. A separate section named \"Owners\" (accessible name only; 0 headings) sits before the Contract card and reads \"Legal Owner NH Nadia Haddad Business Owner Unassigned\". No Field (\"DOC-032 contracts-2 Deal size 1790582775732\", \"DOC-032 contracts-2 Notes 1790582775732\", ...) appears on Overview.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Tom Iwu"],
+      "page": "/contracts/:number (Overview) Legal Owner and Business Owner",
+      "action": "Legal Owner offers active staff; Business Owner offers any active person; Unassigned clears either; on a Confidential Contract only an Administrator, the creator or the Legal Owner can change the Legal Owner or name a Business Owner",
+      "expected": "Legal Owner picker has no Business User or archived person; Business Owner picker includes Lena Vogel; Unassigned clears; Tom Iwu (team member only) is refused both changes.",
+      "startedAt": "2026-09-28T08:07:16.304Z",
+      "finishedAt": "2026-09-28T08:07:23.216Z",
+      "actual": "Legal Owner offered 31 entries, seeded ones [\"Unassigned\",\"Daniel Okafor\",\"Devon Calloway\",\"Ines Duarte\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Priya Raman\",\"Sofia Lindqvist\",\"Tom Iwu\"]; Business Owner offered more people, 51 entries, seeded ones [\"Unassigned\",\"Ade Balogun\",\"Amara Nwosu\",\"Clara Fontaine\",\"Daniel Okafor\",\"Devon Calloway\",\"Diego Salas\",\"Felix Brandt\",\"Ines Duarte\",\"Jonas Weber\",\"Karim Aziz\",\"Lena Fischer\",\"Lena Vogel\",\"Marcus Oyelaran\",\"Mei Tanaka\",\"Nadia Haddad\",\"Oliver Grant\",\"Priya Raman\",\"Ravi Menon\",\"Rosa Iglesias\",\"Sara Haddadi\",\"Sofia Lindqvist\",\"Tom Iwu\"], including Business User Lena Vogel and not archived Gabriel Santos. Unassigned cleared the Legal Owner and Nadia Haddad was set again; Lena Vogel became Business Owner. Tom Iwu, a team member only, chose himself as Legal Owner: page said \"Legal Owner NH Nadia Haddad Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\", Legal Owner stayed \"Nadia Haddad\"; as Business Owner: \"Legal Owner NH Nadia Haddad Business Owner LV Lena Vogel Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\", Business Owner stayed \"Lena Vogel\"; a direct PATCH answered 403 (\"Only an Administrator, the contract's creator, or its Owner can change the team on a confidential contract.\"). Daniel Okafor then cleared Business Owner with Unassigned and set Lena Vogel again.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Overview) Our entity, Department, Region, Priority, Risk, Description, Value",
+      "action": "Our entity offers Not known yet and no archived Entity; Department and Region save on choice and clear with No Department and No Region; Description saves on leave and clearing removes it; Value parts save together; Other needs Custom cadence; emptying Amount removes the value",
+      "expected": "Each change is stored as described.",
+      "startedAt": "2026-09-28T08:07:23.216Z",
+      "finishedAt": "2026-09-28T08:07:30.236Z",
+      "actual": "Our entity offered [\"Not known yet\",\"DOC-032 compat compat-a inbox Live Holdings Ltd\"]... without the archived fixture Entity; Not known yet cleared it and Helix Software GmbH saved on choice. Department Finance and Region EMEA saved on choice; No Department and No Region cleared them. Priority High and Risk Low saved. Description before leaving the input read null; it saved on leave, and clearing it removed it. With Frequency Other and a blank Custom cadence, Enter left the stored value null (group text \"Value Enter a custom cadence. Currency Currency… GBP — British Pound EUR — Euro USD — US Dollar Add new currency Frequency One time Monthly Annually Other\"); \"each milestone\" saved {\"amount\":1250000,\"currency\":\"EUR\",\"cadence\":\"other\",\"cadenceDescription\":\"each milestone\"}. Emptying Amount removed the value (Currency then read \"Currency…\"); it was entered again as 12500 EUR Annually.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Overview and Fields)",
+      "action": "A Row under a Branch whose condition does not hold appears only while it holds a value",
+      "expected": "Needed by shows while Deal size is 250000; after Deal size becomes 5000 it stays while it holds a date and disappears when cleared.",
+      "startedAt": "2026-09-28T08:07:30.237Z",
+      "finishedAt": "2026-09-28T08:07:36.174Z",
+      "actual": "Needed by 2026-12-01 saved while Deal size was 250000. Fields: Deal size 5000 saved on Enter, so the Branch no longer holds. Overview still showed Needed by with \"2026-12-01\". After it was emptied and the page reloaded, Overview had 0 Needed by input.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Overview) Counterparties",
+      "action": "Search and select parties; a new name offers Create \"name\"; the first linked Counterparty is primary; Make primary moves it; removing a Counterparty removes only its link",
+      "expected": "Create \"name\" links a new party; Tailspin (first) is primary until Make primary moves it; removal keeps the Counterparty record.",
+      "startedAt": "2026-09-28T08:07:36.179Z",
+      "finishedAt": "2026-09-28T08:07:37.526Z",
+      "actual": "Typing a new name offered \"Create \\\"DOC-032 contracts-2 administrator Counterparty 1790582775732\\\"\" and selecting it linked the party. Tailspin Logistics BV, linked first in the create dialog, was primary. Make primary moved the designation to the new party. \"Take DOC-032 contracts-2 administrator Counterparty 1790582775732 off the contract\" left one linked party, and the Counterparty search still returns 1 record with that name.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number Contract team applet",
+      "action": "Contract team: Add team member, Person, Add; one row per person; Legal Owner, Business Owner and Creator statements; the Business Owner joined automatically and their row has no remove control; after the assignment is cleared the former owner stays until removed",
+      "expected": "Priya added once; Lena Vogel's row shows Business Owner without a remove button; after Unassigned she stays with a remove button; removing her works.",
+      "startedAt": "2026-09-28T08:07:37.527Z",
+      "finishedAt": "2026-09-28T08:07:39.545Z",
+      "actual": "After Add team member > Person Priya Raman > Add the roster read [\"NH Legal Owner Nadia Haddad\",\"LV Business Owner Lena Vogel\",\"DO Creator Daniel Okafor\",\"PR Priya Raman\",\"TI Tom Iwu\"]; Lena Vogel (Business Owner) had 0 remove controls. After Business Owner was set to Unassigned the roster read [\"NH Legal Owner Nadia Haddad\",\"DO Creator Daniel Okafor\",\"LV Lena Vogel\",\"PR Priya Raman\",\"TI Tom Iwu\"] and Lena had a remove control; \"Take Lena Vogel off the contract team\" removed her: [\"NH Legal Owner Nadia Haddad\",\"DO Creator Daniel Okafor\",\"PR Priya Raman\",\"TI Tom Iwu\"].",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number/fields",
+      "action": "Maintain the values: text saves on leave or Enter; a choice saves on selection; Escape abandons an unsaved text edit; long text Enter is a new line",
+      "expected": "Blur and Enter save; Escape restores the saved text with no save; the choice saves; long text keeps two lines.",
+      "startedAt": "2026-09-28T08:07:39.546Z",
+      "finishedAt": "2026-09-28T08:07:43.678Z",
+      "actual": "Fields showed the Branch Row \"DOC-032 contracts-2 Escalation reason 1790582775732\" (1). Deal size 300000 saved on Tab; Escalation reason saved on Enter; typing \"Unsaved edit\" then Escape restored \"Board approval required\" and the stored value stayed \"Board approval required\"; Risk tier Elevated saved on selection. In Notes, Enter made a new line with nothing saved yet (null); leaving saved \"Line one\\nLine two\".",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Overview) Contract type",
+      "action": "Changing Contract type opens Change contract type for missing required Fields; blank answers are refused; Cancel keeps the type; Change type applies it; the C- reference stays",
+      "expected": "The dialog lists the required Field; blank Change type is refused; Cancel keeps MSA; filling it re-types the Contract.",
+      "startedAt": "2026-09-28T08:07:43.679Z",
+      "finishedAt": "2026-09-28T08:07:51.206Z",
+      "actual": "Choosing \"DOC-032 contracts-2 Form type 1790582775732\" on C-539 (MSA) opened Change contract type: \"Change contract type DOC-032 contracts-2 Form type 1790582775732 requires these fields. Fill them to change the type. DOC-032 contracts-2 Escalation reason 1790582775732 DOC-032 contracts-2 Deal size 1790582775732 Cancel\". Change type with blanks kept the dialog open: \"Change contract type DOC-032 contracts-2 Form type 1790582775732 requires these fields. Fill them to change the type. DOC-032 contracts-2 Escalation reason 1790582775732 DOC-032 contracts-2 Deal size 1790582775732 Fill DOC-032 contracts-2 Escalation reason 179\". Cancel kept \"MSA\". With Deal size 42 only, Change type still asked: \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 — the new type requires it.\" (the Branch Row; see productBugs; a PATCH re-type of C-540 with Deal size 42 alone answered 400 \"Fill DOC-032 contracts-2 Escalation reason 1790582775732 first — the type requires it.\"). With the required answers filled, Change type re-typed it to \"DOC-032 contracts-2 Form type 1790582775732\"; Fields {\"doc_032_contracts_2_deal_size_1790582775732\":42,\"doc_032_contracts_2_escalation_reason_1790582775732\":\"Not needed below the limit\"}; the page still shows C-539.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (archived)",
+      "action": "An archived Contract must be restored before editing",
+      "expected": "The archived Contract shows the restore note and its Overview inputs are read-only.",
+      "startedAt": "2026-09-28T08:07:51.206Z",
+      "finishedAt": "2026-09-28T08:07:51.984Z",
+      "actual": "C-541 archived (setup 200): the page said \"This contract is archived — it is out of the contract list. Restore it to edit.\"; Title editable: false. It was restored afterwards.",
+      "result": "pass"
+    },
+    {
+      "article": "create-contract",
+      "scenario": "V-C14",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Lena Vogel (Portal)"],
+      "page": "/portal/contracts",
+      "action": "In the Portal, a Business User cannot create a Contract directly or assign its Legal Owner",
+      "expected": "No create control in the Portal Contracts list; the API refuses a direct create and a Legal Owner change.",
+      "startedAt": "2026-09-28T08:07:51.985Z",
+      "finishedAt": "2026-09-28T08:07:54.054Z",
+      "actual": "Lena Vogel's Portal Contracts page had 0 create controls. A direct create answered 403; a Legal Owner change on C-537 answered 403; the Legal Owner is still Nadia Haddad.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/settings/contracts/approver-groups",
+      "action": "Create a group, step 1: only an Administrator can open the page; anyone else who opens its address goes to their profile settings",
+      "expected": "Nadia lands on /settings/profile; the API refuses her group write.",
+      "startedAt": "2026-09-28T08:07:54.130Z",
+      "finishedAt": "2026-09-28T08:07:55.743Z",
+      "actual": "Nadia Haddad opened the address and landed on /settings/profile. A group create through the API answered 403.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Profile menu > Settings > Contracts > Approver groups > Add group",
+      "action": "Create a group, steps 1-4: Name, Description, Members including a Business User; Add group; reopen Edit to confirm the saved members; groups appear by name",
+      "expected": "The dialog offers any active user including Business Users; after Add group, Edit shows the chosen members; the list is in name order.",
+      "startedAt": "2026-09-28T08:07:55.744Z",
+      "finishedAt": "2026-09-28T08:07:56.636Z",
+      "actual": "The profile menu path reached /settings/contracts/approver-groups. Add approver group offered 51 people under Members, including Business Users Lena Vogel and Jonas Weber and the invited fixture user, and not archived Gabriel Santos. After Add group and a reload, Edit showed all three chosen members checked. Page list order [\"DOC-032 contracts-2 Legal and business 1790582775732\",\"DOC-032 contracts-2 sign-off 1790582775732\",\"Executive committee\",\"Finance sign-off\",\"Privacy review\",\"Security review\"] is name order (6 live groups; spaces and punctuation ignored, as the database collation does).",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number/approvals > Apply group",
+      "action": "Apply and check the group, steps 1-3: the Contract's Approvals tab, Apply group, choose the Approver group, review the named people and the skipped pending request, Apply group; one request per person asked; Business approvers are not added to the team",
+      "expected": "The dialog asks Lena Vogel and the fixture user and skips Priya (already pending); two new Pending rows; Lena is not on the Contract team.",
+      "startedAt": "2026-09-28T08:07:56.637Z",
+      "finishedAt": "2026-09-28T08:07:58.098Z",
+      "actual": "On C-542, after one manual request for Priya Raman, Apply group with \"DOC-032 contracts-2 Legal and business 1790582775732\" read \"Asks DOC-032 contracts-2 Approver 1790582775732 and Lena Vogel. Skips 1 person who already has a request open. Applying a group asks the people it names now. A later edit to the group leaves these requests as they are. Cancel Apply group\". Requests afterwards: [\"Priya Raman:pending:manual\",\"DOC-032 contracts-2 Approver 1790582775732:pending:group\",\"Lena Vogel:pending:group\"]. Contract team: [\"Daniel Okafor\"] (no Lena Vogel).",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number/approvals > Apply group (refusals)",
+      "action": "A group with everyone already pending is refused; a group with no active members is refused; on a Confidential Contract a staff member without access refuses the whole action and no request is created; a Confidential primary Document also needs staff approvers in its audience",
+      "expected": "Each apply is refused with a reason and creates no request.",
+      "startedAt": "2026-09-28T08:07:58.100Z",
+      "finishedAt": "2026-09-28T08:08:00.836Z",
+      "actual": "All pending on C-542: the dialog said \"Everybody in this group already has a request open.\" and Apply group was refused with \"Everybody in DOC-032 contracts-2 Legal and business 1790582775732 already has a pending approval request on this contract.\"; still 3 requests. Empty group on C-543: \"This group has nobody to ask.\", refused with \"DOC-032 contracts-2 Empty group 1790582775732 has no members to ask.\", 0 requests. Confidential C-544: refused with \"DOC-032 contracts-2 Approver 1790582775732 can't see this contract, so they can't be asked to approve it.\", 0 requests. Open C-545 with a Confidential primary Document: refused with \"DOC-032 contracts-2 Approver 1790582775732 can't see this contract, so they can't be asked to approve it.\", 0 requests.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/settings/contracts/approver-groups > Edit",
+      "action": "A member who has been archived is left out of an apply and shows as Can no longer approve in the editor; remove that selection before saving; the API refuses an archived member; existing requests keep their named people",
+      "expected": "The next apply asks only the live members; the editor flags the archived member; Save with it ticked is refused; after unticking, Save works; C-1's requests are unchanged.",
+      "startedAt": "2026-09-28T08:08:00.837Z",
+      "finishedAt": "2026-09-28T08:08:02.078Z",
+      "actual": "After the fixture user was archived (200), Apply group on C-546 read \"Asks Lena Vogel and Priya Raman. Applying a group asks the people it names now. A later edit to the group leaves these requests as they are. Cancel Apply group\" and asked [\"Lena Vogel\",\"Priya Raman\"]. Edit flagged the archived member \"Can no longer approve\" (1); adding Tom Iwu and selecting Save with that member still ticked showed \"DOC-032 contracts-2 Approver 1790582775732 is archived and can't be a group member.\", the dialog stayed open and the saved list kept 3 members. After unticking the archived member, Save closed the dialog; the group has 3 members including Tom Iwu. A member-list write naming the archived user answered 422 (\"DOC-032 contracts-2 Approver 1790582775732 is archived and can't be a group member.\"). C-542's requests are unchanged: [\"Priya Raman:pending:manual\",\"DOC-032 contracts-2 Approver 1790582775732:pending:group\",\"Lena Vogel:pending:group\"].",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/settings/contracts/approver-groups > Edit, Archive, Show archived, Restore",
+      "action": "Edit, archive, or restore a group: change the name, description and Members and Save; a member-list failure after the name saved is visible; Archive group needs no replacement; Show archived then Restore; existing requests keep their named people",
+      "expected": "Save updates the group; the member-list failure says The member list could not be saved. and the rename alone holds; archive and restore leave C-1's requests unchanged and the archived group is not offered.",
+      "startedAt": "2026-09-28T08:08:02.078Z",
+      "finishedAt": "2026-09-28T08:08:03.769Z",
+      "actual": "Save changed the description and removed Tom Iwu (2 members). With the member-list write answered 503, the editor said \"The member list could not be saved.\"; the new description had saved and Marcus Oyelaran was not added, so the rename or description alone is not proof. The archive confirmation read \"Archive DOC-032 contracts-2 Legal and business 1790582775732 DOC-032 contracts-2 Legal and business 1790582775732 leaves the apply picker. Its 2 members are kept, and approvals already requested from the group are untouched. The change applies immediately and is recorded in the audit log. Cancel Archive group\". While archived, C-542's Apply group offered [\"Pick a group\",\"DOC-032 contracts-2 Empty group 1790582775732\",\"DOC-032 contracts-2 sign-off 1790582775732\",\"Executive committee\",\"Finance sign-off\",\"Privacy review\",\"Security review\"]. Show archived then Restore returned it. C-542's requests stayed [\"Priya Raman:pending:manual\",\"DOC-032 contracts-2 Approver 1790582775732:pending:group\",\"Lena Vogel:pending:group\"] through edit, archive and restore.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Settings > Contracts > Types > Edit type > Approval defaults",
+      "action": "Defaults: open a type, select its Approval defaults tab, choose the Approver group in the Default approver group card; the choice saves on select; new Contracts inherit it and no approval starts; clearing or changing affects future Contracts only; re-typed Contracts keep their default",
+      "expected": "The card saves the group; a new Contract of the type starts Apply group on it with no requests; after No default group, that Contract still starts on it and a new one does not; a Contract re-typed into the type has no default.",
+      "startedAt": "2026-09-28T08:08:03.770Z",
+      "finishedAt": "2026-09-28T08:08:08.569Z",
+      "actual": "Types > Edit DOC-032 contracts-2 Approval defaults type 1790582775732 > Approval defaults showed the Default approver group card. Choosing \"DOC-032 contracts-2 Legal and business 1790582775732\" saved on select. New C-547 of that type had 0 approval requests and its Apply group started on \"DOC-032 contracts-2 Legal and business 1790582775732\". C-548 re-typed into the type (200) started on \"Pick a group\". After No default group saved, C-547 still started on \"DOC-032 contracts-2 Legal and business 1790582775732\" and new C-549 on \"Pick a group\". The default was then set back to the group.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "page": "/settings/contracts/approver-groups > Approval permissions",
+      "action": "Override permissions: the card asks Who can override a default approver group?, starts on Legal team members and administrators, and saves on select; Administrators only restricts applying a different group on a Contract with a default, including for pages opened before the change; Contracts without a default still allow Legal to choose; the setting is put back",
+      "expected": "Nadia's dialog is locked with the note, her already-open dialog's different group is refused, a Contract without a default still lets her choose; Daniel is not locked; the setting returns to the initial value.",
+      "startedAt": "2026-09-28T08:08:08.570Z",
+      "finishedAt": "2026-09-28T08:08:12.047Z",
+      "actual": "The Approval permissions card asked \"Who can override a default approver group?\" and started on \"Legal team members and administrators\". Administrators only saved on select (stored false). Nadia Haddad's dialog, opened before the change with \"DOC-032 contracts-2 sign-off 1790582775732\" chosen, was refused on Apply group: \"Only an administrator can override this contract's default approver group.\"; C-547 has 0 requests. Reopened, her select was disabled and the dialog said \"Only an administrator can choose a different group.\" On a Contract without a default her select was enabled. Daniel Okafor's select stayed enabled. The setting was put back to Legal team members and administrators.",
+      "result": "pass"
+    },
+    {
+      "article": "approver-groups",
+      "scenario": "V-C55",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Types > Approval defaults and /contracts/:number/approvals with an archived default",
+      "action": "If a type's default group is archived, the type card shows it with (archived); on a Contract that inherited it, Apply group shows Default group unavailable — contact an administrator; anyone who may override can choose another group",
+      "expected": "The card shows (archived); the dialog starts on the unavailable option; Daniel can choose another group; the group is restored afterwards.",
+      "startedAt": "2026-09-28T08:08:12.048Z",
+      "finishedAt": "2026-09-28T08:08:13.862Z",
+      "actual": "With the group archived (200), the type's Default approver group card showed \"DOC-032 contracts-2 Legal and business 1790582775732 (archived)\". C-547's Apply group started on \"Default group unavailable — contact an administrator\" and the select was enabled for the Administrator. The group was restored.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number header Stage display",
+      "action": "Change the Status, steps 1-2 and 4: select the current Stage in the header's Stage display, choose Internal review, Awaiting approval, Out for signature and Active in turn, read the Stage beside each Status, then check the Status beside the C- reference, the Stage display and History",
+      "expected": "The menu lists each Status with its Stage; each move shows the new Status beside C- and the Stage display; History records each change; the six Stages are Draft, Review, Approval, Signature, Active, Ended.",
+      "startedAt": "2026-09-28T08:08:13.923Z",
+      "finishedAt": "2026-09-28T08:08:16.529Z",
+      "actual": "C-551 started at \"Draft — move contract\". The menu listed 12 Statuses with their Stages: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Partially signed Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-032 contracts-2 V-C15 review 1790582775732 Review\"]. Moves: Internal review -> Review (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 I\"); Awaiting approval -> Approval (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 A\"); Out for signature -> Signature (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 O\"); Active -> Active (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 A\"). History read \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad changed the status Internal review → Awaiting approval this minute Nadia Haddad changed the status Draft → Internal review this minute Nadia Haddad made doc032-contracts-2-legal_team_member-stages.pdf the primary document Not set → doc032-contracts-2-leg\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number Documents after a manual move to Active",
+      "action": "Check what the change means: manually moving to Active does not upload an executed copy or mark a Document Version as executed; Moving to Signature does not send paper",
+      "expected": "The primary Document still has one Version, not executed; no Envelope exists.",
+      "startedAt": "2026-09-28T08:08:16.531Z",
+      "finishedAt": "2026-09-28T08:08:17.484Z",
+      "actual": "After the moves through Out for signature to Active, C-551 holds 1 Document with 1 Version, 0 marked executed; 0 Envelopes exist, so the Signature move sent nothing.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number Stage display",
+      "action": "A Status maps to one Stage; you may move backwards or skip Stages",
+      "expected": "Active -> Internal review and Internal review -> Active (skipping Approval and Signature) are both accepted.",
+      "startedAt": "2026-09-28T08:08:17.485Z",
+      "finishedAt": "2026-09-28T08:08:17.746Z",
+      "actual": "Active -> Internal review accepted (\"Review — move contract\"), then Internal review -> Active accepted without Approval or Signature (\"Active — move contract\"); the Contract reads Active (active).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor (rename, second actor)", "Nadia Haddad"],
+      "page": "/contracts/:number Stage display after a Status rename",
+      "action": "Negative: renaming a Status does not change that mapping",
+      "expected": "After the Administrator renames the fixture Review Status, the menu shows the new name with Stage Review and the Contract in it keeps Stage review; a rename that carries a Stage is refused.",
+      "startedAt": "2026-09-28T08:08:17.747Z",
+      "finishedAt": "2026-09-28T08:08:18.196Z",
+      "actual": "Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732\" (a rename that also sent stage \"active\" answered 400 \"One or more request fields are invalid.\"). The Contract reads \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732\" / review; the Stage display reads \"Review — move contract\"; the menu item reads \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732 Review\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
+      "page": "/contracts/:number Stage display > Move past approval",
+      "action": "Change the Status, step 3 and Check what the change means: with a Pending and a Rejected approval, a move beyond Approval opens Move past approval listing them; Cancel keeps the Status; Move anyway makes the stated override, History records it, and the approvals are not answered",
+      "expected": "Cancel keeps Awaiting approval; Move anyway saves Out for signature; History has the override; approvals stay Pending and Rejected.",
+      "startedAt": "2026-09-28T08:08:18.197Z",
+      "finishedAt": "2026-09-28T08:08:21.251Z",
+      "actual": "Move past approval read \"Move past approval 2 approvals on this contract are unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending PR Priya Raman Rejected This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\" with buttons [\"Cancel\",\"Move anyway\"]. Cancel kept \"Awaiting approval\". Move anyway saved Out for signature; History: \"Nadia Haddad moved this contract past approval, overriding Daniel Okafor and Priya Raman this minute Nadia Haddad changed the status Awaiting approval → Out for signature this\". Approvals afterwards: [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"] (not answered by the move).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number (Ended Status)",
+      "action": "Ended Contracts stay editable",
+      "expected": "After a move to Expired (Ended) the record still accepts an edit.",
+      "startedAt": "2026-09-28T08:08:21.252Z",
+      "finishedAt": "2026-09-28T08:08:22.392Z",
+      "actual": "Moved to Expired (\"Ended — move contract\"); Priority Critical saved on the Ended Contract.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Lena Vogel (Portal)"],
+      "page": "/contracts/:number (archived) and /portal/contracts/:number",
+      "action": "If the Status does not change: Business Users and readers of archived Contracts do not get the editing control; Restore an archived Contract before the change",
+      "expected": "Lena (team member) sees no Status control in the Portal and a direct write is refused; the archived record shows no Stage move control and a direct write is refused; after Restore the Stage control works.",
+      "startedAt": "2026-09-28T08:08:22.393Z",
+      "finishedAt": "2026-09-28T08:08:26.393Z",
+      "actual": "Lena Vogel (team member) opened the Portal record \"DOC-032 contracts-2 V-C15 legal_team_member 1790582775732\" with 0 Status controls; her direct Status write answered 403. Archived C-551 showed 0 Stage move controls; a direct write answered 409 (\"This contract is archived. Restore it before editing.\"). After Restore (200) the Stage control moved it to Active.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/:number/signatures (work lab, no Signing connector)",
+      "action": "Check what the change means, second paragraph (context only on this lab): the Contract's Signatures tab exists; the confirmed-send move is checked on the owned stand-in lab (walkthrough-signing.json)",
+      "expected": "A Signatures tab after Approvals; with no Signing connector it offers no send.",
+      "startedAt": "2026-09-28T08:08:26.394Z",
+      "finishedAt": "2026-09-28T08:08:28.257Z",
+      "actual": "Contract sections: [\"Overview\",\"Fields\",\"Documents\",\"Approvals 2\",\"Signatures\",\"Key dates\",\"Tasks\"]. The Signatures tab (/contracts/551/signatures) read \"Signatures No signature requests on this contract yet.\"; Send for signature buttons: 0. The confirmed-send paragraph is walked on the owned lab c2sign (walkthrough-signing.json).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number header Stage display",
+      "action": "Change the Status, steps 1-2 and 4: select the current Stage in the header's Stage display, choose Internal review, Awaiting approval, Out for signature and Active in turn, read the Stage beside each Status, then check the Status beside the C- reference, the Stage display and History",
+      "expected": "The menu lists each Status with its Stage; each move shows the new Status beside C- and the Stage display; History records each change; the six Stages are Draft, Review, Approval, Signature, Active, Ended.",
+      "startedAt": "2026-09-28T08:08:28.317Z",
+      "finishedAt": "2026-09-28T08:08:30.395Z",
+      "actual": "C-552 started at \"Draft — move contract\". The menu listed 12 Statuses with their Stages: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Partially signed Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732 Review\"]. Moves: Internal review -> Review (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Inter\"); Awaiting approval -> Approval (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Await\"); Out for signature -> Signature (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Out f\"); Active -> Active (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Activ\"). History read \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor changed the status Internal review → Awaiting approval this minute Daniel Okafor changed the status Draft → Internal review this minute Daniel Okafor made doc032-contracts-2-administrator-stages.pdf the primary document Not set → doc032-contracts-2-ad\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number Documents after a manual move to Active",
+      "action": "Check what the change means: manually moving to Active does not upload an executed copy or mark a Document Version as executed; Moving to Signature does not send paper",
+      "expected": "The primary Document still has one Version, not executed; no Envelope exists.",
+      "startedAt": "2026-09-28T08:08:30.396Z",
+      "finishedAt": "2026-09-28T08:08:31.329Z",
+      "actual": "After the moves through Out for signature to Active, C-552 holds 1 Document with 1 Version, 0 marked executed; 0 Envelopes exist, so the Signature move sent nothing.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number Stage display",
+      "action": "A Status maps to one Stage; you may move backwards or skip Stages",
+      "expected": "Active -> Internal review and Internal review -> Active (skipping Approval and Signature) are both accepted.",
+      "startedAt": "2026-09-28T08:08:31.330Z",
+      "finishedAt": "2026-09-28T08:08:31.873Z",
+      "actual": "Active -> Internal review accepted (\"Review — move contract\"), then Internal review -> Active accepted without Approval or Signature (\"Active — move contract\"); the Contract reads Active (active).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor (rename, second actor)", "Daniel Okafor"],
+      "page": "/contracts/:number Stage display after a Status rename",
+      "action": "Negative: renaming a Status does not change that mapping",
+      "expected": "After the Administrator renames the fixture Review Status, the menu shows the new name with Stage Review and the Contract in it keeps Stage review; a rename that carries a Stage is refused.",
+      "startedAt": "2026-09-28T08:08:31.874Z",
+      "finishedAt": "2026-09-28T08:08:32.670Z",
+      "actual": "Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732\" (a rename that also sent stage \"active\" answered 400 \"One or more request fields are invalid.\"). The Contract reads \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732\" / review; the Stage display reads \"Review — move contract\"; the menu item reads \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732 Review\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "page": "/contracts/:number Stage display > Move past approval",
+      "action": "Change the Status, step 3 and Check what the change means: with a Pending and a Rejected approval, a move beyond Approval opens Move past approval listing them; Cancel keeps the Status; Move anyway makes the stated override, History records it, and the approvals are not answered",
+      "expected": "Cancel keeps Awaiting approval; Move anyway saves Out for signature; History has the override; approvals stay Pending and Rejected.",
+      "startedAt": "2026-09-28T08:08:32.671Z",
+      "finishedAt": "2026-09-28T08:08:36.016Z",
+      "actual": "Move past approval read \"Move past approval 2 approvals on this contract are unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending PR Priya Raman Rejected This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\" with buttons [\"Cancel\",\"Move anyway\"]. Cancel kept \"Awaiting approval\". Move anyway saved Out for signature; History: \"Daniel Okafor moved this contract past approval, overriding Nadia Haddad and Priya Raman this minute Daniel Okafor changed the status Awaiting approval → Out for signature this\". Approvals afterwards: [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"] (not answered by the move).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number (Ended Status)",
+      "action": "Ended Contracts stay editable",
+      "expected": "After a move to Expired (Ended) the record still accepts an edit.",
+      "startedAt": "2026-09-28T08:08:36.017Z",
+      "finishedAt": "2026-09-28T08:08:37.609Z",
+      "actual": "Moved to Expired (\"Ended — move contract\"); Priority Critical saved on the Ended Contract.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Lena Vogel (Portal)"],
+      "page": "/contracts/:number (archived) and /portal/contracts/:number",
+      "action": "If the Status does not change: Business Users and readers of archived Contracts do not get the editing control; Restore an archived Contract before the change",
+      "expected": "Lena (team member) sees no Status control in the Portal and a direct write is refused; the archived record shows no Stage move control and a direct write is refused; after Restore the Stage control works.",
+      "startedAt": "2026-09-28T08:08:37.610Z",
+      "finishedAt": "2026-09-28T08:08:41.781Z",
+      "actual": "Lena Vogel (team member) opened the Portal record \"DOC-032 contracts-2 V-C15 administrator 1790582775732\" with 0 Status controls; her direct Status write answered 403. Archived C-552 showed 0 Stage move controls; a direct write answered 409 (\"This contract is archived. Restore it before editing.\"). After Restore (200) the Stage control moved it to Active.",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number/signatures (work lab, no Signing connector)",
+      "action": "Check what the change means, second paragraph (context only on this lab): the Contract's Signatures tab exists; the confirmed-send move is checked on the owned stand-in lab (walkthrough-signing.json)",
+      "expected": "A Signatures tab after Approvals; with no Signing connector it offers no send.",
+      "startedAt": "2026-09-28T08:08:41.783Z",
+      "finishedAt": "2026-09-28T08:08:44.109Z",
+      "actual": "Contract sections: [\"Overview\",\"Fields\",\"Documents\",\"Approvals 2\",\"Signatures\",\"Key dates\",\"Tasks\"]. The Signatures tab (/contracts/552/signatures) read \"Signatures No signature requests on this contract yet.\"; Send for signature buttons: 0. The confirmed-send paragraph is walked on the owned lab c2sign (walkthrough-signing.json).",
+      "result": "pass"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-28T08:08:42.097Z",
+      "page": "/contracts/552",
+      "waitedFor": "record heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    }
+  ],
+  "cleanup": [
+    "group DOC-032 contracts-2 Empty group 1790582775732: 200",
+    "group DOC-032 contracts-2 Legal and business 1790582775732: 200",
+    "group DOC-032 contracts-2 sign-off 1790582775732: 200",
+    "type DOC-032 contracts-2 Form type 1790582775732: 200",
+    "type DOC-032 contracts-2 Approval defaults type 1790582775732: 200",
+    "field DOC-032 contracts-2 Deal size 1790582775732: 200",
+    "field DOC-032 contracts-2 Escalation reason 1790582775732: 200",
+    "field DOC-032 contracts-2 Notes 1790582775732: 200",
+    "field DOC-032 contracts-2 Risk tier 1790582775732: 200",
+    "status DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732: 200"
+  ]
+}

@@ -1,0 +1,1262 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-a",
+  "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer wrote none of these eleven guides, none of their DOC-030 source reviews and none of the DOC-030 walkthrough scripts. It changed no guide text. It and its replay helpers adapted the DOC-030 scripts only as each script header and this record state.",
+  "reviewedAt": "2026-09-28T08:08:04.677Z",
+  "fromAppCommit": {
+    "find-your-work": "067c1646829df85e62b809ee9157921e867c84e7",
+    "search-and-views": "067c1646829df85e62b809ee9157921e867c84e7",
+    "personal-settings": "067c1646829df85e62b809ee9157921e867c84e7",
+    "roles-and-access": "067c1646829df85e62b809ee9157921e867c84e7",
+    "comments-and-activity": "067c1646829df85e62b809ee9157921e867c84e7",
+    "notifications": "067c1646829df85e62b809ee9157921e867c84e7",
+    "submit-request": "067c1646829df85e62b809ee9157921e867c84e7",
+    "follow-request": "067c1646829df85e62b809ee9157921e867c84e7",
+    "portal-knowledge": "067c1646829df85e62b809ee9157921e867c84e7",
+    "triage-requests": "067c1646829df85e62b809ee9157921e867c84e7",
+    "convert-request": "067c1646829df85e62b809ee9157921e867c84e7"
+  },
+  "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+  "appDiffCommand": "git diff --name-only 067c1646829df85e62b809ee9157921e867c84e7 4ca41822b685a2a1e58a38b4f25e421cf735c54e -- apps packages services styles Dockerfile scripts/documentation",
+  "appDiffFiles": [
+    "apps/api/openapi.json",
+    "apps/api/package.json",
+    "apps/api/src/account-issuer-migration.test.ts",
+    "apps/api/src/app.ts",
+    "apps/api/src/auth/limits.ts",
+    "apps/api/src/auth/oauth.test.ts",
+    "apps/api/src/auth/oauth.ts",
+    "apps/api/src/auth/sso-domains.ts",
+    "apps/api/src/envelope-history-migration.test.ts",
+    "apps/api/src/envelope-launch-migration.test.ts",
+    "apps/api/src/envelope-preparation-migration.test.ts",
+    "apps/api/src/index.ts",
+    "apps/api/src/lib/auto-doc-fill/engine.test.ts",
+    "apps/api/src/lib/contract-team.ts",
+    "apps/api/src/lib/document-erasure.ts",
+    "apps/api/src/lib/document-versions.ts",
+    "apps/api/src/lib/event-hub.test.ts",
+    "apps/api/src/lib/event-hub.ts",
+    "apps/api/src/lib/matter-team.ts",
+    "apps/api/src/lib/share-register.test.ts",
+    "apps/api/src/lib/signer-erasure.ts",
+    "apps/api/src/lib/signing/config.test.ts",
+    "apps/api/src/lib/signing/config.ts",
+    "apps/api/src/lib/signing/docusign.test.ts",
+    "apps/api/src/lib/signing/docusign.ts",
+    "apps/api/src/lib/signing/fake.test.ts",
+    "apps/api/src/lib/signing/fake.ts",
+    "apps/api/src/lib/signing/identity.ts",
+    "apps/api/src/lib/signing/provider.ts",
+    "apps/api/src/lib/signing/recovery-stage.ts",
+    "apps/api/src/lib/signing/recovery.ts",
+    "apps/api/src/lib/signing/resolver.test.ts",
+    "apps/api/src/lib/signing/resolver.ts",
+    "apps/api/src/lib/signing/status-check.ts",
+    "apps/api/src/lib/signing/transitions.ts",
+    "apps/api/src/lib/task-assignment.ts",
+    "apps/api/src/lib/team-person.ts",
+    "apps/api/src/mcp-settings-migration.test.ts",
+    "apps/api/src/mcp/administration.test.ts",
+    "apps/api/src/mcp/administration.ts",
+    "apps/api/src/mcp/calls.ts",
+    "apps/api/src/mcp/change-feed.ts",
+    "apps/api/src/mcp/documentation.test.ts",
+    "apps/api/src/mcp/documents.ts",
+    "apps/api/src/mcp/grant.test.ts",
+    "apps/api/src/mcp/guide.test.ts",
+    "apps/api/src/mcp/listen.test.ts",
+    "apps/api/src/mcp/matters-tasks.test.ts",
+    "apps/api/src/mcp/mcp.test.ts",
+    "apps/api/src/mcp/prompts.test.ts",
+    "apps/api/src/mcp/prompts.ts",
+    "apps/api/src/mcp/register.test.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/requests-comments-people.test.ts",
+    "apps/api/src/mcp/resources.test.ts",
+    "apps/api/src/mcp/resources.ts",
+    "apps/api/src/mcp/routes.ts",
+    "apps/api/src/mcp/selectable-toolsets.ts",
+    "apps/api/src/mcp/team.test.ts",
+    "apps/api/src/mcp/team.ts",
+    "apps/api/src/mcp/tool.ts",
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "apps/api/src/modules/ai-connector/routes.ts",
+    "apps/api/src/modules/api-keys/api-keys.test.ts",
+    "apps/api/src/modules/api-keys/routes.ts",
+    "apps/api/src/modules/approver-groups/approver-groups.test.ts",
+    "apps/api/src/modules/audit-log/routes.ts",
+    "apps/api/src/modules/audit-log/tool-calls.ts",
+    "apps/api/src/modules/auth/allowed-domains.test.ts",
+    "apps/api/src/modules/auth/auth-mode.test.ts",
+    "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/modules/auth/authentication-policy.test.ts",
+    "apps/api/src/modules/auth/profile.test.ts",
+    "apps/api/src/modules/auth/routes.ts",
+    "apps/api/src/modules/auth/setup.test.ts",
+    "apps/api/src/modules/auth/sso.test.ts",
+    "apps/api/src/modules/contract-envelopes/completion.test.ts",
+    "apps/api/src/modules/contract-envelopes/launch.ts",
+    "apps/api/src/modules/contract-envelopes/reconciliation.test.ts",
+    "apps/api/src/modules/contract-envelopes/routes.ts",
+    "apps/api/src/modules/contract-envelopes/send.test.ts",
+    "apps/api/src/modules/contract-envelopes/void.test.ts",
+    "apps/api/src/modules/contract-statuses/contract-statuses.test.ts",
+    "apps/api/src/modules/contract-statuses/routes.ts",
+    "apps/api/src/modules/contracts/contracts.test.ts",
+    "apps/api/src/modules/contracts/create.ts",
+    "apps/api/src/modules/contracts/record.ts",
+    "apps/api/src/modules/contracts/renewal-vehicle.ts",
+    "apps/api/src/modules/contracts/routes.ts",
+    "apps/api/src/modules/contracts/service.ts",
+    "apps/api/src/modules/document-types/document-types.test.ts",
+    "apps/api/src/modules/document-types/routes.ts",
+    "apps/api/src/modules/documents/document-comparison.test.ts",
+    "apps/api/src/modules/documents/documents.test.ts",
+    "apps/api/src/modules/documents/repository-filters.test.ts",
+    "apps/api/src/modules/documents/repository.ts",
+    "apps/api/src/modules/documents/routes.ts",
+    "apps/api/src/modules/documents/service.ts",
+    "apps/api/src/modules/email-settings/routes.ts",
+    "apps/api/src/modules/entities/linked-records.test.ts",
+    "apps/api/src/modules/entities/linked-records.ts",
+    "apps/api/src/modules/entities/share-register.test.ts",
+    "apps/api/src/modules/events/routes.ts",
+    "apps/api/src/modules/matters/routes.ts",
+    "apps/api/src/modules/matters/service.ts",
+    "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+    "apps/api/src/modules/mcp-settings/mcp-settings.test.ts",
+    "apps/api/src/modules/mcp-settings/routes.ts",
+    "apps/api/src/modules/notifications/record-activity.test.ts",
+    "apps/api/src/modules/oauth-grants/oauth-grants.test.ts",
+    "apps/api/src/modules/oauth-grants/routes.ts",
+    "apps/api/src/modules/onboarding/onboarding.test.ts",
+    "apps/api/src/modules/org/currencies.ts",
+    "apps/api/src/modules/org/general.test.ts",
+    "apps/api/src/modules/org/routes.ts",
+    "apps/api/src/modules/portal/document-service.ts",
+    "apps/api/src/modules/portal/documents.ts",
+    "apps/api/src/modules/settings/read.ts",
+    "apps/api/src/modules/signer-erasure/routes.ts",
+    "apps/api/src/modules/signing-connector/routes.ts",
+    "apps/api/src/modules/signing-connector/signing-connector.test.ts",
+    "apps/api/src/modules/signing-webhook/routes.ts",
+    "apps/api/src/modules/signing-webhook/webhook.test.ts",
+    "apps/api/src/origin-check.test.ts",
+    "apps/api/src/pipeline/automatic-contract-analysis.ts",
+    "apps/api/src/pipeline/executed-copy.ts",
+    "apps/api/src/pipeline/reconciliation.ts",
+    "apps/api/src/testing/harness.ts",
+    "apps/api/src/testing/signing-contract.ts",
+    "apps/web/index.html",
+    "apps/web/package.json",
+    "apps/web/src/components/ai-model-selector.tsx",
+    "apps/web/src/components/api-keys.tsx",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/web/src/components/approvals/signer-name-field.tsx",
+    "apps/web/src/components/authentication-options.test.tsx",
+    "apps/web/src/components/authentication-options.tsx",
+    "apps/web/src/components/auto-docs/form-builder.tsx",
+    "apps/web/src/components/auto-docs/rule-value-input.tsx",
+    "apps/web/src/components/auto-docs/upload-dialog.tsx",
+    "apps/web/src/components/avatar.tsx",
+    "apps/web/src/components/connected-clients.tsx",
+    "apps/web/src/components/described-field.tsx",
+    "apps/web/src/components/documents/bulk-document-actions.tsx",
+    "apps/web/src/components/documents/documents-card.tsx",
+    "apps/web/src/components/documents/documents-columns.tsx",
+    "apps/web/src/components/entities/entity-chart.tsx",
+    "apps/web/src/components/entities/linked-records-table.tsx",
+    "apps/web/src/components/entities/officer-name-input.test.tsx",
+    "apps/web/src/components/entities/officer-name-input.tsx",
+    "apps/web/src/components/entities/officers-card.tsx",
+    "apps/web/src/components/linked-records-list.tsx",
+    "apps/web/src/components/list-editor.tsx",
+    "apps/web/src/components/portal/documents-section.tsx",
+    "apps/web/src/components/shell/shell.test.tsx",
+    "apps/web/src/components/smtp-settings-fields.tsx",
+    "apps/web/src/components/table/managed-table.tsx",
+    "apps/web/src/components/taxonomy-types-pane.tsx",
+    "apps/web/src/lib/activity.test.ts",
+    "apps/web/src/lib/activity.ts",
+    "apps/web/src/lib/documents.ts",
+    "apps/web/src/lib/envelopes.ts",
+    "apps/web/src/lib/linked-records.ts",
+    "apps/web/src/lib/oauth-return.ts",
+    "apps/web/src/lib/session.ts",
+    "apps/web/src/lib/setup-drafts.ts",
+    "apps/web/src/router.tsx",
+    "apps/web/src/routes/auth-layout.test.tsx",
+    "apps/web/src/routes/auto-doc-publish.test.tsx",
+    "apps/web/src/routes/auto-docs.test.tsx",
+    "apps/web/src/routes/connected-clients.test.tsx",
+    "apps/web/src/routes/contract-record-envelopes.test.tsx",
+    "apps/web/src/routes/contract-record-renewal.test.tsx",
+    "apps/web/src/routes/contract-record.test.tsx",
+    "apps/web/src/routes/contract-record.tsx",
+    "apps/web/src/routes/contracts-columns.test.tsx",
+    "apps/web/src/routes/documents-filters.test.tsx",
+    "apps/web/src/routes/documents.test.tsx",
+    "apps/web/src/routes/entity-record.test.tsx",
+    "apps/web/src/routes/entity-record.tsx",
+    "apps/web/src/routes/entity-share-register.test.tsx",
+    "apps/web/src/routes/login.test.tsx",
+    "apps/web/src/routes/login.tsx",
+    "apps/web/src/routes/matter-record-edit.test.tsx",
+    "apps/web/src/routes/matter-record.tsx",
+    "apps/web/src/routes/page-title.test.tsx",
+    "apps/web/src/routes/portal-documents.test.tsx",
+    "apps/web/src/routes/portal.test.tsx",
+    "apps/web/src/routes/route-guard.test.tsx",
+    "apps/web/src/routes/settings-api-keys.test.tsx",
+    "apps/web/src/routes/settings-approver-groups.test.tsx",
+    "apps/web/src/routes/settings-audit-log.test.tsx",
+    "apps/web/src/routes/settings-authentication.test.tsx",
+    "apps/web/src/routes/settings-authentication.tsx",
+    "apps/web/src/routes/settings-contract-fields.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.test.tsx",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
+    "apps/web/src/routes/settings-contract-types.test.tsx",
+    "apps/web/src/routes/settings-document-types.test.tsx",
+    "apps/web/src/routes/settings-document-types.tsx",
+    "apps/web/src/routes/settings-e-signature.test.tsx",
+    "apps/web/src/routes/settings-e-signature.tsx",
+    "apps/web/src/routes/settings-entity-types.test.tsx",
+    "apps/web/src/routes/settings-general.tsx",
+    "apps/web/src/routes/settings-intake-links.test.tsx",
+    "apps/web/src/routes/settings-matter-templates.test.tsx",
+    "apps/web/src/routes/settings-matter-types.test.tsx",
+    "apps/web/src/routes/settings-mcp.test.tsx",
+    "apps/web/src/routes/settings-mcp.tsx",
+    "apps/web/src/routes/settings-reminders.test.tsx",
+    "apps/web/src/routes/settings-request-types.test.tsx",
+    "apps/web/src/routes/settings-users.test.tsx",
+    "apps/web/src/routes/settings.test.tsx",
+    "apps/web/src/routes/setup.test.tsx",
+    "apps/web/src/routes/setup.tsx",
+    "apps/web/src/routes/signing-return.tsx",
+    "apps/web/src/routes/welcome.test.tsx",
+    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/testing/helpers.tsx",
+    "apps/web/vite.config.ts",
+    "packages/api-client/src/schema.ts",
+    "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+    "packages/db/migrations/0173_durable-envelope-preparation.sql",
+    "packages/db/migrations/0174_envelope-launch-return.sql",
+    "packages/db/migrations/0175_envelope-launch-timestamps.sql",
+    "packages/db/migrations/0176_envelope-resume.sql",
+    "packages/db/migrations/0177_envelope-recovery.sql",
+    "packages/db/migrations/0178_envelope-recovery-intent.sql",
+    "packages/db/migrations/0179_envelope-reconciliation.sql",
+    "packages/db/migrations/0180_document-type-colors.sql",
+    "packages/db/migrations/0181_partial-signing.sql",
+    "packages/db/migrations/0182_partially-signed-document-type.sql",
+    "packages/db/migrations/0183_sso-provider-name.sql",
+    "packages/db/migrations/meta/0172_snapshot.json",
+    "packages/db/migrations/meta/0173_snapshot.json",
+    "packages/db/migrations/meta/0174_snapshot.json",
+    "packages/db/migrations/meta/0175_snapshot.json",
+    "packages/db/migrations/meta/0176_snapshot.json",
+    "packages/db/migrations/meta/0177_snapshot.json",
+    "packages/db/migrations/meta/0178_snapshot.json",
+    "packages/db/migrations/meta/0179_snapshot.json",
+    "packages/db/migrations/meta/0180_snapshot.json",
+    "packages/db/migrations/meta/0181_snapshot.json",
+    "packages/db/migrations/meta/0182_snapshot.json",
+    "packages/db/migrations/meta/0183_snapshot.json",
+    "packages/db/migrations/meta/_journal.json",
+    "packages/db/src/schema/auth.ts",
+    "packages/db/src/schema/contract-envelopes.ts",
+    "packages/db/src/schema/document-types.ts",
+    "packages/db/src/schema/documents.ts",
+    "packages/db/src/schema/org.ts",
+    "packages/shared/src/activity.ts",
+    "packages/shared/src/document-type-colors.ts",
+    "packages/shared/src/index.ts",
+    "packages/shared/src/live-events.ts",
+    "packages/shared/src/mcp.ts",
+    "packages/shared/src/start-blank.ts",
+    "scripts/documentation/lab-options.mjs",
+    "scripts/documentation/lab-options.test.mjs",
+    "scripts/documentation/lab.mjs",
+    "scripts/documentation/reader.css"
+  ],
+  "labs": [
+    {
+      "name": "work",
+      "project": "openlaw-docs-9d2b1705-work",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43340",
+      "mailUrl": "http://127.0.0.1:48440",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T06:50:34.922Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T06:50:48.736Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Shared DOC-032 work lab. Every replay except the convert-request ai phase ran here. Records are named 'DOC-032 compat compat-a …'."
+    },
+    {
+      "name": "compataai",
+      "project": "openlaw-docs-9d2b1705-compataai",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43396",
+      "mailUrl": "http://127.0.0.1:48496",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T07:16:53.568Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T07:17:18.060Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Created by this reviewer for the convert-request ai phase, which DOC-030 ran on its own inboxai lab: lab.mjs create compataai --commit 4ca41822 --app-port 43396 --mail-port 48496 --backend-subnet 10.243.96.0/24 --engine-subnet 10.244.96.0/24, then up and seed (light, random seed 7). The provider stand-in (inbox-replay/provider-standin.mjs) ran in a node:22-alpine container on the lab backend network. The stand-in and the lab were destroyed at 2026-09-28T07:41:58Z. Same app and engine image IDs as work."
+    }
+  ],
+  "browser": "Playwright 1.63.0 Chromium, headless, one isolated context per identity (viewport as each DOC-030 script sets it)",
+  "articles": [
+    {
+      "articleId": "find-your-work",
+      "scenario": "V-C03",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/home.tsx",
+        "apps/web/src/components/home/section-card.tsx",
+        "apps/web/src/components/home/inbox-card.tsx",
+        "apps/web/src/components/home/obligations-card.tsx",
+        "apps/web/src/components/home/welcome-card.tsx",
+        "apps/api/src/modules/home/routes.ts",
+        "apps/api/src/modules/home/sections/inbox.ts",
+        "apps/api/src/modules/home/sections/obligations.ts",
+        "apps/api/src/modules/home/sections/tasks.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/inbox.ts",
+        "apps/web/src/routes/inbox.tsx",
+        "apps/web/src/components/shell/search-input.tsx",
+        "apps/web/src/components/search/empty-search-entries.tsx",
+        "apps/web/src/lib/recent-searches.ts",
+        "apps/web/src/routes/home-tasks.tsx",
+        "apps/web/src/components/tasks/completed-toggle.tsx",
+        "apps/web/src/components/shell/keyboard-shortcuts.tsx",
+        "apps/web/src/routes/not-found.tsx",
+        "apps/web/src/routes/help.tsx",
+        "apps/api/src/modules/home/",
+        "apps/web/src/components/shell/app-header.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/find-your-work-replay.json",
+        "sha256": "56547258ee51fca4146ea93c8ee2651cc46b6bb16553f98814e0b07c5402305d",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs (with lib.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 28,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. TAG \"DOC-032 compat compat-a access-2\" and throwaway accounts doc032.compata.*@helix.example; only the home, settings and knowledge modules run (staff and expired belong to staff-sign-in). The DOC-030 large-photo product-bug check records an observation, because 7abd2a8f fixed the bug. The seeded Knowledge lookup reads every page of the staff list (other agents pushed the four seeded items to page 2). No step or check changed.",
+        "attempts": [
+          "Attempt 1 (work): the keyboard-navigation step failed for both roles with 'Saved view API 400; groups [Recent]': the longer fixture tag made the saved-search name 62 characters, over the unchanged 60-character limit. Fixture reason. Its run-end SQL cleanup also matched the bare 'DOC-032 compat compat-a' prefix and archived two other compat-a fixtures; the tag was then narrowed.",
+          "Attempt 2 (work): shorter saved-search name; 28 of 28 passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay.mjs",
+            "sha256": "72804c99da708d238f400a5090262fd4549bfdb8958d22a6f1ed9b2aaeea8a6b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay/lib.mjs",
+            "sha256": "affa245864015c35a7dd8e274ec1f1d2b05126d16b7b680f495859830ff6df7c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/find-your-work-replay.json",
+            "sha256": "56547258ee51fca4146ea93c8ee2651cc46b6bb16553f98814e0b07c5402305d"
+          }
+        ]
+      },
+      "summary": "Home, the header search box, My Tasks, keyboard shortcuts and the not-found page did not change (home.tsx, apps/api/src/modules/home/, home-tasks.tsx, search-input.tsx, empty-search-entries.tsx, keyboard-shortcuts.tsx and not-found.tsx have no diff). contract-record.tsx and matter-record.tsx moved the owner pickers into an Owners section and added a Signatures tab on Contracts; the guide only names the Fields and Documents section links, the Your contracts section by Owner and the Contract not found page, which are unchanged. messages/en-US.json removes or changes no string the guide quotes. The replay passed 28 of 28 steps for Administrator and Legal Team Member.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "search-and-views",
+      "scenario": "V-C04",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "packages/shared/src/search-question.ts",
+        "packages/shared/src/search-conditions.ts",
+        "packages/shared/src/search-fields.ts",
+        "packages/shared/src/index.ts",
+        "apps/web/src/components/shell/search-input.tsx",
+        "apps/web/src/routes/search.tsx",
+        "apps/web/src/components/search/search-result-row.tsx",
+        "apps/web/src/components/search/advanced-search.tsx",
+        "apps/web/src/components/search/advanced-search-dialog.tsx",
+        "apps/web/src/components/search/search-conditions.tsx",
+        "apps/web/src/components/search/condition-definitions.ts",
+        "apps/web/src/components/search/condition-chips.tsx",
+        "apps/web/src/components/search/field-definitions.ts",
+        "apps/web/src/components/search/saved-searches.tsx",
+        "apps/web/src/components/search/recent-search-list.tsx",
+        "apps/web/src/components/search/empty-search-entries.ts",
+        "apps/web/src/components/search/search-question.ts",
+        "apps/web/src/components/search/search-sort.tsx",
+        "apps/web/src/components/table/views-menu.tsx",
+        "apps/web/src/components/table/property-list.tsx",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/record-filter-definitions.ts",
+        "apps/web/src/routes/contracts.tsx",
+        "apps/web/src/lib/recent-searches.ts",
+        "apps/web/src/lib/search.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/lib/format.ts",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/lib/list-views.ts",
+        "apps/web/src/lib/table-width-preferences.ts",
+        "apps/api/src/modules/search/service.ts",
+        "apps/api/src/modules/search/conditions.ts",
+        "apps/api/src/modules/search/field-conditions.ts",
+        "apps/api/src/modules/search/relative-dates.ts",
+        "apps/api/src/modules/search/sort.ts",
+        "apps/api/src/modules/list-views/routes.ts",
+        "apps/api/src/lib/record-filters.ts",
+        "packages/db/src/schema/list-views.ts",
+        "apps/web/src/lib/documents.ts",
+        "packages/db/src/schema/documents.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/session.ts",
+        "messages/en-US.json",
+        "packages/db/src/schema/documents.ts",
+        "packages/shared/src/index.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.json",
+        "sha256": "d6428bd1a5e2e06dfb527f86fe61eb4dc926a4a674a803b7dca9601cc6821c44",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/search/walkthrough.mjs (with rewalk-archived-field.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 87,
+        "stepsNote": "85 current steps (42 Administrator, 42 Legal Team Member, 1 Business User) plus 2 re-walk steps",
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Fixture prefix 'DOC-032 compat compat-a search <stamp>' shortened in attempt 2 to fit the unchanged 60-character view-name limit; throwaway accounts doc032.compata.search.*@helix.example; fixture state under ~/.cache. The seeded record the script uses (Northwind Traders Ltd) still exists and the script names no bootstrap Administrator. No step, selector, check or expected text changed.",
+        "attempts": [
+          "Attempt 1 (work): 79 steps, 4 failed, all superseded. Save a view (both roles): the 61-character adapted view name was cut at 60, so the menu had no entry with the full name (fixture). Show ended/closed/archived (Administrator): Draft count moved from 33 to 42 during the measurement (other agents writing). Filter and sort (Administrator): aria-sort read null once (timing).",
+          "Attempt 2 (work): fresh fixtures, 85 steps, 1 failed: Legal Team Member 'Show ended No' count moved from 113 to 115 during the measurement (timing). Administrator steps stand.",
+          "Attempt 3 (work): Legal Team Member only, 43 of 43 passed.",
+          "Attempt 4 (work): archived-Field re-walk script, 2 of 2 passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.mjs",
+            "sha256": "8dfa94477be933f422d92c4beabc7a67fc0e20c05e5c79bc0881e8e03c2a16ae"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/search-and-views-rewalk-archived-field.mjs",
+            "sha256": "f89ce3727fe38a990d52a6ed08257e949eb5188b7dc95fd5596397af85c099a8"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/search-and-views-replay-legal_team_member-saved-view.png",
+            "sha256": "43d644adf79b03ab841016d8a09a2b0d479203563e665716a36cc5879655b940"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.json",
+            "sha256": "d6428bd1a5e2e06dfb527f86fe61eb4dc926a4a674a803b7dca9601cc6821c44"
+          }
+        ]
+      },
+      "summary": "Search, list views, saved searches, Recent and the record filter bar did not change (search/*, list-views/*, views-menu.tsx, record-filter-bar.tsx, recent-searches.ts have no diff). lib/documents.ts and schema/documents.ts add the Partially signed version kind and Document type colours; the guide does not list Document kinds. session.ts only also clears setup drafts on sign-out, and Recent is still cleared. shared/src/index.ts only adds exports. The seeded saved views now belong to Devon Calloway, which the guide does not name. The replay passed its final 85 steps for Administrator, Legal Team Member and the Business User redirect, and the archived-Field re-walk passed 2 of 2 with the guide's two notices. The DOC-030 header-versus-results product bug for 'or' and a leading '-' still reproduces; the script's stale guideFailures note about the dialog notice tests pre-e68143e1 text, which the re-walk confirms.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "personal-settings",
+      "scenario": "V-C05",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-profile.tsx",
+        "apps/web/src/lib/avatar.ts",
+        "apps/web/src/components/status-note.tsx",
+        "apps/web/src/components/ui/label.tsx",
+        "apps/web/src/components/ui/field-help.tsx",
+        "apps/web/src/routes/settings-appearance.tsx",
+        "apps/web/src/routes/settings-app-view.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/timezone-picker.tsx",
+        "apps/api/src/auth/handler.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/api/src/auth/oauth.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/auth/oauth.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/personal-settings-replay.json",
+        "sha256": "c4e2f5d38c5db7cc3f4f27af7eefa8e98ef3e7486d493735570b4b587b0d2201",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs (with lib.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 18,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. TAG \"DOC-032 compat compat-a access-2\" and throwaway accounts doc032.compata.*@helix.example; only the home, settings and knowledge modules run (staff and expired belong to staff-sign-in). The DOC-030 large-photo product-bug check records an observation, because 7abd2a8f fixed the bug. The seeded Knowledge lookup reads every page of the staff list (other agents pushed the four seeded items to page 2). No step or check changed.",
+        "attempts": [
+          "Attempt 1 (work): 18 of 18 passed with the first tag.",
+          "Attempt 2 (work): rerun with the narrowed tag; 18 of 18 passed. Attempt 1 is marked superseded."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay.mjs",
+            "sha256": "72804c99da708d238f400a5090262fd4549bfdb8958d22a6f1ed9b2aaeea8a6b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay/lib.mjs",
+            "sha256": "affa245864015c35a7dd8e274ec1f1d2b05126d16b7b680f495859830ff6df7c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/personal-settings-replay.json",
+            "sha256": "c4e2f5d38c5db7cc3f4f27af7eefa8e98ef3e7486d493735570b4b587b0d2201"
+          }
+        ]
+      },
+      "summary": "settings.tsx, settings-profile.tsx, settings-appearance.tsx, settings-app-view.tsx, avatar.ts and auth/handler.ts have no diff. api-keys.tsx now offers only the Toolsets the account may use and can show 'No Toolsets are available for your account'; the guide sends API key work to Connect a headless Client, so no statement here changes. auth/oauth.ts stops sending the set-auth-jwt header (7abd2a8f); the replay saw a 6.4 MB photo save and Profile reload without error, which matches the guide's 'a large photo is accepted'. The replay passed 18 of 18 steps for Administrator and Legal Team Member.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "roles-and-access",
+      "scenario": "V-C06",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/entity-access.ts",
+        "apps/api/src/lib/portal-record-access.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/web/src/routes/portal-approvals.tsx",
+        "apps/web/src/components/record-team-applet.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "messages/en-US.json",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/team-person.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/team-person.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/matters/routes.ts",
+        "apps/api/src/modules/matters/service.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay.json",
+        "sha256": "b03a462a8af1d5d790e6d4354368aa3ee21b27421cff300fd311ec53198dbce4",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/access/walkthrough.mjs (with lib.mjs, setup.mjs and fixtures.json)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 31,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Only the roles module runs. setup.mjs skips the fixtures that only the signin and contributor modules read (unless ALL_FIXTURES=1), and LINK_RETRY_MS shortened the wait after a refused sign-in link during setup (5 s instead of 60 s). The D7 screenshot goes to the temp folder. No step, check, expected text or locator changed.",
+        "attempts": [
+          "Fixture setup run 1 stopped after 17 minutes on 429 answers for Jonas Weber's sign-in link (other agents spent the budget); setup run 2 passed. Neither is a replay attempt.",
+          "Before the replay, the fixture Entity 'DOC-032 compat compat-a confidential entity Ltd 09280716' was restored through the API after a sibling cleanup archived it.",
+          "Attempt 1 (work): 31 of 31 passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay.mjs",
+            "sha256": "8b072f32a8e062b6ab99c9cf4acc2b09938a1e4051e644ebd3bbc96223634f22"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/fixtures.json",
+            "sha256": "08a150a927d37ee121a34e131e204cb837285af00dee437f9470b35751c772da"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/lib.mjs",
+            "sha256": "d6b9954071958d93a900340d0a3f5da840129ce1b607b10c2fae3f5ad3d82fd1"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/setup.mjs",
+            "sha256": "4445454a51090b3dbe9287c07b34831ae1296964b0b1191d3fd783cb6b29372e"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay.json",
+            "sha256": "b03a462a8af1d5d790e6d4354368aa3ee21b27421cff300fd311ec53198dbce4"
+          }
+        ]
+      },
+      "summary": "8432038e moved Contract and Matter team add and remove from the routes into contract-team.ts, matter-team.ts and team-person.ts. The guard order, the Confidential audience checks and the refusals ('This person is already on the team.', 'Change the Business Owner before removing this person from the team.') are the same. contracts/service.ts and matters/service.ts only take an extra scope; create.ts only moves the renewal vehicle list. contract-record.tsx and matter-record.tsx moved the owner pickers into an Owners section that is still on Overview, as the guide says. contract-access.ts, portal-record-access.ts, requests/convert.ts, portal applets and approvals, the team applet and comment code have no diff. The replay passed 31 of 31 steps for Administrator, Legal Team Member and Business User, with the same refusal texts as DOC-030.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "comments-and-activity",
+      "scenario": "V-C07",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "71aad5ef98b19a27bd910f8421a569a20aaba7e4288ab8ca1f11364768239de4",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/activity/routes.ts",
+        "apps/api/src/lib/activity-redaction.ts",
+        "apps/api/src/lib/notifications/comment-email.ts",
+        "messages/en-US.json",
+        "packages/shared/src/activity.ts",
+        "apps/web/src/components/activity/activity-applet.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/lib/activity.ts",
+        "messages/en-US.json",
+        "packages/shared/src/activity.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/comments-and-activity-replay.json",
+        "sha256": "64b9e00b67aaf1afbe5fb1c3ef2f447471f5cfd14fc2db12d38db1effafddc32",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs (with lib.mjs and fixtures.json)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 37,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Names 'DOC-032 compat compat-a conversations …' and addresses doc032-compata-conv-<stamp>-<key>@helix.example; all DOC-030 sections run in the DOC-030 order (the morning check after the 08:00 UTC round). Organization settings changed by the script (MCP settings, comment words in email) were restored. No check, expected text or step changed.",
+        "attempts": [
+          "14 section runs on work; every comments-and-activity step passed on its first run."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay.mjs",
+            "sha256": "4c7094998452a37339aefdade61d3c61a7d68a8ba622275025c45e34764ec1b3"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay/fixtures.json",
+            "sha256": "ab94cca2cf9eb2f6a9f1a6517068f0dbb2a1a70cded91d85b04e57673e731a39"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay/lib.mjs",
+            "sha256": "091138a6ae2ff1b91d1b5e5d87808c5bb1aab9aac0b63efc801c66145397db80"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/comments-and-activity-replay.json",
+            "sha256": "64b9e00b67aaf1afbe5fb1c3ef2f447471f5cfd14fc2db12d38db1effafddc32"
+          }
+        ]
+      },
+      "summary": "comment-applet.tsx, comment-attachments.tsx, comments.ts, portal record-shell.tsx, portal-request.tsx, inbox-request.tsx, portal/applets.ts, activity routes, activity-redaction.ts and comment-email.ts have no diff. apps/web/src/lib/activity.ts and packages/shared/src/activity.ts only add narrations for new actions (version deleted, Envelope preparation, confirmation, discard and restore, identity provider removed, Partially signed) and an actor-less 'This contract was sent for signature'. The feed, Show older, Portal History scope and the via-Client attribution did not change. The replay passed 37 of 37 steps for Legal Team Member, Administrator and Business User.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "notifications",
+      "scenario": "V-C08",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/web/src/lib/notifications.ts",
+        "apps/web/src/components/notification-preferences.tsx",
+        "apps/web/src/components/notification-devices.tsx",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/components/portal/notification-preferences.ts",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/key-date-reminder-fields.tsx",
+        "apps/web/src/notification-worker.ts",
+        "apps/web/src/routes/settings-notifications.tsx",
+        "apps/web/src/routes/portal-settings.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/routes/settings.tsx",
+        "apps/api/src/lib/notifications/catalog.ts",
+        "apps/api/src/lib/notifications/preferences.ts",
+        "apps/api/src/lib/notifications/audience.ts",
+        "apps/api/src/lib/notifications/notifier.ts",
+        "apps/api/src/lib/notifications/email.ts",
+        "apps/api/src/lib/notifications/comment-email.ts",
+        "apps/api/src/lib/notifications/offsets.ts",
+        "apps/api/src/lib/notifications/vapid.ts",
+        "apps/api/src/lib/email-layout.ts",
+        "apps/api/src/lib/key-date-reminders.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/pipeline/notification-email.ts",
+        "apps/api/src/modules/notifications/routes.ts",
+        "apps/api/src/modules/notifications/subscriptions.test.ts",
+        "apps/api/src/modules/notifications/comment-emails.test.ts",
+        "packages/db/src/schema/notifications.ts",
+        "messages/en-US.json",
+        "apps/api/src/lib/notifications/",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/components/api-keys.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/lib/activity.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/notifications-replay.json",
+        "sha256": "dc5f9180ad2d4140005c0d9ce210d3c00616b89f47c83daa6564ed4d4f703282",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs (with lib.mjs and fixtures.json)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 38,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Names 'DOC-032 compat compat-a conversations …' and addresses doc032-compata-conv-<stamp>-<key>@helix.example; all DOC-030 sections run in the DOC-030 order (the morning check after the 08:00 UTC round). Organization settings changed by the script (MCP settings, comment words in email) were restored. A rerun marks the earlier entry superseded. No check, expected text or step changed.",
+        "attempts": [
+          "14 section runs on work.",
+          "The step 'a delete before the send leaves no words' failed 5 times: the email carried the original words because the mail was created about 30 ms after the delete returned 200 (worker race; notification-email.ts and comment-email.ts have no diff, and DOC-030 also reran this step). It passed on the 6th attempt; the 5 failures are superseded.",
+          "The lead-time reset step was rerun once and passed both times; the first is superseded."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay.mjs",
+            "sha256": "4c7094998452a37339aefdade61d3c61a7d68a8ba622275025c45e34764ec1b3"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay/fixtures.json",
+            "sha256": "ab94cca2cf9eb2f6a9f1a6517068f0dbb2a1a70cded91d85b04e57673e731a39"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/conversations-replay/lib.mjs",
+            "sha256": "091138a6ae2ff1b91d1b5e5d87808c5bb1aab9aac0b63efc801c66145397db80"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/notifications-replay.json",
+            "sha256": "dc5f9180ad2d4140005c0d9ce210d3c00616b89f47c83daa6564ed4d4f703282"
+          }
+        ]
+      },
+      "summary": "No notifier, catalog, preference, bell, device or reminder source changed (apps/api/src/lib/notifications/, notification-bell.tsx, notification-preferences.tsx, my-reminder-lead-times.tsx, settings-notifications.tsx, portal-settings.tsx, settings-reminders.tsx, key-date-reminders.ts, morning-round.ts and notification-email.ts have no diff). activity.ts adds narrations for new actions but no notification kind. api-keys.tsx only limits the Toolsets offered in a key request; the API key notification rows and their Approve and Deny controls did not change. The replay passed its final 38 steps for Legal Team Member, Administrator and Business User.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "submit-request",
+      "scenario": "V-C09",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "c563d0fa9c8f17b1ba97b117516abc056c1266a980c1861f71bfd21b75a61f67",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/intake/form-fields.tsx",
+        "apps/web/src/components/intake/counterparties-input.tsx",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/components/custom-field-control.tsx",
+        "apps/web/src/components/department-picker.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/lib/portal-entities.ts",
+        "apps/web/src/lib/contracts.ts",
+        "apps/web/src/lib/requests.ts",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/portal/counterparties.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/lib/type-form-routes.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/shared/src/form-builtins.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/convert-form.ts",
+        "e2e/tests/61-m39-type-form.spec.ts"
+      ],
+      "inspectedFilesChangedInRange": ["messages/en-US.json"],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/submit-request-replay.json",
+        "sha256": "c3d6980a4c7438ee0782c26ce1b3d45061c3dcf0fca1e01f8a34790b73f6cf64",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/portal/walkthrough.mjs (with lib.mjs, pdf.mjs and fixtures.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 18,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Fixture and file names use 'DOC-032 compat compat-a' and 'doc032-compat-a-', including the fixture Branch ID and intake link; STATE and SESSIONS under ~/.cache. The department phase changed only the replay's own fixture Contract type and restored it. No persona change, no seeded-record lookup change, no step or check changed.",
+        "attempts": [
+          "Attempt 1 (work): phases submit, department and follow; 18 of 18 submit-request steps passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay.mjs",
+            "sha256": "785387f945a9a9b6d1bf92b830d8436858c91c19d6107b3a211facfc552ff651"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/fixtures.mjs",
+            "sha256": "098caa70229b36e14b4e7e71a8afda34bfa7f5dfe6b1f33e4ac4396c0c559be7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/lib.mjs",
+            "sha256": "86b0d1d17d08c941de3b21a4a8ac6ec5df32b75dad729a01c47ea51fdd88c5c4"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/pdf.mjs",
+            "sha256": "d21d3cf7cbcf937ab4d9d0fc0847107364b9f62a1ccf061c1435aad2b20736ee"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/submit-request-replay.json",
+            "sha256": "c3d6980a4c7438ee0782c26ce1b3d45061c3dcf0fca1e01f8a34790b73f6cf64"
+          }
+        ]
+      },
+      "summary": "No Portal Request or intake source changed: portal.tsx, portal-request-form.tsx, intake form-fields, counterparty and department pickers, custom-field-control.tsx, deflection-panel.tsx, my-requests.tsx, request-owner.tsx, portal routes and counterparties, intake-form.ts, type-form-routes.ts, form-evaluator.ts, form-builtins.ts and the requests module have no diff. messages/en-US.json changes no string the guide quotes. The replay passed 18 of 18 steps for the Business User; the three DOC-030 product bugs (raw Term type values, a second Department question, Not recorded under an unmet Branch) still reproduce.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "follow-request",
+      "scenario": "V-C10",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "257a2a24c146025cca08e77a3071d6fe1a3a9c59c2fe4dddc4c6d820a17999ae",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/routes/portal-contract.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/portal/my-requests.tsx",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/web/src/components/portal/record-work.tsx",
+        "apps/web/src/components/activity/activity-applet.tsx",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/web/src/lib/requests.ts",
+        "packages/shared/src/index.ts",
+        "packages/shared/src/form-evaluator.ts",
+        "apps/api/src/modules/requests/routes.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/portal/applets.ts",
+        "apps/api/src/modules/portal/record-work.ts",
+        "apps/api/src/lib/custom-fields.ts",
+        "apps/api/src/modules/comments/audience.ts",
+        "apps/web/src/components/portal/documents-section.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/portal/documents-section.tsx",
+        "messages/en-US.json",
+        "packages/shared/src/index.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/follow-request-replay.json",
+        "sha256": "de674c2485ce627e8967f6a0ea479d8b6e3b3c46a784efe2c7762cd4633f8b48",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/portal/walkthrough.mjs (with lib.mjs, pdf.mjs and fixtures.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 26,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. Fixture and file names use 'DOC-032 compat compat-a' and 'doc032-compat-a-'; STATE and SESSIONS under ~/.cache. No persona change, no seeded-record lookup change, no step or check changed.",
+        "attempts": [
+          "Attempt 1 (work): phases submit, department and follow; 26 of 26 follow-request steps passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay.mjs",
+            "sha256": "785387f945a9a9b6d1bf92b830d8436858c91c19d6107b3a211facfc552ff651"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/fixtures.mjs",
+            "sha256": "098caa70229b36e14b4e7e71a8afda34bfa7f5dfe6b1f33e4ac4396c0c559be7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/lib.mjs",
+            "sha256": "86b0d1d17d08c941de3b21a4a8ac6ec5df32b75dad729a01c47ea51fdd88c5c4"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-replay/pdf.mjs",
+            "sha256": "d21d3cf7cbcf937ab4d9d0fc0847107364b9f62a1ccf061c1435aad2b20736ee"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/follow-request-replay.json",
+            "sha256": "de674c2485ce627e8967f6a0ea479d8b6e3b3c46a784efe2c7762cd4633f8b48"
+          }
+        ]
+      },
+      "summary": "portal-request.tsx, portal-contract.tsx, inbox-request.tsx, my-requests.tsx, request-owner.tsx, record-shell.tsx, record-work.tsx, activity-applet.tsx, comment code, requester-status.ts, the requests module, portal applets and record-work have no diff. documents-section.tsx now labels a converted record's Portal Document version with its Document type name and colour; the guide hands converted-record Documents to the contributor guide and names no pill. shared/src/index.ts only adds exports. The replay passed 26 of 26 steps for the Business User.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "portal-knowledge",
+      "scenario": "V-C11",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/knowledge/service.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/modules/portal/knowledge.test.ts",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/portal/portal-shell.tsx",
+        "apps/web/src/components/documents/documents-card.tsx"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/portal-knowledge-replay.json",
+        "sha256": "54623e4d6c15793d85e6467d607cf8462b783dce04f36d4d91c69eb8c3dfb414",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs (with lib.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 11,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), import paths and root depth, fixture names with the DOC-032 compat compat-a prefix, seat label, task and issue, log path and one log per article. TAG \"DOC-032 compat compat-a access-2\" and throwaway accounts doc032.compata.*@helix.example; only the home, settings and knowledge modules run (staff and expired belong to staff-sign-in). The DOC-030 large-photo product-bug check records an observation, because 7abd2a8f fixed the bug. The seeded Knowledge lookup reads every page of the staff list (other agents pushed the four seeded items to page 2). No step or check changed.",
+        "attempts": [
+          "Attempt 1 (work): 11 of 11 passed with the first tag.",
+          "Attempt 2 (work): step 1 read 'every Knowledge link is a published Everyone item false' because the staff Knowledge list returns 50 items per page and other agents had pushed the four seeded items to page 2 (all four are published for Everyone). Fixture lookup reason.",
+          "Attempt 3 (work): the lookup reads every page; 11 of 11 passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay.mjs",
+            "sha256": "72804c99da708d238f400a5090262fd4549bfdb8958d22a6f1ed9b2aaeea8a6b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/access-2-replay/lib.mjs",
+            "sha256": "affa245864015c35a7dd8e274ec1f1d2b05126d16b7b680f495859830ff6df7c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/portal-knowledge-replay.json",
+            "sha256": "54623e4d6c15793d85e6467d607cf8462b783dce04f36d4d91c69eb8c3dfb414"
+          }
+        ]
+      },
+      "summary": "portal-knowledge.tsx, deflection-panel.tsx, portal.tsx, portal-request-form.tsx, portal-nav.tsx, portal-shell.tsx, the Portal routes, knowledge/service.ts and contract-access.ts have no diff. documents-card.tsx is the staff Documents card: Delete now removes one version and the type pill takes the Document type colour; Mark confidential and canFlag, which the fixture uses, are unchanged, and the Portal shows no such control. The replay passed 11 of 11 steps for the Business User.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "triage-requests",
+      "scenario": "V-C12",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "packages/shared/src/index.ts",
+        "apps/web/src/routes/inbox.tsx",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/inbox/inbox-columns.tsx",
+        "apps/web/src/components/inbox/inbox-filter-definitions.ts",
+        "apps/web/src/components/inbox/request-assignment.tsx",
+        "apps/web/src/components/intake/resolve-dialog.tsx",
+        "apps/web/src/lib/comments.ts",
+        "apps/web/src/components/comments/comment-applet.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/lib/requests.ts",
+        "apps/web/src/lib/requester-status.ts",
+        "apps/web/src/components/portal/request-owner.tsx",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/api/src/modules/requests/assignment.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/requests/disposition.ts",
+        "apps/api/src/modules/requests/list.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/request-detail.ts",
+        "apps/api/src/modules/requests/resolve.ts",
+        "apps/api/src/mcp/prompts.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/mcp/prompts.ts",
+        "messages/en-US.json",
+        "packages/shared/src/index.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/triage-requests-replay.json",
+        "sha256": "71b4bc1214b0289a93b14a9d64a01e62d300041004208e539b655fbdcd6c62ca",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs (with api.mjs, setup-config.mjs, setup-requests.mjs, setup-ai.mjs and provider-standin.mjs)",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 39,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440), helper paths and root depth, fixture names 'DOC-032 compat compat-a inbox' and files 'doc032-compata-inbox-*', task, issue and reviewer label, log path (split per article), generated PDFs and screenshots under /tmp. Requesters Oliver Grant and Rosa Iglesias (REQUESTERS=requester_a,requester_b), as in the DOC-030 recorded run. No step, check or expected text changed.",
+        "attempts": [
+          "work-1: phases triage, convert and access for both roles; every triage-requests step passed except the Legal Team Member 'Converted R-45 in the Inbox …' check, which failed because the conversion before it had failed (see convert-request). Superseded by work-3.",
+          "work-2: stopped before any step on a 429 for Rosa Iglesias's sign-in link (shared budget).",
+          "work-3: Legal Team Member convert phase on fresh Requests; the converted-Request check passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay.mjs",
+            "sha256": "b4054dde16a780db41436f32294aee354da4c742b92c087376c068885e8c0d9a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/api.mjs",
+            "sha256": "39121b2b288fcb58fb9f42d4ff5e1088051d0ba9327835a846d26f5744c8f562"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures-ai.json",
+            "sha256": "c48fd1ea70728690f84ca88bc28df1826ed3d1aacf573bda9e87220eba6098d7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures.json",
+            "sha256": "1db4cb1a92f71df762af3c56b942af6c8441285896d795bfd18ba28c9353505c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/provider-standin.mjs",
+            "sha256": "b70eea1fd3249af8b2fbd568bb682e5da02112f2e09760fcf852b96d331cbfba"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests-ai.json",
+            "sha256": "27cd55f5b569384b3b4f2b0e6467f4223d6bf44b66fd4fbe058dcfa70b9b0e24"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests.json",
+            "sha256": "fe7d0086d8e1dbedb35e01026aeb6c3ce1a54f6f8e8a5f85bc6b32dcb497ddf8"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-ai.mjs",
+            "sha256": "1f66d3a0c6996f60073ea077ac704d12854037f3d57a5a1f4f7527bf8c3fc071"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-config.mjs",
+            "sha256": "930df585118070e7c1b4968dcadd774d43d6da736c5e76b2c899b9804c188c50"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-requests.mjs",
+            "sha256": "b298b0edc4289f748ec9455fa5caf10e04ce2cb62c6459caf1ea4b610ab9132a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/triage-requests-replay.json",
+            "sha256": "71b4bc1214b0289a93b14a9d64a01e62d300041004208e539b655fbdcd6c62ca"
+          }
+        ]
+      },
+      "summary": "No Inbox or triage source changed: inbox.tsx, inbox-request.tsx, inbox columns and filters, request-assignment.tsx, resolve-dialog.tsx, comment code, roles.ts, requests.ts, requester-status.ts, request-owner.tsx, portal-request.tsx and the requests module have no diff. apps/api/src/mcp/prompts.ts adds the triage_inbox MCP prompt, a Client feature that leaves decisions to the Inbox. shared/src/index.ts only adds exports. The replay passed its final 39 steps for Administrator and Legal Team Member and the Business User refusal.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "convert-request",
+      "scenario": "V-C13",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/inbox-request.tsx",
+        "apps/web/src/components/intake/prepared-convert-dialog.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/web/src/components/intake/conversion-evidence.tsx",
+        "apps/web/src/components/intake/description-source-toggle.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/type-form/messages.ts",
+        "apps/web/src/components/contracts/analysis.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/routes/settings-ai-analysis.tsx",
+        "apps/web/src/lib/notifications.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "apps/api/src/modules/requests/convert-form.ts",
+        "apps/api/src/modules/requests/read.ts",
+        "apps/api/src/modules/requests/service.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/matters/create.ts",
+        "apps/api/src/lib/counterparty-link.ts",
+        "apps/api/src/lib/conversion-draft.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/pipeline/conversion-analysis.ts",
+        "apps/api/src/pipeline/contract-analysis.ts",
+        "apps/api/src/pipeline/matter-record-preparation.ts",
+        "apps/api/src/lib/analysis-targets.ts",
+        "packages/shared/src/analysis.ts",
+        "apps/api/src/modules/contract-analysis/request-evidence.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-a/convert-request-replay.json",
+        "sha256": "9a0110c238fc78262eb9d14a45cc7c65865c1114fb7cac31f0511bd2b23de45b",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/inbox/walkthrough.mjs (with api.mjs, setup-config.mjs, setup-requests.mjs, setup-ai.mjs and provider-standin.mjs)",
+        "lab": "work, compataai",
+        "outcome": "pass",
+        "steps": 46,
+        "failed": 0,
+        "adaptations": "Lab manifest work instead of work2 (app 43340, Mailpit 48440); the ai phase on the reviewer's own lab compataai (app 43396, Mailpit 48496) instead of inboxai, so its guards name port 43396 and lab compataai; stand-in host doc032-compata-inbox-provider; helper paths and root depth; fixture names 'DOC-032 compat compat-a inbox' and files 'doc032-compata-inbox-*'; task, issue and reviewer label; log path (split per article); generated PDFs and screenshots under /tmp. openBellItem waits up to 8 s for the bell list to load before it checks the item (timing only). No step, check or expected text changed.",
+        "attempts": [
+          "work-1: Administrator passed every step. Legal Team Member convert steps on R-45 failed: another compat-a helper's run-end SQL cleanup archived the replay's live fixture Entity at 07:20:02Z, so the Entity picker no longer offered it. Fixture reason; superseded.",
+          "work-2: stopped before any step on a 429 for Rosa Iglesias's sign-in link.",
+          "work-3: Entity restored through the API, fresh Requests R-53 to R-57; 14 of 14 Legal Team Member convert steps passed.",
+          "compataai-1: Administrator passed every ai step. Legal Team Member: the completion-notification step timed out and 4 dependent steps failed. The notification existed; the script checked the bell the instant it opened, before Nadia Haddad's longer list loaded. Timing; superseded.",
+          "compataai-2: same failure on fresh Requests, confirming the cause; superseded.",
+          "compataai-3: with the 8 s bell-load wait, 10 of 10 Legal Team Member ai steps passed."
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay.mjs",
+            "sha256": "b4054dde16a780db41436f32294aee354da4c742b92c087376c068885e8c0d9a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/api.mjs",
+            "sha256": "39121b2b288fcb58fb9f42d4ff5e1088051d0ba9327835a846d26f5744c8f562"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures-ai.json",
+            "sha256": "c48fd1ea70728690f84ca88bc28df1826ed3d1aacf573bda9e87220eba6098d7"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures.json",
+            "sha256": "1db4cb1a92f71df762af3c56b942af6c8441285896d795bfd18ba28c9353505c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/provider-standin.mjs",
+            "sha256": "b70eea1fd3249af8b2fbd568bb682e5da02112f2e09760fcf852b96d331cbfba"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests-ai.json",
+            "sha256": "27cd55f5b569384b3b4f2b0e6467f4223d6bf44b66fd4fbe058dcfa70b9b0e24"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests.json",
+            "sha256": "fe7d0086d8e1dbedb35e01026aeb6c3ce1a54f6f8e8a5f85bc6b32dcb497ddf8"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-ai.mjs",
+            "sha256": "1f66d3a0c6996f60073ea077ac704d12854037f3d57a5a1f4f7527bf8c3fc071"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-config.mjs",
+            "sha256": "930df585118070e7c1b4968dcadd774d43d6da736c5e76b2c899b9804c188c50"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-requests.mjs",
+            "sha256": "b298b0edc4289f748ec9455fa5caf10e04ce2cb62c6459caf1ea4b610ab9132a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-a/convert-request-replay.json",
+            "sha256": "9a0110c238fc78262eb9d14a45cc7c65865c1114fb7cac31f0511bd2b23de45b"
+          }
+        ]
+      },
+      "summary": "create.ts now uses the shared team insert and moves the renewal vehicle list; conversion still makes the converter Legal Owner or Matter Manager and adds the Requester as Business Owner and team member (both replays read those values). contract-team.ts and matter-team.ts only move the team writes out of the routes. contract-record.tsx and matter-record.tsx moved Legal Owner, Matter Manager and Business Owner out of the Contract and Matter cards into an Owners section; the guide checks Title, Type, Priority, Description, Department and Needed by in Fields or the Matter section, which still hold them, and does not place the owner controls. The Convert dialogs, conversion-draft.ts, conversion-analysis.ts, matter-record-preparation.ts, contract-analysis.ts, request-evidence.ts and requests/convert.ts have no diff; automatic-contract-analysis.ts only skips partially signed versions. The replay passed its final 46 steps for Administrator and Legal Team Member on work (manual paths) and on compataai with the provider stand-in (AI preparation, record-Row preparation, Fill Contract Fields and failure paths).",
+      "outcome": "compatible"
+    }
+  ],
+  "findings": [
+    "No behavior that a guide in this set describes changed between 067c1646 and 4ca41822. Every article's final replay attempt passed; all earlier failures were fixture or timing reasons, recorded per article.",
+    "App changes seen, none described by these guides: the Contract and Matter Overview owner pickers moved into an Owners section; Contracts gained a Signatures tab; staff Documents Delete removes one version; Portal Document versions show the Document type name and colour; the Partially signed version kind; the API key request offers only permitted Toolsets; the triage_inbox MCP prompt.",
+    "The DOC-030 large-photo Profile failure no longer reproduces (7abd2a8f removed the set-auth-jwt header).",
+    "Harness only: the shared 'DOC-032 compat compat-a' prefix let the access-2 replay's run-end SQL cleanup archive other replays' fixture Entities at 07:20:02Z. The affected replays restored their own Entities and reran; the access-2 tag was narrowed to 'DOC-032 compat compat-a access-2'.",
+    "Harness only: the Convert-notification bell list loads after the click; with a longer list (Legal Team Member) the DOC-030 check ran before it loaded. The inbox replay waits up to 8 s for it.",
+    "Harness only: the notifications email-words race (delete versus worker send) needed reruns, as in DOC-030."
+  ]
+}

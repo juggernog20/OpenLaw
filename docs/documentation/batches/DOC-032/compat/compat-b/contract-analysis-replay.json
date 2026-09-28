@@ -1,0 +1,704 @@
+{
+  "kind": "article-compatibility-replay",
+  "batch": "DOC-032",
+  "issue": 1194,
+  "set": "compat-b",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-b)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-compatb",
+  "lab": "compatb",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T07:13:08.685Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T07:13:26.503Z"
+  },
+  "appUrl": "http://127.0.0.1:43394",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1600 CSS px",
+  "providerMode": "V-C21 only: a local OpenAI-compatible stand-in (DOC-030 contracts-b/provider-standin.mjs, copied unchanged to compat-b/contract-analysis-replay/provider-standin.mjs; not the seed's ai-stub.mjs, the lab seed ran with --skip-ai) in its own container (node from the compatb app image) on the compatb backend network, alias doc032-compatb-provider, no published port. Fictional paper with known extracted text and known answers. No real provider key or traffic. It is not a live-provider check.",
+  "articles": {
+    "contract-analysis": {
+      "path": "docs/user-guides/contract-analysis.md",
+      "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3"
+    }
+  },
+  "selection": {
+    "articles": ["C21"],
+    "roles": ["legal_team_member", "administrator"],
+    "parts": null
+  },
+  "startedAt": "2026-09-28T07:16:39.335Z",
+  "stamp": 1790579799334,
+  "setup": [
+    {
+      "at": "2026-09-28T07:16:41.917Z",
+      "text": "Ravi Menon (Business User) signed in to the Portal with a fresh magic link from the lab Mailpit; the same Portal session serves V-C19 and V-C21."
+    },
+    {
+      "at": "2026-09-28T07:16:42.149Z",
+      "text": "Administrator API: AI connector (was not configured, disabled) saved as Custom, OpenAI chat completions, base URL http://doc032-compatb-provider:8080/v1 (the stand-in), model doc032-compat-b-standin-model, and enabled for V-C21 only. Prerequisite preparation from configure-analysis, not a C21 step."
+    },
+    {
+      "at": "2026-09-28T07:16:42.320Z",
+      "text": "Administrator API: Contract type \"DOC-032 compat compat-b Analysis type 1790579799334\" whose Form gains three prompted record Rows (text location, number tier, text audit clause), and live Counterparty \"DOC-032 Analysis Supplier 1790579799334 Ltd\" on holder Contract C-36."
+    },
+    {
+      "at": "2026-09-28T07:16:42.402Z",
+      "text": "legal_team_member API: created C-37 (no paper), C-38 (unreadable primary PDF) and C-39 (main walk) of the analysis type; stand-in markers DOC032CBLEGAL1790579799334 and DOC032CBLEGAL1790579799334V2."
+    },
+    {
+      "at": "2026-09-28T07:18:21.775Z",
+      "text": "administrator API: created C-42 (no paper), C-43 (unreadable primary PDF) and C-44 (main walk) of the analysis type; stand-in markers DOC032CBADMIN1790579799334 and DOC032CBADMIN1790579799334V2."
+    },
+    {
+      "at": "2026-09-28T07:20:21.068Z",
+      "text": "Stand-in request counts: {\"probes\":0,\"extractions\":52,\"unknown\":0,\"malformed\":12,\"byMarker\":{\"DOC032CBLEGAL1790579799334\":6,\"DOC032CBLEGAL1790579799334DRAFT\":2,\"DOC032CBLEGAL1790579799334V2\":8,\"DOC032CBLEGAL1790579799334STALE\":2,\"DOC032CBADMIN1790579799334\":6,\"DOC032CBADMIN1790579799334DRAFT\":2,\"DOC032CBADMIN1790579799334V2\":8,\"DOC032CBADMIN1790579799334STALE\":2,\"(fallback)\":16},\"last\":{\"marker\":\"(fallback)\",\"asked\":[\"region\",\"risk\",\"key_dates:milestones\"],\"sourceIds\":[\"request:01a0e6e2-c6f0-757f-a67a-46727dd7309c:title\",\"request:01a0e6e2-c6f0-757f-a67a-46727dd7309c:description\",\"request:01a0e6e2-c6f0-757f-a67a-46727dd7309c:urgency\"],\"sourceKinds\":[\"request\",\"request\",\"request\"]},\"paused\":false,\"waiting\":0,\"malformedLeft\":0}"
+    },
+    {
+      "at": "2026-09-28T07:20:21.082Z",
+      "text": "Administrator API: removed the stand-in AI connector (DELETE 200); the lab is back to no AI connector."
+    },
+    {
+      "at": "2026-09-28T07:20:21.095Z",
+      "text": "Administrator API: deleted the stand-in Saved key (200)."
+    },
+    {
+      "at": "2026-09-28T07:20:21.100Z",
+      "text": "Connector after restore: configured false, enabled false, saved keys 0, conversion analysis false."
+    }
+  ],
+  "notes": [
+    "reloaded /contracts/39/fields once after a stalled render",
+    "reloaded /contracts/46 once after a stalled render"
+  ],
+  "records": [
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-36",
+      "title": "DOC-032 compat compat-b contract-analysis Counterparty holder 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-37",
+      "title": "DOC-032 compat compat-b contract-analysis No paper Legal 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-38",
+      "title": "DOC-032 compat compat-b contract-analysis Failed extraction Legal 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-39",
+      "title": "DOC-032 compat compat-b contract-analysis Main Legal 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-40",
+      "title": "DOC-032 compat compat-b contract-analysis Typed draft Legal 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-41",
+      "title": "DOC-032 compat compat-b contract-analysis Stale evidence Legal 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-42",
+      "title": "DOC-032 compat compat-b contract-analysis No paper Admin 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-43",
+      "title": "DOC-032 compat compat-b contract-analysis Failed extraction Admin 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-44",
+      "title": "DOC-032 compat compat-b contract-analysis Main Admin 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-45",
+      "title": "DOC-032 compat compat-b contract-analysis Typed draft Admin 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-46",
+      "title": "DOC-032 compat compat-b contract-analysis Stale evidence Admin 1790579799334"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-47",
+      "title": "DOC-032 compat compat-b contract-analysis Converted Legal 1790579799334",
+      "request": "R-16"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "legal_team_member",
+      "reference": "C-48",
+      "title": "DOC-032 compat compat-b contract-analysis Converted B Legal 1790579799334",
+      "request": "R-17"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-49",
+      "title": "DOC-032 compat compat-b contract-analysis Converted Admin 1790579799334",
+      "request": "R-18"
+    },
+    {
+      "article": "contract-analysis",
+      "role": "administrator",
+      "reference": "C-50",
+      "title": "DOC-032 compat compat-b contract-analysis Converted B Admin 1790579799334",
+      "request": "R-19"
+    }
+  ],
+  "productBugs": [],
+  "observations": [],
+  "guideFailures": [],
+  "steps": [
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: no primary Document; Run analysis in the Fields header and in the Contract actions menu",
+      "page": "/contracts/37/fields",
+      "expected": "The refusal reason shows under the Fields section header for both entry points; no run is created",
+      "actual": "C-37 Fields header offered [\"Run analysis\"]. Run analysis showed [\"This Contract has no primary Document to analyze.\"] under the Fields header. Overview -> Contract actions ([\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]) -> Run analysis, then the Fields tab, showed [\"This Contract has no primary Document to analyze.\"] in the same place. No Analysis run exists.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:42.403Z",
+      "at": "2026-09-28T07:16:47.168Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: failed extraction of the primary Document text",
+      "page": "/contracts/38/fields",
+      "expected": "No automatic run starts and Run analysis is refused because the target text is not ready or is empty",
+      "actual": "Uploaded an unreadable PDF as C-38's primary Document (setup API); its text state became \"failed\"; no automatic run. Run analysis showed [\"The analysis target has no ready, non-empty text.\"] under the Fields header and created no run.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:47.168Z",
+      "at": "2026-09-28T07:16:49.648Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: with the connector disabled, no run and no marked value, the Fields header shows no Analysis controls",
+      "page": "/contracts/37/fields",
+      "expected": "No Run analysis or Confirm all in the Fields header or Run analysis in Contract actions; a direct run is refused; enabling brings Run analysis back",
+      "actual": "Administrator disabled the connector (setup API). C-37 Fields header had no Analysis controls; Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"]; a direct run answered 409 \"No enabled AI connector is configured.\". After enabling, the header shows [\"Run analysis\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:49.648Z",
+      "at": "2026-09-28T07:16:52.174Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Run Analysis and read its outcome: an automatic run starts when the target text becomes ready; the control says Running… and stays disabled; a finished run shows no summary sentence; values carry Unverified where they live",
+      "page": "/contracts/39/fields",
+      "expected": "Running… disabled while pending; after the run the record updates with markers on Overview, Fields and Key dates; unsupported, invalid and unmatched answers write nothing; no Counterparty is linked",
+      "actual": "Uploaded the Version 1 PDF as C-39's primary Document (setup API; stand-in held). Fields header while pending: [{\"name\":\"Running…\",\"disabled\":true},{\"menu\":[\"Copy link\",\"Rename contract\",\"Archive\"]}] (Running… disabled, no Run analysis). After the stand-in answered, without a reload the header showed Run analysis again and no summary sentence (alerts/status: []). Unverified keys: [\"doc_032_service_location_1790579799334\",\"doc_032_service_tier_1790579799334\",\"expiry_date\",\"key_date:4d96f3488f4c1c887c88657b35f298d50c7e86f0de7eecc6d2bde5c0b15c673e\",\"notice_period_days\",\"value\"] (Fields shows 2 Unverified markers; location \"Muscat\"). Effective date (invalid answer), Term type (null), audit clause (quote not in text) and the unknown Counterparty wrote nothing; no Counterparty linked and the page does not mention the unmatched name. Key dates: Price review added Unverified; the Contract expiry milestone matched the term date and added nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:52.174Z",
+      "at": "2026-09-28T07:16:55.393Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The record updates when the run finishes while preserving typed drafts",
+      "page": "/contracts/40/fields",
+      "expected": "A value typed but not saved on Fields stays in its control when a pending run completes",
+      "actual": "C-40: typed \"DOC-032 unsaved draft text\" into DOC-032 Audit clause 1790579799334 (not saved) while the run was pending. When the record updated and DOC-032 Service location 1790579799334 showed \"Muscat\", the typed draft was still in its control.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:55.394Z",
+      "at": "2026-09-28T07:16:58.375Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Contract actions offers Run analysis from any section; each newly AI-written value on Overview has the purple border, the Unverified indicator, an evidence sparkle and Confirm",
+      "page": "/contracts/39",
+      "expected": "Menu item present on Overview; Overview rows show marker, sparkle, Confirm and the AI border",
+      "actual": "Overview Contract actions: [\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]. Overview shows 3 Unverified indicators, sparkles [\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\",\"View AI evidence for Value\"], and Confirm beside Notice period (days); the Notice period control sits in an AI border wrapper {\"generated\":\"true\",\"pseudo\":\"linear-gradient(115deg, rgb(167, 139, 250), rgb(139, 92, 246\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:58.376Z",
+      "at": "2026-09-28T07:16:59.752Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Select the sparkle to open the cited original Document Version in the same-page doc panel and locate its quoted passage",
+      "page": "/contracts/39/key-dates",
+      "expected": "The sparkle opens Version 1 in the doc panel with the quoted passage marked; a Key date sparkle does the same",
+      "actual": "Overview Notice period sparkle opened \"doc032-services-legal.pdf, version 1\" on the same page (/contracts/39) with \"at least 60 days before expiry\" marked. Key dates row \"Jan 15, 2027Price reviewKey dateUnverifiedConfirm\": its sparkle opened the same Version with \"The price review takes place on January 15, 2027.\" marked.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:59.752Z",
+      "at": "2026-09-28T07:17:02.931Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Unverified values are already usable",
+      "page": "/contracts/39/key-dates",
+      "expected": "Before confirmation the extracted Key date is in the list, the notice period drives the derived deadline, and the Value is saved",
+      "actual": "Key dates rows before any confirmation: [\"Jan 15, 2027 Price review Key date Unverified Confirm\",\"Jan 30, 2027 Renewal notice deadline — 60 days before expiry Derived Unverified\",\"Mar 31, 2027 Current term expires Derived Unverified\"]. Saved Value {\"amount\":250000,\"currency\":\"USD\",\"cadence\":\"monthly\"}; notice deadline 2027-01-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:02.934Z",
+      "at": "2026-09-28T07:17:04.314Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Confirm or correct one value: Confirm beside a value; edit a Field; Key date note-only edit then event edit; Confirm all shows in the Fields header while more than one value is marked; History records the confirmation",
+      "page": "/contracts/39/fields",
+      "expected": "Confirm clears only that marker; editing clears its marker; a note-only change keeps the Key date marker and an event change clears it; History shows the confirmation",
+      "actual": "Overview Confirm beside Notice period (days) kept 60 and cleared only its marker and sparkle (6 -> 5 marked). Editing DOC-032 Service location 1790579799334 to Salalah on Fields cleared its marker (4 left). Key dates: Edit date with a note-only change kept Price review Unverified; changing the event to \"Annual price review\" cleared it. Fields header with 3 marked values: [\"Run analysis\",\"Confirm all\"]. History: \"Nadia Haddad confirmed the AI-written value for Notice period (days)\"; Analysis entries [\"OpenLaw completed an AI analysis of this contract\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:04.316Z",
+      "at": "2026-09-28T07:17:14.152Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Rerun after a change: marking Version 1 executed runs on Version 1; a newer upload does not displace the pin or start a run; the evidence still opens the Version that run read; Run analysis reads Version 1",
+      "page": "/contracts/39/fields",
+      "expected": "Pin run on Version 1 keeps confirmed and edited values and does not add the reviewed Key date again; Version 2 upload sends nothing to the provider; sparkle opens Version 1; manual run reads Version 1",
+      "actual": "Documents: Actions for doc032-services-legal.pdf -> Mark as executed copy started an automatic run on Version 1; notice stayed 60 (confirmed), location stayed Salalah (edited), and \"Price review\" was not added again. Version 2 uploaded (setup API) and its text became ready: no new run and no provider request (6 -> 6). Overview Expiry date sparkle still opened \"doc032-services-legal.pdf, version 1\". Run analysis then ran manually on Version 1.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:14.153Z",
+      "at": "2026-09-28T07:17:26.951Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Rerun on changed input while another legal person edits a value: marking Version 2 executed runs on Version 2",
+      "page": "/contracts/39",
+      "expected": "An unverified value is replaced by the new answer; confirmed, edited and concurrently edited values are kept; the matching live Counterparty is linked; a new milestone is added; the evidence then opens Version 2",
+      "actual": "Documents -> Mark as executed copy pinned Version 2 and queued a run; Daniel Okafor saved DOC-032 Service tier 1790579799334 1 -> 5 on Fields while the run waited at the stand-in. The run read Version 2. Saved: expiry 2027-06-30 (Unverified again, replaced), notice 60 (confirmed, kept although the answer was 90), location Salalah (edited, kept), tier 5 with no marker (concurrent edit kept), Counterparty \"DOC-032 Analysis Supplier 1790579799334 Ltd\" linked. Key dates: Option exercise deadline added Unverified; Annual price review unchanged. Expiry date sparkle now opens \"doc032-services-legal.pdf, version 2\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:26.952Z",
+      "at": "2026-09-28T07:17:33.024Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A later run does not change or remove a Key date an earlier run added and does not re-add a removed one; an explicit clear is preserved",
+      "page": "/contracts/39/fields",
+      "expected": "Note-only edit keeps the marker; Remove date clears it; a rerun does not add it again; a cleared Field stays empty",
+      "actual": "Edit date with a note-only change left Option exercise deadline Unverified; Remove date removed it and its marker. Cleared DOC-032 Audit clause 1790579799334 on Fields (was \"Annual audit\"). Run analysis on Version 2 finished: no Option exercise deadline row returned, Annual price review still listed, the audit Field stayed empty.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:33.025Z",
+      "at": "2026-09-28T07:18:03.503Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: a failed run shows Analysis failed: and its reason under the Fields header and changes nothing; another run succeeds",
+      "page": "/contracts/39/fields",
+      "expected": "Analysis failed: <reason> under the Fields header; saved values and markers unchanged; the next run completes and the note goes",
+      "actual": "With the stand-in returning non-JSON, the Fields header note read \"Analysis failed: The provider reply did not contain one JSON object.\". Saved values and markers were identical before and after. With valid replies restored, Run analysis completed and the failure note went.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:03.505Z",
+      "at": "2026-09-28T07:18:06.655Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Stale evidence: a removed source makes a citation unavailable",
+      "page": "/contracts/41",
+      "expected": "After the cited Document is archived, the value keeps its marker and the sparkle says Source evidence is unavailable",
+      "actual": "C-41: after the run the cited Document was archived (setup API 200). Overview Expiry date sparkle showed \"Source evidence is unavailable. The Document Version may have been removed or you may not have access.\"; no doc panel opened; the value is still Unverified.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:06.657Z",
+      "at": "2026-09-28T07:18:09.279Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+      "page": "/contracts/39/fields",
+      "expected": "Ended: no Run analysis, run refused, Confirm still works. Archived: no Confirm or Confirm all; confirm refused. Disabled connector: markers and row controls stay, History keeps runs, Confirm all clears the rest without changing values",
+      "actual": "Moved C-39 to \"Expired\" (Ended; setup API). Fields header [\"Confirm all\"], Contract actions [\"Copy link\",\"Rename contract\",\"Archive\"], direct run 409. Confirm beside Expiry date on Overview still cleared its marker (3 -> 2). Contract actions -> Archive: no Confirm or Confirm all; a direct confirm answered 409. Restored (setup API). Connector disabled (setup API): the Fields header offered [\"Confirm all\"]; 2 values stayed Unverified with 0 row Confirm controls on Fields; History still lists 7 Analysis entries; Confirm all cleared every marker and changed no saved value.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:09.280Z",
+      "at": "2026-09-28T07:18:19.329Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Business Users cannot run Analysis or confirm its values",
+      "page": "/contracts/39/fields",
+      "expected": "A Business User on the Contract team cannot open the record in the full app; run and confirm requests are refused",
+      "actual": "Ravi Menon (Business User; team add answered 201) opening /contracts/39/fields landed on /portal with no Run analysis or Confirm control; POST analysis answered 403 and POST confirm-all answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:19.330Z",
+      "at": "2026-09-28T07:18:21.673Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: no primary Document; Run analysis in the Fields header and in the Contract actions menu",
+      "page": "/contracts/42/fields",
+      "expected": "The refusal reason shows under the Fields section header for both entry points; no run is created",
+      "actual": "C-42 Fields header offered [\"Run analysis\"]. Run analysis showed [\"This Contract has no primary Document to analyze.\"] under the Fields header. Overview -> Contract actions ([\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]) -> Run analysis, then the Fields tab, showed [\"This Contract has no primary Document to analyze.\"] in the same place. No Analysis run exists.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:21.775Z",
+      "at": "2026-09-28T07:18:26.470Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: failed extraction of the primary Document text",
+      "page": "/contracts/43/fields",
+      "expected": "No automatic run starts and Run analysis is refused because the target text is not ready or is empty",
+      "actual": "Uploaded an unreadable PDF as C-43's primary Document (setup API); its text state became \"failed\"; no automatic run. Run analysis showed [\"The analysis target has no ready, non-empty text.\"] under the Fields header and created no run.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:26.470Z",
+      "at": "2026-09-28T07:18:28.778Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: with the connector disabled, no run and no marked value, the Fields header shows no Analysis controls",
+      "page": "/contracts/42/fields",
+      "expected": "No Run analysis or Confirm all in the Fields header or Run analysis in Contract actions; a direct run is refused; enabling brings Run analysis back",
+      "actual": "Administrator disabled the connector (setup API). C-42 Fields header had no Analysis controls; Contract actions offered [\"Copy link\",\"Rename contract\",\"Archive\"]; a direct run answered 409 \"No enabled AI connector is configured.\". After enabling, the header shows [\"Run analysis\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:28.778Z",
+      "at": "2026-09-28T07:18:31.947Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Run Analysis and read its outcome: an automatic run starts when the target text becomes ready; the control says Running… and stays disabled; a finished run shows no summary sentence; values carry Unverified where they live",
+      "page": "/contracts/44/fields",
+      "expected": "Running… disabled while pending; after the run the record updates with markers on Overview, Fields and Key dates; unsupported, invalid and unmatched answers write nothing; no Counterparty is linked",
+      "actual": "Uploaded the Version 1 PDF as C-44's primary Document (setup API; stand-in held). Fields header while pending: [{\"name\":\"Running…\",\"disabled\":true},{\"menu\":[\"Copy link\",\"Rename contract\",\"Archive\"]}] (Running… disabled, no Run analysis). After the stand-in answered, without a reload the header showed Run analysis again and no summary sentence (alerts/status: []). Unverified keys: [\"doc_032_service_location_1790579799334\",\"doc_032_service_tier_1790579799334\",\"expiry_date\",\"key_date:4d96f3488f4c1c887c88657b35f298d50c7e86f0de7eecc6d2bde5c0b15c673e\",\"notice_period_days\",\"value\"] (Fields shows 2 Unverified markers; location \"Muscat\"). Effective date (invalid answer), Term type (null), audit clause (quote not in text) and the unknown Counterparty wrote nothing; no Counterparty linked and the page does not mention the unmatched name. Key dates: Price review added Unverified; the Contract expiry milestone matched the term date and added nothing.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:31.948Z",
+      "at": "2026-09-28T07:18:35.028Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "The record updates when the run finishes while preserving typed drafts",
+      "page": "/contracts/45/fields",
+      "expected": "A value typed but not saved on Fields stays in its control when a pending run completes",
+      "actual": "C-45: typed \"DOC-032 unsaved draft text\" into DOC-032 Audit clause 1790579799334 (not saved) while the run was pending. When the record updated and DOC-032 Service location 1790579799334 showed \"Muscat\", the typed draft was still in its control.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:35.029Z",
+      "at": "2026-09-28T07:18:38.061Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Contract actions offers Run analysis from any section; each newly AI-written value on Overview has the purple border, the Unverified indicator, an evidence sparkle and Confirm",
+      "page": "/contracts/44",
+      "expected": "Menu item present on Overview; Overview rows show marker, sparkle, Confirm and the AI border",
+      "actual": "Overview Contract actions: [\"Copy link\",\"Rename contract\",\"Run analysis\",\"Archive\"]. Overview shows 3 Unverified indicators, sparkles [\"View AI evidence for Expiry date\",\"View AI evidence for Notice period (days)\",\"View AI evidence for Value\"], and Confirm beside Notice period (days); the Notice period control sits in an AI border wrapper {\"generated\":\"true\",\"pseudo\":\"linear-gradient(115deg, rgb(167, 139, 250), rgb(139, 92, 246\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:38.062Z",
+      "at": "2026-09-28T07:18:39.455Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Select the sparkle to open the cited original Document Version in the same-page doc panel and locate its quoted passage",
+      "page": "/contracts/44/key-dates",
+      "expected": "The sparkle opens Version 1 in the doc panel with the quoted passage marked; a Key date sparkle does the same",
+      "actual": "Overview Notice period sparkle opened \"doc032-services-admin.pdf, version 1\" on the same page (/contracts/44) with \"at least 60 days before expiry\" marked. Key dates row \"Jan 15, 2027Price reviewKey dateUnverifiedConfirm\": its sparkle opened the same Version with \"The price review takes place on January 15, 2027.\" marked.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:39.456Z",
+      "at": "2026-09-28T07:18:42.837Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Unverified values are already usable",
+      "page": "/contracts/44/key-dates",
+      "expected": "Before confirmation the extracted Key date is in the list, the notice period drives the derived deadline, and the Value is saved",
+      "actual": "Key dates rows before any confirmation: [\"Jan 15, 2027 Price review Key date Unverified Confirm\",\"Jan 30, 2027 Renewal notice deadline — 60 days before expiry Derived Unverified\",\"Mar 31, 2027 Current term expires Derived Unverified\"]. Saved Value {\"amount\":250000,\"currency\":\"USD\",\"cadence\":\"monthly\"}; notice deadline 2027-01-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:42.838Z",
+      "at": "2026-09-28T07:18:44.049Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Confirm or correct one value: Confirm beside a value; edit a Field; Key date note-only edit then event edit; Confirm all shows in the Fields header while more than one value is marked; History records the confirmation",
+      "page": "/contracts/44/fields",
+      "expected": "Confirm clears only that marker; editing clears its marker; a note-only change keeps the Key date marker and an event change clears it; History shows the confirmation",
+      "actual": "Overview Confirm beside Notice period (days) kept 60 and cleared only its marker and sparkle (6 -> 5 marked). Editing DOC-032 Service location 1790579799334 to Salalah on Fields cleared its marker (4 left). Key dates: Edit date with a note-only change kept Price review Unverified; changing the event to \"Annual price review\" cleared it. Fields header with 3 marked values: [\"Run analysis\",\"Confirm all\"]. History: \"Daniel Okafor confirmed the AI-written value for Notice period (days)\"; Analysis entries [\"OpenLaw completed an AI analysis of this contract\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:44.050Z",
+      "at": "2026-09-28T07:18:53.703Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Rerun after a change: marking Version 1 executed runs on Version 1; a newer upload does not displace the pin or start a run; the evidence still opens the Version that run read; Run analysis reads Version 1",
+      "page": "/contracts/44/fields",
+      "expected": "Pin run on Version 1 keeps confirmed and edited values and does not add the reviewed Key date again; Version 2 upload sends nothing to the provider; sparkle opens Version 1; manual run reads Version 1",
+      "actual": "Documents: Actions for doc032-services-admin.pdf -> Mark as executed copy started an automatic run on Version 1; notice stayed 60 (confirmed), location stayed Salalah (edited), and \"Price review\" was not added again. Version 2 uploaded (setup API) and its text became ready: no new run and no provider request (24 -> 24). Overview Expiry date sparkle still opened \"doc032-services-admin.pdf, version 1\". Run analysis then ran manually on Version 1.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:53.704Z",
+      "at": "2026-09-28T07:19:06.669Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Rerun on changed input while another legal person edits a value: marking Version 2 executed runs on Version 2",
+      "page": "/contracts/44",
+      "expected": "An unverified value is replaced by the new answer; confirmed, edited and concurrently edited values are kept; the matching live Counterparty is linked; a new milestone is added; the evidence then opens Version 2",
+      "actual": "Documents -> Mark as executed copy pinned Version 2 and queued a run; Nadia Haddad saved DOC-032 Service tier 1790579799334 1 -> 5 on Fields while the run waited at the stand-in. The run read Version 2. Saved: expiry 2027-06-30 (Unverified again, replaced), notice 60 (confirmed, kept although the answer was 90), location Salalah (edited, kept), tier 5 with no marker (concurrent edit kept), Counterparty \"DOC-032 Analysis Supplier 1790579799334 Ltd\" linked. Key dates: Option exercise deadline added Unverified; Annual price review unchanged. Expiry date sparkle now opens \"doc032-services-admin.pdf, version 2\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:06.670Z",
+      "at": "2026-09-28T07:19:12.867Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "A later run does not change or remove a Key date an earlier run added and does not re-add a removed one; an explicit clear is preserved",
+      "page": "/contracts/44/fields",
+      "expected": "Note-only edit keeps the marker; Remove date clears it; a rerun does not add it again; a cleared Field stays empty",
+      "actual": "Edit date with a note-only change left Option exercise deadline Unverified; Remove date removed it and its marker. Cleared DOC-032 Audit clause 1790579799334 on Fields (was \"Annual audit\"). Run analysis on Version 2 finished: no Option exercise deadline row returned, Annual price review still listed, the audit Field stayed empty.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:12.868Z",
+      "at": "2026-09-28T07:19:18.253Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If Analysis cannot finish: a failed run shows Analysis failed: and its reason under the Fields header and changes nothing; another run succeeds",
+      "page": "/contracts/44/fields",
+      "expected": "Analysis failed: <reason> under the Fields header; saved values and markers unchanged; the next run completes and the note goes",
+      "actual": "With the stand-in returning non-JSON, the Fields header note read \"Analysis failed: The provider reply did not contain one JSON object.\". Saved values and markers were identical before and after. With valid replies restored, Run analysis completed and the failure note went.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:18.253Z",
+      "at": "2026-09-28T07:19:21.227Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Stale evidence: a removed source makes a citation unavailable",
+      "page": "/contracts/46",
+      "expected": "After the cited Document is archived, the value keeps its marker and the sparkle says Source evidence is unavailable",
+      "actual": "C-46: after the run the cited Document was archived (setup API 200). Overview Expiry date sparkle showed \"Source evidence is unavailable. The Document Version may have been removed or you may not have access.\"; no doc panel opened; the value is still Unverified.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:21.228Z",
+      "at": "2026-09-28T07:19:48.590Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Roles and states: Ended, archived, disabled connector and Confirm all",
+      "page": "/contracts/44/fields",
+      "expected": "Ended: no Run analysis, run refused, Confirm still works. Archived: no Confirm or Confirm all; confirm refused. Disabled connector: markers and row controls stay, History keeps runs, Confirm all clears the rest without changing values",
+      "actual": "Moved C-44 to \"Expired\" (Ended; setup API). Fields header [\"Confirm all\"], Contract actions [\"Copy link\",\"Rename contract\",\"Archive\"], direct run 409. Confirm beside Expiry date on Overview still cleared its marker (3 -> 2). Contract actions -> Archive: no Confirm or Confirm all; a direct confirm answered 409. Restored (setup API). Connector disabled (setup API): the Fields header offered [\"Confirm all\"]; 2 values stayed Unverified with 0 row Confirm controls on Fields; History still lists 7 Analysis entries; Confirm all cleared every marker and changed no saved value.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:48.590Z",
+      "at": "2026-09-28T07:19:56.587Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Business Users cannot run Analysis or confirm its values",
+      "page": "/contracts/44/fields",
+      "expected": "A Business User on the Contract team cannot open the record in the full app; run and confirm requests are refused",
+      "actual": "Ravi Menon (Business User; team add answered 201) opening /contracts/44/fields landed on /portal with no Run analysis or Confirm control; POST analysis answered 403 and POST confirm-all answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:56.588Z",
+      "at": "2026-09-28T07:19:58.753Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion: with Fill Contract Fields after conversion on, a failed run shows the documented note under the Fields header; Retry Request-context Analysis fills the Type's Record Rows",
+      "page": "/contracts/47/fields",
+      "expected": "The Contract remains created; the note reads as the guide quotes it; Retry Request-context Analysis completes and goes; a filled record Field Row shows Unverified and Confirm where it lives",
+      "actual": "Fill Contract Fields after conversion: turned on by the Administrator on Settings -> AI analysis. Ravi Menon submitted R-16 (setup API, type \"NDA request\"); legal_team_member converted it to C-47 (setup API) with the analysis type. With non-JSON replies the note under the Fields header read \"Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.\"; the Contract remained (\"DOC-032 compat compat-b contract-analysis Converted Legal 1790579799334\"). Retry Request-context Analysis ran a conversion run that completed, and the retry control went. On Fields, DOC-032 Service location 1790579799334 = \"DOC032 Nizwa Legal1790579799334\" with 1 Unverified marker and 1 Confirm. The stand-in's last call carried source kinds [\"request\",\"request\",\"request\"] and asked [\"region\",\"risk\",\"key_dates:milestones\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:58.754Z",
+      "at": "2026-09-28T07:20:03.529Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion (guide at 450aba9d): no page shows a marker, evidence or Confirm for Risk, Region or Department when this run filled them; those values do not count towards showing Confirm all, so the Fields header can show only Run analysis",
+      "page": "/contracts/47/fields",
+      "expected": "With Risk and one Field written by the run, Overview and Fields show no Risk marker, evidence or Confirm; the Fields header shows only Run analysis although the stored marker set holds both",
+      "actual": "C-47: the run wrote [\"risk\",\"doc_032_service_location_1790579799334\"]; stored markers (database read) [\"doc_032_service_location_1790579799334\",\"risk\"]; the record API lists [\"doc_032_service_location_1790579799334\"]. Overview shows Risk \"high\" with 0 Risk/Region/Department evidence controls, 0 Unverified markers and 0 Confirm controls. Fields shows 1 Unverified marker (DOC-032 Service location 1790579799334) and its header offers only [\"Run analysis\"]: the hidden Risk marker does not count towards Confirm all.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:03.530Z",
+      "at": "2026-09-28T07:20:05.983Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion (guide at 450aba9d): when Confirm all appears for other values, it also clears the hidden Risk, Region and Department markers",
+      "page": "/contracts/48/fields",
+      "expected": "With Risk and two Fields written, Confirm all appears for the two visible Field markers; selecting it clears every stored marker, including Risk, and keeps the values",
+      "actual": "Ravi Menon submitted R-17 (setup API); legal_team_member converted it to C-48 (setup API). Stored markers (database read) [\"doc_032_audit_clause_1790579799334\",\"doc_032_service_location_1790579799334\",\"risk\"]. Overview showed 0 Risk/Region/Department evidence controls; Fields showed 2 Unverified markers and the header offered [\"Run analysis\",\"Confirm all\"]. Confirm all cleared every stored marker, including risk (stored set now empty); Risk stayed \"high\" and both Field values stayed. Header afterwards: [\"Run analysis\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:05.983Z",
+      "at": "2026-09-28T07:20:10.266Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion: with Fill Contract Fields after conversion on, a failed run shows the documented note under the Fields header; Retry Request-context Analysis fills the Type's Record Rows",
+      "page": "/contracts/49/fields",
+      "expected": "The Contract remains created; the note reads as the guide quotes it; Retry Request-context Analysis completes and goes; a filled record Field Row shows Unverified and Confirm where it lives",
+      "actual": "Fill Contract Fields after conversion: already on. Ravi Menon submitted R-18 (setup API, type \"NDA request\"); administrator converted it to C-49 (setup API) with the analysis type. With non-JSON replies the note under the Fields header read \"Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.\"; the Contract remained (\"DOC-032 compat compat-b contract-analysis Converted Admin 1790579799334\"). Retry Request-context Analysis ran a conversion run that completed, and the retry control went. On Fields, DOC-032 Service location 1790579799334 = \"DOC032 Nizwa Admin1790579799334\" with 1 Unverified marker and 1 Confirm. The stand-in's last call carried source kinds [\"request\",\"request\",\"request\"] and asked [\"region\",\"risk\",\"key_dates:milestones\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:10.267Z",
+      "at": "2026-09-28T07:20:14.363Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion (guide at 450aba9d): no page shows a marker, evidence or Confirm for Risk, Region or Department when this run filled them; those values do not count towards showing Confirm all, so the Fields header can show only Run analysis",
+      "page": "/contracts/49/fields",
+      "expected": "With Risk and one Field written by the run, Overview and Fields show no Risk marker, evidence or Confirm; the Fields header shows only Run analysis although the stored marker set holds both",
+      "actual": "C-49: the run wrote [\"risk\",\"doc_032_service_location_1790579799334\"]; stored markers (database read) [\"doc_032_service_location_1790579799334\",\"risk\"]; the record API lists [\"doc_032_service_location_1790579799334\"]. Overview shows Risk \"high\" with 0 Risk/Region/Department evidence controls, 0 Unverified markers and 0 Confirm controls. Fields shows 1 Unverified marker (DOC-032 Service location 1790579799334) and its header offers only [\"Run analysis\"]: the hidden Risk marker does not count towards Confirm all.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:14.363Z",
+      "at": "2026-09-28T07:20:16.864Z"
+    },
+    {
+      "article": "contract-analysis",
+      "scenario": "V-C21",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Analysis after Request conversion (guide at 450aba9d): when Confirm all appears for other values, it also clears the hidden Risk, Region and Department markers",
+      "page": "/contracts/50/fields",
+      "expected": "With Risk and two Fields written, Confirm all appears for the two visible Field markers; selecting it clears every stored marker, including Risk, and keeps the values",
+      "actual": "Ravi Menon submitted R-19 (setup API); administrator converted it to C-50 (setup API). Stored markers (database read) [\"doc_032_audit_clause_1790579799334\",\"doc_032_service_location_1790579799334\",\"risk\"]. Overview showed 0 Risk/Region/Department evidence controls; Fields showed 2 Unverified markers and the header offered [\"Run analysis\",\"Confirm all\"]. Confirm all cleared every stored marker, including risk (stored set now empty); Risk stayed \"high\" and both Field values stayed. Header afterwards: [\"Run analysis\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:16.865Z",
+      "at": "2026-09-28T07:20:21.064Z"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:20:21.100Z",
+  "summary": {
+    "total": 38,
+    "pass": 38,
+    "fail": 0
+  }
+}

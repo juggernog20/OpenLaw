@@ -1,0 +1,277 @@
+{
+  "batch": "DOC-032",
+  "group": "operator",
+  "reviewer": "DOC-032 source-review author agent (operator)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:17:30Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "install": {
+      "previousWalkthroughBuild": "067c1646829df85e62b809ee9157921e867c84e7",
+      "lastArticleEdit": "none since the DOC-030 evidence (content hash aabcaf18... unchanged before this review)"
+    },
+    "upgrade": {
+      "previousWalkthroughBuild": "067c1646829df85e62b809ee9157921e867c84e7",
+      "lastArticleEdit": "none since the DOC-030 evidence (content hash 224f6e7a... unchanged before this review)"
+    }
+  },
+  "method": "source-inspection",
+  "scopeNote": "Source reading only. No lab, container, build or test was run. No feature PR edited install.md or upgrade.md after 067c1646. Deployment inputs changed since 067c1646: .env.example (TRUSTED_PROXIES comment and example now name the Compose network gateway instead of 127.0.0.1,::1), compose.dev.yml (SIGNING_PREPARATION_ENABLED passthrough, development overlay only), apps/api/src/index.ts (signing preparation gate), docs/DEPLOYMENT.md (trusted-proxy, key, recovery and DocuSign acceptance text), package.json (dev tooling only), and migrations 0172 to 0183. compose.yml, Dockerfile, packages/db/src/index.ts and packages/db/src/migration-journal.ts did not change.",
+  "startingBuildDecision": {
+    "chosen": "067c1646829df85e62b809ee9157921e867c84e7",
+    "replaced": "d1d098ba9f4ba6557a542857d530446b76b1847c",
+    "why": [
+      "Both starting builds upgrade cleanly by the code's rules: migration files 0000 to 0171 are byte-identical at the pin, the 0172 to 0183 journal stamps rise past 0171's, and the journal guard still repairs 0090 for d1d098ba.",
+      "067c1646 is the revision that the previous edition of install.md told operators to build, so it is where this guide's readers are.",
+      "The CI upgrade gate (.github/workflows/ci.yml, matrix baseline ee736148) fills an install whose journal also ends at 0171_m41-oauth-clients and upgrades it on every run, so the 0172 to 0183 path is rehearsed with populated data. d1d098ba is in no gate.",
+      "From 067c1646 the upgrade needs no journal repair, has no refusing migration, and changes no Compose default. The walkthrough then tests data survival rather than configuration drift from an older development build."
+    ]
+  },
+  "articles": [
+    {
+      "articleId": "install",
+      "scenario": ["V-C44"],
+      "contentSha256Before": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
+      "contentSha256": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7",
+      "sources": [
+        "docs/user-guides/install.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/install.json",
+        "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "compose.yml",
+        "compose.dev.yml",
+        "Dockerfile",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        "apps/api/src/index.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/lib/signing/config.ts",
+        "apps/web/src/routes/setup.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "messages/en-US.json",
+        "git show 1f2e77e1 --stat"
+      ],
+      "corrections": [
+        {
+          "claim": "Documented application revision (three places: Before you start, the checkout command, OPENLAW_BUILD_COMMIT in the .env example)",
+          "before": "067c1646829df85e62b809ee9157921e867c84e7",
+          "after": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+          "source": "Batch pin (BRIEF-author.md, plan.json)"
+        }
+      ],
+      "confirmed": [
+        "compose.yml is unchanged since 067c1646: services app, worker, postgres and doc-engine; the app port publishes on ${APP_BIND:-127.0.0.1}:${PORT:-3000}:3000; the worker uses the app image; the network is openlaw-backend; env_file .env on app and worker (compose.yml).",
+        "Dockerfile still takes OPENLAW_BUILD_COMMIT and OPENLAW_BUILD_DIRTY build arguments, which compose.yml passes (Dockerfile lines 30-32, compose.yml build.args).",
+        ".env.example still has empty AUTH_SECRET= and OPENLAW_SECRET_KEY= lines, so the sed key generation works; its TRUSTED_PROXIES comment now names the Compose network gateway, which matches step 4 (.env.example).",
+        "The setup-token log line is still 'First-run setup is open. Paste this setup token into the setup screen:'; a pinned SETUP_TOKEN is used instead; no token once a user exists; a restart makes a new token (apps/api/src/index.ts readSetupToken).",
+        "Commit 1f2e77e1 adds token verification before the account form is sent. The page heading is still Set up OpenLaw and the field is Setup token; the guide hands over to first-run.md for the form, so no install text changes (apps/web/src/routes/setup.tsx, messages auth.setup.title, auth.setup.token).",
+        "The welcome wizard still cannot finish without outbound email: finish() sends the reader to the email step and the API refuses completion with 'Configure outbound email before finishing instance setup.' (apps/web/src/routes/welcome.tsx finish, apps/api/src/modules/onboarding/routes.ts).",
+        "SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB are not in .env.example or compose.yml and default off; only compose.dev.yml passes the first one. An ordinary install needs no setting, so the guide stays silent on them (apps/api/src/lib/signing/config.ts readSigningPreparationEnabled).",
+        "The TRUSTED_PROXIES start warning and /readyz are unchanged (apps/api/src/index.ts, apps/api/src/app.ts)."
+      ],
+      "limitations": [
+        "Source inspection only; V-C44 needs a fresh container-operation walkthrough at the new pin.",
+        "Build time at the new pin was not measured."
+      ]
+    },
+    {
+      "articleId": "upgrade",
+      "scenario": ["V-C46"],
+      "contentSha256Before": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",
+      "contentSha256": "a3fda3bfc3ffe13b7a90529335a02046dc935d4a333be3d782ca3b1f89013afd",
+      "sources": [
+        "docs/user-guides/upgrade.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/upgrade.json",
+        "docs/documentation/batches/DOC-030/operator-2/technical-review.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "compose.yml",
+        ".env.example",
+        "docs/DEPLOYMENT.md",
+        ".github/workflows/ci.yml",
+        "e2e/scripts/upgrade-baseline.mjs",
+        "packages/db/src/index.ts (runMigrations)",
+        "packages/db/src/migration-journal.ts",
+        "packages/db/migrations/meta/_journal.json",
+        "node_modules drizzle-orm pg-core/dialect.js migrate (one outer transaction)",
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+        "packages/db/migrations/0173_durable-envelope-preparation.sql",
+        "packages/db/migrations/0174_envelope-launch-return.sql",
+        "packages/db/migrations/0175_envelope-launch-timestamps.sql",
+        "packages/db/migrations/0176_envelope-resume.sql",
+        "packages/db/migrations/0177_envelope-recovery.sql",
+        "packages/db/migrations/0178_envelope-recovery-intent.sql",
+        "packages/db/migrations/0179_envelope-reconciliation.sql",
+        "packages/db/migrations/0180_document-type-colors.sql",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "packages/db/migrations/0183_sso-provider-name.sql",
+        "git show 067c1646:packages/db/migrations/0043_contract_envelopes.sql (old envelope constraints)",
+        "packages/shared/src/mcp.ts (067c1646 and pin)",
+        "packages/db/src/schema/org.ts",
+        "packages/db/src/schema/contract-statuses.ts",
+        "packages/db/src/schema/document-types.ts",
+        "packages/db/src/schema/auth.ts",
+        "apps/api/src/modules/auth/routes.ts (providerName)",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/worker/src/index.ts",
+        "apps/api/src/index.ts",
+        "apps/api/src/lib/signing/config.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "docs/user-guides/configure-mcp.md (read only)",
+        "docs/user-guides/types-statuses-fields.md (read only)",
+        "docs/user-guides/authentication-and-email.md (read only)",
+        "docs/user-guides/operator-troubleshooting.md (read only)",
+        "messages/en-US.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Candidate and checkout revision",
+          "before": "067c1646829df85e62b809ee9157921e867c84e7",
+          "after": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+          "source": "Batch pin"
+        },
+        {
+          "claim": "Starting build",
+          "before": "Development revision d1d098ba9f4ba6557a542857d530446b76b1847c",
+          "after": "067c1646829df85e62b809ee9157921e867c84e7, which the previous edition of install.md built",
+          "source": "startingBuildDecision in this record; .github/workflows/ci.yml upgrade matrix; packages/db/migrations/meta/_journal.json"
+        },
+        {
+          "claim": "Migrations applied and their data changes",
+          "before": "Every migration up to 0171_m41-oauth-clients, listing the 0138 to 0161 rewrites (Business Owner team rows, per-module Field split, intake questions onto Forms, Version Document types, Saved keys)",
+          "after": "The 12 migrations 0172_m42-toolset-ceiling to 0183_sso-provider-name: the saved Toolset ceiling loses Team and Administration; the protected Partially signed Status joins the end of the Signature Stage; the fixed Partially signed Contract Document type joins before Executed; every existing Envelope counts as a round that completes its Contract and no Version changes type; each SSO provider has an empty display name, so Settings shows its Provider ID",
+          "source": "0172 (UPDATE ... - 'team' - 'administration'); 0181 (INSERT partially_signed, is_system_default true); 0182 (INSERT before executed; backfill only where NOT completes_contract); 0181 completes_contract DEFAULT true; 0183 name DEFAULT ''; auth/routes.ts providerName returns name || providerId"
+        },
+        {
+          "claim": "Refusing migration",
+          "before": "One of these migrations can stop the start (the 0157 intake-form refusal)",
+          "after": "None of the 12 refuses existing data and they share one transaction, so a failure applies none. An older starting build also applies earlier migrations, one of which refuses a Request type's intake form; link to Migration failures kept",
+          "source": "0172-0183 contain no RAISE and no COMMIT; new CHECKs and unique indexes are supersets of the 0043 constraints for existing rows; drizzle migrate wraps pending files in one transaction"
+        },
+        {
+          "claim": "Deployment settings the target changes",
+          "before": "Four bullets: port moves to 127.0.0.1, set TRUSTED_PROXIES, new container ceilings, VAPID keys",
+          "after": "compose.yml is unchanged from the starting build, so no port, ceiling or service change. Check TRUSTED_PROXIES, noting that the starting build's .env.example suggested 127.0.0.1,::1, which never matches a same-host proxy. The compose.private.yml note is kept",
+          "source": "git diff 067c1646..pin -- compose.yml (empty); .env.example diff"
+        },
+        {
+          "claim": "Start log and worker behavior",
+          "before": "First app line 'migrations: reconciled 0090_onboarding_reviewed_types ...'; the worker can stop on missing advanced_settings or runtime_status and Compose restarts it",
+          "after": "Both sentences removed; the check that the worker stays running is kept",
+          "source": "migration-journal.ts repairs only when the recorded journal needs it (067c1646 recorded 0090 correctly); apps/worker/src/index.ts boot reads org_settings.advanced_settings and runtime_status, which exist since 0139; the executed-copy sweep selects only id, status and executed_fetch, which exist before 0172"
+        },
+        {
+          "claim": "Business Owner in the Confidential negative check",
+          "before": "The upgrade makes each Business Owner a team member",
+          "after": "A Business Owner is also a team member",
+          "source": "CONTEXT.md Business Owner (DD-023); 0138 already applied at 067c1646"
+        },
+        {
+          "claim": "Post-upgrade configuration check",
+          "before": "A Field that several modules shared now appears once in each module",
+          "after": "Check that the Contract Statuses and Document types keep their names, with Partially signed added; link to Configure types, Statuses, and Fields",
+          "source": "0140 already applied at 067c1646; 0181, 0182"
+        },
+        {
+          "claim": "Partial migration after a failure",
+          "before": "A migration that stops the start can leave the pending migrations before it applied",
+          "after": "From the starting build a failed migration applies none of the pending migrations; from an older build the earlier sentence still holds",
+          "source": "drizzle pg-core dialect migrate; 0172-0183 contain no COMMIT; BEGIN;"
+        }
+      ],
+      "confirmed": [
+        "The app is still the only process that migrates, at startup under an advisory lock (packages/db/src/index.ts runMigrations; apps/worker/src/index.ts header).",
+        "Migration files 0000 to 0171 are unchanged at the pin, so the boot hash guard accepts a 067c1646 database; journal stamps for 0172 to 0183 are strictly increasing past 0171 (git diff --stat 067c1646..pin -- packages/db/migrations; _journal.json).",
+        "The per-revision image tags from install.md still build without recreating running containers; Postgres stays postgres:16 (compose.yml).",
+        "docker compose port app 3000 still prints 127.0.0.1:3000 by default (compose.yml ports).",
+        "Settings → Advanced labels Saved in OpenLaw, System status, Refresh, API, Worker, Running and Current exist; the advanced-settings route change since 067c1646 is a refactor of state() into readAdvancedSettings with the same fields (messages/en-US.json; apps/api/src/modules/advanced-settings/routes.ts).",
+        "Test connection and 'This part of OpenLaw was updated. Reload to continue.' exist (messages/en-US.json; docs/DEPLOYMENT.md Upgrades).",
+        "configure-mcp.md#choose-team-and-administration exists and says an upgrade clears both rows from an existing ceiling (read only).",
+        "SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB default off and appear in neither .env.example nor compose.yml; a live lab with a stand-in stops the boot (27ccdee3). An ordinary upgrade needs no setting (apps/api/src/lib/signing/config.ts).",
+        "docker compose down -v still deletes openlaw-pgdata and openlaw-files (compose.yml volumes).",
+        "DEPLOYMENT.md still links to upgrade.md#if-the-upgrade-cannot-be-accepted; the heading is kept.",
+        "0180 adds document_types.color as null for existing types; no guide text needed for the upgrade checks."
+      ],
+      "limitations": [
+        "Source inspection only; V-C46 needs a container-operation walkthrough from 067c1646 to the pin with a populated fixture. The DOC-030 fixture was built from d1d098ba; the walkthrough needs a 067c1646 starting lab.",
+        "The fixture should hold an MCP ceiling with Team and Administration selected and a key or grant that uses them, a registered SSO provider, and at least one signed Envelope, so the listed changes are observable.",
+        "If an organization created its own Status whose slug is partially_signed before the upgrade, 0181 keeps that row unprotected and adds none; a custom Contract Document type with slug partially_signed is converted into the fixed type by 0182. Not exercised; the guide does not describe this edge case.",
+        "The worker's behavior while the app migrates from 067c1646 is read from the code order, not observed. The pg-boss scheduled reconciliation job could fire during the migration and be retried; no restart is expected.",
+        "An operator on a build older than 067c1646 gets only a pointer to Migration failures; the Compose changes from older builds are no longer listed in this guide."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [
+    "CONTEXT.md, Document type: says 'The six Contract negotiation types are fixed'. At the pin there are seven fixed Contract types, including Partially signed (0182; document-versions.md and types-statuses-fields.md already say seven).",
+    "docs/documentation/evidence/{install,upgrade}.json, edition.json and scenarios.json: content hashes become 08464391... (install) and a3fda3bf... (upgrade); both need new walkthroughs at the pin, and V-C46's prerequisite starting build is now 067c1646."
+  ],
+  "statusChange": null,
+  "round2": {
+    "reviewedAt": "2026-09-28T09:57:00Z",
+    "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "comparedFrom": {
+      "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "reason": "4ca41822 is on no GitHub branch, so a fresh clone cannot check it out; ad345da5 (merge of PR #1206, version 0.1.0) is on origin/dev."
+    },
+    "method": "source-inspection",
+    "diffRead": "git diff 4ca41822..ad345da5 -- apps packages styles package.json compose.yml Dockerfile .env.example docs/DEPLOYMENT.md .github messages: version 0.0.1 to 0.1.0 (package.json files, OPENLAW_VERSION, openapi.json), dependency patch bumps, .github/workflows/release.yml (new), DEPLOYMENT.md 'Release images' section and Upgrades comment, four setup and authentication messages, one welcome logo message, style tokens. compose.yml, Dockerfile, .env.example, apps/api/src/index.ts, apps/worker/src and packages/db/migrations are unchanged.",
+    "articles": [
+      {
+        "articleId": "install",
+        "contentSha256Before": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7",
+        "contentSha256": "2b4c20bc26965bf59c7671645a078dbef97530c18750472ccd268edc8ad39187",
+        "corrections": [
+          {
+            "claim": "Documented application revision (Before you start, checkout command, OPENLAW_BUILD_COMMIT)",
+            "before": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+            "after": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+            "source": "Batch owner's new candidate; git branch -r --contains ad345da5 lists origin/dev"
+          }
+        ],
+        "confirmed": [
+          "Published images are not mentioned, and the guide keeps its source build. release.yml publishes ghcr.io/juggernog20/openlaw and openlaw-doc-engine only when a vX.Y.Z tag on main is pushed. At ad345da5 no such tag exists: git tag --list 'v*' and git ls-remote --tags origin return nothing. The images are also linux/amd64 only. The guide's compose.operator.yml already replaces compose.yml's ghcr.io ...:latest names with per-revision local tags, and the guide already warns against a latest tag.",
+          "The version change to 0.1.0 touches no sentence in the guide.",
+          "The guide does not quote the wrong-token message or the welcome wizard's step count. It names only Set up OpenLaw and says the wizard cannot finish without outbound email, and both still hold. The setup log line in apps/api/src/index.ts is unchanged.",
+          "compose.yml, Dockerfile and .env.example are unchanged, so every command and setting stays valid."
+        ],
+        "limitations": [
+          "If a v0.1.0 release is tagged and published later, the batch owner may want install.md to offer the published images. That would be a new install path and would need its own walkthrough."
+        ]
+      },
+      {
+        "articleId": "upgrade",
+        "contentSha256Before": "a3fda3bfc3ffe13b7a90529335a02046dc935d4a333be3d782ca3b1f89013afd",
+        "contentSha256": "f22691ca436265481bbb910ddded601af40ad1579681967e46ee81cc8304cc59",
+        "corrections": [
+          {
+            "claim": "Candidate and checkout revision",
+            "before": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+            "after": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+            "source": "Batch owner's new candidate"
+          }
+        ],
+        "confirmed": [
+          "The starting build stays 067c1646. No migration changed between 4ca41822 and ad345da5, so the upgrade still applies 0172_m42-toolset-ceiling to 0183_sso-provider-name with the same data effects.",
+          "DEPLOYMENT.md's new Release images text and pull-based Upgrades comment describe published images. This guide builds from a source checkout with per-revision tags, so no step changes.",
+          "The worker, the migration runner and the startup code are unchanged, so the start and verification steps still hold."
+        ],
+        "limitations": []
+      }
+    ],
+    "productBugs": [],
+    "sharedFileRequests": [
+      "docs/documentation/evidence, edition.json and scenarios.json: the content hashes become 2b4c20bc... (install) and f22691ca... (upgrade), and the app commit becomes ad345da5."
+    ]
+  }
+}

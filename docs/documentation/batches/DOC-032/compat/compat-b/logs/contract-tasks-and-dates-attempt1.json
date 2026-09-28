@@ -1,0 +1,541 @@
+{
+  "kind": "article-compatibility-replay",
+  "batch": "DOC-032",
+  "issue": 1194,
+  "set": "compat-b",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-b)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "appUrl": "http://127.0.0.1:43340",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1600 CSS px",
+  "providerMode": null,
+  "articles": {
+    "contract-tasks-and-dates": {
+      "path": "docs/user-guides/contract-tasks-and-dates.md",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb"
+    }
+  },
+  "selection": {
+    "articles": ["C19"],
+    "roles": ["legal_team_member", "administrator"],
+    "parts": null
+  },
+  "startedAt": "2026-09-28T07:15:43.968Z",
+  "stamp": 1790579743967,
+  "setup": [
+    {
+      "at": "2026-09-28T07:15:46.063Z",
+      "text": "Ravi Menon (Business User) signed in to the Portal with a fresh magic link from the lab Mailpit; the same Portal session serves V-C19 and V-C21."
+    }
+  ],
+  "notes": [
+    "legal_team_member: personal reminder lead times restored to null (200).",
+    "legal_team_member: Contracts list view switched from \"My commercial desk\" to Default view to read Next deadline",
+    "legal_team_member: Contracts list view switched from \"My commercial desk\" to Default view to read Next deadline",
+    "legal_team_member: Contracts list view restored to \"My commercial desk\"",
+    "administrator: personal reminder lead times restored to null (200)."
+  ],
+  "records": [
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "legal_team_member",
+      "reference": "C-65",
+      "title": "DOC-032 compat compat-b contract-tasks-and-dates record legal_team_member 1790579743967"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "administrator",
+      "reference": "C-68",
+      "title": "DOC-032 compat compat-b contract-tasks-and-dates record administrator 1790579743967"
+    }
+  ],
+  "productBugs": [],
+  "observations": [],
+  "guideFailures": [],
+  "steps": [
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Before you start: an unarchived Contract with the acting role as Legal Owner, the other staff role and a Business User on the Contract team",
+      "page": null,
+      "expected": "Prerequisite record exists for this role",
+      "actual": "Setup API as legal_team_member: C-65 \"DOC-032 compat compat-b contract-tasks-and-dates record legal_team_member 1790579743967\" (NDA) with Legal Owner Nadia Haddad; team adds Daniel Okafor and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:46.137Z",
+      "at": "2026-09-28T07:15:46.237Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 1-3: Add task; the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel",
+      "page": "/contracts/65/tasks",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:46.238Z",
+      "at": "2026-09-28T07:15:46.602Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 2-3: Add task with Title, Description, a staged team addition as Assignee, Due date, and an initial note with a file under Comments & attachments; check the new row",
+      "page": "/contracts/65/tasks",
+      "expected": "The Task saves with its assignee added to the team; the initial note is readable to everyone who can open the Task (no audience choice)",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:46.602Z",
+      "at": "2026-09-28T07:15:47.001Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "page": "/contracts/65/tasks",
+      "expected": "Retry note & attachments retries the pending comment only; the Task that saved is kept",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:47.001Z",
+      "at": "2026-09-28T07:15:47.412Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 4: complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count in the section header",
+      "page": "/contracts/65/tasks",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it; the header count reads like 1 of 3 done",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:47.413Z",
+      "at": "2026-09-28T07:15:47.675Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 5: open details from the title and from Edit task, Save an edit, Remove task on an empty Task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "page": "/contracts/65/tasks",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:47.676Z",
+      "at": "2026-09-28T07:15:47.957Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "page": "/contracts/65/tasks",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:47.958Z",
+      "at": "2026-09-28T07:15:48.385Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation: no audience choice, readable to everyone who can open the Task, separate from the record conversation",
+      "page": "/contracts/65/tasks",
+      "expected": "The composer has no Legal Only / Working team choice and states the task audience; the Task note is not in the record conversation",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:48.386Z",
+      "at": "2026-09-28T07:15:48.777Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Task order: Tasks keep the order in which they were added; a new Task goes to the end; completing, editing, or reassigning does not move it; no reordering control, and dragging a row does not change the order",
+      "page": "/contracts/65/tasks",
+      "expected": "Displayed order equals added order before and after complete/edit/reassign and a drag attempt",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:15:48.778Z",
+      "at": "2026-09-28T07:15:49.087Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates steps 1-5: Add date with Date, Event, Note; Global reminders and This date will remind; Additional lead time 0 to 730, at most 20, Remove; Recipients checkboxes include active Business Users on the team; select one; Add date; check the row and Key date source",
+      "page": "/contracts/65/key-dates",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 and 20 rules; Recipients list active team members including Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (30 is global; Add lead time enabled): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). With 20 additional lead times Add lead time was disabled for a 21st. Remove on the 10x-day entries left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\"; Global reminders unchanged. Recipients checkboxes: [\"Daniel Okafor\",\"Nadia Haddad\",\"Ravi Menon\"] (includes Business User Ravi Menon). Selecting Daniel Okafor showed Use the usual audience. Saved row \"Nov 7DOC-032 compat compat-b contract-tasks-and-dates price review legal_team_member 1790579743967Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:49.087Z",
+      "at": "2026-09-28T07:15:52.715Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates step 6 and list order: Edit date then Cancel leaves the date unchanged; Edit date then Save changes it; Remove date removes another; Derived rows have no actions; upcoming nearest first, past most recent first",
+      "page": "/contracts/65/key-dates",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Row menu [\"Edit date\",\"Remove date\"]. Cancel kept the event; Save changed it to \"DOC-032 compat compat-b contract-tasks-and-dates price review legal_team_member 1790579743967 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Oct 8DOC-032 compat compat-b contract-tasks-and-dates near check legal_team_member 1790579743967Key date | Nov 7DOC-032 compat compat-b contract-tasks-and-dates price review legal_team_member 1790579743967 savedFictional price review window.Key date | Jul 25, 2027Current term expiresDerived | Sep 18DOC-032 compat compat-b contract-tasks-and-dates past recent legal_team_member 1790579743967Key date | Aug 19DOC-032 compat compat-b contract-tasks-and-dates past older legal_team_member 1790579743967Key date. 1 Derived row(s), none with an actions button. Upcoming nearest first; past dates follow, 2026-09-18 before 2026-08-19.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:52.715Z",
+      "at": "2026-09-28T07:15:58.905Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Missing recipients: a selected recipient leaves the team; the Edit date dialog says so and offers Remove unavailable recipients while another selected person remains; Use the usual audience clears the selection",
+      "page": "/contracts/65/key-dates",
+      "expected": "The dialog names the change, Remove unavailable recipients keeps only remaining people, and Use the usual audience returns to the default",
+      "actual": "Saved recipients Daniel Okafor and Ravi Menon ([\"01a0e6c7-9732-71e1-834c-8452f24236b0\",\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]). After Daniel Okafor left the team (setup API), Edit date said \"Some selected recipients have left the team and will not be reminded.Remove unavailable recipients\" and offered Remove unavailable recipients; selecting it cleared the notice and kept Ravi Menon checked; Save stored [\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]. Use the usual audience then Save left no checkbox selected and stored [].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:58.905Z",
+      "at": "2026-09-28T07:16:02.286Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Personal lead times: the Reminder lead times card under Settings -> Notifications replaces the organization default for this person; This date will remind does not show the personal list",
+      "page": "/contracts/65/key-dates",
+      "expected": "The card exists with Use the organization's default lead times; after switching it off and adding a personal lead time, the Key date dialog still shows only the organization list plus the date's own lead times",
+      "actual": "Settings -> Notifications shows the Reminder lead times card with \"Use the organization's default lead times\" (on at start). Switching it off and adding 3 saved the personal list [30,14,7,3,1,0] (\"30 days before14 days before7 days before3 days before1 day beforeOn the day\"). The Key date dialog then read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\" and \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\": neither shows the personal 3-day lead time, as the guide warns.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:02.287Z",
+      "at": "2026-09-28T07:16:04.678Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "page": "/contracts",
+      "expected": "The Next deadline cell shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "With an open Task due 2026-09-25, the C-65 Next deadline cell read \"DOC-032 compat compat-b contract-tasks-and-dates overdue legal_team_member 1790579743967Sep 25 (3 days overdue)\". After the Task was completed in the browser it read \"DOC-032 compat compat-b contract-tasks-and-dates near check legal_team_member 1790579743967Oct 8 (in 10 days)\" (the Key date on 2026-10-08; other Tasks, Key dates and the 2027-07-25 expiry are later). The reviewer re-selected the saved view \"My commercial desk\" afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:04.678Z",
+      "at": "2026-09-28T07:16:12.951Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Check reminders and your work: Home shows assigned open Tasks and approaching Contract dates in their sections, and their links open the correct Task or Contract",
+      "page": "/contracts/65/key-dates",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections with links back",
+      "actual": "Home sections: [\"Inbox\",\"Entity obligations\",\"Tasks assigned to you\",\"Dates approaching\",\"Your contracts\",\"Your matters\"]. Home Tasks assigned to you lists \"DOC-032 compat compat-b contract-tasks-and-dates mine legal_team_member 1790579743967\" (/contracts/65/tasks); its link opened /contracts/65/tasks. Dates approaching lists \"DOC-032 compat compat-b contract-tasks-and-dates near check legal_team_member 1790579743967DOC-032 compat compat-b contract-tasks-and-dates record legal_team_member 1790579743967·Key date·Contract C-65Oct 8 (in 10 days)\" -> /contracts/65/key-dates; it opened /contracts/65/key-dates. Reminder delivery timing was not exercised.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:12.951Z",
+      "at": "2026-09-28T07:16:18.937Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: an archived Contract is read-only for Tasks and Key dates; restore allows changes again",
+      "page": "/contracts/65/tasks",
+      "expected": "No Add task, enabled checkbox, Add date or row actions while archived; writes are refused; after restore Add task returns",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:18.938Z",
+      "at": "2026-09-28T07:16:19.228Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "page": null,
+      "expected": "Tasks and Key dates remain in the full app; the Business User has no Tasks or Key date section",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/65/tasks landed on /portal with no Tasks or Key dates section.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:19.229Z",
+      "at": "2026-09-28T07:16:22.354Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Before you start: an unarchived Contract with the acting role as Legal Owner, the other staff role and a Business User on the Contract team",
+      "page": null,
+      "expected": "Prerequisite record exists for this role",
+      "actual": "Setup API as administrator: C-68 \"DOC-032 compat compat-b contract-tasks-and-dates record administrator 1790579743967\" (NDA) with Legal Owner Daniel Okafor; team adds Nadia Haddad and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:22.355Z",
+      "at": "2026-09-28T07:16:22.458Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 1-3: Add task; the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel",
+      "page": "/contracts/68/tasks",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:22.458Z",
+      "at": "2026-09-28T07:16:22.888Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 2-3: Add task with Title, Description, a staged team addition as Assignee, Due date, and an initial note with a file under Comments & attachments; check the new row",
+      "page": "/contracts/68/tasks",
+      "expected": "The Task saves with its assignee added to the team; the initial note is readable to everyone who can open the Task (no audience choice)",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:22.889Z",
+      "at": "2026-09-28T07:16:23.193Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "page": "/contracts/68/tasks",
+      "expected": "Retry note & attachments retries the pending comment only; the Task that saved is kept",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:23.194Z",
+      "at": "2026-09-28T07:16:23.682Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 4: complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count in the section header",
+      "page": "/contracts/68/tasks",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it; the header count reads like 1 of 3 done",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:23.687Z",
+      "at": "2026-09-28T07:16:23.950Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 5: open details from the title and from Edit task, Save an edit, Remove task on an empty Task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "page": "/contracts/68/tasks",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:23.951Z",
+      "at": "2026-09-28T07:16:24.220Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "page": "/contracts/68/tasks",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:24.220Z",
+      "at": "2026-09-28T07:16:24.704Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation: no audience choice, readable to everyone who can open the Task, separate from the record conversation",
+      "page": "/contracts/68/tasks",
+      "expected": "The composer has no Legal Only / Working team choice and states the task audience; the Task note is not in the record conversation",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:24.704Z",
+      "at": "2026-09-28T07:16:25.167Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Task order: Tasks keep the order in which they were added; a new Task goes to the end; completing, editing, or reassigning does not move it; no reordering control, and dragging a row does not change the order",
+      "page": "/contracts/68/tasks",
+      "expected": "Displayed order equals added order before and after complete/edit/reassign and a drag attempt",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:25.167Z",
+      "at": "2026-09-28T07:16:25.472Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates steps 1-5: Add date with Date, Event, Note; Global reminders and This date will remind; Additional lead time 0 to 730, at most 20, Remove; Recipients checkboxes include active Business Users on the team; select one; Add date; check the row and Key date source",
+      "page": "/contracts/68/key-dates",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 and 20 rules; Recipients list active team members including Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (30 is global; Add lead time enabled): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). With 20 additional lead times Add lead time was disabled for a 21st. Remove on the 10x-day entries left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\"; Global reminders unchanged. Recipients checkboxes: [\"Daniel Okafor\",\"Nadia Haddad\",\"Ravi Menon\"] (includes Business User Ravi Menon). Selecting Nadia Haddad showed Use the usual audience. Saved row \"Nov 7DOC-032 compat compat-b contract-tasks-and-dates price review administrator 1790579743967Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:25.473Z",
+      "at": "2026-09-28T07:16:29.322Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates step 6 and list order: Edit date then Cancel leaves the date unchanged; Edit date then Save changes it; Remove date removes another; Derived rows have no actions; upcoming nearest first, past most recent first",
+      "page": "/contracts/68/key-dates",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Row menu [\"Edit date\",\"Remove date\"]. Cancel kept the event; Save changed it to \"DOC-032 compat compat-b contract-tasks-and-dates price review administrator 1790579743967 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Oct 8DOC-032 compat compat-b contract-tasks-and-dates near check administrator 1790579743967Key date | Nov 7DOC-032 compat compat-b contract-tasks-and-dates price review administrator 1790579743967 savedFictional price review window.Key date | Jul 25, 2027Current term expiresDerived | Sep 18DOC-032 compat compat-b contract-tasks-and-dates past recent administrator 1790579743967Key date | Aug 19DOC-032 compat compat-b contract-tasks-and-dates past older administrator 1790579743967Key date. 1 Derived row(s), none with an actions button. Upcoming nearest first; past dates follow, 2026-09-18 before 2026-08-19.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:29.323Z",
+      "at": "2026-09-28T07:16:36.135Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Missing recipients: a selected recipient leaves the team; the Edit date dialog says so and offers Remove unavailable recipients while another selected person remains; Use the usual audience clears the selection",
+      "page": "/contracts/68/key-dates",
+      "expected": "The dialog names the change, Remove unavailable recipients keeps only remaining people, and Use the usual audience returns to the default",
+      "actual": "Saved recipients Nadia Haddad and Ravi Menon ([\"01a0e6c7-9730-78af-95e8-da76f0eb29b4\",\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]). After Nadia Haddad left the team (setup API), Edit date said \"Some selected recipients have left the team and will not be reminded.Remove unavailable recipients\" and offered Remove unavailable recipients; selecting it cleared the notice and kept Ravi Menon checked; Save stored [\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]. Use the usual audience then Save left no checkbox selected and stored [].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:36.136Z",
+      "at": "2026-09-28T07:16:40.475Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Personal lead times: the Reminder lead times card under Settings -> Notifications replaces the organization default for this person; This date will remind does not show the personal list",
+      "page": "/contracts/68/key-dates",
+      "expected": "The card exists with Use the organization's default lead times; after switching it off and adding a personal lead time, the Key date dialog still shows only the organization list plus the date's own lead times",
+      "actual": "Settings -> Notifications shows the Reminder lead times card with \"Use the organization's default lead times\" (on at start). Switching it off and adding 3 saved the personal list [30,14,7,3,1,0] (\"30 days before14 days before7 days before3 days before1 day beforeOn the day\"). The Key date dialog then read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\" and \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\": neither shows the personal 3-day lead time, as the guide warns.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:40.477Z",
+      "at": "2026-09-28T07:16:43.228Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "page": "/contracts",
+      "expected": "The Next deadline cell shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "With an open Task due 2026-09-25, the C-68 Next deadline cell read \"DOC-032 compat compat-b contract-tasks-and-dates overdue administrator 1790579743967Sep 25 (3 days overdue)\". After the Task was completed in the browser it read \"DOC-032 compat compat-b contract-tasks-and-dates near check administrator 1790579743967Oct 8 (in 10 days)\" (the Key date on 2026-10-08; other Tasks, Key dates and the 2027-07-25 expiry are later). The reviewer made no view change.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:43.229Z",
+      "at": "2026-09-28T07:16:47.182Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Check reminders and your work: Home shows assigned open Tasks and approaching Contract dates in their sections, and their links open the correct Task or Contract",
+      "page": "/contracts/68/key-dates",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections with links back",
+      "actual": "Home sections: [\"Inbox\",\"Entity obligations\",\"Approvals waiting on you\",\"Tasks assigned to you\",\"Dates approaching\",\"Your contracts\",\"Your matters\"]. Home Tasks assigned to you lists \"DOC-032 compat compat-b contract-tasks-and-dates mine administrator 1790579743967\" (/contracts/68/tasks); its link opened /contracts/68/tasks. Dates approaching lists \"DOC-032 compat compat-b contract-tasks-and-dates near check administrator 1790579743967DOC-032 compat compat-b contract-tasks-and-dates record administrator 1790579743967·Key date·Contract C-68Oct 8 (in 10 days)\" -> /contracts/68/key-dates; it opened /contracts/68/key-dates. Reminder delivery timing was not exercised.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:47.183Z",
+      "at": "2026-09-28T07:16:53.295Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: an archived Contract is read-only for Tasks and Key dates; restore allows changes again",
+      "page": "/contracts/68/tasks",
+      "expected": "No Add task, enabled checkbox, Add date or row actions while archived; writes are refused; after restore Add task returns",
+      "actual": "Check did not complete: locator.waitFor: Error: strict mode violation: getByRole('region', { name: 'Tasks' }) resolved to 2 elements:     1) <section aria-labelledby=\"page-title\" class=\"flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 bg-canvas px-page-x py-2 @5xl/shell:h-(--height-subbar) @5xl/shell:flex-nowrap @5xl/shell:py-0\">…</section> aka getByRole('region', { name: 'DOC-032 compat compat-b' })     2) <section id=\"contract-tasks\" aria-labelledby=\"contract-tasks-heading\" class=\"w-full overflow-hidden rounded-card border border-border-default bg-raised\">…</section> aka getByRole('region', { name: 'Tasks', exact: true })  Call log:   - waiting for getByRole('region', { name: 'Tasks' }) to be visible",
+      "result": "fail",
+      "startedAt": "2026-09-28T07:16:53.296Z",
+      "at": "2026-09-28T07:16:53.848Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "page": null,
+      "expected": "Tasks and Key dates remain in the full app; the Business User has no Tasks or Key date section",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/68/tasks landed on /portal with no Tasks or Key dates section.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:53.849Z",
+      "at": "2026-09-28T07:16:56.931Z"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:16:56.932Z",
+  "summary": {
+    "total": 34,
+    "pass": 16,
+    "fail": 18
+  }
+}

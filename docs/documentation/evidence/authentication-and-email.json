@@ -1,58 +1,58 @@
 {
   "articleId": "authentication-and-email",
-  "contentSha256": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733",
-  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
-  "environment": "openlaw-docs-80ceef9e-auth2 (owned seeded lab with OIDC fixture); openlaw-docs-80ceef9e-auth2w (owned unseeded first-run lab)",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org); DOC-030 corrections by DOC-030 source-review author agent (admin-org)",
-  "technicalReviewer": "DOC-030 source-review author agent (admin-org)",
-  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-org)",
+  "contentSha256": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-aoauth (owned Helix lab, light profile, random seed 7, OIDC fixture with two issuers); openlaw-docs-9d2b1705-aowiz (owned unseeded lab)",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org); DOC-030 corrections by DOC-030 source-review author agent (admin-org); DOC-032 corrections by DOC-032 source-review author agent (admin-org); DOC-032 corrections by DOC-032 source-review author agent (admin-org)",
+  "technicalReviewer": "DOC-032 source-review author agent (admin-org)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (admin-org)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-25T11:14:26.439Z",
+  "verifiedAt": "2026-09-28T07:33:27.169Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/authentication-and-email.md",
-    "docs/documentation/batches/DOC-030/admin-org/technical-review.json",
-    "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
-    "docs/documentation/batches/DOC-030/admin-org/walkthrough.json",
-    "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
-    "docs/documentation/batches/DOC-030/admin-org/run.sh",
-    "docs/documentation/batches/DOC-030/admin-org/phase.sh",
-    "docs/documentation/batches/DOC-030/admin-org/oidc-fixture.mjs",
-    "docs/documentation/batches/DOC-030/admin-org/overlay-oidc.json",
-    "docs/documentation/batches/DOC-030/admin-org/overlay-mail-stored.json",
-    "docs/documentation/batches/DOC-030/admin-org/overlay-mail-incomplete.json",
-    "docs/documentation/batches/DOC-030/admin-org/overlay-mail-env.json",
-    "docs/documentation/batches/DOC-030/admin-org/overlay-baseurl-unset.json",
+    "docs/documentation/batches/DOC-032/admin-org/walkthrough.json",
+    "docs/documentation/batches/DOC-032/admin-org/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/admin-org/lib.mjs",
+    "docs/documentation/batches/DOC-032/admin-org/run.sh",
+    "docs/documentation/batches/DOC-032/admin-org/phase.sh",
+    "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+    "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+    "docs/documentation/batches/DOC-032/admin-org/overlay-oidc.json",
+    "docs/documentation/batches/DOC-032/admin-org/overlay-mail-stored.json",
+    "docs/documentation/batches/DOC-032/admin-org/overlay-mail-incomplete.json",
+    "docs/documentation/batches/DOC-032/admin-org/overlay-mail-env.json",
+    "docs/documentation/batches/DOC-032/admin-org/overlay-baseurl-unset.json",
     "CONTEXT.md",
     "docs/documentation/EDITORIAL.md",
     "docs/documentation/templates/how-to.md",
-    "docs/decision-records/DECISIONS.md (DD-010)",
-    "docs/decision-records/DECISIONS-SETTINGS.md (SET-005 addendum)",
-    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008, TECH-011, M43/3 addendum)",
-    "docs/decision-records/DECISIONS-DESIGN.md (DES-093)",
-    "apps/web/src/routes/settings.tsx",
+    "docs/documentation/batches/DOC-032/BRIEF-author.md",
+    "docs/documentation/batches/DOC-032/plan.json",
+    "docs/documentation/evidence/authentication-and-email.json",
+    "docs/documentation/batches/DOC-030/admin-org/technical-review.json",
+    "docs/decision-records/DECISIONS-SETTINGS.md (SET-004 amendments 2026-09-15 and 2026-09-27)",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 addendum 2026-09-27)",
+    "docs/decision-records/SCHEMA.md (org_settings.allowed_email_domains)",
+    "docs/UX-REVIEW-CHECKLIST.md (items 10e, 10f, 11, 12b)",
     "apps/web/src/routes/settings-authentication.tsx",
     "apps/web/src/components/authentication-options.tsx",
-    "apps/web/src/routes/settings-email.tsx",
-    "apps/web/src/components/smtp-settings-fields.tsx",
-    "apps/web/src/routes/settings-advanced.tsx",
-    "apps/web/src/routes/welcome.tsx",
+    "apps/web/src/components/list-editor.tsx",
     "apps/web/src/routes/login.tsx",
-    "apps/api/src/auth/instance.ts",
-    "apps/api/src/auth/authentication-policy.ts",
+    "apps/web/src/routes/welcome.tsx",
     "apps/api/src/modules/auth/routes.ts",
     "apps/api/src/modules/auth/authentication-policy-routes.ts",
+    "apps/api/src/auth/authentication-policy.ts",
+    "apps/api/src/auth/instance.ts",
+    "apps/api/src/auth/sso-domains.ts",
+    "apps/api/src/modules/auth/sso.test.ts",
+    "apps/api/src/modules/auth/authentication-policy.test.ts",
+    "apps/api/src/modules/auth/allowed-domains.test.ts",
     "apps/api/src/modules/email-settings/routes.ts",
-    "apps/api/src/lib/mailer.ts",
-    "apps/api/src/lib/email-layout.ts",
-    "apps/api/src/modules/advanced-settings/config.ts",
-    "apps/api/src/modules/onboarding/routes.ts",
-    "apps/api/src/index.ts",
-    "compose.yml",
-    "docs/user-guides/deployment-configuration.md",
-    "docs/user-guides/first-run.md",
-    "messages/en-US.json"
+    "apps/api/src/modules/advanced-settings/routes.ts",
+    "node_modules/@better-auth/sso dist (shared redirectURI option)",
+    "messages/en-US.json",
+    "apps/web/src/main.tsx"
   ],
   "scenarios": [
     {
@@ -61,22 +61,25 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Owned seeded lab auth2 (openlaw-docs-80ceef9e-auth2, Helix seed, light profile, random seed 7) built from 067c1646 with SMTP_URL and SMTP_FROM for Mailpit and BASE_URL http://127.0.0.1:43310; Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) sign in with passwords; seeded and disposable Business Users (doc030-auth-*) sign in with links from the lab Mailpit.",
-        "Local OpenID Connect fixture (oauth2-mock-server 9.2.0) in container openlaw-docs-80ceef9e-auth2-oidc-1 as http://oidc:8080 on the lab network; the browser maps the name to the container address.",
-        "Owned unseeded lab auth2w (openlaw-docs-80ceef9e-auth2w) for first-run: the first Administrator DOC-030 admin-org Avery Morgan, created with the lab setup token.",
-        "Deployment phases applied by phase.sh with compose overlays: overlay-mail-stored.json (no SMTP_URL/SMTP_FROM), overlay-mail-incomplete.json (SMTP_URL without SMTP_FROM), overlay-mail-env.json (SMTP_URL and SMTP_FROM for 'DOC-030 Environment <env-relay@helix.example>'), overlay-baseurl-unset.json (no BASE_URL)."
+        "Owned seeded lab aoauth (openlaw-docs-9d2b1705-aoauth) built from 4ca41822, with a local OIDC fixture (oauth2-mock-server 9.2.0) serving two issuers on the lab network. Daniel Okafor (Administrator), Nadia Haddad (Legal Team Member), seeded and Portal-created Business Users, and disposable doc032-auth-* accounts, each in its own browser context.",
+        "Owned unseeded lab aowiz (openlaw-docs-9d2b1705-aowiz) with the fictional first Administrator DOC-032 admin-org Avery Morgan for the wizard email step and the Settings email pane."
       ],
-      "expected": "Administrators and Legal Team Members sign in with the methods enabled under Legal User Authentication. An Administrator with a password keeps emergency password sign-in when Email and password is off. Business Users sign in only with the methods enabled under Business Portal Authentication. Test mail reaches the controlled sink through the active configuration source. Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets.",
-      "actual": "39 recorded browser steps passed as an Administrator. Settings → Advanced → Authentication showed Legal User Authentication and Business Portal Authentication, each with Email and password, Email magic link, Single sign-on (SSO) and Require two-factor authentication; SSO was disabled with the tooltip \"Configure an identity provider below to enable single sign-on.\" Turning off the last method in either card showed \"Enable at least one sign-in method.\" and stored nothing. With Legal Email and password off, Daniel still signed in with a password while Nadia got \"Password sign-in is disabled for this account.\"; Nadia was refused on the Portal page too, and a Business User's password sign-in on the staff page landed in the Portal. With Business Email and password off, the Portal page offered no password choice, the staff page refused the Business User, and a sign-in link still worked. Pending staff invitations on helix.example and on the unlisted elsewhere.example got sign-in links (\"It expires in 5 minutes and works once.\"), the first link sign-in turned each row Active, a spent link and a link opened after 316 seconds went to /auth/link-expired with no session. A Business User signing in on the staff page landed in /portal. Allowed email domains added northwind.example with a Remove control; a new northwind address became a Business User; an unlisted address got neutral pages, no mail and no account. After Remove northwind.example an existing Business User still got a new link, kept a held session, used an earlier link and a password; a new address got no link, was refused at password setup completion (\"Password setup is no longer available for this address.\") and at link redemption (EMAIL_DOMAIN_NOT_ALLOWED); staff links still worked. The empty list read \"No domains allowed yet. New users must be invited individually.\" and Invite user offered only staff roles. Turning off Business Email magic link made an earlier link fail with \"This sign-in link could not be used. Request a new link or contact your administrator.\" Against the OIDC fixture: an unreachable issuer was refused (\"The change could not be saved. Try again.\") and stored nothing; registration turned on neither SSO switch; Legal SSO let an invited staff account sign in as Legal team member and turned its row Active; an uninvited helix.example identity got \"Single sign-on failed. Try again.\" and no account; Save provider with a blank secret and with a rotated secret (tooltip \"Leave blank to keep the current secret. Paste a new value to rotate.\") each kept SSO working; an unreachable issuer update kept the previous issuer working; Business SSO admitted an existing Business User before and after its domain was removed and refused a new identity. With only SSO on for Legal users Daniel still signed in with a password, and turning Email and password back on and SSO off restored Nadia's password sign-in. Require two-factor authentication sent an Administrator without an authenticator to enrolment with \"Your organization requires two-factor authentication.\", each new session asked for a code, and magic-link, SSO and emergency password sign-ins were all sent to enrolment. In the first-run wizard, Skip optional steps opened Outbound email with no Set up later and Continue disabled; the relay form's Port followed Connection security (587/465/25) until edited; smtp:// and host:port were refused; a STARTTLS relay with Username and password saved without returning or storing the credentials in plain text and its test failed; Replace relay opened empty, Keep current relay closed it; Send test email showed \"Test email sent to\" the Administrator and \"OpenLaw test email\" arrived with Outbound email works, Sent through mailpit:1025 and From; an unreachable relay saved but failed its test; Clear relay stopped delivery and disabled Continue. Settings → Advanced → Outbound email showed Sender, Send test email and Replace relay (no Clear relay), Cancel kept the relay, and a replacement applied to the next email without a restart. With email unset the sign-in pages did not offer Email me a sign-in link. With BASE_URL removed, the Administrator saved Application address and saw \"Settings saved. Restart the API and worker to apply changes.\"",
+      "expected": "Administrators and Legal Team Members sign in with the methods enabled under Legal User Authentication. An Administrator with a password keeps emergency password sign-in when Email and password is off. Business Users sign in only with the methods enabled under Business Portal Authentication. Invalid issuer/relay, denied domain have recoverable outcomes without exposing secrets.",
+      "actual": "48 recorded administrator steps passed. Two policy cards with Email and password, Email magic link, Single sign-on (SSO) and Require two-factor authentication; each change showed Saved; a card with no method gave \"Enable at least one sign-in method.\"; the SSO switch was unavailable with \"Configure an identity provider below to enable single sign-on.\". With Legal Email and password off, Daniel still signed in with a password and Nadia was refused; with only SSO on, the page offered Administrator sign-in and Daniel signed in. Pending invitations, including one off the allowed domains, got 5-minute single-use links that activated them; a reused and an expired link gave no session; a Business User on the staff page landed in the Portal. Adding and removing northwind.example: an unapproved address got no link and no account; removing one of two domains refused new accounts but kept existing Business Users (new link, held session, earlier link, password). Removing the last domain showed \"No domains allowed yet. New users must be invited individually.\", stored every Business method off, made all four switches unavailable with \"Add an allowed email domain to enable Business User sign-in options.\" (SSO: \"Add an allowed email domain and configure an identity provider to enable single sign-on.\"), kept Require two-factor authentication at its value, left Invite user with staff roles only, showed \"Sign-in is unavailable. Contact your administrator.\" on the Portal page, refused the existing Business User, and kept a held session; adding a domain left the methods off until turned on. Turning off Business Email magic link stopped an earlier link. Add provider opened Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret with \"Separate several domains with commas...\"; an unreachable issuer was refused and nothing stored; registration showed the callback http://127.0.0.1:43351/api/auth/sso/callback, listed the name, domain and Configured, and changed no policy; the secret was never returned. With one provider the staff page offered a single Continue with single sign-on button and an invited account signed in (row Active); an uninvited helix.example identity got no staff role. Edit {name} had no Provider ID; a blank secret kept it and a replacement rotated it, both followed by working sign-ins; an unreachable issuer on edit kept the old configuration. A second provider with harbor.example, ops.northwind.example used the same callback; exact, subdomain and parent domains were refused naming the holder (\"... assigned to the identity provider DOC-032 Harbor IdP ...\"). With two providers the page asked for Email and routed helix.example to http://oidc:8080 and harbor.example to http://oidc:8082; unlisted.example showed \"No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.\" with the other methods still offered. A provider whose stored configuration was blanked showed Missing credentials and returned to Configured after Edit. Business Portal SSO signed in an existing Business User, still after its domain was removed, while a new identity was refused. Remove {name} had no confirmation and accounts kept their rows (a sign-in link still worked); removing the last provider turned SSO off in both cards; with SSO as the only Legal method it left the staff page on \"Sign-in is unavailable. Contact your administrator.\" with no Administrator sign-in, and the open Administrator session turned Email and password back on. Require two-factor authentication sent an Administrator without an authenticator to enrollment, required a code on each new session, and applied to magic links, SSO and emergency password sign-in. The actual role decided the methods on either sign-in page. On aowiz, the wizard email step (Port 587/465/25, refused smtp:// and host:port, STARTTLS failure, Replace relay, Keep current relay, unreachable relay, Clear relay) and the Settings pane (Replace relay, Cancel, no Clear relay, change applied without restart) behaved as the guide states; the test email read \"OpenLaw test email\", \"Outbound email works\", Sent through and From.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/admin-org/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
-        "docs/documentation/batches/DOC-030/admin-org/run.sh",
-        "docs/documentation/batches/DOC-030/admin-org/phase.sh",
-        "docs/documentation/batches/DOC-030/admin-org/oidc-fixture.mjs",
-        "docs/documentation/batches/DOC-030/admin-org/technical-review.json"
+        "docs/documentation/batches/DOC-032/admin-org/walkthrough.json",
+        "docs/documentation/batches/DOC-032/admin-org/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/run.sh",
+        "docs/documentation/batches/DOC-032/admin-org/phase.sh",
+        "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+        "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-oidc.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-stored.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-incomplete.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-env.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-baseurl-unset.json"
       ]
     },
     {
@@ -85,46 +88,209 @@
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Owned seeded lab auth2 (openlaw-docs-80ceef9e-auth2, Helix seed, light profile, random seed 7) built from 067c1646 with SMTP_URL and SMTP_FROM for Mailpit and BASE_URL http://127.0.0.1:43310; Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) sign in with passwords; seeded and disposable Business Users (doc030-auth-*) sign in with links from the lab Mailpit.",
-        "Local OpenID Connect fixture (oauth2-mock-server 9.2.0) in container openlaw-docs-80ceef9e-auth2-oidc-1 as http://oidc:8080 on the lab network; the browser maps the name to the container address.",
-        "Owned unseeded lab auth2w (openlaw-docs-80ceef9e-auth2w) for first-run: the first Administrator DOC-030 admin-org Avery Morgan, created with the lab setup token.",
-        "Deployment phases applied by phase.sh with compose overlays: overlay-mail-stored.json (no SMTP_URL/SMTP_FROM), overlay-mail-incomplete.json (SMTP_URL without SMTP_FROM), overlay-mail-env.json (SMTP_URL and SMTP_FROM for 'DOC-030 Environment <env-relay@helix.example>'), overlay-baseurl-unset.json (no BASE_URL)."
+        "The operator responsibility, exercised as compose overlays on the owned labs (phase.sh): SMTP_URL/SMTP_FROM unset, SMTP_URL without SMTP_FROM, both set, BASE_URL removed, and the OIDC fixture container. Each change was checked in the browser as the lab Administrator."
       ],
-      "expected": "Administrators and Legal Team Members sign in with the methods enabled under Legal User Authentication. An Administrator with a password keeps emergency password sign-in when Email and password is off. Business Users sign in only with the methods enabled under Business Portal Authentication. Test mail reaches the controlled sink through the active configuration source. Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets.",
-      "actual": "10 recorded steps passed for the operator responsibility: each is a deployment change on an owned lab (phase.sh recreates app and worker) followed by a browser check. With SMTP_URL and SMTP_FROM set while a stored relay was saved, the wizard read \"Outbound email is set by the deployment environment. Mail is sent from DOC-030 Environment <env-relay@helix.example>.\" with no relay form and no Send test email, and a direct save answered 409; Settings → Advanced → Outbound email read \"Managed by your deployment configuration. Contact your system administrator to change the relay.\" with only Send test email, and the test and a wizard invitation arrived from env-relay@helix.example, not the stored sender. With SMTP_URL but no SMTP_FROM, the wizard and Settings both showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\", Settings disabled Send test email, and an invitation answered 409 with no mail. Removing the override and recreating app and worker made the stored relay active again (test mail from stored-relay@helix.example). The OIDC client was the local fixture; Register provider displayed \"Paste this callback URL into your IdP console: http://127.0.0.1:43310/api/auth/sso/callback\" on the BASE_URL address and GET /api/v1/auth/sso-providers did not return the secret. With BASE_URL set, Instance address showed \"Application address Deployment configuration · Read only\" and the callback used it. With BASE_URL removed, sign-in at the lab address failed with \"Invalid origin\" and the field became editable (Default, http://localhost:3000); after an Administrator saved http://127.0.0.1:43310 the callback still used http://localhost:3000 until app and worker restarted, then the field read Saved in OpenLaw, the callback used the saved address and sign-in at it worked again.",
+      "expected": "Test mail reaches the controlled sink through the active configuration source; environment precedence and locked environment settings behave as the guide states; the identity-provider client and the instance address follow the deployment.",
+      "actual": "10 recorded operator steps passed. With SMTP_URL set and SMTP_FROM empty, the wizard step and Settings, Advanced, Outbound email showed \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\"; Send test email was unavailable and an invitation was refused although a complete relay was saved in the app. With both set, the wizard step read \"Outbound email is set by the deployment environment. Mail is sent from DOC-032 Environment <env-relay@helix.example>.\" with no relay form, a direct save answered 409, Settings showed \"Managed by your deployment configuration. Contact your system administrator to change the relay.\" with only Send test email, and the test mail and an invitation came from env-relay@helix.example, not the stored relay. Removing the override and recreating app and worker returned Settings to the stored relay (Sender \"DOC-032 Stored\" <stored-relay@helix.example>) and its test mail. The OIDC client came from the fixture issuer; the callback used the instance address. With BASE_URL set, Instance address read \"Application address Deployment configuration · Read only\" and the callback used it; with BASE_URL removed the field was editable (Default, http://localhost:3000), a saved address waited for a restart (\"Settings saved. Restart the API and worker to apply changes.\"), and after the restart sign-ins and the callback used the saved address.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/admin-org/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
-        "docs/documentation/batches/DOC-030/admin-org/run.sh",
-        "docs/documentation/batches/DOC-030/admin-org/phase.sh",
-        "docs/documentation/batches/DOC-030/admin-org/overlay-mail-env.json",
-        "docs/documentation/batches/DOC-030/admin-org/overlay-mail-incomplete.json",
-        "docs/documentation/batches/DOC-030/admin-org/overlay-mail-stored.json",
-        "docs/documentation/batches/DOC-030/admin-org/overlay-baseurl-unset.json",
-        "docs/documentation/batches/DOC-030/admin-org/overlay-oidc.json",
-        "docs/documentation/batches/DOC-030/admin-org/technical-review.json"
+        "docs/documentation/batches/DOC-032/admin-org/walkthrough.json",
+        "docs/documentation/batches/DOC-032/admin-org/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/lib.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/run.sh",
+        "docs/documentation/batches/DOC-032/admin-org/phase.sh",
+        "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+        "docs/documentation/batches/DOC-032/admin-org/oidc-fixture.mjs",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-oidc.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-stored.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-incomplete.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-mail-env.json",
+        "docs/documentation/batches/DOC-032/admin-org/overlay-baseurl-unset.json"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
-    "SAML: this version has no SAML setup; the Identity provider card offers OpenID Connect fields only. The scenario's SAML fixture check cannot run. The guide states it.",
-    "The identity provider was a local OIDC fixture (oauth2-mock-server 9.2.0), not a live provider; V-C37 requires a browser walkthrough, not a live-provider check. The existing openlaw-keycloak container was not used.",
-    "operator is a responsibility, not an OpenLaw account. Operator steps were compose overlay changes on the owned labs auth2 and auth2w, checked in the browser as the lab Administrator. The labs were destroyed after the walk.",
+    "The identity providers were a local OIDC fixture with two issuers (oauth2-mock-server 9.2.0), not live vendors; V-C37 requires a browser walkthrough, not a live-provider check. This version has no SAML setup, as the guide states.",
+    "'Missing credentials' was produced by fault injection on the owned lab (the provider's stored oidc_config set to '{}').",
+    "operator is a responsibility, not an OpenLaw account. Operator steps were compose overlay changes on the owned labs aoauth and aowiz, checked in the browser as the lab Administrator. The labs were destroyed after the walk.",
     "With BASE_URL removed, the API accepts requests only from its default origin, so the Administrator reached the lab as http://localhost:3000 through a browser host mapping to the lab port.",
-    "Invalid issuer and invalid relay host refusals are recoverable but generic ('The change could not be saved. Try again.', 'One or more request fields are invalid.'). The guide gives the right corrective action without quoting them.",
-    "The author's open limitation is settled: a link whose method was turned off opens /portal/login with 'This sign-in link could not be used. Request a new link or contact your administrator.' and no session.",
-    "The per-address sign-in link limit ('Too many sign-in link requests. Try again later.') was observed on the shared work2 lab; the guide does not describe it.",
-    "The wizard's own Business-user portal step copy ('No domains allowed yet. Magic-link sign-in is unavailable.') was not checked; the author reports it as stale.",
-    "Two script helpers were made tolerant of a missing sign-in choice after the auth2w, policy, sso and twoFactor runs; in those runs the choices were present, so the recorded steps are unaffected (walkthrough.json scriptNotes)."
+    "The registry's 'An Administrator with a password keeps emergency password sign-in when Email and password is off' holds while Legal User Authentication keeps another method. After the last identity provider is removed from an SSO-only Legal policy the staff page offers no password form (walkthrough.json productBugs); the guide states this.",
+    "Product bug reproduced (walkthrough.json productBugs): on a fresh install that never saved an allowed domain, Settings shows the Business methods off while the stored policy still lets a Business User sign in with a password. The guide's empty-list paragraph describes the Settings display and the state after removing the last domain, which the walk confirmed.",
+    "An unreachable issuer is refused with the generic 'The server could not be reached. Try again.' and invalid relay hosts with 'One or more request fields are invalid.'. Both are recoverable; the guide gives the corrective action without quoting them."
   ],
   "previousEvidence": {
-    "appCommit": "57e77e386be31b2a319f7143dd54d00123e65efe",
-    "contentSha256": "b5e625752297ce38c24e0aa30609d615ef7db10ff366a45e827c869c02c3b208",
-    "verifiedAt": "2026-09-16T18:24:39Z"
+    "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673",
+    "verifiedAt": "2026-09-28T07:33:27.169Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches every relay and test-email claim, and the catalog hunks add settings.auth.domainRequired, settings.auth.domainsAndProviderRequired and settings.auth.waitForSave, whose rendered defaultMessage did not change. The replay on bwiz and bao saw the stored, environment, incomplete and unreachable relays with their exact messages, delivered test emails, sign-in links, the domain and provider tooltips, SSO with the OIDC fixture and two-factor. 59 of 59 current steps passed; three steps in two superseded attempts hit the per-address sign-in link limit and passed on retry. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay.mjs",
+        "sha256": "5b477e33ff1cfb0eebea32f30373fb94c9d6af2236ad2be73bf9f45322e0c6fd"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-logo.svg",
+        "sha256": "357a37f19b1cbdd969df60fe668d0ca5e0b07257e1908407b19a2807c2dff562"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-not-an-image.txt",
+        "sha256": "ea2bc81cf052067db5092bd29594d7a34f127e2766554d30297baf9398684e5e"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/lib.mjs",
+        "sha256": "3a2175feea25128cabfab0432a497c4d083789274bfa1484e683041387dc79dc"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/oidc-fixture.mjs",
+        "sha256": "bee5699e17256e2e9e7614f5cf34be524cc00996740419d8c1711359d1a353e8"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-baseurl-unset.json",
+        "sha256": "f7dcf368008f7219d47a18b74e80a5f71cb55847157f3b1d9d3891de5ee58c3d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-env.json",
+        "sha256": "4297085a95ae7c43b5f9b540014c5707908bda461dd452bbc41ba3d172928366"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-incomplete.json",
+        "sha256": "d6dfd1cc19b3c5aeeed295c46c3bbfbe060bd7e911267bbd4115a2327d5e35fd"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-stored.json",
+        "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-oidc.json",
+        "sha256": "d2187d29c9ef02560300db32192a542e5bb2817eaceee4cd9bbd752063d6faaa"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/phase.sh",
+        "sha256": "68be8914f9173b3aad765eda6bdba962e65086bda681cd2caca1aed4ecb792a5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/run.sh",
+        "sha256": "8b241875ba52a62d1f3d7026afd470615dce259c84b8137d8277099463bef1e6"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/crossPage-2026-09-28T10-24-56-133Z.json",
+        "sha256": "548ea2dc65e8080d9a89d95bb5ee0b24bbb94ab3b195a28b71148b9586e1fd7f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAfter-2026-09-28T10-07-55-684Z.json",
+        "sha256": "ea37954b037c3bb5969dcbeff837e18270f2be7fd5f3038c4a28d394ed2a3b59"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAuth-2026-09-28T10-07-13-239Z.json",
+        "sha256": "e66f2a10a124a23dc7213caa36756b6e3ef2aad922e514bd5a77e3107fe24ed1"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frConnectors-2026-09-28T10-07-29-329Z.json",
+        "sha256": "52c5680aec1a6372f25fb32d8c46a2d2f9fd76bc6e4f04475846c082efafbb44"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmail-2026-09-28T10-07-20-083Z.json",
+        "sha256": "7d01937f1832d5f09a9c4d6ee3bd40812bd61b51e5b2d3989264315c72eaf85a"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmailRow-2026-09-28T10-08-17-180Z.json",
+        "sha256": "f34b60016a54f34b044d6550657e8e8fd3b4b1601fc403e4c58b4ed66ab31454"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frInvites-2026-09-28T10-07-23-631Z.json",
+        "sha256": "1a75655129c2faafd717a088eb4bd3716fcaeeb45aa4cc9ec2cf56be69f19124"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frOrg-2026-09-28T10-07-04-464Z.json",
+        "sha256": "bbb15b2630e075394b39afddc513a049c18cac10b8712669ea1386d4adc50a0b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frReview-2026-09-28T10-07-49-363Z.json",
+        "sha256": "c78d904d8177771cfe8615b93e1dbc71bbb44cf7458bd81572941e3333b0fb74"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frSetup-2026-09-28T10-06-33-644Z.json",
+        "sha256": "c85a5e23827bbf22a273374bff96ac0073ea1c8b7becbf2ac3218f06f7463f2b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/guards-2026-09-28T10-08-38-757Z.json",
+        "sha256": "b354c11ba96fe228699b8986ae68516edee9d7310c3a0da63eec707ff44f0e08"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/instancePinned-2026-09-28T10-25-05-106Z.json",
+        "sha256": "6ee5d6c45716d06377e3d4e3e8b5d009ad2a604f8c4f64d7aa5c2598fbb78ecc"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/instanceSaved-2026-09-28T10-25-08-115Z.json",
+        "sha256": "81078e68849033a2baf735f135c5bb596d826a63442e67c899b64bc17cd3f760"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/org-2026-09-28T10-06-17-425Z.json",
+        "sha256": "594e7df30c03f41eb70fda94e15ae76475c995529f64ececf19daa1b16d76204"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/policy-2026-09-28T10-06-51-526Z.json",
+        "sha256": "ee4bf2a6a1a52b224c36f8a5d7c4d433bed9d39b22fcd7c90a1e156fd1aa4460"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsIncomplete-2026-09-28T10-08-11-065Z.json",
+        "sha256": "5bc9a629339459f58face49cc1932790e084367829462950a2b9b0f2fd022d25"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsStored-2026-09-28T10-08-32-665Z.json",
+        "sha256": "1db254e12f9cfd4840c6db314000416575a054306ddc020bfb98d3922c257232"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-12-08-840Z.json",
+        "sha256": "0fde0cf23fa279b734ecffe38bad608a42c4a11a334966ff3a66453820158c2d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-23-41-743Z.json",
+        "sha256": "c1baab38d55a78ed0b3a1b6d73c0be85d0f66d930b302f7cc9636cc8643b91e8"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/ssoRemove-2026-09-28T10-26-11-692Z.json",
+        "sha256": "de1f1007ac775600372a002d3e4312a27da89f6800fbd7dfb73874420596f050"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-13-17-332Z.json",
+        "sha256": "91b0e951575f2fd077bdeff6492808f784ff0b0a1a3e1bdf5ed24fb117ceb1f4"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-24-42-914Z.json",
+        "sha256": "48824a8f48d36f2075688dfda3f2f6fa2e6598df85ff5c14fe233b424b962fc3"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardEnv-2026-09-28T10-07-49-852Z.json",
+        "sha256": "ca832eaba9adb927e1e92ff97d4ff034b7bc48dae386fa66f3e740253010407d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardIncomplete-2026-09-28T10-07-25-893Z.json",
+        "sha256": "eed7c37834d8bf49db277ddd15a2bed0af88cce4c2ef195d385a31a7b3e4b11f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardStored-2026-09-28T10-06-32-817Z.json",
+        "sha256": "86692c6450b2ea9288f812bcae6a258f143627b5ae3d9bb4ff4a7b5cd0712190"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay.json",
+        "sha256": "03f0128a9fcf83f23e2b06977c892064e64e6c895eb88eaa830bda3f77fc4dd5"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

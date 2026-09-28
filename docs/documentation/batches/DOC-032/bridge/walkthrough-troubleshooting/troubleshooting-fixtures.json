@@ -1,0 +1,85 @@
+{
+  "stamp": "09281019",
+  "shared": {
+    "number": 36,
+    "title": "DOC-032 bridge V-C49 shared DPA contract 09281019",
+    "primaryDocumentId": "01a0e786-7fec-71a5-8504-954707718e96",
+    "pngDocumentId": "01a0e786-7ffe-752b-8364-9155fc60767a",
+    "folderId": "01a0e786-8014-7a02-9a85-7f592db1ff7f",
+    "fieldsPatch": 200,
+    "securityReview": "Not required"
+  },
+  "confidential": {
+    "number": 37,
+    "title": "DOC-032 bridge V-C49 confidential contract 09281019"
+  },
+  "adminConfidential": {
+    "number": 38,
+    "title": "DOC-032 bridge V-C49 administrator confidential contract 09281019"
+  },
+  "confidentialPortal": {
+    "number": 39,
+    "title": "DOC-032 bridge V-C49 confidential portal contract 09281019"
+  },
+  "archived": {
+    "number": 40,
+    "title": "DOC-032 bridge V-C49 archived contract 09281019"
+  },
+  "approval": {
+    "number": 41,
+    "title": "DOC-032 bridge V-C49 approval contract 09281019"
+  },
+  "buApproval": {
+    "number": 42,
+    "title": "DOC-032 bridge V-C49 business approver buApproval 09281019",
+    "approvalId": "01a0e786-8129-713e-9b51-5fcc50f604ed"
+  },
+  "buWithdraw": {
+    "number": 43,
+    "title": "DOC-032 bridge V-C49 business approver buWithdraw 09281019",
+    "approvalId": "01a0e786-815c-7698-bfe0-5e93c94d508b"
+  },
+  "buArchive": {
+    "number": 44,
+    "title": "DOC-032 bridge V-C49 business approver buArchive 09281019",
+    "approvalId": "01a0e786-8190-7e30-b300-9f4605f2638d"
+  },
+  "uploads": {
+    "number": 45,
+    "title": "DOC-032 bridge V-C49 upload contract 09281019"
+  },
+  "files": {
+    "number": 46,
+    "title": "DOC-032 bridge V-C49 file behavior contract 09281019"
+  },
+  "relatedMatter": {
+    "number": 21,
+    "title": "DOC-032 bridge V-C49 related matter 09281019"
+  },
+  "entity": {
+    "id": "01a0e786-81e8-75b8-bc53-bc772020bedf",
+    "name": "DOC-032 bridge V-C49 confidential entity Ltd 09281019"
+  },
+  "registerEntity": {
+    "id": "01a0e786-81fe-7d65-9bff-401e240daed8",
+    "name": "DOC-032 bridge V-C49 register entity Ltd 09281019",
+    "holder": "Marta Kowalczyk",
+    "holderEntity": {
+      "id": "01a0e786-823d-79e0-9b7c-cdcd0258771f",
+      "name": "DOC-032 bridge V-C49 holder entity Ltd 09281019"
+    }
+  },
+  "knowledge": {
+    "id": "01a0e786-826f-7a51-8933-aa56fe7018b0",
+    "title": "DOC-032 bridge V-C49 Portal Knowledge 09281019"
+  },
+  "request": {
+    "number": 31,
+    "contract": 47
+  },
+  "openRequest": {
+    "number": 32
+  },
+  "createdAt": "2026-09-28T10:19:07.427Z",
+  "createdBy": "Nadia Haddad and Daniel Okafor API sessions, and the created Business User's Portal session (Requests)"
+}

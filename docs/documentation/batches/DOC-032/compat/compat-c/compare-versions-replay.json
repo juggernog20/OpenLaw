@@ -1,0 +1,295 @@
+{
+  "kind": "independent-article-walkthrough",
+  "batch": "DOC-032",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/compat/compare-versions-replay.mjs",
+  "group": "analysis-standin",
+  "set": "compat-c",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-c3cmp",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "providerMode": "None. The c3cmp lab has AI disabled and no stand-in; the compare and archived-pair parts make no AI call.",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1440x1000 CSS px",
+  "articleHashesTested": {
+    "contract-analysis": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
+    "compare-versions": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63"
+  },
+  "stamp": 1790579839433,
+  "roles": ["administrator", "legal_team_member"],
+  "parts": ["compare", "archived-pair"],
+  "setup": [
+    {
+      "at": "2026-09-28T07:17:31.737Z",
+      "text": "administrator API: Contract C-41 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2."
+    },
+    {
+      "at": "2026-09-28T07:18:30.109Z",
+      "text": "legal_team_member API: Contract C-42 with a download-only primary placeholder and four supporting Documents: Word v1 thirty/monthly, v2 sixty/quarterly, v3 ninety/annually; PDF v1 / Word v2; TXT v1 / PDF v2; malformed PDF v1 / PDF v2."
+    },
+    {
+      "at": "2026-09-28T07:18:56.923Z",
+      "text": "administrator API: Contract C-43 with a placeholder primary and a two-Version Word Document that has never been compared."
+    },
+    {
+      "at": "2026-09-28T07:19:02.275Z",
+      "text": "legal_team_member API: Contract C-44 with a placeholder primary and a two-Version Word Document that has never been compared."
+    }
+  ],
+  "startedAt": "2026-09-28T07:17:19.434Z",
+  "steps": [
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+      "expected": "Compare with previous opens the pair v2 → v3; while processing is held the page says Preparing comparison and updates to Changes when ready; no Document Version is added.",
+      "actual": "Version actions for version 2 also offered Compare with previous and opened \"v1 → v2\". Documents -> Actions for doc029-terms-admin.docx -> Compare with previous opened \"v2 → v3\". With this lab's worker paused the page read \"Preparing comparison Comparing both versions. This page will update when it is ready.\"; after resuming it changed to the Changes view without a reload. The chain still has 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:31.738Z",
+      "at": "2026-09-28T07:17:56.082Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Pair control, change list, Previous change and Next change",
+      "expected": "Choosing Older and Newer opens each pair at once; the choices keep the older before the newer; insertions and deletions describe the newer Version; Previous/Next move through changes.",
+      "actual": "Older v1 opened v1 → v3 at once; Newer offered [\"v2\",\"v3\"] and v2 opened v1 → v2. With v1 → v2, Older offered [\"v1\"]. Changes: [\"¶2, Replaced = ¶2thirty → sixty\",\"¶3, Replaced = ¶3monthly → quarterly\"]. Compared text: \"doc029-terms-admin.docx → doc029-terms-admin.docx DOC-032 compat compat-c fictional payment terms. Payment is due within Inserted: sixty Deleted: thirty days. Invoices are issued Inserted: quarterly Deleted: monthly.\". Next change moved the current change 0 -> 1; Previous change moved it back to 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:56.083Z",
+      "at": "2026-09-28T07:17:58.883Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "The Document reader offers Compare with the change count",
+      "expected": "When a ready Comparison exists for the previous pair, the reader link shows its change count and opens that Comparison.",
+      "actual": "Reader panel \"doc029-terms-admin.docx, version 3\" showed the link \"Compare with the previous version, 2 changes\"; it opened \"v2 → v3\" in the Changes view.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:58.883Z",
+      "at": "2026-09-28T07:17:59.985Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Export a Word Comparison as a Generated redline",
+      "expected": "Export track changes appends a Generated redline Version that records both operands; Open redline opens it; the file carries tracked changes; exporting again reuses it; reopening adds nothing; Generated redlines are not operands.",
+      "actual": "On v1 → v2, Export track changes became Open redline. Version 4 is \"generated_redline\" compared from v1 to v2; its download (sha256 24fb3da5ae8d…) has w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Open redline opened \"doc029-terms-admin.docx, version 4\". Exporting the same pair again answered 200 with Version 4; reopening v1 → v2 showed Open redline; Newer offered [\"v2\",\"v3\"]; a request naming Version 4 as an operand answered 400. The chain has 4 Versions and v1-v3 remain.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:59.986Z",
+      "at": "2026-09-28T07:18:01.224Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "A text Comparison (PDF against Word)",
+      "expected": "The page says it was built from extracted text, shows the wording change, shows Export needs two Word files. and cannot be exported.",
+      "actual": "PDF v1 → Word v2 showed the extracted-text notice and \"Export needs two Word files.\" with no export control. Compared text: \"doc029-mixed-admin.pdf → doc029-mixed-admin.docx This comparison was built from extracted text, so formatting is not shown. DOC-032 compat compat-c fictional payment terms. Payment is due within Delet\". A direct export answered 409; the chain still has 2 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:01.224Z",
+      "at": "2026-09-28T07:18:04.210Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+      "expected": "A TXT operand and a failed PDF extraction each fail with a reason and Download links; reopening returns the same failure with no retry; a corrected new Version compares as No changes although its bytes differ.",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed\" with \"Version 1 does not support extracted text.\" and [\"Download doc029-plain-admin.txt\",\"Download doc029-plain-admin.pdf\"]; both downloads matched the uploaded bytes. Reloading /documents/01a0e6e0-1d66-78d4-b4e3-a7c243bfee4f/compare?from=01a0e6e0-1d66-78d4-b4e3-a7c3dd617228&to=01a0e6e0-1d7b-7d20-a07b-580225d55f89 returned the same failed Comparison (id unchanged) with no retry control. After adding a corrected PDF as Version 3 (setup, different sha256), Compare with previous opened \"v2 → v3\" and read \"No changes\". Malformed PDF v1 → PDF v2 read \"Version 1 text extraction failed.\" with 2 Download links.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:04.210Z",
+      "at": "2026-09-28T07:18:16.182Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+      "expected": "With the Document archived, Changes stay readable and no export is offered or accepted. With the owning Contract archived, the export is refused. After both are restored, the v2 → v3 export appends a Generated redline.",
+      "actual": "Documents -> Actions -> Archive on doc029-terms-admin.docx: v2 → v3 still showed Changes with no export control, and a direct export answered 409. Document restored (API). Contract actions -> Archive on C-41: Changes stayed readable; the control showed \"This contract is archived. Restore it before changing its paper.\"; a direct export answered 409; still 4 Versions. After Restore, Export track changes on v2 → v3 appended Version 5 (generated_redline, v2 -> v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:16.182Z",
+      "at": "2026-09-28T07:18:18.703Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Close comparison returns to the owning record",
+      "expected": "Close comparison opens the owning Contract's Documents section.",
+      "actual": "Close comparison opened /contracts/41/documents, where doc029-terms-admin.docx and its Actions menu are listed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:18.703Z",
+      "at": "2026-09-28T07:18:19.100Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Only Administrators and Legal Team Members open Comparisons",
+      "expected": "A Business User on the Contract team cannot open the Comparison page or request, read or export a Comparison.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening the v1 → v2 Comparison URL landed on \"/portal\" with no Changes view; requesting the pair answered 403; exporting answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:19.100Z",
+      "at": "2026-09-28T07:18:20.064Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Choose the Versions: Compare with previous, Preparing comparison, then Changes",
+      "expected": "Compare with previous opens the pair v2 → v3; while processing is held the page says Preparing comparison and updates to Changes when ready; no Document Version is added.",
+      "actual": "Version actions for version 2 also offered Compare with previous and opened \"v1 → v2\". Documents -> Actions for doc029-terms-legal.docx -> Compare with previous opened \"v2 → v3\". With this lab's worker paused the page read \"Preparing comparison Comparing both versions. This page will update when it is ready.\"; after resuming it changed to the Changes view without a reload. The chain still has 3 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:30.112Z",
+      "at": "2026-09-28T07:18:34.524Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Pair control, change list, Previous change and Next change",
+      "expected": "Choosing Older and Newer opens each pair at once; the choices keep the older before the newer; insertions and deletions describe the newer Version; Previous/Next move through changes.",
+      "actual": "Older v1 opened v1 → v3 at once; Newer offered [\"v2\",\"v3\"] and v2 opened v1 → v2. With v1 → v2, Older offered [\"v1\"]. Changes: [\"¶2, Replaced = ¶2thirty → sixty\",\"¶3, Replaced = ¶3monthly → quarterly\"]. Compared text: \"doc029-terms-legal.docx → doc029-terms-legal.docx DOC-032 compat compat-c fictional payment terms. Payment is due within Inserted: sixty Deleted: thirty days. Invoices are issued Inserted: quarterly Deleted: monthly.\". Next change moved the current change 0 -> 1; Previous change moved it back to 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:34.524Z",
+      "at": "2026-09-28T07:18:37.198Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "The Document reader offers Compare with the change count",
+      "expected": "When a ready Comparison exists for the previous pair, the reader link shows its change count and opens that Comparison.",
+      "actual": "Reader panel \"doc029-terms-legal.docx, version 3\" showed the link \"Compare with the previous version, 2 changes\"; it opened \"v2 → v3\" in the Changes view.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:37.198Z",
+      "at": "2026-09-28T07:18:38.151Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Export a Word Comparison as a Generated redline",
+      "expected": "Export track changes appends a Generated redline Version that records both operands; Open redline opens it; the file carries tracked changes; exporting again reuses it; reopening adds nothing; Generated redlines are not operands.",
+      "actual": "On v1 → v2, Export track changes became Open redline. Version 4 is \"generated_redline\" compared from v1 to v2; its download (sha256 9007364e405d…) has w:ins [\"sixty\",\"quarterly\"] and w:del [\"thirty\",\"monthly\"]. Open redline opened \"doc029-terms-legal.docx, version 4\". Exporting the same pair again answered 200 with Version 4; reopening v1 → v2 showed Open redline; Newer offered [\"v2\",\"v3\"]; a request naming Version 4 as an operand answered 400. The chain has 4 Versions and v1-v3 remain.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:38.151Z",
+      "at": "2026-09-28T07:18:38.901Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "A text Comparison (PDF against Word)",
+      "expected": "The page says it was built from extracted text, shows the wording change, shows Export needs two Word files. and cannot be exported.",
+      "actual": "PDF v1 → Word v2 showed the extracted-text notice and \"Export needs two Word files.\" with no export control. Compared text: \"doc029-mixed-legal.pdf → doc029-mixed-legal.docx This comparison was built from extracted text, so formatting is not shown. DOC-032 compat compat-c fictional payment terms. Payment is due within Delet\". A direct export answered 409; the chain still has 2 Versions.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:38.901Z",
+      "at": "2026-09-28T07:18:42.426Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "If the Comparison fails: reason, Download links, no retry, corrected new Version",
+      "expected": "A TXT operand and a failed PDF extraction each fail with a reason and Download links; reopening returns the same failure with no retry; a corrected new Version compares as No changes although its bytes differ.",
+      "actual": "TXT v1 → PDF v2 read \"Comparison failed\" with \"Version 1 does not support extracted text.\" and [\"Download doc029-plain-legal.txt\",\"Download doc029-plain-legal.pdf\"]; both downloads matched the uploaded bytes. Reloading /documents/01a0e6e1-00e5-7e39-9672-8481fe6a6810/compare?from=01a0e6e1-00e5-7e39-9672-8482bb562484&to=01a0e6e1-0107-7bbf-9b04-d3627c2522cd returned the same failed Comparison (id unchanged) with no retry control. After adding a corrected PDF as Version 3 (setup, different sha256), Compare with previous opened \"v2 → v3\" and read \"No changes\". Malformed PDF v1 → PDF v2 read \"Version 1 text extraction failed.\" with 2 Download links.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:42.426Z",
+      "at": "2026-09-28T07:18:52.949Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Archiving keeps Comparisons readable and blocks new Generated redlines until restored",
+      "expected": "With the Document archived, Changes stay readable and no export is offered or accepted. With the owning Contract archived, the export is refused. After both are restored, the v2 → v3 export appends a Generated redline.",
+      "actual": "Documents -> Actions -> Archive on doc029-terms-legal.docx: v2 → v3 still showed Changes with no export control, and a direct export answered 409. Document restored (API). Contract actions -> Archive on C-42: Changes stayed readable; the control showed \"This contract is archived. Restore it before changing its paper.\"; a direct export answered 409; still 4 Versions. After Restore, Export track changes on v2 → v3 appended Version 5 (generated_redline, v2 -> v3; w:ins [\"ninety\",\"annually\"], w:del [\"sixty\",\"quarterly\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:52.949Z",
+      "at": "2026-09-28T07:18:55.673Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Close comparison returns to the owning record",
+      "expected": "Close comparison opens the owning Contract's Documents section.",
+      "actual": "Close comparison opened /contracts/42/documents, where doc029-terms-legal.docx and its Actions menu are listed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:55.673Z",
+      "at": "2026-09-28T07:18:55.966Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Only Administrators and Legal Team Members open Comparisons",
+      "expected": "A Business User on the Contract team cannot open the Comparison page or request, read or export a Comparison.",
+      "actual": "Jonas Weber (Business User; team add answered 201) opening the v1 → v2 Comparison URL landed on \"/portal\" with no Changes view; requesting the pair answered 403; exporting answered 403.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:55.966Z",
+      "at": "2026-09-28T07:18:56.774Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "administrator",
+      "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+      "expected": "On an archived Document, Compare with previous for a pair that was never compared opens a Comparison that reaches Changes, offers no export, and adds no Version.",
+      "actual": "Documents -> Actions -> Archive on doc029-archived-admin.docx; with Show archived on, its Actions still offered [\"Compare with previous\",\"Restore\",\"Delete version\"]. Compare with previous opened a first-time v1 → v2 Comparison that reached Changes with no export control; the chain still has 2 Versions. The Document was restored afterwards (API).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:56.923Z",
+      "at": "2026-09-28T07:19:02.084Z"
+    },
+    {
+      "article": "compare-versions",
+      "role": "legal_team_member",
+      "step": "Archiving does not stop comparing existing Versions (new pair on an archived Document)",
+      "expected": "On an archived Document, Compare with previous for a pair that was never compared opens a Comparison that reaches Changes, offers no export, and adds no Version.",
+      "actual": "Documents -> Actions -> Archive on doc029-archived-legal.docx; with Show archived on, its Actions still offered [\"Compare with previous\",\"Restore\"]. Compare with previous opened a first-time v1 → v2 Comparison that reached Changes with no export control; the chain still has 2 Versions. The Document was restored afterwards (API).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:02.275Z",
+      "at": "2026-09-28T07:19:07.555Z"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:19:07.589Z",
+  "records": [
+    {
+      "role": "administrator",
+      "article": "compare-versions",
+      "contract": 41,
+      "documents": {
+        "word": "01a0e6e0-1c51-739c-a886-da5d191a7c27",
+        "mixed": "01a0e6e0-1d04-719b-a86b-528140d102b0",
+        "plain": "01a0e6e0-1d66-78d4-b4e3-a7c243bfee4f",
+        "malformed": "01a0e6e0-1dc1-7cf0-9ad6-3a1c24f53123"
+      }
+    },
+    {
+      "role": "legal_team_member",
+      "article": "compare-versions",
+      "contract": 42,
+      "documents": {
+        "word": "01a0e6e0-ff07-75d7-a6b9-a3a75ed692f3",
+        "mixed": "01a0e6e1-0048-7d79-9b78-4c7fb52a4136",
+        "plain": "01a0e6e1-00e5-7e39-9672-8481fe6a6810",
+        "malformed": "01a0e6e1-018e-7ed6-8acf-8721983fb0fc"
+      }
+    }
+  ],
+  "navigationRetries": [
+    {
+      "at": "2026-09-28T07:17:55.003Z",
+      "url": "/contracts/41/documents"
+    }
+  ]
+}

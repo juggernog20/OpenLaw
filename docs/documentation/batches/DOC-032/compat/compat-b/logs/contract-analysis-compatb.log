@@ -1,0 +1,46 @@
+setup: Administrator API: AI connector (was not configured, disabled) saved as Custom, OpenAI chat completions, base URL http://doc032-compatb-provider:8080/v1 (the stand-in), model doc032-compat-b-standin-model, and enabled for V-C21 only. Prerequisite preparation from configure-analysis, not a C21 step.
+setup: Administrator API: Contract type "DOC-032 compat compat-b Analysis type 1790579799334" whose Form gains three prompted record Rows (text location, number tier, text audit clause), and live Counterparty "DOC-032 Analysis Supplier 1790579799334 Ltd" on holder Contract C-36.
+setup: legal_team_member API: created C-37 (no paper), C-38 (unreadable primary PDF) and C-39 (main walk) of the analysis type; stand-in markers DOC032CBLEGAL1790579799334 and DOC032CBLEGAL1790579799334V2.
+[V-C21 legal_team_member] PASS If Analysis cannot finish: no primary Document; Run analysis in the Fields header and in the Contract actions menu
+[V-C21 legal_team_member] PASS If Analysis cannot finish: failed extraction of the primary Document text
+[V-C21 legal_team_member] PASS If Analysis cannot finish: with the connector disabled, no run and no marked value, the Fields header shows no Analysis controls
+[V-C21 legal_team_member] PASS Run Analysis and read its outcome: an automatic run starts when the target text becomes ready; the control says Running… and stays disabled; a finished run shows no summary sentence; values carry Unverified where they live
+[V-C21 legal_team_member] PASS The record updates when the run finishes while preserving typed drafts
+[V-C21 legal_team_member] PASS Contract actions offers Run analysis from any section; each newly AI-written value on Overview has the purple border, the Unverified indicator, an evidence sparkle and Confirm
+[V-C21 legal_team_member] PASS Select the sparkle to open the cited original Document Version in the same-page doc panel and locate its quoted passage
+[V-C21 legal_team_member] PASS Unverified values are already usable
+[V-C21 legal_team_member] PASS Confirm or correct one value: Confirm beside a value; edit a Field; Key date note-only edit then event edit; Confirm all shows in the Fields header while more than one value is marked; History records the confirmation
+[V-C21 legal_team_member] PASS Rerun after a change: marking Version 1 executed runs on Version 1; a newer upload does not displace the pin or start a run; the evidence still opens the Version that run read; Run analysis reads Version 1
+[V-C21 legal_team_member] PASS Rerun on changed input while another legal person edits a value: marking Version 2 executed runs on Version 2
+[V-C21 legal_team_member] PASS A later run does not change or remove a Key date an earlier run added and does not re-add a removed one; an explicit clear is preserved
+[V-C21 legal_team_member] PASS If Analysis cannot finish: a failed run shows Analysis failed: and its reason under the Fields header and changes nothing; another run succeeds
+[V-C21 legal_team_member] PASS Stale evidence: a removed source makes a citation unavailable
+[V-C21 legal_team_member] PASS Roles and states: Ended, archived, disabled connector and Confirm all
+[V-C21 legal_team_member] PASS Business Users cannot run Analysis or confirm its values
+setup: administrator API: created C-42 (no paper), C-43 (unreadable primary PDF) and C-44 (main walk) of the analysis type; stand-in markers DOC032CBADMIN1790579799334 and DOC032CBADMIN1790579799334V2.
+[V-C21 administrator] PASS If Analysis cannot finish: no primary Document; Run analysis in the Fields header and in the Contract actions menu
+[V-C21 administrator] PASS If Analysis cannot finish: failed extraction of the primary Document text
+[V-C21 administrator] PASS If Analysis cannot finish: with the connector disabled, no run and no marked value, the Fields header shows no Analysis controls
+[V-C21 administrator] PASS Run Analysis and read its outcome: an automatic run starts when the target text becomes ready; the control says Running… and stays disabled; a finished run shows no summary sentence; values carry Unverified where they live
+[V-C21 administrator] PASS The record updates when the run finishes while preserving typed drafts
+[V-C21 administrator] PASS Contract actions offers Run analysis from any section; each newly AI-written value on Overview has the purple border, the Unverified indicator, an evidence sparkle and Confirm
+[V-C21 administrator] PASS Select the sparkle to open the cited original Document Version in the same-page doc panel and locate its quoted passage
+[V-C21 administrator] PASS Unverified values are already usable
+[V-C21 administrator] PASS Confirm or correct one value: Confirm beside a value; edit a Field; Key date note-only edit then event edit; Confirm all shows in the Fields header while more than one value is marked; History records the confirmation
+[V-C21 administrator] PASS Rerun after a change: marking Version 1 executed runs on Version 1; a newer upload does not displace the pin or start a run; the evidence still opens the Version that run read; Run analysis reads Version 1
+[V-C21 administrator] PASS Rerun on changed input while another legal person edits a value: marking Version 2 executed runs on Version 2
+[V-C21 administrator] PASS A later run does not change or remove a Key date an earlier run added and does not re-add a removed one; an explicit clear is preserved
+[V-C21 administrator] PASS If Analysis cannot finish: a failed run shows Analysis failed: and its reason under the Fields header and changes nothing; another run succeeds
+[V-C21 administrator] PASS Stale evidence: a removed source makes a citation unavailable
+[V-C21 administrator] PASS Roles and states: Ended, archived, disabled connector and Confirm all
+[V-C21 administrator] PASS Business Users cannot run Analysis or confirm its values
+[V-C21 legal_team_member] PASS Analysis after Request conversion: with Fill Contract Fields after conversion on, a failed run shows the documented note under the Fields header; Retry Request-context Analysis fills the Type's Record Rows
+[V-C21 legal_team_member] PASS Analysis after Request conversion (guide at 450aba9d): no page shows a marker, evidence or Confirm for Risk, Region or Department when this run filled them; those values do not count towards showing Confirm all, so the Fields header can show only Run analysis
+[V-C21 legal_team_member] PASS Analysis after Request conversion (guide at 450aba9d): when Confirm all appears for other values, it also clears the hidden Risk, Region and Department markers
+[V-C21 administrator] PASS Analysis after Request conversion: with Fill Contract Fields after conversion on, a failed run shows the documented note under the Fields header; Retry Request-context Analysis fills the Type's Record Rows
+[V-C21 administrator] PASS Analysis after Request conversion (guide at 450aba9d): no page shows a marker, evidence or Confirm for Risk, Region or Department when this run filled them; those values do not count towards showing Confirm all, so the Fields header can show only Run analysis
+[V-C21 administrator] PASS Analysis after Request conversion (guide at 450aba9d): when Confirm all appears for other values, it also clears the hidden Risk, Region and Department markers
+setup: Administrator API: removed the stand-in AI connector (DELETE 200); the lab is back to no AI connector.
+setup: Administrator API: deleted the stand-in Saved key (200).
+setup: Connector after restore: configured false, enabled false, saved keys 0, conversion analysis false.
+{"total":38,"pass":38,"fail":0}

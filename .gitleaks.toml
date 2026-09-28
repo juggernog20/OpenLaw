@@ -52,6 +52,14 @@ description = "Fixture values that look like credentials and are not"
 # Last, the fictional invalid AI key and the DocuSign stand-in
 # integration key. The real OpenRouter key of the live Analysis check
 # went into no file.
+#
+# DOC-032 documentation walkthrough logs under
+# docs/documentation/batches/DOC-032/. Two sha256 digests of guide
+# Markdown and one app commit ID, recorded as "<article-id>": "<value>"
+# the same way as in DOC-029 and DOC-030. Two UUIDv7 record IDs of API
+# key requests in the conversations fixtures. Then three fictional
+# integration keys: two for the local DocuSign stand-in servers and one
+# typed into the wizard's DocuSign form, whose connection test fails.
 regexes = [
   '''^0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f$''',
   '''^24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7$''',
@@ -75,4 +83,12 @@ regexes = [
   '''openlawfixturekeyneverused''',
   '''openlawonboardingfixturekey''',
   '''-----BEGIN RSA PRIVATE KEY-----"\);''',
+  '''^4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673$''',
+  '''^b9627fc5aeb90d2f34d508d2bc8066d9322e4a1564caa1bc9c6078a453af9798$''',
+  '''^067c1646829df85e62b809ee9157921e867c84e7$''',
+  '''^01a0e709-2efe-7a56-9ed1-b7b8ac88d648$''',
+  '''^01a0e709-6fea-72cc-9bfa-9a91c524dceb$''',
+  '''^doc032-contracts-standin-integration-key$''',
+  '''^doc032-contracts-2-standin-integration-key$''',
+  '''^doc032-integration-key$''',
 ]

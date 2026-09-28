@@ -1,0 +1,985 @@
+{
+  "kind": "article-compatibility-replay",
+  "task": "DOC-032",
+  "issue": 1194,
+  "adaptedFrom": "docs/documentation/batches/DOC-030/conversations/walkthrough.mjs",
+  "group": "conversations",
+  "independentReview": true,
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "scenarios": {
+    "comments-and-activity": "V-C07",
+    "notifications": "V-C08"
+  },
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "labName": "work",
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, 1440x900, one isolated browser context per identity",
+  "fixtures": {
+    "doc029-conv-notice.pdf": "7b574a6691ddc7b5388b305c1bce733777ad48cd61aa769a8ad05458459fb173",
+    "doc029-conv-schedule.pdf": "ff42a9deb8835b41d31c49140ec5d9c6a2ecfb0eca19b6a78f8a082c8c501bf6",
+    "doc029-conv-portal-note.pdf": "3fc501e60b48f758f7bf6ba46d100e8a5bd9f1caba793b205b2339bdeaee9ffc",
+    "doc029-conv-legal-memo.pdf": "9676bac39a6f02d0056c6b85aec6d8845bcd1081c6ce1991fe1cdbae67ba9535",
+    "doc029-conv-extra-1.txt": "9f29589a72d7ff0f211331344d160bca2240d0bab49e11ace60ca18fbc617c4c",
+    "doc029-conv-extra-2.txt": "320075fe4049a777ce9284010d1e537225402e4bcc1b7dc98ff8b7d71a961b55",
+    "doc029-conv-extra-3.txt": "05db08c00ea562fdfb84d8353c7f9526057ecbb1d17ef7d2d98f9e5ceb3304de",
+    "doc029-conv-extra-4.txt": "29ff59506f60e168a3ea770275c68d997df8caf6a64ebffceacad9d4adb7d0ea",
+    "doc029-conv-extra-5.txt": "fcd3935b728f1c11feee0f53b4c61493c8aee3275b006a58157ef8886400abd0",
+    "doc029-conv-extra-6.txt": "c6241f5f7926357a01e41c39de0e4f966d790610016471cf8a48092d43d9074a"
+  },
+  "runs": [
+    {
+      "sections": ["setup-n"],
+      "startedAt": "2026-09-28T07:16:05.363Z",
+      "finishedAt": "2026-09-28T07:16:24.870Z"
+    },
+    {
+      "sections": ["leadtimes", "keydate"],
+      "startedAt": "2026-09-28T07:16:29.868Z",
+      "finishedAt": "2026-09-28T07:16:44.528Z"
+    },
+    {
+      "sections": ["leadtimes-reset", "morning-ready"],
+      "startedAt": "2026-09-28T07:16:51.437Z",
+      "finishedAt": "2026-09-28T07:16:57.491Z"
+    },
+    {
+      "sections": ["setup-c", "member-comments"],
+      "startedAt": "2026-09-28T07:17:01.835Z",
+      "finishedAt": "2026-09-28T07:17:53.131Z"
+    },
+    {
+      "sections": [
+        "admin-comments",
+        "portal-comments",
+        "portal-history",
+        "linked",
+        "admin-redact",
+        "portal-after"
+      ],
+      "startedAt": "2026-09-28T07:17:57.053Z",
+      "finishedAt": "2026-09-28T07:24:58.240Z"
+    },
+    {
+      "sections": ["morning-check"],
+      "startedAt": "2026-09-28T08:00:27.374Z",
+      "finishedAt": "2026-09-28T08:00:29.130Z"
+    },
+    {
+      "sections": ["member-bell", "devices", "admin-notifications"],
+      "startedAt": "2026-09-28T08:00:32.530Z",
+      "finishedAt": "2026-09-28T08:02:09.078Z"
+    },
+    {
+      "sections": ["api-keys"],
+      "startedAt": "2026-09-28T08:02:13.542Z",
+      "finishedAt": "2026-09-28T08:02:41.336Z"
+    },
+    {
+      "sections": ["via-history", "portal-notifications", "emails"],
+      "startedAt": "2026-09-28T08:02:44.968Z",
+      "finishedAt": "2026-09-28T08:03:56.228Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:04:21.376Z",
+      "finishedAt": "2026-09-28T08:04:30.557Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:04:51.392Z",
+      "finishedAt": "2026-09-28T08:05:00.805Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:01.097Z",
+      "finishedAt": "2026-09-28T08:05:07.392Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:07.693Z",
+      "finishedAt": "2026-09-28T08:05:16.810Z"
+    },
+    {
+      "sections": ["emails"],
+      "startedAt": "2026-09-28T08:05:17.113Z",
+      "finishedAt": "2026-09-28T08:05:23.397Z"
+    }
+  ],
+  "fixturePreparation": [
+    {
+      "at": "2026-09-28T07:16:24.240Z",
+      "text": "The fresh Business User completed Portal onboarding once (Step 1 of 5, Step 2 of 5, Step 2 of 5, Step 3 of 5, Step 4 of 5, Step 5 of 5) with the first Department, the name DOC-032 compat compat-a conversations Business 765363, and the default theme and notification choices."
+    },
+    {
+      "at": "2026-09-28T07:16:24.258Z",
+      "text": "Daniel Okafor invited four fresh fictional staff accounts through the invites API (DOC-032 compat compat-a conversations Legal Own List, Legal Los Angeles, Legal No Date Bell, and Admin, stamp 765363); each set a derived in-memory password from its activation mail. A fresh Business User (doc032-compata-conv-765363-b1@helix.example) was created by its first Portal magic-link sign-in. Every fresh account had its timezone set to America/Los_Angeles through the preferences API so no morning round could serve it before its fixtures were ready."
+    },
+    {
+      "at": "2026-09-28T07:16:24.868Z",
+      "text": "The fresh Business User submitted R-16 and R-17 through the Requests API. Daniel Okafor converted R-16 to Sales Contract C-69, added the four fresh staff accounts to its team, made the fresh Administrator its Legal Owner (HTTP 200), created Tasks due 2026-09-28 for the fresh Administrator and Legal No Date Bell, and added the Key dates \"765363 three-day check\" on 2026-10-01 and \"765363 seven-day check\" on 2026-10-05 through the API. R-17 stays unconverted."
+    },
+    {
+      "at": "2026-09-28T07:16:57.488Z",
+      "text": "At 2026-09-28T07:16:57.488Z the fresh Legal Own List, Legal No Date Bell, Admin and Business accounts had their saved timezone cleared (so the morning process uses UTC) through the preferences API; Legal Los Angeles kept America/Los_Angeles. The next hourly morning round runs at the top of the hour UTC."
+    },
+    {
+      "at": "2026-09-28T07:17:03.088Z",
+      "text": "The fresh Business User (DOC-032 compat compat-a conversations Business 765363) submitted four Legal question Requests through the Portal API (R-30, R-31, R-32, R-33). Daniel Okafor converted R-30 to Sales Contract C-92, R-31 to Litigation Matter M-29, and R-33 to Sales Contract C-93 through the convert API; R-32 stays unconverted. Daniel added Nadia Haddad to the C-92 and M-29 teams through the team API."
+    },
+    {
+      "at": "2026-09-28T07:17:32.488Z",
+      "text": "Daniel Okafor posted 55 Matter Team comments and one Legal Only comment on M-29 through the comments API, to give the Matter more than one page of comments."
+    },
+    {
+      "at": "2026-09-28T07:17:48.033Z",
+      "text": "Nadia Haddad posted one working_team comment on C-92 and one on R-32 through the comments API to stand in for older Working Team comments; the composer does not offer that tier."
+    },
+    {
+      "at": "2026-09-28T07:17:50.497Z",
+      "text": "Nadia Haddad added the Task \"DOC-032 compat compat-a conversations 765363 prepare the signing pack\" due 2026-10-08 on C-92 through the tasks API."
+    },
+    {
+      "at": "2026-09-28T07:18:19.978Z",
+      "text": "Nadia Haddad made record progress through the API as fixtures for Portal History: C-92 Draft to Internal review (a Stage move), Internal review to With counterparty (same Stage), a title change, deal_desk_reference (Visible on Portal) and governing_law (not on the Portal) edits, two Tasks added (one due 2026-10-12), one edited, one completed, a reorder, one removed; M-29 (closed with a note in the first run) moved to In progress, then budget_approved (Visible on Portal) and external_counsel (not on the Portal) edits. Results: contract to Internal review 200, contract to With counterparty 200, contract title 200, portal-visible field 200, hidden field 200, task added 201, task added 2 201, task edited 200, task completed 200, task reordered 404, task removed 200, matter to In progress 200, matter portal-visible field 200, matter hidden field 200."
+    },
+    {
+      "at": "2026-09-28T07:18:27.564Z",
+      "text": "Nadia Haddad closed M-29 with a closing note through the API after the Matter conversation checks."
+    },
+    {
+      "at": "2026-09-28T07:18:35.139Z",
+      "text": "Daniel Okafor created C-113 \"DOC-032 compat compat-a conversations 765363 confidential side letter\", marked it Confidential (Nadia Haddad is not on its team), and linked C-92 to it as related, through the API."
+    },
+    {
+      "at": "2026-09-28T07:18:50.643Z",
+      "text": "Daniel Okafor archived C-93 through the archive API after posting a Contract Team comment with paper in the browser."
+    },
+    {
+      "at": "2026-09-28T07:24:58.237Z",
+      "text": "Daniel Okafor added Amara Nwosu (Business User) to the C-92 team through the team API, then removed her again. He then cleared the Business Owner (HTTP 200; the API refuses to take the Business Owner off the team), removed the requester from the team (HTTP 200), and afterwards restored both."
+    },
+    {
+      "at": "2026-09-28T08:00:33.011Z",
+      "text": "Nadia Haddad posted eleven Contract Team comments mentioning Legal Own List on C-69 through the comments API to give that account more than nine unread bell items."
+    },
+    {
+      "at": "2026-09-28T08:00:46.314Z",
+      "text": "Nadia Haddad requested approval of C-69 from Legal Own List through the approvals API (approval 01a0e707-d8d5-75b3-996b-4515e87853e9)."
+    },
+    {
+      "at": "2026-09-28T08:00:55.689Z",
+      "text": "Legal Own List answered approval 01a0e707-d8d5-75b3-996b-4515e87853e9 through the decision API (HTTP 200); the approval procedure itself belongs to the contract-approvals guide."
+    },
+    {
+      "at": "2026-09-28T08:00:58.388Z",
+      "text": "Nadia Haddad posted sixteen more mentions of Legal Own List on C-69 through the comments API so the bell has more than one page."
+    },
+    {
+      "at": "2026-09-28T08:01:24.331Z",
+      "text": "The fresh Business User submitted R-70 through the Requests API for the New requests and Request receipt checks."
+    },
+    {
+      "at": "2026-09-28T08:02:13.876Z",
+      "text": "Organization MCP settings before the API key checks: {\"enabled\":false,\"legalApiKeysEnabled\":false,\"businessApiKeysEnabled\":false}. Daniel Okafor set {\"enabled\":true,\"legalApiKeysEnabled\":true,\"businessApiKeysEnabled\":true} through the MCP settings API (HTTP 200) for the API key and MCP attribution checks."
+    },
+    {
+      "at": "2026-09-28T08:02:13.934Z",
+      "text": "Legal Own List requested an API key for the Client \"Claude\" (comments Toolset, write) through the API key request API (request 01a0e709-2efe-7a56-9ed1-b7b8ac88d648); the request procedure belongs to the Configure MCP guide."
+    },
+    {
+      "at": "2026-09-28T08:02:23.763Z",
+      "text": "Legal Own List read the one-time key in memory and posted one Contract Team comment on C-69 through the MCP endpoint's openlaw_comment_post tool (HTTP 200); the key was never written down."
+    },
+    {
+      "at": "2026-09-28T08:02:30.496Z",
+      "text": "Legal Own List revoked the API key after the check (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:02:30.553Z",
+      "text": "The fresh Business User requested an API key for \"Claude\" (comments, read) through the API key request API (request 01a0e709-6fea-72cc-9bfa-9a91c524dceb)."
+    },
+    {
+      "at": "2026-09-28T08:02:41.334Z",
+      "text": "Daniel Okafor restored the organization MCP settings to {\"enabled\":false,\"legalApiKeysEnabled\":false,\"businessApiKeysEnabled\":false} (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:20.334Z",
+      "text": "Daniel Okafor added Amara Nwosu to the C-69 team for the comparison and removed her afterwards (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:24.511Z",
+      "text": "Nadia Haddad requested approval of C-69 from the fresh Business User through the approvals API (approval 01a0e70a-42d2-7850-a7d9-e2a4d75f4748)."
+    },
+    {
+      "at": "2026-09-28T08:03:28.518Z",
+      "text": "Nadia Haddad cancelled that approval request through the approvals API (HTTP 200)."
+    },
+    {
+      "at": "2026-09-28T08:03:32.240Z",
+      "text": "Daniel Okafor cleared the Business Owner (HTTP 200), removed the fresh Business User from the C-69 team (HTTP 200), and restored both afterwards, through the API, for the Portal bell access check."
+    },
+    {
+      "at": "2026-09-28T08:03:34.088Z",
+      "text": "Nadia Haddad added the Task \"DOC-032 compat compat-a conversations 765363 email task\" assigned to Legal Own List on C-69 through the tasks API."
+    },
+    {
+      "at": "2026-09-28T08:03:52.769Z",
+      "text": "The fresh Administrator turned \"Include comment words in email\" off in Settings, Organization, Notifications for one mention email, then turned it back on."
+    }
+  ],
+  "records": {
+    "stamp": "765363",
+    "fresh": {
+      "l1": {
+        "key": "l1",
+        "role": "legal_team_member",
+        "label": "Legal Own List",
+        "email": "doc032-compata-conv-765363-l1@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal Own List 765363",
+        "id": "01a0e6de-f5fb-7606-8c94-df27aed69c82"
+      },
+      "l2": {
+        "key": "l2",
+        "role": "legal_team_member",
+        "label": "Legal Los Angeles",
+        "email": "doc032-compata-conv-765363-l2@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal Los Angeles 765363",
+        "id": "01a0e6de-fd68-7727-99df-f9c0dc99d0bb"
+      },
+      "l3": {
+        "key": "l3",
+        "role": "legal_team_member",
+        "label": "Legal No Date Bell",
+        "email": "doc032-compata-conv-765363-l3@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Legal No Date Bell 765363",
+        "id": "01a0e6df-04ad-704b-8176-01a48d15c4a4"
+      },
+      "a1": {
+        "key": "a1",
+        "role": "administrator",
+        "label": "Admin",
+        "email": "doc032-compata-conv-765363-a1@helix.example",
+        "displayName": "DOC-032 compat compat-a conversations Admin 765363",
+        "id": "01a0e6df-0b85-7cba-8cc4-825744beb321"
+      },
+      "b1": {
+        "key": "b1",
+        "role": "business_user",
+        "label": "Business",
+        "email": "doc032-compata-conv-765363-b1@helix.example",
+        "onboarded": true,
+        "displayName": "DOC-032 compat compat-a conversations Business 765363",
+        "id": "01a0e6df-1393-7077-80a2-16891c25d6ce"
+      }
+    },
+    "n": {
+      "request": 16,
+      "openRequest": 17,
+      "openRequestId": "01a0e6df-3ad4-7ac7-983e-f3d59c535987",
+      "contract": 69,
+      "contractId": "01a0e6df-3b1c-71c5-9076-6a0762fb5426",
+      "title": "DOC-032 compat compat-a conversations notifications Contract 765363",
+      "openTitle": "DOC-032 compat compat-a conversations notifications open Request 765363",
+      "keyDates": {
+        "three": "2026-10-01",
+        "seven": "2026-10-05",
+        "five": "2026-10-03"
+      },
+      "today": "2026-09-28",
+      "morningReadyAt": "2026-09-28T07:16:57.488Z",
+      "bellFill": true,
+      "staffApproval": "01a0e707-d8d5-75b3-996b-4515e87853e9",
+      "bellMore": true,
+      "bellRequest": 70,
+      "keyRequest": "01a0e709-2efe-7a56-9ed1-b7b8ac88d648",
+      "buKeyRequest": "01a0e709-6fea-72cc-9bfa-9a91c524dceb",
+      "taskId": "01a0e70a-6835-700e-9694-754922d8a044"
+    },
+    "c": {
+      "tag": "DOC-032 compat compat-a conversations 765363",
+      "contractRequest": 30,
+      "matterRequest": 31,
+      "openRequest": 32,
+      "archiveRequest": 33,
+      "contract": 92,
+      "matter": 29,
+      "archive": 93,
+      "contractTitle": "DOC-032 compat compat-a conversations 765363 Contract",
+      "matterTitle": "DOC-032 compat compat-a conversations 765363 Matter",
+      "openTitle": "DOC-032 compat compat-a conversations 765363 open Request",
+      "contractId": "01a0e6df-cfdb-762e-ac68-2208302aeec5",
+      "matterId": "01a0e6df-d01d-7000-a171-ee0ebbf7b309",
+      "archiveId": "01a0e6df-d071-7499-9f53-34cced3e4e46",
+      "openRequestId": "01a0e6df-cf0f-72a7-a44a-ca62854ac9a3",
+      "ids": {
+        "daniel": "01a0e6c7-9732-71e1-834c-8452f24236b0",
+        "nadia": "01a0e6c7-9730-78af-95e8-da76f0eb29b4",
+        "jonas": "01a0e6df-1393-7077-80a2-16891c25d6ce",
+        "amara": "01a0e6c7-99c0-70e9-a7cf-8e754139bcb8"
+      },
+      "bulkPosted": true,
+      "workingTeam": true,
+      "taskId": "01a0e6e0-8b10-7964-aebb-e14264e10bb6",
+      "progressPart1": true,
+      "progressPart2": true,
+      "progressDone": true,
+      "matterClosed": true,
+      "hidden": {
+        "number": 113,
+        "title": "DOC-032 compat compat-a conversations 765363 confidential side letter"
+      }
+    },
+    "deviceStates": {
+      "support": {
+        "sw": true,
+        "push": true,
+        "notification": true,
+        "permission": "granted"
+      },
+      "cardBefore": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+      "detailsSwitch": "true",
+      "turnOnShown": 1,
+      "cardAfter": "Devices Registration failed - permission denied Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. ",
+      "enabled": 0,
+      "subscriptions": 0,
+      "revokeButtons": 0,
+      "detailsSaved": false,
+      "deniedCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on. ",
+      "deniedPermission": "denied",
+      "portalCard": "Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on."
+    },
+    "preSendTiming": {
+      "edits": ["original", "revised"],
+      "edit": {
+        "status": 200,
+        "doneAt": "2026-09-28T08:03:46.225Z",
+        "mails": [
+          {
+            "created": "2026-09-28T08:03:46.323Z",
+            "words": "revised"
+          }
+        ],
+        "first": true
+      },
+      "del": {
+        "status": 200,
+        "doneAt": "2026-09-28T08:03:49.190Z",
+        "mails": [
+          {
+            "created": "2026-09-28T08:03:49.22Z",
+            "words": "original"
+          }
+        ],
+        "first": true
+      }
+    }
+  },
+  "steps": [
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Fixture: invite fresh fictional accounts and check the initial Notification preferences on each staff account",
+      "expected": "Each fresh staff account shows the guide's initial channel choices, including Push",
+      "startedAt": "2026-09-28T07:16:06.770Z",
+      "at": "2026-09-28T07:16:24.259Z",
+      "page": "/settings/notifications",
+      "actual": "legal_team_member DOC-032 compat compat-a conversations Legal Own List 765363: initial switches match (20 checked); legal_team_member DOC-032 compat compat-a conversations Legal Los Angeles 765363: initial switches match (20 checked); legal_team_member DOC-032 compat compat-a conversations Legal No Date Bell 765363: initial switches match (20 checked); administrator DOC-032 compat compat-a conversations Admin 765363: initial switches match (20 checked); business_user doc032-compata-conv-765363-b1@helix.example created by first magic-link sign-in (role business_user, timezone set HTTP 200)",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Fixture: the fresh Business User's Request is converted to a Contract; staff join its team; Key dates and Tasks are added",
+      "expected": "Contract created from the Request with the fresh accounts on its team",
+      "startedAt": "2026-09-28T07:16:24.260Z",
+      "at": "2026-09-28T07:16:24.869Z",
+      "page": "/settings/notifications",
+      "actual": "C-69 from R-16; team read \"{\\\"type\\\":\\\"about:blank\\\",\\\"title\\\":\\\"Not found\\\",\\\"status\\\":404,\\\"detail\\\":\\\"Route GET /api/v1/contracts/69/team does not exist.\\\",\\\"instance\\\":\\\"/api/v1/contracts/69/team\\\"}\".",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Set your own reminder lead times: turn off Use the organization's default lead times, add a lead time, remove others, check bounds and the last entry, reload",
+      "expected": "The list starts as a copy of the organization list; 731 is refused; 3 is added; the last lead time cannot be removed; the saved indication shows; the choice survives reload",
+      "startedAt": "2026-09-28T07:16:30.118Z",
+      "at": "2026-09-28T07:16:36.569Z",
+      "page": "/settings/notifications",
+      "actual": "Reminder lead times card: the switch \"Use the organization's default lead times\" started on and showed [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"]. Turning it off showed Saved and the same list as her own copy [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"]. Entering 731 and selecting Add lead time was refused with \"Value must be less than or equal to 730.\" and left the list unchanged. Entering 3 added \"3 days before\"; removing the five copied entries with their Remove controls left [\"3 days before\"], and \"Remove 3 days before\" was disabled. After reload the switch stayed off with [\"3 days before\"] (API list [3]).",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Turn Use the organization's default lead times back on to delete the personal list",
+      "expected": "Turning the switch back on shows the organization list again and the personal list is gone",
+      "startedAt": "2026-09-28T07:16:36.570Z",
+      "at": "2026-09-28T07:16:40.365Z",
+      "page": "/settings/notifications",
+      "actual": "With the switch off her own list was [30,14,7,1,0]; turning it back on and reloading showed the organization list [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"] with 0 remove controls, and her saved list read null.",
+      "result": "pass",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "An Administrator's Notifications page has the same cards; a Business User's Portal settings have no Reminder lead times card",
+      "expected": "Administrator sees Notification preferences, Devices, Reminder lead times, Briefing; Portal Notification settings has no Reminder lead times card and no Briefing",
+      "startedAt": "2026-09-28T07:16:40.366Z",
+      "at": "2026-09-28T07:16:43.488Z",
+      "page": "/portal/settings",
+      "actual": "Administrator page headings [\"Personal\",\"Organization\",\"Notification preferences\",\"Devices\",\"Reminder lead times\",\"Briefing\"]. Portal Notification settings headings [\"Notification settings\",\"How we tell you about your work\",\"Devices\"], with 0 Reminder lead times and 0 Briefing text.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Key date dialog: Global reminders shows the organization list, an additional lead time joins This date will remind; recipients include the Business User on the team",
+      "expected": "Global reminders and This date will remind lines; 731 refused; Business User offered as a recipient; the saved Key date keeps its lead time",
+      "startedAt": "2026-09-28T07:16:43.490Z",
+      "at": "2026-09-28T07:16:44.527Z",
+      "page": "/contracts/69/key-dates",
+      "actual": "Legal Own List's Add a key date dialog read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (the organization list, not her own list of 3 days). Additional lead time 731 left Add lead time disabled (true); 5 was added and the dialog read \"This date will remind: 30 days before, 14 days before, 7 days before, 5 days before, 1 day before, On the day\". Recipient checkboxes offered [\"Daniel Okafor\",\"DOC-032 compat compat-a conversations Admin 765363\",\"DOC-032 compat compat-a conversations Business 765363\",\"DOC-032 compat compat-a conversations Legal Los Angeles 765363\",\"DOC-032 compat compat-a conversations Legal No Date Bell 765363\",\"DOC-032 compat compat-a conversations Legal Own List 765363\"], including the Business User on the team (true); Use the usual audience controls with nothing selected: 0. Saved 2026-10-03 with lead times [5] and no selected recipients.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Turn Use the organization's default lead times back on to delete the personal list",
+      "expected": "Turning the switch back on shows the organization list again and the personal list is gone",
+      "startedAt": "2026-09-28T07:16:51.759Z",
+      "at": "2026-09-28T07:16:55.465Z",
+      "page": "/settings/notifications",
+      "actual": "With the switch off her own list was [30,14,7,1,0]; turning it back on and reloading showed the organization list [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"] with 0 remove controls, and her saved list read null.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Fixture: set the fresh accounts' timezones and the No Date Bell account's Dates approaching In-app switch before the morning round",
+      "expected": "Legal No Date Bell shows Dates approaching In-app off after reload; timezones saved",
+      "startedAt": "2026-09-28T07:16:55.466Z",
+      "at": "2026-09-28T07:16:57.490Z",
+      "page": "/settings/notifications",
+      "actual": "Legal No Date Bell after reload: {\"Dates approaching In-app\":false,\"Dates approaching Push\":true,\"Dates Email\":true}. Timezone clears answered {\"l1\":200,\"l3\":200,\"a1\":200,\"b1\":200}.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Understand reminder timing: after the hourly round, a staff account with its own lead-time list is reminded on its list plus the Key date's own lead times; the organization list applies to others; the round waits for 8:00 in the saved timezone",
+      "expected": "Legal Own List: three-day and five-day Key dates only; Administrator: five-day and seven-day only; Legal Los Angeles: nothing yet; Legal No Date Bell: no date items and no Dates section",
+      "startedAt": "2026-09-28T08:00:27.895Z",
+      "at": "2026-09-28T08:00:27.895Z",
+      "page": null,
+      "actual": "Morning rounds \"08:00:04 completed\\n07:00:03 completed\". Legal Own List (own list [3], UTC): {\"bell\":[\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 five-day check5\",\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 three-day check3\",\"briefing.ready:\"],\"keyDates\":[\"three-day check\",\"five-day check\"],\"mails\":[{\"subject\":\"Your daily briefing\",\"keyDates\":[\"three-day check\",\"five-day check\"],\"sections\":[\"Dates\",\"Knowledge\"],\"portalLink\":false,\"viewAll\":false}]}. Admin (organization list, UTC): {\"bell\":[\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 five-day check5\",\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 seven-day check7\",\"briefing.ready:\"],\"keyDates\":[\"five-day check\",\"seven-day check\"],\"mails\":[{\"subject\":\"Your daily briefing\",\"keyDates\":[\"five-day check\",\"seven-day check\"],\"sections\":[\"Tasks\",\"Dates\",\"Knowledge\"],\"portalLink\":false,\"viewAll\":false}]}. Legal Los Angeles (organization list, America/Los_Angeles, before 08:00 local): {\"bell\":[],\"keyDates\":[],\"mails\":[]}. Legal No Date Bell (Dates approaching In-app off): {\"bell\":[\"briefing.ready:\"],\"keyDates\":[],\"mails\":[{\"subject\":\"Your daily briefing\",\"keyDates\":[],\"sections\":[\"Tasks\",\"Knowledge\"],\"portalLink\":false,\"viewAll\":false}]}.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Business Users receive Key-date reminders on their Contracts, including one daily email summary linking to their Portal records; no staff briefing sections",
+      "expected": "Portal bell has the five-day and seven-day Key date items; one date summary email with Portal links; no Your daily briefing",
+      "startedAt": "2026-09-28T08:00:27.897Z",
+      "at": "2026-09-28T08:00:27.897Z",
+      "page": null,
+      "actual": "Business User: {\"bell\":[\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 five-day check5\",\"date.key_date_approaching:DOC-032 compat compat-a conversations 765363 seven-day check7\"],\"keyDates\":[\"five-day check\",\"seven-day check\"],\"mails\":[{\"subject\":\"2 dates on your contracts\",\"keyDates\":[\"five-day check\",\"seven-day check\"],\"sections\":[\"Dates\"],\"portalLink\":true,\"viewAll\":false}]}.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Set the daily briefing: the Administrator's briefing email has the Dates and Tasks sections; the daily bell summary opens Home",
+      "expected": "Your daily briefing email with Dates and Tasks; Your daily briefing is ready opens /",
+      "startedAt": "2026-09-28T08:00:27.898Z",
+      "at": "2026-09-28T08:00:29.129Z",
+      "page": "/",
+      "actual": "Admin briefing mail {\"subject\":\"Your daily briefing\",\"keyDates\":[\"five-day check\",\"seven-day check\"],\"sections\":[\"Tasks\",\"Dates\",\"Knowledge\"],\"portalLink\":false,\"viewAll\":false}; the bell item Your daily briefing is ready linked / and opened Home.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Open a notification: the badge shows 9+ over nine, unread items carry a dot, opening the panel marks nothing read, selecting an item opens its record and marks it read",
+      "expected": "Badge 9+; Unread markers; count unchanged by opening; the selected item opens the Contract and becomes read",
+      "startedAt": "2026-09-28T08:00:32.721Z",
+      "at": "2026-09-28T08:00:46.281Z",
+      "page": "/contracts/69",
+      "actual": "Header button read \"Notifications, 69 unread\" with badge \"9+\". The panel showed 25 Unread markers; the newest mention item read \"Unread Nadia Haddad mentioned you on DOC-032 compat compat-a conversations notifications Contract 765363 this minute\" linking /contracts/69. Closing left unread at 69 (was 69). Selecting the item opened /contracts/69; unread went to 68 and on reopening the item read \"Nadia Haddad mentioned you on DOC-032 compat compat-a conversations notifications Contract 765363 this minute\" without the Unread marker.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Your approvals: an open Contract Approval addressed to you is pinned first with Review; other items follow under Earlier; it counts in the badge after reading; Mark all read leaves it and the panel says so",
+      "expected": "Your approvals group with Review; Earlier heading; Mark all read present while other items are unread; after Mark all read the approval stays, badge 1, note Mark all read leaves Your approvals in place.",
+      "startedAt": "2026-09-28T08:00:46.282Z",
+      "at": "2026-09-28T08:00:55.666Z",
+      "page": "/contracts/69/approvals",
+      "actual": "The panel headings read [\"Your approvals1\",\"Earlier\"]; Your approvals (\"Your approvals 1\") held \"Unread Nadia Haddad asked you to approve DOC-032 compat compat-a conversations notifications Contract 765363 this minute Review\" with Review linking /contracts/69/approvals. Mark all read was shown (1) and the foot read \"Mark all read leaves Your approvals in place.\". After Mark all read the unread count was 1, Your approvals stayed (1) and Mark all read disappeared (0); the header read \"Notifications, 1 unread\" with badge \"1\". Selecting Review opened /contracts/69/approvals; the approval still counted (1 unread).",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "An approval leaves Your approvals when you answer it",
+      "expected": "After answering, the group is gone and the badge drops",
+      "startedAt": "2026-09-28T08:00:55.667Z",
+      "at": "2026-09-28T08:00:58.016Z",
+      "page": "/contracts/69/approvals",
+      "actual": "Answering the approval (HTTP 200) removed Your approvals from the panel (0) and unread went from 1 to 0.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Show older loads earlier items",
+      "expected": "More items after Show older",
+      "startedAt": "2026-09-28T08:00:58.017Z",
+      "at": "2026-09-28T08:01:05.470Z",
+      "page": "/contracts/69/approvals",
+      "actual": "The panel listed 25 items; Show older brought 50.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change preferences: profile menu, Settings, Personal, Notifications; Notification preferences shows In-app, Email and Push per group with the documented initial choices; Briefing switches",
+      "expected": "Five groups with the documented switches and initial choices; Dates approaching has no Email switch; Knowledge items has only Email; Briefing Approvals, Tasks, Dates, Obligations on and Intake off; caption",
+      "startedAt": "2026-09-28T08:01:05.471Z",
+      "at": "2026-09-28T08:01:06.711Z",
+      "page": "/settings/notifications",
+      "actual": "Profile menu > Settings > Personal > Notifications reached /settings/notifications for Legal Los Angeles (switches untouched by other steps). Column headers []. Switch states {\"Assigned to you In-app\":true,\"Assigned to you Email\":true,\"Assigned to you Push\":true,\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Activity on your records Push\":false,\"Dates approaching In-app\":true,\"Dates approaching Email\":\"absent\",\"Dates approaching Push\":true,\"New requests In-app\":true,\"New requests Email\":false,\"New requests Push\":false,\"Knowledge items In-app\":\"absent\",\"Knowledge items Email\":true,\"Knowledge items Push\":\"absent\",\"Approvals Email\":true,\"Tasks Email\":true,\"Dates Email\":true,\"Obligations Email\":true,\"Intake Email\":false} match the guide's table (\"absent\" where the guide says there is no switch). Briefing caption \"These switches change the email only. Your Home sections and daily bell summary stay on.\".",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Assigned to you: Email off keeps the bell item and sends no mail; Email on sends mail; In-app off stops the bell item and the email; each choice survives a reload; a mention gives one item, not a second comment item",
+      "expected": "Mention item with no mail; then mail; then neither; reload keeps each choice; no separate commented-on item for the mention",
+      "startedAt": "2026-09-28T08:01:06.712Z",
+      "at": "2026-09-28T08:01:22.661Z",
+      "page": "/settings/notifications",
+      "actual": "Email off (still off after reload): a mention gave 1 bell item, 0 extra comment items, and 0 \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\" mail after the queue settled. Email on: 1 item and 1 mail. In-app off (still off after reload; the Push switch read aria-checked=true): 0 items and 0 mail. In-app restored to on; Email left on.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "A failed preference save shows the error and the switch returns to its earlier value",
+      "expected": "An error is displayed; the switch returns to its earlier value, also after reload",
+      "startedAt": "2026-09-28T08:01:22.663Z",
+      "at": "2026-09-28T08:01:24.239Z",
+      "page": "/settings/notifications",
+      "actual": "With the save blocked, selecting New requests Push showed \"The change could not be saved. Try again.\" and the switch returned to aria-checked=false (was false); after reload it read false.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "New requests: a new Request reaches the Legal user's bell and opens the Inbox Request",
+      "expected": "A new request item links /inbox/N and opens it",
+      "startedAt": "2026-09-28T08:01:24.240Z",
+      "at": "2026-09-28T08:01:27.520Z",
+      "page": "/inbox/70",
+      "actual": "The bell item \"Unread DOC-032 compat compat-a conversations Business 765363 submitted a new request: DOC-032 compat compat-a conversations new request bell 765363 this minute\" opened /inbox/70.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Turn on device notifications: Devices card, Turn on for this browser, allow, then the card says Notifications are on for this browser. and lists the browser; Show details in notifications; Revoke",
+      "expected": "Reach as many documented states as the headless browser allows and record each",
+      "startedAt": "2026-09-28T08:01:27.774Z",
+      "at": "2026-09-28T08:01:49.549Z",
+      "page": "/settings/notifications",
+      "actual": "Chromium (new headless mode) support {\"sw\":true,\"push\":true,\"notification\":true,\"permission\":\"granted\"}. Devices card before: \"Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. \"; Show details in notifications started aria-checked=true. With permission granted, Turn on for this browser (1) gave \"Devices Registration failed - permission denied Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Turn on for this browser No browsers have been turned on. \" (enabled message 0, subscriptions 0, Revoke controls 0 \"\"; after Revoke \"not reached\", subscriptions n/a). Turning Show details in notifications off saved showRecordNamesOnDevices=false; it was turned back on. In a context without the permission, Turn on for this browser left permission \"denied\" and the card read \"Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on. \". The Business User's Portal Notification settings Devices card (headless shell) read \"Devices Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications. Show details in notifications Notifications are blocked. In Chrome, open Settings > Privacy and security > Site settings > Notifications and allow this site. No browsers have been turned on.\".",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Activity on your records as the Legal Owner: Email off gives a bell item and no mail; Email on sends New comment mail; your own comment gives no item; the item opens the Contract",
+      "expected": "commented on item without mail; with Email on the mail arrives; his own comment produces no item",
+      "startedAt": "2026-09-28T08:01:49.593Z",
+      "at": "2026-09-28T08:02:06.001Z",
+      "page": "/contracts/69",
+      "actual": "Initial Activity on your records {\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Activity on your records Push\":false}. Email off: Nadia's comment gave 1 bell item and 0 \"New comment on DOC-032 compat compat-a conversations notifications Contract 765363\" mail. Email on: 1 item and 1 mail. Email turned off again. His own comment gave 0 items and 0 mail. The item \"Unread Nadia Haddad commented on DOC-032 compat compat-a conversations notifications Contract 765363 this minute\" opened /contracts/69.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an update is missing: a failed bell read and a failed older page show their messages and recover",
+      "expected": "Notifications could not be read. Close this and open it again.; reopening lists items; The older notifications could not be read. Try again.; retry loads more",
+      "startedAt": "2026-09-28T08:02:06.002Z",
+      "at": "2026-09-28T08:02:09.077Z",
+      "page": "/",
+      "actual": "A blocked read showed \"Notifications could not be read. Close this and open it again.\"; reopening listed 25 items. A blocked older page showed \"The older notifications could not be read. Try again.\" with 25 rows kept; the retry brought 50.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Act on Your approvals as an Administrator: an API key request appears under Your approvals with Approve and Deny in the row; Approve handles it",
+      "expected": "Your approvals row names the requester and Client with Approve and Deny; after Approve the group empties and the requester is told",
+      "startedAt": "2026-09-28T08:02:13.878Z",
+      "at": "2026-09-28T08:02:22.571Z",
+      "page": "/",
+      "actual": "Your approvals held \"Unread DOC-032 compat compat-a conversations Legal Own List 765363 requested an API key for Claude this minute Comments Write Deny Approve\" with buttons [\"Deny\",\"Approve\"]. Approve removed the row (0 left); the page then showed \"Notifications Mark all read DOC-032 compat compat-a conversations Legal Own List 765363 requested an API key for Claude this minute Nadia Haddad commented on DO\". The request status read active.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "An API key item opens the API keys page; an action through an MCP Client names the person and the Client in the bell and in History",
+      "expected": "Approved item opens /settings/api-keys; a comment posted through the key reads '<person>, via Claude,' in the Administrator's bell and in the Contract History",
+      "startedAt": "2026-09-28T08:02:22.572Z",
+      "at": "2026-09-28T08:02:30.497Z",
+      "page": "/settings/api-keys",
+      "actual": "The bell item \"Unread Your API key request was approved. Open API keys to copy your key. this minute\" opened /settings/api-keys. The comment through the key answered HTTP 200. The Administrator's Contract History read [\"DOC-032 compat compat-a conversations Legal Own List 765363, via Claude, commented this minute\"]; his bell item read \"Unread DOC-032 compat compat-a conversations Legal Own List 765363, via Claude, commented on DOC-032 compat compat-a conversations notifications Contract 765363 this minute\" (1 items matched).",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Deny in the row: a Business User's API key request is denied from the Administrator's bell; the decision reaches the Portal bell under Assigned to you and opens the Portal API keys page",
+      "expected": "Deny handles the request; the Portal item reads Your API key request was denied and opens /portal/settings/api-keys",
+      "startedAt": "2026-09-28T08:02:30.498Z",
+      "at": "2026-09-28T08:02:40.361Z",
+      "page": "/portal/settings/api-keys",
+      "actual": "Administrator row \"Unread DOC-032 compat compat-a conversations Business 765363 requested an API key for Claude this minute Comments Read Deny Approve\"; Deny set the request to denied. The Portal bell item \"Unread Your API key request was denied. Open API keys to read the note. this minute\" opened /portal/settings/api-keys.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "A handled API key request item opens the MCP settings page",
+      "expected": "The requested item, no longer an open approval, links /settings/mcp",
+      "startedAt": "2026-09-28T08:02:40.362Z",
+      "at": "2026-09-28T08:02:41.315Z",
+      "page": "/settings/mcp",
+      "actual": "The handled item \"DOC-032 compat compat-a conversations Business 765363 requested an API key for Claude this minute\" opened /settings/mcp.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal bell: a Request receipt opens the Request; an item for the Contract converted from his Request opens the Portal Contract and says Legal replied on his request",
+      "expected": "Receipt item links /portal/requests/N; the converted Contract comment item reads replied on your request and opens /portal/contracts/N",
+      "startedAt": "2026-09-28T08:02:49.566Z",
+      "at": "2026-09-28T08:02:56.814Z",
+      "page": "/portal/contracts/69",
+      "actual": "Portal header read \"Notifications, 117 unread\". Receipt item \"Unread Legal has received your request DOC-032 compat compat-a conversations new request bell 765363 1 minute ago\" links /portal/requests/70. The item for Nadia's comment on the converted Contract read \"Unread Nadia Haddad replied on your request DOC-032 compat compat-a conversations notifications Contract 765363 this minute\", linked /portal/requests/16, and opened /portal/contracts/69.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Change Portal preferences: Notification settings in the header; How we tell you about your work; In-app, Email and Push for four groups with the documented initial choices; no Briefing and no Reminder lead times",
+      "expected": "Four groups by three channels; Activity on your records Email and Push off; the rest on",
+      "startedAt": "2026-09-28T08:02:56.815Z",
+      "at": "2026-09-28T08:02:57.093Z",
+      "page": "/portal/settings",
+      "actual": "/portal/settings showed 13 switches (including Show details in notifications) with states {\"Request updates In-app\":true,\"Request updates Email\":true,\"Request updates Push\":true,\"Assigned to you In-app\":true,\"Assigned to you Email\":true,\"Assigned to you Push\":true,\"Activity on your records In-app\":true,\"Activity on your records Email\":false,\"Activity on your records Push\":false,\"Dates approaching In-app\":true,\"Dates approaching Email\":true,\"Dates approaching Push\":true}; row text [\"Receipts, replies, status changes, and decisions on the requests you submit.\",\"Contract team additions and comments that mention you on your Contracts and Matters.\",\"Shared comments and supporting Documents on your Contracts and Matters, and Contract status changes.\",\"Key-date reminders on your Contracts and Matters. Email arrives in one daily summary.\"]; 0 Briefing and 0 Reminder lead times text.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Request updates: Email off keeps the bell item with no mail; Email on sends mail; In-app off stops both; choices survive reload",
+      "expected": "Legal replied item without mail; with mail; neither",
+      "startedAt": "2026-09-28T08:02:57.094Z",
+      "at": "2026-09-28T08:03:11.169Z",
+      "page": "/portal/settings",
+      "actual": "Email off (kept after reload): Nadia's Shared with requester reply on R-17 gave 1 bell item and 0 \"Legal replied on\" mail. Email on: 1 item and 1 mail. In-app off (kept after reload): 0 items and 0 mail. Restored to both on.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Converted-record replies use Request updates: turning off Email for Activity on your records does not stop Legal replied on; turning off Email for Request updates does; a team member who did not raise the Request gets the comment under Activity on your records",
+      "expected": "Requester gets request.replied with Legal replied on mail while Activity Email is off; no mail with Request updates Email off; Amara gets comment.posted",
+      "startedAt": "2026-09-28T08:03:11.171Z",
+      "at": "2026-09-28T08:03:20.336Z",
+      "page": "/portal/settings",
+      "actual": "With {\"Activity on your records Email\":false,\"Request updates Email\":true}, Nadia's Contract Team comment on C-69 gave the requester [\"request.replied\"] and mail [\"Legal replied on R-16 · DOC-032 compat compat-a conversations notifications Contract 765363\"]; Amara (on the team, not the requester) got [\"comment.posted\"]. With Request updates Email off, the next comment gave [\"request.replied\"] and mail []. Request updates Email restored.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal Assigned to you: a team mention on his Contract gives one mention item and You were mentioned mail; a Legal Only comment gives nothing",
+      "expected": "mentioned you item with mail; nothing for Legal Only",
+      "startedAt": "2026-09-28T08:03:20.337Z",
+      "at": "2026-09-28T08:03:24.490Z",
+      "page": "/portal/settings",
+      "actual": "A Contract Team mention on C-69 gave exactly one Portal item (comment.mentioned) and 1 \"You were mentioned on\" mail. A Legal Only comment on the same Contract gave 0 Portal items.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Your approvals in the Portal: a Contract Approval addressed to the Business User is pinned with Review, which opens the Portal review page; it leaves the group when the requester cancels it",
+      "expected": "Your approvals row with Review linking /portal/approvals/{id}; after cancel the group is gone",
+      "startedAt": "2026-09-28T08:03:24.491Z",
+      "at": "2026-09-28T08:03:30.847Z",
+      "page": "/portal/approvals/01a0e70a-42d2-7850-a7d9-e2a4d75f4748",
+      "actual": "The Portal bell showed Your approvals with \"Unread Nadia Haddad asked you to approve DOC-032 compat compat-a conversations notifications Contract 765363 this minute Review\" and an Earlier heading (1). Review opened /portal/approvals/01a0e70a-42d2-7850-a7d9-e2a4d75f4748 (heading \"What do you need from Legal?\"). After Nadia cancelled the request, Your approvals was gone (0).",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "A failed Portal preference save shows the error and keeps the earlier value",
+      "expected": "An error; the switch reverts",
+      "startedAt": "2026-09-28T08:03:30.848Z",
+      "at": "2026-09-28T08:03:31.106Z",
+      "page": "/portal/settings",
+      "actual": "With the save blocked the page showed \"The change could not be saved. Try again.\"; the switch stayed aria-checked=false and read false after reload.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Removing team membership removes record notifications from the Portal bell; restoring brings them back",
+      "expected": "No Contract items while off the team; items return after restore",
+      "startedAt": "2026-09-28T08:03:31.107Z",
+      "at": "2026-09-28T08:03:32.242Z",
+      "page": "/portal/settings",
+      "actual": "The Business User had 3 C-69 notifications; while off the team the Portal bell read returned 0 and the panel showed 0 links for the Contract; after restore it returned 4.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Read comment emails: a long Contract Team mention with an attachment arrives with the words cut at 280 characters, …, Read the full comment, the tier beside the author, no attachment, and a footer linking to notification settings",
+      "expected": "Mention email shows the author with Full Thread, the cut words ending in …, Read the full comment, no attachment name, and the footer",
+      "startedAt": "2026-09-28T08:03:32.328Z",
+      "at": "2026-09-28T08:03:33.212Z",
+      "page": "/portal/settings",
+      "actual": "Comment posted (HTTP 201). The email \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\" read \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363 Nadia Haddad mentioned you in a comment on DOC-032 compat compat-a conversations notifications Contract 765363. Helix Software Group / Legal &#9679; You were mentioned Nadia Haddad mentioned you Hello DOC-032 compat compat-a conversations Legal Own List 765363, Nadia Haddad mentioned you in a comment on DOC-032 compat compat-a conversations notifications Contract 765363. Contract C-69 DOC-032 compat compat-a conversations notifications Contract 765363 NH Nadia Haddad · Full Thread DOC-032 compat compat-a conversations 765363 long email check. The fictional supplier asks for a longer notice period and a \". Checks {\"subject\":\"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\",\"tier\":true,\"cut\":true,\"readFull\":true,\"attachmentNamed\":false,\"attachments\":0,\"footer\":true,\"footerText\":\"\"}.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Staff emails show Legal Only for a Legal Only comment; a Task comment email shows no tier",
+      "expected": "Legal Only beside the author; no tier on a Task comment email",
+      "startedAt": "2026-09-28T08:03:33.214Z",
+      "at": "2026-09-28T08:03:34.947Z",
+      "page": "/portal/settings",
+      "actual": "Legal Only mention email \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\" named tiers [\"Legal Only\"]. Task comment email \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\" named tiers []: \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363 Nadia Haddad mentioned you in a comment on DOC-032 compat compat-a conversations notifications Contract 765363. Helix Software Group / Legal &#9679; You were mentioned Nadia Haddad mentioned you Hello DOC-032 c\".",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "step": "Portal emails show the words and no tier; only people who can read the comment receive the email",
+      "expected": "Legal replied on email has the words and no tier; a Legal Only comment sends the Business User nothing",
+      "startedAt": "2026-09-28T08:03:34.948Z",
+      "at": "2026-09-28T08:03:43.205Z",
+      "page": "/portal/settings",
+      "actual": "The Business User's email \"Legal replied on R-16 · DOC-032 compat compat-a conversations notifications Contract 765363\" read \"Legal replied on R-16 · DOC-032 compat compat-a conversations notifications Contract 765363 Nadia Haddad replied on your request R-16 · DOC-032 compat compat-a conversations notifications Contract 765363. Helix Software Group / Legal portal &#9679; Legal replied Nadia Haddad replied to you Hello DOC-032 compat compat-a conversations Business 765363, Nadia Haddad replied on your request R-16 · DOC-032 compat compat-a conversations notifications Contract 765363. Request R-16 DOC-032 compat compat-\" (tiers named: []). No email carried the Legal Only words.",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:03:43.207Z",
+      "at": "2026-09-28T08:03:52.173Z",
+      "page": "/portal/settings",
+      "actual": "Check did not complete: {\"edits\":[\"original\",\"revised\"],\"edit\":{\"status\":200,\"doneAt\":\"2026-09-28T08:03:46.225Z\",\"mails\":[{\"created\":\"2026-09-28T08:03:46.323Z\",\"words\":\"revised\"}],\"first\":true},\"del\":{\"status\":200,\"doneAt\":\"2026-09-28T08:03:49.190Z\",\"mails\":[{\"created\":\"2026-09-28T08:03:49.22Z\",\"words\":\"original\"}],\"first\":true}}",
+      "result": "fail",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "An Administrator turns comment words off for the organization; the emails then link to the record without the words; the switch is put back",
+      "expected": "With Include comment words in email off, a mention email has no words; restored on",
+      "startedAt": "2026-09-28T08:03:52.175Z",
+      "at": "2026-09-28T08:03:56.225Z",
+      "page": "/settings/reminders",
+      "actual": "The switch started aria-checked=true with help \"Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words.\". With it off, the mention email \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363\" read \"You were mentioned on DOC-032 compat compat-a conversations notifications Contract 765363 Nadia Haddad mentioned you in a comment on DOC-032 compat compat-a conversations notifications Contract 765363. Helix Software Group / Legal &#9679; You were mentioned Nadia Haddad mentioned you Hello DOC-032 compat compat-a conversations Legal Own List 765363, Nadia Haddad mentioned you in a comment on DOC-0\" without the words. The switch was restored (commentWordsInEmail true).",
+      "result": "pass"
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:04:21.656Z",
+      "at": "2026-09-28T08:04:30.556Z",
+      "page": null,
+      "actual": "Check did not complete: {\"edits\":[\"original\",\"revised\"],\"edit\":{\"status\":200,\"doneAt\":\"2026-09-28T08:04:24.714Z\",\"mails\":[{\"created\":\"2026-09-28T08:04:24.806Z\",\"words\":\"revised\"}],\"first\":true},\"del\":{\"status\":200,\"doneAt\":\"2026-09-28T08:04:27.654Z\",\"mails\":[{\"created\":\"2026-09-28T08:04:27.69Z\",\"words\":\"original\"}],\"first\":true}}",
+      "result": "fail",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:04:51.863Z",
+      "at": "2026-09-28T08:05:00.803Z",
+      "page": null,
+      "actual": "Check did not complete: {\"edits\":[\"original\",\"revised\"],\"edit\":{\"status\":200,\"doneAt\":\"2026-09-28T08:04:54.936Z\",\"mails\":[{\"created\":\"2026-09-28T08:04:55.029Z\",\"words\":\"revised\"}],\"first\":true},\"del\":{\"status\":200,\"doneAt\":\"2026-09-28T08:04:57.898Z\",\"mails\":[{\"created\":\"2026-09-28T08:04:57.933Z\",\"words\":\"original\"}],\"first\":true}}",
+      "result": "fail",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:05:01.425Z",
+      "at": "2026-09-28T08:05:07.389Z",
+      "page": null,
+      "actual": "Check did not complete: {\"edits\":[\"revised\"],\"edit\":{\"status\":200,\"doneAt\":\"2026-09-28T08:05:01.481Z\",\"mails\":[{\"created\":\"2026-09-28T08:05:01.573Z\",\"words\":\"revised\"}],\"first\":true},\"del\":{\"status\":200,\"doneAt\":\"2026-09-28T08:05:04.474Z\",\"mails\":[{\"created\":\"2026-09-28T08:05:04.49Z\",\"words\":\"original\"}],\"first\":true}}",
+      "result": "fail",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:05:07.962Z",
+      "at": "2026-09-28T08:05:16.807Z",
+      "page": null,
+      "actual": "Check did not complete: {\"edits\":[\"original\",\"revised\"],\"edit\":{\"status\":200,\"doneAt\":\"2026-09-28T08:05:10.978Z\",\"mails\":[{\"created\":\"2026-09-28T08:05:11.076Z\",\"words\":\"revised\"}],\"first\":true},\"del\":{\"status\":200,\"doneAt\":\"2026-09-28T08:05:13.917Z\",\"mails\":[{\"created\":\"2026-09-28T08:05:13.953Z\",\"words\":\"original\"}],\"first\":true}}",
+      "result": "fail",
+      "superseded": true
+    },
+    {
+      "article": "notifications",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "The email reads the words at send time: an edit before the send is included; a delete before the send leaves no words",
+      "expected": "Edited words in the first email; no words in the second",
+      "startedAt": "2026-09-28T08:05:17.391Z",
+      "at": "2026-09-28T08:05:23.395Z",
+      "page": null,
+      "actual": "Mentions edited right after posting gave emails with [\"revised\"] words in turn (an edit that lands after the send leaves the original words); the last edit (HTTP 200, done 2026-09-28T08:05:17.447Z) produced [{\"created\":\"2026-09-28T08:05:17.529Z\",\"words\":\"revised\"}]: the email carried the revised words. A mention deleted right after posting (HTTP 200, done 2026-09-28T08:05:20.471Z) produced [{\"created\":\"2026-09-28T08:05:20.568Z\",\"words\":\"none\"}]: the email had no words. Earlier runs of this step lost the race in the same way; see the superseded entries.",
+      "result": "pass"
+    }
+  ],
+  "productBugs": [],
+  "guideFailures": [],
+  "limitations": [],
+  "articles": [
+    {
+      "articleId": "notifications",
+      "articlePath": "docs/user-guides/notifications.md",
+      "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2"
+    }
+  ],
+  "stamp": "765363",
+  "identities": [
+    {
+      "role": "administrator",
+      "account": "Daniel Okafor (seed) and DOC-032 compat compat-a conversations Admin (fresh)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "account": "Nadia Haddad (seed) and DOC-032 compat compat-a conversations Legal accounts (fresh)",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user",
+      "account": "Amara Nwosu (seed) and DOC-032 compat compat-a conversations Business (fresh); Jonas Weber was not used because the lab refused his Requests (20 an hour, shared with other agents)",
+      "entry": "fresh magic link read from the work Mailpit, never stored"
+    }
+  ],
+  "summary": {
+    "total": 44,
+    "pass": 39,
+    "fail": 5,
+    "superseded": 6,
+    "current": 38,
+    "currentPass": 38
+  }
+}

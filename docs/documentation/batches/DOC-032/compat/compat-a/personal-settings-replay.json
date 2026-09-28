@@ -1,0 +1,560 @@
+{
+  "batch": "DOC-032",
+  "set": "compat-a",
+  "kind": "compatibility-replay",
+  "article": "personal-settings",
+  "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+  "reviewerKind": "agent",
+  "adaptedFrom": "batches/DOC-030/access-2/walkthrough.mjs",
+  "replayScript": "batches/DOC-032/compat/compat-a/access-2-replay.mjs",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": {
+    "name": "work",
+    "project": "openlaw-docs-9d2b1705-work",
+    "appUrl": "http://127.0.0.1:43340",
+    "mailUrl": "http://127.0.0.1:48440",
+    "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T06:50:34.922Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T06:50:48.736Z"
+    },
+    "runningImages": {
+      "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated context per account or device",
+  "runs": [
+    {
+      "attempt": 1,
+      "article": "personal-settings",
+      "startedAt": "2026-09-28T07:15:19.951Z",
+      "finishedAt": "2026-09-28T07:16:28.459Z",
+      "stamp": 1790579719295,
+      "articleContentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 5,
+          "secondsLeft": 487
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "administrator account doc032.compata.c05.admin.1790579719295@helix.example",
+        "legal_team_member account doc032.compata.c05.member.1790579719295@helix.example",
+        "legal_team_member account doc032.compata.c05.nopassword.1790579719295@helix.example without a password",
+        "legal_team_member account doc032.compata.c05.photobug.1790579719295@helix.example (photo bug reproduction)",
+        "Business User doc032.compata.bu.1790579719295@helix.example (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)"
+      ],
+      "productBugs": [],
+      "observations": [
+        {
+          "article": "personal-settings",
+          "summary": "The DOC-030 product bug (a large profile photo broke Settings > Profile through the set-auth-jwt session header) no longer reproduces at 4ca41822, which includes 7abd2a8f. Profile reloads after the photo saves.",
+          "reproduction": "As doc032.compata.c05.photobug.1790579719295@helix.example: Settings > Profile > Upload a 6.4 MB 1500x1500 noisy PNG; Saved true; stored data URL 1050222 characters; reload Profile: error page false; Full name field shown after reload true; ERR_RESPONSE_HEADERS_TOO_BIG in the console false",
+          "bugStillPresent": false,
+          "observedAt": "2026-09-28T07:16:21.615Z"
+        }
+      ],
+      "summary": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "notRun": 0
+      },
+      "superseded": true,
+      "tag": "DOC-032 compat compat-a",
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBy": 2,
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "attempt": 2,
+      "article": "personal-settings",
+      "startedAt": "2026-09-28T07:30:07.523Z",
+      "finishedAt": "2026-09-28T07:31:14.053Z",
+      "stamp": 1790580606777,
+      "tag": "DOC-032 compat compat-a access-2",
+      "articleContentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+      "sharedSignInBudgetsAtStart": {
+        "magicLink": {
+          "used": 8,
+          "secondsLeft": 556
+        },
+        "passwordSetup": {
+          "used": 0,
+          "secondsLeft": 0
+        }
+      },
+      "created": [
+        "administrator account doc032.compata.c05.admin.1790580606777@helix.example",
+        "legal_team_member account doc032.compata.c05.member.1790580606777@helix.example",
+        "legal_team_member account doc032.compata.c05.nopassword.1790580606777@helix.example without a password",
+        "legal_team_member account doc032.compata.c05.photobug.1790580606777@helix.example (photo bug reproduction)",
+        "Business User doc032.compata.bu.1790580606777@helix.example (JIT-provisioned by a Portal sign-in link; Portal first run finished through the API with Department Engineering)"
+      ],
+      "productBugs": [],
+      "observations": [
+        {
+          "article": "personal-settings",
+          "summary": "The DOC-030 product bug (a large profile photo broke Settings > Profile through the set-auth-jwt session header) no longer reproduces at 4ca41822, which includes 7abd2a8f. Profile reloads after the photo saves.",
+          "reproduction": "As doc032.compata.c05.photobug.1790580606777@helix.example: Settings > Profile > Upload a 6.4 MB 1500x1500 noisy PNG; Saved true; stored data URL 1050222 characters; reload Profile: error page false; Full name field shown after reload true; ERR_RESPONSE_HEADERS_TOO_BIG in the console false",
+          "bugStillPresent": false,
+          "observedAt": "2026-09-28T07:31:07.308Z"
+        }
+      ],
+      "summary": {
+        "total": 18,
+        "passed": 18,
+        "failed": 0,
+        "notRun": 0
+      },
+      "superseded": false
+    }
+  ],
+  "productBugs": [],
+  "observations": [
+    {
+      "article": "personal-settings",
+      "summary": "The DOC-030 product bug (a large profile photo broke Settings > Profile through the set-auth-jwt session header) no longer reproduces at 4ca41822, which includes 7abd2a8f. Profile reloads after the photo saves.",
+      "reproduction": "As doc032.compata.c05.photobug.1790580606777@helix.example: Settings > Profile > Upload a 6.4 MB 1500x1500 noisy PNG; Saved true; stored data URL 1050222 characters; reload Profile: error page false; Full name field shown after reload true; ERR_RESPONSE_HEADERS_TOO_BIG in the console false",
+      "bugStillPresent": false,
+      "observedAt": "2026-09-28T07:31:07.308Z"
+    }
+  ],
+  "summary": {
+    "steps": 18,
+    "passed": 18,
+    "failed": 0,
+    "notRun": 0
+  },
+  "steps": [
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal, General, Regions, Departments, Users, Matters, Contracts, Intake, Entities, Knowledge, Documents, Auto-Docs, Notifications, AI analysis, Integrations, MCP; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal Organization General Regions Departments Users Matters Contracts Int\")",
+      "result": "pass",
+      "at": "2026-09-28T07:30:09.557Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-032 compat compat-a access-2 V-C05 1790580606777 Administrator edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-032 compat compat-a access-2 V-C05 1790580606777 Administrator\"",
+      "result": "pass",
+      "at": "2026-09-28T07:30:13.058Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:13.813Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1800x1800 gradient PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:22.101Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other legal_team_member account name|timezone|theme|photo unchanged true (\"|light|false\")",
+      "result": "pass",
+      "at": "2026-09-28T07:30:26.071Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:26.316Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:30.360Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:33.605Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal API keys Client Toolsets Scope Status Expires Actions No API keys to\")",
+      "result": "pass",
+      "at": "2026-09-28T07:30:34.731Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-032 compat compat-a access-2 V-C05 1790580606777 Legal Team Member edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-032 compat compat-a access-2 V-C05 1790580606777 Legal Team Member\"",
+      "result": "pass",
+      "at": "2026-09-28T07:30:38.196Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:38.943Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1800x1800 gradient PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:47.276Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other administrator account name|timezone|theme|photo unchanged true (\"|light|true\")",
+      "result": "pass",
+      "at": "2026-09-28T07:30:51.130Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:51.369Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:55.433Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:58.739Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "If this password section is absent",
+      "page": "/settings/profile",
+      "expected": "Profile shows Password & two-factor only when the account has a password",
+      "actual": "Invite 201; sign-in link reached the app true; Profile without Password & two-factor true",
+      "result": "pass",
+      "at": "2026-09-28T07:30:59.882Z"
+    },
+    {
+      "article": "personal-settings",
+      "role": "business_user",
+      "step": "Business Users do not have the View Business Portal control",
+      "page": "/portal",
+      "expected": "Settings sends a Business User to the Portal; no View Business Portal or View as business user control",
+      "actual": "Business User doc032.compata.bu.1790580606777@helix.example: {\"/settings\":\"/portal\",\"/settings/app-view\":\"/portal\",\"/settings/profile\":\"/portal\"}; control text present false",
+      "result": "pass",
+      "at": "2026-09-28T07:31:14.053Z"
+    }
+  ],
+  "supersededSteps": [
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal, General, Regions, Departments, Users, Matters, Contracts, Intake, Entities, Knowledge, Documents, Auto-Docs, Notifications, AI analysis, Integrations, MCP; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal Organization General Regions Departments Users Matters Contracts Int\")",
+      "result": "pass",
+      "at": "2026-09-28T07:15:21.922Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-032 compat compat-a V-C05 1790579719295 Administrator edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-032 compat compat-a V-C05 1790579719295 Administrator\"",
+      "result": "pass",
+      "at": "2026-09-28T07:15:25.435Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:26.196Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1800x1800 gradient PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:34.885Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other legal_team_member account name|timezone|theme|photo unchanged true (\"|light|false\")",
+      "result": "pass",
+      "at": "2026-09-28T07:15:38.787Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:39.021Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:43.099Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "administrator",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:46.540Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Personal lists Profile, Appearance, Notifications and API keys, then View Business Portal",
+      "page": "/settings",
+      "expected": "The Personal group has exactly those five entries in that order; API keys opens its pane",
+      "actual": "Settings navigation links: Profile, Appearance, Notifications, API keys, View Business Portal; Personal entries Profile, Appearance, Notifications, API keys, View Business Portal; API keys opened /settings/api-keys true (\"Personal Profile Appearance Notifications API keys View Business Portal API keys Client Toolsets Scope Status Expires Actions No API keys to\")",
+      "result": "pass",
+      "at": "2026-09-28T07:15:47.915Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Update your profile, steps 1-5",
+      "page": "/settings/profile",
+      "expected": "Settings from the name menu; Profile under Personal; Full name saves with Enter or on leaving the field; Timezone search and select saves; Saved shows; reload keeps both; Use browser timezone removes the preference",
+      "actual": "Name saved with Enter true, after reload \"DOC-032 compat compat-a V-C05 1790579719295 Legal Team Member edited\", header name menu updated true; timezone Saved true, after reload \"Asia/Tokyo\"; Use browser timezone Saved true, stored null; name restored by leaving the field Saved true, stored \"DOC-032 compat compat-a V-C05 1790579719295 Legal Team Member\"",
+      "result": "pass",
+      "at": "2026-09-28T07:15:51.494Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Email and Role are read-only; the More information icon beside Role",
+      "page": "/settings/profile",
+      "expected": "Email is read-only; Role has no control; More information beside Role says Roles are managed in Organization → Users.",
+      "actual": "Email read-only with the account email true; Role editable controls 0; More information popover text shown true",
+      "result": "pass",
+      "at": "2026-09-28T07:15:52.244Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your photo: Upload a JPG or PNG up to 10 MB; larger files and other types are refused",
+      "page": "/settings/profile",
+      "expected": "Hint JPG or PNG, up to 10 MB. Resized automatically.; a large photo is scaled down and saved with Saved; a file over 10 MB shows Choose a photo smaller than 10 MB.; another type shows Choose a JPG or PNG photo.",
+      "actual": "Hint true; picker filter \"image/png,image/jpeg\"; 12420-byte PNG via Upload saved true; 9.3 MB 1800x1800 gradient PNG saved true, stored as a 512x512 image of 9694 bytes, Profile reloads true; 10.3 MB PNG refused with the 10 MB message true; a GIF set on the input past the picker's JPG/PNG filter refused with Choose a JPG or PNG photo. true",
+      "result": "pass",
+      "at": "2026-09-28T07:16:00.767Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Choose a theme, steps 1-3; another account's preferences unchanged",
+      "page": "/settings/appearance",
+      "expected": "Light, Warm and Dark each save for this account; reload keeps the choice; changing the theme does not sign out; the other account is unchanged",
+      "actual": "Saved/stored {\"Warm\":\"true/warm\",\"Dark\":\"true/dark\",\"Light\":\"true/light\"}; Dark kept after reload true; still signed in true; other administrator account name|timezone|theme|photo unchanged true (\"|light|true\")",
+      "result": "pass",
+      "at": "2026-09-28T07:16:04.676Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Open your own Portal view, steps 1-4",
+      "page": "/settings/app-view",
+      "expected": "View Business Portal is its own Personal pane at /settings/app-view; View as business user opens the Portal with the Viewing as business user banner; own identity and role; Return to legal view returns to View Business Portal",
+      "actual": "Pane /settings/app-view true; banner true; Portal header shows the account true; role unchanged true; Return to legal view -> /settings/app-view true; still signed in true",
+      "result": "pass",
+      "at": "2026-09-28T07:16:04.937Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "Change your password, steps 1-3",
+      "page": "/settings/profile",
+      "expected": "Change password asks for Current password and New password; a wrong current password or fewer than 8 characters is refused; Save changes it, keeps this session and signs out other devices",
+      "actual": "Card true; dialog says \"Change password Current password New password Saving signs you out on your other devices. Cancel Save\"; wrong current password message true; 6-character password refused true; dialog closed after Save true; this session open true; other device sent to sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:16:09.233Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "End sessions: Sign out other devices and Sign out",
+      "page": "/settings/profile",
+      "expected": "Sign out other devices ends every other session and this one stays; Sign out in the name menu ends the current session",
+      "actual": "Saved true; other device sent to sign-in true; this session open true; Sign out -> sign-in true; Profile afterwards needs sign-in true",
+      "result": "pass",
+      "at": "2026-09-28T07:16:12.513Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "legal_team_member",
+      "step": "If this password section is absent",
+      "page": "/settings/profile",
+      "expected": "Profile shows Password & two-factor only when the account has a password",
+      "actual": "Invite 201; sign-in link reached the app true; Profile without Password & two-factor true",
+      "result": "pass",
+      "at": "2026-09-28T07:16:13.879Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    },
+    {
+      "article": "personal-settings",
+      "role": "business_user",
+      "step": "Business Users do not have the View Business Portal control",
+      "page": "/portal",
+      "expected": "Settings sends a Business User to the Portal; no View Business Portal or View as business user control",
+      "actual": "Business User doc032.compata.bu.1790579719295@helix.example: {\"/settings\":\"/portal\",\"/settings/app-view\":\"/portal\",\"/settings/profile\":\"/portal\"}; control text present false",
+      "result": "pass",
+      "at": "2026-09-28T07:16:28.459Z",
+      "attempt": 1,
+      "supersededAt": "2026-09-28T07:31:31.363Z",
+      "supersededBecause": "Attempt 1 passed every step. Rerun with the final copy of the script (TAG changed to DOC-032 compat compat-a access-2 and the cleanup narrowed after attempt 1's cleanup matched other replays' Entities), so the current run comes from the script as recorded."
+    }
+  ]
+}

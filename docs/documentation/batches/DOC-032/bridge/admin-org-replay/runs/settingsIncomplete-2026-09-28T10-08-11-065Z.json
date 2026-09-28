@@ -1,0 +1,63 @@
+{
+  "section": "settingsIncomplete",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bwiz",
+  "labProject": "openlaw-docs-9d2b1705-bwiz",
+  "appUrl": "http://127.0.0.1:43383",
+  "mailUrl": "http://127.0.0.1:48483",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "incomplete: SMTP_URL set, SMTP_FROM empty (overlay-mail-incomplete.json); wizard finished",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:08:11.066Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/email",
+      "action": "Settings, Advanced, Outbound email with SMTP_URL but no SMTP_FROM: the incomplete warning; Send test email unavailable",
+      "expected": "Managed message and the SMTP_FROM warning; Send test email disabled",
+      "startedAt": "2026-09-28T10:08:12.133Z",
+      "finishedAt": "2026-09-28T10:08:12.931Z",
+      "actual": "The pane read \"Outbound email Managed by your deployment configuration. Contact your system administrator to change the relay. The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment. Send test email\". Send test email was disabled.",
+      "result": "pass"
+    },
+    {
+      "article": "organisation-and-users",
+      "scenario": "V-C36",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/users",
+      "action": "If OpenLaw cannot send email, Send invite and Resend invite show the not-sent message; no Invited row is added",
+      "expected": "\"The invite was not sent: this instance cannot send email.\" with both remedies",
+      "startedAt": "2026-09-28T10:08:12.931Z",
+      "finishedAt": "2026-09-28T10:08:13.594Z",
+      "actual": "With SMTP_URL set and SMTP_FROM empty, Send invite showed \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\" and no row was added (2 users before and after). Resend invite on the pending row showed \"The invite was not sent: this instance cannot send email. Set SMTP_URL and SMTP_FROM together in the environment.\".",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bwiz",
+      "page": "http://127.0.0.1:43383/settings/users",
+      "action": "When outbound email is not configured, the sign-in pages do not offer Email me a sign-in link (finished instance)",
+      "expected": "No Email me a sign-in link",
+      "startedAt": "2026-09-28T10:08:13.594Z",
+      "finishedAt": "2026-09-28T10:08:15.969Z",
+      "actual": "The pages offered {\"/auth/login\":[\"Sign in\"],\"/portal/login\":[\"Sign in\"]}.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:08:15.972Z"
+}

@@ -10,7 +10,7 @@ Check which version of OpenLaw the documentation supports and give the right per
 
 **Supported app** is the version/build declared by this documentation edition. It is not a live measurement of the running server. It shows **Not yet verified** when the edition has not yet recorded a checked app build. Ask your Administrator or operator for the installed app build when comparing a problem with these instructions. Operators can use the build and image records described in [upgrades](upgrade.md).
 
-The package version alone is insufficient for development builds: different builds can share `0.0.1`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.
+The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.
 
 The **Validation in progress** badge means the guide is available before its independent verification finishes. **Development preview: draft and validation content is unverified.** and the **Unverified article** badge mean you are reading a development preview. Neither status is a production release or a claim that every article has passed final acceptance. Record the badge or preview notice you see if you report a mismatch.
 

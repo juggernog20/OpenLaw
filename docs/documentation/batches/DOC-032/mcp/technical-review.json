@@ -1,0 +1,307 @@
+{
+  "batch": "DOC-032",
+  "group": "mcp",
+  "reviewer": "DOC-032 source-review author agent (mcp)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T06:59:08Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastWalkedContent": {
+      "configure-mcp": "a9f1ffdb (0db98624...)",
+      "connect-headless-client": "a9f1ffdb (962c2db4...)",
+      "connect-claude": "213d0fed (50532b15...)"
+    },
+    "lastArticleEdit": "789d2444 (merge carrying f9481e78, dac203fe and 1238de78)",
+    "note": "Unwalked guide edits: f9481e78 and dac203fe (Toolset choice rule, Team and Administration section), 1238de78 (#1166 resources, prompts and change notifications in all three guides). App changes read: #1161 Team Tools 87080703, #1162 Administration Tools 3294f749, #1163 resources 54e7eb92, #1164 prompts a26f998f and 03c617a2, #1165 listen streams 815cc0c6 and 64e97b41, audience/ceiling f9481e78 and dac203fe with migration 0172, Connected Clients and Settings MCP page 8cd0045d. d6768fb1 and 6fcceb04 change only the development Vite proxy (apps/web/vite.config.ts, scripts/dev-hot.sh); no guide describes it. Advanced settings and oauth.ts changes are refactors or unrelated to guide claims."
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "configure-mcp",
+      "scenario": ["V-M40-MCP", "V-M41-MCP", "V-M42-MCP"],
+      "contentSha256Before": "f978a32262efba7c6b688264af667284fced0d220f6b32b5cb83380bb5e5aed1",
+      "contentSha256": "5b5270c48c1bf85fab193e3a0ebfdd26ab188827637410ef70d7a7bdc33c1b9f",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-030/mcp/technical-review.json",
+        "docs/documentation/evidence/configure-mcp.json",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 and its #1166 addendum)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1166 addendum)",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/lib/mcp.ts",
+        "apps/web/src/routes/settings-tool-calls.tsx",
+        "apps/web/vite.config.ts",
+        "apps/api/src/modules/mcp-settings/routes.ts",
+        "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "apps/api/src/auth/oauth.ts",
+        "apps/api/src/mcp/selectable-toolsets.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/workspace.ts",
+        "apps/api/src/mcp/team.ts",
+        "apps/api/src/mcp/administration.ts",
+        "apps/api/src/mcp/calls.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/change-feed.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "apps/api/src/lib/matter-team.ts",
+        "apps/api/src/lib/event-hub.ts",
+        "packages/shared/src/mcp.ts",
+        "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+        "apps/api/src/mcp/auth.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Enable API keys step 4, ceiling default",
+          "before": "All 13 Toolsets start selected.",
+          "after": "On a new installation, 11 of the 13 Toolsets start selected and the summary reads 11 of 13 Toolsets. Team and Administration start unchecked, with a link to Choose Team and Administration.",
+          "source": "packages/shared/src/mcp.ts MCP_DEFAULT_TOOLSET_CEILING; packages/db/migrations/0172_m42-toolset-ceiling.sql column default; settings-mcp.tsx settings.mcp.ceilingSummary"
+        },
+        {
+          "claim": "Choose Team and Administration, upgrade wording",
+          "before": "Both start unchecked on a new installation and after an upgrade to M42.",
+          "after": "Both start unchecked on a new installation. An upgrade from an earlier release clears both from an existing ceiling. (Milestone names are not reader vocabulary.)",
+          "source": "0172_m42-toolset-ceiling.sql UPDATE removes 'team' and 'administration'; DD-029 #1166 addendum"
+        },
+        {
+          "claim": "Receive change notifications, what a modern Client is and what triggers a list reload",
+          "before": "A Client that supports the modern MCP listen stream ... When MCP switches, the Toolset ceiling or Read-only change ...",
+          "after": "Names protocol revision 2026-07-28; the trigger is any switch in the MCP card, the ceiling or Read-only; an Allowed Client turned on or off or deleted does the same.",
+          "source": "mcp/routes.ts classifyInboundRequest revision 2026-07-28; mcp-settings/routes.ts publishLiveEvent for seven policy fields; allowed-clients.ts publishLiveEvent on enabled change and delete; change-feed.ts receive()"
+        },
+        {
+          "claim": "Resource subscription limit",
+          "before": "(absent)",
+          "after": "Up to 100 addresses per stream.",
+          "source": "mcp/change-feed.ts MAX_SUBSCRIBED_ADDRESSES"
+        },
+        {
+          "claim": "Legacy Client definition",
+          "before": "Older, legacy Clients reload by hand.",
+          "after": "Legacy Clients use an earlier protocol revision and reload by hand.",
+          "source": "mcp/routes.ts supportedProtocolVersions split at 2026-07-28; TECH-035 #1166 addendum"
+        },
+        {
+          "claim": "Approval failure reasons",
+          "before": "a Toolset is outside the ceiling",
+          "after": "a Toolset is outside the ceiling or unavailable for the requester's account type",
+          "source": "api-keys/routes.ts assertPolicy message 2 and readPolicy(tx, owner.role) with selectableToolsets"
+        },
+        {
+          "claim": "Tool calls rows for resources and prompts",
+          "before": "(absent)",
+          "after": "A resource read shows as resource:<kind> such as resource:contracts; a prompt get as prompt:<name>; neither records the address.",
+          "source": "mcp/resources.ts readResource recordCall name; mcp/prompts.ts getPrompt; mcp/calls.ts reserveCall tool pattern; settings-tool-calls.tsx renders entry.tool raw; TECH-035 #1166 addendum"
+        }
+      ],
+      "confirmed": [
+        "Team and Administration rows exist with captions Starts off. and Starts off. Administrators only.; labels Team and Administration (settings-mcp.tsx, lib/mcp.ts, messages/en-US.json).",
+        "Team has openlaw_team_add and openlaw_team_remove, write kind, Business User off, remove is destructive; read-scope credentials are refused (team.ts, workspace.ts writeTool, register.ts toolRefusal).",
+        "Removing the current Business Owner is refused with a 409 (lib/contract-team.ts, lib/matter-team.ts).",
+        "Administration has openlaw_audit_log_query and openlaw_settings_get, both read, Business User off and refused for non-Administrators; settings are masked and no Tool writes settings (administration.ts, register.ts).",
+        "API key requests and OAuth consent share selectableToolsets: ceiling membership plus at least one Tool the account type may run; consent also filters by requested scopes; nothing is pre-selected (selectable-toolsets.ts, api-keys/routes.ts, oauth-grants/routes.ts facts(), api-keys.tsx starts with an empty selection).",
+        "Enabling a ceiling row adds nothing to an existing key or grant; removing one refuses its Tools on the next call (mcp/auth.ts intersects the key or grant Toolsets with the current ceiling and applies Read-only on every request; register.ts toolRefusal; DD-029 #1166).",
+        "Each policy change still saves immediately with Settings saved. and writes org_settings.updated (mcp-settings/routes.ts, settings-mcp.tsx).",
+        "Listen stream: revocation closes the stream by credential id; heartbeat rechecks credentials every 15 s; role change closes the stream; Inbox updates only for Administrators and Legal Team Members; Document Version text, My Tasks and vocabulary produce no updates; record updates respect Visibility tiers (change-feed.ts, event-hub.ts DEFAULT_EVENT_HEARTBEAT_MS).",
+        "Every call rechecks current access regardless of cached lists (mcp/auth.ts per request, register.ts toolRefusal).",
+        "Settings MCP page, Allowed Clients, API key requests card, Active keys and grants, consent page and Advanced MCP fields are unchanged since 067c1646 apart from the caption move and Team/Administration captions (git diff 067c1646..4ca41822).",
+        "Development-only Vite proxy changes d6768fb1 and 6fcceb04 do not affect any claim."
+      ],
+      "limitations": [
+        "Source inspection only. V-M42-MCP needs the independent browser walkthrough; V-M40-MCP and V-M41-MCP need a re-walk because the article bytes changed.",
+        "V-M42-MCP prerequisite 'upgraded from M41 with every Toolset in the ceiling' needs a lab upgraded across migration 0172; a fresh M42 seed cannot show the upgrade clearing.",
+        "The M42 page moved the OAuth reachability caption out of the Legal Users and Business Users rows into one note below them. The guide does not quote that note, so no change was needed; see productBugs for its wording.",
+        "Which modern Client the walkthrough uses for the list_changed check is not settled by source. Claude Code documents list_changed over a held stream on its v2 runtime (code.claude.com/docs/en/mcp); a script Client on 2026-07-28 is the deterministic option."
+      ]
+    },
+    {
+      "articleId": "connect-headless-client",
+      "scenario": ["V-M40-CLIENT", "V-M42-C58"],
+      "contentSha256Before": "46a305c4eac14319604ce659daf7e5cae2d9f579ce138411e52073052f3b6f05",
+      "contentSha256": "a5a4215995d48bef84146fab2c7a487a0b805d12ea09b8a50442303129992bd8",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/connect-headless-client.json",
+        "messages/en-US.json",
+        "docs/decision-records/DECISIONS.md (DD-029 #1166 addendum)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 #1166 addendum)",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/mcp/selectable-toolsets.ts",
+        "apps/api/src/mcp/resources.ts",
+        "apps/api/src/mcp/resources.test.ts",
+        "apps/api/src/mcp/prompts.ts",
+        "apps/api/src/mcp/prompts.test.ts",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/calls.ts",
+        "apps/api/src/mcp/results.ts",
+        "apps/api/src/mcp/change-feed.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/api/src/mcp/requests.ts",
+        "apps/api/src/mcp/tasks.ts",
+        "apps/api/src/mcp/entities.ts",
+        "apps/api/src/mcp/knowledge.ts",
+        "apps/api/src/mcp/documents.ts",
+        "apps/api/src/mcp/contracts.ts",
+        "apps/api/src/mcp/matters.ts",
+        "apps/api/src/mcp/guide.ts",
+        "node_modules/@modelcontextprotocol/server 2.1.0 (SubscriptionFilter schema: toolsListChanged, promptsListChanged, resourcesListChanged, resourceSubscriptions)"
+      ],
+      "corrections": [
+        {
+          "claim": "Address table audience for Entity and My Tasks",
+          "before": "One Entity; Tasks assigned to you",
+          "after": "One Entity, for Legal Users; Tasks assigned to you, for Legal Users",
+          "source": "entities.ts openlaw_entity_get businessUser off; tasks.ts openlaw_tasks_list businessUser off; resources.ts listResources filters by toolRefusal; resources.test.ts Business User refused tasks/mine and entities"
+        },
+        {
+          "claim": "Malformed addresses",
+          "before": "Do not add a query or fragment to the address.",
+          "after": "OpenLaw refuses an address with a query, a fragment or an extra path segment.",
+          "source": "resources.ts resolveResource and record-number regex; resources.test.ts 'rejects malformed addresses'"
+        },
+        {
+          "claim": "Document Version continuation",
+          "before": "If that text has a continuation, call openlaw_document_read with the supplied cursor.",
+          "after": "When more text exists, the text ends with the openlaw_document_read arguments including a cursor; call that Tool with them.",
+          "source": "resources.ts resourceContent continuation line 'Continue with T26 openlaw_document_read: {...args, cursor}'"
+        },
+        {
+          "claim": "What a refused read looks like",
+          "before": "(absent)",
+          "after": "A refused read returns isError and a message starting with the reason, such as invalid_arguments, tool_outside_grant or not_found.",
+          "source": "calls.ts recordCall catch formats '<code>: <message>'; resources.ts readResource adds empty contents; resources.test.ts"
+        },
+        {
+          "claim": "Prompt limits and Business User summary",
+          "before": "(absent)",
+          "after": "Business Users cannot summarize an Entity. A limit outside 1 to 100 is refused.",
+          "source": "prompts.ts triageInput with results.ts pageInput max 100 and regex rejecting 0; prompts.test.ts limit 0 and 101; entity_get businessUser off"
+        },
+        {
+          "claim": "How to open the listen stream",
+          "before": "Modern Clients can use subscriptions/listen for change notifications.",
+          "after": "Names revision 2026-07-28, the params.notifications flags toolsListChanged, resourcesListChanged, promptsListChanged, up to 100 addresses in resourceSubscriptions, the notifications received, and that revoking the key closes the stream.",
+          "source": "mcp/routes.ts listen detection; @modelcontextprotocol/server SubscriptionFilterSchema; change-feed.ts MAX_SUBSCRIBED_ADDRESSES and credentialIds close; TECH-035 #1166 addendum"
+        },
+        {
+          "claim": "Troubleshooting: request button hidden because no Toolset is selectable",
+          "before": "(absent)",
+          "after": "New row for the message No Toolsets are available for your account.",
+          "source": "api-keys.tsx apiKeys.noToolsets and requestAction gated on state.policy.toolsets.length; messages/en-US.json"
+        },
+        {
+          "claim": "Revoke closes the listen stream",
+          "before": "Its next request is refused, and the row says Revoked.",
+          "after": "Its next request is refused, any open listen stream closes, and the row says Revoked.",
+          "source": "api-keys/routes.ts publishLiveEvent revocation with credentialIds; change-feed.ts close()"
+        }
+      ],
+      "confirmed": [
+        "Request form lists only state.policy.toolsets (ceiling plus account-type rule); Team and Administration start off; Business Users get neither; only Administrators get Administration (api-keys.tsx, api-keys/routes.ts readPolicy, selectable-toolsets.ts).",
+        "resources/templates/list returns the five record templates and document-versions; resources/list returns inbox, tasks/mine and vocabulary; both filtered by grant (resources.ts listResources, mcp/routes.ts).",
+        "Record numbers accept the C-, M- or R- prefix or a bare positive integer; Entity, Knowledge Item and Version addresses need UUIDs (resources.ts).",
+        "Records and views are application/json; Document Version text is text/plain (resources.ts mimeType).",
+        "Inbox resource is the Legal User Inbox or a Business User's own unconverted Requests; vocabulary is a Guide Tool available to every credential (requests.ts, guide.ts).",
+        "Prompt table: triage_inbox optional string limit 1 to 100, default 25, Legal Users with Requests; summarize_record required record as address or kind and number or id (prompts.ts, results.ts pageInput).",
+        "Each prompt returns an instruction message and an embedded resource message; getting a prompt runs no model and changes nothing; triage asks for confirmation and links to the Convert dialog; summary requests no changes (prompts.ts).",
+        "One ledger row and one rate-limited call per read or get; the embedded read reserves nothing more (calls.ts recordCall, resources.ts resourceContent, prompts.ts).",
+        "Key request, approval, collection, Claude Code, Cowork and Desktop, and troubleshooting steps are unchanged in source since 067c1646 (git diff)."
+      ],
+      "limitations": [
+        "Source inspection only. V-M42-C58 needs a script Client on Streamable HTTP; V-M40-CLIENT needs a re-walk because the article bytes changed.",
+        "The guide gives listen-stream parameters from the SDK 2.1.0 schema. The walkthrough should record the exact notification method names its Client receives.",
+        "V-M42-C58 'update a subscribed record' needs a record change at a tier the subscriber can see; source shows record events are filtered by the subscriber's Visibility tiers."
+      ]
+    },
+    {
+      "articleId": "connect-claude",
+      "scenario": ["V-M41-C59", "V-M42-C59"],
+      "contentSha256Before": "6a69aee2491195f97ab0c4cb5ec96048ea8b90192461db20496592114ecb1103",
+      "contentSha256": "3b6b5603edaf0d0f62209abdfe8bd05dd6ed54c2fdf92437b197f6c5f0831485",
+      "sources": [
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/evidence/connect-claude.json",
+        "docs/documentation/batches/DOC-030/clients/technical-review.json",
+        "docs/decision-records/DECISIONS.md (DD-029 #1166 addendum)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 #1166 addendum)",
+        "apps/api/src/mcp/routes.ts",
+        "apps/api/src/mcp/resources.ts",
+        "apps/api/src/mcp/prompts.ts",
+        "apps/api/src/mcp/register.ts",
+        "apps/web/src/routes/consent.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/api/src/modules/oauth-grants/routes.ts",
+        "https://code.claude.com/docs/en/mcp (Use MCP resources; Use MCP prompts as commands; Dynamic tool updates), fetched 2026-09-28",
+        "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers (Access Resources and Prompts step), fetched 2026-09-28",
+        "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp (link resolves, 200)"
+      ],
+      "corrections": [
+        {
+          "claim": "Refusal of a Contract address",
+          "before": "(absent)",
+          "after": "OpenLaw refuses the address if Contracts is not in your grant or you cannot open the Contract. To add a Toolset, connect again and select it on the consent page.",
+          "source": "mcp/routes.ts OAuth path returns 403 with insufficient_scope naming toolset:contracts for resources/read; resources.ts not_found outside reach; consent re-connect replaces choices (existing guide text)"
+        },
+        {
+          "claim": "How Claude Code lists prompts",
+          "before": "Type / to find the two OpenLaw prompts.",
+          "after": "Claude Code lists them as /openlaw:triage_inbox and /openlaw:summarize_record.",
+          "source": "code.claude.com/docs/en/mcp: 'Claude Code lists each MCP prompt as /servername:promptname (MCP)'"
+        },
+        {
+          "claim": "Business User and triage",
+          "before": "The triage prompt requires the Requests Toolset and a Legal User account.",
+          "after": "Adds: A Business User does not see it.",
+          "source": "prompts.ts listPrompts excludes business_user for triage_inbox"
+        },
+        {
+          "claim": "Summary argument form in Claude Code",
+          "before": "(absent)",
+          "after": "Claude Code splits prompt arguments on spaces, so use the address form, not contract C-12.",
+          "source": "code.claude.com/docs/en/mcp: 'Claude Code splits the arguments on whitespace, so each argument is a single token'; prompts.ts summaryInput takes one record string"
+        },
+        {
+          "claim": "claude.ai attachment menu path",
+          "before": "In claude.ai, open + → Connectors and the OpenLaw attachment menu.",
+          "after": "Select + in the message box, then Connectors, and hover over Add to <connector Name>, such as Add to OpenLaw.",
+          "source": "modelcontextprotocol.io connect-remote-servers 'hover over Connectors, move the cursor over Add to Example Remote Server'"
+        }
+      ],
+      "confirmed": [
+        "Resource mention form @openlaw:openlaw://contracts/C-12 matches Claude Code's @server:protocol://resource/path format, and the #use-mcp-resources anchor exists (code.claude.com/docs/en/mcp).",
+        "Triage requires Requests and a Legal User; default 25, limit 1 to 100; proposes Disposition, type, urgency and assignee; waits for confirmation before assign and comment; gives an /inbox/{number} link for conversion (prompts.ts triageInstruction).",
+        "Summary accepts Contract, Matter, Request, Entity or Knowledge Item, embeds the reached record and requests no changes (prompts.ts, resources.ts).",
+        "claude.ai views are the fixed resources Inbox, My Tasks and OpenLaw vocabulary when the grant permits (resources.ts listResources).",
+        "Consent page, Connected Clients, Disconnect and refusal messages are unchanged since the V-M41-C59 live walkthrough (git diff 067c1646..4ca41822 shows only a className change in connected-clients.tsx).",
+        "External links to code.claude.com, support.claude.com and modelcontextprotocol.io resolve with HTTP 200."
+      ],
+      "limitations": [
+        "Source inspection only. The live claude.ai and Claude Code checks for V-M42-C59 did not run in this batch; V-M41-C59 needs a re-walk because the article bytes changed.",
+        "The claude.ai attachment-menu path and how claude.ai asks for the summary prompt's record argument come from the MCP project's guide, not a live claude.ai session.",
+        "Whether Claude Code or claude.ai reacts to the 403 insufficient_scope challenge by starting a new consent is vendor behavior; the guide tells the person to connect again, which works either way."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/routes/settings-mcp.tsx settings.mcp.oauthHelp: the note under the group rows says 'OAuth Clients work only if this server is reachable from the internet.' Claude Code OAuth also works on a private HTTPS LAN address with loopback callbacks (TECH-035 #1134/#1138 addenda; configure-mcp and connect-claude document that path). Copy discrepancy only; behavior matches the records."
+  ],
+  "sharedFileRequests": [
+    "None for docs/user-guides/connect-chatgpt.md or connect-microsoft-365-copilot.md: checked read-only against M42; their consent, scope, ceiling and resources/prompts statements remain true (toolset:team and toolset:administration are in MCP_SCOPES; both guides already say choices depend on the ceiling).",
+    "docs/documentation/scenarios.json: V-M40-MCP, V-M41-MCP, V-M42-MCP, V-M40-CLIENT, V-M42-C58, V-M41-C59 and V-M42-C59 must point at the new content hashes after the walkthroughs record results (batch owner)."
+  ],
+  "statusChange": null
+}

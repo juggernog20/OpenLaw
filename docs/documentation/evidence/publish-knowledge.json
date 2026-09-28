@@ -117,5 +117,32 @@
     "verifiedAt": "2026-09-16T15:28:24.654Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, documents/routes.ts, mcp/documents.ts, router.tsx, list-editor.tsx and messages/en-US.json. knowledge-record.tsx, portal-knowledge.tsx, deflection-panel.tsx, settings-intake-links.tsx, knowledge routes and service, portal routes, intake-links routes, contract-access.ts, document-access.ts and mcp/knowledge.ts did not change. Publish, Unpublish, Audience, Archive and Restore, Mark confidential and the deflection links are unchanged. documents-card.tsx changed the Delete action to Delete version and the Type pill colour; mcp/documents.ts only adds partially_signed to a Tool description; router.tsx only adds /signing/return; list-editor.tsx only adds an optional expanded-row slot that the deflection link list does not use. No statement in the guide changed. I replayed the DOC-030 knowledge script on work: all 28 steps passed (14 Legal Team Member, 14 Administrator, each with Portal reader checks as Mei Tanaka and Sara Haddadi), the same count as DOC-030. Its one product note, that a Legal Team Member can mark a Knowledge Document confidential but cannot clear the mark, is the same as in DOC-030, and the guide already tells readers to ask an Administrator; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/publish-knowledge-replay.mjs",
+        "sha256": "584f234b529f0caba7bda85546b161d77ada8306d2ea08769e786024d1b14cad"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/publish-knowledge-replay.json",
+        "sha256": "7f92e44ecde5e95cb78ac88b4828f2ea62fc48a6d0b111e5b4a1a2f38f4083c6"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      }
+    ]
+  }
 }

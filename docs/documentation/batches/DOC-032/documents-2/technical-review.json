@@ -1,0 +1,334 @@
+{
+  "batch": "DOC-032",
+  "group": "documents-2",
+  "reviewer": "DOC-032 source-review author agent (documents-2)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:15:09Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "applicationDigest": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+  "comparedFrom": {
+    "previousWalkthroughBuild": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastArticleEdit": {
+      "archive-and-delete-documents": "a9f1ffdb",
+      "create-knowledge": "a9f1ffdb",
+      "contributor-guide": "a9f1ffdb",
+      "reference": "a9f1ffdb"
+    },
+    "changeRange": "git log 067c1646..4ca41822 over each article's evidence sources; no feature commit edited these four guides after the DOC-030 walkthrough (all four hashes matched their evidence before editing)"
+  },
+  "method": "source-inspection",
+  "note": "Kept consistent with the documents group's corrected docs/user-guides/document-versions.md (Delete version paragraph), which this seat did not edit.",
+  "articles": [
+    {
+      "articleId": "archive-and-delete-documents",
+      "scenario": ["V-C54"],
+      "contentSha256Before": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece",
+      "contentSha256": "0c15ae30b9f8412328bb98518d924140f1f05fc249c007d5658b937c128f284a",
+      "sources": [
+        "docs/user-guides/archive-and-delete-documents.md",
+        "docs/documentation/evidence/archive-and-delete-documents.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/documents/technical-review.json",
+        "docs/user-guides/document-versions.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-001, DOC-010, DOC-010/DOC-011 UX review addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "packages/db/src/schema/documents.ts",
+        "packages/db/src/schema/document-rendition.ts",
+        "packages/db/src/schema/document-text.ts",
+        "packages/db/src/schema/knowledge-items.ts",
+        "git show dd28e33d"
+      ],
+      "corrections": [
+        {
+          "claim": "Introduction: what permanent deletion removes",
+          "before": "Permanent deletion removes the entire Document and needs an Administrator.",
+          "after": "Permanent deletion removes one Version at a time and needs an Administrator. Deleting a Document's last Version also removes the Document.",
+          "source": "dd28e33d; documents-card.tsx DocumentActions onDelete(document, chain.current) and VersionActions onDelete; web calls only deleteDocumentVersion (hardDeleteDocument has no caller); routes.ts DELETE /documents/:documentId/versions/:versionId deletes the documents row when versions.length === 1"
+        },
+        {
+          "claim": "Before you start: who sees the delete control",
+          "before": "(no statement about Legal Team Members and deletion)",
+          "after": "Only an Administrator sees Delete version; Legal Team Members do not.",
+          "source": "documents-card.tsx canErase = role === 'administrator' gates the DocumentActions item, VersionActions onDelete and BulkDocumentActions canDelete; routes.ts preHandler requireAdministrator"
+        },
+        {
+          "claim": "H2 heading",
+          "before": "## Permanently delete a Document",
+          "after": "## Permanently delete a Version",
+          "source": "dd28e33d. No guide, Help binding or redirect links to the old anchor (repository grep for permanently-delete and archive-and-delete-documents#), so no redirects.json alias was added."
+        },
+        {
+          "claim": "What deletion removes and keeps",
+          "before": "It removes every Version, the stored originals, and their derived preview and extracted-text data. It clears a primary Document reference pointing to this Document; another Document is not automatically chosen.",
+          "after": "It removes one Version, its stored original, its preview and extracted-text data, and any Comparison that uses it. The other Versions stay, and OpenLaw does not reuse the deleted Version number. If the Version carries the Executed pin, the pin is cleared. (The primary-reference sentence moved to the last-Version paragraph.)",
+          "source": "document-erasure.ts versionErasureBlobs (renditions, comparison redline blobs, version fileRef); document-rendition.ts and document-text.ts version_id onDelete cascade; routes.ts deletes documentComparisons by comparisonIds; documents.ts executed_version_id onDelete set null; dd28e33d message: nextVersionNumber reads document.version_deleted so numbers are not reused"
+        },
+        {
+          "claim": "Steps 2 to 4: menu item, dialog and confirm button",
+          "before": "Open its Actions menu and select Delete. Read Delete this document?. It names the Document and its number of Versions ... Select Delete. Check that the Document is gone; earlier Version links and downloads are no longer available.",
+          "after": "Current Version: Actions menu, Delete version. Earlier Version: show earlier Versions, Actions for version menu, Delete version. Dialog Delete version N? names the Version number and the Document and says All other versions will remain. or This is the last version, so the document will also be removed. Type delete in Type \"delete\" to confirm; select Delete version; the Version is gone and the others remain.",
+          "source": "messages/en-US.json documents.action.delete 'Delete version', documents.actionsForVersion 'Actions for version {number} of {title}', documents.delete.versionTitle, versionBody, otherVersions, lastVersion, confirmLabel; documents-card.tsx DeleteDialog (document.versions.length === 1 chooses the note)"
+        },
+        {
+          "claim": "Deleting a whole Document",
+          "before": "(the row action deleted the whole Document)",
+          "after": "To delete a whole Document, delete its Versions one at a time. When you delete the last Version, OpenLaw also removes the Document. It clears a primary Document reference pointing to that Document; another Document is not automatically chosen.",
+          "source": "routes.ts version DELETE: last => records document.hard_deleted and deletes the documents row; returns primaryDocumentId null when the removed Document was primary; contracts and knowledge_items primary_document_id onDelete set null"
+        },
+        {
+          "claim": "Bulk deletion",
+          "before": "To delete several Documents, select their checkboxes and select Delete in the selection bar. That dialog also asks you to type delete.",
+          "after": "To delete the current Version of several Documents, select their checkboxes and select Delete versions in the selection bar. The dialog says only the current Version of each selected Document is deleted, and asks you to type delete. A selected Document with one Version is removed.",
+          "source": "bulk-document-actions.tsx run('delete') calls deleteDocumentVersion with the current version; documents.bulk.deleteVersions 'Delete versions', documents.bulk.deleteTitle 'Delete {count} selected versions?', documents.bulk.deleteWarning"
+        },
+        {
+          "claim": "No per-Version delete",
+          "before": "You cannot delete just one Version. If one Version carries the wrong Document type, correct it ...",
+          "after": "OpenLaw refuses to delete a Version that a Generated redline Version was made from; delete the Generated redline Version first. If one Version only carries the wrong Document type, you do not need to delete it. Correct it ...",
+          "source": "routes.ts version DELETE: 409 'A generated comparison version uses this version. Delete that comparison version first.' when compared_from/to_version_id names it"
+        },
+        {
+          "claim": "If deletion fails",
+          "before": "A storage failure can leave the Document listed while some originals or previews have already been removed. ... retry the intended whole-Document deletion",
+          "after": "A storage failure can leave the Version listed while its original, previews, or Comparison files have already been removed. ... retry the intended Version deletion",
+          "source": "routes.ts version DELETE runs storage deletes inside the transaction after the row deletes (same DOC-010 failure window); a rename between dialog and submit fails the confirmTitle check with 400 'Type the document's name exactly to delete this version.'"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Legal Team Members and Administrators archive and restore; Business Users have no archive, restore or delete controls",
+          "source": "documents-card.tsx DocumentActions Archive/Restore not gated by canErase; bulk Archive/Restore buttons ungated; portal documents-section.tsx has no archive or delete"
+        },
+        {
+          "claim": "Archive: Actions menu Archive, Show archived, Archived row, bulk Archive for live selections only",
+          "source": "documents-card.tsx; bulk-document-actions.tsx allLive; messages documents.showArchived, documents.action.archive; no change since 067c1646 outside the dd28e33d hunks"
+        },
+        {
+          "claim": "Restore from row menu, repository Filter then Show archived, bulk Restore for all-archived selections; archived owning record must be restored first",
+          "source": "bulk-document-actions.tsx allArchived; documents-card.tsx; routes/documents.tsx unchanged since 067c1646"
+        },
+        {
+          "claim": "Delete version is also offered on an archived Document's row (Show archived)",
+          "source": "documents-card.tsx DocumentActions renders the canErase item outside the !archived block"
+        },
+        {
+          "claim": "Typed confirmation is the word delete; the API receives the title as a guard, so a concurrent rename refuses",
+          "source": "DeleteDialog matches typed 'delete' and sends document.title; routes.ts confirmTitle check"
+        },
+        {
+          "claim": "Activity and Audit log entries remain after deletion",
+          "source": "routes.ts recordActivity document.version_deleted (and document.hard_deleted on the last Version) on the owning record; activity.ts '{actor} deleted version {version} of {title}'"
+        },
+        {
+          "claim": "Retry converges and does not restore files",
+          "source": "DOC-012 deleting a missing key succeeds; version DELETE reruns versionErasureBlobs"
+        }
+      ],
+      "limitations": [
+        "The registry action says 'permanently delete a separate Document as Administrator'. The built UI has no whole-Document delete. The walkthrough can delete a one-Version Document with Delete version (the dialog shows the last-version note), or delete a multi-Version Document one Version at a time. The API route DELETE /documents/:documentId still exists but no control calls it.",
+        "Negative check: a Legal Team Member sees no Delete version item in the row or Version menus and no Delete versions button in the selection bar; the API answers 403. A Business User has no Documents management controls in the Portal.",
+        "The Auto-Doc template refusal (409) is not reachable from any Documents section (DocumentsCard renders only on Contract, Matter, Entity and Knowledge Item records), so the guide omits it. document-versions.md mentions it.",
+        "The Generated redline refusal needs a Comparison export fixture; the walkthrough may skip it if the lab has none.",
+        "On an archived owning record the Document row's Actions menu is hidden, but an Administrator still sees Delete version on earlier Version rows. The guide keeps 'restore the owning record first' and does not describe this edge (see productBugs)."
+      ]
+    },
+    {
+      "articleId": "create-knowledge",
+      "scenario": ["V-C33"],
+      "contentSha256Before": "31863d786a429f225bfe0df5d4c70cc005efd11ffc006abdfd7d65d8e3900c3a",
+      "contentSha256": "4eb7700e3a16f0f12c3bab7fea8c3d2d7ee644eb7be0b59555ebcc18658a15ea",
+      "sources": [
+        "docs/user-guides/create-knowledge.md",
+        "docs/documentation/evidence/create-knowledge.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/knowledge.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "packages/db/src/schema/knowledge-items.ts",
+        "messages/en-US.json",
+        "git diff 067c1646..4ca41822 over the evidence sources"
+      ],
+      "corrections": [
+        {
+          "claim": "Document row actions on a Knowledge Item",
+          "before": "Use the Document row's actions for [archive, restore, and permanent deletion](archive-and-delete-documents.md).",
+          "after": "Use the Document row's actions to [archive, restore, or delete a Version](archive-and-delete-documents.md). ... Only an Administrator sees Delete version. Deleting the last Version of the primary Document removes it and clears the primary choice; OpenLaw does not choose another.",
+          "source": "knowledge-record.tsx renders the shared DocumentsCard; documents-card.tsx Delete version gated by canErase (dd28e33d); routes.ts version DELETE returns primaryDocumentId null when the removed Document was primary; knowledge_items.primary_document_id onDelete set null"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Every other claim (New from files, New Knowledge Item, guidance editor, Set as primary, folders, filters, recovery)",
+          "source": "knowledge.tsx, knowledge-record.tsx, create-attachments.tsx and the knowledge components have no change between 067c1646 and 4ca41822; the DOC-030 walkthrough of these steps still applies"
+        },
+        {
+          "claim": "Archiving does not choose a replacement primary Document",
+          "source": "documents-card.tsx archive path unchanged since 067c1646"
+        }
+      ],
+      "limitations": [
+        "The registry does not test deletion on this article; the new sentence can be checked by opening a Knowledge Item Document's Actions menu as Administrator (Delete version present) and as a Legal Team Member (absent)."
+      ]
+    },
+    {
+      "articleId": "contributor-guide",
+      "scenario": ["V-C25"],
+      "contentSha256Before": "e11d9743d2fbf74a314460577b9c3661c00553c2c530f4e6caf9280d47c67921",
+      "contentSha256": "a15f5f8b5f1f0f297928a187e699430f040240e6348277467c0569a2ffe2d474",
+      "sources": [
+        "docs/user-guides/contributor-guide.md",
+        "docs/documentation/evidence/contributor-guide.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/web/src/lib/documents.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "messages/en-US.json",
+        "git show d0e50ae4, 229909d4",
+        "git diff 067c1646..4ca41822 over the evidence sources"
+      ],
+      "corrections": [
+        {
+          "claim": "What a Portal Documents row shows",
+          "before": "Each row shows the current Version, its kind, uploader and date. The Portal shows the kind, not the Document type Legal sees, so a Version of a type that an Administrator added reads General.",
+          "after": "Each row shows the current Version, its Document type, uploader and date. The Portal shows the same Document type name Legal sees. A Version with no Document type shows its kind instead, usually General.",
+          "source": "d0e50ae4; portal documents-section.tsx VersionSummary renders version.documentType?.displayName ?? documentKindLabel(kind); portal document-service.ts left-joins document_types for displayName and color"
+        },
+        {
+          "claim": "Portal Kind choices on a Contract upload",
+          "before": "It starts on General and also offers the six fixed Contract types, such as Draft · theirs and Executed.",
+          "after": "It starts on General and also offers the seven fixed Contract types, such as Draft · theirs, Partially signed and Executed.",
+          "source": "229909d4; lib/documents.ts DOCUMENT_VERSION_KINDS adds partially_signed; documents-section.tsx options ['general', ...DOCUMENT_VERSION_KINDS]; messages documents.kind partially_signed {Partially signed}"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Legal sees the Kind choice as the Version's Document type; General leaves it with no type",
+          "source": "document-versions.ts resolveDocumentType maps a kind to the module's type with that system_kind; general returns documentTypeId null; 0182 seeds Partially signed with system_kind partially_signed"
+        },
+        {
+          "claim": "Matter uploads have no Kind control",
+          "source": "documents-section.tsx renders Kind only when module === 'contract'"
+        },
+        {
+          "claim": "All other claims (lists, filters, Fields, Original request, Comments, History, team, approvals)",
+          "source": "Portal routes, record-work, applets, approvals and record-list sources have no change between 067c1646 and 4ca41822 apart from the d0e50ae4 hunks; the DOC-030 access walkthrough still applies"
+        }
+      ],
+      "limitations": [
+        "The walkthrough needs a Contract Version that Legal typed with an Administrator-added Document type to see its name in the Portal."
+      ]
+    },
+    {
+      "articleId": "reference",
+      "scenario": ["V-C50"],
+      "contentSha256Before": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb",
+      "contentSha256": "a94b05c5bb2379640d9d29d9aadd3264a9f9d5365e07d340b24683c68a990d2c",
+      "sources": [
+        "docs/user-guides/reference.md",
+        "docs/documentation/evidence/reference.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "CONTEXT.md (Envelope, Signer, Holding, Grant, Approval request, Approver group)",
+        "docs/user-guides/electronic-signing.md",
+        "docs/user-guides/configure-mcp.md",
+        "docs/user-guides/connect-headless-client.md",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "packages/db/src/schema/contract-envelopes.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/mcp/selectable-toolsets.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "messages/en-US.json",
+        "git show 229909d4, d0e50ae4, dd28e33d, e8c08d64, f9481e78"
+      ],
+      "corrections": [
+        {
+          "claim": "Envelope definition",
+          "before": "One electronic-signature round on one Version of a Contract's primary Document. A Contract has at most one live Envelope.",
+          "after": "One electronic-signature round on an exact Version of a Contract's primary Document. A live Envelope is preparing, draft, or sent. While one is live, OpenLaw refuses a new Envelope. An Envelope's draft status is not the Contract's Draft Stage.",
+          "source": "CONTEXT.md Envelope (e8c08d64, #1171); contract-envelopes/routes.ts hasLiveEnvelope over LIVE_ENVELOPE_STATUSES (preparing, draft, sent); a discarded Envelope restored outside OpenLaw can coexist, so 'at most one live' was no longer exact"
+        },
+        {
+          "claim": "Document type row: fixed Contract list and Portal display",
+          "before": "The Contract list starts with six fixed types: ... Executed, and Amendment. ... The Portal still shows the fixed kinds under Kind, so a Version with an added type or no type reads General there.",
+          "after": "The Contract list starts with seven fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, and Amendment. ... The Portal shows the same Document type name; a Version with no type shows its kind there, usually General. A Portal upload's Kind offers General and the seven fixed Contract types.",
+          "source": "229909d4 and 0182_partially-signed-document-type.sql; d0e50ae4 portal documents-section.tsx VersionSummary; documents-section.tsx Kind options"
+        },
+        {
+          "claim": "Version deletion",
+          "before": "There is no individual-Version delete action; permanent Document deletion has wider consequences and requires an Administrator.",
+          "after": "Only an Administrator can permanently delete a Version. Deleting a Document's last Version also removes the Document. The app offers no separate whole-Document delete.",
+          "source": "dd28e33d; documents-card.tsx and bulk-document-actions.tsx call only deleteDocumentVersion; routes.ts requireAdministrator"
+        },
+        {
+          "claim": "API keys: when Request a key appears",
+          "before": "Request a key appears only while Enable MCP and the group's API keys switch are on.",
+          "after": "... and at least one Toolset is available to your account type.",
+          "source": "f9481e78; api-keys.tsx requestAction requires state.policy.toolsets.length > 0, else shows apiKeys.noToolsets 'No Toolsets are available for your account. Ask an Administrator to enable a Toolset you can use.'"
+        },
+        {
+          "claim": "API keys: what a request names",
+          "before": "A Client name, one or more Toolsets from the organization's ceiling, and Read or Write scope.",
+          "after": "A Client name, one or more Toolsets, and Read or Write scope. The form offers only ceiling Toolsets that your account type can use.",
+          "source": "f9481e78; api-keys/routes.ts readPolicy toolsets = selectableToolsets(ceiling, role); selectable-toolsets.ts filters by a Tool the role may run; assertPolicy refuses others"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Signer: a named person asked to sign an Envelope; they do not need an OpenLaw account",
+          "source": "CONTEXT.md Signer now allows a user of the install or an outside person; the guide's 'do not need an account' stays true; electronic-signing.md"
+        },
+        {
+          "claim": "Holding row including From register",
+          "source": "CONTEXT.md Holding (already matched at 067c1646 wording)"
+        },
+        {
+          "claim": "Administrator needs a Grant for a Confidential Entity",
+          "source": "CONTEXT.md Grant"
+        },
+        {
+          "claim": "Approval Request can name a Business User who answers under Approvals",
+          "source": "CONTEXT.md Approval request, Approver group"
+        },
+        {
+          "claim": "Enable MCP switch label",
+          "source": "messages settings.mcp.enable 'Enable MCP'; settings-mcp.tsx"
+        },
+        {
+          "claim": "Other rows (Stage, Status, Task, Key date, file limits, previews, configuration, API key lifecycle)",
+          "source": "no change to their evidence sources between 067c1646 and 4ca41822 apart from the hunks above"
+        }
+      ],
+      "limitations": [
+        "The preparing and draft Envelope states arise from the preparation interface, which electronic-signing.md says is enabled only in an acceptance lab; a walkthrough on the default build sees sent, signed, declined and voided rounds only.",
+        "The Toolset filter needs a Business User and an Administrator with Team or Administration in the ceiling to observe the difference."
+      ]
+    }
+  ],
+  "productBugs": [
+    "dd28e33d (apps/api/src/modules/documents/routes.ts DELETE /documents/:documentId/versions/:versionId; apps/web/src/components/documents/documents-card.tsx Delete version; bulk-document-actions.tsx Delete versions) adds per-Version deletion and removes whole-Document delete from the UI. DOC-001 ('Individual versions are never edited or deleted'), DOC-010 ('Individual versions can never be deleted'; per-version delete 'breaks the negotiation record') and the DOC-010/DOC-011 UX review addendum ('explains that all versions are deleted') contradict it, and no addendum records the change. DOC-010's lawful-erasure path now takes one delete per Version, in Generated-redline-first order. Same finding as the documents group; the guides describe the built behavior.",
+    "apps/web/src/components/documents/documents-card.tsx: on an archived (frozen) owning record the Document row's Actions menu is hidden, so the current Version cannot be deleted there, but VersionActions still offers Delete version on earlier Version rows (rendered when canErase, regardless of frozen). The erasure reach on archived records is inconsistent between the two menus.",
+    "Record drift, also noted by the documents group: 229909d4 adds Partially signed as a seventh fixed Contract Document type; DOC-015 still says six."
+  ],
+  "sharedFileRequests": [],
+  "statusChange": null
+}

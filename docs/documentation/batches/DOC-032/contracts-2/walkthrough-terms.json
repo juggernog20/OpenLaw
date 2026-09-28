@@ -1,0 +1,607 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "contracts-2",
+  "issue": 1194,
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (contracts-2)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "terms-and-renewals": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414"
+  },
+  "selection": {
+    "articles": ["terms-and-renewals"],
+    "roles": ["legal_team_member", "administrator"]
+  },
+  "stamp": 1790582242742,
+  "records": [
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "term and renewal",
+      "reference": "C-497",
+      "title": "DOC-032 contracts-2 V-C18 legal_team_member 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create child contract",
+      "reference": "C-500",
+      "title": "DOC-032 contracts-2 child legal_team_member 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "Create successor contract",
+      "reference": "C-502",
+      "title": "DOC-032 contracts-2 successor legal_team_member 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "legal_team_member",
+      "purpose": "passed renewal date",
+      "reference": "C-503",
+      "title": "DOC-032 contracts-2 lapsed legal_team_member 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "term and renewal",
+      "reference": "C-504",
+      "title": "DOC-032 contracts-2 V-C18 administrator 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create child contract",
+      "reference": "C-509",
+      "title": "DOC-032 contracts-2 child administrator 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "Create successor contract",
+      "reference": "C-510",
+      "title": "DOC-032 contracts-2 successor administrator 1790582242742"
+    },
+    {
+      "article": "terms-and-renewals",
+      "role": "administrator",
+      "purpose": "passed renewal date",
+      "reference": "C-511",
+      "title": "DOC-032 contracts-2 lapsed administrator 1790582242742"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-032/contracts-2/legal_team_member-renewal-stale-refused.png",
+    "docs/documentation/batches/DOC-032/contracts-2/administrator-renewal-stale-refused.png"
+  ],
+  "startedAt": "2026-09-28T07:57:22.742Z",
+  "finishedAt": "2026-09-28T07:59:09.820Z",
+  "steps": [
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "The record exists for this role",
+      "startedAt": "2026-09-28T07:57:23.675Z",
+      "finishedAt": "2026-09-28T07:57:23.914Z",
+      "actual": "C-497 \"DOC-032 contracts-2 V-C18 legal_team_member 1790582242742\" (NDA) by Nadia Haddad; entity DOC-032 compat compat-a confidential entity Ltd 09280716; value GBP 9,900.00 annually; High priority and risk; Confidential; team adds Daniel Okafor and Karim Aziz.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Overview",
+      "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
+      "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "startedAt": "2026-09-28T07:57:23.915Z",
+      "finishedAt": "2026-09-28T07:57:26.403Z",
+      "actual": "Contract card labels in order: \"Title | Contract type | Our entity | Counterparties | Department | Region | Priority | Risk | Term type | Effective date | Expiry date | Notice period (days) | Value | Currency | Frequency | Needed by\"; the five term Rows appear in the order Term type, Effective date, Expiry date, Renewal period (months), Notice period (days) (NDA Form rows: title, contract_type, description, entity, counterparties, owning_department, region, priority, risk, term_type, effective_date, expiry_date, renewal_period_months, notice_period_days, value, needed_by). Term type offered \"Fixed term, Auto-renewing, Evergreen\". Four separate saves answered 200. Renewal period (months) was shown read-only with no value on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; read-back notice deadline 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Overview; Key dates",
+      "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
+      "expected": "Derived rows match the term and carry no row actions",
+      "startedAt": "2026-09-28T07:57:26.403Z",
+      "finishedAt": "2026-09-28T07:57:28.002Z",
+      "actual": "Term timeline: \"Term timeline Initial term Feb 1 – Jan 31, 2027 Jan 1, 2027 Notice deadline Jan 1, 2027 Today Feb 1 Jan 31, 2027 Initial term Notice deadline\". Key dates rows: \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\", each with 0 row actions.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Overview",
+      "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "startedAt": "2026-09-28T07:57:28.002Z",
+      "finishedAt": "2026-09-28T07:57:29.283Z",
+      "actual": "Term type Auto-renewing (PATCH 200) and Renewal period 1 month (PATCH 200) saved; expiry still 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Overview; Key dates",
+      "action": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
+      "startedAt": "2026-09-28T07:57:29.283Z",
+      "finishedAt": "2026-09-28T07:57:31.683Z",
+      "actual": "Evergreen saved (PATCH 200); read-back expiry null, renewal period null, effective date kept 2026-02-01; the card offers no Expiry date picker (0). Key dates now lists: \"no derived term rows\".",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Overview",
+      "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "startedAt": "2026-09-28T07:57:31.684Z",
+      "finishedAt": "2026-09-28T07:57:34.369Z",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. Restored: Auto-renewing, expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Key dates",
+      "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
+      "startedAt": "2026-09-28T07:57:34.370Z",
+      "finishedAt": "2026-09-28T07:57:35.430Z",
+      "actual": "A Task due 2026-12-01 was added (fixture). Key dates still reads \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\" and lists no Task row; read-back notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals",
+      "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
+      "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
+      "startedAt": "2026-09-28T07:57:35.431Z",
+      "finishedAt": "2026-09-28T07:57:36.673Z",
+      "actual": "Renew opened \"Confirm renewal\" with options \"Confirm the roll Same record — the expiry advances. / Create child contract New record parented to this one. / New successor contract Standalone record linked as the renewal.\"; Confirm the roll was checked; \"The term currently runs to Jan 31, 2027.\"; proposed New expiry date 2027-02-28; 0 Paper as amendment options (no primary Document). Entering 2027-01-31 then Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals; Overview; Key dates",
+      "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the new row under Renewals on the Approvals tab; Status and Stage unchanged",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "startedAt": "2026-09-28T07:57:36.673Z",
+      "finishedAt": "2026-09-28T07:57:40.424Z",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027 Renewal notice deadline — 30 days before expiry Derived\"); the Approvals tab shows 1 row under Renewals: \"Term advanced to Feb 28, 2027 From Jan 31, 2027 NH Nadia Haddad Sep 28\"; Overview \"Last renewal Sep 28\"; Status stays Draft (draft).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
+      "page": "Approvals",
+      "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "startedAt": "2026-09-28T07:57:40.425Z",
+      "finishedAt": "2026-09-28T07:57:45.194Z",
+      "actual": "Dialog proposed 2027-03-28; Daniel Okafor moved expiry to 2027-04-30 (second actor's API write). Confirm renewal answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Daniel Okafor"],
+      "page": "Approvals (two browser contexts)",
+      "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "startedAt": "2026-09-28T07:57:45.194Z",
+      "finishedAt": "2026-09-28T07:58:18.645Z",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Nadia Haddad's Confirm renewal answered 200; Daniel Okafor's answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents; Approvals",
+      "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
+      "startedAt": "2026-09-28T07:58:18.645Z",
+      "finishedAt": "2026-09-28T07:58:22.823Z",
+      "actual": "Uploaded \"doc032-contracts-2-legal_team_member-agreement.pdf\" as the first (primary) Document and marked v1 executed. Reopening Renew without a reload (section navigation only) already offered Paper as amendment; after a reload it was offered. Its note read \"Opens this record's Documents section to file an amendment on its paper. No new record is made.\". File the amendment moved to /contracts/497/documents and opened \"Add version\" with Type \"Amendment\". After Upload: v1 no type executed=true; v2 Amendment executed=false. Mark as executed copy on the Document gave: v1 executed=false; v2 executed=true (replaced v1). Expiry still 2027-05-30; relations read-back holds 0 related records.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals; create dialog",
+      "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
+      "startedAt": "2026-09-28T07:58:22.824Z",
+      "finishedAt": "2026-09-28T07:58:25.487Z",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-497 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-032 contracts-2 V-C18 legal_team_member 1790582242742\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-500. Carried over: entity DOC-032 compat compat-a confidential entity Ltd 09280716, counterparty DOC-032 contracts-2 Counterparty legal_team_member 1790582242742, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Karim Aziz. Related contracts on C-500: \"Related contracts Add link PARENT C-497 DOC-032 contracts-2 V-C18 legal_team_member 1790582242742 Draft Remove parent\". C-497 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals; create dialog",
+      "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "startedAt": "2026-09-28T07:58:25.488Z",
+      "finishedAt": "2026-09-28T07:58:28.205Z",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-497 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-032 contracts-2 V-C18 legal_team_member 1790582242742\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-502. Carried over: entity DOC-032 compat compat-a confidential entity Ltd 09280716, counterparty DOC-032 contracts-2 Counterparty legal_team_member 1790582242742, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Daniel Okafor nor Karim Aziz. Related contracts on C-502: \"Related contracts Set parent Add link RENEWS C-497 DOC-032 contracts-2 V-C18 legal_team_member 1790582242742 Draft Remove link\". C-497 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals",
+      "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "startedAt": "2026-09-28T07:58:28.206Z",
+      "finishedAt": "2026-09-28T07:58:29.404Z",
+      "actual": "C-503 (fixture) Auto-renewing, 12 months, expiry 2026-09-23: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-23; Cancel left expiry 2026-09-23 (no automatic advance).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Approvals",
+      "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "startedAt": "2026-09-28T07:58:29.405Z",
+      "finishedAt": "2026-09-28T07:58:31.538Z",
+      "actual": "Archived C-497: Approvals showed 0 Renew buttons and a renewal write answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived NDA Contract with an Entity, a Counterparty, a value, High priority and risk, the Confidential flag, and the other staff role and a Business User on the team",
+      "expected": "The record exists for this role",
+      "startedAt": "2026-09-28T07:58:31.539Z",
+      "finishedAt": "2026-09-28T07:58:31.710Z",
+      "actual": "C-504 \"DOC-032 contracts-2 V-C18 administrator 1790582242742\" (NDA) by Daniel Okafor; entity DOC-032 compat compat-a inbox Live Holdings Ltd; value GBP 9,900.00 annually; High priority and risk; Confidential; team adds Nadia Haddad and Karim Aziz.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Overview",
+      "action": "Record the term: on Overview use the Contract card; its Rows follow the Contract type's Form; choose Term type Fixed term, then Effective date, Expiry date and Notice period (days), one change at a time",
+      "expected": "The term controls sit in the Contract card in the NDA Form's order; Fixed term offers no renewal-period value; each value saves on its own; the notice deadline is expiry minus the notice period",
+      "startedAt": "2026-09-28T07:58:31.710Z",
+      "finishedAt": "2026-09-28T07:58:34.061Z",
+      "actual": "Contract card labels in order: \"Title | Contract type | Our entity | Counterparties | Department | Region | Priority | Risk | Term type | Effective date | Expiry date | Notice period (days) | Value | Currency | Frequency | Needed by\"; the five term Rows appear in the order Term type, Effective date, Expiry date, Renewal period (months), Notice period (days) (NDA Form rows: title, contract_type, description, entity, counterparties, owning_department, region, priority, risk, term_type, effective_date, expiry_date, renewal_period_months, notice_period_days, value, needed_by). Term type offered \"Fixed term, Auto-renewing, Evergreen\". Four separate saves answered 200. Renewal period (months) was shown read-only with no value on Fixed term. After reload the pickers read \"Feb 1, 2026\" and \"Jan 31, 2027\", notice 30 days; read-back notice deadline 2027-01-01 (Jan 31, 2027 minus 30 days).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Overview; Key dates",
+      "action": "Term timeline draws the recorded dates; Key dates shows Current term expires and Renewal notice deadline derived from the term",
+      "expected": "Derived rows match the term and carry no row actions",
+      "startedAt": "2026-09-28T07:58:34.061Z",
+      "finishedAt": "2026-09-28T07:58:35.833Z",
+      "actual": "Term timeline: \"Term timeline Initial term Feb 1 – Jan 31, 2027 Jan 1, 2027 Notice deadline Jan 1, 2027 Today Feb 1 Jan 31, 2027 Initial term Notice deadline\". Key dates rows: \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\", each with 0 row actions.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Overview",
+      "action": "Change Term type to Auto-renewing and enter Renewal period (months)",
+      "expected": "Auto-renewing accepts a renewal period in months",
+      "startedAt": "2026-09-28T07:58:35.835Z",
+      "finishedAt": "2026-09-28T07:58:37.145Z",
+      "actual": "Term type Auto-renewing (PATCH 200) and Renewal period 1 month (PATCH 200) saved; expiry still 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Overview; Key dates",
+      "action": "Change Term type to Evergreen and review the saved values",
+      "expected": "Evergreen has no expiry date; the change clears the expiry and the renewal period",
+      "startedAt": "2026-09-28T07:58:37.146Z",
+      "finishedAt": "2026-09-28T07:58:39.664Z",
+      "actual": "Evergreen saved (PATCH 200); read-back expiry null, renewal period null, effective date kept 2026-02-01; the card offers no Expiry date picker (0). Key dates now lists: \"no derived term rows\".",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Overview",
+      "action": "Back to Auto-renewing with expiry and renewal period, then change to Fixed term and review; finally restore Auto-renewing with a 1-month period",
+      "expected": "Changing away from Auto-renewing clears the renewal period and keeps the expiry",
+      "startedAt": "2026-09-28T07:58:39.665Z",
+      "finishedAt": "2026-09-28T07:58:42.386Z",
+      "actual": "Auto-renewing -> Fixed term cleared the renewal period (null) and kept expiry 2027-01-31. Restored: Auto-renewing, expiry 2027-01-31, renewal 1 month, notice 30 days, notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Key dates",
+      "action": "Negative: a Task due before the notice deadline does not feed the term-derived deadlines",
+      "expected": "Current term expires and Renewal notice deadline stay derived from the term; the Task is not a Key date row",
+      "startedAt": "2026-09-28T07:58:42.387Z",
+      "finishedAt": "2026-09-28T07:58:43.443Z",
+      "actual": "A Task due 2026-12-01 was added (fixture). Key dates still reads \"Jan 31, 2027 Current term expires Derived\" and \"Jan 1, 2027 Renewal notice deadline — 30 days before expiry Derived\" and lists no Task row; read-back notice deadline 2027-01-01.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals",
+      "action": "Confirm a renewal steps 1-3: open Approvals and select Renew; Confirm the roll is the default; a New expiry date that is not after the current expiry is refused; Cancel changes nothing; Paper as amendment is absent without a primary Document",
+      "expected": "The dialog refuses the invalid date with its message; Cancel keeps the term; no Paper as amendment option",
+      "startedAt": "2026-09-28T07:58:43.443Z",
+      "finishedAt": "2026-09-28T07:58:44.624Z",
+      "actual": "Renew opened \"Confirm renewal\" with options \"Confirm the roll Same record — the expiry advances. / Create child contract New record parented to this one. / New successor contract Standalone record linked as the renewal.\"; Confirm the roll was checked; \"The term currently runs to Jan 31, 2027.\"; proposed New expiry date 2027-02-28; 0 Paper as amendment options (no primary Document). Entering 2027-01-31 then Confirm renewal showed \"A roll moves the term forward. Pick a date after the current expiry.\" Cancel left expiry 2027-01-31.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals; Overview; Key dates",
+      "action": "Confirm a renewal step 4: Confirm renewal with the proposed date, then check the new expiry, notice deadline, Last renewal and the new row under Renewals on the Approvals tab; Status and Stage unchanged",
+      "expected": "The term advances only through the confirmation; Status and Stage do not change",
+      "startedAt": "2026-09-28T07:58:44.624Z",
+      "finishedAt": "2026-09-28T07:58:48.602Z",
+      "actual": "Confirm renewal (POST 200) moved expiry 2027-01-31 -> 2027-02-28; notice deadline 2027-01-29 (\"Jan 29, 2027 Renewal notice deadline — 30 days before expiry Derived\"); the Approvals tab shows 1 row under Renewals: \"Term advanced to Feb 28, 2027 From Jan 31, 2027 DO Daniel Okafor Sep 28\"; Overview \"Last renewal Sep 28\"; Status stays Draft (draft).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "page": "Approvals",
+      "action": "Stale date: with Renew open, the other staff role changes the expiry; Confirm renewal is refused and the dialog shows the refreshed expiry; Cancel and reopen Renew gives a fresh proposed date",
+      "expected": "A stale roll is refused and re-read; no second roll is recorded",
+      "startedAt": "2026-09-28T07:58:48.603Z",
+      "finishedAt": "2026-09-28T07:58:53.537Z",
+      "actual": "Dialog proposed 2027-03-28; Nadia Haddad moved expiry to 2027-04-30 (second actor's API write). Confirm renewal answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". The dialog then said \"The term currently runs to Apr 30, 2027.\" and kept the entered 2027-03-28. Cancel and reopen proposed 2027-05-30. Expiry 2027-04-30; renewal rows still 1.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Nadia Haddad"],
+      "page": "Approvals (two browser contexts)",
+      "action": "Competing confirmations: both staff roles open Renew on the same expiry; the first Confirm renewal records the roll and the second is refused",
+      "expected": "Two competing confirmations do not record the same roll twice",
+      "startedAt": "2026-09-28T07:58:53.537Z",
+      "finishedAt": "2026-09-28T07:58:56.903Z",
+      "actual": "Both dialogs proposed 2027-05-30 / 2027-05-30. Daniel Okafor's Confirm renewal answered 200; Nadia Haddad's answered 409: \"This contract's expiry has already moved. Read the record again before confirming the roll.\". Expiry 2027-05-30; renewal rows 2 (one per distinct roll).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents; Approvals",
+      "action": "Paper as amendment: upload the first Document; reopen Renew without a reload, then reload the record and reopen Renew; File the amendment opens Add version with Type set to Amendment; the new Version is not executed until marked, and marking replaces the chain's designation",
+      "expected": "The option appears after a reload; Add version opens on the primary Document with Type Amendment; no new Contract; no expiry change",
+      "startedAt": "2026-09-28T07:58:56.904Z",
+      "finishedAt": "2026-09-28T07:59:01.008Z",
+      "actual": "Uploaded \"doc032-contracts-2-administrator-agreement.pdf\" as the first (primary) Document and marked v1 executed. Reopening Renew without a reload (section navigation only) already offered Paper as amendment; after a reload it was offered. Its note read \"Opens this record's Documents section to file an amendment on its paper. No new record is made.\". File the amendment moved to /contracts/504/documents and opened \"Add version\" with Type \"Amendment\". After Upload: v1 no type executed=true; v2 Amendment executed=false. Mark as executed copy on the Document gave: v1 executed=false; v2 executed=true (replaced v1). Expiry still 2027-05-30; relations read-back holds 0 related records.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals; create dialog",
+      "action": "Create child contract from Renew: review and edit the prefilled Title and Contract type, create, and check the new C- reference and relationship",
+      "expected": "A new Contract parented to this one; Entity, Counterparties, value and term shape carry over; Legal Owner, team, Status, Priority, Risk and Confidential need their own review",
+      "startedAt": "2026-09-28T07:59:01.009Z",
+      "finishedAt": "2026-09-28T07:59:03.650Z",
+      "actual": "Create child contract -> Open the child contract opened \"Create child contract\": \"Prefilled from C-504 and born under it. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-032 contracts-2 V-C18 administrator 1790582242742\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-509. Carried over: entity DOC-032 compat compat-a inbox Live Holdings Ltd, counterparty DOC-032 contracts-2 Counterparty administrator 1790582242742, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Karim Aziz. Related contracts on C-509: \"Related contracts Add link PARENT C-504 DOC-032 contracts-2 V-C18 administrator 1790582242742 Draft Remove parent\". C-504 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals; create dialog",
+      "action": "New successor contract from Renew: review, create, and check the new C- reference and Renews relationship",
+      "expected": "A new Contract linked as renewing this predecessor, with the same carry-over rules",
+      "startedAt": "2026-09-28T07:59:03.651Z",
+      "finishedAt": "2026-09-28T07:59:06.385Z",
+      "actual": "New successor contract -> Open the successor opened \"Create successor contract\": \"Prefilled from C-504 and linked as its renewal. The counterparties, our entity, the value, and the term came across; the team, the status, and the Confidential flag did not. Edit anything before you create it.\". Prefilled Title \"DOC-032 contracts-2 V-C18 administrator 1790582242742\", Contract type NDA, Legal Owner Unassigned; Title edited; Create answered 201 for C-510. Carried over: entity DOC-032 compat compat-a inbox Live Holdings Ltd, counterparty DOC-032 contracts-2 Counterparty administrator 1790582242742, value {\"amount\":990000,\"currency\":\"GBP\",\"cadence\":\"annually\"}, auto_renew to 2027-05-30 (renewal 1, notice 30). Not carried: Legal Owner null, Status Draft, Priority medium, Risk null, Confidential false; team has neither Nadia Haddad nor Karim Aziz. Related contracts on C-510: \"Related contracts Set parent Add link RENEWS C-504 DOC-032 contracts-2 V-C18 administrator 1790582242742 Draft Remove link\". C-504 still expires 2027-05-30.",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals",
+      "action": "Renewal banner: an Auto-renewing Contract whose expiry has passed shows Renewal date passed — pending confirmation; Review renewal opens the same dialog",
+      "expected": "The banner and Review renewal appear; the app does not advance expiry automatically",
+      "startedAt": "2026-09-28T07:59:06.386Z",
+      "finishedAt": "2026-09-28T07:59:07.672Z",
+      "actual": "C-511 (fixture) Auto-renewing, 12 months, expiry 2026-09-23: banner \"Renewal date passed — pending confirmation. The term does not advance until a human confirms.\"; Review renewal opened Confirm renewal proposing 2027-09-23; Cancel left expiry 2026-09-23 (no automatic advance).",
+      "result": "pass"
+    },
+    {
+      "article": "terms-and-renewals",
+      "scenario": "V-C18",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Approvals",
+      "action": "Negative: an archived Contract offers no Renew and refuses a renewal write; Restore keeps the recorded rolls",
+      "expected": "Archived records are handled differently from an active renewal",
+      "startedAt": "2026-09-28T07:59:07.673Z",
+      "finishedAt": "2026-09-28T07:59:09.819Z",
+      "actual": "Archived C-504: Approvals showed 0 Renew buttons and a renewal write answered 409. After Restore (200) expiry 2027-05-30 and 2 renewal rows remain.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user (negative check only)",
+      "person": "Karim Aziz",
+      "entry": "new magic link from the work lab Mailpit, Portal sign-in"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-28T07:58:17.914Z",
+      "page": "/contracts/497/approvals",
+      "waitedFor": "Approvals region",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home",
+      "abortedRequests": [
+        "GET /api/v1/contracts/497/key-dates net::ERR_NETWORK_CHANGED",
+        "GET /api/v1/contracts/497/tasks net::ERR_NETWORK_CHANGED",
+        "GET /api/v1/contracts/497/relations net::ERR_NETWORK_CHANGED",
+        "GET /api/v1/contracts/497/matter net::ERR_NETWORK_CHANGED",
+        "GET /api/v1/contracts/options net::ERR_NETWORK_CHANGED",
+        "GET /api/v1/entities net::ERR_NETWORK_CHANGED",
+        "GET /api/events net::ERR_ABORTED"
+      ]
+    }
+  ],
+  "summary": {
+    "total": 32,
+    "pass": 32,
+    "fail": 0
+  }
+}

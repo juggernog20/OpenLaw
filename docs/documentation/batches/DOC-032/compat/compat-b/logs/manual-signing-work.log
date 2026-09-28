@@ -1,0 +1,21 @@
+[manual-signing/legal_team_member] PASS Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector
+[manual-signing/legal_team_member] FAIL Hand off step 1: use the Stage control to choose the Signature Status Out for signature
+   Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log:   - waiting for getByRole('region', { name: 'Approvals & signing' }) to be visible 
+[manual-signing/legal_team_member] PASS Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed
+[manual-signing/legal_team_member] PASS Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy
+[manual-signing/legal_team_member] PASS Negative: choosing the Executed type during upload does not set the executed designation
+[manual-signing/legal_team_member] PASS Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document
+[manual-signing/legal_team_member] PASS Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again
+[manual-signing/legal_team_member] PASS Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity
+[manual-signing/legal_team_member] PASS Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged
+[manual-signing/administrator] PASS Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector
+[manual-signing/administrator] FAIL Hand off step 1: use the Stage control to choose the Signature Status Out for signature
+   Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log:   - waiting for getByRole('region', { name: 'Approvals & signing' }) to be visible 
+[manual-signing/administrator] PASS Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed
+[manual-signing/administrator] PASS Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy
+[manual-signing/administrator] PASS Negative: choosing the Executed type during upload does not set the executed designation
+[manual-signing/administrator] PASS Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document
+[manual-signing/administrator] PASS Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again
+[manual-signing/administrator] PASS Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity
+[manual-signing/administrator] PASS Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged
+{"total":18,"pass":16,"fail":2}

@@ -80,6 +80,65 @@
     "contentSha256": "7104110814c3a789f3d1fc02240f6d2f40e509813d636c2c196a833fc53aee8f",
     "verifiedAt": "2026-09-16T15:23:35.996Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "257a2a24c146025cca08e77a3071d6fe1a3a9c59c2fe4dddc4c6d820a17999ae",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/portal/documents-section.tsx, packages/shared/src/index.ts and messages/en-US.json. portal-request.tsx, portal-contract.tsx, inbox-request.tsx, my-requests.tsx, request-owner.tsx, record-shell.tsx, record-work.tsx, activity-applet.tsx, comment code, requester-status.ts, the requests module, portal applets and record-work have no diff. documents-section.tsx now labels a converted record's Portal Document version with its Document type name and colour; the guide hands converted-record Documents to the contributor guide and names no pill. shared/src/index.ts only adds exports. The replay passed 26 of 26 steps for the Business User. Replay log: batches/DOC-032/compat/compat-a/follow-request-replay.json; from 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches the Request update emails. The portal replay on final passed 26 of 26 follow-request steps for the Business User and Legal. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/portal-replay.mjs",
+        "sha256": "785387f945a9a9b6d1bf92b830d8436858c91c19d6107b3a211facfc552ff651"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/portal-replay/fixtures.mjs",
+        "sha256": "098caa70229b36e14b4e7e71a8afda34bfa7f5dfe6b1f33e4ac4396c0c559be7"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/portal-replay/lib.mjs",
+        "sha256": "86b0d1d17d08c941de3b21a4a8ac6ec5df32b75dad729a01c47ea51fdd88c5c4"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/portal-replay/pdf.mjs",
+        "sha256": "d21d3cf7cbcf937ab4d9d0fc0847107364b9f62a1ccf061c1435aad2b20736ee"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/follow-request-replay.json",
+        "sha256": "de674c2485ce627e8967f6a0ea479d8b6e3b3c46a784efe2c7762cd4633f8b48"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/portal-replay.mjs",
+        "sha256": "a229fde29790d9af4a5bf911a0148096a8d50c2dfad9fae7ff5ddb4ff657493c"
+      },
+      {
+        "path": "batches/DOC-032/bridge/portal-replay/fixtures.mjs",
+        "sha256": "f7271a60c1090813c1e0669ed838653714e25d1a91b5dafea4da79f12bc81e11"
+      },
+      {
+        "path": "batches/DOC-032/bridge/portal-replay/lib.mjs",
+        "sha256": "cb7c3749b5c7fb346d6f526b1a86a628b484790d7a1cf0fe04ff9f32fb9f0d62"
+      },
+      {
+        "path": "batches/DOC-032/bridge/portal-replay/pdf.mjs",
+        "sha256": "a927ed8acd9be96706983732520349225e651e8a115108e9d643e72c959cca2f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/portal-replay.json",
+        "sha256": "6263bfe7563e9815fab5c73e6a0f627de060ff12ff2efe9f07a9ab906be2c7c3"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

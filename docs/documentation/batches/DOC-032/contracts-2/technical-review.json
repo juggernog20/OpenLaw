@@ -1,0 +1,326 @@
+{
+  "batch": "DOC-032",
+  "group": "contracts-2",
+  "reviewer": "DOC-032 source-review author agent (contracts-2)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:14:26Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousAppCommit": {
+      "create-contract": "067c1646829df85e62b809ee9157921e867c84e7",
+      "approver-groups": "067c1646829df85e62b809ee9157921e867c84e7",
+      "terms-and-renewals": "067c1646829df85e62b809ee9157921e867c84e7",
+      "troubleshooting": "067c1646829df85e62b809ee9157921e867c84e7",
+      "contract-stages": "3fa407e3a846559914aa1a63249741f30cfb4f69"
+    },
+    "lastArticleEdit": {
+      "create-contract": "a9f1ffdb",
+      "approver-groups": "a9f1ffdb",
+      "terms-and-renewals": "a9f1ffdb",
+      "troubleshooting": "a9f1ffdb",
+      "contract-stages": "41390ca0"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "create-contract",
+      "scenario": ["V-C14"],
+      "contentSha256Before": "f2e0f8f483189190429de4313ffbac136c0df54aa0b90e203c1906d67fc239db",
+      "contentSha256": "8f7f98a37901c8b3f11739126a4ff202a6037b41b91d34e9cafe4161715075fd",
+      "sources": [
+        "docs/user-guides/create-contract.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/api/src/modules/contracts/create.ts",
+        "apps/api/src/modules/contracts/routes.ts",
+        "apps/api/src/modules/contracts/record.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/lib/contract-team.ts",
+        "docs/documentation/evidence/create-contract.json",
+        "docs/documentation/batches/DOC-030/contracts-a/technical-review.json",
+        "docs/documentation/batches/DOC-032/triage.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Where the owner controls sit on Overview",
+          "before": "Legal Owner, Business Owner, Days remaining, Last renewal, and the Confidential switch follow the Rows.",
+          "after": "Days remaining, Last renewal, and the Confidential switch follow the Rows. Legal Owner and Business Owner are in their own section above the Contract card.",
+          "source": "contract-record.tsx Overview: a section with aria-label records.people.section (Owners, no visible heading) holds both RecordPersonField controls before the Contract card (791ad567)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Owner options, Unassigned, and the save path are unchanged; only the position moved.",
+          "source": "contract-record.tsx ownerOptions/users props and commit('managerId'|'businessOwnerId'); git diff 067c1646..4ca41822"
+        },
+        {
+          "claim": "Add team member refuses duplicates and Confidential audience changes as before; the Business Owner row cannot be removed while they hold the role.",
+          "source": "apps/api/src/lib/contract-team.ts addToContractTeam/removeContractTeamMember (8432038e moved the same guards out of contracts/routes.ts)"
+        },
+        {
+          "claim": "Creation outcomes (Draft Status, Legal Owner, Creator on team, type default people) are unchanged.",
+          "source": "contracts/create.ts diff 067c1646..4ca41822 moves only the renewal-vehicle constant to renewal-vehicle.ts"
+        },
+        {
+          "claim": "The create dialog, its Form Rows, attachments and refusal messages are unchanged since the DOC-030 walkthrough.",
+          "source": "no commits 067c1646..4ca41822 to create-contract-dialog.tsx, type-form/*, create-attachments.tsx, counterparty-picker.tsx, value-field.tsx"
+        },
+        {
+          "claim": "Every bold label in the guide except the quoted Create \"name\" pattern exists verbatim in the catalog.",
+          "source": "messages/en-US.json scan"
+        },
+        {
+          "claim": "The removed Envelope chip was not described by this guide.",
+          "source": "contract-record.tsx diff (879fc477)"
+        }
+      ],
+      "limitations": [
+        "The Owners section has only an accessible name, no visible heading, so the guide places the two controls by position rather than naming a section label."
+      ]
+    },
+    {
+      "articleId": "approver-groups",
+      "scenario": ["V-C55"],
+      "contentSha256Before": "c0f132517840b0fd75f56250e1ed446326f13fd62027aef4577305ae37d4d88d",
+      "contentSha256": "591486689995657de3bbb0dfe04ef442d97dd23cbf8376579309802a397667d1",
+      "sources": [
+        "docs/user-guides/approver-groups.md",
+        "docs/user-guides/contract-approvals.md",
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/api/src/modules/contracts/create.ts",
+        "scripts/seed/catalog.mjs",
+        "docs/documentation/evidence/approver-groups.json",
+        "docs/documentation/batches/DOC-030/contracts-a/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Where Apply group lives on a Contract",
+          "before": "1. Open Approvals, then Approvals & signing.",
+          "after": "1. Open the Contract's Approvals tab.",
+          "source": "approvals-signing-card.tsx ApprovalsCard header (Renew, Apply group, Add approver); contract-record.tsx tab 'approvals' renders ApprovalsCard, 'signatures' renders SignaturesCard (879fc477)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Apply group appears when a live group exists or the Contract has a default group.",
+          "source": "approvals-signing-card.tsx approverGroups.length > 0 || approvalDefault?.groupId"
+        },
+        {
+          "claim": "The Apply group dialog labels: Approver group, Default group unavailable — contact an administrator, skipped-pending count, Apply group.",
+          "source": "approvals-signing-card.tsx ApplyGroupDialog; messages/en-US.json"
+        },
+        {
+          "claim": "Settings list rows are restructured but approver-group rows pass no rowContent, so Edit, Archive, Show archived and Restore behave as before.",
+          "source": "list-editor.tsx diff (183bfa99); settings-approver-groups.tsx unchanged since 067c1646"
+        },
+        {
+          "claim": "Approver-group API, approval defaults and approvers.ts are unchanged since the DOC-030 walkthrough.",
+          "source": "no commits 067c1646..4ca41822 to approver-groups/routes.ts, contract-approvals/routes.ts, approval-defaults.ts, lib/approvers.ts"
+        },
+        {
+          "claim": "The guide names no seeded group members, so the Devon Calloway seed change needs no text change.",
+          "source": "scripts/seed/catalog.mjs (17179939)"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "scenario": ["V-C18"],
+      "contentSha256Before": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec",
+      "contentSha256": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414",
+      "sources": [
+        "docs/user-guides/terms-and-renewals.md",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/contracts/confirm-renewal-dialog.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "docs/documentation/evidence/terms-and-renewals.json",
+        "docs/documentation/batches/DOC-030/shared-files/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Where the confirmed renewal row appears",
+          "before": "Check the new expiry, notice deadline, Last renewal, and the renewal row on Approvals & signing.",
+          "after": "Check the new expiry, notice deadline, Last renewal, and the new row under Renewals on the Approvals tab.",
+          "source": "approvals-signing-card.tsx ApprovalsCard renders the Renewals block (renewal.block) when renewals exist; the Approvals & signing card is gone (879fc477)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Renew is in the Approvals card header and shows only when the Contract can roll and is not read-only.",
+          "source": "approvals-signing-card.tsx canRenew && !frozen"
+        },
+        {
+          "claim": "Renew dialog labels and routes (Confirm the roll, New expiry date, Confirm renewal, Paper as amendment, Create child contract, New successor contract, Review renewal banner) are unchanged.",
+          "source": "confirm-renewal-dialog.tsx unchanged since 067c1646; messages/en-US.json renewal.*"
+        },
+        {
+          "claim": "Paper as amendment still opens Add version on the primary Document with the Amendment kind.",
+          "source": "documents-card.tsx composer kind 'amendment'; dd28e33d only renamed the row delete to Delete version"
+        },
+        {
+          "claim": "Last renewal still reads the newest confirmed renewal on the Contract card.",
+          "source": "contract-record.tsx ReadOnlyField contracts.form.lastRenewal"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "articleId": "troubleshooting",
+      "scenario": ["V-C49"],
+      "contentSha256Before": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678",
+      "contentSha256": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616",
+      "sources": [
+        "docs/user-guides/troubleshooting.md",
+        "docs/user-guides/electronic-signing.md",
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/lib/envelopes.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/web/src/components/api-keys.tsx",
+        "apps/web/src/components/connected-clients.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/api/src/modules/api-keys/routes.ts",
+        "apps/api/src/mcp/selectable-toolsets.ts",
+        "docs/documentation/evidence/troubleshooting.json",
+        "docs/documentation/batches/DOC-030/support/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Where to check signing and what to do after an uncertain send",
+          "before": "Check your role, ... Follow electronic signing ... After an uncertain send, reload the Envelope list before retrying.",
+          "after": "Open the Contract's Signatures tab first. An Envelope marked Creation uncertain — not confirmed sent keeps the reservation: do not send again, wait for recovery and select Refresh status. If the tab says Automatic recovery has stopped, ask the Administrator.",
+          "source": "approvals-signing-card.tsx SignaturesCard: signing.status.uncertain pill, Refresh status and signing.recoveryStopped shown for a live preparing Envelope; canSend requires no live Envelope (785c419e, 879fc477)"
+        },
+        {
+          "claim": "Signed Envelope waiting for its file",
+          "before": "A Signed Envelope can still be waiting for the executed file to be stored. Check Executed copy and the Document Version ...",
+          "after": "A Signed Envelope can show Filing the signed copy… until Executed copy appears. A round that does not complete the Contract shows Partially signed copy, is not marked executed, and the Contract stays in the Signature Stage. The failure text The signed copy could not be filed. Upload it to the record instead. leads to manual signing.",
+          "source": "approvals-signing-card.tsx ExecutedFile; executed-copy.ts pins executedVersionId only when completesContract and moves Signature to Partially signed otherwise (b6a0bcfd, 229909d4)"
+        },
+        {
+          "claim": "API keys with no usable Toolset",
+          "before": "(not covered)",
+          "after": "No Toolsets are available for your account. means no allowed Toolset suits the role; ask an Administrator to enable one.",
+          "source": "api-keys.tsx apiKeys.noToolsets replaces Request a key when policy.toolsets is empty; api-keys/routes.ts selectableToolsets(ceiling, role) (dac203fe)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "API keys statuses, Your key is ready, Enable MCP and group API keys switches, Read-only and Connected Clients text are unchanged apart from the Toolset filter.",
+          "source": "api-keys.tsx, connected-clients.tsx, api-keys/routes.ts diffs 067c1646..4ca41822"
+        },
+        {
+          "claim": "Access, upload, preview, notification, approval and Analysis sections cite files with no behavior change since 067c1646.",
+          "source": "git diff --stat 067c1646..4ca41822 over the evidence sources list: only contract-record.tsx, api-keys and settings-mcp changed"
+        },
+        {
+          "claim": "Every bold label except the Personal → Notifications path exists verbatim in the catalog.",
+          "source": "messages/en-US.json scan"
+        }
+      ],
+      "limitations": [
+        "The partially signed path has no decision record or CONTEXT.md entry; the guide describes the built behavior from executed-copy.ts and the send dialog copy.",
+        "Provider-side recovery and filing can only be exercised against a stand-in; the walkthrough must not treat it as live-provider evidence (#1178)."
+      ]
+    },
+    {
+      "articleId": "contract-stages",
+      "scenario": ["V-C15"],
+      "contentSha256Before": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+      "contentSha256": "a186659b9221537bff7b995298386a5a88022f59a4f6be3e4b33a73690d73dae",
+      "sources": [
+        "docs/user-guides/contract-stages.md",
+        "docs/user-guides/contract-approvals.md",
+        "CONTEXT.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/lib/soft-gate.ts",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/lib/signing/recovery-stage.ts",
+        "apps/api/src/lib/signing/transitions.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "docs/decision-records/DECISIONS-CONTRACTS.md",
+        "docs/documentation/evidence/contract-stages.json",
+        "docs/documentation/batches/DOC-032/contracts/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Step 3 implied every move past Approval can show Move past approval",
+          "before": "3. If Move past approval appears, ... or Move anyway to make the stated override.",
+          "after": "Same step, plus: Only this Stage control shows the warning.",
+          "source": "assertApprovalGate is called only from the Status update in contracts/service.ts"
+        },
+        {
+          "claim": "A confirmed send also changes the Status without the Soft gate",
+          "before": "(not covered)",
+          "after": "A confirmed send from the Signatures tab moves the Contract to a Signature Status. That move does not open Move past approval and records no override, even when approvals remain Pending or Rejected. Check the Approvals tab before you send.",
+          "source": "contract-envelopes/routes.ts direct send updates statusId to the first live non-partially_signed Signature Status; recovery-stage.ts advanceSentContractStage does the same for prepared and recovered sends via transitions.ts; neither calls assertApprovalGate (879fc477, b6a0bcfd). Wording matches contract-approvals.md."
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Soft gate fires on a Stage-control move from at or before Approval to beyond it with Pending or Rejected requests, and Move anyway records an override.",
+          "source": "soft-gate.ts crossesApprovalGate/assertApprovalGate; contracts/service.ts overrideSoftGate"
+        },
+        {
+          "claim": "Renaming a Status does not change its Stage; the six Stages are fixed.",
+          "source": "contract-statuses/routes.ts (only the protected slug set and stage floor changed, for Partially signed)"
+        },
+        {
+          "claim": "Partially signed is one more protected Signature Status; the guide names Statuses only as examples.",
+          "source": "contract-statuses/routes.ts PROTECTED_SLUGS (b6a0bcfd)"
+        },
+        {
+          "claim": "The Stage control, pipeline and History applet are unchanged; the record now also reloads on contract.status_changed.",
+          "source": "stage-pipeline.tsx and activity-applet.tsx unchanged since 3fa407e3; contract-record.tsx live-event diff"
+        },
+        {
+          "claim": "Manually moving to Active does not file or pin an executed copy.",
+          "source": "contracts/service.ts status update writes no Document Version"
+        }
+      ],
+      "limitations": [
+        "A direct send moves the Contract to Signature from any Stage, including Active and Ended (it clears endedAt). A prepared send moves it only while the Status recorded at preparation still holds. The guide states the move without listing these conditions."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/api/src/modules/contract-envelopes/routes.ts and apps/api/src/lib/signing/recovery-stage.ts",
+      "symptom": "Same defect the contracts seat recorded: a confirmed send moves the Contract to a Signature Status with no Soft gate and no override entry. A direct send also does this from Active or Ended, clearing endedAt. Report once with the contracts seat's entry.",
+      "contradicts": "CTR-012 Soft gate and CONTEXT.md Soft gate; no decision record covers the send-time Status advance."
+    }
+  ],
+  "sharedFileRequests": [
+    {
+      "file": "docs/user-guides/electronic-signing.md",
+      "request": "'A preparation does not enter the Signature Stage automatically when the provider sends it' is wrong since b6a0bcfd: transitions.ts calls advanceSentContractStage when a prepared draft is confirmed sent, signed or declined, if the Status has not changed since preparation. Also add that this move, like the direct send's, skips the Soft gate."
+    },
+    {
+      "file": "docs/user-guides/electronic-signing.md",
+      "request": "The send steps omit the required question 'Will the agreement be fully signed when this DocuSign round is complete?' (Yes, all required signatures will be in place / No, more signatures will still be needed). A No round files a Partially signed copy that is not pinned as executed and moves a Signature-Stage Contract to Partially signed, not Active. 'Follow completion' says filing always moves to Active."
+    },
+    {
+      "file": "docs/user-guides/electronic-signing.md",
+      "request": "'Wait for Executed copy' should name the interim text Filing the signed copy… and the failure text The signed copy could not be filed. Upload it to the record instead., which troubleshooting.md now quotes."
+    }
+  ],
+  "statusChange": null
+}

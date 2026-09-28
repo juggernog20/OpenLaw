@@ -1,0 +1,63 @@
+{
+  "section": "frEmail",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "firstrun",
+  "labProject": "openlaw-docs-9d2b1705-firstrun",
+  "appUrl": "http://127.0.0.1:43342",
+  "mailUrl": "http://127.0.0.1:48442",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "unset (overlay-mail-stored.json)",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T08:08:22.341Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 6: in Outbound email check the configuration source while email is unset",
+      "expected": "The relay form with SMTP server, Port, Connection security, Authentication, Sender name (optional), Sender email and Save relay; no Set up later; Continue unavailable",
+      "startedAt": "2026-09-28T08:08:22.475Z",
+      "finishedAt": "2026-09-28T08:08:22.760Z",
+      "actual": "The step said \"Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\" and showed the relay fields and Save relay; no Set up later or Send test email; Continue disabled.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 6: Authentication Username and password asks for SMTP username and SMTP password; a URL in SMTP server is refused",
+      "expected": "Both fields show and are required; a URL host is not saved",
+      "startedAt": "2026-09-28T08:08:22.761Z",
+      "finishedAt": "2026-09-28T08:08:25.213Z",
+      "actual": "With Username and password, SMTP username and SMTP password were required ([true,true]). SMTP server \"https://mail.harbor.example\" was not saved (source \"unset\"; messages \"One or more request fields are invalid. | Set up outbound email to finish instance setup. OpenLaw uses it for invitations, sign-in links, and notifications.\").",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 6: enter the relay and select Save relay; select Send test email and check the inbox",
+      "expected": "Relay saved; Continue available; the test email arrives with the organization name and logo in its header",
+      "startedAt": "2026-09-28T08:08:25.213Z",
+      "finishedAt": "2026-09-28T08:08:25.476Z",
+      "actual": "Save relay showed \"Relay saved. The next email this instance sends will use it.\"; Continue became available. Send test email showed \"Test email sent to avery.morgan@harbor.example. Check your inbox.\" Mailpit received \"OpenLaw test email\"; its header named \"Harbor Legal DOC-032\" with the inline image org-logo@openlaw. Replace relay then opened an empty form (the saved credential cleared its draft); Keep current relay closed it.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T08:08:25.484Z"
+}

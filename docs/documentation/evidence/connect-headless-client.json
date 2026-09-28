@@ -1,49 +1,51 @@
 {
   "articleId": "connect-headless-client",
-  "contentSha256": "962c2db4f05be7dcc300ecdf257abd07ac6ff37e1fe68635a46490726fd912ab",
-  "environment": "openlaw-docs-80ceef9e-work2",
-  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
-  "walkthroughReviewer": "DOC-030 independent walkthrough agent (mcp)",
+  "contentSha256": "a5a4215995d48bef84146fab2c7a487a0b805d12ea09b8a50442303129992bd8",
+  "environment": "openlaw-docs-9d2b1705-mcp42",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (mcp)",
   "reviewerKind": "agent",
-  "technicalReviewer": "DOC-030 source-review author agent (mcp)",
-  "author": "DOC-030 source-review author agent (mcp)",
-  "verifiedAt": "2026-09-25T13:17:43.486Z",
+  "technicalReviewer": "DOC-032 source-review author agent (mcp)",
+  "author": "DOC-032 source-review author agent (mcp); earlier: DOC-030 source-review author agent (mcp)",
+  "verifiedAt": "2026-09-28T07:41:08.855Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/connect-headless-client.md",
-    "docs/documentation/batches/DOC-030/mcp/technical-review.json",
-    "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
-    "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
-    "docs/documentation/batches/DOC-030/mcp/lib.mjs",
-    "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
-    "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs",
-    "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
-    "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs",
-    "docs/documentation/batches/DOC-030/mcp/overlay-rate.json",
-    "docs/documentation/batches/DOC-030/mcp/overlay-unpin.json",
+    "docs/documentation/batches/DOC-032/mcp/technical-review.json",
+    "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+    "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+    "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+    "docs/documentation/batches/DOC-032/mcp/phase-m40.mjs",
+    "docs/documentation/batches/DOC-032/mcp/phase-c58.mjs",
     "CONTEXT.md",
+    "docs/documentation/EDITORIAL.md",
+    "docs/documentation/templates/how-to.md",
+    "docs/documentation/evidence/connect-headless-client.json",
     "messages/en-US.json",
-    "docs/decision-records/DECISIONS.md (DD-029 and its #1134 and #1138 addenda)",
-    "docs/decision-records/DECISIONS-SETTINGS.md (SET-014)",
-    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 and its #1132, #1134, #1135, #1138 addenda)",
-    "apps/web/src/routes/settings.tsx",
-    "apps/web/src/routes/settings-api-keys.tsx",
-    "apps/web/src/routes/portal-settings.tsx",
-    "apps/web/src/components/portal/portal-shell.tsx",
+    "docs/decision-records/DECISIONS.md (DD-029 #1166 addendum)",
+    "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-035 #1166 addendum)",
     "apps/web/src/components/api-keys.tsx",
-    "apps/web/src/components/connected-clients.tsx",
-    "apps/web/src/components/notification-bell.tsx",
-    "apps/web/src/components/mcp-scope.tsx",
     "apps/api/src/modules/api-keys/routes.ts",
-    "apps/api/src/auth/api-keys.ts",
-    "apps/api/src/mcp/auth.ts",
+    "apps/api/src/mcp/selectable-toolsets.ts",
+    "apps/api/src/mcp/resources.ts",
+    "apps/api/src/mcp/resources.test.ts",
+    "apps/api/src/mcp/prompts.ts",
+    "apps/api/src/mcp/prompts.test.ts",
     "apps/api/src/mcp/routes.ts",
-    "apps/api/src/mcp/register.ts",
-    "apps/api/src/mcp/guide.ts",
     "apps/api/src/mcp/calls.ts",
-    "e2e/tests/62-m40-mcp.spec.ts",
-    "https://code.claude.com/docs/en/mcp (vendor page, read for the header expansion claim only)"
+    "apps/api/src/mcp/results.ts",
+    "apps/api/src/mcp/change-feed.ts",
+    "apps/api/src/mcp/register.ts",
+    "apps/api/src/mcp/requests.ts",
+    "apps/api/src/mcp/tasks.ts",
+    "apps/api/src/mcp/entities.ts",
+    "apps/api/src/mcp/knowledge.ts",
+    "apps/api/src/mcp/documents.ts",
+    "apps/api/src/mcp/contracts.ts",
+    "apps/api/src/mcp/matters.ts",
+    "apps/api/src/mcp/guide.ts"
   ],
   "scenarios": [
     {
@@ -52,20 +54,19 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
-        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
-        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
-        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "Keys were requested, approved from Your approvals or the API key requests card, and collected once in the browser. The SDK Client (Streamable HTTP, x-api-key and Bearer) and the guide's mcpServers entry through npx -y mcp-remote@0.14.3 connected with the collected key.",
+        "Fixture setup, not a reader step: the expired-key check moved the walkthrough's own api_keys row expiry into the past in the lab database."
       ],
-      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
-      "actual": "Nadia Haddad requested from Settings → Personal → API keys: Request a key opened Request an API key with Nothing is selected for you., 12 Toolsets (the ceiling), Read and Write radios, Note (Optional) and Expires 30 days after approval. The organization sets this lifetime.; Send request stayed disabled until name, Toolset and scope were set. The row read Pending approval. Daniel approved from Your approvals in the bell. After reload Your key is ready showed Approved by Daniel Okafor, the key once with Copy, Client, Toolsets, Scope, Expires and a Connect a headless Client link (/documentation/connect-headless-client, new tab); a click outside kept it open and Esc closed it; after reload no dialog came back, the row read Active, and GET /api/v1/api-key-requests/:id had no key. Cancel request on a pending row with confirmation gave Cancelled; a Denied row showed the Administrator's note. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 16 Tools including openlaw_whoami, openlaw_docs_search, openlaw_docs_read, openlaw_contracts_list, openlaw_matters_list and openlaw_matter_create; whoami Nadia Haddad; Authorization: Bearer returned the same list; a browser session cookie alone got 401. The guide's mcp-remote@0.14.3 entry, run headless through npx with the key in env, connected (16 Tools, whoami Nadia Haddad); the --header-file variant also connected; without the env block the bridge failed. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. Daniel revoked her second key from Active keys and grants (Revoke API key → Revoke): 401, row Revoked (re-run m40r).",
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. Negative checks: An expired or revoked key cannot connect.",
+      "actual": "11 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases m40). (1) Troubleshooting row 'No Request a key button' while MCP and API keys are off: API keys pane shows 0 Request a key buttons. Text: \"Personal Profile Appearance Notifications API keys View Business Portal API keys Client Toolsets Scope Status Expires Actions DOC-032 mcp revoke legal_team_memb\" (2) Request and collect 1-4: Settings → Personal → API keys, Request a key, Toolsets, Scope, Note, Send request: Dialog \"Request an API key\" showed \"Nothing is selected for you.\" and \"Expires 30 days after approval. The organization sets this lifetime.\"; Send request disabled until filled; 10 Toolsets offered (Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge; no Team, Administration or People), 0 pre-selected; Write radio shown. Sent Contracts+Matters, Write, with a note → 201;… (3) Request and collect 5-6: return to API keys and reload; Your key is ready; Copy; outside click keeps it; Esc closes: Dialog text: \"Your key is ready Approved by Daniel Okafor on Sep 28, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-032 mcp Claude Code LTM 09280726 Toolsets Contracts, Matters Scope Write Expires Oct 28, 2026 Send this key in the x-api-key header. Connec\". Outside click: still open. Copy → Copied; clipboard key starts ol_ (67 chars). Guide link /documentation/connect-headless-client target _blank.… (4) Connect Claude Code: run the guide's Bash block (address replaced), then claude mcp list [blocked]: Not run. The batch instruction for this seat says \"Do not run the claude CLI\". The guide's block is unchanged since the DOC-030 walk ran it (claude mcp add --transport http --scope user openlaw <address> --header 'x-api-key: ${OPENLAW_API_KEY}', then claude mcp list and claude): \"read -r -s -p 'OpenLaw API key: ' OPENLAW_API_KEY\\nprintf '\\\\n'\\nexport OPENLAW_API_KEY\\nclaude mcp add --transport http --scope user openl… (5) Connect with an SDK Client (Streamable HTTP, x-api-key); Guide Tools read the articles; Bearer also accepted: 16 Tools listed, including openlaw_whoami, openlaw_docs_search, openlaw_docs_read, openlaw_contracts_list, openlaw_matters_list, openlaw_matter_create; none from Entities or Knowledge. whoami: {\"person\":{\"id\":\"01a0e6d6-41be-7ed6-9d3b-1fde8136bfa5\",\"email\":\"nadia.haddad@helix.example\",\"displayName\":\"Nadia Haddad\"},\"accountType\":\"legal_team_member\",\"toolsets\":[\"guide\",\"contracts\",\"matters\"],\"scope\":\"write\",\"organizatio… (6) Connect Claude Cowork or Claude Desktop: the guide's mcpServers entry through npx -y mcp-remote@0.14.3 (headless), then the --header-file variant: Args [\"-y\",\"mcp-remote@0.14.3\",\"http://127.0.0.1:43361/mcp\",\"--header\",\"x-api-key:${OPENLAW_API_KEY}\",\"--transport\",\"http-only\"] with env OPENLAW_API_KEY → 16 Tools, whoami Nadia Haddad. --header-file variant → 16 Tools, whoami Nadia Haddad. Without the env block: refused (Connection closed). (7) Troubleshooting 'Pending approval': Cancel request on its row and confirm: Row after confirm: \"DOC-032 mcp cancel LTM 09280726 Contracts Read Cancelled —\". (8) Fixture setup (not a reader step): move this key's expiry into the past in the mcp42 database: UPDATE 1 on the walkthrough's own api_keys row (9) Negative: an expired key cannot connect; the row says Expired: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present. Row \"DOC-032 mcp Claude Code LTM 09280726 Contracts, Matters Write Expired Sep 28, 2026\". The mcp-remote bridge entry with this key: refused (Connection closed). (10) Fixture: a second key for the revoke check (request, approve, collect): Collected; tools/list 200 with 7 Tools. (11) Negative: a revoked key cannot connect: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-m40.mjs"
       ]
     },
     {
@@ -74,20 +75,19 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
-        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
-        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
-        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "Keys were requested, approved from Your approvals or the API key requests card, and collected once in the browser. The SDK Client (Streamable HTTP, x-api-key and Bearer) and the guide's mcpServers entry through npx -y mcp-remote@0.14.3 connected with the collected key.",
+        "Fixture setup, not a reader step: the expired-key check moved the walkthrough's own api_keys row expiry into the past in the lab database."
       ],
-      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
-      "actual": "Daniel Okafor's own request approved itself: Your key is ready opened at once, Copy then Done; the row read Active and a later read had no key. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 9 Tools (Contracts and Entities read Tools plus Guide Tools); whoami Daniel Okafor. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. He revoked his second key on his own row (Revoke API key → Revoke): 401, row Revoked (re-run m40r).",
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. Negative checks: An expired or revoked key cannot connect.",
+      "actual": "7 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases m40). (1) An Administrator's own request approves itself; Your key is ready at once; Copy; Done: POST 201; \"Your key is ready\" opened without an approval step: \"Your key is ready Approved by Daniel Okafor on Sep 28, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-032 mcp Claude Code admin 09280726 Toolsets Contracts, Entities Scope Read Expi\". Copy then Done. Row \"DOC-032 mcp Claude Code admin 09280726 Contracts, Entities Read Active Oct 28, 2026 Revoke\". Re-read key field absent. (2) Connect Claude Code with the Administrator's key (guide block) [blocked]: Not run. The batch instruction for this seat says \"Do not run the claude CLI\". The guide's block is unchanged since the DOC-030 walk ran it (claude mcp add --transport http --scope user openlaw <address> --header 'x-api-key: ${OPENLAW_API_KEY}', then claude mcp list and claude): \"read -r -s -p 'OpenLaw API key: ' OPENLAW_API_KEY\\nprintf '\\\\n'\\nexport OPENLAW_API_KEY\\nclaude mcp add --transport http --scope user openl… (3) SDK Client with the Administrator's key; Guide Tools: 9 Tools; whoami {\"person\":{\"id\":\"01a0e6d6-41bf-7cc0-b7de-24c558ac9a9e\",\"email\":\"daniel.okafor@helix.example\",\"displayName\":\"Daniel Okafor\"},\"accountType\":\"administrator\",\"toolsets\":[\"guide\",\"contracts\",\"entities\"],\"scope\":\"read\",\"organizationName\":\"Helix Software Group\",\"glossary\":{\"Matter\":\"A work container for legal effort whose deliverable is not a signed document.\",\"Contract\":\"A workspace for work whose deliverab… (4) Fixture setup (not a reader step): move this key's expiry into the past in the mcp42 database: UPDATE 1 on the walkthrough's own api_keys row (5) Negative: an expired key cannot connect; the row says Expired: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present. Row \"DOC-032 mcp Claude Code admin 09280726 Contracts, Entities Read Expired Sep 28, 2026\". The mcp-remote bridge entry with this key: refused (Connection closed). (6) Fixture: a second key for the revoke check (request, approve, collect): Collected; tools/list 200 with 7 Tools. (7) Stop access: Revoke on its own row → Revoke API key → Revoke; next request refused; row Revoked: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present. Row \"DOC-032 mcp revoke administrator 09280726 Contracts Read Revoked Oct 28, 2026\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-m40.mjs"
       ]
     },
     {
@@ -96,32 +96,112 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7, Helix seed light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
-        "work2's organization MCP policy was read first (all switches off, 13 Toolsets, Read-only off, 90 days) and put back exactly as found at the end of each run. MCP, Legal Users and Business Users API keys were on during the walk; lifetime 30 days.",
-        "Claude Code 2.1.282 ran only with HOME and CLAUDE_CONFIG_DIR pointed at a throwaway directory (~/.cache/openlaw-doc030/mcp-claude-home), deleted afterwards.",
-        "Fixture setup, not a reader step: the expired-key check moved this role's own api_keys row expiry into the past with docker exec openlaw-docs-80ceef9e-work2-postgres-1 psql."
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "Keys were requested, approved from Your approvals or the API key requests card, and collected once in the browser. The SDK Client (Streamable HTTP, x-api-key and Bearer) and the guide's mcpServers entry through npx -y mcp-remote@0.14.3 connected with the collected key.",
+        "Fixture setup, not a reader step: the expired-key check moved the walkthrough's own api_keys row expiry into the past in the lab database."
       ],
-      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. An expired or revoked key cannot connect.",
-      "actual": "Jonas Weber (magic link) selected the Notification settings gear in the Portal header, then API keys (/portal/settings/api-keys), and Request a key; the row read Pending approval. Daniel approved it from the API key requests card with a note. After reload Your key is ready showed the key once (outside click kept it open), Done closed it, the row read Active with the approval note, and a later read had no key. The guide's Bash block, run as written with the lab Server address and the key on stdin, printed Added HTTP MCP server openlaw ... Headers: { \"x-api-key\": \"[REDACTED]\" }; the saved config holds x-api-key: ${OPENLAW_API_KEY} and the key is in no file; claude mcp list reported openlaw ✔ Connected with OPENLAW_API_KEY set, and ! Needs authentication plus a Missing environment variables: OPENLAW_API_KEY warning without it, so the single-quoted header expands at connect time as the guide says. SDK Client (Streamable HTTP, x-api-key): 9 Tools: Requests and Knowledge Tools plus openlaw_whoami, openlaw_docs_search, openlaw_docs_read, openlaw_form_get, openlaw_vocabulary; whoami Jonas Weber. Guide Tools: openlaw_docs_search for Connect a headless Client ranked connect-headless-client first; openlaw_docs_read returned Connect a headless Client and Configure MCP. Expired key (fixture): 401 Authentication required. with WWW-Authenticate, the row read Expired, claude mcp list read Needs authentication. He revoked his second key on his own Portal row (Revoke API key → Revoke): 401, row Revoked.",
+      "expected": "The Client connects and lists the granted Tools; a later key read returns no secret. Negative checks: An expired or revoked key cannot connect.",
+      "actual": "8 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases m40). (1) Business User: Notification settings gear → API keys → Request a key: Gear \"Notification settings\" → /portal/settings → API keys link → /portal/settings/api-keys. Dialog offered 9 Toolsets; POST 201; row \"DOC-032 mcp Claude Code BU 09280726 Requests, Knowledge Read Pending approval — Cancel request\". (2) Business User returns, reloads, collects the key once: \"Your key is ready Approved by Daniel Okafor on Sep 28, 2026. OpenLaw will not show this key again. <key> Copy Client DOC-032 mcp Claude Code BU 09280726 Toolsets Requests, Knowledge Scope Read Expires\". Outside click kept it: true. After reload: no dialog; row \"DOC-032 mcp Claude Code BU 09280726 Requests, Knowledge Read Active DOC-032 fictional approval note Oct 28, 2026 Revoke\"; re-read key absent. (3) Connect Claude Code with the Business User's key (guide block) [blocked]: Not run. The batch instruction for this seat says \"Do not run the claude CLI\". The guide's block is unchanged since the DOC-030 walk ran it (claude mcp add --transport http --scope user openlaw <address> --header 'x-api-key: ${OPENLAW_API_KEY}', then claude mcp list and claude): \"read -r -s -p 'OpenLaw API key: ' OPENLAW_API_KEY\\nprintf '\\\\n'\\nexport OPENLAW_API_KEY\\nclaude mcp add --transport http --scope user openl… (4) SDK Client with the Business User's key; Guide Tools: 9 Tools (openlaw_docs_read, openlaw_docs_search, openlaw_form_get, openlaw_knowledge_get, openlaw_knowledge_search, openlaw_request_get, openlaw_requests_list, openlaw_vocabulary, openlaw_whoami); whoami {\"person\":{\"id\":\"01a0e6d6-448a-773c-be78-02f8cbfcf047\",\"email\":\"jonas.weber@helix.example\",\"displayName\":\"Jonas Weber\"},\"accountType\":\"business_user\",\"toolsets\":[\"guide\",\"requests\",\"knowledge\"],\"scope\":\"read\",\"organi… (5) Fixture setup (not a reader step): move this key's expiry into the past in the mcp42 database: UPDATE 1 on the walkthrough's own api_keys row (6) Negative: an expired key cannot connect; the row says Expired: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present. Row \"DOC-032 mcp Claude Code BU 09280726 Requests, Knowledge Read Expired DOC-032 fictional approval note Sep 28, 2026\". The mcp-remote bridge entry with this key: refused (Connection closed). (7) Fixture: a second key for the revoke check (request, approve, collect): Collected; tools/list 200 with 7 Tools. (8) Stop access: Revoke on its own row → Revoke API key → Revoke; next request refused; row Revoked: tools/list answered 401 {\"type\":\"about:blank\",\"title\":\"Authentication required.\",\"status\":401,\"detail\":\"Authentication required.\",\"instance\":\"/m; WWW-Authenticate present. Row \"DOC-032 mcp revoke business_user 09280726 Requests Read Revoked Oct 28, 2026\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.json",
-        "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/mcp/lib.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
-        "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-m40.mjs"
+      ]
+    },
+    {
+      "id": "V-M42-C58",
+      "coverage": ["C58"],
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "One key per account type with every offered Toolset and Read scope, requested, approved and collected in the browser. A modern script Client (@modelcontextprotocol/client 2.1.0 pinned to 2026-07-28) on Streamable HTTP read the resources and prompts and held the listen stream.",
+        "Fixture writes by a second actor (the Administrator's own API session): a DOCX with 9990 characters of text uploaded to C-36 so a Document Version has more than one page, title edits and full_thread comments on subscribed Contracts, and marking one new Request read to change the Inbox. The ceiling change ran in the browser."
+      ],
+      "expected": "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists. Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit. The stream receives list_changed and resources/updated notifications for reached records only. Negative checks: An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused. A revoked key closes the stream and the next call is unauthorized.",
+      "actual": "9 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases c58). (1) Request and collect a key with every offered Toolset (Read); an Administrator approves from Your approvals: Offered 11: Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People. bell: \"Unread Nadia Haddad requested an API key for DOC-032 mcp c58 legal_team_member 09280732 this minute Workspace, Contracts, Matters, Tasks, Re\". Key collected once (67 chars). (2) resources/templates/list and resources/list on a modern Streamable HTTP Client: Protocol 2026-07-28. Templates: openlaw://contracts/{number}, openlaw://matters/{number}, openlaw://requests/{number}, openlaw://entities/{id}, openlaw://knowledge/{id}, openlaw://document-versions/{versionId}. Fixed: openlaw://inbox, openlaw://tasks/mine, openlaw://vocabulary. (3) resources/read for each address in the table; compare with the matching Tool: openlaw://contracts/C-36: application/json same as Tool (\"C-36: Review Contoso Financial Group order form before quarter end\") | openlaw://contracts/36 vs C-36:  same as Tool | openlaw://matters/M-17: application/json same as Tool (\"M-17: Do we need a DPA for an analytics tool?\") | openlaw://requests/R-6: application/json same as Tool (\"R-6: Review Meridian Benefits Brokers order form before quarter end\") | openlaw:/… (4) Negative: an address with a query, a fragment or an extra path segment is refused; a record outside the grant or reach is refused: query: \"invalid_arguments: Supply the record number in the resource address.\"; fragment: \"invalid_arguments: Supply the record number in the resource address.\"; extraSegment: \"invalid_arguments: Supply the record number in the resource address.\"; inboxQuery: \"not_found: This resource address is not in the OpenLaw register.\" (5) prompts/list; prompts/get triage_inbox with limit 5; summarize_record with an address and with a kind and number; limits 0 and 101: prompts/list: triage_inbox, summarize_record | triage_inbox limit 5 → user:text + user:resource(openlaw://inbox, application/json); embedded Inbox holds 3 Requests; instruction says \"Wait for the person's confirmation before any action.\" and gives http://127.0.0.1:43361/inbox/{number} | limit \"0\" → invalid_arguments: Supply an optional limit from 1 to 100.; limit \"101\" → invalid_arguments: Supply an optional limit fr… (6) Each resource read or prompt get counts once against the credential's rate limit; the embedded read does not count again: Ledger rows for this key (state read, the rate limit counts these): 36 → 37 after one resources/read → 38 after one prompts/get with its embedded read. Newest rows name prompt:summarize_record, resource:contracts. (7) Open subscriptions/listen (toolsListChanged, resourcesListChanged, promptsListChanged; resourceSubscriptions), change the Toolset ceiling, update a subscribed record: Honored filter {\"toolsListChanged\":true,\"promptsListChanged\":true,\"resourcesListChanged\":true,\"resourceSubscriptions\":[\"openlaw://contracts/C-36\",\"openlaw://inbox\"]}. Knowledge cleared; Settings saved. Knowledge selected; Settings saved. Notifications: notifications/tools/list_changed, notifications/prompts/list_changed, notifications/resources/list_changed. Second actor edited the title of C-36 twice each (then put … (8) Inbox subscription: a new Request reaches the Legal User's Inbox: Fixture: the second actor (Daniel, API session) marked new Request R-15 read, as opening it in the Inbox does (POST /read answered 200) and changes the Inbox queue. The stream received {\"at\":1790581244525,\"method\":\"notifications/resources/updated\",\"uri\":\"openlaw://inbox\"}. (9) Negative: revoke the key on its own row; the listen stream closes and the next call is unauthorized: Listen stream ended (graceful). Next tools/list → 401. Row \"DOC-032 mcp c58 legal_team_member 09280732 Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People Read Revoked Dec 27, 2026\".",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-c58.mjs"
+      ]
+    },
+    {
+      "id": "V-M42-C58",
+      "coverage": ["C58"],
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "One key per account type with every offered Toolset and Read scope, requested, approved and collected in the browser. A modern script Client (@modelcontextprotocol/client 2.1.0 pinned to 2026-07-28) on Streamable HTTP read the resources and prompts and held the listen stream.",
+        "Fixture writes by a second actor (the Administrator's own API session): a DOCX with 9990 characters of text uploaded to C-36 so a Document Version has more than one page, title edits and full_thread comments on subscribed Contracts, and marking one new Request read to change the Inbox. The ceiling change ran in the browser."
+      ],
+      "expected": "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists. Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit. The stream receives list_changed and resources/updated notifications for reached records only. Negative checks: An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused. A revoked key closes the stream and the next call is unauthorized.",
+      "actual": "10 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases c58). (1) Request and collect a key with every offered Toolset (Read); an Administrator approves from Your approvals: Offered 11: Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People. self-approved (Administrator). Key collected once (67 chars). (2) Fixture setup (not a reader step): the Administrator uploads a long DOCX to a Contract the Legal Team Member reaches, and its text is extracted: Uploaded to C-36; Version text ready with 9990 characters. (3) resources/templates/list and resources/list on a modern Streamable HTTP Client: Protocol 2026-07-28. Templates: openlaw://contracts/{number}, openlaw://matters/{number}, openlaw://requests/{number}, openlaw://entities/{id}, openlaw://knowledge/{id}, openlaw://document-versions/{versionId}. Fixed: openlaw://inbox, openlaw://tasks/mine, openlaw://vocabulary. (4) resources/read for each address in the table; compare with the matching Tool: openlaw://contracts/C-36: application/json same as Tool (\"C-36: Review Contoso Financial Group order form before quarter end\") | openlaw://contracts/36 vs C-36:  same as Tool | openlaw://matters/M-17: application/json same as Tool (\"M-17: Do we need a DPA for an analytics tool?\") | openlaw://requests/R-6: application/json same as Tool (\"R-6: Review Meridian Benefits Brokers order form before quarter end\") | openlaw:/… (5) Negative: an address with a query, a fragment or an extra path segment is refused; a record outside the grant or reach is refused: query: \"invalid_arguments: Supply the record number in the resource address.\"; fragment: \"invalid_arguments: Supply the record number in the resource address.\"; extraSegment: \"invalid_arguments: Supply the record number in the resource address.\"; inboxQuery: \"not_found: This resource address is not in the OpenLaw register.\" (6) prompts/list; prompts/get triage_inbox with limit 5; summarize_record with an address and with a kind and number; limits 0 and 101: prompts/list: triage_inbox, summarize_record | triage_inbox limit 5 → user:text + user:resource(openlaw://inbox, application/json); embedded Inbox holds 3 Requests; instruction says \"Wait for the person's confirmation before any action.\" and gives http://127.0.0.1:43361/inbox/{number} | limit \"0\" → invalid_arguments: Supply an optional limit from 1 to 100.; limit \"101\" → invalid_arguments: Supply an optional limit fr… (7) Each resource read or prompt get counts once against the credential's rate limit; the embedded read does not count again: Ledger rows for this key (state read, the rate limit counts these): 35 → 36 after one resources/read → 37 after one prompts/get with its embedded read. Newest rows name prompt:summarize_record, resource:contracts. (8) Open subscriptions/listen (toolsListChanged, resourcesListChanged, promptsListChanged; resourceSubscriptions), change the Toolset ceiling, update a subscribed record: Honored filter {\"toolsListChanged\":true,\"promptsListChanged\":true,\"resourcesListChanged\":true,\"resourceSubscriptions\":[\"openlaw://contracts/C-36\",\"openlaw://inbox\"]}. Knowledge cleared; Settings saved. Knowledge selected; Settings saved. Notifications: notifications/tools/list_changed, notifications/prompts/list_changed, notifications/resources/list_changed. Second actor edited the title of C-36 twice each (then put … (9) Inbox subscription: a new Request reaches the Legal User's Inbox: Fixture: the second actor (Daniel, API session) marked new Request R-7 read, as opening it in the Inbox does (POST /read answered 200) and changes the Inbox queue. The stream received {\"at\":1790581253162,\"method\":\"notifications/resources/updated\",\"uri\":\"openlaw://inbox\"}. (10) Negative: revoke the key on its own row; the listen stream closes and the next call is unauthorized: Listen stream ended (graceful). Next tools/list → 401. Row \"DOC-032 mcp c58 administrator 09280732 Workspace, Contracts, Matters, Tasks, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge, People Read Revoked Dec 27, 2026\".",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-c58.mjs"
+      ]
+    },
+    {
+      "id": "V-M42-C58",
+      "coverage": ["C58"],
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "prerequisites": [
+        "Owned lab openlaw-docs-9d2b1705-mcp42 (mcp42) built by lab.mjs from 4ca41822b685a2a1e58a38b4f25e421cf735c54e, Helix seed light profile, random seed 7, seeded 2026-09-28T07:06:36.064Z to 2026-09-28T07:06:51.740Z, subnets 10.243.87.0/24 and 10.244.87.0/24. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password, Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
+        "One key per account type with every offered Toolset and Read scope, requested, approved and collected in the browser. A modern script Client (@modelcontextprotocol/client 2.1.0 pinned to 2026-07-28) on Streamable HTTP read the resources and prompts and held the listen stream.",
+        "Fixture writes by a second actor (the Administrator's own API session): a DOCX with 9990 characters of text uploaded to C-36 so a Document Version has more than one page, title edits and full_thread comments on subscribed Contracts, and marking one new Request read to change the Inbox. The ceiling change ran in the browser."
+      ],
+      "expected": "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists. Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit. The stream receives list_changed and resources/updated notifications for reached records only. Negative checks: An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused. A revoked key closes the stream and the next call is unauthorized.",
+      "actual": "8 recorded steps on 4ca41822b685a2a1e58a38b4f25e421cf735c54e (walkthrough.json phases c58). (1) Request and collect a key with every offered Toolset (Read); an Administrator approves from Your approvals: Offered 9: Workspace, Contracts, Matters, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge. bell: \"Unread Jonas Weber requested an API key for DOC-032 mcp c58 business_user 09280732 this minute Workspace, Contracts, Matters, Requests, Comm\". Key collected once (67 chars). (2) resources/templates/list and resources/list on a modern Streamable HTTP Client: Protocol 2026-07-28. Templates: openlaw://contracts/{number}, openlaw://matters/{number}, openlaw://requests/{number}, openlaw://knowledge/{id}, openlaw://document-versions/{versionId}. Fixed: openlaw://inbox, openlaw://vocabulary. (3) resources/read for each address in the table; compare with the matching Tool: openlaw://contracts/C-20: application/json same as Tool (\"C-20: SOW - Tailspin Logistics BV - managed onboarding\") | openlaw://contracts/20 vs C-20:  same as Tool | openlaw://requests/R-15: application/json same as Tool (\"R-15: Do we need a DPA for an analytics tool?\") | openlaw://knowledge/01a0e6d6-5924-797a-b13d-fa0562da2585: application/json same as Tool (\"Mutual NDA - Helix standard form\") | openlaw://document-ve… (4) Negative: an address with a query, a fragment or an extra path segment is refused; a record outside the grant or reach is refused: query: \"invalid_arguments: Supply the record number in the resource address.\"; fragment: \"invalid_arguments: Supply the record number in the resource address.\"; extraSegment: \"invalid_arguments: Supply the record number in the resource address.\"; inboxQuery: \"not_found: This resource address is not in the OpenLaw register.\"; entity: \"tool_outside_grant: openlaw_entity_get is outside this credential's Toolsets or acco… (5) prompts/list; triage_inbox is absent and refused; summarize_record with an address and with a kind and number; an Entity is refused: prompts/list: summarize_record | triage_inbox → tool_outside_grant: triage_inbox is outside this credential's Toolsets or account type. | summarize_record entity → tool_outside_grant: openlaw_entity_get is outside this credential's Toolsets or account type. | summarize_record \"openlaw://contracts/C-20\" → user:text + user:resource(openlaw://contracts/C-20, application/json); \"contract C-20\" → user:text + user:resource… (6) Each resource read or prompt get counts once against the credential's rate limit; the embedded read does not count again: Ledger rows for this key (state read, the rate limit counts these): 29 → 30 after one resources/read → 31 after one prompts/get with its embedded read. Newest rows name prompt:summarize_record, resource:contracts. (7) Open subscriptions/listen (toolsListChanged, resourcesListChanged, promptsListChanged; resourceSubscriptions), change the Toolset ceiling, update a subscribed record: Honored filter {\"toolsListChanged\":true,\"promptsListChanged\":true,\"resourcesListChanged\":true,\"resourceSubscriptions\":[\"openlaw://contracts/C-20\",\"openlaw://contracts/C-36\"]}. Knowledge cleared; Settings saved. Knowledge selected; Settings saved. Notifications: notifications/tools/list_changed, notifications/prompts/list_changed, notifications/resources/list_changed. Second actor edited the title of C-20 and C-36 twi… (8) Negative: revoke the key on its own row; the listen stream closes and the next call is unauthorized: Listen stream ended (graceful). Next tools/list → 401. Row \"DOC-032 mcp c58 business_user 09280732 Workspace, Contracts, Matters, Requests, Comments, Documents, Auto-Docs, Entities, Knowledge Read Revoked Dec 27, 2026\".",
+      "result": "pass",
+      "evidence": [
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.json",
+        "docs/documentation/batches/DOC-032/mcp/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/mcp/lib.mjs",
+        "docs/documentation/batches/DOC-032/mcp/ui.mjs",
+        "docs/documentation/batches/DOC-032/mcp/phase-c58.mjs"
       ]
     }
   ],
   "limitations": [
-    "The final line of the Claude Code block, the interactive claude session and its /mcp view, was not run: the throwaway home has no Claude account. claude mcp add, claude mcp list and claude mcp get ran; claude mcp list's ✔ Connected health check stands in for /mcp, and the SDK Client made the Guide Tool calls the guide's example question asks for.",
-    "Claude Cowork and Claude Desktop were not installed. Their API key path was checked by running the guide's mcpServers entry (npx -y mcp-remote@0.14.3 <Server address> --header x-api-key:${OPENLAW_API_KEY} --transport http-only, env block) headless as a stdio server, and the --header-file variant. Settings → Developer, Edit Config, the tools menu and app restart are vendor UI and were not seen.",
-    "Expired keys were produced as fixture setup by moving each role's own api_keys expiry into the past in the work2 database; the shortest key lifetime is one day.",
-    "The Guide Tools serve the article bytes built into the pinned app image (067c1646), not the reviewed text; the check shows the Tools find and read these articles.",
-    "Business User steps ran in the full m40 run only. The m40r re-run of the Legal Team Member and Administrator revoke steps did not repeat them because work2's Mailpit had exited by then.",
-    "Rate limit reached was checked on the owned mcplan lab (configure-mcp operator scenario), not with a Business or Legal key on work2."
+    "The guide's Connect Claude Code block was not run: the batch instruction for this seat says not to run the claude CLI. Those three steps are recorded as blocked in walkthrough.json. The guide's block is unchanged since DOC-030 ran it; the same key and x-api-key header were checked with the SDK Client and the mcp-remote bridge entry for every role.",
+    "Claude Cowork and Claude Desktop were not opened. Their mcpServers entry was run headless as npx -y mcp-remote@0.14.3 with the guide's arguments, in both the env and --header-file forms.",
+    "Expired keys were produced as fixture setup by moving the walkthrough's own api_keys row expiry into the past in the lab database.",
+    "A Business User heard no resources/updated for a title edit on a reached Contract: title edits are working_team activity and the Business User hears full_thread, so Visibility tiers apply as the guide says. A full_thread comment produced the update; nothing arrived for an unreached Contract.",
+    "The rate-limit count was read from the mcp_tool_calls ledger rows for each key (the rows the limit counts); a refusal at the limit itself was walked in configure-mcp (phase lan)."
   ],
-  "previousEvidence": null,
-  "compatibilityReview": null,
+  "previousEvidence": {
+    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "contentSha256": "962c2db4f05be7dcc300ecdf257abd07ac6ff37e1fe68635a46490726fd912ab",
+    "verifiedAt": "2026-09-25T13:17:43.486Z"
+  },
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "a5a4215995d48bef84146fab2c7a487a0b805d12ea09b8a50442303129992bd8",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. The MCP initialize serverInfo version is now 0.1.0, but neither MCP guide nor its recorded steps name it. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

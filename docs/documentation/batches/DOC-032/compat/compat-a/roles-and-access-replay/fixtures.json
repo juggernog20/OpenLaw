@@ -1,0 +1,123 @@
+{
+  "stamp": "09280716",
+  "ids": {
+    "daniel": "01a0e6c7-9732-71e1-834c-8452f24236b0",
+    "nadia": "01a0e6c7-9730-78af-95e8-da76f0eb29b4",
+    "priya": "01a0e6c7-9732-71e1-834c-84531f2cb77f",
+    "jonas": "01a0e6c7-99bd-7440-8bda-acb46e6da578",
+    "amara": "01a0e6c7-99c0-70e9-a7cf-8e754139bcb8",
+    "ravi": "01a0e6c7-9955-7ca2-90c7-758f13a1fe17"
+  },
+  "types": {
+    "nda": "019ff1f5-301d-7795-a5af-e4339c76d4ce",
+    "commercial": "019ff2bc-41c7-767f-83a6-85e36c70b0ba",
+    "sales": "01a0e6c7-b0db-7ae4-926d-fcb6d668ef25"
+  },
+  "form": {
+    "typeA": {
+      "id": "01a0e6df-8872-7144-b61d-02fd71245faa",
+      "name": "DOC-032 compat compat-a Form type 09280716"
+    },
+    "typeB": {
+      "id": "01a0e6df-88d3-7ea9-b384-0ce514e193ed",
+      "name": "DOC-032 compat compat-a Second type 09280716"
+    },
+    "visible": {
+      "id": "01a0e6df-8812-7e84-9e4e-eb7c2c728b3c",
+      "key": "doc_032_compat_compat_a_visible_field_09280716",
+      "name": "DOC-032 compat compat-a Visible field 09280716"
+    },
+    "hidden": {
+      "id": "01a0e6df-881e-7395-bb90-4fa821d4aa8f",
+      "key": "doc_032_compat_compat_a_hidden_field_09280716",
+      "name": "DOC-032 compat compat-a Hidden field 09280716"
+    },
+    "gate": {
+      "id": "01a0e6df-883b-75b3-8bc2-db007daaaa90",
+      "key": "doc_032_compat_compat_a_gate_09280716",
+      "name": "DOC-032 compat compat-a Gate 09280716"
+    },
+    "branch": {
+      "id": "01a0e6df-884c-7ed7-9358-6baf02cde8eb",
+      "key": "doc_032_compat_compat_a_branch_field_09280716",
+      "name": "DOC-032 compat compat-a Branch field 09280716"
+    }
+  },
+  "co": {
+    "number": 75,
+    "id": "01a0e6df-8976-74ff-8c1c-d3061e3540da",
+    "title": "DOC-032 compat compat-a open contract 09280716"
+  },
+  "mo": {
+    "number": 26,
+    "id": "01a0e6df-899d-7e83-afd7-234a6bd9b689",
+    "title": "DOC-032 compat compat-a open matter 09280716"
+  },
+  "cc": {
+    "number": 77,
+    "id": "01a0e6df-89b8-775c-8e6b-7463df1f450f",
+    "title": "DOC-032 compat compat-a confidential contract 09280716"
+  },
+  "mc": {
+    "number": 27,
+    "id": "01a0e6df-89dd-7907-921e-386a3073bba6",
+    "title": "DOC-032 compat compat-a confidential matter 09280716"
+  },
+  "parent": {
+    "number": 80,
+    "id": "01a0e6df-8a29-740b-87cb-4355affb1b40",
+    "title": "DOC-032 compat compat-a confidential parent contract 09280716"
+  },
+  "child": {
+    "number": 81,
+    "id": "01a0e6df-8a80-7d24-a02d-b4e5c42225a0",
+    "title": "DOC-032 compat compat-a child contract 09280716"
+  },
+  "coDocs": {
+    "baseline": "01a0e6df-8ac8-700d-8fd4-3bab46e5a32d",
+    "note": "01a0e6df-8af8-7292-a81c-22cc4a1203ae"
+  },
+  "entity": {
+    "id": "01a0e6df-8c06-7f26-ad59-46c17e7de924",
+    "name": "DOC-032 compat compat-a confidential entity Ltd 09280716"
+  },
+  "approvals": {
+    "open": {
+      "number": 83,
+      "id": "01a0e6df-8c5d-7898-b654-3074217663e1",
+      "title": "DOC-032 compat compat-a approval contract 09280716",
+      "doc": "01a0e6df-8c7d-7aec-a0a6-38a8467ad2f3",
+      "approvalId": "01a0e6df-8db4-7ae5-aaeb-01da2913608c"
+    },
+    "confidentialPaper": {
+      "number": 85,
+      "id": "01a0e6df-8ce5-72b4-9cfd-e0fd5abaa581",
+      "title": "DOC-032 compat compat-a confidential paper approval contract 09280716",
+      "doc": "01a0e6df-8d08-7da6-b138-265725e0abaf",
+      "approvalId": "01a0e6df-8de3-7731-bf8f-e93a5adb4147"
+    },
+    "withdraw": {
+      "number": 88,
+      "id": "01a0e6df-8d9a-7fd8-a280-5c89f90f8e4b",
+      "title": "DOC-032 compat compat-a withdrawn approval contract 09280716",
+      "approvalId": "01a0e6df-8e10-7535-a7dc-5c42364642e0"
+    }
+  },
+  "jonasConverted": {
+    "request": 67,
+    "number": 265,
+    "title": "DOC-032 compat compat-a Jonas converted contract 09280716"
+  },
+  "archivedJ": {
+    "number": 266,
+    "title": "DOC-032 compat compat-a archived team contract 09280716"
+  },
+  "jonasPrimary": {
+    "id": "01a0e6fa-a887-7792-81d8-a9540d38fa69"
+  },
+  "entity2": {
+    "id": "01a0e6fa-a8e3-7467-a3f8-afbdb4f3c50f",
+    "name": "DOC-032 compat compat-a second confidential entity Ltd 09280716"
+  },
+  "createdAt": "2026-09-28T07:46:22.075Z"
+}

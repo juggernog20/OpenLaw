@@ -1,0 +1,174 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "bridge",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+  "group": "admin-config",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "articlePath": "docs/user-guides/types-statuses-fields.md",
+      "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887"
+    },
+    {
+      "articleId": "request-forms",
+      "articlePath": "docs/user-guides/request-forms.md",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "articlePath": "docs/user-guides/reminders-and-audit.md",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e"
+    },
+    {
+      "articleId": "auto-doc-template",
+      "articlePath": "docs/user-guides/auto-doc-template.md",
+      "contentSha256": "4eef3f447d51058e092ada65c50670ae47e483c7a6552994e54423c6a852d496"
+    }
+  ],
+  "scenarios": {
+    "V-C38": "types-statuses-fields",
+    "V-C40": "request-forms",
+    "V-C41": "reminders-and-audit",
+    "V-C56": "auto-doc-template"
+  },
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "lab": {
+    "name": "final",
+    "project": "openlaw-docs-9d2b1705-final",
+    "appUrl": "http://127.0.0.1:43390",
+    "mailUrl": "http://127.0.0.1:48490",
+    "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T09:41:01.834Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T09:41:17.492Z"
+    }
+  },
+  "runs": [
+    {
+      "sections": ["reminders"],
+      "lab": "final",
+      "project": "openlaw-docs-9d2b1705-final",
+      "appUrl": "http://127.0.0.1:43390",
+      "startedAt": "2026-09-28T11:00:51.524Z",
+      "stamp": "0928110051"
+    }
+  ],
+  "steps": [
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/notifications",
+      "action": "Set reminder lead times, steps 1-2: profile menu > Settings > Organization > Notifications shows Reminder lead times; Personal > Notifications changes only your preferences",
+      "expected": "Organization > Notifications shows the Reminder lead times list; Personal > Notifications shows Notification preferences and the personal lead time switch.",
+      "startedAt": "2026-09-28T11:00:51.993Z",
+      "at": "2026-09-28T11:00:54.279Z",
+      "actual": "Organization > Notifications opened /settings/reminders with headings [\"Personal\",\"Organization\",\"Comment emails\",\"Reminder lead times\"] and the list [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"]; the note reads \"These are the default lead times for expiries, notice deadlines, Key dates and obligations. People can set their own in Notifications. Keep at least one lead time.\". Personal > Notifications opened /settings/notifications with Notification preferences and the switch \"Use the organization's default lead times\".",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/reminders",
+      "action": "Steps 3-5: Add lead time with Save; Cancel discards; a duplicate and 731 are refused; reorder with the arrow keys; Remove; reload and confirm; at most 20 entries",
+      "expected": "The new lead time is added; duplicates and 731 are refused; the reorder persists after reload; a 21st entry is refused; Remove removes an entry.",
+      "startedAt": "2026-09-28T11:00:54.280Z",
+      "at": "2026-09-28T11:01:29.865Z",
+      "actual": "Add lead time with 33 and Cancel saved nothing. 9 + Save added \"9 days before\". A second 9 stayed in the add row with \"days before the date 9 days before is already on the list. Save Cancel\"; 731 with \"days before the date Enter a whole number of days between 0 and 730. Save Cancel\". \"On the day\" (0) is on the list: true. ArrowUp moved \"9 days before\" from 6 to 5; after reload the list read [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"9 days before\",\"On the day\"]. 14 temporary entries filled the list to 20; 90 was then refused with \"days before the date The list holds at most 20 lead times. Remove one first. Save Cancel\" and the list stayed at 20. Remove took the temporary entries away again.",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/audit-log",
+      "action": "Choose whether comment emails carry the words: Comment emails card, Include comment words in email, on by default; saves on change; recorded as an Administrator-only Audit log event",
+      "expected": "The switch starts on, turns off and saves, and the Audit log shows the change with an Administrator audience; it is put back on.",
+      "startedAt": "2026-09-28T11:01:29.871Z",
+      "at": "2026-09-28T11:01:35.463Z",
+      "actual": "The Comment emails card's switch started on (true); help \"Applies to everyone in the organization. When off, mention, comment and reply emails link to the record without including the comment's words.\". Turning it off saved and read off after reload; it was turned back on. Audit log Search \"comment\" shows 6 of Daniel Okafor's rows, newest \"Daniel Okafor changed the organization settings commentWordsInEmail: No → Yes System Administrators this minute\".",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/24/key-dates",
+      "action": "Check delivery: two fictional Legal Team Members, one past 08:00 and one before 08:00 in their saved timezone; Key dates at listed and unlisted distances; a Key date's own lead time; run the morning round; read each bell and briefing email",
+      "expected": "The past-08:00 colleague gets one reminder per Key date at a listed distance (two Key dates on one date each remind) and for the Key date's own lead time, none at an unlisted distance; the before-08:00 colleague gets nothing yet.",
+      "startedAt": "2026-09-28T11:01:35.463Z",
+      "at": "2026-09-28T11:02:12.115Z",
+      "actual": "Invited \"DOC-032 bridge V-C41 Reminder ready 0928110051\" (timezone Asia/Dubai, local hour 15) and \"DOC-032 bridge V-C41 Reminder early 0928110051\" (Pacific/Honolulu, local hour 1) as Legal Team Members; each set a password from the invitation mail and saved the timezone on Profile. Each manages one Matter (M-23, M-24). Key dates on M-23: KD listed A 7 0928110051 on 2026-10-05: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD listed B 7 0928110051 on 2026-10-05: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD unlisted 11 0928110051 on 2026-10-09: This date will remind: 30 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day; KD own lead 15 0928110051 on 2026-10-13: This date will remind: 30 days before, 15 days before, 14 days before, 9 days before, 7 days before, 1 day before, On the day. The Key dates page showed the generic error page 0 times on navigation and loaded after Reload. The round ran through pg-boss job notification.morning-round queued in openlaw-docs-9d2b1705-final-worker-1 (trigger route answered 404): {\"id\":\"30eede73-fd71-44d8-9dc8-8b47c20524ab\",\"state\":\"completed\",\"output\":null}. \"DOC-032 bridge V-C41 Reminder ready 0928110051\"'s bell items per Key date: {\"DOC-032 bridge V-C41 KD listed A 7 0928110051\":1,\"DOC-032 bridge V-C41 KD listed B 7 0928110051\":1,\"DOC-032 bridge V-C41 KD unlisted 11 0928110051\":0,\"DOC-032 bridge V-C41 KD own lead 15 0928110051\":1}; header bell \"Notifications, none unread\"; briefing mail \"Your daily briefing\" with Key date names {\"DOC-032 bridge V-C41 KD listed A 7 0928110051\":true,\"DOC-032 bridge V-C41 KD listed B 7 0928110051\":true,\"DOC-032 bridge V-C41 KD unlisted 11 0928110051\":false,\"DOC-032 bridge V-C41 KD own lead 15 0928110051\":true}. \"DOC-032 bridge V-C41 Reminder early 0928110051\" (before 08:00): bell holds its Key date false; briefing mail none.",
+      "result": "pass"
+    },
+    {
+      "section": "reminders",
+      "scenario": "V-C41",
+      "role": "administrator",
+      "method": "restore",
+      "page": "/settings/reminders",
+      "action": "Restore the organization lead time list (the guide's last-entry rule checked on the way) and confirm it after reload",
+      "expected": "The last entry cannot be removed; the list reads as before the walkthrough.",
+      "startedAt": "2026-09-28T11:02:12.115Z",
+      "at": "2026-09-28T11:02:14.884Z",
+      "actual": "Removed entries down to one (\"30 days before\"): no Remove control; the list kept 1 entry. The original offsets [30,14,7,1,0] were put back with PUT /api/v1/org/reminder-offsets (200); after reload the page reads [\"30 days before\",\"14 days before\",\"7 days before\",\"1 day before\",\"On the day\"].",
+      "result": "pass"
+    }
+  ],
+  "records": [
+    {
+      "section": "reminders",
+      "kind": "user",
+      "name": "DOC-032 bridge V-C41 Reminder ready 0928110051",
+      "role": "legal_team_member",
+      "timezone": "Asia/Dubai"
+    },
+    {
+      "section": "reminders",
+      "kind": "matter",
+      "name": "DOC-032 bridge V-C41 Reminder matter ready 0928110051",
+      "number": 23
+    },
+    {
+      "section": "reminders",
+      "kind": "user",
+      "name": "DOC-032 bridge V-C41 Reminder early 0928110051",
+      "role": "legal_team_member",
+      "timezone": "Pacific/Honolulu"
+    },
+    {
+      "section": "reminders",
+      "kind": "matter",
+      "name": "DOC-032 bridge V-C41 Reminder matter early 0928110051",
+      "number": 24
+    }
+  ],
+  "productBugs": [],
+  "guideFailures": [],
+  "finishedAt": "2026-09-28T11:02:14.884Z",
+  "images": {
+    "app": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "engine": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+    "worker": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3"
+  },
+  "summary": {
+    "total": 5,
+    "pass": 5,
+    "fail": 0
+  }
+}
