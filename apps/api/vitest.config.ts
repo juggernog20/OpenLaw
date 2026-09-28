@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 if (process.env.TESTCONTAINERS_RYUK_DISABLED === "true") {
   throw new Error(
     "API tests require Testcontainers cleanup. Unset TESTCONTAINERS_RYUK_DISABLED " +
-      "and use a container runtime that supports Ryuk (see README.md). " +
+      "and use a container runtime that supports Ryuk (see docs/DEVELOPMENT.md). " +
       "Disabling Ryuk leaves databases " +
       "running when a test worker times out or is killed.",
   );
