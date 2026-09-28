@@ -35,8 +35,8 @@ export const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
  * credentials works everywhere.
  */
 export const ADMIN = {
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   password: "correct-horse-battery",
 } as const;
 

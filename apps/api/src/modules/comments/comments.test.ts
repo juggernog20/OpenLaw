@@ -745,9 +745,10 @@ describe("who a comment on a record can address", () => {
     const contract = await contractWithTeam("Who can be named");
     const list = await candidates(memberCookies, contract.id);
 
+    // Display-name order: Casey Contributor, Devon Calloway, Nadia Counsel.
     expect(list.map((row) => [row.displayName, row.tiers])).toEqual([
-      [ADMIN.displayName, ["legal_only", "working_team", "full_thread"]],
       [CONTRIBUTOR.displayName, ["full_thread"]],
+      [ADMIN.displayName, ["legal_only", "working_team", "full_thread"]],
       [MEMBER.displayName, ["legal_only", "working_team", "full_thread"]],
     ]);
   });

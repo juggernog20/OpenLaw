@@ -24,7 +24,7 @@ const TODAY = new Date().toISOString().slice(0, 10);
 function entity(overrides: Record<string, unknown> = {}) {
   return {
     id: "e1",
-    legalName: "Wentworth Capital Partners Ltd",
+    legalName: "Calloway Capital Partners Ltd",
     entityTypeId: "t-corp",
     entityTypeName: "Corporation",
     jurisdiction: "Cayman Islands",
@@ -52,15 +52,15 @@ const WFO = {
   restricted: false,
   id: "h-wfo",
   kind: "entity",
-  name: "Wentworth Family Office Holdings Ltd",
+  name: "Calloway Family Office Holdings Ltd",
   entityId: "e2",
   jurisdiction: "Jersey",
 };
-const BLAIR = {
+const DEVON = {
   restricted: false,
-  id: "h-blair",
+  id: "h-devon",
   kind: "individual",
-  name: "Blair Wentworth",
+  name: "Devon Calloway",
   entityId: null,
   jurisdiction: null,
 };
@@ -126,14 +126,14 @@ function registerAt(asOf: string) {
         },
       ],
     }),
-    entryRow({ id: "en2", entryNo: 2, quantity: 200_000, to: BLAIR }),
+    entryRow({ id: "en2", entryNo: 2, quantity: 200_000, to: DEVON }),
     entryRow({
       id: "en3",
       entryNo: 3,
       kind: "transfer",
       effectiveOn: "2023-02-01",
       quantity: 40_000,
-      from: BLAIR,
+      from: DEVON,
       to: WALLED,
       certificatesCancelled: ["002"],
       applied: !historic,
@@ -152,7 +152,7 @@ function registerAt(asOf: string) {
           balanceToday: 550_000,
         },
         {
-          holder: BLAIR,
+          holder: DEVON,
           shareClassId: "c-ord",
           balance: 200_000,
           percentOfClass: 26.67,
@@ -174,7 +174,7 @@ function registerAt(asOf: string) {
           balanceToday: 550_000,
         },
         {
-          holder: BLAIR,
+          holder: DEVON,
           shareClassId: "c-ord",
           balance: 160_000,
           percentOfClass: 21.33,
@@ -277,7 +277,7 @@ describe("the Entity Ownership tab as a share register", () => {
       .getByRole("heading", { name: "Register of members" })
       .closest("section")!;
     const rows = within(members).getAllByRole("row");
-    expect(within(rows[1]!).getByText("Wentworth Family Office Holdings Ltd")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("Calloway Family Office Holdings Ltd")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("Entity · Jersey")).toBeInTheDocument();
     expect(within(rows[1]!).getByText("550,000")).toBeInTheDocument();
     expect(within(rows[1]!).getAllByText("73.3%")).toHaveLength(2);
@@ -369,7 +369,7 @@ describe("the Entity Ownership tab as a share register", () => {
   it("keeps projected owners out of the declared-owner list", async () => {
     const projected = (name: string, id: string, source: "register" | "manual") => ({
       owner: { restricted: false, id, legalName: name, kind: "individual" },
-      owned: { restricted: false, id: "e1", legalName: "Wentworth Capital Partners Ltd" },
+      owned: { restricted: false, id: "e1", legalName: "Calloway Capital Partners Ltd" },
       ownershipPercent: 10,
       source,
       createdAt: "2026-08-01T00:00:00.000Z",
@@ -382,7 +382,7 @@ describe("the Entity Ownership tab as a share register", () => {
         if (call.url.pathname === "/api/v1/entities/e1/holdings" && call.method === "GET") {
           return json(200, {
             owners: [
-              projected("Blair Wentworth", "individual:p1", "register"),
+              projected("Devon Calloway", "individual:p1", "register"),
               projected("Old Founder", "individual:p2", "manual"),
             ],
             owned: [],
@@ -397,7 +397,7 @@ describe("the Entity Ownership tab as a share register", () => {
       await screen.findByRole("heading", { name: "Declared owners not in the register" })
     ).closest("section")!;
     expect(within(declared).getByText("Old Founder")).toBeInTheDocument();
-    expect(within(declared).queryByText("Blair Wentworth")).not.toBeInTheDocument();
+    expect(within(declared).queryByText("Devon Calloway")).not.toBeInTheDocument();
   });
 
   it("opens on the empty state, with Record entry waiting on a share class", async () => {
@@ -433,7 +433,7 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(api.writes[0]?.body).toMatchObject({
       kind: "transfer",
       quantity: 41_000,
-      from: { kind: "holder", holderId: "h-blair" },
+      from: { kind: "holder", holderId: "h-devon" },
       to: { kind: "holder", holderId: "h-walled" },
     });
   });
@@ -467,7 +467,7 @@ describe("the Entity Ownership tab as a share register", () => {
     await user.click(await screen.findByRole("button", { name: "Record entry" }));
     const dialog = await screen.findByRole("dialog", { name: "Record entry" });
     await user.selectOptions(within(dialog).getByLabelText(/^Entry/), "transfer");
-    await user.selectOptions(within(dialog).getByLabelText(/^From/), "holder:h-blair");
+    await user.selectOptions(within(dialog).getByLabelText(/^From/), "holder:h-devon");
     await user.selectOptions(within(dialog).getByLabelText(/^To/), "holder:h-wfo");
     await user.type(within(dialog).getByLabelText(/^Shares/), "999999");
     await user.click(within(dialog).getByRole("button", { name: "Enter in register" }));
@@ -477,7 +477,7 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(api.writes[0]?.body).toMatchObject({
       kind: "transfer",
       quantity: 999_999,
-      from: { kind: "holder", holderId: "h-blair" },
+      from: { kind: "holder", holderId: "h-devon" },
       to: { kind: "holder", holderId: "h-wfo" },
       shareClassId: "c-ord",
     });

@@ -277,13 +277,13 @@ describe("public sign-in branding", () => {
       method: "PATCH",
       url: "/api/v1/org/general",
       cookies,
-      payload: { name: "Wentworth Family Office", logo: PNG_LOGO },
+      payload: { name: "Calloway Family Office", logo: PNG_LOGO },
     });
     expect(saved.statusCode).toBe(200);
     const read = () => harness.app.inject({ method: "GET", url: "/api/v1/org/branding" });
     const branded = await read();
     expect(branded.statusCode).toBe(200);
-    expect(branded.json()).toEqual({ name: "Wentworth Family Office", logo: PNG_LOGO });
+    expect(branded.json()).toEqual({ name: "Calloway Family Office", logo: PNG_LOGO });
     expect(branded.headers["cache-control"]).toBe("no-store");
     await harness.app.inject({
       method: "PATCH",
@@ -291,6 +291,6 @@ describe("public sign-in branding", () => {
       cookies,
       payload: { logo: null },
     });
-    expect((await read()).json()).toEqual({ name: "Wentworth Family Office", logo: null });
+    expect((await read()).json()).toEqual({ name: "Calloway Family Office", logo: null });
   });
 });

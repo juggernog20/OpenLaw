@@ -103,7 +103,7 @@ async function installOn16(name: string): Promise<Db> {
   const db = await freshDb(name);
   await migrateThrough(db, BEFORE);
   await db.execute(sql`insert into users (id, display_name, email, email_verified, role)
-    values ('u-blair', 'Blair Wentworth', 'blair@example.com', true, 'administrator'),
+    values ('u-devon', 'Devon Calloway', 'devon@example.com', true, 'administrator'),
            ('u-nadia', 'Nadia Counsel', 'nadia@acme.example', true, 'legal_team_member')`);
   return db;
 }
@@ -137,11 +137,11 @@ describe("the 0060 backfill", () => {
     try {
       // A credential row as 1.6 wrote it: the subject is the user id.
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
-        values ('a-1', 'u-blair', 'u-blair', 'credential', 'argon2id-hash')`);
+        values ('a-1', 'u-devon', 'u-devon', 'credential', 'argon2id-hash')`);
 
       await migrateThrough(db, BACKFILL);
 
-      expect(await issuers(db)).toEqual({ "u-blair": CREDENTIAL_ISSUER });
+      expect(await issuers(db)).toEqual({ "u-devon": CREDENTIAL_ISSUER });
     } finally {
       await db.$client.end();
     }
@@ -151,7 +151,7 @@ describe("the 0060 backfill", () => {
     const db = await installOn16("issuer_oidc");
     try {
       await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
-        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-blair')`);
+        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-devon')`);
       // An SSO row as 1.6 wrote it: provider id is the provider's slug,
       // and the subject is the OIDC `sub`.
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
@@ -169,9 +169,9 @@ describe("the 0060 backfill", () => {
     const db = await installOn16("issuer_mixed");
     try {
       await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
-        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-blair')`);
+        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-devon')`);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
-        values ('a-1', 'u-blair', 'u-blair', 'credential', 'argon2id-hash'),
+        values ('a-1', 'u-devon', 'u-devon', 'credential', 'argon2id-hash'),
                ('a-3', 'u-nadia', 'u-nadia', 'credential', 'argon2id-hash')`);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
         values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp')`);
@@ -179,7 +179,7 @@ describe("the 0060 backfill", () => {
       await migrateThrough(db, BACKFILL);
 
       expect(await issuers(db)).toEqual({
-        "u-blair": CREDENTIAL_ISSUER,
+        "u-devon": CREDENTIAL_ISSUER,
         "u-nadia": CREDENTIAL_ISSUER,
         "idp-nadia": "https://idp.acme.example",
       });
@@ -263,11 +263,11 @@ describe("the 0060 refusals", () => {
       // Two providers registered against one IdP, each with a row for the
       // same subject. Distinct under 1.6's key, one identity under 1.7's.
       await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
-        values ('p-a', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-blair'),
-               ('p-b', 'https://idp.acme.example', 'acme.example', 'acme-idp-2', 'u-blair')`);
+        values ('p-a', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-devon'),
+               ('p-b', 'https://idp.acme.example', 'acme.example', 'acme-idp-2', 'u-devon')`);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
         values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp'),
-               ('a-3', 'u-blair', 'idp-nadia', 'acme-idp-2')`);
+               ('a-3', 'u-devon', 'idp-nadia', 'acme-idp-2')`);
 
       // The pair itself, substituted — the two rows that would collide.
       expect(await refusal(db)).toContain("(https://idp.acme.example, idp-nadia)");
@@ -282,9 +282,9 @@ describe("the 0091 retirement", () => {
     const db = await installOn16("issuer_retired");
     try {
       await db.execute(sql`insert into sso_providers (id, issuer, domain, provider_id, user_id)
-        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-blair')`);
+        values ('p-acme', 'https://idp.acme.example', 'acme.example', 'acme-idp', 'u-devon')`);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
-        values ('a-1', 'u-blair', 'u-blair', 'credential', 'argon2id-hash')`);
+        values ('a-1', 'u-devon', 'u-devon', 'credential', 'argon2id-hash')`);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id)
         values ('a-2', 'u-nadia', 'idp-nadia', 'acme-idp')`);
 
@@ -304,7 +304,7 @@ describe("the 0091 retirement", () => {
       );
       expect(rows.rows).toEqual([
         { account_id: "idp-nadia", provider_id: "acme-idp" },
-        { account_id: "u-blair", provider_id: "credential" },
+        { account_id: "u-devon", provider_id: "credential" },
       ]);
     } finally {
       await db.$client.end();
@@ -332,7 +332,7 @@ describe("the upgraded install", () => {
       );
       const hash = await (await before.$context).password.hash(password);
       await db.execute(sql`insert into accounts (id, user_id, account_id, provider_id, password)
-        values ('a-1', 'u-blair', 'u-blair', 'credential', ${hash})`);
+        values ('a-1', 'u-devon', 'u-devon', 'credential', ${hash})`);
 
       await runMigrations(db);
 
@@ -343,9 +343,9 @@ describe("the upgraded install", () => {
       // schema moved under the first one.
       const after = createAuth(db, TEST_AUTH_CONFIG, unconfiguredMailer, silent);
       const session = await after.api.signInEmail({
-        body: { email: "blair@example.com", password },
+        body: { email: "devon@example.com", password },
       });
-      expect(session.user.email).toBe("blair@example.com");
+      expect(session.user.email).toBe("devon@example.com");
     } finally {
       await db.$client.end();
     }

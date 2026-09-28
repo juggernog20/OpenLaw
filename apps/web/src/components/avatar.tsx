@@ -10,7 +10,7 @@
 
 import { cn } from "../lib/utils";
 
-/** First letters of the first and last words: "Blair Wentworth" → "BW". */
+/** First letters of the first and last words: "Devon Calloway" → "DC". */
 export function initialsOf(displayName: string): string {
   const words = displayName.trim().split(/\s+/).filter(Boolean);
   const first = words[0]?.[0] ?? "?";

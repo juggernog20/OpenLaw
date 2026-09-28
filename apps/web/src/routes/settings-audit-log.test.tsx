@@ -33,8 +33,8 @@ import { json, problem, renderAt, stubApi, type StubCall } from "../testing/help
 
 const ADMIN = {
   id: "u1",
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   role: "administrator",
   theme: "light",
 };
@@ -50,8 +50,8 @@ const MEMBER = {
 const PEOPLE = [
   {
     id: "u1",
-    email: "blair@example.com",
-    displayName: "Blair Wentworth",
+    email: "devon@example.com",
+    displayName: "Devon Calloway",
     role: "administrator",
     status: "active",
     lastActiveAt: null,
@@ -68,9 +68,9 @@ const PEOPLE = [
 
 const ACTIONS = ["contract.created", "org_settings.updated", "user.role_changed"];
 
-const BLAIR = {
+const DEVON = {
   id: "u1",
-  displayName: "Blair Wentworth",
+  displayName: "Devon Calloway",
   image: null,
   archived: false,
 };
@@ -85,7 +85,7 @@ const ENTRIES = [
     entityType: "user",
     entityId: "u2",
     visibility: "admin_only",
-    actor: BLAIR,
+    actor: DEVON,
     createdAt: "2026-08-12T09:00:00.000Z",
     payload: { email: "casey@example.com", from: "contributor", to: "legal_team_member" },
   },
@@ -95,7 +95,7 @@ const ENTRIES = [
     entityType: "system",
     entityId: null,
     visibility: "admin_only",
-    actor: BLAIR,
+    actor: DEVON,
     createdAt: "2026-08-12T08:00:00.000Z",
     payload: { field: "name", old: "Acme", new: "Acme Legal" },
   },
@@ -106,7 +106,7 @@ const ENTRIES = [
     entityId: "c1",
     entityRef: { number: 42, title: "The Ashford supply agreement" },
     visibility: "working_team",
-    actor: BLAIR,
+    actor: DEVON,
     createdAt: "2026-08-12T07:00:00.000Z",
     payload: {},
   },
@@ -140,7 +140,7 @@ const ENTRIES = [
     entityType: "contract",
     entityId: "c1",
     visibility: "working_team",
-    actor: BLAIR,
+    actor: DEVON,
     createdAt: "2026-08-12T05:00:00.000Z",
     payload: {
       envelopeId: "e2",
@@ -273,7 +273,7 @@ describe("what the pane shows", () => {
     };
     stubApi({ signedIn: ADMIN, extra: auditApi(newCalls(), { pages: [[attributed]] }) });
     renderAt("/settings/audit-log");
-    expect(await screen.findByText(/Blair Wentworth, via Claude Code, created/)).toBeVisible();
+    expect(await screen.findByText(/Devon Calloway, via Claude Code, created/)).toBeVisible();
   });
 
   it("narrates every family, including the admin-only ones no record feed carries", async () => {
@@ -283,7 +283,7 @@ describe("what the pane shows", () => {
     // The role change, as a sentence naming who did it and to whom,
     // with both sides of the change in the Users pane's own words.
     const roleRow = (
-      await screen.findByText("Blair Wentworth changed the role of casey@example.com")
+      await screen.findByText("Devon Calloway changed the role of casey@example.com")
     ).closest("tr")!;
     expect(within(roleRow).getByText("Role: Contributor → Legal team member")).toBeVisible();
     expect(within(roleRow).getByText("Administrators")).toBeVisible();
@@ -292,14 +292,14 @@ describe("what the pane shows", () => {
 
     // The settings entry, whose changed field is named on its own line.
     const settingsRow = screen
-      .getByText("Blair Wentworth changed the organization settings")
+      .getByText("Devon Calloway changed the organization settings")
       .closest("tr")!;
     expect(within(settingsRow).getByText("Name: Acme → Acme Legal")).toBeVisible();
 
     // And the record's own, which the history applet narrates the same
     // way — one answer for both surfaces. Its Record cell names the
     // Contract as the product does, and keeps the id an auditor quotes.
-    const contractRow = screen.getByText("Blair Wentworth created this contract").closest("tr")!;
+    const contractRow = screen.getByText("Devon Calloway created this contract").closest("tr")!;
     expect(within(contractRow).getByText("C-42 · The Ashford supply agreement")).toBeVisible();
     expect(within(contractRow).getByText("c1")).toBeVisible();
 
@@ -315,7 +315,7 @@ describe("what the pane shows", () => {
     // passively, because nobody here is behind it.
     expect(
       screen.getByText(
-        "Blair Wentworth voided this contract's envelope — We sent the wrong redline.",
+        "Devon Calloway voided this contract's envelope — We sent the wrong redline.",
       ),
     ).toBeVisible();
     expect(
@@ -349,7 +349,7 @@ describe("the filters", () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: auditApi(newCalls()) });
     const { router } = renderAt("/settings/audit-log");
-    await screen.findByText("Blair Wentworth created this contract");
+    await screen.findByText("Devon Calloway created this contract");
 
     await user.keyboard("/");
 
@@ -381,14 +381,14 @@ describe("the filters", () => {
     stubApi({ signedIn: ADMIN, extra: auditApi(calls) });
     renderAt("/settings/audit-log");
 
-    await screen.findByText("Blair Wentworth created this contract");
+    await screen.findByText("Devon Calloway created this contract");
 
     // One filter narrows.
     await user.selectOptions(filterBar().getByLabelText("Record"), "user");
     await waitFor(() =>
-      expect(screen.queryByText("Blair Wentworth created this contract")).not.toBeInTheDocument(),
+      expect(screen.queryByText("Devon Calloway created this contract")).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("Blair Wentworth changed the role of casey@example.com")).toBeVisible();
+    expect(screen.getByText("Devon Calloway changed the role of casey@example.com")).toBeVisible();
 
     // A second one composes with the first rather than replacing it:
     // both ride the same request.
@@ -411,7 +411,7 @@ describe("the filters", () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: auditApi(calls) });
     renderAt("/settings/audit-log");
-    await screen.findByText("Blair Wentworth created this contract");
+    await screen.findByText("Devon Calloway created this contract");
 
     await user.selectOptions(filterBar().getByLabelText("Person"), "u1");
     await user.type(filterBar().getByLabelText("From"), "2026-08-01");
@@ -439,18 +439,18 @@ describe("the filters", () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: auditApi(calls) });
     renderAt("/settings/audit-log");
-    await screen.findByText("Blair Wentworth created this contract");
+    await screen.findByText("Devon Calloway created this contract");
 
     await user.type(filterBar().getByLabelText("Search"), "casey");
     await waitFor(() =>
-      expect(screen.queryByText("Blair Wentworth created this contract")).not.toBeInTheDocument(),
+      expect(screen.queryByText("Devon Calloway created this contract")).not.toBeInTheDocument(),
     );
     expect(
-      await screen.findByText("Blair Wentworth changed the role of casey@example.com"),
+      await screen.findByText("Devon Calloway changed the role of casey@example.com"),
     ).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Clear filters" }));
-    expect(await screen.findByText("Blair Wentworth created this contract")).toBeVisible();
+    expect(await screen.findByText("Devon Calloway created this contract")).toBeVisible();
     const query = await lastRead(calls);
     expect([...query.keys()]).toEqual([]);
   });
@@ -461,7 +461,7 @@ describe("the export", () => {
     const user = userEvent.setup();
     stubApi({ signedIn: ADMIN, extra: auditApi(newCalls()) });
     renderAt("/settings/audit-log");
-    await screen.findByText("Blair Wentworth created this contract");
+    await screen.findByText("Devon Calloway created this contract");
 
     const link = () => screen.getByRole("link", { name: "Export CSV" });
     expect(link()).toHaveAttribute("href", "/api/v1/audit-log/export?");
@@ -482,15 +482,15 @@ describe("paging", () => {
     });
     renderAt("/settings/audit-log");
 
-    await screen.findByText("Blair Wentworth changed the role of casey@example.com");
-    expect(screen.queryByText("Blair Wentworth created this contract")).not.toBeInTheDocument();
+    await screen.findByText("Devon Calloway changed the role of casey@example.com");
+    expect(screen.queryByText("Devon Calloway created this contract")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Show older" }));
 
-    expect(await screen.findByText("Blair Wentworth created this contract")).toBeVisible();
+    expect(await screen.findByText("Devon Calloway created this contract")).toBeVisible();
     // The first page is still there — "show older" adds to the account,
     // it does not replace it.
-    expect(screen.getByText("Blair Wentworth changed the role of casey@example.com")).toBeVisible();
+    expect(screen.getByText("Devon Calloway changed the role of casey@example.com")).toBeVisible();
     // And the foot goes once there is nothing older.
     expect(screen.queryByRole("button", { name: "Show older" })).not.toBeInTheDocument();
   });

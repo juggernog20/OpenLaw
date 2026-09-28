@@ -895,7 +895,7 @@ describe("welcome wizard e-signature step (#698)", () => {
           tests += 1;
           return json(200, {
             connected: true,
-            accountName: "Wentworth Demo",
+            accountName: "Calloway Demo",
             accountId: "demo-account",
             userEmail: "signer@example.com",
           });
@@ -917,7 +917,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     await user.type(screen.getByLabelText("Connect HMAC secret (from DocuSign)"), "draft-secret");
     await user.click(test);
     expect(
-      await screen.findByText("Connected to Wentworth Demo as signer@example.com."),
+      await screen.findByText("Connected to Calloway Demo as signer@example.com."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "E-signature (DocuSign Integration)" }),
@@ -939,7 +939,7 @@ describe("welcome wizard e-signature step (#698)", () => {
     );
     await user.click(screen.getByRole("button", { name: "Replace credentials" }));
     expect(
-      screen.queryByText("Connected to Wentworth Demo as signer@example.com."),
+      screen.queryByText("Connected to Calloway Demo as signer@example.com."),
     ).not.toBeInTheDocument();
   });
 
@@ -2427,11 +2427,11 @@ it("lists registered identity providers on the authentication step and removes o
   const providers = [
     {
       id: "p1",
-      providerId: "wentworth",
-      name: "Wentworth identity provider",
-      issuer: "https://idp.wentworth.test",
-      domain: "wentworth.test",
-      domains: ["wentworth.test"],
+      providerId: "calloway",
+      name: "Calloway identity provider",
+      issuer: "https://idp.calloway.test",
+      domain: "calloway.test",
+      domains: ["calloway.test"],
       clientId: "openlaw",
     },
     {
@@ -2473,7 +2473,7 @@ it("lists registered identity providers on the authentication step and removes o
   await user.click(screen.getByRole("switch", { name: "Single sign-on (SSO)" }));
   await user.click(screen.getByRole("button", { name: "Business Users" }));
   // The business group needs an allowed domain before its methods can be changed.
-  await user.type(screen.getByLabelText("Allowed email domains"), "wentworth.test");
+  await user.type(screen.getByLabelText("Allowed email domains"), "calloway.test");
   await user.click(screen.getByRole("button", { name: "Add" }));
   await user.click(screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })[1]!);
 
@@ -2484,7 +2484,7 @@ it("lists registered identity providers on the authentication step and removes o
     expect(toggle).toBeEnabled();
     expect(toggle).toBeChecked();
   }
-  await user.click(screen.getByRole("button", { name: "Remove Wentworth identity provider" }));
+  await user.click(screen.getByRole("button", { name: "Remove Calloway identity provider" }));
   await waitFor(() =>
     expect(
       screen.queryByRole("list", { name: "Registered identity providers" }),
@@ -2500,11 +2500,11 @@ it("shows the refusal and keeps the rows when a provider removal or registration
   const providers = [
     {
       id: "p1",
-      providerId: "wentworth",
-      name: "Wentworth identity provider",
-      issuer: "https://idp.wentworth.test",
-      domain: "wentworth.test",
-      domains: ["wentworth.test"],
+      providerId: "calloway",
+      name: "Calloway identity provider",
+      issuer: "https://idp.calloway.test",
+      domain: "calloway.test",
+      domains: ["calloway.test"],
       clientId: "openlaw",
     },
     {
@@ -2527,7 +2527,7 @@ it("shows the refusal and keeps the rows when a provider removal or registration
       if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "POST") {
         return problem(
           409,
-          "wentworth.test is already assigned to the identity provider Wentworth identity provider. Each email domain can belong to one provider.",
+          "calloway.test is already assigned to the identity provider Calloway identity provider. Each email domain can belong to one provider.",
         );
       }
       if (call.url.pathname.startsWith("/api/v1/auth/sso-providers/")) {
@@ -2548,12 +2548,12 @@ it("shows the refusal and keeps the rows when a provider removal or registration
 
   await user.type(screen.getByLabelText("Provider ID"), "third");
   await user.type(screen.getByLabelText("Issuer URL"), "https://idp.third.test");
-  await user.type(screen.getByLabelText("Email domains"), "wentworth.test");
+  await user.type(screen.getByLabelText("Email domains"), "calloway.test");
   await user.type(screen.getByLabelText("Client ID"), "openlaw-third");
   await user.type(screen.getByLabelText("Client secret"), "third-secret");
   await user.click(screen.getByRole("button", { name: "Register provider" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "wentworth.test is already assigned to the identity provider Wentworth identity provider.",
+    "calloway.test is already assigned to the identity provider Calloway identity provider.",
   );
   expect(within(list).getAllByRole("listitem")).toHaveLength(2);
   expect(screen.getByLabelText("Provider ID")).toHaveValue("third");

@@ -987,7 +987,7 @@ export const APPROVER_GROUPS = [
     name: "Executive committee",
     description:
       "Uncapped liability, exclusivity, and anything that changes the standard order form.",
-    members: ["Blair Wentworth", "Daniel Okafor"],
+    members: ["Devon Calloway", "Daniel Okafor"],
   },
   {
     name: "Privacy review",
@@ -999,7 +999,7 @@ export const APPROVER_GROUPS = [
 /** Saved list views (DD-019). `owner` names whose menu they appear in. */
 export const LIST_VIEWS = [
   {
-    owner: "Blair Wentworth",
+    owner: "Devon Calloway",
     surface: "contracts",
     name: "Renewals and expiries",
     isDefault: false,
@@ -1019,7 +1019,7 @@ export const LIST_VIEWS = [
     },
   },
   {
-    owner: "Blair Wentworth",
+    owner: "Devon Calloway",
     surface: "contracts",
     name: "High value, in flight",
     isDefault: false,
@@ -1078,7 +1078,7 @@ export const LIST_VIEWS = [
     },
   },
   {
-    owner: "Blair Wentworth",
+    owner: "Devon Calloway",
     surface: "matters",
     name: "Team workload",
     isDefault: false,
@@ -1115,7 +1115,7 @@ export const LIST_VIEWS = [
     },
   },
   {
-    owner: "Blair Wentworth",
+    owner: "Devon Calloway",
     surface: "entities",
     name: "Filing watch",
     isDefault: false,

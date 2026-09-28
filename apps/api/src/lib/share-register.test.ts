@@ -43,7 +43,7 @@ describe("the share register replay", () => {
       entry({
         kind: "allotment",
         quantity: 200_000,
-        toHolderId: "blair",
+        toHolderId: "devon",
         effectiveOn: "2019-03-12",
       }),
       entry({ kind: "buyback", quantity: 50_000, fromHolderId: "wfo", effectiveOn: "2020-12-10" }),
@@ -75,7 +75,7 @@ describe("the share register replay", () => {
     const state = replayRegister({ classes: CLASSES, entries, certificates: [] }, END_OF_TIME);
     expect(state.violation).toBeNull();
     expect(balance(state, "wfo")).toBe(450_000);
-    expect(balance(state, "blair")).toBe(200_000);
+    expect(balance(state, "devon")).toBe(200_000);
     expect(balance(state, "harbour")).toBe(50_000);
     expect(balance(state, "meridian", "pref")).toBe(100_000);
     expect(balance(state, "meridian", "ord")).toBe(20_000);

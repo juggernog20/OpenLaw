@@ -18,8 +18,8 @@ import { json, problem, renderAt, stubApi, type StubCall } from "../testing/help
 
 const ADMIN = {
   id: "u1",
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   role: "administrator",
   theme: "light",
 };
@@ -29,7 +29,7 @@ const MEMBER = { ...ADMIN, id: "u2", email: "casey@example.com", role: "legal_te
 /** The people the picker reads: two Member+, one Contributor, one
  * archived Legal team member. */
 const USERS = [
-  { id: "u1", email: "blair@example.com", displayName: "Blair Wentworth", role: "administrator" },
+  { id: "u1", email: "devon@example.com", displayName: "Devon Calloway", role: "administrator" },
   {
     id: "u2",
     email: "casey@example.com",
@@ -81,12 +81,12 @@ function group(
   };
 }
 
-const BLAIR = { id: "u1", displayName: "Blair Wentworth", email: "blair@example.com" };
+const DEVON = { id: "u1", displayName: "Devon Calloway", email: "devon@example.com" };
 const CASEY = { id: "u2", displayName: "Casey Counsel", email: "casey@example.com" };
 
 function seededGroups(archivedIds: string[] = []): StubGroup[] {
   return [
-    group("g1", "Commercial sign-off", [BLAIR, CASEY], {
+    group("g1", "Commercial sign-off", [DEVON, CASEY], {
       description: "GC plus CFO on every commercial paper.",
     }),
     group("g2", "Data protection", [CASEY]),
@@ -129,7 +129,7 @@ function groupsApi(calls: GroupCalls, rows = seededGroups()) {
       calls.creates.push(call.body);
       const body = call.body as { name: string; description?: string; memberIds?: string[] };
       const members = (body.memberIds ?? []).map((id) =>
-        [BLAIR, CASEY].find((person) => person.id === id)!,
+        [DEVON, CASEY].find((person) => person.id === id)!,
       );
       return json(201, {
         approverGroup: group("g-new", body.name, members, {
@@ -147,7 +147,7 @@ function groupsApi(calls: GroupCalls, rows = seededGroups()) {
       calls.members.push({ id: setMembers[1]!, body: call.body });
       const body = call.body as { memberIds: string[] };
       const members = body.memberIds.map((id) =>
-        [BLAIR, CASEY].find((person) => person.id === id)!,
+        [DEVON, CASEY].find((person) => person.id === id)!,
       );
       return json(200, {
         approverGroup: { ...byId(setMembers[1]!), members, memberCount: members.length },
@@ -283,7 +283,7 @@ describe("create (the group-editor dialog)", () => {
     await user.click(await screen.findByRole("button", { name: "Add group" }));
     const dialog = await screen.findByRole("dialog", { name: "Add approver group" });
 
-    expect(within(dialog).getByRole("checkbox", { name: /Blair Wentworth/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole("checkbox", { name: /Devon Calloway/ })).toBeInTheDocument();
     expect(within(dialog).getByRole("checkbox", { name: /Casey Counsel/ })).toBeInTheDocument();
     // A Contributor never approves; an archived person never appears.
     expect(
@@ -310,7 +310,7 @@ describe("edit (name, description, and the member list)", () => {
       "GC plus CFO on every commercial paper.",
     );
     // The current members arrive checked.
-    expect(within(dialog).getByRole("checkbox", { name: /Blair Wentworth/ })).toBeChecked();
+    expect(within(dialog).getByRole("checkbox", { name: /Devon Calloway/ })).toBeChecked();
     expect(within(dialog).getByRole("checkbox", { name: /Casey Counsel/ })).toBeChecked();
 
     await user.clear(within(dialog).getByRole("textbox", { name: "Description" }));

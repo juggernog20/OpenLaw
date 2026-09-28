@@ -90,8 +90,8 @@ const ORIGIN = process.env.UPGRADE_ORIGIN ?? BASE_URL;
  * against any stack somebody brings up by hand.
  */
 const ADMIN = {
-  email: "blair@example.com",
-  displayName: "Blair Wentworth",
+  email: "devon@example.com",
+  displayName: "Devon Calloway",
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway CI stack
 };
 

@@ -26,7 +26,7 @@ const MEMBER = {
 
 describe("app shell chrome", () => {
   it("uses organization branding and refreshes it after an edit, retaining openlaw /", async () => {
-    let name = "Wentworth Family Office";
+    let name = "Calloway Family Office";
     let logo: string | null = "data:image/png;base64,test";
     stubApi({
       signedIn: MEMBER,

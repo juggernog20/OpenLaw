@@ -95,7 +95,7 @@ function titleWhenClipped(el: HTMLElement, full: () => string) {
  *
  * A cell can draw text that nobody should hear: the initials on an avatar
  * are decoration beside the name they abbreviate, so `textContent` on the
- * Owner cell says "BWBlair Wentworth". A cell can also mean text it never
+ * Owner cell says "DCDevon Calloway". A cell can also mean text it never
  * draws: DES-009's marker draws "CONFI" precisely because the word does
  * not fit, and carries the word itself as an `aria-label`. Skipping
  * `aria-hidden` and preferring `aria-label` is the accessible name in the
