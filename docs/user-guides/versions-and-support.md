@@ -12,7 +12,7 @@ Check which version of OpenLaw the documentation supports and give the right per
 
 The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.
 
-The **Validation in progress** badge means the guide is available before its independent verification finishes. **Development preview: draft and validation content is unverified.** and the **Unverified article** badge mean you are reading a development preview. Neither status is a production release or a claim that every article has passed final acceptance. Record the badge or preview notice you see if you report a mismatch.
+**Development preview: draft and validation content is unverified.** means you are reading a development preview. It is not a production release or a claim that every article has passed final acceptance. Record the notice if you see it when you report a mismatch.
 
 ## If a link names another edition or a missing article
 

@@ -167,8 +167,8 @@ Strict publication includes only `verified` and `published` articles whose
 evidence matches their bytes. TECH-027 amends this rule to permit explicit
 development publication before verification. `edition.publication` records the
 owner's approval, source commit, reason, and each approved draft/review article's
-SHA-256. Only those exact sources become available in normal builds, with a visible
-validation-in-progress article badge. Changed approved sources stop a normal build; a
+SHA-256. Only those exact sources become available in normal builds. The reader
+shows no badge on them (TECH-027 addendum of 2026-09-28). Changed approved sources stop a normal build; a
 preview can still render them for editing. The record cannot be used in a release
 edition and never supplies verification evidence. See
 [batches/app-publication/README.md](batches/app-publication/README.md). An explicit development preview may include `draft` and
@@ -176,7 +176,7 @@ edition and never supplies verification evidence. See
 `ready` catalog entry never becomes a placeholder article. An empty early build
 shows an honest availability state, not fabricated content.
 
-Ordinary Vite development and build commands use the TECH-026/027 addendum of 2026-09-17 for `development` editions: authored guides remain available while stale compatibility or article evidence produces warnings. Such guides carry validation-in-progress article badges and do not count as verified. This does not mutate source evidence or edition review records. Invalid source, links, assets and catalog structure still fail. `docs:check`, `docs:export`, `docs:complete`, and release editions always retain the strict publication checks described above.
+Ordinary Vite development and build commands use the TECH-026/027 addendum of 2026-09-17 for `development` editions: authored guides remain available while stale compatibility or article evidence produces warnings. Such guides show no badge in the reader and do not count as verified. This does not mutate source evidence or edition review records. Invalid source, links, assets and catalog structure still fail. `docs:check`, `docs:export`, `docs:complete`, and release editions always retain the strict publication checks described above.
 
 The builder supports ordinary incremental checks and a separate complete-suite
 publication check. Incremental builds can succeed while writing is in progress;

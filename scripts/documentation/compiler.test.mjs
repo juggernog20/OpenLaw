@@ -192,7 +192,7 @@ test("authorized development publication includes current sources without claimi
   assert.doesNotMatch(files.get("index.html"), /Development preview/);
   const page = files.get("submit.html");
   assert.doesNotMatch(page, /Guide validation is in progress/);
-  assert.match(page, /docs-badge">Validation in progress</);
+  assert.doesNotMatch(page, /Validation in progress/);
   assert.doesNotMatch(page, /Unverified article/);
   assert.doesNotMatch(JSON.stringify(bundle), /Fixture maintainer|Publish the current guide/);
   assert.throws(() => f.compile({ complete: true }), /unverified articles or coverage/);
@@ -487,7 +487,7 @@ test("development builds warn about stale application review without claiming ve
   assert.equal(bundle.report.coverageVerified, 0);
   assert.ok(bundle.articles.every((a) => a.unverified));
   assert.ok(bundle.warnings.some((warning) => /compatibility/.test(warning)));
-  assert.match(files.get("submit.html"), /Validation in progress/);
+  assert.doesNotMatch(files.get("submit.html"), /Validation in progress|docs-badge/);
   assert.throws(() => f.compile({ build }), /compatibility/);
   assert.throws(
     () => f.compile({ development: true, complete: true, build: { ...build, dirty: false } }),

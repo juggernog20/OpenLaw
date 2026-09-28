@@ -500,15 +500,6 @@
   color: var(--text-muted);
   margin-bottom: 20px;
 }
-.docs-reader .docs-badge {
-  display: inline-block;
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--status-warning-fg);
-  background: var(--status-warning-bg);
-  border-radius: 4px;
-  padding: 3px 7px;
-}
 .docs-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

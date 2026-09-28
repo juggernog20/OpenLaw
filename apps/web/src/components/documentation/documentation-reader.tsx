@@ -186,7 +186,6 @@ export function DocumentationReader({
     if (!audience && selectedAudience) search.set("audience", selectedAudience);
     return `${base}?${search}`;
   };
-  const badge = bundle.validationPending ? M.validationBadge : M.unverified;
   const resultList = (items: typeof results) => (
     <div className="docs-results">
       {items.map((a) => (
@@ -197,7 +196,6 @@ export function DocumentationReader({
               <Link to={`${base}/${a.id}`}>{a.title}</Link>
             </h2>
             <p>{documentationExcerpt(a, q, 180)}</p>
-            {a.unverified && <span className="docs-badge">{intl.formatMessage(badge)}</span>}
           </div>
           <ChevronRight size={20} aria-hidden="true" />
         </section>
@@ -368,9 +366,6 @@ export function DocumentationReader({
                         .join(" · "),
                     })}
                   </span>
-                  {article.unverified && (
-                    <span className="docs-badge">{intl.formatMessage(badge)}</span>
-                  )}
                 </div>
                 {missingSection && (
                   <p role="status" className="docs-notice">

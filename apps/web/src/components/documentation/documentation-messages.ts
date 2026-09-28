@@ -3,7 +3,6 @@
 import { defineMessages, type MessageDescriptor } from "react-intl";
 
 export const M: Record<
-  | "validationBadge"
   | "intro"
   | "introBody"
   | "helpBody"
@@ -57,7 +56,6 @@ export const M: Record<
   | "unavailableBody"
   | "wrongEdition"
   | "preview"
-  | "unverified"
   | "empty"
   | "noMatches"
   | "missingSection"
@@ -80,7 +78,6 @@ export const M: Record<
   | "operator",
   MessageDescriptor
 > = defineMessages({
-  validationBadge: { id: "docs.validationBadge", defaultMessage: "Validation in progress" },
   intro: { id: "docs.intro", defaultMessage: "Find the guide you need." },
   introBody: {
     id: "docs.introBody",
@@ -198,7 +195,6 @@ export const M: Record<
     id: "docs.preview",
     defaultMessage: "Development preview: draft and validation content is unverified.",
   },
-  unverified: { id: "docs.unverified", defaultMessage: "Unverified article" },
   empty: {
     id: "docs.empty",
     defaultMessage: "No verified articles are available in this edition yet.",

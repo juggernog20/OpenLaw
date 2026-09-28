@@ -1471,6 +1471,7 @@ the article's development-publication entry and supplies its actual evidence.
 
 Amended 2026-09-09 at the owner's request: remove the page-wide validation notice
 from the app and standalone edition. Keep the article validation badges.
+_Superseded by the 2026-09-28 addendum below: the article badges are removed too._
 
 ### Consequences
 
@@ -1482,11 +1483,25 @@ update the approval record when a guide changes or completes verification.
 
 ### TECH-026/027 addendum: development builds warn while publication stays strict (2026-09-17)
 
-The product owner approved separating routine development builds from documentation publication review. Ordinary Vite development and build commands for a `development` edition include authored guides and warn when application compatibility or article evidence is missing or stale. Affected guides carry validation-in-progress article badges and receive no verification credit. Original evidence, dates and hashes are retained; building the app does not update them.
+The product owner approved separating routine development builds from documentation publication review. Ordinary Vite development and build commands for a `development` edition include authored guides and warn when application compatibility or article evidence is missing or stale. Affected guides carry validation-in-progress article badges and receive no verification credit. _(Revised by the 2026-09-28 addendum below: no badge is shown; the guides still receive no verification credit.)_ Original evidence, dates and hashes are retained; building the app does not update them.
 
 `docs:check`, `docs:complete`, and `docs:export` remain strict publication commands. A `release` edition always enforces compatibility and article evidence, even when requested through the development build integration. Complete-suite publication retains its clean-build, coverage and final-destination evidence requirements. Source validation, sanitization, links, assets and catalog structure remain build errors in development too.
 
 This supersedes the ordinary development build restrictions above, including the requirement for a hash-bound publication approval to make a draft or review article available while developing. TECH-027's explicit publication records remain applicable to strict development-edition publication. It does not grant release approval or classify stale guides as verified.
+
+### TECH-027 addendum: no validation badges in the reader (2026-09-28)
+
+OpenLaw 0.1.0 is released and in use. The product owner asked to remove the
+article validation badges from the user interface. The in-app reader and the
+standalone edition no longer show **Validation in progress** or **Unverified
+article** on any guide, in the search results or in the article header.
+
+Only the display changes. The compiler still marks each article verified or
+unverified, the bundle and the MCP documentation tools still carry that flag,
+and development builds still print their warnings. `docs:check`, `docs:complete`,
+`docs:export` and release editions keep every strict check above. A guide without
+current evidence still receives no verification credit. An explicit preview build
+keeps its page-wide preview notice, because only authors see it.
 
 ## TECH-028: The Auto-Doc fill engine runs in the API process; the sidecar renders the PDF
 
