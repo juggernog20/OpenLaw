@@ -266,7 +266,7 @@ Scope filters the existing matching vectors before ranking. Titles and numbers s
 - **Status** — Accepted
 - **Date** — 2026-08-04
 - **Context** — Deletion/retention semantics for the file layer.
-- **Decision** — Archive (soft delete, Member+) hides from lists/search, recoverable, logged. Hard delete is Admin-only, whole-document (all versions), typed-confirmation + activity-logged — the compliance/redaction path (DD-017/MTR-008 pattern). Individual versions can never be deleted. Retention rules and legal holds stay parked (FUTURE-FEATURES).
+- **Decision** — Archive (soft delete, Member+) hides from lists/search, recoverable, logged. Hard delete is Admin-only, whole-document (all versions), typed-confirmation + activity-logged — the compliance/redaction path (DD-017/MTR-008 pattern). Individual versions can never be deleted. _Revised by the 2026-09-28 addendum below: an Administrator may delete one Version._ Retention rules and legal holds stay parked (FUTURE-FEATURES).
 - **Rationale** — Chain trustworthiness requires version immutability; lawful-erasure (GDPR) requires a real hard-delete path.
 - **Alternatives considered** — Soft-only: no erasure path. Per-version delete: breaks the negotiation record.
 - **Consequences** — Matches `archived_at` on `documents`; hard delete cascades `document_versions` + stored blobs. _Settled in M11/5: the typed confirmation is a **server** rule, not a dialog's manners — the route takes the document's own title and refuses anything else, because the dialog can be skipped and the ceremony is what stops an irreversible act happening without the actor naming its subject. The blobs are deleted **inside** the transaction that removes the rows, before it commits, where deleting after the commit would leave files with no row left to name them — an erasure that reports success, is not one, and has nothing left to retry from. This order is chosen between two bad failures, not against a clean one. A storage failure part way through destroys the blobs behind the versions already reached and then rolls **every** row back, including those, so the record names files that no longer exist and their downloads fail until the erasure is run again. That is accepted: the retry converges, because deleting a key that is already gone succeeds (DOC-012). It is not a claim that a failed erasure leaves the record whole. Hard delete reaches a document on an **archived** contract, which refuses every other write on its paper — erasure is compelled from outside the record, so a frozen record is not a place to hide from it._ _Extended in M12/3: the erasure takes what the machine derived as well. `document_version_text` is keyed by the version's id and cascades with it, so extracted text — including a scan's OCR output — goes with the rows and needs no step of its own._ _Extended again in M12/4: a display rendition is a **blob** as well as a row, and no database cascade reaches a storage driver — so the erasure reads the renditions' references before it deletes the rows and destroys those blobs in the same loop, inside the same transaction and before the same commit. They go **first**, ahead of the sources: a failure part way through then destroys derived copies rather than originals, and a rendition can be made again from its source while a source cannot be made again from anything. The rendition rows themselves cascade with the version rows, like the text._ _Extended in M35 (2026-09-14, [#873](https://github.com/juggernog20/OpenLaw/issues/873)): this route refuses an Auto-Doc's template with 409, because that Document is one part of a larger record. Erasing the template alone would leave every Generation, every saved answer, and every generated file behind, which is the opposite of what the act claims to do. **ADO-012** gives the Auto-Doc its own Administrator erasure and that route owns the whole record. It reuses this one's blob collection for the template chain, then takes the Generations, their outputs, and the Acknowledgements as well, under this record's ordering and this record's typed confirmation. A **Filed** Document is different: it is the paper of the Matter or Contract it was filed to, and it is erased here, on that record, by this route. One erasure request may therefore need this act more than once._
@@ -364,23 +364,23 @@ The first cut gave Knowledge a fourth tab. Blair saw that it would be confused w
 
 ## Index of decisions
 
-| #       | Decision                                                                       | Status   |
-| ------- | ------------------------------------------------------------------------------ | -------- |
-| DOC-001 | Record model: logical document + linear immutable version chain                | Accepted |
-| DOC-002 | Module identity: the legal file layer, made browsable                          | Accepted |
-| DOC-003 | Redline compare: rendered in-app view + Word track-changes export              | Accepted |
-| DOC-004 | In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only    | Accepted |
-| DOC-005 | OCR on upload for image-only PDFs                                              | Accepted |
-| DOC-006 | Folders: inside matters/contracts only; no global tree                         | Accepted |
-| DOC-007 | Metadata: standard document properties only; no custom fields; tags deferred   | Accepted |
-| DOC-008 | No standalone documents: every document has an owning record; access inherited | Accepted |
-| DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack         | Accepted |
-| DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable                  | Accepted |
-| DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest)       | Accepted |
-| DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`           | Accepted |
-| DOC-013 | SharePoint is not a store; the third driver is Azure Blob                      | Accepted |
-| DOC-014 | Two stores per install: source and derived; reads route across drivers         | Accepted |
-| DOC-015 | Document types: one configurable list per owning module                        | Accepted |
+| #       | Decision                                                                                            | Status   |
+| ------- | --------------------------------------------------------------------------------------------------- | -------- |
+| DOC-001 | Record model: logical document + linear immutable version chain                                     | Accepted |
+| DOC-002 | Module identity: the legal file layer, made browsable                                               | Accepted |
+| DOC-003 | Redline compare: rendered in-app view + Word track-changes export                                   | Accepted |
+| DOC-004 | In-app rendering: PDF, Word, images, PowerPoint, emails; rest download-only                         | Accepted |
+| DOC-005 | OCR on upload for image-only PDFs                                                                   | Accepted |
+| DOC-006 | Folders: inside matters/contracts only; no global tree                                              | Accepted |
+| DOC-007 | Metadata: standard document properties only; no custom fields; tags deferred                        | Accepted |
+| DOC-008 | No standalone documents: every document has an owning record; access inherited                      | Accepted |
+| DOC-009 | Storage & search: requirements here, engine picks routed to tech-stack                              | Accepted |
+| DOC-010 | Deletion: soft delete + Admin hard delete; versions immutable (per-Version delete added 2026-09-28) | Accepted |
+| DOC-011 | Bulk upload: multi-file + folder drop retaining structure (folders nest)                            | Accepted |
+| DOC-012 | Storage adapter: three operations, and `file_ref` = `<driver>:<key>`                                | Accepted |
+| DOC-013 | SharePoint is not a store; the third driver is Azure Blob                                           | Accepted |
+| DOC-014 | Two stores per install: source and derived; reads route across drivers                              | Accepted |
+| DOC-015 | Document types: one configurable list per owning module                                             | Accepted |
 
 ### DOC-006 UX review addendum — drag saved Documents between folders (2026-09-08)
 
@@ -432,3 +432,30 @@ needs observation. External-Signer erasure removes local Signer rows, tombstones
 retained Activity details and clears the invitation Subject. It does not erase
 provider paper or fields, executed files, or previously exported logs. No remote
 erasure or revocation guarantee is added by the preparation interface.
+
+### DOC-010 addendum, 2026-09-28, dd28e33d. Administrator per-Version delete
+
+DOC-010 said a Version can never be deleted, so a wrong upload or a superseded
+round could only go with the whole Document. That cost more history than it
+protected. An Administrator may now delete one Version.
+
+The route is `DELETE /documents/:documentId/versions/:versionId`. It is
+Administrator-only and takes the same typed-title confirmation as the hard delete.
+A Version that belongs to another Document answers 404. The route removes the
+Version row, its renditions, the Comparisons that name it, and every stored blob
+behind them, inside one transaction and in DOC-010's blob-first order. It refuses
+with 409 while a generated Comparison Version depends on the Version, and for an
+Auto-Doc template, which ADO-012 erases as one record.
+
+Deleting the last Version removes the Document. That path records
+`document.hard_deleted` and clears the primary pin, as the whole-document delete
+does. Every other case records a new `document.version_deleted` Activity entry
+that carries the version number. The next version number reads those entries, so
+a deleted number is never reused and the chain still shows where a Version was.
+
+In the web app the row and Version menus offer Delete version. Bulk delete in
+the Documents section removes each selected Document's current Version rather
+than the whole Document; the whole-document hard delete stays on its own menu.
+The DOC-010 rationale stands for everything else: bytes, order, note, author and
+provenance of a Version remain immutable, and the whole-document hard delete
+remains the erasure path.
