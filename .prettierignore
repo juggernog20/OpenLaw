@@ -2,8 +2,6 @@ node_modules/
 dist/
 .turbo/
 pnpm-lock.yaml
-designs/
-*.pen
 
 # DOC-030 publication evidence binds these files by sha256
 # (docs/documentation/evidence/publication.json). They stay byte for byte

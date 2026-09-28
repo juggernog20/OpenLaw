@@ -1,5 +1,7 @@
 # OpenLaw — Design Language & UX Decision Record
 
+> The `designs/*.pen` files these records cite moved to the private repository `juggernog20/openlaw-private` on 2026-09-28. Frame names and IDs below still refer to those files.
+
 Decisions about visual design, design system, UI patterns, and interaction conventions. Platform product decisions live in `DECISIONS.md`; this file covers the look-and-feel layer that drives Pencil mocks and frontend implementation.
 
 Reference: per `DECISIONS.md` DD-004, the team detail-mocks all four modules and cross-cutting capabilities up front in Pencil before implementation. This file records the design-language decisions that those mocks encode.

@@ -14,8 +14,9 @@ services/     Sidecar containers (doc-engine: LibreOffice + OCR)
 packages/     Shared types and utilities
 styles/       Theme substrate (Tailwind v4 CSS-first, three themes)
 docs/         Product & decision records (DECISIONS*.md, PRODUCT.md, SCHEMA.md)
-designs/      Pencil (.pen) design files
 ```
+
+The Pencil design mocks that the design decision records cite live in a separate private repository, `juggernog20/openlaw-private`.
 
 ## Development
 

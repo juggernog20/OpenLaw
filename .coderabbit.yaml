@@ -112,8 +112,6 @@ reviews:
     # see the migrations path_instructions below.
     - "!packages/db/migrations/meta/**"
     # Encrypted Pencil sources. Ciphertext; there is nothing to review, and
-    # .pen is not in CodeRabbit's default ignore list because it is ours.
-    - "!designs/**"
     #
     # Deliberately NOT excluded (was excluded before): apps/api/openapi.json.
     # It is generated, but it is also the published contract, and it is the
