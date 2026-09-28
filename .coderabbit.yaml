@@ -53,7 +53,7 @@ reviews:
   # Restricting the list turns it into an allowlist: CodeRabbit suggests only
   # from here. That deliberately keeps it out of the five-label triage state
   # machine (needs-triage / needs-info / ready-for-agent / ready-for-human /
-  # wontfix), which docs/agents/triage-labels.md reserves for the maintainer
+  # wontfix), which .agents/triage-labels.md reserves for the maintainer
   # and the triage skill.
   labeling_instructions:
     - label: "bug"
@@ -329,7 +329,7 @@ reviews:
     - path: "docs/decision-records/**/*.md"
       instructions: |
         The decision record set is the repo's memory. Conventions from
-        CLAUDE.md and docs/agents/domain.md:
+        CLAUDE.md and .agents/domain.md:
           - New decisions append to the module file that covers the area
             (DECISIONS-CONTRACTS.md, DECISIONS-DESIGN.md, ...) or to
             DECISIONS.md for system-wide ones, using the existing numbered
@@ -689,7 +689,7 @@ issue_enrichment:
     auto_planning:
       enabled: true
       # Plan only what triage has already declared fully specified. This is the
-      # `ready-for-agent` state from docs/agents/triage-labels.md — the same
+      # `ready-for-agent` state from .agents/triage-labels.md — the same
       # signal the AFK agent workflow keys on.
       labels:
         - "ready-for-agent"
