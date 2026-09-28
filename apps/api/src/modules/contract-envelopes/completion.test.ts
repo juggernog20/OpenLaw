@@ -563,8 +563,10 @@ describe("a signed envelope files its executed copy", () => {
 
     const final = await sendFrom(partialContract.number, true);
     expect(final).toMatchObject({ completesContract: true });
+    // A send moves the Status forward only (#1207). The Contract is
+    // already in the Signature Stage, so the final round keeps it there.
     expect(await statusOf(partialContract.id)).toEqual({
-      displayName: "Out for signature",
+      displayName: "Partially signed",
       stage: "signature",
     });
     await signIt(final);

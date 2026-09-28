@@ -10,6 +10,7 @@ import { FormattedMessage, defineMessage, defineMessages, useIntl } from "react-
 import type { paths } from "@openlaw/api-client";
 import type { McpToolset } from "@openlaw/shared";
 import { api } from "../lib/api";
+import { copyText } from "../lib/clipboard";
 import { toolsetLabel } from "../lib/mcp";
 import { Scope } from "./mcp-scope";
 import { ConnectedClients } from "./connected-clients";
@@ -648,12 +649,11 @@ export function ApiKeyReadyDialog({ ready, onClose }: { ready: KeyRow; onClose: 
               />
             </p>
             <div className="flex items-center gap-2 rounded-button bg-control p-3">
-              <code className="min-w-0 flex-1 break-all">{ready.key}</code>
+              <code className="min-w-0 flex-1 select-all break-all">{ready.key}</code>
               <Button
                 variant="secondary"
                 onClick={() => {
-                  void navigator.clipboard
-                    .writeText(ready.key!)
+                  void copyText(ready.key!)
                     .then(() => setCopied(true))
                     .catch(() =>
                       setError(

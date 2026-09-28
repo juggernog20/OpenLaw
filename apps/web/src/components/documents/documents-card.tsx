@@ -304,6 +304,10 @@ interface RowContext {
   /** The record module's live Document types (DOC-015); empty until
    * the read answers. */
   typeOptions: readonly DocumentTypeOption[];
+  /** The Type column shows a label the API derives, not one a Member
+   * sets. A Knowledge Item's files show the item's Knowledge type
+   * (DOC-015's Knowledge addendum), so the cell offers no choice. */
+  derivedTypes: boolean;
   designations: boolean;
   executedDesignations: boolean;
   folders: boolean;
@@ -1346,7 +1350,9 @@ export function DocumentsCard({
 
   /** Administration and upload controls still obey the record freeze.
    * A comparison is a read, so a frozen reader may nevertheless need
-   * the narrow Actions column for a Version pair they can reach. */
+   * the narrow Actions column for a Version pair they can reach. An
+   * Administrator also needs it, because erasure reaches an archived
+   * record (DOC-010). */
   const showHeaderActions = !frozen || supportingUploads;
   const comparisonActions = [
     ...documents,
@@ -1355,7 +1361,7 @@ export function DocumentsCard({
     (document) =>
       document.versions.filter((version) => version.kind !== "generated_redline").length > 1,
   );
-  const showActionColumn = showHeaderActions || comparisonActions;
+  const showActionColumn = showHeaderActions || comparisonActions || canErase;
 
   const knownDocuments = new Map(
     [...documents, ...[...listings.values()].flatMap((listing) => listing.documents)].map(
@@ -1397,6 +1403,7 @@ export function DocumentsCard({
     onSelect: selectDocument,
     documentDrag,
     typeOptions: typeOptions ?? [],
+    derivedTypes: record.entityType === "knowledge_item",
     designations: supportsDesignations(record.entityType),
     executedDesignations: record.entityType === "contract",
     folders: record.entityType !== "knowledge_item",
@@ -2090,13 +2097,18 @@ function DocumentRows({
                         onToggleExecuted={() => rows.onPin(document, chain.current)}
                       />
                     )}
+                    {/* A frozen record keeps two acts on its current
+                        round. Compare is a read. Delete version is
+                        DOC-010's erasure, which reaches an archived
+                        record because the demand for it comes from
+                        outside the record. */}
                     {rows.frozen &&
                       !(
                         rows.supportingUploads &&
                         document.archivedAt === null &&
                         (!rows.designations || !document.isPrimary)
                       ) &&
-                      currentPredecessor && (
+                      (currentPredecessor || rows.canErase) && (
                         <VersionActions
                           document={document}
                           version={chain.current}
@@ -2104,6 +2116,7 @@ function DocumentRows({
                           busy={rows.busy}
                           intl={rows.intl}
                           onCompare={rows.onCompare}
+                          onDelete={rows.canErase ? rows.onDelete : undefined}
                         />
                       )}
                   </span>
@@ -3524,6 +3537,7 @@ function TypeCell({
       : rows.typeOptions;
   const readOnly =
     rows.frozen ||
+    rows.derivedTypes ||
     document.archivedAt !== null ||
     version.kind === "generated_redline" ||
     version.source === "generated" ||

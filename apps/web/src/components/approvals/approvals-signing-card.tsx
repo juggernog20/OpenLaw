@@ -28,12 +28,14 @@ import {
   MAX_ENVELOPE_REASON_LENGTH,
   MAX_ENVELOPE_SIGNERS,
   MAX_ENVELOPE_SUBJECT_LENGTH,
+  SOFT_GATE_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import {
   APPROVAL_PILL,
   applyApproverGroup,
   cancelContractApproval,
   decideContractApproval,
+  isUnresolved,
   requestContractApprovals,
   type ApprovalDecision,
   type ApprovalStatus,
@@ -68,6 +70,7 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { FieldHelp } from "../ui/field-help";
 import { SignerNameField } from "./signer-name-field";
+import { SoftGateDialog } from "./soft-gate-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -484,13 +487,24 @@ export function ApprovalsCard({
   );
 }
 
+/** What the send dialog hands back: one send or preparation. */
+type SendInput = Parameters<Parameters<typeof SendEnvelopeDialog>[0]["onConfirm"]>[0];
+
 export function SignaturesCard({
   signing,
   users,
+  approvals,
+  signatureStatusName,
   onSigning,
 }: Readonly<{
   signing: SigningState;
   users: readonly UserOption[];
+  /** The record's Approval requests. The soft gate dialog names the
+   * unresolved ones when a send would move the Contract past approval. */
+  approvals: readonly ContractApproval[];
+  /** The Status a send moves the Contract to: the first live Signature
+   * status. The soft gate dialog names it. */
+  signatureStatusName: string;
   onSigning: (signing: SigningState) => void;
 }>) {
   const { record, viewer, ownerId, frozen } = useRecord();
@@ -511,6 +525,10 @@ export function SignaturesCard({
     defaultMessage: "DocuSign could not open this draft. Try again from Signatures.",
   });
   const [voiding, setVoiding] = useState<ContractEnvelope | null>(null);
+  /** The send CTR-012's soft gate refused, held while its dialog asks
+   * for the one deliberate confirmation. The send dialog stays open
+   * under it, so Cancel returns to the same signers. */
+  const [gated, setGated] = useState<SendInput | null>(null);
   const busy = status === "saving";
 
   const live = liveEnvelope(signing.envelopes);
@@ -547,6 +565,53 @@ export function SignaturesCard({
     });
     setStatus("saved");
     return null;
+  }
+
+  /** What to print when a send or preparation is refused without a
+   * sentence of its own. */
+  const sendFailed = intl.formatMessage(
+    signing.preparationEnabled
+      ? defineMessage({
+          id: "signing.prepareFailed",
+          defaultMessage:
+            "The Envelope could not be prepared. Check its status before trying again.",
+        })
+      : defineMessage({
+          id: "signing.sendFailed",
+          defaultMessage: "The envelope could not be sent. Try again.",
+        }),
+  );
+
+  /** One send, or one preparation and the launch that follows it. */
+  function writeSend(input: SendInput & { overrideSoftGate?: boolean }): Promise<SigningOutcome> {
+    if (!signing.preparationEnabled) return sendContractEnvelope(contractNumber, input);
+    return prepareContractEnvelope(contractNumber, input).then(async (outcome) => {
+      if (!outcome.ok) return outcome;
+      onSigning(outcome);
+      const draft = outcome.envelopes.find((envelope) => envelope.status === "draft");
+      if (!draft)
+        return {
+          ok: false as const,
+          type: undefined,
+          status: 409,
+          network: false,
+          detail: intl.formatMessage({
+            id: "signing.preparationPending",
+            defaultMessage:
+              "Preparation is awaiting confirmation. Check Signatures before trying again.",
+          }),
+        };
+      const detail = await launchContractEnvelope(draft.id);
+      return detail !== null
+        ? {
+            ok: false as const,
+            type: undefined,
+            status: 502,
+            network: false,
+            detail: detail ?? launchFailed,
+          }
+        : outcome;
+    });
   }
 
   return (
@@ -801,54 +866,39 @@ export function SignaturesCard({
           onClose={() => setSending(false)}
           onReturnFocus={() => (sendButton.current ?? signaturesHeading.current)?.focus()}
           onConfirm={async (input) => {
-            const refusal = await runSend(
-              () =>
-                signing.preparationEnabled
-                  ? prepareContractEnvelope(contractNumber, input).then(async (outcome) => {
-                      if (!outcome.ok) return outcome;
-                      onSigning(outcome);
-                      const draft = outcome.envelopes.find(
-                        (envelope) => envelope.status === "draft",
-                      );
-                      if (!draft)
-                        return {
-                          ok: false as const,
-                          type: undefined,
-                          status: 409,
-                          network: false,
-                          detail: intl.formatMessage({
-                            id: "signing.preparationPending",
-                            defaultMessage:
-                              "Preparation is awaiting confirmation. Check Signatures before trying again.",
-                          }),
-                        };
-                      const detail = await launchContractEnvelope(draft.id);
-                      return detail !== null
-                        ? {
-                            ok: false as const,
-                            type: undefined,
-                            status: 502,
-                            network: false,
-                            detail: detail ?? launchFailed,
-                          }
-                        : outcome;
-                    })
-                  : sendContractEnvelope(contractNumber, input),
-              intl.formatMessage(
-                signing.preparationEnabled
-                  ? defineMessage({
-                      id: "signing.prepareFailed",
-                      defaultMessage:
-                        "The Envelope could not be prepared. Check its status before trying again.",
-                    })
-                  : defineMessage({
-                      id: "signing.sendFailed",
-                      defaultMessage: "The envelope could not be sent. Try again.",
-                    }),
-              ),
-            );
+            let refusedByGate = false;
+            const refusal = await runSend(async () => {
+              const outcome = await writeSend(input);
+              refusedByGate = !outcome.ok && outcome.type === SOFT_GATE_PROBLEM_TYPE;
+              return outcome;
+            }, sendFailed);
+            // The gate's refusal is a question, not a failure. Its
+            // dialog opens over this one and asks it.
+            if (refusedByGate) {
+              setGated(input);
+              return null;
+            }
             if (refusal === null) setSending(false);
             return refusal;
+          }}
+        />
+      )}
+      {gated !== null && (
+        <SoftGateDialog
+          statusName={signatureStatusName}
+          unresolved={approvals.filter(isUnresolved)}
+          onOpenChange={(open) => {
+            if (!open) setGated(null);
+          }}
+          onConfirm={async () => {
+            const refusal = await runSend(
+              () => writeSend({ ...gated, overrideSoftGate: true }),
+              sendFailed,
+            );
+            if (refusal !== null) return refusal;
+            setGated(null);
+            setSending(false);
+            return undefined;
           }}
         />
       )}

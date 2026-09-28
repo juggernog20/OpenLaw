@@ -166,10 +166,17 @@ export function TwoFactorEnrollPage() {
         </CardTitle>
         {step.name === "password" && (
           <CardDescription>
-            <FormattedMessage
-              id="auth.enroll.passwordHint"
-              defaultMessage="Confirm your password to start enrollment."
-            />
+            {loaded.hasPassword ? (
+              <FormattedMessage
+                id="auth.enroll.passwordHint"
+                defaultMessage="Confirm your password to start enrollment."
+              />
+            ) : (
+              <FormattedMessage
+                id="auth.enroll.noPasswordHint"
+                defaultMessage="Select Turn on two-factor to start enrollment. You need an authenticator app."
+              />
+            )}
           </CardDescription>
         )}
         {step.name === "verify" && (

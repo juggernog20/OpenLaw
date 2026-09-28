@@ -32,8 +32,13 @@ const PROVIDERS = [
   },
 ];
 
-function setup({ provider = true, fail = false, failRow = false } = {}) {
-  let domains = ["example.com"];
+function setup({
+  provider = true,
+  fail = false,
+  failRow = false,
+  initialDomains = ["example.com"],
+} = {}) {
+  let domains = initialDomains;
   let policy = {
     legal: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
     business: { password: false, magicLink: true, sso: false, requireTwoFactor: false },
@@ -148,20 +153,38 @@ it("requires an identity provider before either group can enable SSO", async () 
   expect(screen.getByText("0 providers")).toBeVisible();
 });
 
-it("turns Business sign-in methods off after removing the last domain and keeps them off when re-added", async () => {
-  const { user } = setup();
+it("keeps the Business policy editable after removing the last domain", async () => {
+  const { writes, user } = setup();
   const business = await screen.findByRole("region", { name: "Business Portal Authentication" });
   const magicLink = within(business).getByRole("switch", { name: "Email magic link" });
-  expect(magicLink).toBeChecked();
   await user.click(screen.getByRole("button", { name: "Remove example.com" }));
-  await waitFor(() => expect(magicLink).toBeDisabled());
-  expect(magicLink).not.toBeChecked();
-  const legal = screen.getByRole("region", { name: "Legal User Authentication" });
-  expect(within(legal).getByRole("switch", { name: "Email and password" })).toBeChecked();
-  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
-  await user.click(within(business).getByRole("button", { name: "Add" }));
-  await waitFor(() => expect(magicLink).toBeEnabled());
-  expect(magicLink).not.toBeChecked();
+  expect(
+    await within(business).findByText(
+      "No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account.",
+    ),
+  ).toBeVisible();
+  expect(magicLink).toBeEnabled();
+  expect(magicLink).toBeChecked();
+  await user.click(within(business).getByRole("switch", { name: "Email and password" }));
+  await waitFor(() =>
+    expect(writes).toEqual([
+      {
+        path: "/api/v1/auth/policy/business",
+        body: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+      },
+    ]),
+  );
+});
+
+it("shows the policy the API enforces when no domain was ever saved", async () => {
+  setup({ initialDomains: [] });
+  const business = await screen.findByRole("region", { name: "Business Portal Authentication" });
+  const password = within(business).getByRole("switch", { name: "Email and password" });
+  const magicLink = within(business).getByRole("switch", { name: "Email magic link" });
+  expect(password).toBeEnabled();
+  expect(password).not.toBeChecked();
+  expect(magicLink).toBeEnabled();
+  expect(magicLink).toBeChecked();
 });
 
 it("keeps Business sign-in choices when removing a domain fails", async () => {

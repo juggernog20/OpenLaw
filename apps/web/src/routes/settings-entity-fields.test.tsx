@@ -21,6 +21,8 @@ const base = {
   aiPrompt: null,
   archivedAt: null,
   inUseCount: 0,
+  typeCount: 0,
+  recordCount: 0,
 };
 
 describe("the Entities Fields pane", () => {

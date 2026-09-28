@@ -63,12 +63,9 @@ export const authenticationPolicyRoutes: FastifyPluginAsyncZod = async (app) => 
       return app.db.transaction(async (tx) => {
         const [settings] = await tx.select().from(orgSettings).for("update");
         if (!settings) throw httpError(500, "Organization settings are unavailable.");
-        if (
-          !options.password &&
-          !options.magicLink &&
-          !options.sso &&
-          !(request.params.group === "business" && settings.allowedEmailDomains.length === 0)
-        )
+        // Both groups keep a method even with no allowed domains: the
+        // domains admit new Business Users, not existing ones (TECH-008).
+        if (!options.password && !options.magicLink && !options.sso)
           throw httpError(400, "Enable at least one sign-in method.");
         if (
           options.sso &&

@@ -210,6 +210,32 @@ function relayAuthError(error: unknown): never {
   throw error;
 }
 
+/**
+ * The SSO plugin's discovery codes that mean the issuer did not answer.
+ * The plugin maps both to 502, and a bare 502 reads in the web as if
+ * OpenLaw itself were down.
+ */
+const UNREACHABLE_DISCOVERY_CODES = new Set(["discovery_timeout", "discovery_unexpected_error"]);
+
+/**
+ * Relays a failed provider registration. When discovery cannot reach
+ * the issuer, the 502 carries copy we author, so the Administrator
+ * learns which server failed to answer. It names the discovery URL,
+ * which the Administrator typed, and never the plugin's own message.
+ */
+function relaySsoRegistrationError(error: unknown, issuer: string): never {
+  if (isAPIError(error) && UNREACHABLE_DISCOVERY_CODES.has(error.body?.code ?? "")) {
+    const discoveryUrl = `${issuer.replace(/\/+$/, "")}/.well-known/openid-configuration`;
+    throw httpError(
+      502,
+      `OpenLaw could not reach the identity provider's discovery URL, ${discoveryUrl}. ` +
+        "Check the issuer URL, and check that this server can reach the identity provider.",
+      { expose: true },
+    );
+  }
+  relayAuthError(error);
+}
+
 export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(authenticationPolicyRoutes);
   app.get(
@@ -830,7 +856,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               }),
             );
           } catch (error) {
-            relayAuthError(error);
+            relaySsoRegistrationError(error, issuer);
           }
 
           // An Administrator registering the provider is OpenLaw's domain
@@ -999,7 +1025,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
               // on; a failed restore must not replace it.
               request.log.error({ err: restoreError }, "sso provider restore failed");
             }
-            relayAuthError(error);
+            relaySsoRegistrationError(error, merged.issuer);
           }
 
           const [row] = await app.db
@@ -1070,7 +1096,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "Remove a registered identity provider (TECH-008). Accounts that " +
           "signed in through it keep their rows; they sign in another way " +
-          "until a provider serves their domain again",
+          "until a provider serves their domain again. Removing the last " +
+          "provider turns SSO off for both groups, and is refused (409) " +
+          "while a group can sign in only with SSO",
         tags: ["auth"],
         params: z.object({ providerId: z.string() }),
         response: { 204: z.null(), default: problemResponse },
@@ -1097,6 +1125,22 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           const remaining = await tx.select({ id: ssoProviders.id }).from(ssoProviders).limit(1);
           if (remaining.length === 0) {
             const previous = authenticationPolicy(settings);
+            // Each group keeps at least one method (TECH-008), so a group
+            // that signs in only through SSO blocks the removal. The
+            // throw rolls the delete back.
+            const stranded = (["legal", "business"] as const).filter(
+              (group) =>
+                previous[group].sso && !previous[group].password && !previous[group].magicLink,
+            );
+            if (stranded.length > 0) {
+              const groups = stranded
+                .map((group) => (group === "legal" ? "Legal Users" : "Business Users"))
+                .join(" and ");
+              throw httpError(
+                409,
+                `${groups} can sign in only with single sign-on. Turn on another sign-in method before you remove the last identity provider.`,
+              );
+            }
             const next = {
               legal: { ...previous.legal, sso: false },
               business: { ...previous.business, sso: false },
@@ -1239,7 +1283,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "getAllowedDomains",
-        summary: "The magic-link domain allowlist (DD-010); empty admits nobody",
+        summary: "The magic-link domain allowlist (DD-010); empty admits no new Business Users",
         tags: ["auth"],
         response: {
           200: z.object({ domains: z.array(z.string()) }),
@@ -1258,8 +1302,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "setAllowedDomains",
         summary:
           "Replace the magic-link domain allowlist (DD-010); the list is " +
-          "normalised to lower case and enforced on the next request — an " +
-          "empty list closes the portal to everyone",
+          "normalised to lower case and enforced on the next request. The " +
+          "list admits new Business Users only; an empty list admits none " +
+          "and leaves existing accounts and the Business policy unchanged",
         tags: ["auth"],
         body: z.object({ domains: z.array(AllowedDomainSchema).max(1000) }),
         response: {
@@ -1273,21 +1318,21 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       // collapse; the policy check is case-insensitive anyway, so the
       // stored list is just its canonical spelling.
       const domains = [...new Set(request.body.domains.map((domain) => domain.toLowerCase()))];
+      // The list governs new Business User accounts only (TECH-008). It
+      // never changes the Business policy, so an empty list leaves
+      // existing Business Users able to sign in.
       const stored = await app.db.transaction(async (tx) => {
-        const [current] = await tx.select().from(orgSettings).limit(1).for("update");
+        const [current] = await tx
+          .select({ id: orgSettings.id, domains: orgSettings.allowedEmailDomains })
+          .from(orgSettings)
+          .limit(1)
+          .for("update");
         if (!current) throw httpError(500, "org_settings has no row to update.");
         // Order counts as change: the stored list is the canonical one.
-        if (JSON.stringify(current.allowedEmailDomains) === JSON.stringify(domains))
-          return current.allowedEmailDomains;
-        const previous = authenticationPolicy(current);
-        const business = { ...previous.business, password: false, magicLink: false, sso: false };
+        if (JSON.stringify(current.domains) === JSON.stringify(domains)) return current.domains;
         const [row] = await tx
           .update(orgSettings)
-          .set({
-            allowedEmailDomains: domains,
-            updatedAt: new Date(),
-            ...(domains.length === 0 ? { authenticationPolicy: { ...previous, business } } : {}),
-          })
+          .set({ allowedEmailDomains: domains, updatedAt: new Date() })
           .where(eq(orgSettings.id, current.id))
           .returning({ domains: orgSettings.allowedEmailDomains });
         if (!row) throw httpError(500, "org_settings has no row to update.");
@@ -1296,24 +1341,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           actorId: request.user.id,
           action: "org_settings.updated",
           visibility: "admin_only",
-          payload: {
-            field: "allowedEmailDomains",
-            old: current.allowedEmailDomains,
-            new: row.domains,
-          },
+          payload: { field: "allowedEmailDomains", old: current.domains, new: row.domains },
         });
-        if (
-          domains.length === 0 &&
-          JSON.stringify(previous.business) !== JSON.stringify(business)
-        ) {
-          await recordActivity(tx, {
-            entityType: "system",
-            actorId: request.user.id,
-            action: "org_settings.updated",
-            visibility: "admin_only",
-            payload: { field: "businessAuthentication", old: previous.business, new: business },
-          });
-        }
         return row.domains;
       });
       return { domains: stored };

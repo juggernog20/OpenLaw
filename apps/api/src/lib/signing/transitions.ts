@@ -221,6 +221,7 @@ export async function applyEnvelopeStatus(
         creationKind: contractEnvelopes.creationKind,
         creationStatusId: contractEnvelopes.creationStatusId,
         creationStatusRevision: contractEnvelopes.creationStatusRevision,
+        sentBy: contractEnvelopes.sentBy,
       })
       .from(contractEnvelopes)
       .where(

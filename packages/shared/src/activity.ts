@@ -524,10 +524,16 @@ type EntityPayloads = {
    * link. `legalName` is the Entity the entry hangs off, so the two
    * entries for one act carry different values; `ownerName` and
    * `ownedName` are the same on both.
+   *
+   * An individual owner has no Entity, so its write appends one entry,
+   * on the owned Entity, with `ownerIndividual: true`. The flag tells
+   * the feed that `ownerName` is not a far Entity to redact. Entries
+   * written before 2026-09-28 do not carry it.
    */
   "entity_holding.created": {
     legalName: string;
     ownerName: string;
+    ownerIndividual?: true;
     ownedName: string;
     ownershipPercent: number;
   };
@@ -536,6 +542,7 @@ type EntityPayloads = {
   "entity_holding.updated": {
     legalName: string;
     ownerName: string;
+    ownerIndividual?: true;
     ownedName: string;
     from: number;
     to: number;
@@ -545,6 +552,7 @@ type EntityPayloads = {
   "entity_holding.deleted": {
     legalName: string;
     ownerName: string;
+    ownerIndividual?: true;
     ownedName: string;
     ownershipPercent: number;
   };

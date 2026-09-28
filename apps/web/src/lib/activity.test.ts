@@ -1382,6 +1382,39 @@ describe("the cross-reference fallbacks between an ask and its record", () => {
 });
 
 describe("the sentences a reader gets", () => {
+  it("names a Holding's owner and reads its stored numbers as percentages", () => {
+    const holding = { legalName: "Register Co", ownedName: "Register Co" };
+    expect(
+      narrate("entity_holding.created", {
+        ...holding,
+        ownerName: "Ada Quill",
+        ownerIndividual: true,
+        ownershipPercent: 33.33,
+      }).sentence,
+    ).toBe("Nadia Counsel recorded Ada Quill owning 33.33% of Register Co");
+    expect(
+      narrate("entity_holding.updated", { ...holding, ownerName: "Minor Owner", from: 10, to: 25 })
+        .sentence,
+    ).toBe("Nadia Counsel changed Minor Owner's Holding in Register Co from 10% to 25%");
+    expect(
+      narrate("entity_holding.deleted", {
+        ...holding,
+        ownerName: "Ada Quill",
+        ownershipPercent: 40,
+      }).sentence,
+    ).toBe("Nadia Counsel removed Ada Quill's 40% Holding in Register Co");
+  });
+
+  it("names a redacted Holding owner without calling it someone", () => {
+    const sentence = narrate("entity_holding.deleted", {
+      legalName: "Register Co",
+      ownedName: "Register Co",
+      ownershipPercent: 40,
+    }).sentence;
+    expect(sentence).toBe("Nadia Counsel removed an owner's 40% Holding in Register Co");
+    expect(sentence).not.toContain("someone");
+  });
+
   it("names a briefing section preference without exposing its slug", () => {
     expect(
       narrate("user.notification_preference_changed", {

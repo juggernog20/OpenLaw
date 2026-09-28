@@ -182,6 +182,39 @@ it("collects an approved key once, copies it and confirms revocation", async () 
   await waitFor(() => expect(revoked).toBe(true));
   expect(collected).toBe(1);
 });
+it("shows Copy failed when the browser has no clipboard, as on plain HTTP", async () => {
+  stubApi({
+    signedIn: {
+      id: "person",
+      email: "person@example.com",
+      displayName: "Person",
+      role: "legal_team_member",
+    },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/api-key-requests")
+        return json(200, { policy, requests: [{ ...row, keyAvailable: true }] });
+      if (call.url.pathname.endsWith("/request-1")) return json(200, { ...row, key: "ol_by_hand" });
+    },
+  });
+  const user = userEvent.setup();
+  // A browser leaves navigator.clipboard undefined outside a secure
+  // context. user-event attaches its own stub in setup, so remove it after.
+  const stub = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+  Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+  try {
+    renderAt("/settings/api-keys");
+    const ready = await screen.findByRole("dialog", { name: "Your key is ready" });
+    await user.click(within(ready).getByRole("button", { name: "Copy" }));
+    expect(await within(ready).findByRole("alert")).toHaveTextContent(
+      "Copy failed. Select and copy the key before closing this dialog.",
+    );
+    expect(within(ready).getByRole("button", { name: "Copy" })).toBeInTheDocument();
+    expect(within(ready).getByText("ol_by_hand")).toHaveClass("select-all");
+  } finally {
+    if (stub) Object.defineProperty(navigator, "clipboard", stub);
+    else Reflect.deleteProperty(navigator, "clipboard");
+  }
+});
 it("lets an Administrator approve and deny with an optional note on the MCP pane", async () => {
   const posted: unknown[] = [];
   stubApi({

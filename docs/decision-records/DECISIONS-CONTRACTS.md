@@ -899,3 +899,28 @@ claim that connector disable stops callbacks and reconciliation. #1177 supersede
 older claims that preparing is not narrated or that a provider-confirmed Send can
 be attributed to the last OpenLaw browser user. Existing decisions remain in place
 as historical records with those amendments.
+
+### CTR-012 addendum, 2026-09-28, #1207. The Soft gate applies at send
+
+A send for signature moves the Contract to its Signature Stage, so it meets the
+Soft gate like any Status move. A direct send and an Envelope preparation both
+ask the gate before the provider is called. When the move would cross from a
+Stage at or before `approval` while an Approval request is Pending or Rejected,
+the route refuses with the soft-gate problem type. The same request with
+`overrideSoftGate` goes ahead. The record raises the same **Move past approval**
+dialog the Status control uses.
+
+The override needs no new column. A prepared round keeps the Status and Status
+revision it was reserved at, and the later move happens only while both still
+hold. A gated round that reaches the move was therefore reserved with the
+override. The move re-reads the unresolved requests and records
+`contract.stage_gate_overridden` beside the Status change when any remain. The
+entry names the sender or preparer, because that person gave the override. The
+direct send records it in the same transaction as the send.
+
+A send moves the Status forward only. A Contract already at `signature`,
+`active` or `ended` keeps its Status and its `ended_at`. This supersedes the
+earlier send behavior, which moved any Contract to the first live Signature
+status, cleared `ended_at`, and recorded no override. A final round sent from
+Partially signed therefore stays at Partially signed until completion moves the
+Contract to Active.

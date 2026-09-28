@@ -35,18 +35,29 @@
  * sign-off on the way *back* would be a warning about nothing.
  *
  * It lives beside the status commit rather than inside the contracts
- * module because it is one rule about two modules: the contracts PATCH
- * is the only door it guards today, and the shape of that rule belongs
- * with the approvals it reads.
+ * module because it is one rule about several modules. It guards the
+ * contracts PATCH, and a send for signature: a direct send and an
+ * Envelope preparation ask it before the provider is called, and the
+ * Stage move that follows a confirmed send records the override.
  */
 
-import { and, contractApprovals, eq, inArray, users, CONTRACT_STAGES } from "@openlaw/db";
+import {
+  and,
+  contractApprovals,
+  contracts,
+  contractStatuses,
+  eq,
+  inArray,
+  users,
+  CONTRACT_STAGES,
+} from "@openlaw/db";
 import type { ContractStage, Executor } from "@openlaw/db";
 import {
   SOFT_GATE_PROBLEM_TYPE,
   UNRESOLVED_APPROVAL_STATUSES,
   type UnresolvedApprovalStatus,
 } from "@openlaw/shared";
+import { recordActivity, RECORD_ACTIVITY_TIER } from "./activity.js";
 import { httpError } from "./problem.js";
 
 /** The line the gate is drawn at (CTR-001). */
@@ -154,4 +165,79 @@ export async function assertApprovalGate(
     );
   }
   return unresolved;
+}
+
+/**
+ * Asks the gate about a send for signature, before the provider is
+ * called.
+ *
+ * A send moves the Contract to the `signature` Stage, so the gate reads
+ * the Stage it holds now and asks about that move. A Contract already at
+ * `signature` or later never trips it: the send does not move it back.
+ */
+export async function assertSendGate(
+  db: Executor,
+  contractId: string,
+  override: boolean,
+): Promise<void> {
+  const [current] = await db
+    .select({ stage: contractStatuses.stage })
+    .from(contracts)
+    .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
+    .where(eq(contracts.id, contractId));
+  if (current) await assertApprovalGate(db, contractId, current.stage, "signature", override);
+}
+
+/**
+ * Whether a send moves a Contract at this Stage. A send moves the
+ * Contract forward to `signature` only. A Contract already there, or
+ * Active, or Ended keeps its Status.
+ */
+export const sendMovesStage = (stage: ContractStage): boolean =>
+  stageIndex(stage) < stageIndex("signature");
+
+/**
+ * CTR-012's override entry, written beside the status change it rode on.
+ *
+ * Its own verb, beside the status change rather than inside it
+ * (DD-017). Pushing past sign-off is a second thing that happened, and
+ * CTR-012 requires it to be accountable in its own right. So an
+ * Administrator filters the audit log on this verb rather than hunting
+ * through status payloads for the ones that crossed the line. The
+ * payload names the people who were unresolved, because "who was
+ * skipped" is the question the entry exists to answer.
+ */
+export async function recordGateOverride(
+  tx: Executor,
+  entry: {
+    contractId: string;
+    /** Absent when no person is known, which the feed reads as the
+     * integration. */
+    actorId?: string;
+    number: number;
+    title: string;
+    fromStage: ContractStage;
+    toStage: ContractStage;
+    overridden: readonly UnresolvedApproval[];
+  },
+): Promise<void> {
+  await recordActivity(tx, {
+    entityType: "contract",
+    entityId: entry.contractId,
+    ...(entry.actorId === undefined ? {} : { actorId: entry.actorId }),
+    action: "contract.stage_gate_overridden",
+    visibility: RECORD_ACTIVITY_TIER,
+    payload: {
+      number: entry.number,
+      title: entry.title,
+      fromStage: entry.fromStage,
+      toStage: entry.toStage,
+      approvers: entry.overridden.map((approval) => ({
+        approvalId: approval.id,
+        approverId: approval.approverId,
+        approverName: approval.approverName,
+        status: approval.status,
+      })),
+    },
+  });
 }

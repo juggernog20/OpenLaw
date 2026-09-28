@@ -312,12 +312,24 @@ export function LoginPage() {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {view === "unavailable" && (
-          <Alert variant="danger">
-            <FormattedMessage
-              id="auth.login.unavailable"
-              defaultMessage="Sign-in is unavailable. Contact your administrator."
-            />
-          </Alert>
+          <>
+            <Alert variant="danger">
+              <FormattedMessage
+                id="auth.login.unavailable"
+                defaultMessage="Sign-in is unavailable. Contact your administrator."
+              />
+            </Alert>
+            {/* The API always accepts an Administrator password (TECH-008),
+                so staff sign-in keeps that way in when no method is left. */}
+            {group === "legal" && (
+              <Button variant="link" className="self-start" onClick={() => show("password")}>
+                <FormattedMessage
+                  id="auth.login.breakGlass"
+                  defaultMessage="Administrator sign-in"
+                />
+              </Button>
+            )}
+          </>
         )}
         {view === "passwordSetup" && (
           <form className="flex flex-col gap-4" onSubmit={(event) => void requestPassword(event)}>

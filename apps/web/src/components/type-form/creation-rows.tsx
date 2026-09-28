@@ -16,9 +16,11 @@ import {
 } from "@openlaw/shared";
 import {
   emptyDraft,
+  isAnswered,
   toValue,
   type AttachedField,
   type CustomFieldDraft,
+  type CustomFieldValue,
 } from "../../lib/custom-fields";
 import { type ContractValue } from "../../lib/contracts";
 import { api } from "../../lib/api";
@@ -71,6 +73,57 @@ export const creationKeys: Record<string, keyof CreationValues> = {
   counterparties: "counterparties",
 };
 
+/** The tree to evaluate. A type with no Form sent evaluates its
+ * attached Fields as flat Rows, with no Branches. */
+function formTree(form: Form | undefined, fields: readonly AttachedField[]): Form {
+  return (
+    form ??
+    fields.map((f): FormRow => ({
+      kind: "row",
+      id: f.fieldId,
+      rowRef: f.slug,
+      fieldType: f.fieldType,
+      isRequired: f.isRequired,
+      visibleOnPortal: true,
+    }))
+  );
+}
+
+/**
+ * The Field Rows a change of type must collect (MTR-014, DD-028). The
+ * rule is the one creation applies: a Row that is Required for creation
+ * is enforced only while every Branch above it holds. `record` is the
+ * record as it will be after the change, so it names the new type. The
+ * answers are the record's values plus the dialog's drafts, so an answer
+ * in the dialog can open a Branch below it. A Field the record already
+ * answers is not asked again.
+ */
+export function retypeGaps(
+  form: Form | undefined,
+  fields: readonly AttachedField[],
+  record: Readonly<Record<string, unknown>>,
+  saved: Readonly<Record<string, CustomFieldValue>>,
+  drafts: Readonly<Record<string, CustomFieldDraft>> = {},
+): AttachedField[] {
+  const drafted = Object.fromEntries(
+    fields.flatMap((field) => {
+      const draft = drafts[field.slug];
+      if (draft === undefined) return [];
+      const parsed = toValue(field, draft);
+      return "value" in parsed && parsed.value !== null ? [[field.slug, parsed.value]] : [];
+    }),
+  );
+  const answers = recordFormAnswers({ ...record, customFields: { ...saved, ...drafted } });
+  const required = formRowsForTouchpoint(
+    evaluateForm(formTree(form, fields), answers).enforcedRequiredRows,
+    "creation",
+  );
+  return required.flatMap((row) => {
+    const field = fields.find((f) => f.slug === row.rowRef);
+    return field && !isAnswered(saved[field.slug]) ? [{ ...field, isRequired: true }] : [];
+  });
+}
+
 export function creationRows(
   form: Form | undefined,
   fields: readonly AttachedField[],
@@ -92,19 +145,10 @@ export function creationRows(
       "counterpartyId" in p ? p.counterpartyId : p.name,
     ),
   });
-  const tree =
-    form ??
-    fields.map((f): FormRow => ({
-      kind: "row",
-      id: f.fieldId,
-      rowRef: f.slug,
-      fieldType: f.fieldType,
-      isRequired: f.isRequired,
-      visibleOnPortal: true,
-    }));
-  const rows = formRowsForTouchpoint(evaluateForm(tree, answers).visibleRows, "creation").filter(
-    (r) => !["title", "contract_type", "matter_type"].includes(r.rowRef),
-  );
+  const rows = formRowsForTouchpoint(
+    evaluateForm(formTree(form, fields), answers).visibleRows,
+    "creation",
+  ).filter((r) => !["title", "contract_type", "matter_type"].includes(r.rowRef));
   return {
     rows,
     answers,

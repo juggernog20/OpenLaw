@@ -938,4 +938,28 @@ describe("the SET-003 field guard counts contracts holding a value", () => {
     await detachField(type.id, field.fieldId);
     expect(await countOf()).toBe(1);
   });
+
+  it("answers types and records apart, so one type and one value read as one type (#1214)", async () => {
+    const type = await newType("Split count type");
+    const field = await defineField({ displayName: "Split count field", fieldType: "text" });
+    await attachField(type.id, field.fieldId);
+    const contract = await newContract("Split count", type.id);
+    await patchContract(contract.number, { customFields: { [field.slug]: "held" } });
+
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/fields",
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const row = (
+      res.json().fields as {
+        id: string;
+        inUseCount: number;
+        typeCount: number;
+        recordCount: number;
+      }[]
+    ).find((candidate) => candidate.id === field.fieldId);
+    expect(row).toMatchObject({ inUseCount: 2, typeCount: 1, recordCount: 1 });
+  });
 });

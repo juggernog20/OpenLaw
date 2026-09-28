@@ -7,6 +7,7 @@ import {
 } from "../lib/matter-key-dates";
 import { NeededByField } from "../components/type-form/needed-by-field";
 import { RecordRows } from "../components/type-form/record-rows";
+import { retypeGaps } from "../components/type-form/creation-rows";
 import { recordFormAnswers } from "@openlaw/shared";
 
 /** M22/5's editable matter record: one commit per field and recoverable lifecycle acts. */
@@ -38,7 +39,6 @@ import {
   sameDraft,
   toDraft,
   toValue,
-  unansweredRequired,
   type CustomFieldDraft,
   type CustomFieldValue,
 } from "../lib/custom-fields";
@@ -512,7 +512,14 @@ function MatterRecord() {
   function pickType(id: string) {
     const target = matterTypes.find((option) => option.id === id);
     if (!target || target.id === saved.matterTypeId) return;
-    if (unansweredRequired(target.fields, saved.customFields).length === 0) {
+    if (
+      retypeGaps(
+        target.creationForm,
+        target.fields,
+        { ...saved, matterTypeId: target.id },
+        saved.customFields,
+      ).length === 0
+    ) {
       void commit("matterTypeId", { matterTypeId: id });
     } else {
       setRetypeTo(target);
@@ -1488,6 +1495,7 @@ function MatterRecord() {
         {retypeTo && (
           <MatterRetypeDialog
             target={retypeTo}
+            record={{ ...saved, matterTypeId: retypeTo.id }}
             values={saved.customFields}
             people={peopleRefs}
             // The dialog asks only for the target type's unanswered
@@ -1776,6 +1784,7 @@ function MatterCustomField({
 
 function MatterRetypeDialog({
   target,
+  record,
   values,
   people,
   entities,
@@ -1783,6 +1792,8 @@ function MatterRetypeDialog({
   onConfirm,
 }: {
   target: MatterTypeOption;
+  /** The record as the change leaves it, for the Branch conditions. */
+  record: Readonly<Record<string, unknown>>;
   values: MatterRow["customFields"];
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
@@ -1790,10 +1801,11 @@ function MatterRetypeDialog({
   onConfirm: (values: Record<string, CustomFieldValue | null>) => Promise<string | undefined>;
 }) {
   const intl = useIntl();
-  const gaps = unansweredRequired(target.fields, values);
-  const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>(() =>
-    Object.fromEntries(gaps.map((field) => [field.slug, toDraft(field, values[field.slug])])),
-  );
+  // DD-028: the same Branch evaluation as the create dialog. A Row under
+  // a Branch that does not hold is neither shown nor required, and an
+  // answer here can open a Branch below it.
+  const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  const gaps = retypeGaps(target.creationForm, target.fields, record, values, drafts);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   async function submit() {

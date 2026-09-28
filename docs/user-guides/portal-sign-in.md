@@ -1,6 +1,6 @@
 # Sign in to the Business Portal
 
-Use the Portal to send Requests to Legal, follow your own conversations, work on Contracts and Matters shared with you, and answer approval requests. Ask Legal for your organization's Portal address. You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts. If the Administrator removes the last allowed email domain, OpenLaw turns off every Business Portal sign-in method. The sign-in page then shows **Sign-in is unavailable. Contact your administrator.**, and existing accounts cannot sign in either. Ask Legal to add a domain and turn a sign-in method back on.
+Use the Portal to send Requests to Legal, follow your own conversations, work on Contracts and Matters shared with you, and answer approval requests. Ask Legal for your organization's Portal address. You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts. The allowed domains control only new accounts. If your domain leaves the list, you can still sign in with your existing account.
 
 ## Get a sign-in link
 

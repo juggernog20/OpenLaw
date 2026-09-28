@@ -1029,6 +1029,78 @@ describe("the editable matter record", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("re-types straight away when the only gap sits under a Branch that does not hold (DD-028)", async () => {
+    const escalation = {
+      fieldId: "f-escalation",
+      slug: "escalation-owner",
+      displayName: "Escalation owner",
+      description: null,
+      fieldType: "text",
+      options: null,
+      displayOrder: 1,
+      isRequired: true,
+    };
+    const gated = {
+      id: "t-gated",
+      slug: "gated",
+      displayName: "Gated",
+      fields: [escalation],
+      creationForm: [
+        {
+          kind: "row",
+          id: "priority",
+          rowRef: "priority",
+          fieldType: "single_select",
+          isRequired: true,
+          visibleOnPortal: true,
+        },
+        {
+          kind: "branch",
+          id: "b-high",
+          match: "all",
+          conditions: [{ rowRef: "priority", operator: "equals", value: "high" }],
+          children: [
+            {
+              kind: "row",
+              id: "f-escalation",
+              rowRef: "escalation-owner",
+              fieldType: "text",
+              isRequired: true,
+              visibleOnPortal: true,
+            },
+          ],
+        },
+      ],
+    };
+    let saved = row();
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return json(200, {
+            matterTypes: [...TYPES, gated],
+            matterStatuses: STATUSES,
+            users: [MEMBER],
+          });
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "PATCH") {
+          patches.push(call.body);
+          saved = row({ ...saved, matterTypeId: "t-gated", matterTypeName: "Gated" });
+          return json(200, { ...record(row()), matter: saved, fields: [escalation] });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    // Priority is Medium, so the Branch that holds Escalation owner is false.
+    await user.selectOptions(await screen.findByLabelText("Matter type"), "t-gated");
+    await waitFor(() => expect(patches).toEqual([{ matterTypeId: "t-gated" }]));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("offers the reachable registry for a re-type gap on an Entity-valued Field", async () => {
     let saved = row();
     const patches: unknown[] = [];

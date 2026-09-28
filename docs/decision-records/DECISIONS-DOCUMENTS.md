@@ -462,10 +462,17 @@ with it. The whole-document route stays in the API as DOC-010 describes it.
 
 The DOC-010 rationale stands for everything else: bytes, order, note, author and
 provenance of a Version remain immutable, and every erasure keeps the typed
-confirmation and the activity entry. One gap is open: on an archived owning
-record the row menu is hidden, but an earlier Version's menu still offers Delete
-version to an Administrator. [#1211](https://github.com/juggernog20/OpenLaw/issues/1211)
-tracks whether that is wanted.
+confirmation and the activity entry.
+
+On an archived owning record an Administrator may still delete any Version,
+the current one included. The row menu and each earlier Version's menu offer
+Delete version. They also offer Compare with previous where the Version has an
+earlier one, because a comparison is a read. DOC-010 already lets
+erasure reach an archived record, because the demand for it comes from outside
+the record. Every other action stays hidden until the record is restored. Bulk
+delete stays hidden too, because an archived record draws no selection boxes.
+The route accepts an archived owner. Decided in
+[#1211](https://github.com/juggernog20/OpenLaw/issues/1211).
 
 ### DOC-015 addendum, 2026-09-28, 229909d4. Partially signed is a seventh fixed type
 

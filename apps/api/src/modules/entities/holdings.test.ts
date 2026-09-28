@@ -517,6 +517,25 @@ it("records individual owners, includes them in totals and the chart, and suppor
   expect(
     events.filter((event) => (event.payload as { ownerName?: string }).ownerName === "Alex Morgan"),
   ).toHaveLength(3);
+  // An individual owner is no Entity, so the feed's far-Entity
+  // redaction must leave its name and percentage in place.
+  const feed = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/activity?entityType=entity&entityId=${company.id}`,
+    cookies: memberCookies,
+  });
+  expect(feed.statusCode, feed.body).toBe(200);
+  const individualEntries = (
+    feed.json().entries as { action: string; payload: Record<string, unknown> }[]
+  ).filter((row) => row.action.startsWith("entity_holding.") && row.payload.ownerIndividual);
+  expect(individualEntries.map((row) => row.payload)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ ownerName: "Alex Morgan", ownershipPercent: 50 }),
+      expect.objectContaining({ ownerName: "Alex Morgan", from: 50, to: 40 }),
+      expect.objectContaining({ ownerName: "Alex Morgan", ownershipPercent: 40 }),
+    ]),
+  );
+  expect(individualEntries).toHaveLength(3);
   const after = await harness.app.inject({
     method: "GET",
     url: "/api/v1/entities/chart",

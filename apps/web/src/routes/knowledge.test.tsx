@@ -508,6 +508,33 @@ describe("a Knowledge record", () => {
     await waitFor(() => expect(screen.getByText("Saved")).toBeInTheDocument());
   });
 
+  it("shows the item's Knowledge type on its files as a label, not a choice (#1214)", async () => {
+    // The API derives the label from the item (DOC-015's Knowledge
+    // addendum) and refuses any correction, so the cell must not offer one.
+    const labelled = documentFixture({
+      versions: documentFixture().versions.map((version) => ({
+        ...version,
+        documentType: { id: "type-playbook", displayName: "Playbook", archived: false },
+      })),
+    });
+    const record = recordApi([]);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/knowledge/knowledge-1/documents" && call.method === "GET"
+          ? json(200, { documents: [labelled], nextCursor: null })
+          : record(call),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    const heading = await screen.findByRole("heading", { name: "Documents" });
+    const section = heading.closest("section")!;
+    expect(await within(section).findByText("Playbook", { selector: "span" })).toBeVisible();
+    expect(
+      within(section).queryByRole("combobox", { name: /^Type of version/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("commits identity fields inline and offers the type settings deep link only to an Administrator", async () => {
     const patches: unknown[] = [];
     stubApi({ signedIn: ADMIN, extra: recordApi(patches) });

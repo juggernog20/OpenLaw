@@ -13,7 +13,6 @@ import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import {
   AuthenticationOptionsFields,
-  withoutSignInMethods,
   type AuthenticationOptions,
 } from "../components/authentication-options";
 import { ListEditor } from "../components/list-editor";
@@ -414,9 +413,6 @@ export function SettingsAuthenticationPage() {
         return false;
       }
       setDomains(data.domains);
-      if (data.domains.length === 0) {
-        setPolicy((current) => ({ ...current, business: withoutSignInMethods(current.business) }));
-      }
       note("domains", "saved");
       return true;
     } catch {
@@ -524,15 +520,9 @@ export function SettingsAuthenticationPage() {
         }
       >
         <AuthenticationOptionsFields
-          value={domains.length === 0 ? withoutSignInMethods(policy.business) : policy.business}
-          domainsConfigured={domains.length > 0}
+          value={policy.business}
           onChange={(value) => void commitPolicy("business", value)}
-          disabled={
-            status.legal === "saving" ||
-            status.business === "saving" ||
-            status.domains === "saving" ||
-            domains.length === 0
-          }
+          disabled={status.legal === "saving" || status.business === "saving"}
           ssoConfigured={providers.length > 0}
         />
         <StatusNote status={status.business} detail={detail.business} />
@@ -591,7 +581,7 @@ export function SettingsAuthenticationPage() {
             <p className="text-sm text-muted">
               <FormattedMessage
                 id="settings.auth.noDomains"
-                defaultMessage="No domains allowed yet. New users must be invited individually."
+                defaultMessage="No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account."
               />
             </p>
           )}

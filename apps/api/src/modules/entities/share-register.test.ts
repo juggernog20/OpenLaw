@@ -831,6 +831,41 @@ describe("the share register", () => {
     }
     expect((await holdingsOf(issuer.id)).json().owners).toEqual([]);
     expect(parentRow.source).toBe("register");
+
+    // The issuer's History names the projected individual and her
+    // percentage. Ada is no Entity, so the feed must not redact her name.
+    const feed = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/activity?entityType=entity&entityId=${issuer.id}`,
+      cookies: memberCookies,
+    });
+    expect(feed.statusCode, feed.body).toBe(200);
+    const holdingPayloads = (
+      feed.json().entries as { action: string; payload: Record<string, unknown> }[]
+    )
+      .filter((row) => row.action.startsWith("entity_holding."))
+      .map((row) => ({ action: row.action, ...row.payload }));
+    expect(holdingPayloads).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: "entity_holding.created",
+          ownerName: "Ada",
+          ownerIndividual: true,
+          ownershipPercent: 40,
+        }),
+        expect.objectContaining({
+          action: "entity_holding.deleted",
+          ownerName: "Ada",
+          ownerIndividual: true,
+          ownershipPercent: 40,
+        }),
+        expect.objectContaining({
+          action: "entity_holding.created",
+          ownerName: "Projected Other Ltd",
+          ownershipPercent: 10,
+        }),
+      ]),
+    );
   });
 
   it("exports the register of members and the entries as CSV", async () => {

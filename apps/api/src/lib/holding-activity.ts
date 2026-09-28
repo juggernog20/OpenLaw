@@ -28,6 +28,9 @@ export async function recordHoldingActivity(tx: Transaction, input: HoldingActiv
     [input.ownedId, input.ownedName],
   ] as const) {
     if (input.ownerIndividual && entityId === input.ownerId) continue;
+    // The flag tells the feed's redaction that the owner is a person
+    // named on this Entity, not a far Entity to look up by name.
+    const individual = input.ownerIndividual ? { ownerIndividual: true as const } : {};
     const common = {
       entityType: "entity" as const,
       entityId,
@@ -42,6 +45,7 @@ export async function recordHoldingActivity(tx: Transaction, input: HoldingActiv
         payload: {
           legalName,
           ownerName: input.ownerName,
+          ...individual,
           ownedName: input.ownedName,
           from: input.from,
           to: input.to,
@@ -54,6 +58,7 @@ export async function recordHoldingActivity(tx: Transaction, input: HoldingActiv
         payload: {
           legalName,
           ownerName: input.ownerName,
+          ...individual,
           ownedName: input.ownedName,
           ownershipPercent: input.ownershipPercent,
         },

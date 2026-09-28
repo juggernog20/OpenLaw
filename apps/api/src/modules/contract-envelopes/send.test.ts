@@ -51,7 +51,11 @@ import {
   users,
   sql,
 } from "@openlaw/db";
-import { ENVELOPE_LIVE_PROBLEM_TYPE, SIGNING_NOT_CONFIGURED_PROBLEM_TYPE } from "@openlaw/shared";
+import {
+  ENVELOPE_LIVE_PROBLEM_TYPE,
+  SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
+  SOFT_GATE_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { recoverEnvelope } from "../../lib/signing/recovery.js";
 import { checkEnvelopeStatus } from "../../lib/signing/status-check.js";
 import { runReconciliationSweep } from "../../pipeline/reconciliation.js";
@@ -587,7 +591,7 @@ describe("the contract status follows a successful send", () => {
     expect(later.statusCode, later.body).toBe(201);
   });
 
-  it("uses the first live configured Signature status and clears an ended date", async () => {
+  it("uses the first live configured Signature status", async () => {
     const { contract, versionId } = await readyContract("Configured Signature status");
     const [custom] = await harness.db
       .insert(contractStatuses)
@@ -598,21 +602,10 @@ describe("the contract status follows a successful send", () => {
         displayOrder: -1,
       })
       .returning();
-    const [ended] = await harness.db
-      .select()
-      .from(contractStatuses)
-      .where(eq(contractStatuses.stage, "ended"));
-    await harness.db
-      .update(contracts)
-      .set({ statusId: ended!.id, endedAt: new Date() })
-      .where(eq(contracts.id, contract.id));
     try {
       const res = await send(as(MEMBER), contract.number, versionId);
       expect(res.statusCode, res.body).toBe(201);
-      expect(await storedContract(contract.id)).toMatchObject({
-        statusId: custom!.id,
-        endedAt: null,
-      });
+      expect((await storedContract(contract.id)).statusId).toBe(custom!.id);
       const again = await send(as(MEMBER), contract.number, versionId);
       expect(again.statusCode).toBe(409);
       const changes = await harness.db
@@ -631,6 +624,179 @@ describe("the contract status follows a successful send", () => {
         .set({ archivedAt: new Date() })
         .where(eq(contractStatuses.id, custom!.id));
     }
+  });
+
+  // A send moves forward only (#1207). A signed agreement that goes out
+  // again, say for a side letter, stays Active or Ended.
+  it.each(["active", "ended"] as const)(
+    "keeps an %s Contract's Status and ended date",
+    async (stage) => {
+      const { contract, versionId } = await readyContract(`Send from ${stage}`);
+      const [held] = await harness.db
+        .select()
+        .from(contractStatuses)
+        .where(and(eq(contractStatuses.stage, stage), isNull(contractStatuses.archivedAt)))
+        .limit(1);
+      const endedAt = stage === "ended" ? new Date("2026-06-30T00:00:00Z") : null;
+      await harness.db
+        .update(contracts)
+        .set({ statusId: held!.id, endedAt })
+        .where(eq(contracts.id, contract.id));
+      const res = await send(as(MEMBER), contract.number, versionId);
+      expect(res.statusCode, res.body).toBe(201);
+      expect(await storedContract(contract.id)).toMatchObject({ statusId: held!.id, endedAt });
+      const changes = await harness.db
+        .select()
+        .from(activityLog)
+        .where(
+          and(
+            eq(activityLog.entityId, contract.id),
+            eq(activityLog.action, "contract.status_changed"),
+          ),
+        );
+      expect(changes).toEqual([]);
+    },
+  );
+});
+
+/**
+ * CTR-012's soft gate at the send (#1207). A send moves the Contract
+ * past the approval Stage, so it asks the gate like any Status move. It
+ * refuses before the provider is called, and the same send with the
+ * override goes out and records the override entry.
+ */
+describe("the soft gate on a send for signature", () => {
+  beforeAll(configureConnector);
+
+  async function gatedContract(title: string) {
+    const contract = await newContract(title);
+    await paperOn(contract.number, Buffer.from("v1"), Buffer.from("v2"));
+    const paper = (await signingState(as(MEMBER), contract.number)).primaryDocument!;
+    const asked = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/approvals`,
+      cookies: as(MEMBER),
+      payload: { approverIds: [idOf(ADMIN)] },
+    });
+    expect(asked.statusCode, asked.body).toBe(201);
+    return { contract, versionId: paper.versions[0]!.id };
+  }
+
+  const stageOf = async (contractId: string) => {
+    const [row] = await harness.db
+      .select({ stage: contractStatuses.stage })
+      .from(contracts)
+      .innerJoin(contractStatuses, eq(contractStatuses.id, contracts.statusId))
+      .where(eq(contracts.id, contractId));
+    return row!.stage;
+  };
+
+  const overridesOn = (contractId: string) =>
+    harness.db
+      .select()
+      .from(activityLog)
+      .where(
+        and(
+          eq(activityLog.entityId, contractId),
+          eq(activityLog.action, "contract.stage_gate_overridden"),
+        ),
+      );
+
+  const gatedPost = (number: number, versionId: string, preparing: boolean, override?: boolean) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${number}/envelopes${preparing ? "/prepare" : ""}`,
+      cookies: as(MEMBER),
+      payload: {
+        documentVersionId: versionId,
+        signers: [...SIGNERS],
+        ...(preparing ? { idempotencyKey: `gate-${String(number)}` } : {}),
+        ...(override === undefined ? {} : { overrideSoftGate: override }),
+      },
+    });
+
+  it.each([false, true])(
+    "refuses before the provider is called, preparing: %s",
+    async (preparing) => {
+      const { contract, versionId } = await gatedContract(`Gate refusal ${String(preparing)}`);
+      const account = vi.spyOn(provider(), "testConnection");
+      const before = provider().sentEnvelopeIds().length;
+      try {
+        const res = await gatedPost(contract.number, versionId, preparing);
+        expect(res.statusCode, res.body).toBe(409);
+        expect(res.json().type).toBe(SOFT_GATE_PROBLEM_TYPE);
+        expect(res.json().detail).toContain(ADMIN.displayName);
+        expect(account).not.toHaveBeenCalled();
+      } finally {
+        account.mockRestore();
+      }
+      expect(provider().sentEnvelopeIds()).toHaveLength(before);
+      expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
+      expect(await stageOf(contract.id)).toBe("draft");
+      expect(await overridesOn(contract.id)).toEqual([]);
+    },
+  );
+
+  it("sends with the override, moves the Status, and records the override", async () => {
+    const { contract, versionId } = await gatedContract("Gate override on a direct send");
+    const res = await gatedPost(contract.number, versionId, false, true);
+    expect(res.statusCode, res.body).toBe(201);
+    expect(await stageOf(contract.id)).toBe("signature");
+    const overrides = await overridesOn(contract.id);
+    expect(overrides).toHaveLength(1);
+    expect(overrides[0]).toMatchObject({
+      actorId: idOf(MEMBER),
+      payload: {
+        fromStage: "draft",
+        toStage: "signature",
+        approvers: [{ approverId: idOf(ADMIN), status: "pending" }],
+      },
+    });
+  });
+
+  it("prepares with the override and records it when the confirmed send moves the Status", async () => {
+    const { contract, versionId } = await gatedContract("Gate override on a preparation");
+    const res = await gatedPost(contract.number, versionId, true, true);
+    expect(res.statusCode, res.body).toBe(201);
+    expect(await stageOf(contract.id)).toBe("draft");
+    expect(await overridesOn(contract.id)).toEqual([]);
+    const [draft] = await harness.db
+      .select()
+      .from(contractEnvelopes)
+      .where(eq(contractEnvelopes.contractId, contract.id));
+    await applyEnvelopeStatus(harness.app.notifier, {
+      provider: "docusign",
+      providerEnvelopeId: draft!.providerEnvelopeId!,
+      status: "sent",
+    });
+    expect(await stageOf(contract.id)).toBe("signature");
+    const overrides = await overridesOn(contract.id);
+    expect(overrides).toHaveLength(1);
+    expect(overrides[0]).toMatchObject({
+      actorId: idOf(MEMBER),
+      payload: {
+        fromStage: "draft",
+        toStage: "signature",
+        approvers: [{ approverId: idOf(ADMIN), status: "pending" }],
+      },
+    });
+  });
+
+  it("does not ask the gate for a Contract already at Signature or later", async () => {
+    const { contract, versionId } = await gatedContract("Gate after Signature");
+    const [active] = await harness.db
+      .select()
+      .from(contractStatuses)
+      .where(and(eq(contractStatuses.stage, "active"), isNull(contractStatuses.archivedAt)))
+      .limit(1);
+    await harness.db
+      .update(contracts)
+      .set({ statusId: active!.id })
+      .where(eq(contracts.id, contract.id));
+    const res = await gatedPost(contract.number, versionId, false);
+    expect(res.statusCode, res.body).toBe(201);
+    expect(await stageOf(contract.id)).toBe("active");
+    expect(await overridesOn(contract.id)).toEqual([]);
   });
 });
 

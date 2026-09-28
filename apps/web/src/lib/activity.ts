@@ -895,6 +895,26 @@ function numbered(intl: IntlShape, payload: Payload, key: string): string {
   return typeof value === "number" ? intl.formatNumber(value) : notSet(intl);
 }
 
+/** The owner a Holding entry names. The API strips the name when the
+ * owner is an Entity this viewer cannot reach (ENT-004). Entries written
+ * before 2026-09-28 also lost an individual owner's name that way. The
+ * owner may be an Entity, so the fallback is not a person's "someone". */
+function holdingOwner(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "ownerName") ??
+    intl.formatMessage({ id: "activity.entityHolding.unnamedOwner", defaultMessage: "an owner" })
+  );
+}
+
+/** The owned Entity a Holding entry names, or a fallback when the API
+ * stripped it because this viewer cannot reach that Entity. */
+function holdingOwned(intl: IntlShape, payload: Payload): string {
+  return (
+    text(payload, "ownedName") ??
+    intl.formatMessage({ id: "activity.entityHolding.unnamedOwned", defaultMessage: "an Entity" })
+  );
+}
+
 /** ENT-011's entry kinds as prose. The `other` arm is the floor: a kind
  * this build does not know still reads as a sentence. */
 function entryKind(intl: IntlShape, payload: Payload): string {
@@ -3679,9 +3699,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} recorded {owner} owning {percent}% of {owned}",
     }),
     values: (intl, payload) => ({
-      owner: named(intl, payload, "ownerName"),
-      owned: named(intl, payload, "ownedName"),
-      percent: named(intl, payload, "ownershipPercent"),
+      owner: holdingOwner(intl, payload),
+      owned: holdingOwned(intl, payload),
+      percent: numbered(intl, payload, "ownershipPercent"),
     }),
   },
   "entity_holding.updated": {
@@ -3691,10 +3711,10 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%",
     }),
     values: (intl, payload) => ({
-      owner: named(intl, payload, "ownerName"),
-      owned: named(intl, payload, "ownedName"),
-      from: named(intl, payload, "from"),
-      to: named(intl, payload, "to"),
+      owner: holdingOwner(intl, payload),
+      owned: holdingOwned(intl, payload),
+      from: numbered(intl, payload, "from"),
+      to: numbered(intl, payload, "to"),
     }),
   },
   "entity_holding.deleted": {
@@ -3704,9 +3724,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       defaultMessage: "{actor} removed {owner}'s {percent}% Holding in {owned}",
     }),
     values: (intl, payload) => ({
-      owner: named(intl, payload, "ownerName"),
-      owned: named(intl, payload, "ownedName"),
-      percent: named(intl, payload, "ownershipPercent"),
+      owner: holdingOwner(intl, payload),
+      owned: holdingOwned(intl, payload),
+      percent: numbered(intl, payload, "ownershipPercent"),
     }),
   },
   "entity_share_class.created": {

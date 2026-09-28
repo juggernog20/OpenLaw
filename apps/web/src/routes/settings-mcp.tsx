@@ -11,6 +11,7 @@ import { Bot, Clock, Link, Shield, Users, type LucideIcon } from "lucide-react";
 import { MCP_TOOLSETS, MCP_OAUTH_UNAVAILABLE_PROBLEM } from "@openlaw/shared";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { copyText } from "../lib/clipboard";
 import { requireUser } from "../lib/session";
 import { TOOLSET_MESSAGES } from "../lib/mcp";
 import { PageTitle } from "../components/page-title";
@@ -60,7 +61,7 @@ function OAuthNote() {
     <p className="py-3 text-sm text-muted">
       <FormattedMessage
         id="settings.mcp.oauthHelp"
-        defaultMessage="OAuth Clients work only if this server is reachable from the internet. <note>How to set this up</note>"
+        defaultMessage="Web-hosted Clients, such as claude.ai, need an HTTPS address that is reachable from the internet. Clients with a loopback callback, such as Claude Code, also work on a private HTTPS address. <note>How to set this up</note>"
         values={{
           note: (text) => (
             <RouterLink
@@ -236,8 +237,7 @@ export function SettingsMcpPage() {
             <Button
               variant="secondary"
               onClick={() => {
-                void navigator.clipboard
-                  .writeText(policy.serverAddress)
+                void copyText(policy.serverAddress)
                   .then(() => setCopied(true))
                   .catch(() =>
                     setError(

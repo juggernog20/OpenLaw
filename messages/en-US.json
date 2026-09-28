@@ -401,6 +401,12 @@
   "activity.entityHolding.deleted": {
     "defaultMessage": "{actor} removed {owner}'s {percent}% Holding in {owned}"
   },
+  "activity.entityHolding.unnamedOwned": {
+    "defaultMessage": "an Entity"
+  },
+  "activity.entityHolding.unnamedOwner": {
+    "defaultMessage": "an owner"
+  },
   "activity.entityHolding.updated": {
     "defaultMessage": "{actor} changed {owner}'s Holding in {owned} from {from}% to {to}%"
   },
@@ -1426,6 +1432,9 @@
   },
   "auth.enroll.manualEntry": {
     "defaultMessage": "No camera? Enter this secret manually: {secret}"
+  },
+  "auth.enroll.noPasswordHint": {
+    "defaultMessage": "Select Turn on two-factor to start enrollment. You need an authenticator app."
   },
   "auth.enroll.pageTitle": {
     "defaultMessage": "Two-factor enrollment"
@@ -10049,14 +10058,8 @@
   "settings.auth.domainPlaceholder": {
     "defaultMessage": "acme.example"
   },
-  "settings.auth.domainRequired": {
-    "defaultMessage": "Add an allowed email domain to enable Business User sign-in options."
-  },
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
-  },
-  "settings.auth.domainsAndProviderRequired": {
-    "defaultMessage": "Add an allowed email domain and configure an identity provider to enable single sign-on."
   },
   "settings.auth.domainsHint": {
     "defaultMessage": "Separate several domains with commas. Sign-in routes by the email domain a person enters, so each domain can belong to one provider."
@@ -10089,7 +10092,7 @@
     "defaultMessage": "Single sign-on (SSO)"
   },
   "settings.auth.noDomains": {
-    "defaultMessage": "No domains allowed yet. New users must be invited individually."
+    "defaultMessage": "No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account."
   },
   "settings.auth.portal": {
     "defaultMessage": "Business Portal Authentication"
@@ -10196,14 +10199,23 @@
   "settings.contractFields.archiveError": {
     "defaultMessage": "The field could not be archived."
   },
+  "settings.contractFields.archiveKept": {
+    "defaultMessage": "The attachments and values are kept, hidden until the field is restored."
+  },
+  "settings.contractFields.archiveRecords": {
+    "defaultMessage": "{count, plural, =0 {No record holds a value for it.} one {# record holds a value for it.} other {# records hold a value for it.}}"
+  },
   "settings.contractFields.archiveSubmit": {
     "defaultMessage": "Archive field"
   },
   "settings.contractFields.archiveTitle": {
     "defaultMessage": "Archive {name}"
   },
-  "settings.contractFields.archiveWarning": {
-    "defaultMessage": "{count, plural, =0 {{name} is not attached to any type. The definition is kept and the field can be restored.} one {{name} is attached to # type — the attachment is kept, hidden until the field is restored.} other {{name} is attached to # types — the attachments are kept, hidden until the field is restored.}}"
+  "settings.contractFields.archiveTypes": {
+    "defaultMessage": "{count, plural, =0 {{name} is not attached to any type.} one {{name} is attached to # type.} other {{name} is attached to # types.}}"
+  },
+  "settings.contractFields.archiveUnused": {
+    "defaultMessage": "{name} is not attached to any type, and no record holds a value for it. The definition is kept and the field can be restored."
   },
   "settings.contractFields.auditNote": {
     "defaultMessage": "The change applies immediately and is recorded in the audit log."
@@ -11799,7 +11811,7 @@
     "defaultMessage": "OAuth Clients"
   },
   "settings.mcp.oauthHelp": {
-    "defaultMessage": "OAuth Clients work only if this server is reachable from the internet. <note>How to set this up</note>"
+    "defaultMessage": "Web-hosted Clients, such as claude.ai, need an HTTPS address that is reachable from the internet. Clients with a loopback callback, such as Claude Code, also work on a private HTTPS address. <note>How to set this up</note>"
   },
   "settings.mcp.reachable": {
     "defaultMessage": "Reachable"
@@ -13544,6 +13556,9 @@
   "welcome.eSignature.error.save": {
     "defaultMessage": "The e-signature connector could not be saved."
   },
+  "welcome.eSignature.error.webhookPrivate": {
+    "defaultMessage": "DocuSign cannot reach a localhost or private address. Enter a public HTTPS webhook URL, or choose Polling."
+  },
   "welcome.eSignature.error.webhookSecret": {
     "defaultMessage": "Enter the Connect HMAC secret to use Webhook."
   },
@@ -13719,10 +13734,10 @@
     "defaultMessage": "Allowed email domains"
   },
   "welcome.portal.empty": {
-    "defaultMessage": "Add a domain to enable sign-in options."
+    "defaultMessage": "No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account."
   },
   "welcome.portal.hint": {
-    "defaultMessage": "Add an allowed email domain, then choose how Business Users sign in."
+    "defaultMessage": "Choose how Business Users sign in. An allowed email domain lets new Business Users on it create their own accounts."
   },
   "welcome.portal.remove": {
     "defaultMessage": "Remove {domain}"
@@ -13794,7 +13809,7 @@
     "defaultMessage": "The seeded lists could not be removed. Try again."
   },
   "welcome.review.startBlank.keeps": {
-    "defaultMessage": "Kept: the Other types, the Open and Closed matter statuses, the Draft, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
+    "defaultMessage": "Kept: the Other and Default types, the Open and Closed matter statuses, the Draft, Partially signed, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
   },
   "welcome.review.startBlank.rows": {
     "defaultMessage": "{count, plural, one {# row} other {# rows}}"

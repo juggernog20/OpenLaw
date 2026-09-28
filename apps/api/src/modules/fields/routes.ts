@@ -71,6 +71,12 @@ const FieldSchema = z.object({
    * attachments since #85; Contract values count since #112 and Matter
    * values since M22; Entity attachments and values join in M27. */
   inUseCount: z.number().int(),
+  /** The types the Field is attached to, across every module join. The
+   * archive dialog names this number on its own (#1214). */
+  typeCount: z.number().int(),
+  /** The records that hold a value for the Field, archived records
+   * included. `inUseCount` is `typeCount` plus this. */
+  recordCount: z.number().int(),
 });
 
 const FieldEnvelope = z.object({ field: FieldSchema });
@@ -102,7 +108,16 @@ function checkAnswerStyle(
   }
 }
 
-function toRow(row: Field, inUseCount: number) {
+/** What one Field is used by: the types it is attached to, and the
+ * records that hold a value for it. */
+interface FieldUsage {
+  types: number;
+  records: number;
+}
+
+const UNUSED: FieldUsage = { types: 0, records: 0 };
+
+function toRow(row: Field, usage: FieldUsage) {
   return {
     id: row.id,
     slug: row.slug,
@@ -115,7 +130,9 @@ function toRow(row: Field, inUseCount: number) {
     aiAnswerStyle: row.aiAnswerStyle,
     isSystemDefault: row.isSystemDefault,
     archivedAt: row.archivedAt?.toISOString() ?? null,
-    inUseCount,
+    inUseCount: usage.types + usage.records,
+    typeCount: usage.types,
+    recordCount: usage.records,
   };
 }
 
@@ -154,8 +171,9 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   ] as const;
 
   /**
-   * The SET-003 guard number per field: type attachments across every
-   * module join, plus every record that holds a value for the field.
+   * The SET-003 guard numbers per field: type attachments across every
+   * module join, and every record that holds a value for the field. The
+   * two stay apart, so the archive dialog can name each one.
    *
    * Contracts hold values from #112, and they are counted by slug — a
    * record's `custom_fields` is keyed by the field's machine identity,
@@ -163,12 +181,17 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
    * exactly like a detached field's, so a restore must not make a
    * number the Administrator already saw go up. Matter values joined in M22.
    */
-  async function attachmentCounts(
+  async function usageCounts(
     db: Executor,
     catalog: readonly { id: string; slug: string }[],
-  ): Promise<Map<string, number>> {
-    const tally = new Map<string, number>();
+  ): Promise<Map<string, FieldUsage>> {
+    const tally = new Map<string, FieldUsage>();
     if (catalog.length === 0) return tally;
+    const add = (fieldId: string, part: keyof FieldUsage, amount: number) => {
+      const usage = tally.get(fieldId) ?? { ...UNUSED };
+      usage[part] += amount;
+      tally.set(fieldId, usage);
+    };
     const fieldIds = catalog.map((row) => row.id);
     for (const { joinTable } of MODULE_JOINS) {
       const rows = await db
@@ -176,7 +199,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         .from(joinTable)
         .where(inArray(joinTable.fieldId, fieldIds))
         .groupBy(joinTable.fieldId);
-      for (const row of rows) tally.set(row.fieldId, (tally.get(row.fieldId) ?? 0) + row.tally);
+      for (const row of rows) add(row.fieldId, "types", row.tally);
     }
     // One query for the whole catalog, not one per field: a record's
     // held slugs are unnested, then counted per slug. `sql.param` binds
@@ -200,7 +223,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     for (const row of held.rows) {
       const fieldId = slugToId.get(row.slug);
       // COUNT() comes back as a string on a bigint column.
-      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+      if (fieldId) add(fieldId, "records", Number(row.tally));
     }
     const matterHeld = await db.execute<{ slug: string; tally: string }>(
       sql`
@@ -216,7 +239,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     );
     for (const row of matterHeld.rows) {
       const fieldId = slugToId.get(row.slug);
-      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+      if (fieldId) add(fieldId, "records", Number(row.tally));
     }
     const entityHeld = await db.execute<{ slug: string; tally: string }>(
       sql`
@@ -231,13 +254,13 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     );
     for (const row of entityHeld.rows) {
       const fieldId = slugToId.get(row.slug);
-      if (fieldId) tally.set(fieldId, (tally.get(fieldId) ?? 0) + Number(row.tally));
+      if (fieldId) add(fieldId, "records", Number(row.tally));
     }
     return tally;
   }
 
-  async function inUseCountOf(db: Executor, field: { id: string; slug: string }): Promise<number> {
-    return (await attachmentCounts(db, [field])).get(field.id) ?? 0;
+  async function usageOf(db: Executor, field: { id: string; slug: string }): Promise<FieldUsage> {
+    return (await usageCounts(db, [field])).get(field.id) ?? UNUSED;
   }
 
   app.get(
@@ -270,8 +293,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             : and(scoped, isNull(fields.archivedAt)),
         )
         .orderBy(asc(fields.createdAt), asc(fields.id));
-      const counts = await attachmentCounts(app.db, rows);
-      return { fields: rows.map((row) => toRow(row, counts.get(row.id) ?? 0)) };
+      const counts = await usageCounts(app.db, rows);
+      return { fields: rows.map((row) => toRow(row, counts.get(row.id) ?? UNUSED)) };
     },
   );
 
@@ -345,7 +368,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return created!;
       });
-      return reply.status(201).send({ field: toRow(row, 0) });
+      return reply.status(201).send({ field: toRow(row, UNUSED) });
     },
   );
 
@@ -426,7 +449,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row)) };
+      return { field: toRow(row, await usageOf(app.db, row)) };
     },
   );
 
@@ -472,12 +495,12 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
             slug: target.slug,
             displayName: target.displayName,
             moduleScope: target.moduleScope,
-            inUseCount: await inUseCountOf(tx, target),
+            inUseCount: await usageOf(tx, target).then((usage) => usage.types + usage.records),
           },
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row)) };
+      return { field: toRow(row, await usageOf(app.db, row)) };
     },
   );
 
@@ -513,7 +536,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { field: toRow(row, await inUseCountOf(app.db, row)) };
+      return { field: toRow(row, await usageOf(app.db, row)) };
     },
   );
 };

@@ -1705,7 +1705,7 @@
       },
       "delete": {
         "operationId": "deleteSsoProvider",
-        "summary": "Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again",
+        "summary": "Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again. Removing the last provider turns SSO off for both groups, and is refused (409) while a group can sign in only with SSO",
         "tags": ["auth"],
         "parameters": [
           {
@@ -1826,7 +1826,7 @@
     "/api/v1/auth/allowed-domains": {
       "get": {
         "operationId": "getAllowedDomains",
-        "summary": "The magic-link domain allowlist (DD-010); empty admits nobody",
+        "summary": "The magic-link domain allowlist (DD-010); empty admits no new Business Users",
         "tags": ["auth"],
         "responses": {
           "200": {
@@ -1863,7 +1863,7 @@
       },
       "put": {
         "operationId": "setAllowedDomains",
-        "summary": "Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request — an empty list closes the portal to everyone",
+        "summary": "Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request. The list admits new Business Users only; an empty list admits none and leaves existing accounts and the Business policy unchanged",
         "tags": ["auth"],
         "requestBody": {
           "required": true,
@@ -58824,7 +58824,7 @@
       },
       "post": {
         "operationId": "sendContractEnvelope",
-        "summary": "Legacy explicit direct-send API. Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called. A send the provider refuses leaves no row. A send with no clear answer stays reserved as an uncertain preparing envelope, and a matching idempotent retry answers with it rather than sending again. An envelope the provider took but the record could not keep is voided again before the refusal is raised; if the provider does not confirm that void, the envelope stays reserved with its provider id. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored",
+        "summary": "Legacy explicit direct-send API. Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract forward to its first live Signature status. A contract already at Signature, Active, or Ended keeps its status. Sending is legal at any stage. A send that would move the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 before the provider is called, and the same send with `overrideSoftGate` goes out and is logged as an override. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called. A send the provider refuses leaves no row. A send with no clear answer stays reserved as an uncertain preparing envelope, and a matching idempotent retry answers with it rather than sending again. An envelope the provider took but the record could not keep is voided again before the refusal is raised; if the provider does not confirm that void, the envelope stays reserved with its provider id. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored",
         "tags": ["envelopes"],
         "requestBody": {
           "required": true,
@@ -58886,6 +58886,9 @@
                   },
                   "completesContract": {
                     "default": true,
+                    "type": "boolean"
+                  },
+                  "overrideSoftGate": {
                     "type": "boolean"
                   }
                 },
@@ -59223,7 +59226,7 @@
             }
           },
           "409": {
-            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type.",
+            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -59235,6 +59238,7 @@
                         "urn:openlaw:problem:signing-not-configured",
                         "urn:openlaw:problem:envelope-live",
                         "urn:openlaw:problem:envelope-idempotency-conflict",
+                        "urn:openlaw:problem:approval-soft-gate",
                         "about:blank"
                       ],
                       "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
@@ -59272,7 +59276,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type."
+                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type."
                 }
               }
             }
@@ -59293,7 +59297,7 @@
     "/api/v1/contracts/{number}/envelopes/prepare": {
       "post": {
         "operationId": "prepareContractEnvelope",
-        "summary": "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage.",
+        "summary": "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override.",
         "tags": ["envelopes"],
         "requestBody": {
           "required": true,
@@ -59355,6 +59359,9 @@
                   },
                   "completesContract": {
                     "default": true,
+                    "type": "boolean"
+                  },
+                  "overrideSoftGate": {
                     "type": "boolean"
                   }
                 },
@@ -59692,7 +59699,7 @@
             }
           },
           "409": {
-            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type.",
+            "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -59704,6 +59711,7 @@
                         "urn:openlaw:problem:signing-not-configured",
                         "urn:openlaw:problem:envelope-live",
                         "urn:openlaw:problem:envelope-idempotency-conflict",
+                        "urn:openlaw:problem:approval-soft-gate",
                         "about:blank"
                       ],
                       "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
@@ -59741,7 +59749,7 @@
                   },
                   "required": ["type", "title", "status"],
                   "additionalProperties": false,
-                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type."
+                  "description": "Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type."
                 }
               }
             }
@@ -99194,6 +99202,16 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "typeCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "recordCount": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -99208,7 +99226,9 @@
                           "aiAnswerStyle",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "typeCount",
+                          "recordCount"
                         ],
                         "additionalProperties": false
                       }
@@ -99390,6 +99410,16 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "typeCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "recordCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -99404,7 +99434,9 @@
                         "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "typeCount",
+                        "recordCount"
                       ],
                       "additionalProperties": false
                     }
@@ -99592,6 +99624,16 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "typeCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "recordCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -99606,7 +99648,9 @@
                         "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "typeCount",
+                        "recordCount"
                       ],
                       "additionalProperties": false
                     }
@@ -99733,6 +99777,16 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "typeCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "recordCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -99747,7 +99801,9 @@
                         "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "typeCount",
+                        "recordCount"
                       ],
                       "additionalProperties": false
                     }
@@ -99874,6 +99930,16 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "typeCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "recordCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -99888,7 +99954,9 @@
                         "aiAnswerStyle",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "typeCount",
+                        "recordCount"
                       ],
                       "additionalProperties": false
                     }

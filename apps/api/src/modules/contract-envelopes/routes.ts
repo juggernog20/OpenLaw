@@ -111,7 +111,8 @@
  */
 
 import { EnvelopeIdentityError, requireEnvelopeIdentity } from "../../lib/signing/identity.js";
-import { contractStatusRevision } from "../../lib/signing/recovery-stage.js";
+import { contractStatusRevision, moveSentContract } from "../../lib/signing/recovery-stage.js";
+import { assertSendGate } from "../../lib/soft-gate.js";
 import { createHash, randomUUID } from "node:crypto";
 import type { Readable } from "node:stream";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
@@ -123,7 +124,6 @@ import {
   contractEnvelopes,
   contractEnvelopeSigners,
   contracts,
-  contractStatuses,
   signingConnectors,
   sql,
   desc,
@@ -134,7 +134,6 @@ import {
   EXECUTED_FETCH_STATES,
   inArray,
   isNull,
-  ne,
   users,
   type EnvelopeStatus,
   type Executor,
@@ -148,6 +147,7 @@ import {
   MAX_ENVELOPE_SIGNERS,
   MAX_ENVELOPE_SUBJECT_LENGTH,
   SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
+  SOFT_GATE_PROBLEM_TYPE,
 } from "@openlaw/shared";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { ERASED } from "../../lib/signer-erasure.js";
@@ -870,7 +870,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         schema: {
           operationId: preparing ? "prepareContractEnvelope" : "sendContractEnvelope",
           summary: preparing
-            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage."
+            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override."
             : "Legacy explicit direct-send API. Send a version of the contract's primary document out for " +
               "signature (CTR-013). The version must be a round of that " +
               "document's own chain — loose attachments are not sendable in " +
@@ -878,8 +878,14 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               "send left from. Signers are users of this install, by id, or " +
               "name-and-email pairs, and every one of them is asked at once: " +
               "there is no routing order. A successful send moves the " +
-              "contract to its first live Signature status. Sending is legal " +
-              "at any stage. Refused with a typed problem when this install " +
+              "contract forward to its first live Signature status. A " +
+              "contract already at Signature, Active, or Ended keeps its " +
+              "status. Sending is legal at any stage. A send that would move " +
+              "the contract past the approval stage while approvals are " +
+              "pending or rejected meets CTR-012's soft gate: it is refused " +
+              "409 before the provider is called, and the same send with " +
+              "`overrideSoftGate` goes out and is logged as an override. " +
+              "Refused with a typed problem when this install " +
               "has no e-signature connector, and with another when the " +
               "contract already has a live envelope (preparing, draft, or " +
               "sent) — two envelopes must never race for one signature. The " +
@@ -929,6 +935,10 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
              * record names itself. */
             subject: z.string().trim().max(MAX_ENVELOPE_SUBJECT_LENGTH).optional(),
             completesContract: z.boolean().default(true),
+            /** CTR-012's confirmation. The send moves the Contract past
+             * the approval Stage, and this says the sender saw the
+             * unresolved approvals and chose to go on. */
+            overrideSoftGate: z.boolean().optional(),
           }),
           response: {
             201: EnvelopesEnvelope,
@@ -938,12 +948,15 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
             // read `detail` — and `detail` is copy.
             409: problemTypeResponse(
               "Refused: this install has no e-signature connector, the contract " +
-                "already has a live envelope, or the idempotency key names a different " +
-                "request. An archived contract is refused here too, without naming a type.",
+                "already has a live envelope, the idempotency key names a different " +
+                "request, or the send crosses CTR-012's approval gate with approvals " +
+                "still unresolved. Re-send with `overrideSoftGate` to record the " +
+                "override. An archived contract is refused here too, without naming a type.",
               [
                 SIGNING_NOT_CONFIGURED_PROBLEM_TYPE,
                 ENVELOPE_LIVE_PROBLEM_TYPE,
                 ENVELOPE_IDEMPOTENCY_CONFLICT_PROBLEM_TYPE,
+                SOFT_GATE_PROBLEM_TYPE,
               ],
             ),
             default: problemResponse,
@@ -1052,6 +1065,12 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
 
         const fileRef = await versionFileRef(version.id);
         if (await hasLiveEnvelope(app.db, contract.id)) throw liveEnvelopeRefusal();
+        // CTR-012's soft gate, asked before the provider is called. The
+        // send that follows a preparation moves the Stage too, so a
+        // preparation asks here as well. It is asked again under the
+        // lock below, where the answer is a decision.
+        const override = request.body.overrideSoftGate ?? false;
+        await assertSendGate(app.db, contract.id, override);
         // Authentication creates nothing; persist its identity before creation.
         const account = await signing.testConnection().catch((error: unknown) => {
           throw sendFailure(error);
@@ -1095,6 +1114,11 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
           if (await hasLiveEnvelope(tx, locked.id)) throw liveEnvelopeRefusal();
           if (locked.primaryDocumentId !== primaryDocument.id)
             throw httpError(409, "The primary Document changed. Select its Version again.");
+          // A round reserved here carries the Status it was reserved
+          // at. The later move checks that Status still holds, so a
+          // gated round that reaches the move was reserved with the
+          // override, and the move records it.
+          await assertSendGate(tx, locked.id, override);
           const [creationStatus] = await tx
             .select({ id: contracts.statusId })
             .from(contracts)
@@ -1348,59 +1372,14 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
               },
             });
 
-            const [currentStatus] = await tx
-              .select({
-                id: contractStatuses.id,
-                displayName: contractStatuses.displayName,
-                stage: contractStatuses.stage,
-              })
-              .from(contracts)
-              .innerJoin(contractStatuses, eq(contracts.statusId, contractStatuses.id))
-              .where(eq(contracts.id, locked.id));
-            const [signatureStatus] = await tx
-              .select()
-              .from(contractStatuses)
-              .where(
-                and(
-                  eq(contractStatuses.stage, "signature"),
-                  isNull(contractStatuses.archivedAt),
-                  ne(contractStatuses.slug, "partially_signed"),
-                ),
-              )
-              .orderBy(asc(contractStatuses.displayOrder), asc(contractStatuses.createdAt))
-              .limit(1)
-              .for("share");
-            if (!currentStatus || !signatureStatus) {
+            // Forward only. A Contract already at Signature, Active,
+            // or Ended keeps its Status and its ended date.
+            const moved = await moveSentContract(tx, app.notifier, locked, request.user);
+            if (moved === "unconfigured") {
               throw httpError(
                 409,
                 "Configure a live Signature status before sending for signature.",
               );
-            }
-            if (currentStatus.id !== signatureStatus.id) {
-              await tx
-                .update(contracts)
-                .set({ statusId: signatureStatus.id, endedAt: null })
-                .where(eq(contracts.id, locked.id));
-              const change = {
-                from: currentStatus.displayName,
-                to: signatureStatus.displayName,
-                fromStage: currentStatus.stage,
-                toStage: signatureStatus.stage,
-              };
-              await recordActivity(tx, {
-                entityType: "contract",
-                entityId: locked.id,
-                actorId: request.user.id,
-                action: "contract.status_changed",
-                visibility: RECORD_ACTIVITY_TIER,
-                payload: { number: locked.number, title: locked.title, ...change },
-              });
-              await app.notifier.statusChanged(tx, {
-                contractId: locked.id,
-                actorId: request.user.id,
-                actorName: request.user.displayName,
-                ...change,
-              });
             }
 
             return {

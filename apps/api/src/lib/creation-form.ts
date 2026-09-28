@@ -36,13 +36,14 @@ const labels: Record<string, string> = {
   value: "Value",
   needed_by: "Needed by",
 };
-export async function assertCreationForm(
+/** The creation touchpoint's Required Rows under Branches that hold for
+ * these answers. */
+async function enforcedCreationRows(
   db: Executor,
   module: FormModule,
   typeId: string,
-  fields: readonly AttachedCustomField[],
   answers: FormAnswers,
-): Promise<void> {
+) {
   if (module !== "entity" && typeof answers.region === "string") {
     const [region] = await db
       .select({ id: regions.id })
@@ -50,11 +51,40 @@ export async function assertCreationForm(
       .where(sql`lower(${regions.displayName}) = lower(${answers.region})`);
     if (region) answers = { ...answers, region: region.id };
   }
-  const required = formRowsForTouchpoint(
+  return formRowsForTouchpoint(
     evaluateForm(formForTouchpoint(await readTypeForm(db, module, typeId), "creation"), answers)
       .enforcedRequiredRows,
     "creation",
   );
+}
+
+/**
+ * The attached Fields a change of type must find answered (MTR-014,
+ * DD-028). Creation's rule: a Field Row that is Required for creation
+ * counts only while every Branch above it holds for the record's
+ * answers. The caller passes the answers as the write leaves the record.
+ */
+export async function retypeRequiredFields(
+  db: Executor,
+  module: FormModule,
+  typeId: string,
+  attached: readonly AttachedCustomField[],
+  answers: FormAnswers,
+): Promise<AttachedCustomField[]> {
+  const enforced = new Set(
+    (await enforcedCreationRows(db, module, typeId, answers)).map((row) => row.rowRef),
+  );
+  return attached.filter((field) => enforced.has(field.slug));
+}
+
+export async function assertCreationForm(
+  db: Executor,
+  module: FormModule,
+  typeId: string,
+  fields: readonly AttachedCustomField[],
+  answers: FormAnswers,
+): Promise<void> {
+  const required = await enforcedCreationRows(db, module, typeId, answers);
   const missing = required.filter((row) => {
     const value = answers[row.rowRef];
     return (

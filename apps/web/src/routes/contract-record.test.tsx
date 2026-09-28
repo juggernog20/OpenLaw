@@ -2925,6 +2925,122 @@ describe("the /contracts/:number record page", () => {
     expect(screen.getByLabelText("Contract type")).toHaveValue("t-msa");
   });
 
+  describe("a re-type onto a type whose Form has a Branch (DD-028)", () => {
+    /** "DPA reference" is required, but only under a Branch that holds
+     * when Our position is Provider. */
+    const DPA_REFERENCE = {
+      fieldId: "f-dpa",
+      slug: "dpa_reference",
+      displayName: "DPA reference",
+      description: null,
+      fieldType: "text",
+      options: null,
+      displayOrder: 2,
+      isRequired: true,
+    };
+    const GATED = {
+      id: "t-gated",
+      slug: "gated",
+      displayName: "Gated NDA",
+      fields: [OUR_POSITION, DPA_REFERENCE],
+      creationForm: [
+        {
+          kind: "row",
+          id: "f-position",
+          rowRef: "our_position",
+          fieldType: "single_select",
+          isRequired: true,
+          visibleOnPortal: true,
+        },
+        {
+          kind: "branch",
+          id: "b-provider",
+          match: "all",
+          conditions: [{ rowRef: "our_position", operator: "equals", value: "Provider" }],
+          children: [
+            {
+              kind: "row",
+              id: "f-dpa",
+              rowRef: "dpa_reference",
+              fieldType: "text",
+              isRequired: true,
+              visibleOnPortal: true,
+            },
+          ],
+        },
+      ],
+    };
+    function gatedApi(customFields: Record<string, unknown> = {}) {
+      const api = recordApi(contractRow({ customFields }));
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) =>
+          call.url.pathname === "/api/v1/contracts/options" && call.method === "GET"
+            ? json(200, { ...OPTIONS, contractTypes: [...OPTIONS.contractTypes, GATED] })
+            : api.handler(call),
+      });
+      return api;
+    }
+
+    it("re-types straight away when the only gap sits under a Branch that does not hold", async () => {
+      const api = gatedApi({ our_position: "Customer" });
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      await user.selectOptions(await screen.findByLabelText("Contract type"), "t-gated");
+      await waitFor(() => expect(api.patches).toEqual([{ contractTypeId: "t-gated" }]));
+      expect(
+        screen.queryByRole("heading", { name: "Change contract type" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("leaves a Row under a false Branch out of the dialog and out of the write", async () => {
+      const api = gatedApi();
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      await user.selectOptions(await screen.findByLabelText("Contract type"), "t-gated");
+      const dialog = within(await screen.findByRole("dialog"));
+      expect(dialog.getByLabelText("Our position")).toBeInTheDocument();
+      expect(dialog.queryByLabelText("DPA reference")).not.toBeInTheDocument();
+
+      await user.selectOptions(dialog.getByLabelText("Our position"), "Customer");
+      expect(dialog.queryByLabelText("DPA reference")).not.toBeInTheDocument();
+      await user.click(dialog.getByRole("button", { name: "Change type" }));
+      await waitFor(() =>
+        expect(api.patches).toEqual([
+          { contractTypeId: "t-gated", customFields: { our_position: "Customer" } },
+        ]),
+      );
+    });
+
+    it("asks for a Row once an answer in the dialog opens its Branch", async () => {
+      const api = gatedApi();
+      renderAt("/contracts/42");
+      const user = userEvent.setup();
+
+      await user.selectOptions(await screen.findByLabelText("Contract type"), "t-gated");
+      const dialog = within(await screen.findByRole("dialog"));
+      await user.selectOptions(dialog.getByLabelText("Our position"), "Provider");
+      const dpa = await dialog.findByLabelText("DPA reference");
+
+      await user.click(dialog.getByRole("button", { name: "Change type" }));
+      expect(await dialog.findByText(/Fill DPA reference/)).toBeInTheDocument();
+      expect(api.patches).toEqual([]);
+
+      await user.type(dpa, "DPA-7");
+      await user.click(dialog.getByRole("button", { name: "Change type" }));
+      await waitFor(() =>
+        expect(api.patches).toEqual([
+          {
+            contractTypeId: "t-gated",
+            customFields: { our_position: "Provider", dpa_reference: "DPA-7" },
+          },
+        ]),
+      );
+    });
+  });
+
   it("shows the seam's refusal beside the field that earned it", async () => {
     const api = recordApi(contractRow());
     stubApi({
@@ -7205,6 +7321,72 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
       within(section).getByRole("button", { name: "Orion_MSA_2026_draft.docx" }),
     ).toBeInTheDocument();
     expect(within(section).getByText("Primary")).toBeVisible();
+  });
+
+  it("lets an Administrator delete any Version on an archived record, and nothing else (#1211)", async () => {
+    // DOC-010: erasure reaches an archived record, because the demand
+    // for it comes from outside the record. Every other write stays off.
+    const record = recordApi(contractRow({ archivedAt: "2026-08-02T00:00:00.000Z" }));
+    const api = documentsApi([CHAIN, DRAFT]);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/42" && call.method === "GET"
+          ? record.handler(call)
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByRole("button", { name: DRAFT.title });
+    expect(within(section).queryByRole("button", { name: "Upload" })).not.toBeInTheDocument();
+    expect(within(section).queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(
+      within(section).queryByRole("button", { name: `Actions for ${DRAFT.title}` }),
+    ).not.toBeInTheDocument();
+
+    const verbsOf = async (name: string) => {
+      await user.click(within(section).getByRole("button", { name }));
+      const menu = await screen.findByRole("menu");
+      const verbs = within(menu)
+        .getAllByRole("menuitem")
+        .map((item) => item.textContent ?? "");
+      await user.keyboard("{Escape}");
+      return verbs;
+    };
+    // The current round of a one-Version Document.
+    expect(await verbsOf(`Actions for version 1 of ${DRAFT.title}`)).toEqual(["Delete version"]);
+    // The current round of a chain, where Compare is a read.
+    expect(await verbsOf(`Actions for version 3 of ${CHAIN.title}`)).toEqual([
+      "Compare with previous",
+      "Delete version",
+    ]);
+    // An earlier round keeps Delete version and loses the executed pin.
+    await user.click(
+      within(section).getByRole("button", { name: /Show the 2 earlier versions of/ }),
+    );
+    expect(await verbsOf(`Actions for version 2 of ${CHAIN.title}`)).toEqual([
+      "Compare with previous",
+      "Delete version",
+    ]);
+
+    await user.click(
+      within(section).getByRole("button", { name: `Actions for version 1 of ${DRAFT.title}` }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Delete version" }));
+    const dialog = await screen.findByRole("dialog", { name: "Delete version 1?" });
+    await user.type(within(dialog).getByLabelText('Type "delete" to confirm'), "delete");
+    await user.click(
+      within(dialog).getByRole("button", { name: `Delete version 1 of ${DRAFT.title}` }),
+    );
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(api.writes).toEqual([
+      {
+        url: `/api/v1/documents/${DRAFT.id}/versions/${DRAFT.versions[0]!.id}:DELETE`,
+        body: { confirmTitle: DRAFT.title },
+      },
+    ]);
   });
 
   it("archives a document off the list and out of the count", async () => {

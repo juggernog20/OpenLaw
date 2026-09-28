@@ -18,7 +18,7 @@ import {
   sql,
   type Matter,
 } from "@openlaw/db";
-import { MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE } from "@openlaw/shared";
+import { MATTER_REOPEN_CONFIRMATION_PROBLEM_TYPE, recordFormAnswers } from "@openlaw/shared";
 import { z } from "zod";
 import { NO_PERMISSION, type AuthenticatedUser } from "../../auth/guards.js";
 import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
@@ -29,6 +29,7 @@ import {
   projectCustomFields,
   selectAttachedFields,
 } from "../../lib/custom-fields.js";
+import { retypeRequiredFields } from "../../lib/creation-form.js";
 import { incompleteMatter } from "../../lib/incomplete-matter.js";
 import { matterTeamScope, NO_MATTER } from "../../lib/matter-access.js";
 import { addMatterTeamMember } from "../../lib/matter-team.js";
@@ -287,7 +288,17 @@ export async function patchMatter(
         body.customFields ?? {},
       );
       if (retyped) {
-        assertRequiredCustomFields(attached, applied.values);
+        // DD-028: a Field Row under a Branch that does not hold for the
+        // record's answers is not enforced, the same rule creation applies.
+        const answers = recordFormAnswers({
+          ...target,
+          ...patch,
+          customFields: applied.values,
+        });
+        assertRequiredCustomFields(
+          await retypeRequiredFields(tx, "matter", patch.matterTypeId!, attached, answers),
+          applied.values,
+        );
       } else if (body.customFields !== undefined) {
         assertRequiredCustomFields(
           attached.filter((field) => field.slug in body.customFields!),

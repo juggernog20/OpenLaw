@@ -218,11 +218,20 @@ describe("runtime BYO-OIDC (POST /api/v1/auth/sso-providers + sso sign-in)", () 
   it("refuses registration when discovery cannot reach the issuer", async () => {
     const res = await registerProvider(adminCookies, {
       providerId: "dead-idp",
+      // A domain of its own, so the domain check cannot refuse first.
+      domain: "dead.example",
       // Nothing listens here; discovery must fail before anything persists.
       issuer: "http://127.0.0.1:9",
     });
-    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBe(502);
     expect(res.headers["content-type"]).toContain("application/problem+json");
+    // The detail names the issuer's discovery URL, so the Administrator
+    // does not read the 502 as OpenLaw itself being down.
+    expect(res.json().detail).toBe(
+      "OpenLaw could not reach the identity provider's discovery URL, " +
+        "http://127.0.0.1:9/.well-known/openid-configuration. Check the issuer URL, and " +
+        "check that this server can reach the identity provider.",
+    );
     const rows = await harness.db
       .select({ id: ssoProviders.id })
       .from(ssoProviders)
@@ -617,8 +626,12 @@ describe("the provider management surface (#64)", () => {
   it("restores the provider untouched when the new issuer cannot be discovered", async () => {
     const before = await listProviders(adminCookies);
     const res = await patchProvider(PROVIDER.providerId, { issuer: "http://127.0.0.1:9" });
-    expect(res.statusCode).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBe(502);
     expect(res.headers["content-type"]).toContain("application/problem+json");
+    expect(res.json().detail).toContain(
+      "could not reach the identity provider's discovery URL, " +
+        "http://127.0.0.1:9/.well-known/openid-configuration.",
+    );
 
     const after = await listProviders(adminCookies);
     expect(after.json()).toEqual(before.json());
@@ -958,9 +971,46 @@ describe("several identity providers, routed by email domain", () => {
   });
 });
 
-it("removing the last provider disables SSO for both groups, even when SSO is their only method", async () => {
+it("refuses to remove the last provider while a group can sign in only with SSO", async () => {
+  const ssoOnly = { password: false, magicLink: false, sso: true, requireTwoFactor: false };
+  const business = { password: true, magicLink: false, sso: true, requireTwoFactor: true };
+  const remove = () =>
+    harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sso-providers/${PROVIDER.providerId}`,
+      cookies: adminCookies,
+    });
+  const listed = async () =>
+    (
+      await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/auth/sso-providers",
+        cookies: adminCookies,
+      })
+    ).json().providers;
+  const stored = async () => (await harness.db.select().from(orgSettings))[0]!.authenticationPolicy;
+
+  await harness.db.update(orgSettings).set({ authenticationPolicy: { legal: ssoOnly, business } });
+  const refused = await remove();
+  expect(refused.statusCode, refused.body).toBe(409);
+  expect(refused.json().detail).toBe(
+    "Legal Users can sign in only with single sign-on. Turn on another sign-in method before you remove the last identity provider.",
+  );
+  expect(await listed()).toHaveLength(1);
+  expect(await stored()).toEqual({ legal: ssoOnly, business });
+  // The Administrator password path stays open while Legal Users use only SSO (TECH-008).
+  expect(await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password)).toBeDefined();
+
+  await harness.db
+    .update(orgSettings)
+    .set({ authenticationPolicy: { legal: ssoOnly, business: ssoOnly } });
+  expect((await remove()).json().detail).toContain("Legal Users and Business Users");
+  expect(await listed()).toHaveLength(1);
+});
+
+it("removing the last provider turns SSO off for both groups when each keeps another method", async () => {
   const previous = {
-    legal: { password: false, magicLink: false, sso: true, requireTwoFactor: false },
+    legal: { password: false, magicLink: true, sso: true, requireTwoFactor: false },
     business: { password: true, magicLink: false, sso: true, requireTwoFactor: true },
   };
   await harness.db.update(orgSettings).set({ authenticationPolicy: previous });
@@ -989,6 +1039,4 @@ it("removing the last provider disables SSO for both groups, even when SSO is th
   });
   expect(enable.statusCode).toBe(400);
   expect(enable.json().detail).toContain("Configure an identity provider");
-  // Administrators retain password recovery access when a group used only SSO.
-  expect(await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password)).toBeDefined();
 });

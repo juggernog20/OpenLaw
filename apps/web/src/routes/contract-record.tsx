@@ -7,6 +7,7 @@ import {
 } from "../lib/key-dates";
 import { NeededByField } from "../components/type-form/needed-by-field";
 import { RecordRows } from "../components/type-form/record-rows";
+import { retypeGaps } from "../components/type-form/creation-rows";
 import { recordFormAnswers, recordFormRows } from "@openlaw/shared";
 
 import { identifierLabel } from "../lib/identifier-label";
@@ -184,7 +185,6 @@ import {
   sameDraft,
   toDraft,
   toValue,
-  unansweredRequired,
   type AttachedField,
   type CustomFieldDraft,
   type CustomFieldRefs,
@@ -192,12 +192,7 @@ import {
   type CustomFieldValues,
 } from "../lib/custom-fields";
 import { formatShortDate } from "../lib/format";
-import {
-  APPROVAL_PILL,
-  isUnresolved,
-  readContractApprovals,
-  type ContractApproval,
-} from "../lib/approvals";
+import { isUnresolved, readContractApprovals, type ContractApproval } from "../lib/approvals";
 import { readContractKeyDates, type ContractDeadline } from "../lib/key-dates";
 import type { ContractTask } from "../lib/tasks";
 import { confirmContractRenewal, type ConfirmedRenewal } from "../lib/renewals";
@@ -224,7 +219,7 @@ import { RecordApplets } from "../components/shell/record-applets";
 import { RecordTabs } from "../components/shell/record-tabs";
 import type { Applet } from "../components/shell/applets";
 import { ApprovalsCard, SignaturesCard } from "../components/approvals/approvals-signing-card";
-import { Avatar } from "../components/avatar";
+import { SoftGateDialog } from "../components/approvals/soft-gate-dialog";
 import { ConfidentialBanner } from "../components/confidential-banner";
 import { ConfidentialToggle } from "../components/confidential-toggle";
 import { RestrictedRecordCell } from "../components/restricted-record-cell";
@@ -1732,11 +1727,20 @@ function ContractRecord() {
   function pickType(contractTypeId: string) {
     const target = contractTypes.find((option: ContractTypeOption) => option.id === contractTypeId);
     if (!target || target.id === saved.contractTypeId) return;
-    if (unansweredRequired(target.fields, saved.customFields).length === 0) {
+    if (
+      retypeGaps(target.creationForm, target.fields, retypeRecord(target), saved.customFields)
+        .length === 0
+    ) {
       void commit("contractTypeId", { contractTypeId });
       return;
     }
     setRetypeTo(target);
+  }
+
+  /** The record as a change to `target` leaves it, for DD-028's
+   * Branch conditions. */
+  function retypeRecord(target: ContractTypeOption): Record<string, unknown> {
+    return { ...saved, contractTypeId: target.id, counterparties: parties };
   }
 
   function commitText(key: TextFieldKey) {
@@ -3100,6 +3104,16 @@ function ContractRecord() {
               <SignaturesCard
                 signing={signing}
                 users={users}
+                approvals={approvals}
+                // The Status a send moves the Contract to, as the server
+                // picks it: the first live Signature status that is not
+                // Partially signed, in the Settings order.
+                signatureStatusName={
+                  contractStatuses.find(
+                    (option: ContractStatusOption) =>
+                      option.stage === "signature" && option.slug !== "partially_signed",
+                  )?.displayName ?? ""
+                }
                 onSigning={(next) => {
                   setSigning(next);
                   void revalidate();
@@ -3134,6 +3148,7 @@ function ContractRecord() {
         {retypeTo && (
           <RetypeDialog
             target={retypeTo}
+            record={retypeRecord(retypeTo)}
             values={saved.customFields}
             people={peopleReferences}
             entities={entityReferences}
@@ -3158,7 +3173,7 @@ function ContractRecord() {
         )}
         {gateTo && (
           <SoftGateDialog
-            target={gateTo}
+            statusName={gateTo.displayName}
             unresolved={approvals.filter(isUnresolved)}
             onOpenChange={(open) => {
               if (!open) setGateTo(null);
@@ -3725,130 +3740,6 @@ function CustomFieldRow({
 }
 
 /**
- * CTR-012's soft gate, raised by the seam's refusal (#235).
- *
- * The record is on its way past the approval stage while somebody's
- * sign-off is still open. That is allowed — CTR-001 restricts no
- * transition and CTR-012 chose a warning over a lock, because in a
- * 2–10 person team the person holding the policy and the person
- * overriding it are often the same human. So this costs one deliberate
- * press, and the press is what the activity feed records.
- *
- * **It names the people, and says what each of them said.** "Approvals
- * are open" is not something anybody can act on; "Sarah Chen is
- * pending, Marcus Webb rejected" is. The state rides in the same
- * DES-005 pill the Approvals roster draws it in, so the dialog and the
- * section behind it say the same thing in the same colour.
- *
- * **It states nothing the seam did not say.** Whether the move crosses
- * the line, and whether anything is unresolved, is the seam's decision
- * and its refusal is what opened this — the same one-rule-one-place
- * shape the apply dialog takes (DES-035 clause 16). What is drawn here
- * is the record's own roster, filtered to the asks an approval has not
- * answered.
- */
-function SoftGateDialog({
-  target,
-  unresolved,
-  onOpenChange,
-  onConfirm,
-}: Readonly<{
-  target: ContractStatusOption;
-  unresolved: readonly ContractApproval[];
-  onOpenChange: (open: boolean) => void;
-  /** Answers `undefined` when the override landed, and the seam's own
-   * refusal — or an empty string when it gave none — when it did not. */
-  onConfirm: () => Promise<string | undefined>;
-}>) {
-  const intl = useIntl();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit() {
-    if (busy) return;
-    setError(null);
-    setBusy(true);
-    const refusal = await onConfirm().finally(() => setBusy(false));
-    if (refusal !== undefined) {
-      setError(
-        refusal ||
-          intl.formatMessage({
-            id: "contracts.softGate.error",
-            defaultMessage: "The status could not be changed.",
-          }),
-      );
-    }
-  }
-
-  /** A dismissal is ignored while the override is in flight: the
-   * commit either lands or is refused, and a dialog that vanished
-   * mid-write would leave the reader with neither answer. */
-  function close(open: boolean) {
-    if (!open && busy) return;
-    onOpenChange(open);
-  }
-
-  return (
-    <Dialog open onOpenChange={close}>
-      <DialogContent aria-describedby="contract-soft-gate-note">
-        <DialogTitle>
-          <FormattedMessage id="contracts.softGate.title" defaultMessage="Move past approval" />
-        </DialogTitle>
-        <p id="contract-soft-gate-note" className="mt-2 text-base text-muted">
-          <FormattedMessage
-            id="contracts.softGate.note"
-            defaultMessage="{count, plural, one {# approval on this contract is unresolved.} other {# approvals on this contract are unresolved.}} Moving to {status} goes past sign-off."
-            values={{ count: unresolved.length, status: target.displayName }}
-          />
-        </p>
-        <ul className="mt-4 flex flex-col gap-2">
-          {unresolved.map((approval) => (
-            <li key={approval.id} className="flex items-center gap-2">
-              <Avatar
-                name={approval.approver.displayName}
-                image={approval.approver.image}
-                className="size-6"
-              />
-              <span className="text-base text-primary">{approval.approver.displayName}</span>
-              <span
-                className={`inline-flex rounded-pill px-2 py-0.5 text-xs font-medium ${APPROVAL_PILL[approval.status]}`}
-              >
-                {approval.status === "rejected" ? (
-                  <FormattedMessage id="approvals.status.rejected" defaultMessage="Rejected" />
-                ) : (
-                  <FormattedMessage id="approvals.status.pending" defaultMessage="Pending" />
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-        {/* The C5 mock's soft-gate note row, said where the act is taken
-        rather than under the roster (DES-035 clauses 17 and 18). */}
-        <p className="mt-4 text-xs text-muted">
-          <FormattedMessage
-            id="contracts.softGate.override"
-            defaultMessage="This is allowed. It is recorded on the record's activity as an override."
-          />
-        </p>
-        {error && (
-          <p role="alert" className="mt-4 text-xs text-status-danger-fg">
-            {error}
-          </p>
-        )}
-        <div className="mt-4 flex justify-end gap-2">
-          <Button type="button" variant="secondary" disabled={busy} onClick={() => close(false)}>
-            <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
-          </Button>
-          <Button type="button" disabled={busy} onClick={() => void submit()}>
-            <FormattedMessage id="contracts.softGate.submit" defaultMessage="Move anyway" />
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-/**
  * Re-typing onto a type that demands something the record does not
  * answer (MTR-014). The record cannot fill those fields inline — they
  * belong to a type it does not hold yet — so this collects them and
@@ -3857,6 +3748,7 @@ function SoftGateDialog({
  */
 function RetypeDialog({
   target,
+  record,
   values,
   people,
   entities,
@@ -3864,6 +3756,8 @@ function RetypeDialog({
   onConfirm,
 }: Readonly<{
   target: ContractTypeOption;
+  /** The record as the change leaves it, for the Branch conditions. */
+  record: Readonly<Record<string, unknown>>;
   values: CustomFieldValues;
   people: readonly FieldReference[];
   entities: readonly FieldReference[];
@@ -3873,10 +3767,11 @@ function RetypeDialog({
   onConfirm: (customFields: Record<string, CustomFieldValue | null>) => Promise<string | undefined>;
 }>) {
   const intl = useIntl();
-  const gaps = unansweredRequired(target.fields, values);
-  const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>(() =>
-    Object.fromEntries(gaps.map((field) => [field.slug, toDraft(field, values[field.slug])])),
-  );
+  // DD-028: the same Branch evaluation as the create dialog. A Row under
+  // a Branch that does not hold is neither shown nor required, and an
+  // answer here can open a Branch below it.
+  const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
+  const gaps = retypeGaps(target.creationForm, target.fields, record, values, drafts);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -3885,7 +3780,7 @@ function RetypeDialog({
     setError(null);
     const collected: Record<string, CustomFieldValue | null> = {};
     for (const field of gaps) {
-      const parsed = toValue(field, drafts[field.slug] ?? "");
+      const parsed = toValue(field, drafts[field.slug] ?? toDraft(field, values[field.slug]));
       if ("error" in parsed) {
         setError(
           intl.formatMessage({
@@ -3959,7 +3854,7 @@ function RetypeDialog({
               <CustomFieldControl
                 id={`contract-retype-${field.slug}`}
                 field={field}
-                draft={drafts[field.slug] ?? ""}
+                draft={drafts[field.slug] ?? toDraft(field, values[field.slug])}
                 people={people}
                 entities={entities}
                 describedBy={field.description ? `contract-retype-${field.slug}-help` : undefined}

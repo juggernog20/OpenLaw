@@ -70,10 +70,7 @@ import {
   useSetupDraft,
   writeSetupDraft,
 } from "../lib/setup-drafts";
-import {
-  AuthenticationOptionsFields,
-  withoutSignInMethods,
-} from "../components/authentication-options";
+import { AuthenticationOptionsFields } from "../components/authentication-options";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
@@ -94,6 +91,39 @@ const SIGNING_PROVIDER = "docusign" as const;
 
 /** The estates DocuSign runs, as the API's own enum has them. */
 const SIGNING_ENVIRONMENTS = ["demo", "production"] as const;
+
+/**
+ * Whether a callback host is one DocuSign can never reach: a localhost
+ * name, or a loopback, private, link-local or shared IP literal. The
+ * browser cannot resolve a name, so a public name that points at a
+ * private address still passes. DocuSign then reports the failure.
+ */
+function isPrivateCallbackHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return true;
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/.exec(host);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168)
+    );
+  }
+  if (!host.includes(":")) return false;
+  // The URL parser writes an IPv4-mapped address in hex, ::ffff:a00:1.
+  const mapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host);
+  if (mapped) {
+    const high = parseInt(mapped[1]!, 16);
+    const low = parseInt(mapped[2]!, 16);
+    return isPrivateCallbackHost(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`);
+  }
+  return host === "::1" || host === "::" || /^f[cd]/.test(host) || /^fe[89ab]/.test(host);
+}
 
 /** The connector as the API answers it. Never either secret. */
 type SigningConnector =
@@ -360,7 +390,7 @@ function StartBlankDialog({
           <p className="text-sm text-muted">
             <FormattedMessage
               id="welcome.review.startBlank.keeps"
-              defaultMessage="Kept: the Other types, the Open and Closed matter statuses, the Draft, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
+              defaultMessage="Kept: the Other and Default types, the Open and Closed matter statuses, the Draft, Partially signed, Active, and Expired contract statuses, the default Fields, and the reminder offsets."
             />
           </p>
           <p className="flex items-center gap-1.5 text-xs text-muted">
@@ -1109,14 +1139,6 @@ export function WelcomePage() {
     setDomainInput("");
   }
 
-  function removeDomain(domain: string) {
-    const next = domains.filter((value) => value !== domain);
-    setDomains(next);
-    if (next.length === 0) {
-      setPolicy((current) => ({ ...current, business: withoutSignInMethods(current.business) }));
-    }
-  }
-
   async function saveEmailSettings(event: FormSubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -1314,6 +1336,19 @@ export function WelcomePage() {
             id: "welcome.eSignature.error.webhookUrl",
             defaultMessage:
               "Enter a public HTTPS webhook URL without credentials, query parameters or fragments.",
+          }),
+        );
+        return;
+      }
+      // The card already says these hosts cannot receive DocuSign
+      // updates, so the wizard refuses them rather than save a Webhook
+      // that never delivers.
+      if (isPrivateCallbackHost(url.hostname)) {
+        setError(
+          intl.formatMessage({
+            id: "welcome.eSignature.error.webhookPrivate",
+            defaultMessage:
+              "DocuSign cannot reach a localhost or private address. Enter a public HTTPS webhook URL, or choose Polling.",
           }),
         );
         return;
@@ -1747,7 +1782,7 @@ export function WelcomePage() {
                       <CardDescription>
                         <FormattedMessage
                           id="welcome.portal.hint"
-                          defaultMessage="Add an allowed email domain, then choose how Business Users sign in."
+                          defaultMessage="Choose how Business Users sign in. An allowed email domain lets new Business Users on it create their own accounts."
                         />
                       </CardDescription>
                       <div className="flex flex-col gap-1.5">
@@ -1796,7 +1831,7 @@ export function WelcomePage() {
                                   { domain },
                                 )}
                                 className="p-1 text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
-                                onClick={() => removeDomain(domain)}
+                                onClick={() => setDomains(domains.filter((d) => d !== domain))}
                               >
                                 <X size={16} aria-hidden />
                               </button>
@@ -1807,19 +1842,14 @@ export function WelcomePage() {
                         <p className="text-sm text-muted">
                           <FormattedMessage
                             id="welcome.portal.empty"
-                            defaultMessage="Add a domain to enable sign-in options."
+                            defaultMessage="No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account."
                           />
                         </p>
                       )}
                       <AuthenticationOptionsFields
-                        value={
-                          domains.length === 0
-                            ? withoutSignInMethods(policy.business)
-                            : policy.business
-                        }
+                        value={policy.business}
                         onChange={(business) => setPolicy({ ...policy, business })}
-                        disabled={busy || domains.length === 0}
-                        domainsConfigured={domains.length > 0}
+                        disabled={busy}
                         ssoConfigured={ssoProviders.length > 0}
                       />
                     </AuthenticationSection>

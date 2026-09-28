@@ -240,9 +240,17 @@ export function SettingsContractStatusesPage() {
   const live = rows.filter((row) => !row.archivedAt).sort(byDisplayOrder);
   const archived = rows.filter((row) => row.archivedAt).sort(byDisplayOrder);
 
-  /** The CTR-001 floor, client-side: is this row its stage's last live one? */
+  /** The CTR-001 floor, client-side: is this row its stage's last live
+   * one? It matches the API's `breaksStageFloor`. The protected Partially
+   * signed Status does not keep the signature stage open, so it never
+   * counts as another live Signature Status. */
   const lastLiveInStage = (row: StatusRow) =>
-    !live.some((candidate) => candidate.stage === row.stage && candidate.id !== row.id);
+    !live.some(
+      (candidate) =>
+        candidate.stage === row.stage &&
+        candidate.id !== row.id &&
+        (row.stage !== "signature" || candidate.slug !== "partially_signed"),
+    );
 
   function noteRow(id: string, status: FieldStatus, detail?: string) {
     setRowStatus((current) => ({ ...current, [id]: status }));

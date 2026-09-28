@@ -22,7 +22,11 @@
 import { describe, expect, it } from "vitest";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ENVELOPE_LIVE_PROBLEM_TYPE, MAX_ENVELOPE_SIGNERS } from "@openlaw/shared";
+import {
+  ENVELOPE_LIVE_PROBLEM_TYPE,
+  MAX_ENVELOPE_SIGNERS,
+  SOFT_GATE_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import {
   json,
   problem,
@@ -815,6 +819,85 @@ describe("sending for signature", () => {
     // send can be made again without retyping the signers.
     expect(within(dialog).getByLabelText("Signer 1 name")).toHaveValue("Sarah Chen");
     expect(within(dialog).getByRole("button", { name: "Send envelope" })).toBeEnabled();
+  });
+
+  // CTR-012's soft gate at the send (#1207). The seam decides; its
+  // typed refusal raises the same Move past approval dialog the Status
+  // picker uses, and the confirm re-sends with the override.
+  it("asks the soft gate's question, then sends with the override", async () => {
+    const user = userEvent.setup();
+    const api = recordApi();
+    const extra = (call: StubCall) => {
+      if (call.url.pathname === "/api/v1/contracts/42/approvals" && call.method === "GET") {
+        return json(200, {
+          approvals: [
+            {
+              id: "a1",
+              approver: { id: "u4", displayName: "Omar Owner", image: null },
+              requestedBy: { id: "u2", displayName: "Nadia Counsel", image: null },
+              source: "manual",
+              groupName: null,
+              status: "rejected",
+              note: null,
+              requestedAt: "2026-08-10T00:00:00.000Z",
+              decidedAt: "2026-08-11T00:00:00.000Z",
+            },
+          ],
+        });
+      }
+      if (
+        call.url.pathname === "/api/v1/contracts/42/envelopes" &&
+        call.method === "POST" &&
+        !(call.body as { overrideSoftGate?: boolean }).overrideSoftGate
+      ) {
+        api.writes.push({ path: call.url.pathname, body: call.body });
+        return problem(
+          409,
+          "This contract has unresolved approvals: Omar Owner (rejected).",
+          SOFT_GATE_PROBLEM_TYPE,
+        );
+      }
+      return api.handler(call);
+    };
+    stubApi({ signedIn: MEMBER, extra });
+    renderAt("/contracts/42/signatures");
+
+    await user.click(await screen.findByRole("button", { name: "Send for signature" }));
+    const dialog = await screen.findByRole("dialog", { name: "Send for signature" });
+    await user.type(within(dialog).getByLabelText("Signer 1 name"), "Sarah Chen");
+    await user.type(within(dialog).getByLabelText("Signer 1 email"), "sarah@meridianbio.example");
+    await user.click(within(dialog).getByRole("radio", { name: /Yes, all required signatures/ }));
+    await user.click(within(dialog).getByRole("button", { name: "Send envelope" }));
+
+    // The gate names the Status the send moves to and the unresolved
+    // request. Cancel sends nothing and keeps the send form.
+    let gate = await screen.findByRole("dialog", { name: "Move past approval" });
+    expect(
+      within(gate).getByText(
+        "1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(gate).getByText("Omar Owner")).toBeInTheDocument();
+    expect(within(gate).getByText("Rejected")).toBeInTheDocument();
+    await user.click(within(gate).getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Move past approval" })).not.toBeInTheDocument(),
+    );
+    expect(api.writes).toHaveLength(1);
+    const kept = screen.getByRole("dialog", { name: "Send for signature" });
+    expect(within(kept).getByLabelText("Signer 1 name")).toHaveValue("Sarah Chen");
+
+    await user.click(within(kept).getByRole("button", { name: "Send envelope" }));
+    gate = await screen.findByRole("dialog", { name: "Move past approval" });
+    await user.click(within(gate).getByRole("button", { name: "Move anyway" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(3));
+    expect(api.writes[2]).toMatchObject({
+      path: "/api/v1/contracts/42/envelopes",
+      body: { documentVersionId: "v2", overrideSoftGate: true },
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(async () => expect(await envelopeRows()).toHaveLength(1));
   });
 
   it("refuses to send a signer it could not reach, in the dialog", async () => {

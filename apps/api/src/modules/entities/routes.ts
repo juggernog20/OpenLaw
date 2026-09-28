@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { assertCreationForm } from "../../lib/creation-form.js";
+import { assertCreationForm, retypeRequiredFields } from "../../lib/creation-form.js";
 import { formForTouchpoint } from "@openlaw/shared";
 import { FormNodeSchema, readTypeForm } from "../../lib/type-form-routes.js";
 
@@ -632,7 +632,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
             body.customFields ?? {},
           );
           if (retyped) {
-            assertRequiredCustomFields(fields, applied.values);
+            // DD-028: a Field Row under a Branch that does not hold is
+            // not enforced. The answers are the ones creation reads.
+            assertRequiredCustomFields(
+              await retypeRequiredFields(tx, "entity", patch.entityTypeId!, fields, applied.values),
+              applied.values,
+            );
           } else if (body.customFields !== undefined) {
             assertRequiredCustomFields(
               fields.filter((field) => field.slug in body.customFields!),

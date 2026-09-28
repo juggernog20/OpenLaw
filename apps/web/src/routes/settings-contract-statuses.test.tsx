@@ -36,7 +36,18 @@ const SEEDS = [
   ["s8", "terminated", "Terminated", "ended"],
 ] as const;
 
-function seededStatuses(archivedSlugs: string[] = []) {
+interface StatusStub {
+  id: string;
+  slug: string;
+  displayName: string;
+  stage: string;
+  displayOrder: number;
+  isSystemDefault: boolean;
+  archivedAt: string | null;
+  inUseCount: number;
+}
+
+function seededStatuses(archivedSlugs: string[] = []): StatusStub[] {
   return SEEDS.map(([id, slug, displayName, stage], index) => ({
     id,
     slug,
@@ -352,6 +363,38 @@ describe("the archive guard (SET-003: block, never reassign)", () => {
     expect(
       within(dialog).getByText(
         "Awaiting approval is the last unarchived status in its stage — every stage keeps " +
+          "at least one. Add another status to the stage first.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "Archive status" })).toBeDisabled();
+    expect(calls.archives).toEqual([]);
+  });
+
+  it("does not count Partially signed as another live Signature Status, as the API does not (#1212)", async () => {
+    const calls = newCalls();
+    const rows = [
+      ...seededStatuses(),
+      {
+        id: "s9",
+        slug: "partially_signed",
+        displayName: "Partially signed",
+        stage: "signature",
+        displayOrder: 9,
+        isSystemDefault: true,
+        archivedAt: null,
+        inUseCount: 0,
+      },
+    ];
+    stubApi({ signedIn: ADMIN, extra: statusesApi(calls, rows) });
+    renderAt("/settings/contracts/statuses");
+    const user = userEvent.setup();
+    // Out for signature and Partially signed are both live in the
+    // signature stage, but only Out for signature holds the floor.
+    await user.click(await screen.findByRole("button", { name: "Archive Out for signature" }));
+    const dialog = await screen.findByRole("dialog", { name: "Archive Out for signature" });
+    expect(
+      within(dialog).getByText(
+        "Out for signature is the last unarchived status in its stage — every stage keeps " +
           "at least one. Add another status to the stage first.",
       ),
     ).toBeInTheDocument();

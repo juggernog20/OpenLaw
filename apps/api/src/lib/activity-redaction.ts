@@ -82,6 +82,10 @@ function farReferenceOf(action: string, payload: Payload): FarReference | null {
       // `legalName` is this end; the other name is the far side. The
       // payload carries names, not ids, so the far Entity is looked up
       // by name and a name that matches no reachable row is stripped.
+      // An individual owner is no Entity. Its entry sits only on the
+      // owned Entity, which this viewer reaches, so nothing is far.
+      // Entries written before the flag existed still lose the name.
+      if (payload.ownerIndividual === true) return null;
       const own = payload.legalName;
       for (const key of ["ownerName", "ownedName"] as const) {
         const name = payload[key];

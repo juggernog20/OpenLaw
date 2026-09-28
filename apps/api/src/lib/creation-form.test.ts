@@ -146,6 +146,105 @@ it.each(["contract", "matter", "entity"] as const)(
   },
 );
 
+it.each(["contract", "matter", "entity"] as const)(
+  "%s re-type enforces only the required Rows under Branches that hold",
+  async (module: FormModule) => {
+    const plural = module === "entity" ? "entities" : `${module}s`;
+    const makeType = async (displayName: string) => {
+      const made = await h.app.inject({
+        method: "POST",
+        url: `/api/v1/${module}-types`,
+        cookies,
+        payload: { displayName },
+      });
+      expect(made.statusCode, made.body).toBe(201);
+      return made.json()[`${module}Type`].id as string;
+    };
+    const plainId = await makeType(`Retype from ${module}`);
+    const gatedId = await makeType(`Retype onto ${module}`);
+    const definitions = await h.db
+      .insert(fields)
+      .values(
+        ["Retype choice", "Retype conditional"].map((displayName, index) => ({
+          moduleScope: module,
+          slug: `${module}_retype_${index}`,
+          displayName,
+          fieldType: "text" as const,
+        })),
+      )
+      .returning();
+    const [choice, conditional] = definitions.map((f) => ({
+      kind: "row" as const,
+      id: f.id,
+      rowRef: f.slug,
+      fieldType: f.fieldType,
+      isRequired: true,
+      visibleOnPortal: true,
+      ...(module === "entity" ? {} : { onIntakeForm: false }),
+    }));
+    const form: FormNode[] = [
+      ...pinnedFormRows(module),
+      choice!,
+      {
+        kind: "branch",
+        id: "retype-conditional",
+        match: "all",
+        conditions: [{ rowRef: choice!.rowRef, operator: "equals", value: "Yes" }],
+        children: [conditional!],
+      },
+      ...Object.entries(FORM_BUILTINS[module]).map(([rowRef, fieldType]) => ({
+        kind: "row" as const,
+        id: rowRef,
+        rowRef,
+        fieldType,
+        isRequired: false,
+        onIntakeForm: false,
+        visibleOnPortal: true,
+      })),
+    ];
+    const written = await h.app.inject({
+      method: "PUT",
+      url: `/api/v1/${module}-types/${gatedId}/form`,
+      cookies,
+      payload: { form },
+    });
+    expect(written.statusCode, written.body).toBe(200);
+
+    const retype = async (answers: Record<string, string>) => {
+      const created = await h.app.inject({
+        method: "POST",
+        url: `/api/v1/${plural}`,
+        cookies,
+        payload: {
+          [module === "entity" ? "legalName" : "title"]: "Branch re-type",
+          [`${module}TypeId`]: plainId,
+        },
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      const record = created.json()[module];
+      return h.app.inject({
+        method: "PATCH",
+        url: `/api/v1/${plural}/${module === "entity" ? record.id : record.number}`,
+        cookies,
+        payload: { [`${module}TypeId`]: gatedId, customFields: answers },
+      });
+    };
+    // The Branch does not hold, so its required Row is not enforced.
+    const hidden = await retype({ [choice!.rowRef]: "No" });
+    expect(hidden.statusCode, hidden.body).toBe(200);
+    // The Branch holds, so the Row under it is required again.
+    const missing = await retype({ [choice!.rowRef]: "Yes" });
+    expect(missing.statusCode, missing.body).toBe(400);
+    expect(missing.json().detail).toContain("Retype conditional");
+    const answered = await retype({ [choice!.rowRef]: "Yes", [conditional!.rowRef]: "Given" });
+    expect(answered.statusCode, answered.body).toBe(200);
+    // A required Row outside any Branch still refuses the re-type.
+    const bare = await retype({});
+    expect(bare.statusCode, bare.body).toBe(400);
+    expect(bare.json().detail).toContain("Retype choice");
+  },
+);
+
 it("collects Contract built-ins and stores Needed by and Counterparties on the record", async () => {
   const made = await h.app.inject({
     method: "POST",

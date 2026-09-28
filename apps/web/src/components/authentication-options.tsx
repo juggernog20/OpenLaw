@@ -12,9 +12,6 @@ import { Tooltip } from "./ui/tooltip";
 export type AuthenticationOptions =
   paths["/api/v1/auth/methods"]["get"]["responses"][200]["content"]["application/json"]["policy"]["legal"];
 
-export function withoutSignInMethods(options: AuthenticationOptions): AuthenticationOptions {
-  return { ...options, password: false, magicLink: false, sso: false };
-}
 const labels = defineMessages({
   password: { id: "settings.auth.method.password", defaultMessage: "Email and password" },
   magicLink: { id: "settings.auth.method.magicLink", defaultMessage: "Email magic link" },
@@ -29,13 +26,11 @@ export function AuthenticationOptionsFields({
   onChange,
   disabled = false,
   ssoConfigured,
-  domainsConfigured = true,
 }: {
   value: AuthenticationOptions;
   onChange: (value: AuthenticationOptions) => void;
   disabled?: boolean;
   ssoConfigured: boolean;
-  domainsConfigured?: boolean;
 }) {
   const id = useId();
   const intl = useIntl();
@@ -43,29 +38,17 @@ export function AuthenticationOptionsFields({
     <div className="flex flex-col gap-3">
       {(["password", "magicLink", "sso", "requireTwoFactor"] as const).map((method) => {
         const missingProvider = method === "sso" && !ssoConfigured;
-        const reason = !domainsConfigured
-          ? missingProvider
+        const reason = missingProvider
+          ? intl.formatMessage({
+              id: "settings.auth.configureSso",
+              defaultMessage: "Configure an identity provider below to enable single sign-on.",
+            })
+          : disabled
             ? intl.formatMessage({
-                id: "settings.auth.domainsAndProviderRequired",
-                defaultMessage:
-                  "Add an allowed email domain and configure an identity provider to enable single sign-on.",
+                id: "settings.auth.waitForSave",
+                defaultMessage: "Wait for the current changes to finish saving.",
               })
-            : intl.formatMessage({
-                id: "settings.auth.domainRequired",
-                defaultMessage:
-                  "Add an allowed email domain to enable Business User sign-in options.",
-              })
-          : missingProvider
-            ? intl.formatMessage({
-                id: "settings.auth.configureSso",
-                defaultMessage: "Configure an identity provider below to enable single sign-on.",
-              })
-            : disabled
-              ? intl.formatMessage({
-                  id: "settings.auth.waitForSave",
-                  defaultMessage: "Wait for the current changes to finish saving.",
-                })
-              : undefined;
+            : undefined;
         const reasonId = `${id}-${method}-disabled-reason`;
         const control = (
           <Switch

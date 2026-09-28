@@ -251,7 +251,7 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
-    /** Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again */
+    /** Remove a registered identity provider (TECH-008). Accounts that signed in through it keep their rows; they sign in another way until a provider serves their domain again. Removing the last provider turns SSO off for both groups, and is refused (409) while a group can sign in only with SSO */
     delete: operations["deleteSsoProvider"];
     options?: never;
     head?: never;
@@ -284,9 +284,9 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The magic-link domain allowlist (DD-010); empty admits nobody */
+    /** The magic-link domain allowlist (DD-010); empty admits no new Business Users */
     get: operations["getAllowedDomains"];
-    /** Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request — an empty list closes the portal to everyone */
+    /** Replace the magic-link domain allowlist (DD-010); the list is normalised to lower case and enforced on the next request. The list admits new Business Users only; an empty list admits none and leaves existing accounts and the Business policy unchanged */
     put: operations["setAllowedDomains"];
     post?: never;
     delete?: never;
@@ -5228,7 +5228,7 @@ export interface paths {
     /** One contract's signing envelopes, newest preparation first with historical Sent ordering (CTR-013) — the adapter that carried each one, where it stands, who was asked to sign it, what went out, and when. A declined or voided envelope carries the reason it ended with, and a finished one carries the moment it ended. Both arrive from the provider's own feed, so the record answers them without anybody typing them in. Answers two facts beside the rows: whether this install has an e-signature connector at all, and the primary document this viewer may send, with its version chain newest round first. Both are what decide whether the record draws a send control, so an install with no connector and a record with no paper each answer plainly rather than by omission. A contract that has only ever been signed by hand holds no envelopes, which is the zero-config manual hand-off and not an error. Access is inherited from the contract and nothing else: a Contributor on the team reads it, and anyone who cannot reach the contract is answered 404, exactly as for a contract that does not exist. An archived contract still reads: archiving freezes a record, it does not hide it */
     get: operations["listContractEnvelopes"];
     put?: never;
-    /** Legacy explicit direct-send API. Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract to its first live Signature status. Sending is legal at any stage. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called. A send the provider refuses leaves no row. A send with no clear answer stays reserved as an uncertain preparing envelope, and a matching idempotent retry answers with it rather than sending again. An envelope the provider took but the record could not keep is voided again before the refusal is raised; if the provider does not confirm that void, the envelope stays reserved with its provider id. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
+    /** Legacy explicit direct-send API. Send a version of the contract's primary document out for signature (CTR-013). The version must be a round of that document's own chain — loose attachments are not sendable in v1, because the executed copy comes back to the chain the send left from. Signers are users of this install, by id, or name-and-email pairs, and every one of them is asked at once: there is no routing order. A successful send moves the contract forward to its first live Signature status. A contract already at Signature, Active, or Ended keeps its status. Sending is legal at any stage. A send that would move the contract past the approval stage while approvals are pending or rejected meets CTR-012's soft gate: it is refused 409 before the provider is called, and the same send with `overrideSoftGate` goes out and is logged as an override. Refused with a typed problem when this install has no e-signature connector, and with another when the contract already has a live envelope (preparing, draft, or sent) — two envelopes must never race for one signature. The live envelope is reserved before the provider is called. A send the provider refuses leaves no row. A send with no clear answer stays reserved as an uncertain preparing envelope, and a matching idempotent retry answers with it rather than sending again. An envelope the provider took but the record could not keep is voided again before the refusal is raised; if the provider does not confirm that void, the envelope stays reserved with its provider id. Appends one envelope.sent entry on the contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403 rather than 404, because they can already see it. An archived contract sends nothing until it is restored */
     post: operations["sendContractEnvelope"];
     delete?: never;
     options?: never;
@@ -5245,7 +5245,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. */
+    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override. */
     post: operations["prepareContractEnvelope"];
     delete?: never;
     options?: never;
@@ -28859,6 +28859,7 @@ export interface operations {
           subject?: string;
           /** @default true */
           completesContract?: boolean;
+          overrideSoftGate?: boolean;
         };
       };
     };
@@ -28938,7 +28939,7 @@ export interface operations {
           };
         };
       };
-      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -28953,6 +28954,7 @@ export interface operations {
               | "urn:openlaw:problem:signing-not-configured"
               | "urn:openlaw:problem:envelope-live"
               | "urn:openlaw:problem:envelope-idempotency-conflict"
+              | "urn:openlaw:problem:approval-soft-gate"
               | "about:blank";
             title: string;
             status: number;
@@ -29003,6 +29005,7 @@ export interface operations {
           subject?: string;
           /** @default true */
           completesContract?: boolean;
+          overrideSoftGate?: boolean;
         };
       };
     };
@@ -29082,7 +29085,7 @@ export interface operations {
           };
         };
       };
-      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, or the idempotency key names a different request. An archived contract is refused here too, without naming a type. */
+      /** @description Refused: this install has no e-signature connector, the contract already has a live envelope, the idempotency key names a different request, or the send crosses CTR-012's approval gate with approvals still unresolved. Re-send with `overrideSoftGate` to record the override. An archived contract is refused here too, without naming a type. */
       409: {
         headers: {
           [name: string]: unknown;
@@ -29097,6 +29100,7 @@ export interface operations {
               | "urn:openlaw:problem:signing-not-configured"
               | "urn:openlaw:problem:envelope-live"
               | "urn:openlaw:problem:envelope-idempotency-conflict"
+              | "urn:openlaw:problem:approval-soft-gate"
               | "about:blank";
             title: string;
             status: number;
@@ -42952,6 +42956,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              typeCount: number;
+              recordCount: number;
             }[];
           };
         };
@@ -43032,6 +43038,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              typeCount: number;
+              recordCount: number;
             };
           };
         };
@@ -43100,6 +43108,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              typeCount: number;
+              recordCount: number;
             };
           };
         };
@@ -43158,6 +43168,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              typeCount: number;
+              recordCount: number;
             };
           };
         };
@@ -43216,6 +43228,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              typeCount: number;
+              recordCount: number;
             };
           };
         };

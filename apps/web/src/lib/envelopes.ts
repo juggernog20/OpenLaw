@@ -54,11 +54,10 @@ export type SigningState = ListResponse;
  * What a read or a write over the record's signing state answers: the
  * state as it now stands, or why not.
  *
- * `type` is the refusal's own RFC 9457 URN, carried but not yet read.
- * Nothing on the card branches on a signing refusal today — every one
- * of them is printed in the dialog the act was taken from. It is here
- * so that the day one of them needs different handling, the caller
- * branches on the type as TECH-020 requires rather than reaching for
+ * `type` is the refusal's own RFC 9457 URN. The card branches on one
+ * type: CTR-012's soft gate, which opens the **Move past approval**
+ * dialog. Every other refusal is printed in the dialog the act was
+ * taken from. The card reads the type as TECH-020 requires rather than
  * the sentence, which is copy and changes.
  */
 export type SigningOutcome = ({ ok: true } & SigningState) | ({ ok: false } & Problem);
@@ -121,6 +120,9 @@ export async function sendContractEnvelope(
     signers: readonly SendSigner[];
     subject?: string;
     completesContract: boolean;
+    /** CTR-012's confirmation, sent once the sender has seen the
+     * unresolved approvals the gate named. */
+    overrideSoftGate?: boolean;
   },
 ): Promise<SigningOutcome> {
   const result = await api
@@ -135,6 +137,7 @@ export async function sendContractEnvelope(
             : { name: signer.name, email: signer.email },
         ),
         ...(input.subject ? { subject: input.subject } : {}),
+        ...(input.overrideSoftGate ? { overrideSoftGate: true } : {}),
       },
     })
     .catch(() => undefined);
@@ -175,6 +178,8 @@ export async function prepareContractEnvelope(
     subject?: string;
     idempotencyKey: string;
     completesContract: boolean;
+    /** CTR-012's confirmation, as for a direct send. */
+    overrideSoftGate?: boolean;
   },
 ): Promise<SigningOutcome> {
   const result = await api

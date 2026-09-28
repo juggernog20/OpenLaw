@@ -71,7 +71,7 @@ The Field catalog does not have reorder handles. Set order where Fields are atta
 
 Entity Forms show only **Required for creation**. They have Branches and Touchpoint, but no On intake form or Visible on Portal switch and no intake preview. Their native Entity columns remain on the existing create form. A User Row on intake cannot be required, because the Portal has no staff directory picker.
 
-Visible on Portal belongs to the Row, so a Field can be visible on one type's Form and hidden on another's. **Detach** removes its Row and keeps the Field definition and stored values. **Archive** in the Field catalog hides the Field from live configuration and keeps its attachments and stored values for restoration. Use **Show archived**, then **Restore**, to recover the definition. Neither operation transfers answers to another Field. Built-in Rows cannot detach.
+Visible on Portal belongs to the Row, so a Field can be visible on one type's Form and hidden on another's. **Detach** removes its Row and keeps the Field definition and stored values. **Archive** in the Field catalog hides the Field from live configuration and keeps its attachments and stored values for restoration. Its dialog says how many types the Field is attached to and how many records hold a value for it. Use **Show archived**, then **Restore**, to recover the definition. Neither operation transfers answers to another Field. Built-in Rows cannot detach.
 
 ## Add conditional Rows with a Branch
 

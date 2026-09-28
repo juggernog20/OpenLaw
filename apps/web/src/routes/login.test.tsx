@@ -218,6 +218,28 @@ it("shows an unavailable state when the only method needs unconfigured email", a
   ).toBeVisible();
   expect(screen.queryByRole("button", { name: "Send link" })).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  // The Business Portal never offers the Administrator way in.
+  expect(screen.queryByRole("button", { name: "Administrator sign-in" })).not.toBeInTheDocument();
+});
+
+it("keeps Administrator sign-in on the staff page when Legal Users have no method", async () => {
+  const none = { password: false, magicLink: false, sso: false, requireTwoFactor: false };
+  stubApi({
+    signedIn: null,
+    methods: {
+      mode: "built_in",
+      magicLinkEnabled: false,
+      ssoProviderId: null,
+      policy: { legal: none, business: none },
+    },
+  });
+  renderAt("/auth/login");
+  expect(
+    await screen.findByText("Sign-in is unavailable. Contact your administrator."),
+  ).toBeVisible();
+  await userEvent.click(screen.getByRole("button", { name: "Administrator sign-in" }));
+  expect(await screen.findByLabelText("Password")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
 });
 
 it("returns from password setup without sending a request", async () => {

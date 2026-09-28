@@ -10,6 +10,7 @@ import { FormattedMessage, defineMessages, useIntl, type MessageDescriptor } fro
 import { Bot } from "lucide-react";
 import type { paths } from "@openlaw/api-client";
 import { api } from "../lib/api";
+import { copyText } from "../lib/clipboard";
 import { SettingsCard } from "./settings-card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -388,12 +389,11 @@ export function AllowedClients({
                 />
               </p>
               <div className="flex items-center gap-2 rounded-button bg-control p-3">
-                <code className="min-w-0 flex-1 break-all">{ready.secret}</code>
+                <code className="min-w-0 flex-1 select-all break-all">{ready.secret}</code>
                 <Button
                   variant="secondary"
                   onClick={() =>
-                    void navigator.clipboard
-                      .writeText(ready.secret)
+                    void copyText(ready.secret)
                       .then(() => setCopied(true))
                       .catch(() =>
                         setError(

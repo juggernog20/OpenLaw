@@ -1102,6 +1102,41 @@ describe("welcome wizard e-signature step (#698)", () => {
     ]);
   });
 
+  it.each([
+    "https://localhost/api/v1/webhooks/docusign",
+    "https://127.0.0.1/docusign",
+    "https://192.168.1.20/docusign",
+    "https://[::1]/docusign",
+    "https://[::ffff:10.0.0.1]/docusign",
+  ])("refuses a Webhook callback DocuSign cannot reach: %s", async (callback) => {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra(calls),
+    });
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Integration key"), "new-key");
+    await user.type(screen.getByLabelText("User ID"), "new-user");
+    await user.type(screen.getByLabelText("RSA private key"), "new-private-key");
+    await user.selectOptions(screen.getByLabelText("Update method"), "webhook");
+    await user.clear(screen.getByLabelText("Public callback URL"));
+    // Pasted, because user.type reads "[" as the start of a key name.
+    await user.click(screen.getByLabelText("Public callback URL"));
+    await user.paste(callback);
+    await user.type(
+      screen.getByLabelText("Connect HMAC secret (from DocuSign)"),
+      "signed-updates-secret",
+    );
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      await screen.findByText(/DocuSign cannot reach a localhost or private address/),
+    ).toBeInTheDocument();
+    expect(calls.saves).toEqual([]);
+    expect(screen.queryByRole("heading", { name: "AI analysis" })).not.toBeInTheDocument();
+  });
+
   it("changes an existing connector to polling without replacing its credentials", async () => {
     const calls: SigningCalls = { saves: [], completed: 0 };
     stubApi({
@@ -1868,6 +1903,8 @@ const REVIEW_RESPONSES = {
         options: null,
         aiPrompt: null,
         aiAnswerStyle: null,
+        typeCount: 0,
+        recordCount: 0,
       },
     ],
   },
@@ -2056,7 +2093,11 @@ describe("welcome wizard Review step (#700)", () => {
       const item = dialog.getByText(label).closest("li")!;
       expect(within(item).getByText(count === 1 ? "1 row" : `${count} rows`)).toBeInTheDocument();
     }
-    expect(dialog.getByText(/Kept: the Other types/)).toBeInTheDocument();
+    expect(
+      dialog.getByText(
+        /Kept: the Other and Default types.*Draft, Partially signed, Active, and Expired/,
+      ),
+    ).toBeInTheDocument();
     expect(writes).toEqual([]);
     await user.click(dialog.getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -2472,9 +2513,6 @@ it("lists registered identity providers on the authentication step and removes o
   expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeEnabled();
   await user.click(screen.getByRole("switch", { name: "Single sign-on (SSO)" }));
   await user.click(screen.getByRole("button", { name: "Business Users" }));
-  // The business group needs an allowed domain before its methods can be changed.
-  await user.type(screen.getByLabelText("Allowed email domains"), "calloway.test");
-  await user.click(screen.getByRole("button", { name: "Add" }));
   await user.click(screen.getAllByRole("switch", { name: "Single sign-on (SSO)" })[1]!);
 
   await user.click(screen.getByRole("button", { name: "Remove Family Office identity provider" }));
@@ -2624,38 +2662,71 @@ it("starts both user groups collapsed and saves business settings before requiri
   expect(readSetupDraft("welcome-u1", "step", "")).toBe("email");
 });
 
-it("requires an added domain before editing Business User sign-in options", async () => {
-  stubApi({ signedIn: ADMIN, onboarding: { completed: false }, extra: wizardExtra() });
+it("keeps Business User sign-in options editable with no allowed domain", async () => {
+  const writes: { path: string; body: unknown }[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    onboarding: { completed: false },
+    extra: emailWizardExtra((call) => {
+      if (call.method === "PATCH" && call.url.pathname.startsWith("/api/v1/auth/policy/")) {
+        writes.push({ path: call.url.pathname, body: call.body });
+        return json(200, {
+          legal: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+          business: call.body,
+        });
+      }
+      if (call.method === "PUT") writes.push({ path: call.url.pathname, body: call.body });
+      return undefined;
+    }),
+  });
   renderAt("/welcome?step=authentication");
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Legal Users" }));
-  expect(screen.getByRole("switch", { name: "Email and password" })).toBeEnabled();
-  await user.click(screen.getByRole("button", { name: "Legal Users" }));
-  await user.click(screen.getByRole("button", { name: "Business Users" }));
-  const switches = screen.getAllByRole("switch");
-  for (const control of switches) expect(control).toBeDisabled();
+  await user.click(await screen.findByRole("button", { name: "Business Users" }));
+  expect(
+    screen.getByText(
+      "No domains allowed yet. Existing Business Users can still sign in, but nobody can create a new Business User account.",
+    ),
+  ).toBeInTheDocument();
   const magicLink = screen.getByRole("switch", { name: "Email magic link" });
-  await user.click(screen.getByRole("group", { name: "Email magic link" }));
-  expect(magicLink).not.toBeChecked();
-  await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
-  for (const control of switches) expect(control).toBeDisabled();
-  await user.click(screen.getByRole("button", { name: "Add" }));
   expect(magicLink).toBeEnabled();
-  expect(screen.getByRole("switch", { name: "Email and password" })).toBeEnabled();
-  expect(screen.getByRole("switch", { name: "Require two-factor authentication" })).toBeEnabled();
-  expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
   expect(magicLink).toBeChecked();
-  expect(screen.getByRole("switch", { name: "Email and password" })).toBeChecked();
-  await user.click(screen.getByRole("button", { name: "Remove example.com" }));
-  for (const control of switches) expect(control).toBeDisabled();
-  expect(magicLink).not.toBeChecked();
-  expect(screen.getByRole("switch", { name: "Email and password" })).not.toBeChecked();
-  expect(screen.getByText("Add a domain to enable sign-in options.")).toBeInTheDocument();
+  expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toBeDisabled();
   await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
   await user.click(screen.getByRole("button", { name: "Add" }));
+  await user.click(screen.getByRole("button", { name: "Remove example.com" }));
+  // Removing the last domain leaves the Business choices as they were.
   expect(magicLink).toBeEnabled();
-  expect(magicLink).not.toBeChecked();
-  expect(screen.getByRole("switch", { name: "Email and password" })).not.toBeChecked();
+  expect(magicLink).toBeChecked();
+  await user.click(magicLink);
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
+  expect(writes).toEqual([
+    {
+      path: "/api/v1/auth/policy/business",
+      body: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
+    },
+  ]);
+});
+
+it("shows and keeps the policy the API enforces when no group policy was saved", async () => {
+  const writes: string[] = [];
+  stubApi({
+    signedIn: ADMIN,
+    onboarding: { completed: false },
+    extra: emailWizardExtra((call) => {
+      if (call.method !== "GET") writes.push(`${call.method} ${call.url.pathname}`);
+      return undefined;
+    }),
+  });
+  renderAt("/welcome?step=authentication");
+  const user = userEvent.setup();
+  // The legacy fallback lets a Business User sign in with a password or a link.
+  await user.click(await screen.findByRole("button", { name: "Business Users" }));
+  expect(screen.getByRole("switch", { name: "Email and password" })).toBeChecked();
+  expect(screen.getByRole("switch", { name: "Email magic link" })).toBeChecked();
+  await user.click(screen.getByRole("button", { name: "Continue" }));
+  expect(await screen.findByRole("heading", { name: "Outbound email" })).toBeInTheDocument();
+  expect(writes).toEqual([]);
 });
 
 it("redirects old portal-step links into the Business Users section", async () => {

@@ -22,6 +22,7 @@ import {
   type ContractStage,
 } from "@openlaw/db";
 import {
+  recordFormAnswers,
   TERM_EXPIRY_ON_EVERGREEN_PROBLEM_TYPE,
   TERM_RENEWAL_PERIOD_PROBLEM_TYPE,
 } from "@openlaw/shared";
@@ -41,7 +42,12 @@ import type { Notifier } from "../../lib/notifications/notifier.js";
 import { httpError } from "../../lib/problem.js";
 import { choiceFilter, dateFilter } from "../../lib/record-filters.js";
 import { recordPerson } from "../../lib/record-person.js";
-import { assertApprovalGate, type UnresolvedApproval } from "../../lib/soft-gate.js";
+import { retypeRequiredFields } from "../../lib/creation-form.js";
+import {
+  assertApprovalGate,
+  recordGateOverride,
+  type UnresolvedApproval,
+} from "../../lib/soft-gate.js";
 import { readTypeForm } from "../../lib/type-form-routes.js";
 import { latestAnalysisRun } from "../contract-analysis/routes.js";
 import { lockedDepartment } from "../departments/references.js";
@@ -501,10 +507,28 @@ export async function patchContract(
       );
       const customFields = applied.values;
       if (retyped) {
-        // The new type's whole required set, against the values the
-        // record will hold. Values retained from before count: a
-        // slug the old type also attached is already answered.
-        assertRequiredCustomFields(attached, customFields);
+        // The new type's required set, against the values the record
+        // will hold. Values retained from before count: a slug the old
+        // type also attached is already answered. DD-028: a Field Row
+        // under a Branch that does not hold is not enforced, the same
+        // rule creation applies.
+        const answers = recordFormAnswers({
+          ...target,
+          ...patch,
+          ...(body.value !== undefined
+            ? {
+                valueAmount: body.value?.amount ?? null,
+                valueCurrency: body.value?.currency ?? null,
+                valueCadence: body.value?.cadence ?? null,
+              }
+            : {}),
+          counterparties: await selectCounterparties(tx, target.id),
+          customFields,
+        });
+        assertRequiredCustomFields(
+          await retypeRequiredFields(tx, "contract", patch.contractTypeId!, attached, answers),
+          customFields,
+        );
       } else if (body.customFields !== undefined) {
         // No re-type, so only the fields this commit touched are
         // checked (MTR-014: the rule also holds when a required
@@ -704,32 +728,14 @@ export async function patchContract(
       });
     }
     if (overridden && statusChange) {
-      // Its own verb, beside the status change rather than inside
-      // it (DD-017). Pushing past sign-off is a second thing that
-      // happened, and CTR-012 requires it to be accountable in its
-      // own right — so an Administrator filters the audit log on
-      // this verb rather than hunting through status payloads for
-      // the ones that crossed the line. The payload names the
-      // people who were unresolved, because "who was skipped" is
-      // the question the entry exists to answer.
-      await recordActivity(tx, {
-        entityType: "contract",
-        entityId: target.id,
+      await recordGateOverride(tx, {
+        contractId: target.id,
         actorId: user.id,
-        action: "contract.stage_gate_overridden",
-        visibility: RECORD_ACTIVITY_TIER,
-        payload: {
-          number: row!.number,
-          title: row!.title,
-          fromStage: statusChange.fromStage,
-          toStage: statusChange.toStage,
-          approvers: overridden.map((approval) => ({
-            approvalId: approval.id,
-            approverId: approval.approverId,
-            approverName: approval.approverName,
-            status: approval.status,
-          })),
-        },
+        number: row!.number,
+        title: row!.title,
+        fromStage: statusChange.fromStage,
+        toStage: statusChange.toStage,
+        overridden,
       });
     }
     // Being handed a contract is done *to* you, so it is NOT-002's

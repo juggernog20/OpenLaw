@@ -2093,6 +2093,25 @@ describe("deleting individual document versions", () => {
     expect(removed.json().documents[0].isPrimary).toBe(false);
   });
 
+  it("reaches a Version on an archived contract, because erasure is compelled from outside (#1211)", async () => {
+    const contract = await newContract("Version deletion on a frozen record");
+    const original = await uploaded(adminCookies, contract.number, { filename: "keep.pdf" });
+    const document = await versionAdded(adminCookies, original.id, { filename: "erase.pdf" });
+    const refs = await fileRefsOf(document.id);
+    const freeze = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/contracts/${contract.number}/archive`,
+      cookies: adminCookies,
+    });
+    expect(freeze.statusCode, freeze.body).toBe(200);
+
+    const removed = await removeVersion(document, document.versions[1]!.id);
+
+    expect(removed.statusCode, removed.body).toBe(200);
+    expect(await blobExists(refs[0]!)).toBe(true);
+    expect(await blobExists(refs[1]!)).toBe(false);
+  });
+
   it("requires Administrator access, title confirmation and a version belonging to the document", async () => {
     const contract = await newContract("Version deletion guards");
     const document = await uploaded(adminCookies, contract.number);

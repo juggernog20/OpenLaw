@@ -145,21 +145,35 @@ function ArchiveFieldDialog({
             <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
             {/* Fields never reassign and never block: everything is
                 retained by rule (MTR-014), which is the whole message.
-                M8 and M22 added record values to this same count; the
-                copy deliberately calls every source "uses". */}
-            <p>
-              <FormattedMessage
-                id="settings.contractFields.archiveWarning"
-                defaultMessage={
-                  "{count, plural, =0 {{name} is not attached to any type. The definition " +
-                  "is kept and the field can be restored.} one {{name} is attached to " +
-                  "# type — the attachment is kept, hidden until the field is restored.} " +
-                  "other {{name} is attached to # types — the attachments are kept, " +
-                  "hidden until the field is restored.}}"
-                }
-                values={{ name: target.displayName, count: target.inUseCount }}
-              />
-            </p>
+                The API answers the types and the records holding a
+                value apart, so each number is named for what it counts
+                (#1214). */}
+            {target.typeCount === 0 && target.recordCount === 0 ? (
+              <p>
+                <FormattedMessage
+                  id="settings.contractFields.archiveUnused"
+                  defaultMessage="{name} is not attached to any type, and no record holds a value for it. The definition is kept and the field can be restored."
+                  values={{ name: target.displayName }}
+                />
+              </p>
+            ) : (
+              <p>
+                <FormattedMessage
+                  id="settings.contractFields.archiveTypes"
+                  defaultMessage="{count, plural, =0 {{name} is not attached to any type.} one {{name} is attached to # type.} other {{name} is attached to # types.}}"
+                  values={{ name: target.displayName, count: target.typeCount }}
+                />{" "}
+                <FormattedMessage
+                  id="settings.contractFields.archiveRecords"
+                  defaultMessage="{count, plural, =0 {No record holds a value for it.} one {# record holds a value for it.} other {# records hold a value for it.}}"
+                  values={{ count: target.recordCount }}
+                />{" "}
+                <FormattedMessage
+                  id="settings.contractFields.archiveKept"
+                  defaultMessage="The attachments and values are kept, hidden until the field is restored."
+                />
+              </p>
+            )}
           </div>
           <p className="flex items-center gap-1.5 text-xs text-muted">
             <History size={16} aria-hidden="true" />

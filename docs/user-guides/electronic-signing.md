@@ -18,7 +18,7 @@ The default interface still offers **Send for signature**. The preparation inter
 
 This interface sends immediately. It uses the legacy `/sig/` signature anchor for every Signer. All Signers share those marks; this interface cannot assign distinct positions. The earlier live check covered one Signer and one visible anchor. Multiple Signers, hidden anchors and paper without anchors have not been verified live. Do not rely on this interface to ensure that each Signer has a distinct required signature field.
 
-A confirmed direct send moves the Contract to its first configured live Signature Status, normally **Out for signature**. An uncertain result can recover later. Check the existing Envelope before trying another send.
+A confirmed direct send moves the Contract forward to its first configured live Signature Status, normally **Out for signature**. A Contract already at Signature, Active, or Ended keeps its Status. If the send moves the Contract beyond Approval while approvals remain Pending or Rejected, **Move past approval** opens first; see [Request and give approval](contract-approvals.md). An uncertain result can recover later. Check the existing Envelope before trying another send.
 
 ## Prepare in the acceptance lab
 

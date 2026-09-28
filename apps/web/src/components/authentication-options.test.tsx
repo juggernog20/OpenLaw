@@ -6,7 +6,7 @@ import { IntlProvider } from "react-intl";
 import { expect, it, vi } from "vitest";
 import { AuthenticationOptionsFields } from "./authentication-options";
 
-it("explains missing domains on hover and keyboard focus without changing a disabled method", async () => {
+it("explains a pending save on hover and keyboard focus without changing a disabled method", async () => {
   const onChange = vi.fn();
   const user = userEvent.setup();
   render(
@@ -14,13 +14,13 @@ it("explains missing domains on hover and keyboard focus without changing a disa
       <AuthenticationOptionsFields
         value={{ password: false, magicLink: false, sso: false, requireTwoFactor: false }}
         onChange={onChange}
-        domainsConfigured={false}
+        disabled
         ssoConfigured={false}
       />
     </IntlProvider>,
   );
   const target = screen.getByRole("group", { name: "Email and password" });
-  const reason = "Add an allowed email domain to enable Business User sign-in options.";
+  const reason = "Wait for the current changes to finish saving.";
   expect(screen.getByRole("switch", { name: "Email and password" })).toHaveAccessibleDescription(
     reason,
   );
@@ -34,7 +34,7 @@ it("explains missing domains on hover and keyboard focus without changing a disa
   expect(onChange).not.toHaveBeenCalled();
   expect(screen.getByRole("switch", { name: "Email and password" })).toBeDisabled();
   expect(screen.getByRole("switch", { name: "Single sign-on (SSO)" })).toHaveAccessibleDescription(
-    "Add an allowed email domain and configure an identity provider to enable single sign-on.",
+    "Configure an identity provider below to enable single sign-on.",
   );
 });
 

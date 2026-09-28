@@ -208,7 +208,7 @@ it("limits completion attempts by client address", async () => {
   }
 });
 
-it("removing the last domain turns off Business methods without changing Legal or two-factor policy", async () => {
+it("removing the last domain leaves the Business policy and existing Business Users alone", async () => {
   const domains = (values: string[]) =>
     harness.app.inject({
       method: "PUT",
@@ -218,25 +218,39 @@ it("removing the last domain turns off Business methods without changing Legal o
     });
   const previous = {
     legal: { ...basic },
-    business: { ...basic, sso: true, requireTwoFactor: true },
+    business: { ...basic, magicLink: false, requireTwoFactor: false },
   };
   await harness.db.update(orgSettings).set({
     allowedEmailDomains: ["example.com", "other.example"],
     authenticationPolicy: previous,
   });
-  expect((await domains(["example.com"])).statusCode).toBe(200);
-  let [settings] = await harness.db.select().from(orgSettings);
-  expect(settings!.authenticationPolicy).toEqual(previous);
   expect((await domains([])).statusCode).toBe(200);
-  [settings] = await harness.db.select().from(orgSettings);
-  const off = { ...previous.business, password: false, magicLink: false, sso: false };
-  expect(settings!.authenticationPolicy).toEqual({ ...previous, business: off });
-  // An empty Business configuration is valid while no domains are allowed.
-  expect((await policy("business", off)).statusCode).toBe(200);
-  expect((await policy("legal", off)).statusCode).toBe(400);
-  expect((await domains(["example.com"])).statusCode).toBe(200);
-  [settings] = await harness.db.select().from(orgSettings);
-  expect(settings!.authenticationPolicy!.business).toEqual(off);
+  const [settings] = await harness.db.select().from(orgSettings);
+  expect(settings!.authenticationPolicy).toEqual(previous);
+  // The domains admit new Business Users only (TECH-008).
+  await signInCookies(harness.app, "new-business@example.com", "business-test-password");
+  // The group still needs a method, and may change it, with no domains.
+  const off = { ...previous.business, password: false };
   expect((await policy("business", off)).statusCode).toBe(400);
-  expect((await policy("business", basic)).statusCode).toBe(200);
+  const changed = await policy("business", { ...previous.business, magicLink: true });
+  expect(changed.statusCode, changed.body).toBe(200);
+  expect(changed.json().business).toMatchObject({ password: true, magicLink: true });
+});
+
+it("publishes the legacy fallback as the policy it enforces before any group policy is saved", async () => {
+  await harness.db.update(orgSettings).set({
+    authenticationPolicy: null,
+    authMode: "built_in",
+    magicLinkEnabled: true,
+    allowedEmailDomains: [],
+  });
+  const methods = await harness.app.inject({ method: "GET", url: "/api/v1/auth/methods" });
+  expect(methods.json().policy.business).toEqual({
+    password: true,
+    magicLink: true,
+    sso: false,
+    requireTwoFactor: false,
+  });
+  // What the page shows is what sign-in accepts.
+  await signInCookies(harness.app, "new-business@example.com", "business-test-password");
 });

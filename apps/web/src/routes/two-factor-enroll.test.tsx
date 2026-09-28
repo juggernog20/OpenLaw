@@ -94,3 +94,38 @@ it.each(["enable", "verify"])("keeps enrollment required when %s fails", async (
   expect(await screen.findByLabelText(stage === "enable" ? "Password" : /code/i)).toBeVisible();
   expect(router.state.location.pathname).toBe("/auth/two-factor/enroll");
 });
+
+it("tells an account with no password how to start enrollment without asking for one", async () => {
+  let enableBody: unknown;
+  stubApi({
+    signedIn: {
+      id: "u1",
+      email: "sso@example.com",
+      displayName: "SSO",
+      role: "legal_team_member",
+      twoFactorRequired: true,
+      twoFactorSetupRequired: true,
+      twoFactorEnabled: false,
+      hasPassword: false,
+    },
+    extra: (call) => {
+      if (call.url.pathname === "/api/auth/two-factor/enable") {
+        enableBody = call.body;
+        return json(200, {
+          method: "totp",
+          totpURI: "otpauth://totp/OpenLaw?secret=JBSWY3DPEHPK3PXP",
+          backupCodes: ["backup"],
+        });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auth/two-factor/enroll");
+  const user = userEvent.setup();
+  expect(await screen.findByText(/Select Turn on two-factor to start enrollment/)).toBeVisible();
+  expect(screen.queryByText(/Confirm your password/)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Turn on two-factor" }));
+  expect(await screen.findByLabelText(/code/i)).toBeVisible();
+  expect(enableBody).not.toHaveProperty("password");
+});

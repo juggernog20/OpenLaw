@@ -51,6 +51,8 @@ interface StubFieldRow {
   isSystemDefault?: boolean;
   archivedAt: string | null;
   inUseCount: number;
+  typeCount: number;
+  recordCount: number;
 }
 
 function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
@@ -65,6 +67,8 @@ function seededFields(archivedSlugs: string[] = []): StubFieldRow[] {
     aiPrompt,
     archivedAt: archivedSlugs.includes(slug) ? "2026-08-10T12:00:00.000Z" : null,
     inUseCount: 0,
+    typeCount: 0,
+    recordCount: 0,
   }));
 }
 
@@ -103,6 +107,8 @@ function fieldsApi(calls: FieldCalls, rows = seededFields()) {
           aiPrompt: body.aiPrompt ?? null,
           archivedAt: null,
           inUseCount: 0,
+          typeCount: 0,
+          recordCount: 0,
         },
       });
     }
@@ -430,8 +436,8 @@ describe("the archive guard (retention, never reassignment)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Archive Our position" });
     expect(
       within(dialog).getByText(
-        "Our position is not attached to any type. The definition is kept and the field " +
-          "can be restored.",
+        "Our position is not attached to any type, and no record holds a value for it. " +
+          "The definition is kept and the field can be restored.",
       ),
     ).toBeInTheDocument();
     expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument();
@@ -447,11 +453,13 @@ describe("the archive guard (retention, never reassignment)", () => {
     expect(screen.getByText("2 fields")).toBeInTheDocument();
   });
 
-  it("labels an in-use field's count as type attachments, not records", async () => {
-    // This stub count represents attachments only; the dialog must not
-    // claim record values from the M8/M22 modules.
+  it("names the attached types and the records holding a value apart (#1214)", async () => {
+    // One type and one record holding a value is a use count of 2. The
+    // dialog must say one type, not two.
     const calls = newCalls();
-    const rows = seededFields().map((row) => (row.id === "f3" ? { ...row, inUseCount: 3 } : row));
+    const rows = seededFields().map((row) =>
+      row.id === "f3" ? { ...row, inUseCount: 2, typeCount: 1, recordCount: 1 } : row,
+    );
     stubApi({ signedIn: ADMIN, extra: fieldsApi(calls, rows) });
     renderAt("/settings/contracts/fields");
     const user = userEvent.setup();
@@ -460,8 +468,8 @@ describe("the archive guard (retention, never reassignment)", () => {
     const dialog = await screen.findByRole("dialog", { name: "Archive Our position" });
     expect(
       within(dialog).getByText(
-        "Our position is attached to 3 types — the attachments are kept, hidden until " +
-          "the field is restored.",
+        "Our position is attached to 1 type. 1 record holds a value for it. The " +
+          "attachments and values are kept, hidden until the field is restored.",
       ),
     ).toBeInTheDocument();
   });
