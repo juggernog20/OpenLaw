@@ -476,6 +476,6 @@ had no kind pill, and anyone could edit the note away.
 Partially signed is now a fixed Contract Document type with its own Version kind,
 placed just before Executed. Like the other six it maps to a system kind, so it
 cannot be renamed, archived or deleted. A Member+ can pick it on upload and in a
-kind correction. The executed-copy pipeline files each partial round with this
+type correction. The executed-copy pipeline files each partial round with this
 kind and no note. Migration 0182 widens the kind checks, seeds the row, and moves
 the Versions that earlier partial rounds filed onto it, clearing their old note.
