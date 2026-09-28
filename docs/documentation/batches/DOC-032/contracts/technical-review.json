@@ -1,0 +1,126 @@
+{
+  "batch": "DOC-032",
+  "group": "contracts",
+  "reviewer": "DOC-032 source-review author agent (contracts)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T06:56:19Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastArticleEdit": {
+      "contract-approvals": "789d2444 (text from 879fc477; a9f1ffdb text was the walked content 45c6f916)"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "contract-approvals",
+      "scenario": ["V-C16"],
+      "contentSha256Before": "ace657d375b67dceb1672b99e90bb2d0bfb5e557f7f73e635b61c07097d1e889",
+      "contentSha256": "6029b98fa17b35633c27c9d97b57fc714c8562d2f85ac48058513211650415c8",
+      "sources": [
+        "docs/user-guides/contract-approvals.md",
+        "CONTEXT.md (Stage, Status, Envelope, Soft gate)",
+        "docs/documentation/EDITORIAL.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-012; CTR-013 and its 2026-08-16 M15/5 addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/portal-approvals.tsx",
+        "apps/web/src/components/portal/portal-nav.tsx",
+        "apps/web/src/components/notification-bell.tsx",
+        "apps/api/src/modules/contract-approvals/routes.ts",
+        "apps/api/src/modules/portal/approvals.ts",
+        "apps/api/src/lib/approvers.ts",
+        "apps/api/src/lib/approval-access.ts",
+        "apps/api/src/lib/soft-gate.ts",
+        "apps/api/src/lib/notifications/approvals.ts",
+        "apps/api/src/lib/notifications/notifier.ts",
+        "apps/api/src/modules/contracts/service.ts",
+        "apps/api/src/modules/contract-envelopes/routes.ts",
+        "apps/api/src/modules/contract-envelopes/send.test.ts",
+        "apps/api/src/lib/signing/recovery-stage.ts",
+        "packages/db/src/schema/auth.ts",
+        "docs/user-guides/electronic-signing.md",
+        "docs/user-guides/contract-stages.md",
+        "docs/documentation/evidence/contract-approvals.json",
+        "docs/documentation/batches/DOC-030/contracts-a/technical-review.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Sending for signature and the Soft gate",
+          "before": "Not stated. The guide implied every move past Approval opens Move past approval.",
+          "after": "A confirmed send from the Signatures tab also moves the Contract to a Signature Status. That move does not open Move past approval and records no override, even when approvals remain Pending or Rejected. Check the Approvals tab before you send.",
+          "source": "apps/api/src/modules/contract-envelopes/routes.ts direct send (first live Signature status, no assertApprovalGate); apps/api/src/lib/signing/recovery-stage.ts advanceSentContractStage; send.test.ts 'advances Approval to Signature on confirmed send'; assertApprovalGate is called only from contracts/service.ts (879fc477)"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Open the Contract's Approvals tab (879fc477 edit, never walked)",
+          "source": "contract-record.tsx RECORD_TABS and tab link contracts.record.tab.approvals 'Approvals' at /contracts/:number/approvals rendering ApprovalsCard; card heading approvals.block 'Approvals'; approvals.sectionSigning 'Approvals & signing' removed from messages/en-US.json"
+        },
+        {
+          "claim": "Add approver, Approvers, Request approvals, Pending row",
+          "source": "approvals-signing-card.tsx AddApproverDialog; messages/en-US.json approvals.add, approvals.approvers, approvals.request, approvals.status.pending"
+        },
+        {
+          "claim": "Picker offers active Administrators, Legal Team Members and Business Users without an open request; on a Confidential Contract only Administrators, team members, the Legal Owner and Business Users",
+          "source": "approvals-signing-card.tsx APPROVER_ROLES and candidates filter (unchanged since 067c1646)"
+        },
+        {
+          "claim": "Apply group appears when a live group exists or the Contract has a default group; dialog labels and default-group messages",
+          "source": "approvals-signing-card.tsx ApplyGroupDialog (function body identical to 067c1646); messages approvals.applyGroup, approvals.group, approvals.defaultRestricted, approvals.defaultUnavailable"
+        },
+        {
+          "claim": "Only the named approver sees Approve or Reject; the dialog says a decision is final; Note; Approved or Rejected row",
+          "source": "approvals-signing-card.tsx canDecide, ApprovalRow, DecisionDialog (identical to 067c1646); messages approvals.decisionFinal, approvals.note"
+        },
+        {
+          "claim": "Requester, Legal Owner or Administrator can Cancel request on a pending row, with no confirmation",
+          "source": "approvals-signing-card.tsx canCancel and onCancel run(); apps/api/src/modules/contract-approvals/routes.ts (unchanged)"
+        },
+        {
+          "claim": "Move past approval, Cancel and Move anyway on a Stage move from at or before Approval to beyond it, for Pending or Rejected approvals; override recorded",
+          "source": "apps/api/src/lib/soft-gate.ts (unchanged); contracts/service.ts overrideSoftGate; messages contracts.softGate.title, contracts.softGate.submit"
+        },
+        {
+          "claim": "Your approvals pin in the notification bell with Review",
+          "source": "notification-bell.tsx and apps/api/src/lib/notifications/approvals.ts (unchanged); messages notifications.yourApprovals"
+        },
+        {
+          "claim": "Portal Approvals page Your approvals, Pending, Completed, No document attached, Note (optional), decision saves at once",
+          "source": "portal-approvals.tsx, portal-nav.tsx, apps/api/src/modules/portal/approvals.ts (unchanged); messages portal.approvals.title, portal.approvals.noDocumentTitle, portal.approvals.note"
+        },
+        {
+          "claim": "Confidential primary Document refuses a staff approver outside its audience by name; a Business approver is not refused",
+          "source": "apps/api/src/modules/contract-approvals/routes.ts and apps/api/src/lib/approval-access.ts (unchanged since 067c1646)"
+        }
+      ],
+      "limitations": [
+        "Only one guide edit since the walk was unwalked: 879fc477 replaced 'Approvals section and its Approvals & signing card' with 'Approvals tab'. The a9f1ffdb text is the walked content 45c6f916. The merge 789d2444 added no text of its own.",
+        "App changes to this guide's sources since 067c1646 are limited to the split of the Approvals & signing card into an Approvals tab and a Signatures tab (879fc477 and later signing commits), the owner fields moving into their own Overview section (791ad567) and an SSO column in auth.ts (fd8ffd71). The approval sub-components are byte-identical to 067c1646.",
+        "A prepared (embedded) send advances the Status only when the Contract's Status has not changed since preparation (recovery-stage.ts). Preparation is gated off by default, so the new sentence describes the direct send. The walkthrough can check the bypass with a direct send from a Contract at an Approval Status that holds a Pending approval, on a lab with a Signing connector.",
+        "The V-C16 registry text says 'cross the Soft gate deliberately'. That still holds for a Stage move from the Stage control. A send for signature crosses the line without the Soft gate; see productBugs."
+      ]
+    }
+  ],
+  "productBugs": [
+    {
+      "file": "apps/api/src/modules/contract-envelopes/routes.ts (direct send) and apps/api/src/lib/signing/recovery-stage.ts (prepared send)",
+      "symptom": "A confirmed send moves the Contract from an Approval Status to a Signature Status with no Soft gate warning and no override entry, even when approvals are Pending or Rejected. assertApprovalGate is called only from the Status PATCH in contracts/service.ts. Added by 879fc477.",
+      "contradicts": "CTR-012 Soft gate: advancing past approval with pending/rejected approvals warns loudly, is allowed, and is activity-logged as an override. CONTEXT.md Soft gate. No decision record covers the send-time Status advance; CTR-013 records only signature to active on completion."
+    }
+  ],
+  "sharedFileRequests": [
+    {
+      "file": "docs/user-guides/contract-stages.md",
+      "request": "Step 3 implies every move past Approval can show Move past approval. Add that a confirmed send for signature moves the Contract to a Signature Status without the Soft gate and records no override."
+    },
+    {
+      "file": "docs/user-guides/electronic-signing.md",
+      "request": "The sentence 'A confirmed direct send moves the Contract to its first configured live Signature Status' should add that this move skips the Soft gate: no Move past approval dialog and no override, even with Pending or Rejected approvals."
+    }
+  ],
+  "statusChange": null
+}

@@ -1,0 +1,106 @@
+{
+  "section": "frConnectors",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "firstrun",
+  "labProject": "openlaw-docs-9d2b1705-firstrun",
+  "appUrl": "http://127.0.0.1:43342",
+  "mailUrl": "http://127.0.0.1:48442",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "app-saved relay; model-list stand-in on the OIDC fixture",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T08:08:31.628Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 8: E-signature (DocuSign Integration): Environment, Integration key, User ID, RSA private key; Test DocuSign connection below the credentials; the Signing updates card",
+      "expected": "The fields; the test button after the credentials and unavailable until key, user ID and private key exist; Update method Polling by default, Webhook adds Public callback URL and Connect HMAC secret",
+      "startedAt": "2026-09-28T08:08:31.891Z",
+      "finishedAt": "2026-09-28T08:08:32.337Z",
+      "actual": "Step 6 of 8: E-signature (DocuSign Integration). Environment offered [\"Demo\",\"Production\"]. Test DocuSign connection is below the RSA private key and was unavailable with no credentials (true) and without a private key (true). Update method defaulted to polling ([\"Polling\",\"Webhook\"]); Webhook added Public callback URL and Connect HMAC secret (from DocuSign). The card said \"Use a public HTTPS endpoint that forwards to OpenLaw’s webhook. Localhost and private addresses cannot receive DocuSign updates. Configure this URL and HMAC secret in DocuSign Connect.\"",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 8: Test DocuSign connection saves the credentials and checks account access without leaving the step; failures show the connection error; the Signing updates choices stay unsaved",
+      "expected": "The step stays; an error shows; the connector holds the credentials with Polling; the Webhook draft remains after reload",
+      "startedAt": "2026-09-28T08:08:32.338Z",
+      "finishedAt": "2026-09-28T08:08:44.104Z",
+      "actual": "Test DocuSign connection kept the step open and showed \"The connection test failed. The provider could not be reached. Check the environment setting and this host's outbound network access.\" (fictional credentials; a successful test needs a real DocuSign account). The connector then held integration key doc032-integration-key, environment demo, configured true, update method polling. After reload the step read \"DocuSign is connected in the demo environment, as integration key doc032-integration-key.\" and Update method still showed the webhook draft.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 8: signing update choices save on Continue; Polling needs only outbound access",
+      "expected": "With Webhook and a localhost callback, Continue's outcome is recorded; with Polling, Continue saves Polling and opens AI analysis",
+      "startedAt": "2026-09-28T08:08:44.104Z",
+      "finishedAt": "2026-09-28T08:08:47.015Z",
+      "actual": "Continue with Webhook and https://localhost/... moved to AI analysis; the connector then read update method webhook and URL https://localhost/api/v1/webhooks/docusign. Polling and Continue saved update method polling and opened Step 7 of 8: AI analysis.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 9 and Resume: in AI analysis connect a provider; the loaded model list stays in this tab on reload; a different endpoint uses its own list",
+      "expected": "Load models lists the stand-in's models; after reload they are still listed; another Base URL shows no list; the original Base URL shows its list again",
+      "startedAt": "2026-09-28T08:08:47.016Z",
+      "finishedAt": "2026-09-28T08:08:48.640Z",
+      "actual": "Custom endpoint, OpenAI-compatible chat completions, Base URL http://oidc:8083/v1 (a model-list stand-in on the lab network) and an API key; Load models listed [\"doc032-model-a\",\"doc032-model-b\"]. After reload the tab still listed [\"doc032-model-a\",\"doc032-model-b\"] with Refresh models. Base URL .../v2 showed Load models and no list; back on .../v1 the list returned. The stand-in counted 0 -> 1 model requests.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Resume: model lists remain available after saving the API key; Refresh models fetches an updated list",
+      "expected": "Continue saves the connector and opens Review; back on AI analysis the saved connector's list is available and Refresh models adds the stand-in's new model",
+      "startedAt": "2026-09-28T08:08:48.640Z",
+      "finishedAt": "2026-09-28T08:08:52.635Z",
+      "actual": "Continue saved the connector (configured true, model doc032-model-a) and opened Review. Back on AI analysis the step read \"AI features use Custom endpoint, on model doc032-model-a.\". After Replace credentials the saved key's model list was still available with Refresh models; Refresh models made the stand-in answer again (1 -> 2 requests) and the list became [\"doc032-model-a\",\"doc032-model-b\",\"doc032-model-refreshed-2\"]. Keep current credentials closed the form.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T08:08:52.645Z",
+  "signingTest": {
+    "outcome": "The connection test failed. The provider could not be reached. Check the environment setting and this host's outbound network access."
+  },
+  "webhookLocalhost": {
+    "localTitle": "AI analysis",
+    "localAlert": "",
+    "updateMode": "webhook",
+    "webhookUrl": "https://localhost/api/v1/webhooks/docusign"
+  },
+  "aiSave": {
+    "next": "Review",
+    "alerts": "",
+    "configured": true,
+    "model": "doc032-model-a"
+  }
+}

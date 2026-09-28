@@ -1,0 +1,49 @@
+{
+  "section": "frAfter",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "firstrun",
+  "labProject": "openlaw-docs-9d2b1705-firstrun",
+  "appUrl": "http://127.0.0.1:43342",
+  "mailUrl": "http://127.0.0.1:48442",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "app-saved relay; onboarding complete",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T08:08:59.834Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/",
+      "action": "After Finish the welcome wizard cannot be reopened",
+      "expected": "/welcome and /welcome?step=review open Home",
+      "startedAt": "2026-09-28T08:08:59.982Z",
+      "finishedAt": "2026-09-28T08:09:01.445Z",
+      "actual": "/welcome -> /; /welcome?step=review -> /",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/settings/email",
+      "action": "Step 2 and Prepare the workspace: the app header shows the saved name and logo; Settings keeps the organization, users, authentication and connectors editable; the checklist lists only unfinished steps",
+      "expected": "Header name and PNG logo; General shows the saved values; Users lists the invitations; the connector pages open; an app-saved relay is managed under Settings, Advanced, Outbound email",
+      "startedAt": "2026-09-28T08:09:01.445Z",
+      "finishedAt": "2026-09-28T08:09:04.876Z",
+      "actual": "Header {\"text\":\"openlaw / Harbor Legal DOC-032 / Help AM\",\"logo\":true}. General showed \"Harbor Legal DOC-032\" and Default timezone \"Europe/Lisbon\". Setup checklist rows after Finish: []. Users listed Rowan Lee and Sam Ortiz and not the unsent entry. /settings/authentication -> /settings/authentication; /settings/integrations/e-signature -> /settings/integrations/e-signature; /settings/ai-analysis -> /settings/ai-analysis. Outbound email showed \"Sender: \"Harbor Legal\" <legal@harbor.example>\" with [\"Send test email\",\"Replace relay\"] and no deployment-managed note.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T08:09:04.883Z"
+}

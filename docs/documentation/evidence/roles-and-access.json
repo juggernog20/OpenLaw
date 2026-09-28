@@ -120,5 +120,40 @@
     "verifiedAt": "2026-09-16T16:20:59.865Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:08:04.677Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/lib/contract-team.ts, apps/api/src/lib/matter-team.ts, apps/api/src/lib/team-person.ts, apps/api/src/modules/contracts/create.ts, apps/api/src/modules/contracts/routes.ts, apps/api/src/modules/contracts/service.ts, apps/api/src/modules/matters/routes.ts, apps/api/src/modules/matters/service.ts, apps/web/src/routes/contract-record.tsx, apps/web/src/routes/matter-record.tsx and messages/en-US.json. 8432038e moved Contract and Matter team add and remove from the routes into contract-team.ts, matter-team.ts and team-person.ts. The guard order, the Confidential audience checks and the refusals ('This person is already on the team.', 'Change the Business Owner before removing this person from the team.') are the same. contracts/service.ts and matters/service.ts only take an extra scope; create.ts only moves the renewal vehicle list. contract-record.tsx and matter-record.tsx moved the owner pickers into an Owners section that is still on Overview, as the guide says. contract-access.ts, portal-record-access.ts, requests/convert.ts, portal applets and approvals, the team applet and comment code have no diff. The replay passed 31 of 31 steps for Administrator, Legal Team Member and Business User, with the same refusal texts as DOC-030. Replay log: batches/DOC-032/compat/compat-a/roles-and-access-replay.json.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay.mjs",
+        "sha256": "8b072f32a8e062b6ab99c9cf4acc2b09938a1e4051e644ebd3bbc96223634f22"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/fixtures.json",
+        "sha256": "08a150a927d37ee121a34e131e204cb837285af00dee437f9470b35751c772da"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/lib.mjs",
+        "sha256": "d6b9954071958d93a900340d0a3f5da840129ce1b607b10c2fae3f5ad3d82fd1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay/setup.mjs",
+        "sha256": "4445454a51090b3dbe9287c07b34831ae1296964b0b1191d3fd783cb6b29372e"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/roles-and-access-replay.json",
+        "sha256": "b03a462a8af1d5d790e6d4354368aa3ee21b27421cff300fd311ec53198dbce4"
+      }
+    ]
+  }
 }

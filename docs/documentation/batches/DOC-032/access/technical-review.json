@@ -1,0 +1,142 @@
+{
+  "batch": "DOC-032",
+  "group": "access",
+  "reviewer": "DOC-032 source-review author agent (access)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:12:26Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "staff-sign-in": {
+      "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "lastArticleEdit": "f3e11862"
+    },
+    "portal-sign-in": {
+      "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "lastArticleEdit": "a9f1ffdb"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "scenario": ["V-C01"],
+      "contentSha256Before": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
+      "contentSha256": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+      "sources": [
+        "docs/user-guides/staff-sign-in.md",
+        "docs/documentation/evidence/staff-sign-in.json",
+        "docs/documentation/batches/DOC-030/access-2/technical-review.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+        "docs/user-guides/authentication-and-email.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/login.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/auth/sso-domains.ts",
+        "apps/api/src/auth/limits.ts",
+        "apps/api/src/modules/auth/sso.test.ts",
+        "apps/web/src/lib/session.ts",
+        "node_modules @better-auth/sso 1.7.6 dist/index.mjs"
+      ],
+      "corrections": [
+        {
+          "claim": "Single sign-on with several identity providers",
+          "before": "If the page offers Continue with single sign-on, select it and complete your organization's identity-provider sign-in.",
+          "after": "Same, plus: with more than one identity provider the page first says Enter your work email. Your organization's identity provider opens next.; enter Email, select Continue with single sign-on; OpenLaw opens the provider that serves the domain; an unserved domain shows No single sign-on provider is set up for {domain}. Check the address or contact your administrator.",
+          "source": "apps/web/src/routes/login.tsx ssoByEmail (ssoProviderId null and ssoProviderCount > 0) and startSso 404 branch (fd8ffd71, 354a6b67); apps/api/src/modules/auth/routes.ts GET /auth/methods ssoProviderId only when exactly one provider; sso.test.ts 'answers 404 when no provider serves the address's domain'; messages/en-US.json auth.login.ssoByEmail, auth.login.error.ssoNoProvider"
+        },
+        {
+          "claim": "Administrator sign-in link can be absent",
+          "before": "(not stated) Administrator sign-in opens the password form when the organization does not allow password sign-in for staff.",
+          "after": "New paragraph: if the page shows only Sign-in is unavailable. Contact your administrator., no staff method is open and there is no Administrator sign-in link. Happens after the last identity provider is removed while SSO is the only Legal method, or when sign-in links are the only method and OpenLaw cannot send email. A still-signed-in Administrator turns on another method in Settings → Advanced → Authentication.",
+          "source": "apps/web/src/routes/login.tsx initialView and the 'unavailable' view (no links rendered; Administrator sign-in only in the sso and magic views); apps/api/src/modules/auth/routes.ts DELETE /auth/sso-providers/:providerId sets legal.sso and business.sso false when no provider remains (3e91951f); consistent with docs/user-guides/authentication-and-email.md Several identity providers"
+        }
+      ],
+      "confirmed": [
+        "One provider: Continue with single sign-on is a single button that starts the provider directly (login.tsx methods.ssoProviderId branch).",
+        "Single sign-on is not configured yet message still renders when the Legal policy has SSO on and no provider is registered (login.tsx ssoUnconfigured). Only reachable through the legacy unsaved-policy fallback now, because PATCH refuses SSO without a provider and removing the last provider turns SSO off (authentication-policy-routes.ts, routes.ts).",
+        "Administrator sign-in appears in the SSO and sign-in link views for the Legal page when Legal password is off; a Legal Team Member gets Password sign-in is disabled for this account. (login.tsx; instance.ts assertPasswordSignIn and session create hook).",
+        "Sign-in link rules unchanged: five-minute single-use link, neutral Check your email, three requests per email in 15 minutes (login.tsx magicSent body; limits.ts only adds a setup-token bucket).",
+        "Password lockout, password setup link and its one-hour expiry, and the two-factor and session sections: no source change since 067c1646 in two-factor.tsx, two-factor-enroll.tsx, settings-profile.tsx, set-password.tsx, link-expired.tsx, magic-link-request.tsx, user-menu.tsx, app-header.tsx.",
+        "Sign-out: session.ts only adds clearSetupDrafts after sign-out; the Sign out behavior the guide describes is unchanged."
+      ],
+      "limitations": [
+        "The several-provider path needs two registered identity providers on the lab (the admin-org oidc-fixture can serve this). The unavailable-page path needs the last provider removed while SSO is the only Legal method; the walkthrough must keep an Administrator session in another context to restore a method."
+      ]
+    },
+    {
+      "articleId": "portal-sign-in",
+      "scenario": ["V-C02"],
+      "contentSha256Before": "d547143ab8f3c8f3969576cadb326df6e9aa58ed3eb7a340994ed41257dd6256",
+      "contentSha256": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e",
+      "sources": [
+        "docs/user-guides/portal-sign-in.md",
+        "docs/documentation/evidence/portal-sign-in.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/batches/DOC-032/admin-org/technical-review.json",
+        "docs/user-guides/authentication-and-email.md",
+        "docs/user-guides/first-run.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "messages/en-US.json",
+        "apps/web/src/routes/login.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/web/src/router.tsx",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/api/src/modules/auth/sso.test.ts"
+      ],
+      "corrections": [
+        {
+          "claim": "Empty allowed-domain list closes Portal sign-in",
+          "before": "You need access to your email and either an existing active account or an email domain the Administrator allows for new accounts.",
+          "after": "Same, plus: removing the last allowed email domain turns off every Business Portal sign-in method; the page shows Sign-in is unavailable. Contact your administrator. and existing accounts cannot sign in either; ask Legal to add a domain and turn a method back on.",
+          "source": "apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains sets business password, magicLink and sso false when domains is empty (3e91951f); instance.ts session create hook checks the role's policy for password, magic-link verify and SSO callback; login.tsx initialView returns 'unavailable'; matches authentication-and-email.md Control Business Portal entry"
+        },
+        {
+          "claim": "Get a sign-in link step 2 with several providers",
+          "before": "If the page shows a password form or Continue with single sign-on, select Email me a sign-in link.",
+          "after": "If the page shows a password form or Continue with single sign-on, with or without an Email field above it, select Email me a sign-in link.",
+          "source": "apps/web/src/routes/login.tsx ssoByEmail form (Email field and Continue with single sign-on), followed by the Email me a sign-in link button when magicLinkOffered"
+        },
+        {
+          "claim": "Single sign-on when links are off, several providers",
+          "before": "If the page offers Continue with single sign-on, complete that sign-in with your organization's account.",
+          "after": "Same, plus: with more than one identity provider enter Email first, then Continue with single sign-on; an unserved domain shows No single sign-on provider is set up for {domain}. Check the address or contact your administrator.",
+          "source": "apps/web/src/routes/login.tsx ssoByEmail and startSso 404 branch; messages/en-US.json auth.login.error.ssoNoProvider"
+        }
+      ],
+      "confirmed": [
+        "Business page title Business Portal sign-in; Get a sign-in link, Send link, Check your email neutral body, five-minute single-use link (login.tsx).",
+        "SSO view on the Business page offers Sign in with a password only when the Business password method is on; no Administrator sign-in link on the Business page (login.tsx group === 'legal' guards).",
+        "An address outside the allowed domains needs an existing active account to receive a link (instance.ts magicLinkDenied and user create hook); still true while at least one domain is listed.",
+        "Sign-in links already sent stop working when the Business magic-link method is off, including after the last domain is removed (instance.ts session create hook returns false on /magic-link/verify).",
+        "Sessions already held keep working after the list is emptied: the policy is checked only when a session is created (instance.ts session create hook).",
+        "Portal Contracts and Matters sections: documents-section.tsx now shows the Document type name and colour on a Version pill; the guide does not describe the pill, so no text changes.",
+        "router.tsx only adds /signing/return; session.ts only clears wizard drafts after sign-out."
+      ],
+      "limitations": [
+        "V-C02 negative check 'unapproved domain gets the supported refusal/neutral response' still holds while at least one domain is listed. With an empty list the page shows Sign-in is unavailable instead of the sign-in link form; the walkthrough should test the empty-list state with an existing Business User and restore a domain and method afterwards.",
+        "Several-provider SSO on the Business page needs two identity providers and Business SSO on; the walkthrough may cover this only as far as the Email field and the unserved-domain message."
+      ]
+    }
+  ],
+  "productBugs": [
+    "Same defect the admin-org seat recorded, listed here only because staff-sign-in now documents it: apps/api/src/modules/auth/routes.ts DELETE /auth/sso-providers/:providerId turns off legal.sso when the last provider goes, and apps/web/src/routes/login.tsx then renders the 'unavailable' view with no Administrator sign-in link. Contradicts TECH-008 break-glass (instance.ts assertPasswordSignIn still allows the Administrator's password). File once.",
+    "Same defect the admin-org seat recorded: apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains turns off every Business method when the list becomes empty, locking out existing Business Users; the TECH-008 2026-09-27 addendum and SET-004 say the list governs new accounts only. portal-sign-in now describes the built behavior. File once."
+  ],
+  "sharedFileRequests": [],
+  "statusChange": null
+}

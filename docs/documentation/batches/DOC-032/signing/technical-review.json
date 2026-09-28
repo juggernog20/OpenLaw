@@ -1,0 +1,147 @@
+{
+  "batch": "DOC-032",
+  "group": "signing",
+  "reviewer": "DOC-032 source-review author agent (signing)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T07:53:46Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "manual-signing": {
+      "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "lastArticleEdit": "a9f1ffdb"
+    }
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "manual-signing",
+      "scenario": ["V-C17-manual"],
+      "contentSha256Before": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+      "contentSha256": "d28d44c1df641f202c0c0fe248c2c1673e6b6f7629f9c3597d0de78f03311e94",
+      "sources": [
+        "docs/user-guides/manual-signing.md",
+        "docs/documentation/evidence/manual-signing.json",
+        "docs/documentation/batches/DOC-030/shared-files/technical-review.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/batches/DOC-032/triage.json",
+        "docs/documentation/batches/DOC-032/compat/compat-b.json",
+        "docs/documentation/batches/DOC-032/compat/compat-b/manual-signing-replay.json",
+        "docs/user-guides/contract-stages.md",
+        "docs/user-guides/contract-approvals.md",
+        "docs/user-guides/document-versions.md",
+        "docs/user-guides/electronic-signing.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/decision-records/DECISIONS-CONTRACTS.md (CTR-013, CTR-014)",
+        "messages/en-US.json",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/approvals/approvals-signing-card.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/contract-statuses/routes.ts",
+        "apps/web/src/routes/settings-contract-statuses.tsx",
+        "packages/db/src/schema/documents.ts",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "packages/shared/src/start-blank.ts",
+        "git show 879fc477, b6a0bcfd, 229909d4, dd28e33d"
+      ],
+      "corrections": [
+        {
+          "claim": "How to see that no Signing connector is in play",
+          "before": "This workflow needs no Signing connector.",
+          "after": "Same, plus: Without one, the Contract's **Signatures** tab offers no **Send for signature** control.",
+          "source": "879fc477 split the Approvals & signing card into the Approvals and Signatures tabs; approvals-signing-card.tsx SignaturesCard draws Send for signature only when canSend (signing.signingConfigured and a primary Document and no live Envelope); messages signing.section 'Signatures', signing.send 'Send for signature'. The compat replay could not check this against the removed 'Approvals & signing' region."
+        },
+        {
+          "claim": "Glossary term for the pin",
+          "before": "executed designation / incorrectly designated Document Version / resulting designation",
+          "after": "Executed pin, and step 4 names the visible mark: **Executed** beside the Version number",
+          "source": "CONTEXT.md 'Executed pin'; scenario V-C17-manual wording; document-versions.md uses Executed pin; documents-card.tsx VersionCell renders documents.executed 'Executed' when version.isExecuted"
+        },
+        {
+          "claim": "Type Executed versus the pin, observable difference",
+          "before": "Choosing the **Executed** type during upload does not set the executed designation automatically.",
+          "after": "Choosing the **Executed** type during upload does not set the Executed pin. The **Type** column can read **Executed** while the Version number shows no **Executed** mark.",
+          "source": "documents/routes.ts setExecutedDocumentVersion (pin is explicit, never read off kind); documents-card.tsx VersionCell versus the Type column; compat replay negative step"
+        },
+        {
+          "claim": "Soft gate step",
+          "before": "Confirm a Soft gate override only if appropriate, then check the Status and Activity.",
+          "after": "If **Move past approval** appears, select **Move anyway** only if the override is appropriate, or **Cancel**. Then check the Status and Activity.",
+          "source": "messages contracts.softGate.title 'Move past approval', contracts.softGate.submit 'Move anyway'; contract-stages.md step 3"
+        },
+        {
+          "claim": "Partially signed rounds in a manual hand-off (new paragraph)",
+          "before": "(absent)",
+          "after": "File each partly signed round with Add version and the Partially signed type; the Contract can move to the Partially signed Status in the Signature Stage; do not mark a partly signed Version as the executed copy; after the last signature continue from step 3.",
+          "source": "229909d4 and migration 0182 (fixed Contract Document type Partially signed before Executed); b6a0bcfd and migration 0181 (protected partially_signed Status in the Signature Stage, kept by Start Blank); setExecutedDocumentVersion accepts any Version, so the guide tells the reader not to pin a partial round; executed-copy.ts sets no pin for partial connector rounds, matching this rule"
+        },
+        {
+          "claim": "Manual hand-off and Envelopes",
+          "before": "Manual hand-off creates no OpenLaw Envelope row. Do not expect a provider update to arrive for it.",
+          "after": "Manual hand-off creates no OpenLaw Envelope. The **Signatures** tab lists no signature request for it, and no provider update will arrive for it.",
+          "source": "SignaturesCard lists signing.envelopes only; signing.empty 'No signature requests on this contract yet.'"
+        },
+        {
+          "claim": "Wrong file uploaded",
+          "before": "If the wrong file was uploaded, retain the C- reference and Document Version details when asking for help.",
+          "after": "An Administrator can remove that Version with **Delete version** (per document-versions.md); deletion cannot be undone; deleting the pinned Version clears the pin, so mark the correct Version again. Otherwise retain the C- reference and Version details.",
+          "source": "dd28e33d; documents/routes.ts DELETE /documents/:documentId/versions/:versionId (requireAdministrator); documents-card.tsx canErase = role === 'administrator'; schema documents.executed_version_id onDelete set null; messages documents.action.delete 'Delete version'"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Legal Team Member or Administrator with access to an unarchived Contract",
+          "source": "setExecutedDocumentVersion/clearExecutedDocumentVersion requireMember, assertOpenDocument, assertContractDocument; compat replay: Business User 403, archived 409"
+        },
+        {
+          "claim": "Stage control choice of a Signature Status such as Out for signature, and an Active Status",
+          "source": "contract-stages.md; compat replay (11 Statuses, Out for signature and Active saved)"
+        },
+        {
+          "claim": "Add version uploads to the intended Document; first Document via upload",
+          "source": "documents-card.tsx action labels documents.action.addVersion; document-versions.md"
+        },
+        {
+          "claim": "Mark as executed copy on the Document; earlier Version through its own actions; Unmark as executed copy",
+          "source": "messages documents.action.markExecuted/unmarkExecuted, documents.actionsForVersion; compat replay"
+        },
+        {
+          "claim": "Marking one Version moves the pin off any other; a later upload does not move the pin",
+          "source": "setExecutedDocumentVersion summary; compat replay v3 upload left v2 pinned"
+        },
+        {
+          "claim": "Marking executed does not change the Contract Status",
+          "source": "setExecutedDocumentVersion writes documents.executed_version_id only; contract-stages.md"
+        },
+        {
+          "claim": "Primary Document check on a Contract with several Documents",
+          "source": "messages documents.primary 'Primary'; compat replay"
+        },
+        {
+          "claim": "Archived or read-only record offers no legal actions; restore first",
+          "source": "assertOpenDocument; documents-card frozen state; compat replay"
+        },
+        {
+          "claim": "This workflow needs no Signing connector",
+          "source": "CONTEXT.md Signing connector and Manual hand-off; CTR-013"
+        },
+        {
+          "claim": "Link targets contract-approvals.md, document-versions.md, electronic-signing.md",
+          "source": "structural build check ok"
+        }
+      ],
+      "limitations": [
+        "Deleting the Version that carries the Executed pin clears the pin through the foreign key's SET NULL. OpenLaw records document.version_deleted but no document.executed_cleared entry, so History does not say the pin was cleared. The guide tells the reader to mark the correct Version again rather than promising a History line.",
+        "The Partially signed Status name is seeded data. An Administrator can rename it but cannot archive or delete it. The guide uses the seeded name, as it does for Out for signature.",
+        "The registry's 'unsupported users cannot perform the legal action' is covered by the guide's role prerequisite and the archived-record sentence. A Business User sees no executed-copy controls in the Portal; the guide states the supported roles rather than naming every refused role."
+      ]
+    }
+  ],
+  "productBugs": [],
+  "sharedFileRequests": [],
+  "statusChange": null
+}

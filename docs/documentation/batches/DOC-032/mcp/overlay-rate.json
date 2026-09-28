@@ -1,0 +1,6 @@
+{
+  "services": {
+    "app": { "environment": { "MCP_RATE_LIMIT_PER_HOUR": "3" } },
+    "worker": { "environment": { "MCP_RATE_LIMIT_PER_HOUR": "3" } }
+  }
+}

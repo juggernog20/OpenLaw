@@ -1,0 +1,330 @@
+{
+  "kind": "article-compatibility-replay",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-b",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+  "sections": {
+    "templates": {
+      "article": "matter-templates",
+      "articleSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+      "phase": "main",
+      "labName": "work",
+      "environment": "openlaw-docs-9d2b1705-work",
+      "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T06:50:34.922Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T06:50:48.736Z"
+      },
+      "stamp": "20260928071853",
+      "seat": "DOC-032 compatibility reviewer (compat-b)",
+      "startedAt": "2026-09-28T07:18:53.314Z",
+      "finishedAt": "2026-09-28T07:19:46.106Z",
+      "steps": [
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "API (fixture setup)",
+          "action": "Before you start: a live Matter type with the Fields the template should fill (fixture setup through the API)",
+          "expected": "The DOC-030 Matter type is live; Priority and Risk are On intake form, so both are creation Rows; the optional note is On intake form, the required note is Required for creation, and the record note is neither.",
+          "startedAt": "2026-09-28T07:18:57.209Z",
+          "finishedAt": "2026-09-28T07:18:57.209Z",
+          "actual": "Matter type \"DOC-032 compat compat-b template type 20260928071853\" Form rows [\"title required\",\"matter_type required\",\"description intake\",\"priority intake\",\"risk intake\",\"department\",\"region\",\"needed_by\",\"doc_032_compat_compat_b_optional_note_20260928071853 intake\",\"doc_032_compat_compat_b_required_note_20260928071853 required\",\"doc_032_compat_compat_b_record_note_20260928071853\"]. Priority creation Row: yes (On intake form). Risk creation Row: yes (On intake form, optional). Request type \"DOC-032 compat compat-b matter request 20260928071853\" targets the type. Ade Balogun submitted R-50 and R-51 (Urgency High, optional note answered, Risk not answered).",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/settings/matters/templates",
+          "action": "Create and edit a template, steps 1-7: profile menu > Settings > Matters > Templates; Matter type; Add template (Name, Description); Edit; Matter defaults; Custom field defaults; Tasks (Add task, offsets, Matter Manager / Unassigned, reorder); Key dates (Add key date); Save template; reopen and confirm",
+          "expected": "The template saves, and after reload all four areas hold the entered values in the chosen order.",
+          "startedAt": "2026-09-28T07:18:57.210Z",
+          "finishedAt": "2026-09-28T07:19:04.125Z",
+          "actual": "Templates list after Add template: \"template DOC-032 compat compat-b onboarding template 20260928071853 DOC-032 fictional onboarding checklist. 0 tasks 0 dates 0 f\". Edit opened the editor (\"Matter type: DOC-032 compat compat-b template type 20260928071853\"). Task role options [\"Matter Manager\",\"Unassigned\"]. Save template reported saved=true. After reload: Priority \"Low\", Risk \"Critical\", Title prefix \"DOC-032 CB -\"; Field defaults [\"Template optional default\",\"Template required default\",\"Template record default\"]; Tasks [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2\",\"Matter Manager\"],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"5\",\"Matter Manager\"],[\"DOC-032 compat compat-b open task 20260928071853\",\"\",\"Unassigned\"]] (the third Task moved up with ArrowUp on its reorder handle); Key dates [[\"DOC-032 compat compat-b review 20260928071853\",\"10\",\"Fictional review with the supplier.\"],[\"DOC-032 compat compat-b kick-off 20260928071853\",\"0\",\"\"]].",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "template editor",
+          "action": "Offsets: enter Task 1 due offset 3651 and save; then clear Key date 1's offset and save (Recover a failed save: correct invalid offsets)",
+          "expected": "Both saves are refused with an error naming the problem; after reload the template is unchanged.",
+          "startedAt": "2026-09-28T07:19:04.126Z",
+          "finishedAt": "2026-09-28T07:19:11.856Z",
+          "actual": "Priority Critical with Task 1 offset 3651: Save template showed \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload Priority \"Low\", Task 1 offset \"2\". Blank Key date 1 offset: \"Give every row a name and use whole-number offsets from 0 to 3650 days.\"; after reload it reads \"10\". Both were refused before any section saved.",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/matters (Create matter dialog), /matters/<n>",
+          "action": "Test both creation paths, direct creation: choose the type, then the template in Matter template; read the hint, the title, the creation Rows, and Matter Manager; clear the optional Field; Create; check Overview, Tasks, Task assignments and Key dates",
+          "expected": "The dialog says the template adds 3 Tasks and 2 Key dates, suggests the prefix title, shows Priority Low and Risk Critical and the Field defaults in the creation Rows; the record-only Field is not shown but its default goes on the Matter; the cleared optional Field stays empty; dates count from the UTC creation date; Manager Tasks go to the Matter Manager; the Task without an offset has no due date.",
+          "startedAt": "2026-09-28T07:19:11.857Z",
+          "finishedAt": "2026-09-28T07:19:18.389Z",
+          "actual": "Template choices [\"No template\",\"DOC-032 compat compat-b onboarding template 20260928071853\"]; hint \"Template adds 3 tasks and 2 key dates.\"; suggested {\"title\":\"DOC-032 CB -\",\"priority\":\"Low\",\"risk\":\"Critical\",\"manager\":\"Daniel Okafor\",\"fOpt\":\"Template optional default\",\"fReq\":\"Template required default\",\"fRecShown\":0} (the record-only Field is not a creation Row, so it is not drawn). Cleared the optional Field, Create opened M-49 created 2026-09-28T07:19:13.074Z (UTC anchor 2026-09-28). Saved priority low, risk critical, optional null, required \"Template required default\", record-only \"Template record default\" (template default for a Row the dialog did not show). Tasks [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"2026-10-03\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b open task 20260928071853\",null,null]]; Key dates [[\"DOC-032 compat compat-b kick-off 20260928071853\",\"2026-09-28\"],[\"DOC-032 compat compat-b review 20260928071853\",\"2026-10-08\"]]. Overview, Tasks and Key dates pages show the title, Tasks and Key dates.",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/matters (Create matter dialog)",
+          "action": "Direct creation with explicit values: clear the Required for creation Field and select Create; then fill it, set Priority to Medium and Matter Manager to Unassigned, and Create",
+          "expected": "Creation is refused while the required Row is empty; the explicit Priority wins over the template default; Matter Manager Tasks stay unassigned.",
+          "startedAt": "2026-09-28T07:19:18.389Z",
+          "finishedAt": "2026-09-28T07:19:19.660Z",
+          "actual": "Empty required Row: the dialog stayed open with \"Fill DOC-032 compat compat-b required note 20260928071853.\". After filling it, Priority Medium and Unassigned: M-51 priority medium (template Low), risk critical, manager null, required \"Typed required value\"; Tasks [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2026-09-30\",null],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"2026-10-03\",null],[\"DOC-032 compat compat-b open task 20260928071853\",null,null]] (Manager Tasks unassigned).",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/inbox/50 (Convert dialog)",
+          "action": "Test both creation paths, Request conversion: open R-50, Triage > Convert to matter, confirm the configured Matter type, choose the template in Matter template, review the creation Rows, fill Risk Medium, and select Convert to matter",
+          "expected": "The dialog shows the target Form's creation Rows; the optional Field starts from the Request's answer, the required Field from the template default; Priority starts from the Request's Urgency (High), not the template's Low; Risk starts empty; no carried or not-carried lists; no template title prefix.",
+          "startedAt": "2026-09-28T07:19:19.660Z",
+          "finishedAt": "2026-09-28T07:19:26.989Z",
+          "actual": "Dialog \"Convert R-50 to a matter\" opened on Matter type \"DOC-032 compat compat-b template type 20260928071853\" with Priority \"High\" (Urgency High). After choosing the template: {\"title\":\"DOC-032 compat compat-b matter-templates administrator convert 20260928071853\",\"priority\":\"High\",\"risk\":\"Not set\",\"fOpt\":\"Requester answer administrator\",\"fReq\":\"Template required default\",\"fRecShown\":0}; no carried or not-carried lists. Filled Risk Medium. Converted to M-52 created 2026-09-28T07:19:21.608Z (the Request was submitted 2026-09-28T07:18:57.079Z). Saved title \"DOC-032 compat compat-b matter-templates administrator convert 20260928071853\" (no \"DOC-032 CB -\" prefix), priority high (template Low), risk \"medium\" (template Critical does not apply), Matter Manager \"Daniel Okafor\", optional \"Requester answer administrator\", required \"Template required default\", record-only \"Template record default\". Tasks [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"2026-10-03\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b open task 20260928071853\",null,null]]; Key dates [[\"DOC-032 compat compat-b kick-off 20260928071853\",\"2026-09-28\"],[\"DOC-032 compat compat-b review 20260928071853\",\"2026-10-08\"]] (anchor 2026-09-28 UTC).",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "legal_team_member",
+          "method": "browser-walkthrough",
+          "actors": "Nadia Haddad",
+          "page": "/inbox/51 (Convert dialog)",
+          "action": "Test both creation paths, Request conversion: open R-51, Triage > Convert to matter, confirm the configured Matter type, choose the template in Matter template, review the creation Rows, leave Risk empty, and select Convert to matter",
+          "expected": "The dialog shows the target Form's creation Rows; the optional Field starts from the Request's answer, the required Field from the template default; Priority starts from the Request's Urgency (High), not the template's Low; Risk starts empty; no carried or not-carried lists; no template title prefix.",
+          "startedAt": "2026-09-28T07:19:26.990Z",
+          "finishedAt": "2026-09-28T07:19:34.619Z",
+          "actual": "Dialog \"Convert R-51 to a matter\" opened on Matter type \"DOC-032 compat compat-b template type 20260928071853\" with Priority \"High\" (Urgency High). After choosing the template: {\"title\":\"DOC-032 compat compat-b matter-templates legal_team_member convert 20260928071853\",\"priority\":\"High\",\"risk\":\"Not set\",\"fOpt\":\"Requester answer legal_team_member\",\"fReq\":\"Template required default\",\"fRecShown\":0}; no carried or not-carried lists. Left Risk Not set. Converted to M-53 created 2026-09-28T07:19:29.472Z (the Request was submitted 2026-09-28T07:18:57.156Z). Saved title \"DOC-032 compat compat-b matter-templates legal_team_member convert 20260928071853\" (no \"DOC-032 CB -\" prefix), priority high (template Low), risk null (template Critical does not apply), Matter Manager \"Nadia Haddad\", optional \"Requester answer legal_team_member\", required \"Template required default\", record-only \"Template record default\". Tasks [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2026-09-30\",\"Nadia Haddad\"],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"2026-10-03\",\"Nadia Haddad\"],[\"DOC-032 compat compat-b open task 20260928071853\",null,null]]; Key dates [[\"DOC-032 compat compat-b kick-off 20260928071853\",\"2026-09-28\"],[\"DOC-032 compat compat-b review 20260928071853\",\"2026-10-08\"]] (anchor 2026-09-28 UTC).",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "template editor, /matters",
+          "action": "Change or archive a template: rename Task 1 and change its offset to 3, save; compare the earlier Matter and a new Matter",
+          "expected": "The earlier Matter keeps its Tasks; a new Matter uses the changed Task.",
+          "startedAt": "2026-09-28T07:19:34.619Z",
+          "finishedAt": "2026-09-28T07:19:38.406Z",
+          "actual": "Saved Task 1 as \"DOC-032 compat compat-b manager task 20260928071853 revised\" with offset 3. M-49 still has [[\"DOC-032 compat compat-b manager task 20260928071853\",\"2026-09-30\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b second manager task 20260928071853\",\"2026-10-03\",\"Daniel Okafor\"],[\"DOC-032 compat compat-b open task 20260928071853\",null,null]]. New M-54 (created 2026-09-28T07:19:38.282Z) has [\"DOC-032 compat compat-b manager task 20260928071853 revised\",\"2026-10-01\",\"Daniel Okafor\"].",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/settings/matters/templates, /matters",
+          "action": "Archive the template (Archive control, Archive template), check creation, then Show archived > Restore",
+          "expected": "The archived template is not offered and a creation that names it is refused with a clear message; Restore brings its saved definition back.",
+          "startedAt": "2026-09-28T07:19:38.407Z",
+          "finishedAt": "2026-09-28T07:19:43.099Z",
+          "actual": "Archive dialog: \"Archive DOC-032 compat compat-b onboarding template 20260928071853? The template leaves new Matter creation. Existing Matters are unchanged, and restoring the template brings its full definition back. Cancel Archive temp\". After Archive template the Create matter dialog offered [\"No template\"]; a create naming the archived template answered 400 \"The template must be live and belong to the selected matter type.\". Show archived > Restore: the editor holds 3 Tasks, 2 Key dates and the Field defaults; the dialog offers [\"No template\",\"DOC-032 compat compat-b onboarding template 20260928071853\"] again.",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "/matters (Create matter dialog)",
+          "action": "A template whose Matter type is unavailable: a second, unused DOC-030 Matter type with its own template is archived (setup through the API); open Create matter and try that template; then restore the type",
+          "expected": "The archived type and its template are not offered, and a creation naming them is refused.",
+          "startedAt": "2026-09-28T07:19:43.099Z",
+          "finishedAt": "2026-09-28T07:19:43.792Z",
+          "actual": "While live, Create matter offered \"DOC-032 compat compat-b template type 20260928071853 unused\" with template choices [\"No template\",\"DOC-032 compat compat-b onboarding template 20260928071853 unused\"]. After the type was archived, Create matter no longer listed it; a create naming the archived type and its template answered 400 \"The matter type must be a live matter type.\".",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "template editor",
+          "action": "A Field detached from the template's type: remove the record-only Field's Row from the type Form (setup through the API), open the template editor, then attach it again",
+          "expected": "The editor names the Field and its retained saved value; after reattaching, the default is an editable control again.",
+          "startedAt": "2026-09-28T07:19:43.793Z",
+          "finishedAt": "2026-09-28T07:19:46.097Z",
+          "actual": "After the Row was removed, the editor read \"DOC-032 compat compat-b record note 20260928071853 is no longer attached to this Matter type. Its saved value (Template record default) is retained.\". After the Row was added again, the default control shows \"Template record default\".",
+          "result": "pass"
+        },
+        {
+          "article": "matter-templates",
+          "scenario": "V-C39",
+          "role": "administrator",
+          "method": "browser-walkthrough",
+          "actors": "Daniel Okafor",
+          "page": "docs/user-guides/matter-templates.md",
+          "action": "Guide text check: the steps walked are the ones in the reviewed content",
+          "expected": "The guide names Matter template, On intake form, Required for creation, Convert to matter, Archive template, Show archived and Restore.",
+          "startedAt": "2026-09-28T07:19:46.097Z",
+          "finishedAt": "2026-09-28T07:19:46.098Z",
+          "actual": "All eight labels are in the reviewed guide text.",
+          "result": "pass"
+        }
+      ],
+      "fixtures": {
+        "names": {
+          "type": "DOC-032 compat compat-b template type 20260928071853",
+          "fOpt": "DOC-032 compat compat-b optional note 20260928071853",
+          "fReq": "DOC-032 compat compat-b required note 20260928071853",
+          "fRec": "DOC-032 compat compat-b record note 20260928071853",
+          "name": "DOC-032 compat compat-b onboarding template 20260928071853",
+          "task1": "DOC-032 compat compat-b manager task 20260928071853",
+          "task2": "DOC-032 compat compat-b open task 20260928071853",
+          "task3": "DOC-032 compat compat-b second manager task 20260928071853",
+          "date1": "DOC-032 compat compat-b review 20260928071853",
+          "date2": "DOC-032 compat compat-b kick-off 20260928071853",
+          "prefix": "DOC-032 CB -",
+          "requestType": "DOC-032 compat compat-b matter request 20260928071853"
+        },
+        "matterType": {
+          "id": "01a0e6e1-876a-75be-ba04-fe6cac01abc0",
+          "displayName": "DOC-032 compat compat-b template type 20260928071853",
+          "form": [
+            {
+              "rowRef": "title",
+              "onIntakeForm": false,
+              "isRequired": true
+            },
+            {
+              "rowRef": "matter_type",
+              "onIntakeForm": false,
+              "isRequired": true
+            },
+            {
+              "rowRef": "description",
+              "onIntakeForm": true,
+              "isRequired": false
+            },
+            {
+              "rowRef": "priority",
+              "onIntakeForm": true,
+              "isRequired": false
+            },
+            {
+              "rowRef": "risk",
+              "onIntakeForm": true,
+              "isRequired": false
+            },
+            {
+              "rowRef": "department",
+              "onIntakeForm": false,
+              "isRequired": false
+            },
+            {
+              "rowRef": "region",
+              "onIntakeForm": false,
+              "isRequired": false
+            },
+            {
+              "rowRef": "needed_by",
+              "onIntakeForm": false,
+              "isRequired": false
+            },
+            {
+              "rowRef": "doc_032_compat_compat_b_optional_note_20260928071853",
+              "onIntakeForm": true,
+              "isRequired": false
+            },
+            {
+              "rowRef": "doc_032_compat_compat_b_required_note_20260928071853",
+              "onIntakeForm": false,
+              "isRequired": true
+            },
+            {
+              "rowRef": "doc_032_compat_compat_b_record_note_20260928071853",
+              "onIntakeForm": false,
+              "isRequired": false
+            }
+          ]
+        },
+        "priorityRiskCreationRows": {
+          "priority": {
+            "rowRef": "priority",
+            "onIntakeForm": true,
+            "isRequired": false
+          },
+          "risk": {
+            "rowRef": "risk",
+            "onIntakeForm": true,
+            "isRequired": false
+          },
+          "note": "Priority and Risk are On intake form on this type, so both are creation Rows in the Create matter and Convert dialogs."
+        },
+        "fields": {
+          "fOpt": {
+            "slug": "doc_032_compat_compat_b_optional_note_20260928071853",
+            "displayName": "DOC-032 compat compat-b optional note 20260928071853"
+          },
+          "fReq": {
+            "slug": "doc_032_compat_compat_b_required_note_20260928071853",
+            "displayName": "DOC-032 compat compat-b required note 20260928071853"
+          },
+          "fRec": {
+            "slug": "doc_032_compat_compat_b_record_note_20260928071853",
+            "displayName": "DOC-032 compat compat-b record note 20260928071853"
+          }
+        },
+        "requestType": {
+          "id": "01a0e6e1-87a6-7c62-952b-3bba54b0c155",
+          "displayName": "DOC-032 compat compat-b matter request 20260928071853"
+        },
+        "requests": {
+          "administrator": {
+            "number": 50,
+            "title": "DOC-032 compat compat-b matter-templates administrator convert 20260928071853",
+            "createdAt": "2026-09-28T07:18:57.079Z"
+          },
+          "legal_team_member": {
+            "number": 51,
+            "title": "DOC-032 compat compat-b matter-templates legal_team_member convert 20260928071853",
+            "createdAt": "2026-09-28T07:18:57.156Z"
+          }
+        }
+      },
+      "records": {
+        "direct": 49,
+        "converted": {
+          "administrator": 52,
+          "legal_team_member": 53
+        }
+      }
+    }
+  },
+  "updatedAt": "2026-09-28T07:19:46.106Z"
+}

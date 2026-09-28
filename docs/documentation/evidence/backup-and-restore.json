@@ -72,6 +72,33 @@
     "contentSha256": "915895ce11cf5621f92a72f70a4d3e43bbae1e52a8bb117472b484dc654db811",
     "verifiedAt": "2026-09-16T15:31:52Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:48:27.194Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): The guide backs up and restores the whole database and the file store, so new tables and columns (migrations 0172-0183: toolset ceiling, Envelope preparation, launch, resume and recovery, document type colors, partial signing, SSO provider name) travel in the dump; the replay restored a 4ca41822 dump with 893 TOC entries and every Version hash matched. rewrap.ts (the sealed columns) did not change, so the start-log line 'No configured key opens these stored credentials' names the same columns (api_key, smtp_url, vapid_private_key, advanced_settings), as observed. advanced-settings routes only moved the read into readAdvancedSettings; org.ts only changes the ceiling default. Signing recovery (reconciliation.ts, signing-webhook) can use a restored signing account, which the guide already warns about under 'Review restored destinations'. compose.yml did not change; .env.example changed only the TRUSTED_PROXIES comment, which this guide does not use. Replay of batches/DOC-030/operator-2/walkthrough.mjs on own Compose projects openlaw-doc032-cd-opinst, -opup, -oprecover, -oprestore, -opmigfix: 64 steps, 4 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-d.json",
+        "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/operator-2-replay.mjs",
+        "sha256": "42c6064d3541a20126797739cf859fee311925c464636ff8e5f35400eae17364"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/operator-2-replay/op-lib.mjs",
+        "sha256": "4f09efadb08a909e2a2b329bda7212493ed7653fc38df370d7e90e14c6709b12"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/backup-and-restore-replay.json",
+        "sha256": "7f9167ab38f934f1a82cc15c73c7ee8b02280a3f4b92a74450426f69597f38c2"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

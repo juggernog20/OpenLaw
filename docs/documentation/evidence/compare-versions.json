@@ -78,13 +78,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
     "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
-    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
-    "reviewer": "DOC-030 compatibility reviewer (compat)",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-c)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-25T11:14:39.367Z",
-    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of document-compare.tsx, documents-card.tsx, lib/documents.ts, lib/roles.ts, documents/routes.ts and doc-engine server.ts. The Compare with previous action, the Changes view, export and the comparison pipeline did not change; the Documents card column is now Type and still shows Generated redline for an exported redline, which is the guide's wording. I replayed the DOC-029 V-C29 script and its archived-pair supplement for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-28T07:47:04.000Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, documents/routes.ts, document-versions.ts, document-erasure.ts, lib/documents.ts, messages/en-US.json and CONTEXT.md. document-compare.tsx, pipeline/document-comparison.ts, document-access.ts, roles.ts, doc-panel.tsx and the doc engine did not change in this range. dd28e33d adds an Administrator-only Delete version to the Version actions menu beside Compare with previous. The route refuses to delete a Version that a Generated redline was made from, and deleting a Version removes the stored Comparisons that use it; document-versions.ts does not reuse a deleted number. So after an export the original Versions and the Comparison stay available, as the guide says, until someone deletes the Generated redline first, which the guide does not describe. No statement in the guide changed. I replayed the DOC-030 compatibility script (compare and archived-pair parts) on c3cmp: all 20 steps passed, including Preparing comparison with the worker paused. Earlier review, DOC-030 compatibility reviewer (compat), 3fa407e3 to 067c1646: From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of document-compare.tsx, documents-card.tsx, lib/documents.ts, lib/roles.ts, documents/routes.ts and doc-engine server.ts. The Compare with previous action, the Changes view, export and the comparison pipeline did not change; the Documents card column is now Type and still shows Generated redline for an exported redline, which is the guide's wording. I replayed the DOC-029 V-C29 script and its archived-pair supplement for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
       {
         "path": "batches/DOC-029/compat-r2/analysis-standin.json",
@@ -113,6 +113,22 @@
       {
         "path": "batches/DOC-030/compat/logs/compare-versions-compatcmp.log",
         "sha256": "14c7a1487fecca3457f80f5c216ba57bd9a68b668df207813b620e2b6c2bf817"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/compare-versions-replay.mjs",
+        "sha256": "5a2b8849cc0015961289989e4af0b07fe22e22125a02f842720e9d1c0f368ca3"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/compare-versions-replay/harness.mjs",
+        "sha256": "10ec7cbb1976194bcd96cd3309858168f56c75869294dd7219cd4dc4f14a67c8"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/compare-versions-replay.json",
+        "sha256": "4b3d194ed2643912652de31b08c19bc71302e50d5d33902ef9e44b30498476bd"
       }
     ]
   }

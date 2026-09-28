@@ -1,0 +1,91 @@
+{
+  "section": "twoFactor",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "aoauth",
+  "labProject": "openlaw-docs-9d2b1705-aoauth",
+  "appUrl": "http://127.0.0.1:43351",
+  "mailUrl": "http://127.0.0.1:48451",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "base lab environment; OIDC fixture with two issuers running",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:31:35.713Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/",
+      "action": "Prepare a disposable Administrator with a password and no authenticator",
+      "expected": "Invited as Administrator; password set",
+      "startedAt": "2026-09-28T07:31:36.809Z",
+      "finishedAt": "2026-09-28T07:31:37.870Z",
+      "actual": "DOC-032 admin-org V-C37 2FA admin was invited as Administrator, set a password and signed in (administrator).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/",
+      "action": "Turn on Require two-factor authentication under Legal User Authentication as an Administrator with no authenticator: OpenLaw asks for set-up before continuing",
+      "expected": "Enrolment page with the organization requirement; API refused until enrolment; enrolment reaches the app",
+      "startedAt": "2026-09-28T07:31:37.870Z",
+      "finishedAt": "2026-09-28T07:31:39.128Z",
+      "actual": "Require two-factor authentication was off. Selecting it under Legal User Authentication saved it on and took the Administrator to /auth/two-factor/enroll with \"Your organization requires two-factor authentication.\"; an admin API call answered 403 (\"Set up two-factor authentication before continuing.\"). After Turn on two-factor, a code, Confirm and Done, the Administrator reached / and the same API answered 200.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/",
+      "action": "Each new session must prove a code",
+      "expected": "A fresh password sign-in asks for a code",
+      "startedAt": "2026-09-28T07:31:39.128Z",
+      "finishedAt": "2026-09-28T07:31:39.619Z",
+      "actual": "A fresh password sign-in went to /auth/two-factor with \"Enter the 6-digit code from your authenticator app.\" Before the code an admin API call answered 401; after Verify it answered 200.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/authentication",
+      "action": "Required two-factor authentication applies to email magic links and to single sign-on, and to Administrator emergency password sign-in",
+      "expected": "Magic-link and SSO sign-ins of staff without an authenticator are sent to set-up; Daniel's password sign-in with Email and password off is sent to set-up",
+      "startedAt": "2026-09-28T07:31:39.619Z",
+      "finishedAt": "2026-09-28T07:31:48.349Z",
+      "actual": "Observed {\"magicLink\":{\"path\":\"/auth/two-factor/enroll\",\"work\":403},\"sso\":{\"callback\":\"/auth/two-factor/enroll\",\"me\":200,\"setupRequired\":true,\"path\":\"/auth/two-factor/enroll\",\"work\":403},\"emergencyPassword\":{\"path\":\"/auth/two-factor/enroll\",\"work\":403}}. Legal SSO was turned off and Email and password turned back on ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":true}).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/authentication",
+      "action": "Turn off Require two-factor authentication",
+      "expected": "Policy saved off",
+      "startedAt": "2026-09-28T07:31:48.349Z",
+      "finishedAt": "2026-09-28T07:31:49.293Z",
+      "actual": "The switch showed \"Saved\" ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}). The disposable Administrator's authenticator stays enrolled.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:31:49.298Z"
+}

@@ -113,6 +113,41 @@
     "contentSha256": "0c4586d601262514f49a617fa47f6bd3c45accadd851fd6bfb9a2f3d817d8d9b",
     "verifiedAt": "2026-09-16T15:38:37.588Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-b)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T07:47:59.876Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of matter-record.tsx, task-assignment.ts, the new lib/matter-team.ts, matters/routes.ts, matters/service.ts and messages/en-US.json. The Matter Tasks, Key dates, Related Matters and Linked Contracts cards, the task dialog and assignee picker, and the matter-tasks and matter-relations routes did not change. 254d4d40 makes a Task assignee team add call addMatterTeamMember, which inserts the same matter_team row and writes the same matter.team_added entry as before; the Matter team routes and the Business Owner change use the same helper. matter-record.tsx only moved the Matter Manager and Business Owner controls into a new Owners section, which this guide does not place. I replayed the DOC-030 matter-work script for Administrator and Legal Team Member on work built from 4ca41822; all 34 steps passed, 17 per role, as in DOC-030.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-b.json",
+        "sha256": "59266bfee347abd819b0fe2ff7c1c1e4ecfe43bce11dd4252960dc3ed0a854fa"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-work-replay.mjs",
+        "sha256": "0998724fb1f72dae65829c47ff451b14b7f9d77dbf5129c7414599118d26676d"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-work-replay/lib.mjs",
+        "sha256": "787fa8a39a882a858afe77dc4c395775ff93e1563ce68350799a5460ab6e859b"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-work-replay/wt-matter-work.mjs",
+        "sha256": "fa90b754177ce5534bf212dd3dacf9ca993b6dcf226aafe7ec24c531b242dddc"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/matter-work-replay.json",
+        "sha256": "afd13925afc9ed5fb0b48277686c39d4acd21b5a99723469c14148931584b5b2"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/matter-work-work.log",
+        "sha256": "0d7de3ac820d4258748b13707ee030eed5d02028783bf3b38f3dac8942874dd0"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

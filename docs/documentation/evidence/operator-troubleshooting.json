@@ -85,6 +85,33 @@
     "contentSha256": "23c6619715d721ec93c0ca4e61e662cd4bce2887d53bd7a29668e32c052ab4b9",
     "verifiedAt": "2026-09-16T16:14:35Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:48:27.194Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): index.ts adds only a boot stop when SIGNING_PREPARATION_LIVE_LAB is set with a signing stand-in, which no documented deployment sets. The migration refusals the guide quotes are unchanged and were observed again ('This database cannot apply the migrations it is missing.', the accounts.issuer cases, 'Cannot migrate the intake form of Request types:'). The AI test refusal ('The connection test failed. The provider refused the request with HTTP 401.' and the log line) and the SMTP messages are unchanged; ai-connector and email-settings only moved reads into shared functions. settings-e-signature.tsx rewords the connector on/off captions; the guide's Signing row (Polling and Webhook, connection test) still holds and the Signing updates control still offers Polling and Webhook. Behavior the guide does not describe: events/routes.ts and event-hub.ts now also serve MCP listen streams (mcp/change-feed.ts subscribes with the person's user ID), so an MCP Client's listen stream counts toward the same five streams per person and 500 per process. The guide's 'Live updates arrive only after reloading' row stays true (a sixth stream still closes the oldest; the browser route still answers 503 with 'Too many live event streams are open. Try again shortly.'), but its 'about one per open tab' does not mention that a Client's listen stream also takes a slot. Replay of batches/DOC-030/operator-2/walkthrough.mjs on the same operator-2 replay projects as backup-and-restore: 59 steps, 4 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-d.json",
+        "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/operator-2-replay.mjs",
+        "sha256": "42c6064d3541a20126797739cf859fee311925c464636ff8e5f35400eae17364"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/operator-2-replay/op-lib.mjs",
+        "sha256": "4f09efadb08a909e2a2b329bda7212493ed7653fc38df370d7e90e14c6709b12"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/operator-troubleshooting-replay.json",
+        "sha256": "4a9ecfc9d3f7e038bfcdeab247c19537c8c17ede72b79946fed6b68ac35a67e1"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

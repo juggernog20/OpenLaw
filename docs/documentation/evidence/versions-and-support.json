@@ -108,14 +108,34 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
     "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
-    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
-    "reviewer": "DOC-030 compatibility reviewer (compat)",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-25T11:14:39.367Z",
-    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile. The reader, Help links and Edition details did not change; development builds now show pending-review guides with validation badges, which the guide already describes; the headers changed only branding. I replayed the DOC-029 V-C51 section for Administrator, Legal Team Member, Business User and operator on lab compatcmp built from 067c1646; all 15 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+    "reviewedAt": "2026-09-28T08:48:27.194Z",
+    "summary": "From 3fa407e3 to 4ca41822 (DOC-032, set compat-d): 3fa407e3..067c1646 was reviewed compatible by DOC-030 (set compat) with a 15-step replay. From 067c1646 to 4ca41822, help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile did not change. reader.css only makes a whole search result card clickable with a focus outline; index.html adds a no-referrer meta tag; router.tsx adds the /signing/return route. None touches Help, the reader, Edition details or the standalone export. The replay on the work lab passed 15 of 15 steps for Administrator, Legal Team Member, Business User and operator. Edition details showed Supported app '0.0.1 / 067c1646…' and Distribution commit 4ca41822: the lab serves the edition.json committed at 4ca41822, and the guide names no app revision. Replay of batches/DOC-030/compat/versions-and-support-replay.mjs on work: 15 steps, 0 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change. Earlier review, DOC-030 compatibility reviewer (compat) (3fa407e3 to 067c1646): From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile. The reader, Help links and Edition details did not change; development builds now show pending-review guides with validation badges, which the guide already describes; the headers changed only branding. I replayed the DOC-029 V-C51 section for Administrator, Legal Team Member, Business User and operator on lab compatcmp built from 067c1646; all 15 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
     "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-d.json",
+        "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay.mjs",
+        "sha256": "fd477578b74995a1282d86d97f36662c9a136970192cce9329d07459281cb944"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay/lib.mjs",
+        "sha256": "95142b7585eea43e0095cf8361123ec0e8f7352df7aeadd855057f52b3d0ec9d"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay.json",
+        "sha256": "603eb25111a42e0cb0073190e54f1ec71e8ef7ec4618bcd67100af77ad9a687c"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay/doc032-admin-edition-details.png",
+        "sha256": "cab5705e820aa4afef41a50c9cf98891de3a275740a1cecc95315a05c61d1d73"
+      },
       {
         "path": "batches/DOC-029/compat-r2/support.json",
         "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"

@@ -88,6 +88,41 @@
     "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
     "verifiedAt": "2026-09-25T13:34:56.886Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-c)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T07:47:04.000Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of audit-log/routes.ts, audit-log/tool-calls.ts, org/routes.ts, settings-mcp.tsx, list-editor.tsx, activity.ts and messages/en-US.json. settings.tsx, settings-reminders.tsx, reminder-offsets.ts, my-reminder-lead-times.tsx, settings-notifications.tsx, settings-audit-log.tsx, audit-settings-tabs.tsx, settings-tool-calls.tsx, morning-round.ts, round-trigger.ts and activity-redaction.ts did not change. 3294f749 moved the Audit log, CSV export and Tool calls reads into shared functions for the Administration Tools; the filters, audience reach, redaction of an unreached second record, the export bound and the CSV columns are unchanged. org/routes.ts moved the reminder offset and comment-words reads into functions with the same answers. settings-mcp.tsx changed captions and moved the OAuth note; the Tool calls in the last day button did not change. activity.ts adds narrations, so the Action filter offers more events; the guide does not list them. list-editor.tsx only adds an optional expanded-row slot; the lead time list keeps Add lead time, Remove and the reorder handle. No statement in the guide changed. I replayed the DOC-030 admin-config reminders, audit and Tool calls sections on c3cmp: all 15 V-C41 steps passed (Administrator, with Legal Team Member and Administrator audience checks), the same count as DOC-030, after two harness-only attempts (see attempts).",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/admin-config-replay.mjs",
+        "sha256": "05cb2a824e7ce9613d774b51359faabc15a181fae42087831bceba2dfa2c7e3a"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/admin-config-replay/api.mjs",
+        "sha256": "6eb6f71fd2c7033a38fb1aa9e585b923e1199ceff8e2573cfc830269a0e6b729"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.json",
+        "sha256": "175ac5bf27e3dbb981a295686bc95955b9a0a66d9c14edb0d34dc1c925e4541c"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt1.json",
+        "sha256": "6cd2fc64addadd37be6f1ca8aa393beecbf2a44ba87556c2b58a15cecfc4cedb"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt2.json",
+        "sha256": "c899d30ba4b2ab1cb7675c242d329b7be6aa220156ffa70a83edc4603914b2fb"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

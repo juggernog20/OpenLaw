@@ -1,73 +1,39 @@
 {
   "articleId": "types-statuses-fields",
-  "contentSha256": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060",
-  "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-  "buildId": "app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba; engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e",
-  "environment": "openlaw-docs-80ceef9e-work2",
-  "author": "DOC-030 source-review author agent (admin-config)",
-  "technicalReviewer": "DOC-030 source-review author agent (admin-config)",
-  "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
+  "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "author": "DOC-032 source-review author agent (records); earlier: DOC-032 source-review author agent (records); earlier: DOC-030 source-review author agent (admin-config)",
+  "technicalReviewer": "DOC-032 source-review author agent (records)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (records)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-25T13:34:35.597Z",
+  "verifiedAt": "2026-09-28T07:51:30.418Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/types-statuses-fields.md",
+    "docs/documentation/batches/DOC-032/records/technical-review.json",
+    "docs/documentation/batches/DOC-032/records/walkthrough.json",
+    "docs/documentation/batches/DOC-032/records/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/records/lib.mjs",
+    "docs/documentation/batches/DOC-032/records/wt-types-statuses-fields.mjs",
     "docs/documentation/batches/DOC-030/admin-config/technical-review.json",
-    "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
-    "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
-    "docs/documentation/batches/DOC-030/admin-config/api.mjs",
-    "docs/documentation/batches/DOC-030/admin-config/v-c38-preview-intake-form.png",
     "CONTEXT.md",
     "docs/documentation/EDITORIAL.md",
     "docs/documentation/templates/how-to.md",
-    "docs/decision-records/DECISIONS.md (DD-028 and its 2026-09-22 built addendum)",
-    "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-015 and its Knowledge addendum)",
-    "docs/decision-records/DECISIONS-SETTINGS.md (DD-028 Default type amendment)",
-    "apps/web/src/routes/settings.tsx",
-    "apps/web/src/components/contracts-settings-tabs.tsx",
-    "apps/web/src/components/matters-settings-tabs.tsx",
-    "apps/web/src/components/entities-settings-tabs.tsx",
-    "apps/web/src/components/knowledge-settings-tabs.tsx",
-    "apps/web/src/components/documents-settings-tabs.tsx",
+    "docs/documentation/batches/DOC-032/triage.json",
+    "docs/documentation/batches/DOC-032/plan.json",
+    "messages/en-US.json",
+    "apps/web/src/routes/settings-document-types.tsx",
     "apps/web/src/components/taxonomy-types-pane.tsx",
     "apps/web/src/components/list-editor.tsx",
-    "apps/web/src/components/inline-add-form.tsx",
-    "apps/web/src/components/default-fields.tsx",
-    "apps/web/src/routes/settings-contract-types.tsx",
-    "apps/web/src/routes/settings-matter-types.tsx",
-    "apps/web/src/routes/settings-entity-types.tsx",
-    "apps/web/src/routes/settings-knowledge-types.tsx",
-    "apps/web/src/routes/settings-document-types.tsx",
-    "apps/web/src/routes/settings-officer-roles.tsx",
-    "apps/web/src/routes/settings-contract-statuses.tsx",
-    "apps/web/src/routes/settings-matter-statuses.tsx",
-    "apps/web/src/routes/settings-contract-fields.tsx",
-    "apps/web/src/components/type-editor-screen.tsx",
-    "apps/web/src/components/type-editor-sections.tsx",
-    "apps/web/src/routes/settings-contract-type-editor.tsx",
-    "apps/web/src/routes/settings-matter-type-editor.tsx",
-    "apps/web/src/routes/settings-entity-type-editor.tsx",
-    "apps/web/src/components/type-form/builder.tsx",
-    "apps/web/src/components/type-form/conditions.tsx",
-    "apps/web/src/components/type-form/model.ts",
-    "apps/web/src/components/type-form/preview.tsx",
-    "apps/web/src/components/field-editor-dialog.tsx",
-    "apps/web/src/components/field-answer-style-select.tsx",
-    "apps/web/src/lib/field-catalog.ts",
-    "apps/web/src/components/documents/documents-card.tsx",
-    "apps/web/src/components/documents/create-attachments.tsx",
-    "apps/web/src/components/documents/batch-dialog.tsx",
-    "apps/api/src/lib/taxonomy-routes.ts",
-    "apps/api/src/modules/contract-types/routes.ts",
-    "apps/api/src/modules/matter-types/routes.ts",
-    "apps/api/src/modules/entity-types/routes.ts",
-    "apps/api/src/modules/officer-roles/routes.ts",
+    "apps/web/src/lib/documents.ts",
+    "packages/shared/src/document-type-colors.ts",
     "apps/api/src/modules/document-types/routes.ts",
+    "apps/web/src/routes/settings-contract-statuses.tsx",
     "apps/api/src/modules/contract-statuses/routes.ts",
-    "apps/api/src/modules/matter-statuses/routes.ts",
-    "packages/db/migrations/0157_type-forms.sql",
-    "packages/db/migrations/0160_document_types.sql",
-    "messages/en-US.json"
+    "packages/db/migrations/0181_partial-signing.sql",
+    "packages/db/migrations/0182_partially-signed-document-type.sql"
   ],
   "scenarios": [
     {
@@ -76,82 +42,33 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
-        "Reviewer-created records named DOC-030 admin-config V-C38 <thing> <stamp>: Matter, Contract, Entity and Knowledge types; Contract and Matter Statuses; Matter, Contract and Entity Fields; a fixed-term NDA-style Contract type; Officer roles. API fixtures (Administrator session) only for records that use a definition: Matters on a type or Status, two Officers (one resigned) on a role, and one Contract Text Field. Records retaining values: a Contract created in the browser holds a value for a Field that is later archived and restored."
+        "Shared work lab openlaw-docs-9d2b1705-work built from 4ca41822 (Helix seed, light profile, random seed 7, seeded 2026-09-28T06:50:34.922Z to 2026-09-28T06:50:48.736Z). Other walkthrough agents used the same lab at the same time; this run created only records named \"DOC-032 records V-C38 ... 0928074931\".",
+        "Daniel Okafor (Administrator) signs in with a password in an isolated browser context; Nadia Haddad (Legal Team Member) signs in in her own context for the non-Administrator check.",
+        "This guide changes organisation-wide configuration. The run created only types, Statuses, Fields, Document types and Officer roles named \"DOC-032 records V-C38 ... 0928074931\", reordered only its own rows, set the colour it changed back to Automatic, only opened and closed the colour swatch of the seeded Partially signed type, and archived everything it created at the end (cleanup record in walkthrough.json). A fixture Matter, Contract and Entity with Officers were created through the API to hold values."
       ],
-      "expected": "Types, Statuses, Fields, Form Rows, Branches and Officer roles configure as documented; archive reassignment moves records onto a live replacement only; the Default type refuses archive with a reason; archived Fields keep their stored values for restoration; new records follow the Form's requiredness and Branches; Stage and Category cannot change; non-Administrators cannot edit configuration.",
-      "actual": "36 recorded browser steps passed as Daniel Okafor, plus two API refusals. Types: Add type with Save and Cancel, Rename, Edit (Details and Form) with the Description saved on blur, arrow-key reorder, on Matters, Contracts, Entities and Knowledge (Knowledge rows have no Edit). Archiving a type used by one Matter showed the usage count and offered only live types other than itself (no archived type); the Matter moved to the replacement and stayed there after Show archived > Restore. The Default Contract and Matter types (no label) show Archive; the dialog refused with \"Default is the Default type and cannot be archived or deleted: module-only Requests need its Form.\" Create matter preselected Default. Document types: Settings > Documents lists Matters, Contracts and Entities; Add type, Rename and reorder saved; the six fixed Contract types show \"<name> is fixed. Contract workflows depend on it.\" with no Rename or Archive; an added Entity type appeared in the Entity Upload dialog's Type choice, its Archive asked for no replacement and it left the choice until Restore. Statuses: Contract Add status with a Stage (Save status, Cancel), no Stage control on the row, Draft/Active/Expired locked, an in-use Status's dialog reads \"Move them to another status first\" with Archive disabled; Matter Add status defaulted the group to In progress, a Closed Status has no group, a row group change persisted, Open and Closed are locked, and archiving an in-use custom Status offered only Open-Category replacements and moved the Matter. Fields: Default Fields starts collapsed with locked rows above an expanded Custom Fields; Governing law, Jurisdiction and Our position show \"is a default Field and can't be archived\" (API archive 409); Add field offers the ten Types, Options one per line, no Yes/No control for Boolean, no reorder handles, no Type control on Edit (\"The field type is immutable after creation.\"); Contract Text and Long text show AI prompt and Answer style (Organisation default), User and Entity show no AI prompt. Form: Title and Type pinned with \"Position and switches are fixed\"; Attach Field lists Fields alphabetically with Search fields; Create Field attaches from the Form; each switch change showed Saved; On intake form turned on and locked Visible on Portal (\"Turn off On intake form first\"); Touchpoint moved Intake -> Creation -> Record with the switches; a User Row on intake could not be required; arrow-key Row moves persisted and stopped below Type. Branch: Add condition in the header added a Branch at the end of the Form; Term type / is / Fixed saved as \"Show when all of: Term type is Fixed\"; the grip's Put under a condition… moved Expiry date under it; Preview intake form (\"Preview only. No Request will be sent.\") showed Expiry date as required for Fixed and hid it for Evergreen, and Submit request refused the missing answer; Add another condition asked AND or OR, Join conditions changed it, an unfinished Branch disabled Add condition, Escape discarded it, Remove condition kept Expiry date at the root. Records: Create contract refused an empty Required for creation Field (\"Fill … — this contract type requires it.\"), asked Expiry date only for Fixed, and created a Contract whose Fields tab shows the value; archiving the Field hid it from the Form and the record while the API kept the value; Restore brought the Row and the value back; Detach removed a Row and kept the Field. Entity Forms show only Required for creation and no Preview. Officer roles (Director & Officer roles): Add role, Rename, reorder; archiving a role used by one current and one resigned Officer counted 2 and moved both; Restore did not move them back; Other is locked.",
+      "expected": "New and existing records reflect the documented configuration and retained-value behavior. Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration.",
+      "actual": "38 recorded browser steps passed for this role (run 0928074931, last step 2026-09-28T07:51:30.418Z). Profile menu > Settings > Organization > Matters > Types: Add type + Save added the fixture types and Cancel left no row; Rename, Edit (Details and Form tabs, Description saved on leaving the field) and keyboard reorder (own row above own row) persisted. Contracts, Entities and Knowledge each took Add type; Edit exists on Contracts and Entities, not Knowledge. Archiving an in-use type showed its usage count and offered only live types other than itself; the Matter moved to the replacement; Other shows the lock; the Default row shows Archive but the dialog refused with \"Default is the Default type and cannot be archived or deleted: module-only Requests need its Form.\"; the Create matter dialog preselected Default; Show archived > Restore did not move the Matter back; the API refused reassignment onto an archived type or the type itself (400). Documents: the Matters, Contracts and Entities tabs; Add type, Rename and reorder on Matters; the swatch \"Colour for <name>\" opened Automatic, Grey, Blue, Amber, Green, Red, Orange and Purple, Purple saved at once (PATCH 200) and read \"Colour for ...: Purple\" after a reload, and Automatic set it back. The Contracts list shows the seven fixed types in the order Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment, each with the lock \"<name> has a fixed name. Its colour can be changed.\", a colour swatch and no Rename or Archive; the Partially signed swatch opened with enabled choices and Escape changed nothing. On Entities the upload dialog showed a Type choice only with a live type; archive asked for no replacement and the archived type left the upload choices. Contract Statuses: Add status with a Stage, Cancel, Save status, Rename and reorder; the row has no Stage control; Draft, Partially signed, Active and Expired show \"<name> is system-protected and can't be archived\"; the in-use Terminated dialog asks you to move Contracts and has no replacement; a fixture Signature Status archived while the seeded Signature Statuses stayed live. Matter Statuses: Open with default group In progress, Waiting, Closed with no group; the row group control saved Open; archiving an in-use custom Status offered only Open-Category replacements and moved the Matter. The API refused a Stage or Category change (400). Fields: Default Fields collapsed with locked rows, Custom Fields expanded; Governing law, Jurisdiction and Our position show \"<name> is a default Field and can't be archived\" and the API refuses; Add field with the Type list of the guide, Options one per line, no Type control after creation, no reorder handles; AI prompt and Answer style (Organisation default) on Contract Text Fields. Form: Attach Field with Search fields, Create Field, the three switches with Saved and Touchpoint Intake/Creation/Record, Visible on Portal locked on while On intake form is on, keyboard move with Title and Type pinned; a Branch with Add condition, Put under a condition..., Preview intake form (Fixed shows Expiry date as required, Evergreen hides it), AND/OR join, Remove condition; a new Contract required the Creation Row. Archive in the Field catalog hid the Row and kept the stored value, Restore brought it back, and Detach kept the Field. Entity Forms show only Required for creation. Officer roles: Add role, Rename, reorder, archive with replacement counting current and resigned Officers, Restore without moving them back. Nadia Haddad saw no Organization configuration: the four configuration URLs showed no add controls and POST /api/v1/contract-types answered 403.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
-      ]
-    },
-    {
-      "id": "V-C38",
-      "coverage": ["C38"],
-      "role": "administrator",
-      "method": "api-refusal",
-      "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit.",
-        "API refusal checks made with Daniel Okafor's own session, because the browser offers no control for these choices."
-      ],
-      "expected": "Invalid reassignment (onto an archived type or onto the type itself) and a Stage or Category change on an existing Status are refused.",
-      "actual": "As the Administrator, POST /api/v1/matter-types/{\"DOC-030 admin-config V-C38 Replacement type 0925133420\"}/archive with reassignToId = the archived \"DOC-030 admin-config V-C38 Archived probe type 0925133420\" answered 400 \"The reassignment target must be a live matter type.\"; with reassignToId = itself answered 400 \"A type can't take reassignments from itself.\". The type stayed live (archivedAt null). As the Administrator, PATCH /api/v1/contract-statuses/{\"DOC-030 admin-config V-C38 Contract status renamed 0925112257\"} with stage \"ended\" answered 400 \"One or more request fields are invalid.\"; the Status keeps Stage \"review\". PATCH /api/v1/matter-statuses/{\"DOC-030 admin-config V-C38 Matter status waiting 0925112257\"} with category \"closed\" answered 400 \"One or more request fields are invalid.\". In the browser the archive dialog never offers these targets and neither Statuses page has a Stage or Category control, as the guide says.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
-      ]
-    },
-    {
-      "id": "V-C38",
-      "coverage": ["C38"],
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit."
-      ],
-      "expected": "Negative check: non-Administrators cannot edit configuration.",
-      "actual": "Nadia Haddad opened Settings from the profile menu; the rail groups are [\"Personal\"]. /settings/contracts/types -> /settings/profile (\"Personal\", add controls 0); /settings/matters/statuses -> /settings/profile (\"Personal\", add controls 0); /settings/contracts/fields -> /settings/profile (\"Personal\", add controls 0); /settings/entities/officer-roles -> /settings/profile (\"Personal\", add controls 0). POST /api/v1/contract-types answered 403 \"You do not have permission to perform this action.\".",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
-      ]
-    },
-    {
-      "id": "V-C38",
-      "coverage": ["C38"],
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "prerequisites": [
-        "Shared lab openlaw-docs-80ceef9e-work2 (work2) built from 067c1646829df85e62b809ee9157921e867c84e7 with lab.mjs; Helix seed, light profile, random seed 7, seeded 2026-09-25T09:59:53.804Z to 2026-09-25T10:00:16.340Z; organization timezone Europe/London. Each identity signs in in its own Playwright Chromium context: Daniel Okafor (Administrator) and Nadia Haddad (Legal Team Member) by password; Jonas Weber (Business User) by a fresh magic link read from the lab Mailpit."
-      ],
-      "expected": "Negative check: a Business User cannot open configuration.",
-      "actual": "Jonas Weber, signed in to the Portal: /settings/contracts/types -> /portal; /settings/intake/request-types -> /portal.",
-      "result": "pass",
-      "evidence": [
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.json",
-        "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
-        "docs/documentation/batches/DOC-030/admin-config/api.mjs"
+        "docs/documentation/batches/DOC-032/records/walkthrough.json",
+        "docs/documentation/batches/DOC-032/records/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/records/lib.mjs",
+        "docs/documentation/batches/DOC-032/records/wt-types-statuses-fields.mjs"
       ]
     }
   ],
   "limitations": [
-    "Invalid reassignment and Stage or Category immutability have no browser control; they were exercised as API refusals as the Administrator (recorded as a separate administrator entry with method api-refusal).",
-    "The Matters and Entities Document type lists already held rows added by other DOC-030 agents on the shared lab, so 'start empty' and 'a type choice only when the list holds a live type' could be seen only as: adding a type adds it to the Upload dialog's Type choice, and archiving removes it.",
-    "Ravi Menon, the seed's Contributor, holds the Business User role on the shared lab at the time of the walk, so the non-Administrator checks used Nadia Haddad (Legal Team Member) and Jonas Weber (Business User).",
-    "Visible on Portal was checked for its lock and switch behavior; a Business User reading a record's value on the Portal was not exercised in this group.",
-    "Product bug recorded in walkthrough.json productBugs: the Field archive dialog says 'attached to 2 types' when one type's Form holds the Field and one Contract holds a value (attachmentCounts adds records to the type count)."
+    "Independent agent walkthrough in headless Chromium (Playwright 1.63.0) by a different agent from the author and the source reviewer; not a human user study and not feature-owner approval.",
+    "The author's product bug (archiving the last other Signature Status shows no warning in Settings but the API refuses) was not reproduced. It needs Partially signed plus only one other live Signature Status; on the shared lab that means archiving the seeded Out for signature and Signed, awaiting countersignature, which other guides rely on. A fixture Signature Status archived normally while those stayed live.",
+    "The guide says the Matters and Entities Document type lists start empty. On the shared lab they held other agents' fixture rows, so the empty start could not be seen; the upload-dialog rule was checked on the Entities list.",
+    "The colour of a seeded fixed Contract type was not changed, to protect other guides on the shared lab: its swatch opened with enabled choices and was closed with Escape. The saved-colour behaviour was checked on this run's own Document type.",
+    "Stage or Category changes have no control on either page, so the refusal was checked through the API as the Administrator.",
+    "Author limitation confirmed: the Settings pane labels the control Colour (\"Colour for <name>\")."
   ],
   "previousEvidence": {
-    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "contentSha256": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060",
-    "verifiedAt": "2026-09-25T13:34:35.597Z"
+    "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887",
+    "verifiedAt": "2026-09-28T07:51:30.418Z"
   },
   "compatibilityReview": null,
   "copyOnlyReview": null

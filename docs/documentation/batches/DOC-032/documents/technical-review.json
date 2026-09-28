@@ -1,0 +1,126 @@
+{
+  "batch": "DOC-032",
+  "group": "documents",
+  "reviewer": "DOC-032 source-review author agent (documents)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T06:56:23Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousWalkthroughBuild": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastArticleEdit": "0e62863c"
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "document-versions",
+      "scenario": ["V-C26"],
+      "contentSha256Before": "bc98a342dfcce41487b7934f76d1f04e1c8495cf1159dd2ccb4c71be4bb83382",
+      "contentSha256": "7a6faa9ea580c647a381ba1785e426da6c59fc5a7bf1536fbc25939ca8231ee4",
+      "sources": [
+        "docs/user-guides/document-versions.md",
+        "docs/documentation/evidence/document-versions.json",
+        "docs/documentation/batches/DOC-030/documents/technical-review.json",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "CONTEXT.md",
+        "docs/decision-records/DECISIONS-DOCUMENTS.md (DOC-001, DOC-010, DOC-015, DOC-010/DOC-011 UX addendum)",
+        "messages/en-US.json",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/taxonomy-types-pane.tsx",
+        "apps/web/src/components/documents-settings-tabs.tsx",
+        "apps/web/src/routes/settings-document-types.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/matter-record.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/document-types/routes.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/api/src/pipeline/executed-copy.ts",
+        "packages/shared/src/document-type-colors.ts",
+        "packages/db/src/schema/document-types.ts",
+        "packages/db/src/schema/documents.ts",
+        "packages/db/migrations/0182_partially-signed-document-type.sql",
+        "git show dd28e33d, 229909d4, b6a0bcfd, d0e50ae4, 0e62863c"
+      ],
+      "corrections": [
+        {
+          "claim": "Before you start: the fixed Contract Document types",
+          "before": "The Contract list starts with six fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment.",
+          "after": "The Contract list starts with seven fixed types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, and Amendment.",
+          "source": "229909d4; packages/db/src/schema/document-types.ts DOCUMENT_TYPE_SYSTEM_KINDS; 0182_partially-signed-document-type.sql seeds Partially signed before Executed; document-types.test.ts 'seeds seven fixed Contract types'; messages/en-US.json documents.kind partially_signed {Partially signed}"
+        },
+        {
+          "claim": "Add another Version: individual Version deletion",
+          "before": "There is no individual-Version delete action.",
+          "after": "New paragraph: only an Administrator can delete a Version; the Document's Actions menu offers Delete version for the current Version and an earlier Version's 'Actions for version' menu offers it for that Version; the dialog names the Version number; type delete in Type \"delete\" to confirm, then Delete version; the Version, its stored file and the Comparisons that name it are removed, other Versions stay; the number is not reused; deleting the pinned Version clears the Executed pin; deleting the last Version removes the Document; refused while a Generated redline uses that Version and on an Auto-Doc template; cannot be undone, link to archive and deletion.",
+          "source": "dd28e33d; apps/api/src/modules/documents/routes.ts DELETE /documents/:documentId/versions/:versionId (requireAdministrator, 409 on autoDocId, 409 on comparedFrom/ToVersionId dependant, last version deletes the document); apps/api/src/lib/document-erasure.ts versionErasureBlobs; apps/api/src/lib/document-versions.ts nextVersionNumber reads document.version_deleted; packages/db/src/schema/documents.ts executed_version_id onDelete set null; documents-card.tsx canErase = role === administrator, DocumentActions onDelete(chain.current), VersionActions onDelete, DeleteDialog (documents.delete.versionTitle, versionBody, lastVersion, otherVersions, confirmLabel); messages documents.action.delete 'Delete version', documents.actionsForVersion"
+        },
+        {
+          "claim": "Recover from a refusal: what a refusal leaves",
+          "before": "A refused upload or type correction adds no Version and leaves the chain as it was.",
+          "after": "A refused upload, type correction, or Version delete leaves the chain as it was.",
+          "source": "routes.ts version DELETE runs in one transaction and throws before any delete on a refusal; storage deletes follow the row deletes inside the transaction"
+        }
+      ],
+      "confirmed": [
+        {
+          "claim": "Upload, Upload document, Choose files, Choose file, Type, No type, Note, Add version, Edit details, Save labels",
+          "source": "messages/en-US.json documents.* entries; documents-card.tsx UploadDialog unchanged since 067c1646 apart from dd28e33d and d0e50ae4 hunks"
+        },
+        {
+          "claim": "Settings, Documents with Matters, Contracts, Entities tabs; Matter and Entity lists start empty; Knowledge has no list",
+          "source": "documents-settings-tabs.tsx; settings-document-types.tsx; DOC-015 and its Knowledge addendum"
+        },
+        {
+          "claim": "Colour section: swatch per row, seven colours plus Automatic, choice saves at once, fixed types keep names but take colours",
+          "source": "settings-document-types.tsx DocumentTypeColorPicker (PATCH on click, settings.documentTypes.fixed '{name} has a fixed name. Its colour can be changed.'); lib/documents.ts documentTypeColorLabel; packages/shared/src/document-type-colors.ts; document-types/routes.ts patchSchema color"
+        },
+        {
+          "claim": "Colour applies in record Documents, the Documents repository and the Business Portal, including archived types, and follows the theme",
+          "source": "documents-card.tsx TypeCell documentTypePill(kind, color); documents-columns.tsx; portal/documents-section.tsx; portal/document-service.ts and documents/repository.ts return documentTypes.color; DOCUMENT_TYPE_COLOR_PILL uses status token pairs"
+        },
+        {
+          "claim": "Type correction limits: frozen record, archived Document, Generated redline and generated Versions read-only; empty list shows a dash",
+          "source": "documents-card.tsx TypeCell readOnly"
+        },
+        {
+          "claim": "Knowledge Item Type column offers a choice that OpenLaw refuses",
+          "source": "documents-card.tsx TypeCell unchanged since 067c1646; DOC-030 productBugs entry still applies"
+        },
+        {
+          "claim": "Primary, Make primary, Mark as executed copy, Unmark as executed copy, Set as primary labels and the Executed pin rules",
+          "source": "messages/en-US.json; documents-card.tsx DocumentActions and VersionActions; a partial signing round is filed as Partially signed without the pin (executed-copy.ts)"
+        },
+        {
+          "claim": "Comment attachment filing labels (File to Contract, File to Matter, File attachment, Destination, New Document, New Version on an existing Document, Document name, File, Filed to, both Confidential switch labels)",
+          "source": "messages/en-US.json; no change to comment-attachments.tsx since 067c1646"
+        },
+        {
+          "claim": "Business Users cannot delete paper; Legal Team Members cannot delete a Version",
+          "source": "routes.ts requireAdministrator on both DELETE routes; documents-card.tsx canErase; portal documents-section.tsx has no delete"
+        }
+      ],
+      "limitations": [
+        "The whole-Document delete route (DELETE /documents/:documentId) still exists, but the Documents section no longer offers it. The row menu and the bulk toolbar now delete Versions (bulk: the current Version of each selected Document). The guide does not describe bulk deletion; archive-and-delete-documents.md does and is now wrong (see sharedFileRequests).",
+        "On an archived owning record, the Document row's Actions menu is hidden, but an Administrator still sees Delete version in an earlier Version's menu (VersionActions renders when canErase regardless of frozen). The API reaches archived records for erasure. The guide does not describe this edge; the walkthrough need not test it.",
+        "The registry negative check for insufficient access applies to Version delete as well: a Legal Team Member sees no Delete version item and the API answers 403."
+      ]
+    }
+  ],
+  "productBugs": [
+    "dd28e33d adds per-Version delete (apps/api/src/modules/documents/routes.ts DELETE /documents/:documentId/versions/:versionId; documents-card.tsx Delete version; bulk-document-actions.tsx Delete versions). DOC-001 ('Individual versions are never edited or deleted') and DOC-010 ('Individual versions can never be deleted'; per-version delete 'breaks the negotiation record') say it must not exist, and the DOC-010/DOC-011 UX addendum says the delete dialog explains that all versions are deleted. No addendum records the change. Either the records need a superseding addendum or the build is wrong. The UI also no longer offers whole-Document hard delete; erasing a Document now takes one delete per Version.",
+    "229909d4 adds Partially signed as a seventh fixed Contract Document type. DOC-015 still says the Contract list starts with six negotiation types. Record drift; needs a DOC-015 addendum.",
+    "Carried from DOC-030, still present at 4ca41822: documents-card.tsx TypeCell renders an editable select on a Knowledge Item's files, and every change is refused (409 or 400). DOC-015 Knowledge addendum says the label is derived and Knowledge has no list, so the cell should be read-only."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/archive-and-delete-documents.md: the Delete this document? dialog, the Delete action and 'You cannot delete just one Version' are wrong at 4ca41822. The row menu says Delete version, the dialog is 'Delete version N?', the bulk toolbar says Delete versions and deletes only the current Version of each selected Document, and deleting the last Version removes the Document (dd28e33d).",
+    "docs/user-guides/reference.md line 68: 'There is no individual-Version delete action' is wrong; an Administrator can delete one Version (dd28e33d)."
+  ],
+  "statusChange": null
+}

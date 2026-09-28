@@ -1,0 +1,396 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "contracts-2",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (contracts-2)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-c2sign",
+  "labName": "c2sign",
+  "appUrl": "http://127.0.0.1:43365",
+  "mailUrl": "http://127.0.0.1:48465",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T07:22:31.099Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T07:22:50.045Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from the worktree node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "create-contract": "8f7f98a37901c8b3f11739126a4ff202a6037b41b91d34e9cafe4161715075fd",
+    "approver-groups": "591486689995657de3bbb0dfe04ef442d97dd23cbf8376579309802a397667d1",
+    "terms-and-renewals": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414",
+    "contract-stages": "a186659b9221537bff7b995298386a5a88022f59a4f6be3e4b33a73690d73dae",
+    "troubleshooting": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616"
+  },
+  "signingCheck": true,
+  "only": [
+    "create-contract",
+    "approver-groups",
+    "terms-and-renewals",
+    "contract-stages",
+    "troubleshooting"
+  ],
+  "roles": ["legal_team_member", "administrator"],
+  "stamp": 1790582229462,
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in",
+      "context": "daniel"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in",
+      "context": "nadia"
+    },
+    {
+      "role": "legal_team_member (named approver and comparison reader)",
+      "person": "Priya Raman",
+      "entry": "password sign-in",
+      "context": "priya"
+    },
+    {
+      "role": "legal_team_member (reader outside a Confidential team, second actor)",
+      "person": "Marcus Oyelaran",
+      "entry": "password sign-in",
+      "context": "marcus"
+    },
+    {
+      "role": "legal_team_member (type default person on the fixture type, not creator or owner)",
+      "person": "Tom Iwu",
+      "entry": "password sign-in",
+      "context": "tom"
+    },
+    {
+      "role": "business_user (Business approver)",
+      "person": "Lena Vogel",
+      "entry": "fresh magic link from this lab's Mailpit, Portal sign-in",
+      "context": "lena"
+    }
+  ],
+  "fixtures": [
+    {
+      "kind": "Signing connector",
+      "name": "DocuSign (Demo, Webhook) pointing at the e2e signing stand-in on the owned lab",
+      "detail": "saved 200; enabled true; test 200 \"OpenLaw E2E Signing\""
+    },
+    {
+      "kind": "Fault injection",
+      "name": "C-61 Envelope 01a0e707-2b0c-7539-9dfe-197bfd76c816",
+      "detail": "recovery_stopped set to attempts_exhausted in the owned lab database (1 row)"
+    },
+    {
+      "kind": "Fault injection",
+      "name": "C-65 Envelope 01a0e70a-a225-7926-b5ba-d738eda2e715",
+      "detail": "recovery_stopped set to attempts_exhausted in the owned lab database (1 row)"
+    }
+  ],
+  "records": [
+    {
+      "title": "DOC-032 contracts-2 V-C15 legal_team_member send 1790582229462",
+      "reference": "C-58",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 legal_team_member filing 1790582229462",
+      "reference": "C-59",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 legal_team_member partial 1790582229462",
+      "reference": "C-60",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 legal_team_member uncertain 1790582229462",
+      "reference": "C-61",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C15 administrator send 1790582229462",
+      "reference": "C-62",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 administrator filing 1790582229462",
+      "reference": "C-63",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 administrator partial 1790582229462",
+      "reference": "C-64",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 administrator uncertain 1790582229462",
+      "reference": "C-65",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C15 administrator send from active 1790582229462",
+      "reference": "C-66",
+      "note": "setup through Daniel Okafor's API session"
+    },
+    {
+      "title": "DOC-032 contracts-2 V-C49 business_user portal 1790582229462",
+      "reference": "C-67",
+      "note": "setup through Nadia Haddad's API session"
+    }
+  ],
+  "typeForms": [],
+  "orgSettings": [],
+  "productBugs": [],
+  "startedAt": "2026-09-28T07:57:09.462Z",
+  "finishedAt": "2026-09-28T08:04:38.492Z",
+  "steps": [
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Daniel Okafor", "Priya Raman"],
+      "page": "/contracts/:number/signatures Send for signature",
+      "action": "Check what the change means, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status, does not open Move past approval, and records no override; only the Stage control shows the warning",
+      "expected": "No Move past approval dialog; an Out for signature row; the Contract is at a Signature Status; approvals stay Pending and Rejected; History has a status change and no override entry.",
+      "startedAt": "2026-09-28T07:57:12.243Z",
+      "finishedAt": "2026-09-28T07:57:27.393Z",
+      "actual": "C-58 stood at \"Awaiting approval\" (approval) with [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"]. Signatures > Send for signature: Version \"Version 1 — doc032-contracts-2-V-C15-legal_team_member-send.pdf (current)\", one Signer, \"Yes, all required signatures will be in place\", Send envelope closed the dialog; Move past approval did not open within 12 s. The tab showed \"pdf Version 1 Out for signature Sep 28 Prepared by Nadia Haddad —\". The Contract is now \"Out for signature\" (signature); approvals still [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"]. History: \"Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia H\", and no override entry.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "signing stand-in (signer)"],
+      "page": "/contracts/:number/signatures Executed copy",
+      "action": "Electronic signing, third paragraph: a Signed Envelope can show Filing the signed copy… while OpenLaw stores the returned file; wait for Executed copy, then check the Document Version",
+      "expected": "After the stand-in signs, the row reads Signed and then offers Executed copy; the Documents tab holds the executed Version.",
+      "startedAt": "2026-09-28T07:57:27.394Z",
+      "finishedAt": "2026-09-28T07:57:29.755Z",
+      "actual": "Envelope sent for C-58; the stand-in signed it and its Connect delivery answered 204. The Signatures tab then read \"pdf Version 1 Signed Sep 28 Prepared by Nadia Haddad Sep 28 Executed copy\" (Filing the signed copy… was not caught between reloads); it offers 1 \"Executed copy\" link. Documents: 1 executed Version ([\"doc032-contracts-2-V-C15-legal_team_member-send (executed).pdf\"]); Documents tab row \"t · theirs Redline · theirs Redline · ours Partially signed Executed Amendment v2 Executed Sep 28 Uploaded by Nadia Haddad NH\". The Contract is now \"Active\" (active).",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "signing stand-in (signer; executed download answered 503)"],
+      "page": "/contracts/:number/signatures Filing the signed copy… then failure",
+      "action": "Electronic signing, third paragraph: while the returned file is not yet stored the row shows Filing the signed copy…; when filing fails it shows The signed copy could not be filed. Upload it to the record instead.; manual hand-off remains available",
+      "expected": "Filing the signed copy… under Signed, then the failure text; no Executed copy; the Contract stays in the Signature Stage; the Documents tab still offers manual upload and Mark as executed copy.",
+      "startedAt": "2026-09-28T07:57:29.756Z",
+      "finishedAt": "2026-09-28T07:59:25.234Z",
+      "actual": "C-59: sent (Out for signature), stand-in signed it with its executed download answering 503; delivery 204. The row read \"Sep 28 Prepared by Nadia Haddad Sep 28 Filing the signed copy…\". After the fetch retries ran out (100 s) it read \"Signed Sep 28 Prepared by Nadia Haddad Sep 28 The signed copy could not be filed. Upload it to the record instead.\"; 0 Executed copy links. The Contract stays \"Out for signature\" (signature). Manual hand-off: the primary Document's actions offer [\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\"].",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "signing stand-in (signer)"],
+      "page": "/contracts/:number/signatures Partially signed copy",
+      "action": "Electronic signing, third paragraph: a round that does not complete the Contract shows Partially signed copy; that file is not marked as executed and the Contract stays in the Signature Stage",
+      "expected": "Row offers Partially signed copy, not Executed copy; no executed Version; the Contract is at a Signature Status (Partially signed).",
+      "startedAt": "2026-09-28T07:59:25.235Z",
+      "finishedAt": "2026-09-28T08:00:00.245Z",
+      "actual": "C-60: sent with \"No, more signatures will still be needed\"; the stand-in signed it (delivery 204). The row read \"Sep 28 Prepared by Nadia Haddad Sep 28 Partially signed copy\": 1 \"Partially signed copy\" link and 0 \"Executed copy\". The chain holds 2 Versions, 0 marked executed. The Contract is \"Partially signed\" (signature).",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Nadia Haddad",
+        "signing stand-in (creation answered 500)",
+        "lab database (recovery_stopped set)"
+      ],
+      "page": "/contracts/:number/signatures Creation uncertain, Refresh status, Automatic recovery has stopped",
+      "action": "Electronic signing, second paragraph: an Envelope marked Creation uncertain — not confirmed sent still holds the reservation; do not try another send; wait for recovery and select Refresh status; if the tab says Automatic recovery has stopped, ask the Administrator",
+      "expected": "The row shows Creation uncertain — not confirmed sent with Refresh status; no Send for signature is offered and a second send is refused; after recovery stops the tab says Automatic recovery has stopped. Ask your Administrator to resolve this Envelope.",
+      "startedAt": "2026-09-28T08:00:00.246Z",
+      "finishedAt": "2026-09-28T08:00:35.343Z",
+      "actual": "C-61: with the stand-in answering envelope creation with 500, Send envelope kept the dialog open with \"It stays reserved on this contract until its outcome is known.\". The Signatures tab read \"Creation uncertain — not confirmed sent Not sent Prepared by Nadia Haddad — OpenLaw is checking the original Envelope. Checks made: 0. Refreshing does not create another Envelope or speed up provider checks. Next check no earlier than Sep 28, 12:15 PM. Refresh status Changing OpenLaw access, archiv\"; 0 Send for signature buttons; a second send through the API answered 409 (\"This contract already has a live envelope. Another cannot be sent or prepared until it ends.\"). Refresh status kept \"Creation uncertain — not confirmed sent\". After recovery_stopped was set, Refresh status showed \"Automatic recovery has stopped. Ask your Administrator to resolve this Envelope. It stays reserved until its outcome is confirmed.\". The Contract has 1 Envelope; the stand-in holds 19 envelopes in total (none created for this round).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Nadia Haddad", "Priya Raman"],
+      "page": "/contracts/:number/signatures Send for signature",
+      "action": "Check what the change means, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status, does not open Move past approval, and records no override; only the Stage control shows the warning",
+      "expected": "No Move past approval dialog; an Out for signature row; the Contract is at a Signature Status; approvals stay Pending and Rejected; History has a status change and no override entry.",
+      "startedAt": "2026-09-28T08:00:35.343Z",
+      "finishedAt": "2026-09-28T08:00:50.566Z",
+      "actual": "C-62 stood at \"Awaiting approval\" (approval) with [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"]. Signatures > Send for signature: Version \"Version 1 — doc032-contracts-2-V-C15-administrator-send.pdf (current)\", one Signer, \"Yes, all required signatures will be in place\", Send envelope closed the dialog; Move past approval did not open within 12 s. The tab showed \"pdf Version 1 Out for signature Sep 28 Prepared by Daniel Okafor —\". The Contract is now \"Out for signature\" (signature); approvals still [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"]. History: \"Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel\", and no override entry.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "signing stand-in (signer)"],
+      "page": "/contracts/:number/signatures Executed copy",
+      "action": "Electronic signing, third paragraph: a Signed Envelope can show Filing the signed copy… while OpenLaw stores the returned file; wait for Executed copy, then check the Document Version",
+      "expected": "After the stand-in signs, the row reads Signed and then offers Executed copy; the Documents tab holds the executed Version.",
+      "startedAt": "2026-09-28T08:00:50.567Z",
+      "finishedAt": "2026-09-28T08:00:52.880Z",
+      "actual": "Envelope sent for C-62; the stand-in signed it and its Connect delivery answered 204. The Signatures tab then read \"pdf Version 1 Signed Sep 28 Prepared by Daniel Okafor Sep 28 Executed copy\" (Filing the signed copy… was not caught between reloads); it offers 1 \"Executed copy\" link. Documents: 1 executed Version ([\"doc032-contracts-2-V-C15-administrator-send (executed).pdf\"]); Documents tab row \"t · theirs Redline · theirs Redline · ours Partially signed Executed Amendment v2 Executed Sep 28 Uploaded by Daniel Okafor DO\". The Contract is now \"Active\" (active).",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "signing stand-in (signer; executed download answered 503)"],
+      "page": "/contracts/:number/signatures Filing the signed copy… then failure",
+      "action": "Electronic signing, third paragraph: while the returned file is not yet stored the row shows Filing the signed copy…; when filing fails it shows The signed copy could not be filed. Upload it to the record instead.; manual hand-off remains available",
+      "expected": "Filing the signed copy… under Signed, then the failure text; no Executed copy; the Contract stays in the Signature Stage; the Documents tab still offers manual upload and Mark as executed copy.",
+      "startedAt": "2026-09-28T08:00:52.881Z",
+      "finishedAt": "2026-09-28T08:03:32.103Z",
+      "actual": "C-63: sent (Out for signature), stand-in signed it with its executed download answering 503; delivery 204. The row read \"Sep 28 Prepared by Daniel Okafor Sep 28 Filing the signed copy…\". After the fetch retries ran out (143 s) it read \"The signed copy could not be filed. Upload it to the record instead.\"; 0 Executed copy links. The Contract stays \"Out for signature\" (signature). Manual hand-off: the primary Document's actions offer [\"Mark as executed copy\",\"Add version\",\"Edit details\",\"Move to folder\",\"Mark confidential\",\"Archive\",\"Delete version\"].",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "signing stand-in (signer)"],
+      "page": "/contracts/:number/signatures Partially signed copy",
+      "action": "Electronic signing, third paragraph: a round that does not complete the Contract shows Partially signed copy; that file is not marked as executed and the Contract stays in the Signature Stage",
+      "expected": "Row offers Partially signed copy, not Executed copy; no executed Version; the Contract is at a Signature Status (Partially signed).",
+      "startedAt": "2026-09-28T08:03:32.105Z",
+      "finishedAt": "2026-09-28T08:03:47.299Z",
+      "actual": "C-64: sent with \"No, more signatures will still be needed\"; the stand-in signed it (delivery 204). The row read \"Sep 28 Prepared by Daniel Okafor Sep 28 Partially signed copy\": 1 \"Partially signed copy\" link and 0 \"Executed copy\". The chain holds 2 Versions, 0 marked executed. The Contract is \"Partially signed\" (signature).",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": [
+        "Daniel Okafor",
+        "signing stand-in (creation answered 500)",
+        "lab database (recovery_stopped set)"
+      ],
+      "page": "/contracts/:number/signatures Creation uncertain, Refresh status, Automatic recovery has stopped",
+      "action": "Electronic signing, second paragraph: an Envelope marked Creation uncertain — not confirmed sent still holds the reservation; do not try another send; wait for recovery and select Refresh status; if the tab says Automatic recovery has stopped, ask the Administrator",
+      "expected": "The row shows Creation uncertain — not confirmed sent with Refresh status; no Send for signature is offered and a second send is refused; after recovery stops the tab says Automatic recovery has stopped. Ask your Administrator to resolve this Envelope.",
+      "startedAt": "2026-09-28T08:03:47.300Z",
+      "finishedAt": "2026-09-28T08:04:22.366Z",
+      "actual": "C-65: with the stand-in answering envelope creation with 500, Send envelope kept the dialog open with \"It stays reserved on this contract until its outcome is known.\". The Signatures tab read \"Creation uncertain — not confirmed sent Not sent Prepared by Daniel Okafor — OpenLaw is checking the original Envelope. Checks made: 0. Refreshing does not create another Envelope or speed up provider checks. Next check no earlier than Sep 28, 12:18 PM. Refresh status Changing OpenLaw access, archi\"; 0 Send for signature buttons; a second send through the API answered 409 (\"This contract already has a live envelope. Another cannot be sent or prepared until it ends.\"). Refresh status kept \"Creation uncertain — not confirmed sent\". After recovery_stopped was set, Refresh status showed \"Automatic recovery has stopped. Ask your Administrator to resolve this Envelope. It stays reserved until its outcome is confirmed.\". The Contract has 1 Envelope; the stand-in holds 22 envelopes in total (none created for this round).",
+      "result": "pass"
+    },
+    {
+      "article": "contract-stages",
+      "scenario": "V-C15",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/:number/signatures Send for signature from Active",
+      "action": "Author limitation check: a direct send moves the Contract to Signature from any Stage, including Active",
+      "expected": "A Contract at Active moves to a Signature Status after the send.",
+      "startedAt": "2026-09-28T08:04:22.366Z",
+      "finishedAt": "2026-09-28T08:04:36.652Z",
+      "actual": "C-66 at Active; after a confirmed send it reads \"Out for signature\" (signature); Move past approval opened: false.",
+      "result": "pass"
+    },
+    {
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "actors": ["Lena Vogel (Portal)", "Nadia Haddad (setup)"],
+      "page": "/portal/contracts/:number",
+      "action": "An edit or action is unavailable / Electronic signing: a Business User cannot send for signature",
+      "expected": "No Send for signature control on a shared Contract in the Portal; a direct send is refused.",
+      "startedAt": "2026-09-28T08:04:36.652Z",
+      "finishedAt": "2026-09-28T08:04:38.475Z",
+      "actual": "Lena Vogel opened C-67 in the Portal (\"Your Contracts DOC-032 contracts-2 V-C49 business_user portal 1790582229462 C-67 Overview Counterparty Not recorded Stag\") with 0 send controls; a direct send answered 403.",
+      "result": "pass"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-28T07:58:19.444Z",
+      "page": "/contracts/59/signatures",
+      "waitedFor": "Signatures heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T07:58:55.522Z",
+      "page": "/contracts/59/signatures",
+      "waitedFor": "Signatures heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T07:59:59.492Z",
+      "page": "/contracts/60/signatures",
+      "waitedFor": "Signatures heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T08:00:31.902Z",
+      "page": "/contracts/61",
+      "waitedFor": "record heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T08:00:31.974Z",
+      "page": "/contracts/61",
+      "waitedFor": "record heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T08:02:32.420Z",
+      "page": "/contracts/63/signatures",
+      "waitedFor": "Signatures heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    },
+    {
+      "at": "2026-09-28T08:03:09.178Z",
+      "page": "/contracts/63/signatures",
+      "waitedFor": "Signatures heading",
+      "shown": "Something went wrong. The page could not load. Reload to try again. Reload Back to Home"
+    }
+  ]
+}

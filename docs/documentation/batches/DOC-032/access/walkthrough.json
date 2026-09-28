@@ -1,0 +1,2106 @@
+{
+  "batch": "DOC-032",
+  "group": "access",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (access)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-accs",
+  "lab": {
+    "name": "accs",
+    "project": "openlaw-docs-9d2b1705-accs",
+    "appUrl": "http://127.0.0.1:43357",
+    "mailUrl": "http://127.0.0.1:48457",
+    "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T07:21:35.841Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T07:21:50.673Z"
+    },
+    "created": "node scripts/documentation/lab.mjs create accs --commit 4ca41822b685a2a1e58a38b4f25e421cf735c54e --app-port 43357 --mail-port 48457 --backend-subnet 10.243.57.0/24 --engine-subnet 10.244.57.0/24; up; seed"
+  },
+  "browser": "Playwright 1.63.0 Chromium (node_modules/.pnpm), headless, 1440x900, one isolated browser context per person or device, inside a pasta network namespace",
+  "oidcFixture": "oauth2-mock-server 9.2.0 from DOC-032/admin-org/oidc-fixture.mjs in container openlaw-docs-9d2b1705-accs-oidc-1 (overlay-oidc.json), issuers http://oidc:8080 and http://oidc:8082",
+  "articleContentSha256": {
+    "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+    "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+  },
+  "sections": {
+    "fixtures": {
+      "startedAt": "2026-09-28T07:33:57.148Z",
+      "finishedAt": "2026-09-28T07:33:58.240Z",
+      "stamp": "09280733",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    },
+    "staff": {
+      "startedAt": "2026-09-28T07:34:08.173Z",
+      "finishedAt": "2026-09-28T07:39:30.316Z",
+      "stamp": "09280734",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    },
+    "staffSso": {
+      "startedAt": "2026-09-28T07:43:57.925Z",
+      "finishedAt": "2026-09-28T07:46:38.011Z",
+      "stamp": "09280743",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    },
+    "portal": {
+      "startedAt": "2026-09-28T07:46:48.037Z",
+      "finishedAt": "2026-09-28T07:52:05.073Z",
+      "stamp": "09280746",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    },
+    "portalSso": {
+      "startedAt": "2026-09-28T07:56:16.647Z",
+      "finishedAt": "2026-09-28T07:56:45.287Z",
+      "stamp": "09280756",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    },
+    "mailOff": {
+      "startedAt": "2026-09-28T07:54:30.073Z",
+      "finishedAt": "2026-09-28T07:55:10.764Z",
+      "stamp": "09280754",
+      "runningImages": {
+        "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+        "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+      },
+      "articleContentSha256": {
+        "staff-sign-in": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+        "portal-sign-in": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e"
+      }
+    }
+  },
+  "settingChanges": [
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:43:59.684Z",
+      "what": "fault injection: org_settings.auth_mode = oidc with no saved policy and no provider",
+      "detail": "null|built_in"
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:02.615Z",
+      "what": "fault injection reverted: org_settings.auth_mode = built_in",
+      "detail": null
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:03.875Z",
+      "what": "identity provider registered",
+      "detail": {
+        "providerId": "doc032-access-helix",
+        "domains": "helix.example"
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:03.897Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:12.285Z",
+      "what": "identity provider registered",
+      "detail": {
+        "providerId": "doc032-access-harbor",
+        "domains": "harbor.example"
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:24.846Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": false,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:27.701Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:30.690Z",
+      "what": "Daniel Okafor enrolled two-factor (fixture; turned off again at the end of this step group)",
+      "detail": null
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:31.192Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": true
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:46:30.730Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:46:31.026Z",
+      "what": "Daniel Okafor two-factor turned off again",
+      "detail": null
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:46:31.039Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": false,
+          "magicLink": false,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:46:31.865Z",
+      "what": "identity provider removed",
+      "detail": {
+        "providerId": "doc032-access-harbor"
+      }
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:46:32.731Z",
+      "what": "identity provider removed",
+      "detail": {
+        "providerId": "doc032-access-helix"
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:43.836Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": false,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:46.800Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:51.995Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": true
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:48:02.823Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:48:02.854Z",
+      "what": "organization logo",
+      "detail": {
+        "to": "DOC-032 access 16x16 test logo",
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:48:04.191Z",
+      "what": "organization logo restored",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:52:05.059Z",
+      "what": "final check",
+      "detail": {
+        "businessPolicyRestored": true
+      }
+    },
+    {
+      "section": "mailOff",
+      "at": "2026-09-28T07:54:47.859Z",
+      "what": "deployment phase mail-off",
+      "detail": "phase mail-off applied to openlaw-docs-9d2b1705-accs (2026-09-28T07:54:47Z)"
+    },
+    {
+      "section": "mailOff",
+      "at": "2026-09-28T07:54:50.856Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": false,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "mailOff",
+      "at": "2026-09-28T07:54:54.328Z",
+      "what": "legal authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "mailOff",
+      "at": "2026-09-28T07:55:10.730Z",
+      "what": "deployment phase base",
+      "detail": "phase base applied to openlaw-docs-9d2b1705-accs (2026-09-28T07:55:10Z)"
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:19.188Z",
+      "what": "identity provider registered",
+      "detail": {
+        "providerId": "doc032-access-helix",
+        "domains": "helix.example"
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:19.199Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:23.992Z",
+      "what": "identity provider registered",
+      "detail": {
+        "providerId": "doc032-access-harbor",
+        "domains": "harbor.example"
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:25.612Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": false,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:33.264Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": true,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:36.131Z",
+      "what": "allowed email domains emptied",
+      "detail": {
+        "before": ["helix.example"],
+        "after": []
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:40.879Z",
+      "what": "allowed email domain helix.example added; Business Email magic link turned on",
+      "detail": {
+        "afterAdd": {
+          "password": false,
+          "magicLink": false,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "saved": "Saved"
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:43.524Z",
+      "what": "business authentication policy",
+      "detail": {
+        "request": {
+          "password": true,
+          "magicLink": true,
+          "sso": false,
+          "requireTwoFactor": false
+        },
+        "status": 200
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:44.369Z",
+      "what": "identity provider removed",
+      "detail": {
+        "providerId": "doc032-access-helix"
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:45.180Z",
+      "what": "identity provider removed",
+      "detail": {
+        "providerId": "doc032-access-harbor"
+      }
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:45.252Z",
+      "what": "final state",
+      "detail": {
+        "methods": {
+          "legal": {
+            "password": true,
+            "magicLink": true,
+            "sso": false,
+            "requireTwoFactor": false
+          },
+          "business": {
+            "password": true,
+            "magicLink": true,
+            "sso": false,
+            "requireTwoFactor": false
+          }
+        },
+        "domains": ["helix.example"]
+      }
+    }
+  ],
+  "created": [
+    {
+      "section": "fixtures",
+      "at": "2026-09-28T07:33:58.240Z",
+      "what": "Portal fixtures (fixtures.json): Amara's Request R-16; Jonas's Request R-17 converted to C-34 with doc032-access-jonas-paper.txt, a Counterparty, Value and dates; archived team Contract C-35; Matter M-20 without Jonas; 26 paging Contracts with Jonas on the team"
+    },
+    {
+      "section": "staff",
+      "at": "2026-09-28T07:34:08.333Z",
+      "what": "administrator account doc032.access.c01.admin.09280734@helix.example (DOC-032 access V-C01 09280734 Administrator)"
+    },
+    {
+      "section": "staff",
+      "at": "2026-09-28T07:36:47.975Z",
+      "what": "legal_team_member account doc032.access.c01.member.09280734@helix.example (DOC-032 access V-C01 09280734 Legal Team Member)"
+    },
+    {
+      "section": "staff",
+      "at": "2026-09-28T07:39:25.861Z",
+      "what": "legal_team_member account doc032.access.c01.archived.09280734@helix.example (DOC-032 access V-C01 09280734 Archived Member), activated"
+    },
+    {
+      "section": "staff",
+      "at": "2026-09-28T07:39:27.735Z",
+      "what": "legal_team_member account doc032.access.c01.archived.09280734@helix.example archived by this walkthrough"
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:02.690Z",
+      "what": "administrator account doc032.access.sso.admin.09280743@helix.example (DOC-032 access V-C01 09280743 SSO Administrator), invited; first sign-in through the identity provider"
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:02.756Z",
+      "what": "legal_team_member account doc032.access.sso.member.09280743@helix.example (DOC-032 access V-C01 09280743 SSO Legal Team Member), invited; first sign-in through the identity provider"
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:02.817Z",
+      "what": "legal_team_member account doc032.access.sso.member.09280743@harbor.example (DOC-032 access V-C01 09280743 SSO Harbor Legal Team Member), invited; first sign-in through the identity provider"
+    },
+    {
+      "section": "staffSso",
+      "at": "2026-09-28T07:44:31.134Z",
+      "what": "legal_team_member account doc032.access.c01.tf.09280743@helix.example (DOC-032 access V-C01 09280743 Required 2FA Legal Team Member), activated"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:46:49.666Z",
+      "what": "Business User doc032.access.expiry.09280746@helix.example (sign-in link requested; created on first use)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:46:51.172Z",
+      "what": "Business User doc032.access.first.09280746@helix.example (DOC-032 access first Business User 09280746), created by the first sign-in link"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:05.058Z",
+      "what": "Business User doc032.access.invited.09280746@partner-firm.example (invited by Daniel, role changed to Business User)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:45.212Z",
+      "what": "Business User doc032.access.password.09280746@helix.example (created by password setup with links off)"
+    },
+    {
+      "section": "portal",
+      "at": "2026-09-28T07:47:51.679Z",
+      "what": "Business User doc032.access.twofactor.09280746@helix.example (created by a sign-in link; first visit finished in the browser)"
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:23.992Z",
+      "what": "Business User doc032.access.sso2.09280756@helix.example (created by a sign-in link in SSO2)"
+    },
+    {
+      "section": "portalSso",
+      "at": "2026-09-28T07:56:31.972Z",
+      "what": "Business User doc032.access.ssopw.09280756@helix.example (created by password setup while Portal links were off)"
+    }
+  ],
+  "productBugs": [
+    {
+      "section": "staffSso",
+      "article": "staff-sign-in",
+      "summary": "Removing the last identity provider while single sign-on is the only Legal method leaves no staff method and no Administrator sign-in link (the same defect the DOC-032 admin-org and access authors recorded; file once).",
+      "reproduction": "On accs: Legal policy {password:false,magicLink:false,sso:true}; Settings → Advanced → Authentication → Remove each provider. /api/v1/auth/methods then answered legal {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false} and /auth/login showed only \"Sign-in is unavailable. Contact your administrator.\" TECH-008 keeps Administrator password sign-in as break-glass (instance.ts assertPasswordSignIn still allows it), but the page offers no way in."
+    },
+    {
+      "section": "portalSso",
+      "article": "portal-sign-in",
+      "summary": "Removing the last allowed email domain turns off every Business Portal sign-in method, so existing Business Users are locked out (the same defect the DOC-032 admin-org and access authors recorded; file once).",
+      "reproduction": "On accs: Settings → Advanced → Authentication → Business Portal Authentication → Remove helix.example (the only domain). /api/v1/auth/methods then answered business {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}; /portal/login showed only \"Sign-in is unavailable. Contact your administrator.\" and an existing Business User's earlier sign-in link gave no session. TECH-008 (2026-09-27 addendum) and SET-004 say the list governs new accounts only."
+    },
+    {
+      "section": "staffSso",
+      "article": "staff-sign-in",
+      "summary": "Minor: for an account without a password (first signed in through single sign-on), the required two-factor enrollment page says \"Confirm your password to start enrollment.\" but shows no Password field.",
+      "reproduction": "On accs with Legal requireTwoFactor on, the invited Administrator doc032.access.sso.admin.* signed in through Continue with single sign-on and landed on /auth/two-factor/enroll. The page read \"Two-factor authentication Confirm your password to start enrollment. Your organization requires two-factor authentication.\" with no Password field; Turn on two-factor worked without one (two-factor-enroll.tsx renders the passwordHint for every password step, the field only when hasPassword). The guide wording \"Enter Password if the page asks for it\" still holds."
+    }
+  ],
+  "summary": {
+    "staff-sign-in": {
+      "steps": 65,
+      "pass": 65,
+      "fail": 0,
+      "blocked": 0
+    },
+    "portal-sign-in": {
+      "steps": 33,
+      "pass": 33,
+      "fail": 0,
+      "blocked": 0
+    }
+  },
+  "steps": [
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "fixtures",
+      "id": "fixture: Portal records",
+      "action": "API fixture setup as Legal and as the Business Users",
+      "expected": "Records exist",
+      "page": null,
+      "actual": "Fixtures ready: {\"amaraRequest\":16,\"converted\":34,\"archived\":35,\"mx\":20,\"paging\":26}",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:33:57.297Z",
+      "at": "2026-09-28T07:33:58.240Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, step 1: the invitation email",
+      "action": "Accept a password invitation, step 1: the invitation email",
+      "expected": "Email Set your OpenLaw password with a Set password control; the link expires in one hour",
+      "page": "Mailpit",
+      "actual": "Invite API 201; subject \"Set your OpenLaw password\"; HTML has a Set password control true; text says \"The link expires in one hour.\"; the link opens /auth/set-password with the token in the URL fragment true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:08.349Z",
+      "at": "2026-09-28T07:34:08.349Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: an expired invitation link",
+      "action": "If it does not work: an expired invitation link",
+      "expected": "This link has expired or was already used. Ask for a new one.",
+      "page": "/auth/set-password",
+      "actual": "Set password on an invitation whose token had expired (test preparation moved this account's token expiry one minute into the past) showed: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:09.436Z",
+      "at": "2026-09-28T07:34:09.436Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: the browser opened only part of the link",
+      "action": "If it does not work: the browser opened only part of the link",
+      "expected": "This link is not valid. Ask for a new invitation or password reset.",
+      "page": "/auth/set-password",
+      "actual": "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:09.496Z",
+      "at": "2026-09-28T07:34:09.496Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "fixture: the Administrator sends a fresh invitation",
+      "action": "fixture: the Administrator sends a fresh invitation",
+      "expected": "A new Set your OpenLaw password email",
+      "page": "Mailpit",
+      "actual": "Invite API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:09.564Z",
+      "at": "2026-09-28T07:34:09.564Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: passwords that do not match",
+      "action": "If it does not work: passwords that do not match",
+      "expected": "The passwords do not match.",
+      "page": "/auth/set-password",
+      "actual": "Different values in New password and Confirm password showed: The passwords do not match.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:09.632Z",
+      "at": "2026-09-28T07:34:09.632Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, steps 2-5",
+      "action": "Accept a password invitation, steps 2-5",
+      "expected": "New password (at least eight characters), Confirm password, Set password, then Password set with Sign in",
+      "page": "/auth/set-password",
+      "actual": "Form hint mentions eight characters true; Password set true; Sign in control true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:09.756Z",
+      "at": "2026-09-28T07:34:09.756Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "action": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "page": "/auth/login",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:10.843Z",
+      "at": "2026-09-28T07:34:10.843Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, step 6 and the check after it",
+      "action": "Accept a password invitation, step 6 and the check after it",
+      "expected": "A wrong password shows Check your email and password.; Email and Password with Sign in reach the app; the name menu (photo or initials) shows name and email; a wide window shows the organization's name in the header",
+      "page": "/",
+      "actual": "Wrong password message true; landed on / true; name menu \"DOC-032 access V-C01 09280734 Administrator doc032.access.c01.admin.09280734@helix.example Settings Sign out\"; organization name \"Helix Software Group\" in the header at 1440 px true, at 700 px false",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:11.780Z",
+      "at": "2026-09-28T07:34:11.780Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "A successful activation consumes the invitation link",
+      "action": "A successful activation consumes the invitation link",
+      "expected": "Reopening the used link shows This link has expired or was already used. Ask for a new one.",
+      "page": "/auth/set-password",
+      "actual": "The used invitation link, opened in a new browser, was refused with the expired-or-used message",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:12.157Z",
+      "at": "2026-09-28T07:34:12.157Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Turn on two-factor authentication, steps 1-8",
+      "action": "Turn on two-factor authentication, steps 1-8",
+      "expected": "Settings from the name menu; Profile under Personal; Password & two-factor; Turn on two-factor; Password and Continue; QR code or manual secret; Code and Confirm; backup codes; Done; Profile says two-factor is on",
+      "page": "/settings/profile",
+      "actual": "Profile said off before true; QR true; manual secret shown true; a wrong code was refused true; backup codes shown 10; after Done Profile says on true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:12.754Z",
+      "at": "2026-09-28T07:34:12.755Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign in with a second factor, steps 1-3",
+      "action": "Sign in with a second factor, steps 1-3",
+      "expected": "Password sign-in opens Two-factor authentication; a wrong code shows Wrong code. Try again, or restart sign-in.; the current Code with Verify signs in",
+      "page": "/auth/two-factor",
+      "actual": "Challenge true; wrong code message true; current code reached / true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:30.716Z",
+      "at": "2026-09-28T07:34:30.716Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "action": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "expected": "Use a backup code, an unused Backup code and Verify sign in; the same code cannot be reused; Sign out returns to sign-in",
+      "page": "/auth/two-factor",
+      "actual": "First use reached the app true; reuse stayed on the challenge true with Wrong code. Try again, or restart sign-in. true; Sign out -> sign-in true; / afterwards needs sign-in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:34:32.919Z",
+      "at": "2026-09-28T07:34:32.919Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "End or recover a session: Settings → Profile → Sign out other devices; a revoked session goes to sign-in",
+      "action": "End or recover a session: Settings → Profile → Sign out other devices; a revoked session goes to sign-in",
+      "expected": "The other browser's session ends and reload sends it to sign-in; this session stays",
+      "page": "/settings/profile",
+      "actual": "Second browser signed in true; Saved true; second browser reload -> sign-in true; this browser still on Profile true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:33.660Z",
+      "at": "2026-09-28T07:35:33.660Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "action": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "expected": "Re-enroll and the password give a new secret; after closing the dialog Profile says two-factor is off and the password alone signs in",
+      "page": "/settings/profile",
+      "actual": "New secret differs true; Profile off true; password-only sign-in reached the app true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:34.170Z",
+      "at": "2026-09-28T07:35:34.171Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "action": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "expected": "A wrong password is refused; the right one turns two-factor off; password sign-in has no challenge; Sign out returns to sign-in",
+      "page": "/settings/profile",
+      "actual": "Wrong password message Check your password. true; Profile off true; Sign out -> sign-in true; password-only sign-in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:35.048Z",
+      "at": "2026-09-28T07:35:35.048Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Use your organization's sign-in method: Email me a sign-in link; the link works once",
+      "action": "Use your organization's sign-in method: Email me a sign-in link; the link works once",
+      "expected": "Email, Send link, Check your email; Sign in in the newest email signs in within five minutes; the link works once; a used link opens Sign-in link expired with Email and Send link while links are on and email works",
+      "page": "/auth/link-expired",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; email has a Sign in control true; token lifetime 5 min; the link signed in true; reuse after sign-out opened \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get \" with controls [input email, Send link, Help with this page], Email true, Back to sign-in false",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:35.701Z",
+      "at": "2026-09-28T07:35:35.701Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign-in link expired: enter your email and select Send link to get a new link",
+      "action": "Sign-in link expired: enter your email and select Send link to get a new link",
+      "expected": "Send link on Sign-in link expired sends a new link that signs in",
+      "page": "/auth/link-expired",
+      "actual": "Check your email true; new email \"Sign in to OpenLaw\"; the new link signed in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:35.997Z",
+      "at": "2026-09-28T07:35:35.997Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign-in link budget: three links for one email address in 15 minutes",
+      "action": "Sign-in link budget: three links for one email address in 15 minutes",
+      "expected": "The fourth request shows Too many sign-in link requests. Try again later.",
+      "page": "/auth/login",
+      "actual": "Third request: \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc032.access.c01\"; fourth request: \"Helix Software Group Legal Portal Powered by OpenLaw Get a sign-in link Too many sign-in link requests. Try again later. Enter your work email to get a single-u\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:41.228Z",
+      "at": "2026-09-28T07:35:41.228Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If you forgot your password: Set up or reset your password",
+      "action": "If you forgot your password: Set up or reset your password",
+      "expected": "Below the password form; Email and Send password setup link; Check your email; Set password in the email within one hour sets a new password; the new password signs out every session",
+      "page": "/auth/set-password",
+      "actual": "Check your email true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; a browser signed in before the reset was sent to sign-in on reload true; old password refused true; new password signed in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:45.504Z",
+      "at": "2026-09-28T07:35:45.504Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "action": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "expected": "The fourth request shows Too many password setup requests. Try again later.",
+      "page": "/auth/login",
+      "actual": "Second: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; third: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; fourth: \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Send password setup link Back to sign-in Too many pas\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:35:53.559Z",
+      "at": "2026-09-28T07:35:53.559Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "action": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "expected": "Wrong codes show Wrong code. Try again, or restart sign-in.; after 10 wrong codes the page shows Too many attempts. Wait 15 minutes, then try again.",
+      "page": "/auth/two-factor",
+      "actual": "Attempt messages in order (Sign out and password sign-in between rounds of five): wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; wrong-code messages before the lock 10; the current code during the lock was also refused true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:32.173Z",
+      "at": "2026-09-28T07:36:32.173Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "End or recover a session: wrong passwords and the 15-minute lock",
+      "action": "End or recover a session: wrong passwords and the 15-minute lock",
+      "expected": "A wrong password shows Check your email and password.; a successful sign-in before the limit resets the count; after 10 wrong passwords the page shows Too many attempts. Wait 15 minutes, then try again., even for the correct password",
+      "page": "/auth/login",
+      "actual": "9 wrong passwords left a live failure count of 9; the correct password then signed in true and the count became 0. Then 11 wrong passwords showed: wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; the correct password afterwards stayed on sign-in with Too many attempts true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:47.908Z",
+      "at": "2026-09-28T07:36:47.908Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, step 1: the invitation email",
+      "action": "Accept a password invitation, step 1: the invitation email",
+      "expected": "Email Set your OpenLaw password with a Set password control; the link expires in one hour",
+      "page": "Mailpit",
+      "actual": "Invite API 201; subject \"Set your OpenLaw password\"; HTML has a Set password control true; text says \"The link expires in one hour.\"; the link opens /auth/set-password with the token in the URL fragment true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.011Z",
+      "at": "2026-09-28T07:36:48.011Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: an expired invitation link",
+      "action": "If it does not work: an expired invitation link",
+      "expected": "This link has expired or was already used. Ask for a new one.",
+      "page": "/auth/set-password",
+      "actual": "Set password on an invitation whose token had expired (test preparation moved this account's token expiry one minute into the past) showed: This link has expired or was already used. Ask for a new one.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.361Z",
+      "at": "2026-09-28T07:36:48.361Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: the browser opened only part of the link",
+      "action": "If it does not work: the browser opened only part of the link",
+      "expected": "This link is not valid. Ask for a new invitation or password reset.",
+      "page": "/auth/set-password",
+      "actual": "Opening /auth/set-password without the #token fragment showed: This link is not valid. Ask for a new invitation or password reset.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.405Z",
+      "at": "2026-09-28T07:36:48.405Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "fixture: the Administrator sends a fresh invitation",
+      "action": "fixture: the Administrator sends a fresh invitation",
+      "expected": "A new Set your OpenLaw password email",
+      "page": "Mailpit",
+      "actual": "Invite API 200; subject \"Set your OpenLaw password\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.469Z",
+      "at": "2026-09-28T07:36:48.469Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If it does not work: passwords that do not match",
+      "action": "If it does not work: passwords that do not match",
+      "expected": "The passwords do not match.",
+      "page": "/auth/set-password",
+      "actual": "Different values in New password and Confirm password showed: The passwords do not match.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.521Z",
+      "at": "2026-09-28T07:36:48.521Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, steps 2-5",
+      "action": "Accept a password invitation, steps 2-5",
+      "expected": "New password (at least eight characters), Confirm password, Set password, then Password set with Sign in",
+      "page": "/auth/set-password",
+      "actual": "Form hint mentions eight characters true; Password set true; Sign in control true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:48.578Z",
+      "at": "2026-09-28T07:36:48.578Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "action": "Introduction: the sign-in page shows the organization's name above the form, and its logo if saved",
+      "expected": "Organization name above the Sign in form; a logo only when the Administrator saved one",
+      "page": "/auth/login",
+      "actual": "Public branding answer name \"Helix Software Group\", logo none; name shown true; above the Sign in heading and form true; Organization logo images 0",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:49.697Z",
+      "at": "2026-09-28T07:36:49.698Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Accept a password invitation, step 6 and the check after it",
+      "action": "Accept a password invitation, step 6 and the check after it",
+      "expected": "A wrong password shows Check your email and password.; Email and Password with Sign in reach the app; the name menu (photo or initials) shows name and email; a wide window shows the organization's name in the header",
+      "page": "/",
+      "actual": "Wrong password message true; landed on / true; name menu \"DOC-032 access V-C01 09280734 Legal Team Member doc032.access.c01.member.09280734@helix.example Settings Sign out\"; organization name \"Helix Software Group\" in the header at 1440 px true, at 700 px false",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:50.482Z",
+      "at": "2026-09-28T07:36:50.482Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "A successful activation consumes the invitation link",
+      "action": "A successful activation consumes the invitation link",
+      "expected": "Reopening the used link shows This link has expired or was already used. Ask for a new one.",
+      "page": "/auth/set-password",
+      "actual": "The used invitation link, opened in a new browser, was refused with the expired-or-used message",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:50.799Z",
+      "at": "2026-09-28T07:36:50.799Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Turn on two-factor authentication, steps 1-8",
+      "action": "Turn on two-factor authentication, steps 1-8",
+      "expected": "Settings from the name menu; Profile under Personal; Password & two-factor; Turn on two-factor; Password and Continue; QR code or manual secret; Code and Confirm; backup codes; Done; Profile says two-factor is on",
+      "page": "/settings/profile",
+      "actual": "Profile said off before true; QR true; manual secret shown true; a wrong code was refused true; backup codes shown 10; after Done Profile says on true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:36:51.324Z",
+      "at": "2026-09-28T07:36:51.324Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign in with a second factor, steps 1-3",
+      "action": "Sign in with a second factor, steps 1-3",
+      "expected": "Password sign-in opens Two-factor authentication; a wrong code shows Wrong code. Try again, or restart sign-in.; the current Code with Verify signs in",
+      "page": "/auth/two-factor",
+      "actual": "Challenge true; wrong code message true; current code reached / true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:37:00.678Z",
+      "at": "2026-09-28T07:37:00.678Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "action": "Use a backup code once; Sign out on the challenge restarts sign-in",
+      "expected": "Use a backup code, an unused Backup code and Verify sign in; the same code cannot be reused; Sign out returns to sign-in",
+      "page": "/auth/two-factor",
+      "actual": "First use reached the app true; reuse stayed on the challenge true with Wrong code. Try again, or restart sign-in. true; Sign out -> sign-in true; / afterwards needs sign-in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:37:02.887Z",
+      "at": "2026-09-28T07:37:02.887Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "End or recover a session: Settings → Profile → Sign out other devices; a revoked session goes to sign-in",
+      "action": "End or recover a session: Settings → Profile → Sign out other devices; a revoked session goes to sign-in",
+      "expected": "The other browser's session ends and reload sends it to sign-in; this session stays",
+      "page": "/settings/profile",
+      "actual": "Second browser signed in true; Saved true; second browser reload -> sign-in true; this browser still on Profile true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:03.520Z",
+      "at": "2026-09-28T07:38:03.520Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "action": "Re-enroll turns off the old authenticator; closing before a new code leaves two-factor off",
+      "expected": "Re-enroll and the password give a new secret; after closing the dialog Profile says two-factor is off and the password alone signs in",
+      "page": "/settings/profile",
+      "actual": "New secret differs true; Profile off true; password-only sign-in reached the app true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:04.039Z",
+      "at": "2026-09-28T07:38:04.039Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "action": "Turn off two-factor requires the password; Sign out in the name menu ends the session",
+      "expected": "A wrong password is refused; the right one turns two-factor off; password sign-in has no challenge; Sign out returns to sign-in",
+      "page": "/settings/profile",
+      "actual": "Wrong password message Check your password. true; Profile off true; Sign out -> sign-in true; password-only sign-in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:04.873Z",
+      "at": "2026-09-28T07:38:04.873Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Use your organization's sign-in method: Email me a sign-in link; the link works once",
+      "action": "Use your organization's sign-in method: Email me a sign-in link; the link works once",
+      "expected": "Email, Send link, Check your email; Sign in in the newest email signs in within five minutes; the link works once; a used link opens Sign-in link expired with Email and Send link while links are on and email works",
+      "page": "/auth/link-expired",
+      "actual": "Check your email true; subject \"Sign in to OpenLaw\"; email has a Sign in control true; token lifetime 5 min; the link signed in true; reuse after sign-out opened \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get \" with controls [input email, Send link, Help with this page], Email true, Back to sign-in false",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:05.514Z",
+      "at": "2026-09-28T07:38:05.514Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign-in link expired: enter your email and select Send link to get a new link",
+      "action": "Sign-in link expired: enter your email and select Send link to get a new link",
+      "expected": "Send link on Sign-in link expired sends a new link that signs in",
+      "page": "/auth/link-expired",
+      "actual": "Check your email true; new email \"Sign in to OpenLaw\"; the new link signed in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:05.829Z",
+      "at": "2026-09-28T07:38:05.829Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign-in link budget: three links for one email address in 15 minutes",
+      "action": "Sign-in link budget: three links for one email address in 15 minutes",
+      "expected": "The fourth request shows Too many sign-in link requests. Try again later.",
+      "page": "/auth/login",
+      "actual": "Third request: \"Helix Software Group Legal Portal Powered by OpenLaw Check your email If doc032.access.c01\"; fourth request: \"Helix Software Group Legal Portal Powered by OpenLaw Get a sign-in link Too many sign-in link requests. Try again later. Enter your work email to get a single-u\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:11.071Z",
+      "at": "2026-09-28T07:38:11.071Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If you forgot your password: Set up or reset your password",
+      "action": "If you forgot your password: Set up or reset your password",
+      "expected": "Below the password form; Email and Send password setup link; Check your email; Set password in the email within one hour sets a new password; the new password signs out every session",
+      "page": "/auth/set-password",
+      "actual": "Check your email true; email \"Set your OpenLaw password\"; token lifetime 60 min; Password set true; a browser signed in before the reset was sent to sign-in on reload true; old password refused true; new password signed in true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:15.302Z",
+      "at": "2026-09-28T07:38:15.302Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "action": "Password setup budget: three setup emails for one email address in 15 minutes",
+      "expected": "The fourth request shows Too many password setup requests. Try again later.",
+      "page": "/auth/login",
+      "actual": "Second: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; third: \"Helix Software Group Legal Portal Powered by OpenLaw Check y\"; fourth: \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Email Send password setup link Back to sign-in Too many pas\"",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:38:23.320Z",
+      "at": "2026-09-28T07:38:23.320Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "action": "Sign in with a second factor: after 10 wrong codes the page shows Too many attempts",
+      "expected": "Wrong codes show Wrong code. Try again, or restart sign-in.; after 10 wrong codes the page shows Too many attempts. Wait 15 minutes, then try again.",
+      "page": "/auth/two-factor",
+      "actual": "Attempt messages in order (Sign out and password sign-in between rounds of five): wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; wrong-code messages before the lock 10; the current code during the lock was also refused true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:39:02.190Z",
+      "at": "2026-09-28T07:39:02.190Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "End or recover a session: wrong passwords and the 15-minute lock",
+      "action": "End or recover a session: wrong passwords and the 15-minute lock",
+      "expected": "A wrong password shows Check your email and password.; a successful sign-in before the limit resets the count; after 10 wrong passwords the page shows Too many attempts. Wait 15 minutes, then try again., even for the correct password",
+      "page": "/auth/login",
+      "actual": "9 wrong passwords left a live failure count of 9; the correct password then signed in true and the count became 0. Then 11 wrong passwords showed: wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, wrong, locked; the correct password afterwards stayed on sign-in with Too many attempts true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:39:18.001Z",
+      "at": "2026-09-28T07:39:18.001Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "Check your email appears whether or not the address is eligible",
+      "action": "Check your email appears whether or not the address is eligible",
+      "expected": "An ineligible address gets the same Check your email page for Send link and Send password setup link, and no email",
+      "page": "/auth/login",
+      "actual": "Signed out, for doc032.access.nobody.09280734@outside-domain.example: Send link showed Check your email true; Send password setup link showed Check your email true; Mailpit messages to the address after 5 s: 0",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:39:25.463Z",
+      "at": "2026-09-28T07:39:25.463Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staff",
+      "id": "If the sign-in page shows This sign-in link could not be used",
+      "action": "If the sign-in page shows This sign-in link could not be used",
+      "expected": "OpenLaw refuses the sign-in for an archived account; the sign-in page shows This sign-in link could not be used. Request a new link or contact your administrator.",
+      "page": "/auth/login",
+      "actual": "Link emailed true; the Administrator archived the account (API 200) before the link was opened; the link ended on /auth/login; message shown true",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:39:30.294Z",
+      "at": "2026-09-28T07:39:30.294Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Single sign-on is not configured yet; Administrator sign-in",
+      "action": "Open the sign-in page while single sign-on is on and no identity provider is connected; try Administrator sign-in",
+      "expected": "The page says Single sign-on is not configured yet; Administrator sign-in opens the password form; only an Administrator signs in with a password, a Legal Team Member sees Password sign-in is disabled for this account.",
+      "page": "/auth/login",
+      "actual": "The staff sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Single sign-on is not configured yet. Use administrator sign-in. Email me a sign-in link Administra\" with buttons [\"Email me a sign-in link\",\"Administrator sign-in\"]. Administrator sign-in opened the password form (true); Nadia Haddad entered Email and Password and Sign in gave: Password sign-in is disabled for this account..",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:43:59.684Z",
+      "at": "2026-09-28T07:44:01.137Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Single sign-on is not configured yet; Administrator sign-in",
+      "action": "Open the sign-in page while single sign-on is on and no identity provider is connected; try Administrator sign-in",
+      "expected": "The page says Single sign-on is not configured yet; Administrator sign-in opens the password form; only an Administrator signs in with a password, a Legal Team Member sees Password sign-in is disabled for this account.",
+      "page": "/auth/login",
+      "actual": "The staff sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Single sign-on is not configured yet. Use administrator sign-in. Email me a sign-in link Administra\" with buttons [\"Email me a sign-in link\",\"Administrator sign-in\"]. Administrator sign-in opened the password form (true); Daniel Okafor entered Email and Password and Sign in gave: signed in.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:01.138Z",
+      "at": "2026-09-28T07:44:02.544Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Use your organization's sign-in method: Continue with single sign-on (one identity provider)",
+      "action": "Select Continue with single sign-on and complete the identity-provider sign-in",
+      "expected": "One button that opens the identity provider directly; the account reaches its permitted landing page",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"] and no Email field. Continue with single sign-on went to http://oidc:8080 (fixture identity doc032.access.sso.admin.09280743@helix.example) and back to /, signed in as administrator; the name menu read \"DOC-032 access V-C01 09280743 SSO Administrator doc032.access.sso.admin.09280743@helix.example Settings Sign out\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:03.897Z",
+      "at": "2026-09-28T07:44:07.690Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Use your organization's sign-in method: Continue with single sign-on (one identity provider)",
+      "action": "Select Continue with single sign-on and complete the identity-provider sign-in",
+      "expected": "One button that opens the identity provider directly; the account reaches its permitted landing page",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"] and no Email field. Continue with single sign-on went to http://oidc:8080 (fixture identity doc032.access.sso.member.09280743@helix.example) and back to /, signed in as legal_team_member; the name menu read \"DOC-032 access V-C01 09280743 SSO Legal Team Member doc032.access.sso.member.09280743@helix.example Settings Sign out\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:07.691Z",
+      "at": "2026-09-28T07:44:11.304Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Use your organization's sign-in method: more than one identity provider",
+      "action": "Enter your work address in Email, then select Continue with single sign-on",
+      "expected": "The page first says Enter your work email. Your organization's identity provider opens next.; OpenLaw opens the identity provider that serves the email domain",
+      "page": "/",
+      "actual": "With two providers the page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Enter your work email. Your organization's identity provider opens next. Email Continue with single sign-on E\". doc032.access.sso.admin.09280743@helix.example in Email and Continue with single sign-on opened http://oidc:8080 (the helix.example provider) and signed in as administrator on /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:12.285Z",
+      "at": "2026-09-28T07:44:15.900Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Use your organization's sign-in method: more than one identity provider",
+      "action": "Enter your work address in Email, then select Continue with single sign-on",
+      "expected": "The page first says Enter your work email. Your organization's identity provider opens next.; OpenLaw opens the identity provider that serves the email domain",
+      "page": "/",
+      "actual": "With two providers the page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Enter your work email. Your organization's identity provider opens next. Email Continue with single sign-on E\". doc032.access.sso.member.09280743@helix.example in Email and Continue with single sign-on opened http://oidc:8080 (the helix.example provider) and signed in as legal_team_member on /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:15.902Z",
+      "at": "2026-09-28T07:44:19.391Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "More than one identity provider: another domain opens its own provider",
+      "action": "Enter a harbor.example work address, then select Continue with single sign-on",
+      "expected": "OpenLaw opens the identity provider that serves harbor.example",
+      "page": "/",
+      "actual": "doc032.access.sso.member.09280743@harbor.example opened http://oidc:8082 (the harbor.example provider) and signed in as legal_team_member on /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:19.393Z",
+      "at": "2026-09-28T07:44:21.926Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If no provider serves the domain: No single sign-on provider is set up for {domain}; check the address or use another method that the page offers",
+      "action": "Enter an address on an unserved domain and select Continue with single sign-on; then use another method the page offers",
+      "expected": "No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.; the other methods stay available",
+      "page": "/auth/login",
+      "actual": "The page stayed on /auth/login and showed \"No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.\". It still offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"]; Sign in with a password as Nadia Haddad signed in.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:21.928Z",
+      "at": "2026-09-28T07:44:23.382Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If no provider serves the domain: No single sign-on provider is set up for {domain}; check the address or use another method that the page offers",
+      "action": "Enter an address on an unserved domain and select Continue with single sign-on; then use another method the page offers",
+      "expected": "No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.; the other methods stay available",
+      "page": "/auth/login",
+      "actual": "The page stayed on /auth/login and showed \"No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.\". It still offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"]; Sign in with a password as Daniel Okafor signed in.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:23.382Z",
+      "at": "2026-09-28T07:44:24.837Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Administrator sign-in opens the password form when the organization does not allow password sign-in for staff",
+      "action": "Select Administrator sign-in, enter Email and Password, select Sign in",
+      "expected": "The Administrator signs in with a password",
+      "page": "/auth/login",
+      "actual": "Legal policy password off, sign-in links and SSO on. The single sign-on view offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Administrator sign-in\"]; the Get a sign-in link view offered [\"Send link\",\"Administrator sign-in\",\"Back to sign-in\"]. Administrator sign-in opened the password form; Daniel Okafor with Email, Password and Sign in: signed in (me 200).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:24.846Z",
+      "at": "2026-09-28T07:44:26.243Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "Administrator sign-in opens the password form when the organization does not allow password sign-in for staff",
+      "action": "Select Administrator sign-in, enter Email and Password, select Sign in",
+      "expected": "A Legal Team Member sees Password sign-in is disabled for this account. and must use a method the page offers",
+      "page": "/auth/login",
+      "actual": "Legal policy password off, sign-in links and SSO on. The single sign-on view offered [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Administrator sign-in\"]; the Get a sign-in link view offered [\"Send link\",\"Administrator sign-in\",\"Back to sign-in\"]. Administrator sign-in opened the password form; Nadia Haddad with Email, Password and Sign in: Password sign-in is disabled for this account. (me 401).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:26.244Z",
+      "at": "2026-09-28T07:44:27.691Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If your organization requires two-factor authentication (password sign-in): Two-factor authentication opens after sign-in",
+      "action": "Sign in with Email and Password; enter Password if the page asks for it, select Turn on two-factor, complete steps 5 to 8",
+      "expected": "The page says Your organization requires two-factor authentication.; other pages stay closed until enrollment finishes; then the app opens",
+      "page": "/auth/two-factor/enroll",
+      "actual": "Password sign-in opened /auth/two-factor/enroll: \"Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication Confirm your password to start enrollment. Your organization requires two-factor authentica\". The page asked for Password (true). Opening /contracts stayed on /auth/two-factor/enroll. Turn on two-factor, Code and Confirm showed 10 backup codes; Done opened /. Profile showed Required by your organization true, with Turn off two-factor 0 and Re-enroll 0. The next password sign-in asked for a code: \"Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication E\"; Code and Verify opened /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:44:31.192Z",
+      "at": "2026-09-28T07:45:00.752Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "When two-factor is required, OpenLaw asks for a code after a sign-in link",
+      "action": "Sign in with Email me a sign-in link; enter the Code",
+      "expected": "The sign-in link opens Two-factor authentication; the code opens the app",
+      "page": "/auth/two-factor",
+      "actual": "The sign-in link opened the challenge \"Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication E\"; Code and Verify opened /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:45:00.753Z",
+      "at": "2026-09-28T07:45:30.718Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If your organization requires two-factor authentication (single sign-on, no password): enrollment before any page; then a code after every single sign-on",
+      "action": "Continue with single sign-on; select Turn on two-factor, complete steps 5 to 8; sign out; single sign-on again and enter the Code",
+      "expected": "Two-factor authentication opens with Your organization requires two-factor authentication.; no Password field when the account has none; later single sign-on asks for a code",
+      "page": "/auth/two-factor/enroll",
+      "actual": "Single sign-on opened /auth/two-factor/enroll: \"Helix Software Group Legal Portal Powered by OpenLaw Two-factor authentication Confirm your password to start enrollment. Your organization requires two-factor authentica\", with no Password field (true). /contracts stayed on /auth/two-factor/enroll. Enrollment showed 10 backup codes; Done opened /. After Sign out, single sign-on opened the challenge and the Code opened /. A sign-in link also opened the challenge and the Code opened /.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:45:30.719Z",
+      "at": "2026-09-28T07:46:30.713Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If the page shows only Sign-in is unavailable. Contact your administrator.",
+      "action": "Open the staff sign-in page as Nadia Haddad after the Administrator removed the last identity provider while single sign-on was the only Legal method",
+      "expected": "Only Sign-in is unavailable. Contact your administrator.; no Administrator sign-in link",
+      "page": "/auth/login",
+      "actual": "Legal policy before removal {\"password\":false,\"magicLink\":false,\"sso\":true,\"requireTwoFactor\":false}; the Administrator removed DOC-032 access Harbor IdP and then DOC-032 access Helix IdP (providers left []); the stored Legal policy became {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}. The staff sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Sign-in is unavailable. Contact your administrator. Help with this page\" with controls [\"Help with this page\"]; no Administrator sign-in link.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:32.753Z",
+      "at": "2026-09-28T07:46:34.142Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "If the page shows only Sign-in is unavailable. Contact your administrator.",
+      "action": "Open the staff sign-in page as Daniel Okafor after the Administrator removed the last identity provider while single sign-on was the only Legal method",
+      "expected": "Only Sign-in is unavailable. Contact your administrator.; no Administrator sign-in link",
+      "page": "/auth/login",
+      "actual": "Legal policy before removal {\"password\":false,\"magicLink\":false,\"sso\":true,\"requireTwoFactor\":false}; the Administrator removed DOC-032 access Harbor IdP and then DOC-032 access Helix IdP (providers left []); the stored Legal policy became {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}. The staff sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Sign-in is unavailable. Contact your administrator. Help with this page\" with controls [\"Help with this page\"]; no Administrator sign-in link.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:34.143Z",
+      "at": "2026-09-28T07:46:35.466Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "staffSso",
+      "id": "An Administrator who is still signed in on another device turns on another method in Settings → Advanced → Authentication",
+      "action": "In the still-open Administrator session, open Settings → Advanced → Authentication and turn on Email and password under Legal User Authentication",
+      "expected": "Saved; the staff sign-in page offers the password form again and a Legal Team Member signs in",
+      "page": "/settings/authentication",
+      "actual": "Daniel's session opened in another browser context stayed signed in. Email and password under Legal User Authentication showed \"Saved\". A signed-out browser then showed the password form with buttons [\"Sign in\",\"Set up or reset your password\"], and Nadia Haddad signed in (true). Email magic link was turned back on too (\"Saved\"); Legal policy now {\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:35.467Z",
+      "at": "2026-09-28T07:46:37.971Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "fixture.expiry-link",
+      "action": "Request a sign-in link now for the check after five minutes.",
+      "expected": "A link arrives for a new allowed-domain address.",
+      "page": "/portal/login",
+      "actual": "Link email \"Sign in to OpenLaw\" arrived for a new helix.example address at 2026-09-28T07:46:49.539Z; kept unopened for the expiry check.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:48.249Z",
+      "at": "2026-09-28T07:46:49.666Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S1.open-address",
+      "action": "Open the Portal address.",
+      "expected": "The sign-in page shows the organization's name, and its logo if one is saved.",
+      "page": "/portal/login",
+      "actual": "Signed out, /portal opened /portal/login with the heading Business Portal sign-in. The page read \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in Email Password Sign in Set up or reset your password Email me a\". Saved name \"Helix Software Group\", saved logo none, Organization logo images 0.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:49.697Z",
+      "at": "2026-09-28T07:46:51.011Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S2.email-me",
+      "action": "If the page shows a password form or Continue with single sign-on, select Email me a sign-in link.",
+      "expected": "The page changes to Get a sign-in link.",
+      "page": "/portal/login",
+      "actual": "Password form shown true; Continue with single sign-on false. Email me a sign-in link changed the card to Get a sign-in link.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:51.012Z",
+      "at": "2026-09-28T07:46:51.033Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S3-5.send-link",
+      "action": "Enter the work address in Email, select Send link.",
+      "expected": "Check your email appears.",
+      "page": "/portal/login",
+      "actual": "Check your email appeared: \"Check your email If <new address> is eligible, a sign-in link is on its way. It expires in 5 minutes and works once. Back to sign-in Help with this page\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:51.035Z",
+      "at": "2026-09-28T07:46:51.162Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S6.follow-link",
+      "action": "Open the sign-in email for that address and follow its link within five minutes.",
+      "expected": "The Portal opens under that identity; the first visit shows Welcome to your Business Portal; Department with Continue, Skip on later steps, Finish opens the Portal.",
+      "page": "/portal/onboarding",
+      "actual": "Subject \"Sign in to OpenLaw\". Link lifetime 5 minutes. The link opened /portal/onboarding with Welcome to your Business Portal. The Department step had Continue (disabled until a Department was chosen) and no Skip. After Full name, Skip was offered on: Name and photo | Theme | Notifications. Finish opened /portal. Header: \"openlaw / Helix Software Group Legal portal Help D0 DOC-032 access first Business User 09280746 <new address> Sign out\". Main: \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnaround: 3 business days Contract review Re\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:51.164Z",
+      "at": "2026-09-28T07:46:55.529Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S7.outside-domain",
+      "action": "Request a link for an address outside the allowed domains with no account.",
+      "expected": "Check your email is neutral; no link arrives.",
+      "page": "/portal/login",
+      "actual": "Check your email said \"If <address> is eligible, a sign-in link is on its way. It expires in \"; Mailpit held 0 messages for the address after 8 s.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:46:55.531Z",
+      "at": "2026-09-28T07:47:04.970Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S7b.outside-domain-existing",
+      "action": "Request a link for an existing active Business User account on a domain that is not allowed.",
+      "expected": "An address outside the allowed domains with an existing active account receives a link.",
+      "page": "/portal/login",
+      "actual": "Fixture: Daniel invited an account at partner-firm.example (not an allowed domain) and changed its role to Business User (200). Send link showed Check your email and \"Sign in to OpenLaw\" arrived; its link opened /portal.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:04.972Z",
+      "at": "2026-09-28T07:47:06.559Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S8.sign-out",
+      "action": "Select Sign out in the Portal header.",
+      "expected": "The session ends; the Portal sign-in page shows.",
+      "page": "/portal",
+      "actual": "Sign out (header button) returned to /portal/login; opening /portal again showed /portal/login.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:06.561Z",
+      "at": "2026-09-28T07:47:08.918Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S9.used-link",
+      "action": "Reuse the old email link after sign-out; on Sign-in link expired enter Email, select Send link, follow the new link once.",
+      "expected": "Sign-in link expired offers Email and Send link; the new link opens the Portal; the old link does not.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "The used link opened /auth/link-expired?portal=1: \"Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\". Email and Send link sent \"Sign in to OpenLaw\"; its link opened /portal without repeating the first-visit steps.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:08.923Z",
+      "at": "2026-09-28T07:47:10.265Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S10.bad-link",
+      "action": "Open a sign-in link whose token was altered.",
+      "expected": "A bad link offers a working recovery route.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "An altered token opened /auth/link-expired?portal=1 with \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Enter your email to get a fresh one. Email Send link Help with this page\". Email and Send link were offered (the same recovery route as S9).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:10.266Z",
+      "at": "2026-09-28T07:47:11.648Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S11.own-requests",
+      "action": "Follow a fresh link as Jonas; check the signed-in identity.",
+      "expected": "The Portal opens under that identity and lists that person's Requests.",
+      "page": "/portal",
+      "actual": "Header \"openlaw / Helix Software Group Legal portal Help 9+ JW Jonas Weber jonas.weber@helix.example Sign out\". Jonas's own Request R-13 \"Can we hire a contractor in Brazil without an enti\" was listed; Amara's R-16 was not.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:14.419Z",
+      "at": "2026-09-28T07:47:15.567Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S12.other-request-and-staff-pages",
+      "action": "Open another Business User's Request link and the staff Inbox, Contracts and Matters pages.",
+      "expected": "Another Business User's Request link does not grant access; Business Users cannot enter the staff pages.",
+      "page": "/portal/requests/16",
+      "actual": "Amara's Request address showed /portal with \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnar\" and not its title. Staff pages ended on: {\"/inbox\":\"/portal\",\"/contracts\":\"/portal\",\"/matters\":\"/portal\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:15.569Z",
+      "at": "2026-09-28T07:47:20.118Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S13.your-contracts",
+      "action": "Select Contracts in the Portal navigation bar.",
+      "expected": "Your Contracts lists non-archived Contracts whose teams include you; Show more loads more.",
+      "page": "/portal/contracts",
+      "actual": "Your Contracts showed 25 row links; Show more raised it to 29. The archived team Contract C-35 was not listed and its address showed \"Contract not found\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:20.119Z",
+      "at": "2026-09-28T07:47:23.452Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S14.read-contract",
+      "action": "Open a row; check reference, title, Counterparty, Stage, owners, terms, dates and Value; in Documents the Primary Document label; select the name; use the download control; use Your Contracts.",
+      "expected": "The Contract page shows these; Primary Document marks the primary file; the name opens the current Version; download works; Your Contracts returns to the list.",
+      "page": "/portal/contracts/34",
+      "actual": "C-34 \"DOC-032 access Jonas converted contract 09280733\" showed Counterparty, Stage, Business Owner, Legal Owner, Term type, Effective date, Expiry date, Value, Documents. Overview text: \"Overview Counterparty DOC-032 access Fictional Partner Ltd 09280733 Stage Draft Business Owner Jonas Weber Legal Owner Nadia Haddad Department Sales Region Not recorded Term type Fixed term Value £50,000.00 Effective date Feb 1 Expiry date Jan 31, 2028 Renewal period Not recorded Notice deadline Not\". Primary Document label shown; the name opened \"doc032-access-jonas-paper.txt, version 1\"; \"Download doc032-access-jonas-paper.txt, version 1\" downloaded \"doc032-access-jonas-paper.txt\"; Your Contracts returned to the list.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:23.453Z",
+      "at": "2026-09-28T07:47:25.931Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S15.matters",
+      "action": "Select Matters in the Portal navigation bar and open a row.",
+      "expected": "The Matter shows its M- reference, title, Matter Type, Status, Matter Manager and Business Owner; the list uses the current-team rule.",
+      "page": "/portal/matters/4",
+      "actual": "Your Matters listed Jonas's team Matters and not M-20, whose team does not include him. M-4 showed Matter Type, Status, Matter Manager, Business Owner: \"Your Matters Contractor misclassification review - Spain M-4 Matter Type Employment Status With counterparty Matter Manager Nadia Haddad Business Owner Not recorded Region Not recorded Department People Fields Description This came in throu\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:25.932Z",
+      "at": "2026-09-28T07:47:27.159Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S16.record-sections",
+      "action": "Check the record page sections and applet bar.",
+      "expected": "Record pages offer Fields, Documents with Versions and read-only Original request; the applet bar holds Comments, History and Contract team or Matter team.",
+      "page": "/portal/contracts/34",
+      "actual": "C-34 showed Fields, Documents (with Version rows) and Original request. Applet bar: \"\". The Matter page offered Matter team.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:27.161Z",
+      "at": "2026-09-28T07:47:29.532Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S17.conversion",
+      "action": "Open the converted Request address; check the team.",
+      "expected": "At conversion you become Business Owner and join the team; the Request address redirects there.",
+      "page": "/portal/requests/17",
+      "actual": "/portal/requests/17 redirected to /portal/contracts/34. Contract team rows: NH Legal Owner Creator Nadia Haddad | JW Business Owner Jonas Weber.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:29.533Z",
+      "at": "2026-09-28T07:47:31.436Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S18.new-business-owner",
+      "action": "Legal assigns a new Business Owner (second actor, API).",
+      "expected": "The new Business Owner joins the team; the former owner remains a member until Legal removes them.",
+      "page": "/portal/contracts/34",
+      "actual": "Nadia set Amara Nwosu as Business Owner (200). Jonas still opened C-34; his Contract team read: NH Legal Owner Creator Nadia Haddad | AN Business Owner Amara Nwosu | JW Jonas Weber. Restored: Business Owner back to Jonas (200), Amara removed (200).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:31.437Z",
+      "at": "2026-09-28T07:47:33.446Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S19.second-business-user",
+      "action": "Sign in as Amara in a separate browser context.",
+      "expected": "Only the intended Business User session opens; each sees only their own Requests.",
+      "page": "/portal",
+      "actual": "Amara's header \"openlaw / Helix Software Group Legal portal Help 3 AN Amara Nwosu amara.nwosu@he\"; her R-16 listed, Jonas's R-13 not; Jonas's Request address showed /portal without its title. Jonas's own context still read \"openlaw / Helix Software Group Legal portal Help 9+ JW Jonas Weber jonas.weber@h\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:36.074Z",
+      "at": "2026-09-28T07:47:39.489Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S20.staff-keeps-role",
+      "action": "A Legal Team Member follows a Portal sign-in link.",
+      "expected": "The account keeps its role when it follows a sign-in link; it does not act as a Business User.",
+      "page": "/portal",
+      "actual": "Nadia's Portal sign-in link opened /portal; /me role legal_team_member; the staff page /contracts opened (/contracts).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:39.493Z",
+      "at": "2026-09-28T07:47:43.821Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V1.links-off",
+      "action": "With email links switched off for the Portal, open the sign-in page; use Set up or reset your password, Send password setup link, follow the one-hour link, set the password, sign in with Email and Password.",
+      "expected": "No Email me a sign-in link; Email and Password with Sign in; password setup works; the expired-link page offers only Back to sign-in.",
+      "page": "/portal/login",
+      "actual": "Policy saved (email links off). Sign-in page buttons: Sign in, Set up or reset your password. Send password setup link showed \"Check your email If your email address is eligible, a password setup link is on its way. It expires in one hour. Back to sign-in Help with t\"; \"Set your OpenLaw password\" arrived; Password set; Email, Password and Sign in opened /portal/onboarding. /auth/link-expired?portal=1 read \"Helix Software Group Legal Portal Powered by OpenLaw Sign-in link expired The link has expired or was already used. Request a new one from the sign-in\" with no Send link; Back to sign-in returned to /portal/login.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:43.827Z",
+      "at": "2026-09-28T07:47:46.786Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V3.two-factor",
+      "action": "With two-factor required for the Portal, follow a sign-in link; set up the authenticator app; sign out; follow a new link and enter the code. Sign in with a password under the same policy.",
+      "expected": "OpenLaw asks to set up an authenticator app before the Portal opens, then asks for a code each time; this applies to sign-in links and passwords.",
+      "page": "/auth/two-factor/enroll",
+      "actual": "Policy saved (two-factor required for the Portal). The sign-in link opened /auth/two-factor/enroll: \"OpenLaw Legal Portal Two-factor authentication Confirm your password to start enrollment. Your organization requires two-factor authentication. Turn o\". Turn on two-factor showed the QR code and manual secret; Code and Confirm showed backup codes; Done opened /portal. After that, a second link opened /auth/two-factor: \"OpenLaw Legal Portal Two-factor authentication Enter the 6-digit code from your authenticator app. C\"; Code and Verify opened /portal. A password sign-in by the V1 account under the same policy opened /auth/two-factor/enroll.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:47:51.984Z",
+      "at": "2026-09-28T07:48:02.796Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "V4.logo",
+      "action": "Open the Portal address after an Administrator saves a logo.",
+      "expected": "The sign-in page shows the organization's name and its logo.",
+      "page": "/portal/login",
+      "actual": "With a saved logo the page showed one Organization logo image and \"Helix Software Group Legal Portal Powered by OpenLaw Busines\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:48:02.832Z",
+      "at": "2026-09-28T07:48:04.179Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portal",
+      "id": "S21.expired-link",
+      "action": "Follow a link after five minutes; on Sign-in link expired enter Email, Send link, follow the new link once.",
+      "expected": "The expired link offers a fresh link; the new link works once.",
+      "page": "/auth/link-expired?portal=1",
+      "actual": "After 5 minutes the first link opened /auth/link-expired?portal=1 (Sign-in link expired). Email and Send link sent a new link, which opened /portal. The same new link in a second browser context opened Sign-in link expired (works once).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:48:04.191Z",
+      "at": "2026-09-28T07:52:05.048Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "SSO1.one-provider",
+      "action": "Open the Portal sign-in page with one identity provider; select Email me a sign-in link; then, in another browser, select Continue with single sign-on and complete the sign-in as Jonas",
+      "expected": "The page shows Continue with single sign-on; Email me a sign-in link changes it to Get a sign-in link; single sign-on opens the Portal under Jonas's identity",
+      "page": "/portal/login",
+      "actual": "Business SSO on with one provider: buttons [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"], no Email field. Email me a sign-in link showed Get a sign-in link (true). Continue with single sign-on went to http://oidc:8080 and back to /portal as jonas.weber@helix.example (business_user); the Portal read \"What do you need from Legal? Help with this page NDA request Mutual or one-way NDA with a counterparty. Estimated turnar\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:19.199Z",
+      "at": "2026-09-28T07:56:22.975Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "SSO2.email-field-then-link",
+      "action": "Get a sign-in link, step 2, with an Email field above Continue with single sign-on: select Email me a sign-in link, then Email, Send link, follow the link",
+      "expected": "Email me a sign-in link is below the Email field and Continue with single sign-on; it changes the page to Get a sign-in link; the link signs in",
+      "page": "/portal/login",
+      "actual": "With two providers the Portal page read \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in Enter your work email. Your organization's identity provider opens next. Email Cont\" with an Email field and buttons [\"Continue with single sign-on\",\"Email me a sign-in link\",\"Sign in with a password\"]. Email me a sign-in link showed Get a sign-in link; Send link for doc032.access.sso2.09280756@helix.example and the emailed link opened the Portal (true).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:23.992Z",
+      "at": "2026-09-28T07:56:25.598Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "SSO3.links-off-several-providers",
+      "action": "When email links are switched off and there is more than one identity provider: enter Email, then select Continue with single sign-on",
+      "expected": "No Email me a sign-in link; OpenLaw opens the identity provider that serves the domain and the Portal opens",
+      "page": "/portal",
+      "actual": "Links off, SSO on with two providers: buttons [\"Continue with single sign-on\",\"Sign in with a password\"]. Jonas's address in Email and Continue with single sign-on opened http://oidc:8080 and the Portal at /portal (business_user).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:25.612Z",
+      "at": "2026-09-28T07:56:29.117Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "SSO4.unserved-domain",
+      "action": "Enter an address whose domain no provider serves and select Continue with single sign-on",
+      "expected": "No single sign-on provider is set up for {domain}. Check the address or contact your administrator.",
+      "page": "/portal/login",
+      "actual": "The Portal page showed \"No single sign-on provider is set up for unlisted.example. Check the address or contact your administrator.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:29.119Z",
+      "at": "2026-09-28T07:56:30.538Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "SSO5.password-first",
+      "action": "If the page shows Continue with single sign-on and you have a password, select Sign in with a password first; without a password yet, Set up or reset your password, Email, Send password setup link, follow the link, set the password, then sign in",
+      "expected": "Sign in with a password opens Email and Password; the setup link sets a password; Email, Password and Sign in open the Portal",
+      "page": "/portal/login",
+      "actual": "Sign in with a password opened Email and Password (true). Set up or reset your password, Email and Send password setup link brought \"Set your OpenLaw password\"; Password set; Sign in with a password, Email, Password and Sign in opened /portal/onboarding.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:30.541Z",
+      "at": "2026-09-28T07:56:33.252Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "D1.last-domain-removed",
+      "action": "Open the Portal address after the Administrator removed the last allowed email domain; try an existing account's sign-in link sent before the removal",
+      "expected": "OpenLaw turns off every Business Portal sign-in method; the page shows Sign-in is unavailable. Contact your administrator.; existing accounts cannot sign in either",
+      "page": "/portal/login",
+      "actual": "Business policy before {\"password\":true,\"magicLink\":true,\"sso\":true,\"requireTwoFactor\":false}; Daniel removed [\"helix.example\"] under Business Portal Authentication (list now []); the stored Business policy became {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}. The Portal sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in Sign-in is unavailable. Contact your administrator. Help with this page\" with controls [\"Help with this page\"]. The existing Business User doc032.access.ssopw.09280756@helix.example's sign-in link, sent before the removal, ended on /portal/login with \"Helix Software Group Legal Portal Powered by OpenLaw Business Portal sign-in Sign-in is unavailable. Contact your admini\" and no session (me 401).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:36.135Z",
+      "at": "2026-09-28T07:56:38.625Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "portalSso",
+      "id": "D2.domain-and-method-restored",
+      "action": "Ask Legal to add a domain and turn a sign-in method back on; then get a sign-in link",
+      "expected": "After the Administrator adds a domain and turns a method on, the Portal page offers it again and an existing Business User signs in",
+      "page": "/portal",
+      "actual": "Daniel added helix.example; the Business policy was then {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false} and the Portal page still read Sign-in is unavailable (true). Email magic link under Business Portal Authentication showed \"Saved\". the existing Business User doc032.access.ssopw.09280756@helix.example then used Email me a sign-in link and the emailed link opened the Portal: \"Welcome to your Business Portal Set up your profile and choose how you’d like to work with Legal. St\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:56:38.627Z",
+      "at": "2026-09-28T07:56:43.512Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "section": "mailOff",
+      "id": "M1.no-email: Email me a sign-in link and Set up or reset your password need email",
+      "action": "Open the staff sign-in page while OpenLaw cannot send email; open an expired sign-in link; select Back to sign-in and use another method",
+      "expected": "No Email me a sign-in link and no Set up or reset your password; Sign-in link expired shows only Back to sign-in, which returns to sign-in; password sign-in works",
+      "page": "/auth/login",
+      "actual": "App and worker recreated with SMTP_URL and SMTP_FROM empty; /auth/methods emailConfigured false. The staff sign-in page offered [\"Sign in\"]. /auth/link-expired showed controls [\"Back to sign-in\",\"Help with this page\"]; Back to sign-in returned to sign-in (true) and Nadia Haddad signed in with a password (true).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:54:47.880Z",
+      "at": "2026-09-28T07:54:49.427Z"
+    },
+    {
+      "article": "portal-sign-in",
+      "scenario": "V-C02",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "section": "mailOff",
+      "id": "M2.no-email: the Portal without email",
+      "action": "Open the Portal sign-in page and an expired Portal link while OpenLaw cannot send email",
+      "expected": "No Email me a sign-in link (use the method the page shows); the expired-link page only offers Back to sign-in",
+      "page": "/portal/login",
+      "actual": "The Portal page offered [\"Sign in\"]. /auth/link-expired?portal=1 showed [\"Back to sign-in\",\"Help with this page\"]; Back to sign-in returned to /portal/login (true).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:54:49.430Z",
+      "at": "2026-09-28T07:54:50.833Z"
+    },
+    {
+      "article": "staff-sign-in",
+      "scenario": "V-C01",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "section": "mailOff",
+      "id": "M3.links-only-without-email: Sign-in is unavailable",
+      "action": "Open the staff sign-in page when sign-in links are the only Legal method and OpenLaw cannot send email; recover from the still-open Administrator session",
+      "expected": "Only Sign-in is unavailable. Contact your administrator.; no Administrator sign-in link; Settings → Advanced → Authentication turns on another method",
+      "page": "/auth/login",
+      "actual": "Legal policy sign-in links only, no email relay: the staff page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Sign-in is unavailable. Contact your administrator. Help with this page\" with controls [\"Help with this page\"]. In Daniel's open session, Settings → Advanced → Authentication → Email and password showed \"Saved\"; the staff page then offered [\"Sign in\"] and Daniel signed in with a password (true).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:54:50.856Z",
+      "at": "2026-09-28T07:54:54.316Z"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "stamp": "09280820",
+  "shared": {
+    "number": 673,
+    "title": "DOC-032 contracts-2 V-C49 shared DPA contract 09280820",
+    "primaryDocumentId": "01a0e71a-0022-774b-b9ae-44e411e09c34",
+    "pngDocumentId": "01a0e71a-003b-76c5-a6f0-72909e0f4b51",
+    "folderId": "01a0e71a-004e-7965-b6f1-30a0a94f564e",
+    "fieldsPatch": 200,
+    "securityReview": "Not required"
+  },
+  "confidential": {
+    "number": 674,
+    "title": "DOC-032 contracts-2 V-C49 confidential contract 09280820"
+  },
+  "adminConfidential": {
+    "number": 675,
+    "title": "DOC-032 contracts-2 V-C49 administrator confidential contract 09280820"
+  },
+  "confidentialPortal": {
+    "number": 676,
+    "title": "DOC-032 contracts-2 V-C49 confidential portal contract 09280820"
+  },
+  "archived": {
+    "number": 677,
+    "title": "DOC-032 contracts-2 V-C49 archived contract 09280820"
+  },
+  "approval": {
+    "number": 678,
+    "title": "DOC-032 contracts-2 V-C49 approval contract 09280820"
+  },
+  "buApproval": {
+    "number": 679,
+    "title": "DOC-032 contracts-2 V-C49 business approver buApproval 09280820",
+    "approvalId": "01a0e71a-014d-7d78-8f7a-58255ad446cd"
+  },
+  "buWithdraw": {
+    "number": 680,
+    "title": "DOC-032 contracts-2 V-C49 business approver buWithdraw 09280820",
+    "approvalId": "01a0e71a-0184-732e-87ae-177afade9731"
+  },
+  "buArchive": {
+    "number": 681,
+    "title": "DOC-032 contracts-2 V-C49 business approver buArchive 09280820",
+    "approvalId": "01a0e71a-01b9-71c8-b4d3-d7d48c379d98"
+  },
+  "uploads": {
+    "number": 682,
+    "title": "DOC-032 contracts-2 V-C49 upload contract 09280820"
+  },
+  "files": {
+    "number": 683,
+    "title": "DOC-032 contracts-2 V-C49 file behavior contract 09280820"
+  },
+  "relatedMatter": {
+    "number": 137,
+    "title": "DOC-032 contracts-2 V-C49 related matter 09280820"
+  },
+  "entity": {
+    "id": "01a0e71a-020b-72c4-8668-4059a06789bf",
+    "name": "DOC-032 contracts-2 V-C49 confidential entity Ltd 09280820"
+  },
+  "registerEntity": {
+    "id": "01a0e71a-0220-7570-b702-fd74989302fa",
+    "name": "DOC-032 contracts-2 V-C49 register entity Ltd 09280820",
+    "holder": "Marta Kowalczyk",
+    "holderEntity": {
+      "id": "01a0e71a-0254-7b01-b4e8-a96f03e6b119",
+      "name": "DOC-032 contracts-2 V-C49 holder entity Ltd 09280820"
+    }
+  },
+  "knowledge": {
+    "id": "01a0e71a-0280-70a3-89f3-f63da6999e75",
+    "title": "DOC-032 contracts-2 V-C49 Portal Knowledge 09280820"
+  },
+  "request": {
+    "number": 71,
+    "contract": 684
+  },
+  "openRequest": {
+    "number": 72
+  },
+  "createdAt": "2026-09-28T08:20:36.758Z",
+  "createdBy": "Nadia Haddad and Daniel Okafor API sessions, and the created Business User's Portal session (Requests)"
+}

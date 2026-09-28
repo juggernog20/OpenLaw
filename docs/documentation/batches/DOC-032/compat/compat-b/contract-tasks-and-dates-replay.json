@@ -1,0 +1,542 @@
+{
+  "kind": "article-compatibility-replay",
+  "batch": "DOC-032",
+  "issue": 1194,
+  "set": "compat-b",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/contracts-b/walkthrough.mjs",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-b)",
+  "reviewerKind": "agent",
+  "method": "browser-walkthrough",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "appUrl": "http://127.0.0.1:43340",
+  "browser": "Playwright 1.63.0 Chromium, headless, one context per identity at 1280x1600 CSS px",
+  "providerMode": null,
+  "articles": {
+    "contract-tasks-and-dates": {
+      "path": "docs/user-guides/contract-tasks-and-dates.md",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb"
+    }
+  },
+  "selection": {
+    "articles": ["C19"],
+    "roles": ["legal_team_member", "administrator"],
+    "parts": null
+  },
+  "startedAt": "2026-09-28T07:17:12.089Z",
+  "stamp": 1790579832088,
+  "setup": [
+    {
+      "at": "2026-09-28T07:17:14.487Z",
+      "text": "Ravi Menon (Business User) signed in to the Portal with a fresh magic link from the lab Mailpit; the same Portal session serves V-C19 and V-C21."
+    }
+  ],
+  "notes": [
+    "legal_team_member: personal reminder lead times restored to null (200).",
+    "legal_team_member: Contracts list view switched from \"My commercial desk\" to Default view to read Next deadline",
+    "legal_team_member: Contracts list view switched from \"My commercial desk\" to Default view to read Next deadline",
+    "legal_team_member: Contracts list view restored to \"My commercial desk\"",
+    "Key dates section for C-114 did not render within 20 s once; a reload rendered it",
+    "administrator: personal reminder lead times restored to null (200)."
+  ],
+  "records": [
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "legal_team_member",
+      "reference": "C-95",
+      "title": "DOC-032 compat compat-b V-C19 record legal_team_member 1790579832088"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "role": "administrator",
+      "reference": "C-114",
+      "title": "DOC-032 compat compat-b V-C19 record administrator 1790579832088"
+    }
+  ],
+  "productBugs": [],
+  "observations": [],
+  "guideFailures": [],
+  "steps": [
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Before you start: an unarchived Contract with the acting role as Legal Owner, the other staff role and a Business User on the Contract team",
+      "page": null,
+      "expected": "Prerequisite record exists for this role",
+      "actual": "Setup API as legal_team_member: C-95 \"DOC-032 compat compat-b V-C19 record legal_team_member 1790579832088\" (NDA) with Legal Owner Nadia Haddad; team adds Daniel Okafor and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:14.665Z",
+      "at": "2026-09-28T07:17:14.841Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 1-3: Add task; the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel",
+      "page": "/contracts/95/tasks",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "Tasks -> Add task -> Assignee: the picker offered [\"Unassigned\",\"DODaniel Okafor\",\"NHNadia Haddad\",\"Add someone to the team…\"] (no Ravi Menon). Add someone to the team… -> Priya Raman showed \"BackPRPriya RamanThis person will join the team, gain access to this record, and be assigned this task.Team membership and assignment are saved when you save the task.Use this person\"; Use this person set Assignee to \"PRPriya Raman\". Cancel: no Task saved and Priya Raman is not on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:14.842Z",
+      "at": "2026-09-28T07:17:16.763Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 2-3: Add task with Title, Description, a staged team addition as Assignee, Due date, and an initial note with a file under Comments & attachments; check the new row",
+      "page": "/contracts/95/tasks",
+      "expected": "The Task saves with its assignee added to the team; the initial note is readable to everyone who can open the Task (no audience choice)",
+      "actual": "Add a task dialog with a typed note: Comments & attachments has no Audience group, no audience radio and no Legal Only or Working team wording (\"Comments & attachmentsAdd a noteDOC-032 initial note for the reviewer.Attach filesUp to 5 \"). Daniel Okafor, another team member, can read the initial note (comments read 200). Saved row: \"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088Due Oct 18PRPriya Raman\". Task assigned to Priya Raman, due 2026-10-18; Priya Raman joined the Contract team on save. Task details shows the initial note and doc032-compat-b-task-note-1790579832088.pdf.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:16.764Z",
+      "at": "2026-09-28T07:17:20.908Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "page": "/contracts/95/tasks",
+      "expected": "Retry note & attachments retries the pending comment only; the Task that saved is kept",
+      "actual": "With one comment POST answered 503 by the reviewer's browser route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After Retry note & attachments there is 1 Task \"DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\" with 1 comment; the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:20.909Z",
+      "at": "2026-09-28T07:17:22.059Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 4: complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count in the section header",
+      "page": "/contracts/95/tasks",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it; the header count reads like 1 of 3 done",
+      "actual": "Header count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it with a checked box (\"Reopen task: DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\"); selecting the checkbox again reopened it (\"0 of 2 done\", isDone false).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:22.059Z",
+      "at": "2026-09-28T07:17:25.701Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 5: open details from the title and from Edit task, Save an edit, Remove task on an empty Task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "page": "/contracts/95/tasks",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Title click opened Task details; Save persisted \"DOC-032 compat compat-b V-C19 empty legal_team_member 1790579832088 edited\". The row actions menu offered [\"Edit task\",\"Remove task\"]; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after its comment was deleted (setup API 200) Remove task still answered 409 and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:25.701Z",
+      "at": "2026-09-28T07:17:33.936Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "page": "/contracts/95/tasks",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Row assignee -> Add someone to the team… -> Ines Duarte: picker read \"BackIDInes DuarteThis person will join the team, gain access to this record, and be assigned this task.Add to team and assign\"; Add to team and assign made Ines Duarte the assignee and a team member. Choosing Unassigned cleared the assignee; Ines Duarte is still on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:33.937Z",
+      "at": "2026-09-28T07:17:38.100Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation: no audience choice, readable to everyone who can open the Task, separate from the record conversation",
+      "page": "/contracts/95/tasks",
+      "expected": "The composer has no Legal Only / Working team choice and states the task audience; the Task note is not in the record conversation",
+      "actual": "Task details for \"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\": Comments & attachments shows the initial note, no Audience group and no Legal Only or Working team wording; it says \"Visible to everyone who can access this task.\" The Contract's own conversation does not contain the Task note.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:38.101Z",
+      "at": "2026-09-28T07:17:40.384Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Task order: Tasks keep the order in which they were added; a new Task goes to the end; completing, editing, or reassigning does not move it; no reordering control, and dragging a row does not change the order",
+      "page": "/contracts/95/tasks",
+      "expected": "Displayed order equals added order before and after complete/edit/reassign and a drag attempt",
+      "actual": "Order with Show completed on: [\"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\"]. Add task \"DOC-032 compat compat-b V-C19 added last legal_team_member 1790579832088\" appended it at the end. Completing \"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\", then reopening it, and reassigning \"DOC-032 compat compat-b V-C19 added last legal_team_member 1790579832088\" to Nadia Haddad left the order [\"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 added last legal_team_member 1790579832088\"]. The section has 0 draggable elements and 0 move/reorder buttons; a mouse drag of the last row onto the first sent 0 reorder request and the order stayed [\"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 added last legal_team_member 1790579832088\"] (API order [\"DOC-032 compat compat-b V-C19 review notice legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 retry legal_team_member 1790579832088\",\"DOC-032 compat compat-b V-C19 added last legal_team_member 1790579832088\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:40.384Z",
+      "at": "2026-09-28T07:17:50.538Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates steps 1-5: Add date with Date, Event, Note; Global reminders and This date will remind; Additional lead time 0 to 730, at most 20, Remove; Recipients checkboxes include active Business Users on the team; select one; Add date; check the row and Key date source",
+      "page": "/contracts/95/key-dates",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 and 20 rules; Recipients list active team members including Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (30 is global; Add lead time enabled): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). With 20 additional lead times Add lead time was disabled for a 21st. Remove on the 10x-day entries left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\"; Global reminders unchanged. Recipients checkboxes: [\"Daniel Okafor\",\"Ines Duarte\",\"Nadia Haddad\",\"Priya Raman\",\"Ravi Menon\"] (includes Business User Ravi Menon). Selecting Daniel Okafor showed Use the usual audience. Saved row \"Nov 7DOC-032 compat compat-b V-C19 price review legal_team_member 1790579832088Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:50.539Z",
+      "at": "2026-09-28T07:17:55.922Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates step 6 and list order: Edit date then Cancel leaves the date unchanged; Edit date then Save changes it; Remove date removes another; Derived rows have no actions; upcoming nearest first, past most recent first",
+      "page": "/contracts/95/key-dates",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Row menu [\"Edit date\",\"Remove date\"]. Cancel kept the event; Save changed it to \"DOC-032 compat compat-b V-C19 price review legal_team_member 1790579832088 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Oct 8DOC-032 compat compat-b V-C19 near check legal_team_member 1790579832088Key date | Nov 7DOC-032 compat compat-b V-C19 price review legal_team_member 1790579832088 savedFictional price review window.Key date | Jul 25, 2027Current term expiresDerived | Sep 18DOC-032 compat compat-b V-C19 past recent legal_team_member 1790579832088Key date | Aug 19DOC-032 compat compat-b V-C19 past older legal_team_member 1790579832088Key date. 1 Derived row(s), none with an actions button. Upcoming nearest first; past dates follow, 2026-09-18 before 2026-08-19.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:55.922Z",
+      "at": "2026-09-28T07:18:03.615Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Missing recipients: a selected recipient leaves the team; the Edit date dialog says so and offers Remove unavailable recipients while another selected person remains; Use the usual audience clears the selection",
+      "page": "/contracts/95/key-dates",
+      "expected": "The dialog names the change, Remove unavailable recipients keeps only remaining people, and Use the usual audience returns to the default",
+      "actual": "Saved recipients Daniel Okafor and Ravi Menon ([\"01a0e6c7-9732-71e1-834c-8452f24236b0\",\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]). After Daniel Okafor left the team (setup API), Edit date said \"Some selected recipients have left the team and will not be reminded.Remove unavailable recipients\" and offered Remove unavailable recipients; selecting it cleared the notice and kept Ravi Menon checked; Save stored [\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]. Use the usual audience then Save left no checkbox selected and stored [].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:03.616Z",
+      "at": "2026-09-28T07:18:09.581Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Personal lead times: the Reminder lead times card under Settings -> Notifications replaces the organization default for this person; This date will remind does not show the personal list",
+      "page": "/contracts/95/key-dates",
+      "expected": "The card exists with Use the organization's default lead times; after switching it off and adding a personal lead time, the Key date dialog still shows only the organization list plus the date's own lead times",
+      "actual": "Settings -> Notifications shows the Reminder lead times card with \"Use the organization's default lead times\" (on at start). Switching it off and adding 3 saved the personal list [30,14,7,3,1,0] (\"30 days before14 days before7 days before3 days before1 day beforeOn the day\"). The Key date dialog then read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\" and \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\": neither shows the personal 3-day lead time, as the guide warns.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:09.582Z",
+      "at": "2026-09-28T07:18:12.320Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "page": "/contracts",
+      "expected": "The Next deadline cell shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "With an open Task due 2026-09-25, the C-95 Next deadline cell read \"DOC-032 compat compat-b V-C19 overdue legal_team_member 1790579832088Sep 25 (3 days overdue)\". After the Task was completed in the browser it read \"DOC-032 compat compat-b V-C19 near check legal_team_member 1790579832088Oct 8 (in 10 days)\" (the Key date on 2026-10-08; other Tasks, Key dates and the 2027-07-25 expiry are later). The reviewer re-selected the saved view \"My commercial desk\" afterwards.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:12.320Z",
+      "at": "2026-09-28T07:18:23.221Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "Check reminders and your work: Home shows assigned open Tasks and approaching Contract dates in their sections, and their links open the correct Task or Contract",
+      "page": "/contracts/95/key-dates",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections with links back",
+      "actual": "Home sections: [\"Inbox\",\"Entity obligations\",\"Approvals waiting on you\",\"Tasks assigned to you\",\"Dates approaching\",\"Your contracts\",\"Your matters\"]. Home Tasks assigned to you lists \"DOC-032 compat compat-b V-C19 mine legal_team_member 1790579832088\" (/contracts/95/tasks); its link opened /contracts/95/tasks. Dates approaching lists \"DOC-032 compat compat-b V-C19 near check legal_team_member 1790579832088DOC-032 compat compat-b V-C19 record legal_team_member 1790579832088·Key date·Contract C-95Oct 8 (in 10 days)\" -> /contracts/95/key-dates; it opened /contracts/95/key-dates. Reminder delivery timing was not exercised.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:23.222Z",
+      "at": "2026-09-28T07:18:29.464Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: an archived Contract is read-only for Tasks and Key dates; restore allows changes again",
+      "page": "/contracts/95/tasks",
+      "expected": "No Add task, enabled checkbox, Add date or row actions while archived; writes are refused; after restore Add task returns",
+      "actual": "Archived (setup API): Tasks had 0 Add task buttons, 0 row action menus and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; direct Task and Key date writes answered 409 and 409. After restore (200) Add task is back.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:29.465Z",
+      "at": "2026-09-28T07:18:32.603Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "page": null,
+      "expected": "Tasks and Key dates remain in the full app; the Business User has no Tasks or Key date section",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/95/tasks landed on /portal with no Tasks or Key dates section.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:32.604Z",
+      "at": "2026-09-28T07:18:35.728Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Before you start: an unarchived Contract with the acting role as Legal Owner, the other staff role and a Business User on the Contract team",
+      "page": null,
+      "expected": "Prerequisite record exists for this role",
+      "actual": "Setup API as administrator: C-114 \"DOC-032 compat compat-b V-C19 record administrator 1790579832088\" (NDA) with Legal Owner Daniel Okafor; team adds Nadia Haddad and Ravi Menon (Business User).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:35.729Z",
+      "at": "2026-09-28T07:18:35.928Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 1-3: Add task; the Assignee picker offers active team people and the Legal Owner, not Business Users; Add someone to the team… then Use this person, then Cancel",
+      "page": "/contracts/114/tasks",
+      "expected": "Cancel before saving creates neither the Task nor a staged team addition",
+      "actual": "Tasks -> Add task -> Assignee: the picker offered [\"Unassigned\",\"DODaniel Okafor\",\"NHNadia Haddad\",\"Add someone to the team…\"] (no Ravi Menon). Add someone to the team… -> Tom Iwu showed \"BackTITom IwuThis person will join the team, gain access to this record, and be assigned this task.Team membership and assignment are saved when you save the task.Use this person\"; Use this person set Assignee to \"TITom Iwu\". Cancel: no Task saved and Tom Iwu is not on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:35.929Z",
+      "at": "2026-09-28T07:18:37.914Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 2-3: Add task with Title, Description, a staged team addition as Assignee, Due date, and an initial note with a file under Comments & attachments; check the new row",
+      "page": "/contracts/114/tasks",
+      "expected": "The Task saves with its assignee added to the team; the initial note is readable to everyone who can open the Task (no audience choice)",
+      "actual": "Add a task dialog with a typed note: Comments & attachments has no Audience group, no audience radio and no Legal Only or Working team wording (\"Comments & attachmentsAdd a noteDOC-032 initial note for the reviewer.Attach filesUp to 5 \"). Nadia Haddad, another team member, can read the initial note (comments read 200). Saved row: \"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088Due Oct 18TITom Iwu\". Task assigned to Tom Iwu, due 2026-10-18; Tom Iwu joined the Contract team on save. Task details shows the initial note and doc032-compat-b-task-note-1790579832088.pdf.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:37.915Z",
+      "at": "2026-09-28T07:18:43.284Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Partial save: the Task saves but its initial note fails; Retry note & attachments posts the note without creating another Task",
+      "page": "/contracts/114/tasks",
+      "expected": "Retry note & attachments retries the pending comment only; the Task that saved is kept",
+      "actual": "With one comment POST answered 503 by the reviewer's browser route, the dialog said \"Task saved. Your note and attachments could not be added. Please try again.\" and offered Retry note & attachments; 1 Task existed. After Retry note & attachments there is 1 Task \"DOC-032 compat compat-b V-C19 retry administrator 1790579832088\" with 1 comment; the dialog closed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:43.285Z",
+      "at": "2026-09-28T07:18:44.479Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 4: complete a Task with its checkbox, find it with Show completed, reopen it, and check the done count in the section header",
+      "page": "/contracts/114/tasks",
+      "expected": "A completed Task leaves the list until Show completed is on; reopening restores it; the header count reads like 1 of 3 done",
+      "actual": "Header count \"0 of 2 done\" -> \"1 of 2 done\" after completion; the row left the list; Show completed showed it with a checked box (\"Reopen task: DOC-032 compat compat-b V-C19 retry administrator 1790579832088\"); selecting the checkbox again reopened it (\"0 of 2 done\", isDone false).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:44.479Z",
+      "at": "2026-09-28T07:18:49.279Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Tasks step 5: open details from the title and from Edit task, Save an edit, Remove task on an empty Task; a Task with conversation history cannot be removed, also after its comment is deleted",
+      "page": "/contracts/114/tasks",
+      "expected": "Edits persist; Remove task removes only a Task without conversation history",
+      "actual": "Title click opened Task details; Save persisted \"DOC-032 compat compat-b V-C19 empty administrator 1790579832088 edited\". The row actions menu offered [\"Edit task\",\"Remove task\"]; Edit task opened the same details. Remove task on the empty Task answered 200 and removed it. Remove task on the Task with a note answered 409 (\"Tasks20 of 2 doneShow completedThis Task has a conversation on it, so it cannot be removed.\") and kept it; after its comment was deleted (setup API 200) Remove task still answered 409 and the Task stayed.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:49.280Z",
+      "at": "2026-09-28T07:18:57.651Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Change who is responsible from the row's assignee: Add someone to the team… shows the access notice and Add to team and assign; later changing to Unassigned keeps the team membership",
+      "page": "/contracts/114/tasks",
+      "expected": "The person joins the Contract team and is assigned; clearing the assignee does not remove team membership",
+      "actual": "Row assignee -> Add someone to the team… -> Marcus Oyelaran: picker read \"BackMOMarcus OyelaranThis person will join the team, gain access to this record, and be assigned this task.Add to team and assign\"; Add to team and assign made Marcus Oyelaran the assignee and a team member. Choosing Unassigned cleared the assignee; Marcus Oyelaran is still on the team.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:57.652Z",
+      "at": "2026-09-28T07:19:01.851Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Task details conversation: no audience choice, readable to everyone who can open the Task, separate from the record conversation",
+      "page": "/contracts/114/tasks",
+      "expected": "The composer has no Legal Only / Working team choice and states the task audience; the Task note is not in the record conversation",
+      "actual": "Task details for \"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\": Comments & attachments shows the initial note, no Audience group and no Legal Only or Working team wording; it says \"Visible to everyone who can access this task.\" The Contract's own conversation does not contain the Task note.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:01.852Z",
+      "at": "2026-09-28T07:19:04.129Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Task order: Tasks keep the order in which they were added; a new Task goes to the end; completing, editing, or reassigning does not move it; no reordering control, and dragging a row does not change the order",
+      "page": "/contracts/114/tasks",
+      "expected": "Displayed order equals added order before and after complete/edit/reassign and a drag attempt",
+      "actual": "Order with Show completed on: [\"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 retry administrator 1790579832088\"]. Add task \"DOC-032 compat compat-b V-C19 added last administrator 1790579832088\" appended it at the end. Completing \"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\", then reopening it, and reassigning \"DOC-032 compat compat-b V-C19 added last administrator 1790579832088\" to Daniel Okafor left the order [\"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 retry administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 added last administrator 1790579832088\"]. The section has 0 draggable elements and 0 move/reorder buttons; a mouse drag of the last row onto the first sent 0 reorder request and the order stayed [\"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 retry administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 added last administrator 1790579832088\"] (API order [\"DOC-032 compat compat-b V-C19 review notice administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 retry administrator 1790579832088\",\"DOC-032 compat compat-b V-C19 added last administrator 1790579832088\"]).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:04.130Z",
+      "at": "2026-09-28T07:19:14.844Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates steps 1-5: Add date with Date, Event, Note; Global reminders and This date will remind; Additional lead time 0 to 730, at most 20, Remove; Recipients checkboxes include active Business Users on the team; select one; Add date; check the row and Key date source",
+      "page": "/contracts/114/key-dates",
+      "expected": "The Key date saves with source Key date; lead times follow the 0 to 730 and 20 rules; Recipients list active team members including Business Users",
+      "actual": "\"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\". 731 and -1 left Add lead time disabled; 0 enabled it. After adding 45 and 30 (30 is global; Add lead time enabled): \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\" (30 appears once). With 20 additional lead times Add lead time was disabled for a 21st. Remove on the 10x-day entries left \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\"; Global reminders unchanged. Recipients checkboxes: [\"Daniel Okafor\",\"Marcus Oyelaran\",\"Nadia Haddad\",\"Ravi Menon\",\"Tom Iwu\"] (includes Business User Ravi Menon). Selecting Nadia Haddad showed Use the usual audience. Saved row \"Nov 7DOC-032 compat compat-b V-C19 price review administrator 1790579832088Fictional price review window.Key date\" with one actions button.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:14.879Z",
+      "at": "2026-09-28T07:19:19.563Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Maintain Key dates step 6 and list order: Edit date then Cancel leaves the date unchanged; Edit date then Save changes it; Remove date removes another; Derived rows have no actions; upcoming nearest first, past most recent first",
+      "page": "/contracts/114/key-dates",
+      "expected": "Key date edits persist, Cancel changes nothing, and the combined list keeps the stated order",
+      "actual": "Row menu [\"Edit date\",\"Remove date\"]. Cancel kept the event; Save changed it to \"DOC-032 compat compat-b V-C19 price review administrator 1790579832088 saved\"; Remove date (no confirmation dialog) removed \"remove me\". Rows in order: Oct 8DOC-032 compat compat-b V-C19 near check administrator 1790579832088Key date | Nov 7DOC-032 compat compat-b V-C19 price review administrator 1790579832088 savedFictional price review window.Key date | Jul 25, 2027Current term expiresDerived | Sep 18DOC-032 compat compat-b V-C19 past recent administrator 1790579832088Key date | Aug 19DOC-032 compat compat-b V-C19 past older administrator 1790579832088Key date. 1 Derived row(s), none with an actions button. Upcoming nearest first; past dates follow, 2026-09-18 before 2026-08-19.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:19.564Z",
+      "at": "2026-09-28T07:19:27.413Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Missing recipients: a selected recipient leaves the team; the Edit date dialog says so and offers Remove unavailable recipients while another selected person remains; Use the usual audience clears the selection",
+      "page": "/contracts/114/key-dates",
+      "expected": "The dialog names the change, Remove unavailable recipients keeps only remaining people, and Use the usual audience returns to the default",
+      "actual": "Saved recipients Nadia Haddad and Ravi Menon ([\"01a0e6c7-9730-78af-95e8-da76f0eb29b4\",\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]). After Nadia Haddad left the team (setup API), Edit date said \"Some selected recipients have left the team and will not be reminded.Remove unavailable recipients\" and offered Remove unavailable recipients; selecting it cleared the notice and kept Ravi Menon checked; Save stored [\"01a0e6c7-9955-7ca2-90c7-758f13a1fe17\"]. Use the usual audience then Save left no checkbox selected and stored [].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:27.414Z",
+      "at": "2026-09-28T07:19:51.998Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Personal lead times: the Reminder lead times card under Settings -> Notifications replaces the organization default for this person; This date will remind does not show the personal list",
+      "page": "/contracts/114/key-dates",
+      "expected": "The card exists with Use the organization's default lead times; after switching it off and adding a personal lead time, the Key date dialog still shows only the organization list plus the date's own lead times",
+      "actual": "Settings -> Notifications shows the Reminder lead times card with \"Use the organization's default lead times\" (on at start). Switching it off and adding 3 saved the personal list [30,14,7,3,1,0] (\"30 days before14 days before7 days before3 days before1 day beforeOn the day\"). The Key date dialog then read \"Global reminders: 30 days before, 14 days before, 7 days before, 1 day before, On the day\" and \"This date will remind: 45 days before, 30 days before, 14 days before, 7 days before, 1 day before, On the day\": neither shows the personal 3-day lead time, as the guide warns.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:51.999Z",
+      "at": "2026-09-28T07:19:54.411Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Next deadline in the Contracts list picks the earliest unfinished Task due date, including an overdue Task, before Key dates and term dates",
+      "page": "/contracts",
+      "expected": "The Next deadline cell shows the overdue Task, then the nearest Key date after the Task is done",
+      "actual": "With an open Task due 2026-09-25, the C-114 Next deadline cell read \"DOC-032 compat compat-b V-C19 overdue administrator 1790579832088Sep 25 (3 days overdue)\". After the Task was completed in the browser it read \"DOC-032 compat compat-b V-C19 near check administrator 1790579832088Oct 8 (in 10 days)\" (the Key date on 2026-10-08; other Tasks, Key dates and the 2027-07-25 expiry are later). The reviewer made no view change.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:54.412Z",
+      "at": "2026-09-28T07:19:58.171Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "Check reminders and your work: Home shows assigned open Tasks and approaching Contract dates in their sections, and their links open the correct Task or Contract",
+      "page": "/contracts/114/key-dates",
+      "expected": "Home lists assigned open Tasks and approaching Contract dates in separate sections with links back",
+      "actual": "Home sections: [\"Inbox\",\"Entity obligations\",\"Approvals waiting on you\",\"Tasks assigned to you\",\"Dates approaching\",\"Your contracts\",\"Your matters\"]. Home Tasks assigned to you lists \"DOC-032 compat compat-b V-C19 mine administrator 1790579832088\" (/contracts/114/tasks); its link opened /contracts/114/tasks. Dates approaching showed only its first rows; View all opened Your dates, which lists \"DOC-032 compat compat-b V-C19 near check administrator 1790579832088DOC-032 compat compat-b V-C19 record administrator 1790579832088·Key date·Contract C-114Oct 8 (in 10 days)\" -> /contracts/114/key-dates; it opened /contracts/114/key-dates. Reminder delivery timing was not exercised.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:58.171Z",
+      "at": "2026-09-28T07:20:08.826Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: an archived Contract is read-only for Tasks and Key dates; restore allows changes again",
+      "page": "/contracts/114/tasks",
+      "expected": "No Add task, enabled checkbox, Add date or row actions while archived; writes are refused; after restore Add task returns",
+      "actual": "Archived (setup API): Tasks had 0 Add task buttons, 0 row action menus and 0 enabled checkboxes; Key dates had 0 Add date buttons and 0 row action buttons; direct Task and Key date writes answered 409 and 409. After restore (200) Add task is back.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:08.827Z",
+      "at": "2026-09-28T07:20:11.382Z"
+    },
+    {
+      "article": "contract-tasks-and-dates",
+      "scenario": "V-C19",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "step": "If an action is unavailable: a Business User on the Contract team cannot open the Tasks or Key dates sections",
+      "page": null,
+      "expected": "Tasks and Key dates remain in the full app; the Business User has no Tasks or Key date section",
+      "actual": "Ravi Menon (Business User, on the team) got 403 for Tasks and 403 for Key dates; opening /contracts/114/tasks landed on /portal with no Tasks or Key dates section.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:20:11.383Z",
+      "at": "2026-09-28T07:20:14.444Z"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:20:14.445Z",
+  "summary": {
+    "total": 34,
+    "pass": 34,
+    "fail": 0
+  }
+}

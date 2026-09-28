@@ -1,29 +1,40 @@
 {
   "articleId": "contract-stages",
-  "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-work",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-a)",
-  "technicalReviewer": "DOC-029 source-review author agent (contracts-a)",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-a, round 1)",
+  "contentSha256": "a186659b9221537bff7b995298386a5a88022f59a4f6be3e4b33a73690d73dae",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-a); corrections by DOC-032 source-review author agent (contracts-2)",
+  "technicalReviewer": "DOC-032 source-review author agent (contracts-2)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (contracts-2)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-16T15:40:06.333Z",
+  "verifiedAt": "2026-09-28T08:08:44.109Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/contract-stages.md",
+    "docs/documentation/batches/DOC-032/contracts-2/technical-review.json",
+    "docs/documentation/batches/DOC-032/contracts-2/api.mjs",
+    "docs/documentation/batches/DOC-032/contracts-2/fixture/signing-overlay.yml",
+    "docs/documentation/batches/DOC-032/contracts-2/fixture/standin-entry.mjs",
+    "docs/documentation/batches/DOC-032/contracts-2/fixture/up.sh",
+    "docs/documentation/batches/DOC-032/contracts-2/walkthrough-signing.json",
+    "docs/documentation/batches/DOC-032/contracts-2/walkthrough.json",
+    "docs/documentation/batches/DOC-032/contracts-2/walkthrough.mjs",
+    "docs/user-guides/contract-approvals.md",
     "CONTEXT.md",
     "messages/en-US.json",
     "apps/web/src/routes/contract-record.tsx",
-    "apps/web/src/components/stage-pipeline.tsx",
-    "apps/web/src/components/activity/activity-applet.tsx",
-    "apps/api/src/modules/contracts/routes.ts",
+    "apps/web/src/components/approvals/approvals-signing-card.tsx",
+    "apps/api/src/modules/contracts/service.ts",
     "apps/api/src/lib/soft-gate.ts",
+    "apps/api/src/modules/contract-envelopes/routes.ts",
+    "apps/api/src/lib/signing/recovery-stage.ts",
+    "apps/api/src/lib/signing/transitions.ts",
+    "apps/api/src/pipeline/executed-copy.ts",
     "apps/api/src/modules/contract-statuses/routes.ts",
-    "packages/db/migrations/0009_contract_statuses.sql",
-    "docs/documentation/batches/DOC-029/contracts-a/technical-review.json",
-    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-    "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
+    "docs/decision-records/DECISIONS-CONTRACTS.md",
+    "docs/documentation/evidence/contract-stages.json",
+    "docs/documentation/batches/DOC-032/contracts/technical-review.json"
   ],
   "scenarios": [
     {
@@ -33,15 +44,19 @@
       "method": "browser-walkthrough",
       "prerequisites": [
         "Contract Statuses covering the fixed Stages and an editable Contract.",
-        "Seeded Contract Statuses for all six Stages plus one fixture Review-Stage Status.",
-        "Contract created through the acting role's API session with Jonas Weber on its team."
+        "Shared work lab openlaw-docs-9d2b1705-work built from 4ca41822 for the Stage control, rename, Soft gate, Ended, archived and Portal checks (fixture Review-Stage Status 'DOC-032 contracts-2 V-C15 review <stamp>', archived after the run). The confirmed-send paragraph was walked on the owned lab openlaw-docs-9d2b1705-c2sign (same pinned commit and app image), whose app and worker point at the e2e signing stand-in (fixture/ in the group folder; Webhook connector saved and enabled by the Administrator's API session)."
       ],
       "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
-      "actual": "6 recorded steps passed for this role in the final run (2026-09-16T15:36:02.839Z to 2026-09-16T15:36:10.863Z). Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History: Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-029 contracts-a review 1789572933571 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-188 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad changed the status Internal review → Awaiting approval this minute Nadia Haddad changed the status Draft → Internal review this minute Nadia Haddad added Jonas Weber to the team this minute Nadia Haddad created this contract this minu\". Move backwards and skip Stages: Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active). Negative: renaming a Status does not change its Stage: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-029 contracts-a renamed by legal_team_member 1789572933571\" (a rename carrying a Stage answered 400). The Contract reads DOC-029 contracts-a renamed by legal_team_member 1789572933571 / review; the menu item reads \"DOC-029 contracts-a renamed by legal_team_member 1789572933571 Review\". Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override: Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Nadia Haddad moved this contract past approval, overriding Daniel Okafor this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad asked Daniel Okafor\". The approval for Daniel Okafor is still pending. Ended Contracts stay editable: Moved to Expired (Ended); Priority Critical saved on the Ended Contract. Negative: archived records and Business Users get no Status control; Restore brings it back: Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-188 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
+      "actual": "9 recorded browser steps passed for this role in the final runs (2026-09-28T07:57:12.243Z to 2026-09-28T08:08:28.257Z). [/contracts/:number header Stage display] Change the Status, steps 1-2 and 4: select the current Stage in the header's Stage display, choose Internal review, Awaiting approval, Out for signature and Active in turn, read the Stage beside each Status, then check the Status beside the C- reference, the Stage display and History: C-551 started at \"Draft — move contract\". The menu listed 12 Statuses with their Stages: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Partially signed Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-032 contracts-2 V-C15 review 1790582775732 Review\"]. Moves: Internal review -> Review (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 I\"); Awaiting approval -> Approval (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 A\"); Out for signature -> Signature (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 O\"); Active -> Active (header \"C-551 DOC-032 contracts-2 V-C15 legal_team_member 1790582775732 A\"). History read \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad changed the status Internal review → Awaiting approval this minute Nadia Haddad changed the status Draft → Internal review this minute Nadia Haddad made doc032-contracts-2-legal_team_member-stages.pdf the primary document Not set → doc032-contracts-2-leg\". [/contracts/:number Documents after a manual move to Active] Check what the change means: manually moving to Active does not upload an executed copy or mark a Document Version as executed; Moving to Signature does not send paper: After the moves through Out for signature to Active, C-551 holds 1 Document with 1 Version, 0 marked executed; 0 Envelopes exist, so the Signature move sent nothing. [/contracts/:number Stage display] A Status maps to one Stage; you may move backwards or skip Stages: Active -> Internal review accepted (\"Review — move contract\"), then Internal review -> Active accepted without Approval or Signature (\"Active — move contract\"); the Contract reads Active (active). [/contracts/:number Stage display after a Status rename] Negative: renaming a Status does not change that mapping: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732\" (a rename that also sent stage \"active\" answered 400 \"One or more request fields are invalid.\"). The Contract reads \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732\" / review; the Stage display reads \"Review — move contract\"; the menu item reads \"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732 Review\". [/contracts/:number Stage display > Move past approval] Change the Status, step 3 and Check what the change means: with a Pending and a Rejected approval, a move beyond Approval opens Move past approval listing them; Cancel keeps the Status; Move anyway makes the stated override, History records it, and the approvals are not answered: Move past approval read \"Move past approval 2 approvals on this contract are unresolved. Moving to Out for signature goes past sign-off. DO Daniel Okafor Pending PR Priya Raman Rejected This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\" with buttons [\"Cancel\",\"Move anyway\"]. Cancel kept \"Awaiting approval\". Move anyway saved Out for signature; History: \"Nadia Haddad moved this contract past approval, overriding Daniel Okafor and Priya Raman this minute Nadia Haddad changed the status Awaiting approval → Out for signature this\". Approvals afterwards: [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"] (not answered by the move). [/contracts/:number (Ended Status)] Ended Contracts stay editable: Moved to Expired (\"Ended — move contract\"); Priority Critical saved on the Ended Contract. [/contracts/:number (archived) and /portal/contracts/:number] If the Status does not change: Business Users and readers of archived Contracts do not get the editing control; Restore an archived Contract before the change: Lena Vogel (team member) opened the Portal record \"DOC-032 contracts-2 V-C15 legal_team_member 1790582775732\" with 0 Status controls; her direct Status write answered 403. Archived C-551 showed 0 Stage move controls; a direct write answered 409 (\"This contract is archived. Restore it before editing.\"). After Restore (200) the Stage control moved it to Active. [/contracts/:number/signatures (work lab, no Signing connector)] Check what the change means, second paragraph (context only on this lab): the Contract's Signatures tab exists; the confirmed-send move is checked on the owned stand-in lab (walkthrough-signing.json): Contract sections: [\"Overview\",\"Fields\",\"Documents\",\"Approvals 2\",\"Signatures\",\"Key dates\",\"Tasks\"]. The Signatures tab (/contracts/551/signatures) read \"Signatures No signature requests on this contract yet.\"; Send for signature buttons: 0. The confirmed-send paragraph is walked on the owned lab c2sign (walkthrough-signing.json). [/contracts/:number/signatures Send for signature] Check what the change means, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status, does not open Move past approval, and records no override; only the Stage control shows the warning: C-58 stood at \"Awaiting approval\" (approval) with [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"]. Signatures > Send for signature: Version \"Version 1 — doc032-contracts-2-V-C15-legal_team_member-send.pdf (current)\", one Signer, \"Yes, all required signatures will be in place\", Send envelope closed the dialog; Move past approval did not open within 12 s. The tab showed \"pdf Version 1 Out for signature Sep 28 Prepared by Nadia Haddad —\". The Contract is now \"Out for signature\" (signature); approvals still [\"Daniel Okafor:pending\",\"Priya Raman:rejected\"]. History: \"Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia H\", and no override entry.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-032/contracts-2/api.mjs",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/signing-overlay.yml",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/standin-entry.mjs",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/up.sh",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough-signing.json",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough.json",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough.mjs"
       ]
     },
     {
@@ -51,67 +66,36 @@
       "method": "browser-walkthrough",
       "prerequisites": [
         "Contract Statuses covering the fixed Stages and an editable Contract.",
-        "Seeded Contract Statuses for all six Stages plus one fixture Review-Stage Status.",
-        "Contract created through the acting role's API session with Jonas Weber on its team."
+        "Shared work lab openlaw-docs-9d2b1705-work built from 4ca41822 for the Stage control, rename, Soft gate, Ended, archived and Portal checks (fixture Review-Stage Status 'DOC-032 contracts-2 V-C15 review <stamp>', archived after the run). The confirmed-send paragraph was walked on the owned lab openlaw-docs-9d2b1705-c2sign (same pinned commit and app image), whose app and worker point at the e2e signing stand-in (fixture/ in the group folder; Webhook connector saved and enabled by the Administrator's API session)."
       ],
       "expected": "Status labels use their configured Stage mapping and each successful move is visible. An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage.",
-      "actual": "6 recorded steps passed for this role in the final run (2026-09-16T15:37:50.973Z to 2026-09-16T15:37:59.495Z). Change the Status through Review, Approval, Signature and Active; read the Stage beside each Status; check the pill and History: Menu items: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-029 contracts-a renamed by legal_team_member 1789572933571 Review\"]. Moves: Internal review -> Review; Awaiting approval -> Approval; Out for signature -> Signature; Active -> Active; each time the header showed the Status beside C-204 and \"<Stage> — move contract\". Moving to Signature created 0 Envelopes and Active added 0 Documents. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor changed the status Internal review → Awaiting approval this minute Daniel Okafor changed the status Draft → Internal review this minute Daniel Okafor added Jonas Weber to the team this minute Daniel Okafor created this contract thi\". Move backwards and skip Stages: Active -> Internal review accepted, then Internal review -> Active (skipping Approval and Signature) accepted; now Active (active). Negative: renaming a Status does not change its Stage: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-029 contracts-a renamed by administrator 1789572933571\" (a rename carrying a Stage answered 400). The Contract reads DOC-029 contracts-a renamed by administrator 1789572933571 / review; the menu item reads \"DOC-029 contracts-a renamed by administrator 1789572933571 Review\". Soft gate: Move past approval lists unresolved approvals; Cancel keeps the Status; Move anyway records the override: Dialog: \"Move past approval 1 approval on this contract is unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\". Cancel kept Awaiting approval. Move anyway saved Out for signature. History: \"Daniel Okafor moved this contract past approval, overriding Nadia Haddad this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor asked Nadia Haddad\". The approval for Nadia Haddad is still pending. Ended Contracts stay editable: Moved to Expired (Ended); Priority Critical saved on the Ended Contract. Negative: archived records and Business Users get no Status control; Restore brings it back: Jonas Weber (team member, Portal) saw 0 Status controls and a direct Status write answered 403. Archived C-204 showed 0 Stage move controls and a direct write answered 409. After Restore (200) the Stage control moved it to Active.",
+      "actual": "10 recorded browser steps passed for this role in the final runs (2026-09-28T08:00:35.343Z to 2026-09-28T08:08:44.109Z). [/contracts/:number header Stage display] Change the Status, steps 1-2 and 4: select the current Stage in the header's Stage display, choose Internal review, Awaiting approval, Out for signature and Active in turn, read the Stage beside each Status, then check the Status beside the C- reference, the Stage display and History: C-552 started at \"Draft — move contract\". The menu listed 12 Statuses with their Stages: [\"Draft Draft\",\"Internal review Review\",\"With counterparty Review\",\"Awaiting approval Approval\",\"Out for signature Signature\",\"Partially signed Signature\",\"Active Active\",\"Expired Ended\",\"Terminated Ended\",\"Signed, awaiting countersignature Signature\",\"Superseded Ended\",\"DOC-032 contracts-2 V-C15 renamed by legal_team_member 1790582775732 Review\"]. Moves: Internal review -> Review (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Inter\"); Awaiting approval -> Approval (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Await\"); Out for signature -> Signature (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Out f\"); Active -> Active (header \"C-552 DOC-032 contracts-2 V-C15 administrator 1790582775732 Activ\"). History read \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor changed the status Internal review → Awaiting approval this minute Daniel Okafor changed the status Draft → Internal review this minute Daniel Okafor made doc032-contracts-2-administrator-stages.pdf the primary document Not set → doc032-contracts-2-ad\". [/contracts/:number Documents after a manual move to Active] Check what the change means: manually moving to Active does not upload an executed copy or mark a Document Version as executed; Moving to Signature does not send paper: After the moves through Out for signature to Active, C-552 holds 1 Document with 1 Version, 0 marked executed; 0 Envelopes exist, so the Signature move sent nothing. [/contracts/:number Stage display] A Status maps to one Stage; you may move backwards or skip Stages: Active -> Internal review accepted (\"Review — move contract\"), then Internal review -> Active accepted without Approval or Signature (\"Active — move contract\"); the Contract reads Active (active). [/contracts/:number Stage display after a Status rename] Negative: renaming a Status does not change that mapping: Moved to the fixture Status; Daniel Okafor renamed it to \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732\" (a rename that also sent stage \"active\" answered 400 \"One or more request fields are invalid.\"). The Contract reads \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732\" / review; the Stage display reads \"Review — move contract\"; the menu item reads \"DOC-032 contracts-2 V-C15 renamed by administrator 1790582775732 Review\". [/contracts/:number Stage display > Move past approval] Change the Status, step 3 and Check what the change means: with a Pending and a Rejected approval, a move beyond Approval opens Move past approval listing them; Cancel keeps the Status; Move anyway makes the stated override, History records it, and the approvals are not answered: Move past approval read \"Move past approval 2 approvals on this contract are unresolved. Moving to Out for signature goes past sign-off. NH Nadia Haddad Pending PR Priya Raman Rejected This is allowed. It is recorded on the record's activity as an override. Cancel Move anyway\" with buttons [\"Cancel\",\"Move anyway\"]. Cancel kept \"Awaiting approval\". Move anyway saved Out for signature; History: \"Daniel Okafor moved this contract past approval, overriding Nadia Haddad and Priya Raman this minute Daniel Okafor changed the status Awaiting approval → Out for signature this\". Approvals afterwards: [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"] (not answered by the move). [/contracts/:number (Ended Status)] Ended Contracts stay editable: Moved to Expired (\"Ended — move contract\"); Priority Critical saved on the Ended Contract. [/contracts/:number (archived) and /portal/contracts/:number] If the Status does not change: Business Users and readers of archived Contracts do not get the editing control; Restore an archived Contract before the change: Lena Vogel (team member) opened the Portal record \"DOC-032 contracts-2 V-C15 administrator 1790582775732\" with 0 Status controls; her direct Status write answered 403. Archived C-552 showed 0 Stage move controls; a direct write answered 409 (\"This contract is archived. Restore it before editing.\"). After Restore (200) the Stage control moved it to Active. [/contracts/:number/signatures (work lab, no Signing connector)] Check what the change means, second paragraph (context only on this lab): the Contract's Signatures tab exists; the confirmed-send move is checked on the owned stand-in lab (walkthrough-signing.json): Contract sections: [\"Overview\",\"Fields\",\"Documents\",\"Approvals 2\",\"Signatures\",\"Key dates\",\"Tasks\"]. The Signatures tab (/contracts/552/signatures) read \"Signatures No signature requests on this contract yet.\"; Send for signature buttons: 0. The confirmed-send paragraph is walked on the owned lab c2sign (walkthrough-signing.json). [/contracts/:number/signatures Send for signature] Check what the change means, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status, does not open Move past approval, and records no override; only the Stage control shows the warning: C-62 stood at \"Awaiting approval\" (approval) with [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"]. Signatures > Send for signature: Version \"Version 1 — doc032-contracts-2-V-C15-administrator-send.pdf (current)\", one Signer, \"Yes, all required signatures will be in place\", Send envelope closed the dialog; Move past approval did not open within 12 s. The tab showed \"pdf Version 1 Out for signature Sep 28 Prepared by Daniel Okafor —\". The Contract is now \"Out for signature\" (signature); approvals still [\"Nadia Haddad:pending\",\"Priya Raman:rejected\"]. History: \"Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel\", and no override entry. [/contracts/:number/signatures Send for signature from Active] Author limitation check: a direct send moves the Contract to Signature from any Stage, including Active: C-66 at Active; after a confirmed send it reads \"Out for signature\" (signature); Move past approval opened: false.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"
+        "docs/documentation/batches/DOC-032/contracts-2/api.mjs",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/signing-overlay.yml",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/standin-entry.mjs",
+        "docs/documentation/batches/DOC-032/contracts-2/fixture/up.sh",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough-signing.json",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough.json",
+        "docs/documentation/batches/DOC-032/contracts-2/walkthrough.mjs"
       ]
     }
   ],
   "limitations": [
-    "Independent agent walkthrough by an agent that did not write the guide; not a human user study and not the feature owner's approval.",
-    "Run on the shared work lab (openlaw-docs-41255c61-work), which other DOC-029 groups used at the same time. Only records named DOC-029 contracts-a were created; the fixture Contract type, Fields, Contract Status and Approver group were archived after the run.",
-    "Setup API calls created some prerequisites and API readbacks confirmed saved values and refusals; the article steps themselves were performed in the browser. See the observations in walkthrough-r1.json.",
-    "Contributor is a former account type (DD-023). Business User refusals used Jonas Weber through a new Portal magic link.",
-    "Browser contexts were 1280x900 CSS px; the Status menu had 11 options and all were reachable. Issue #768 (crowded menu) is not claimed fixed.",
-    "A competing change that requires a fresh review was not exercised.",
-    "The Status rename was made by Daniel Okafor through the Contract Status API as fixture setup, not through the Settings screen."
+    "Independent agent walkthrough by an agent that did not write or source-review the guide; not a human user study and not the feature owner's approval.",
+    "API sessions created prerequisites, played second actors' writes and read back saved state and refusals. Every guide step ran in the browser as the named role.",
+    "Other agents on this host create and remove lab networks. Chromium then aborted in-flight requests with net::ERR_NETWORK_CHANGED and the app showed Something went wrong.; the scripts reload up to twice and log each retry under retries in the logs. 36 direct reloads of the affected Signatures pages afterwards showed no error page, so this is recorded as environment noise, not a product bug.",
+    "Stage control, rename, Soft gate, Ended, archived and Portal checks ran on the shared work lab. The confirmed-send paragraph ran on the owned lab openlaw-docs-9d2b1705-c2sign (same pinned commit and app image) whose app and worker pointed at the e2e signing stand-in (DOCUSIGN_BASE_URL + SIGNING_STANDIN, fixture/ in the group folder). The stand-in is not a provider; this is not live-provider evidence. The lab was destroyed after the run.",
+    "Confirms the author's limitation for the direct send: a Contract at Active moved to Out for signature after a confirmed send, with no Move past approval. The prepared-send condition (Status unchanged since preparation) was checked by source only, because the lab ran with signing preparation off.",
+    "Renaming a Status was done by the Administrator's API session as the second actor; a rename that also sent a Stage was refused 400.",
+    "Product behavior recorded, as the author and the contracts seat did: a confirmed send moves the Contract to a Signature Status with no Soft gate and no override entry. The guide now states this."
   ],
   "previousEvidence": {
-    "appCommit": "a28331f779da3c8b9e9172dee3cc5b58c7170c7b",
-    "contentSha256": "a01d92cc6adf974978b91b9ff543402472ed5bd4300755e5a78a02370465854b",
-    "verifiedAt": "2026-09-07T13:32:50.763Z"
-  },
-  "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
     "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
-    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d",
-    "reviewer": "DOC-030 compatibility reviewer (compat)",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-25T11:14:39.367Z",
-    "summary": "From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of contract-record.tsx, contracts/service.ts, contracts/record.ts, contracts/routes.ts and contract-statuses/routes.ts. stage-pipeline.tsx, soft-gate.ts and activity-applet.tsx did not change. The status move now sits in contracts/service.ts and still applies the Soft gate with overrideSoftGate, so no statement in the guide changed. I replayed the DOC-029 V-C15 script for Legal Team Member and Administrator on lab compatcmp built from 067c1646; all 12 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (contracts-a)) found the article compatible: Inspected the 3fa407e3..57e77e38 app diff; the Stage pipeline, Soft gate and History are unchanged, and only the Settings add row for a Status changed. Replayed the round 1 V-C15 walkthrough for Legal Team Member and Administrator on work2 built from 57e77e38; all 12 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-029/compat-r2/contracts-a.json",
-        "sha256": "d3f55e90c80b20890b67d07c3d321fa5dc3376df94341715e4f76e570b9cc953"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      },
-      {
-        "path": "batches/DOC-030/compat/compat.json",
-        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
-      },
-      {
-        "path": "batches/DOC-030/compat/contract-stages-replay.mjs",
-        "sha256": "051ccc9a4bbbac714845e7072d78fc5899914485fca3cfb01dd13f146ddc1723"
-      },
-      {
-        "path": "batches/DOC-030/compat/contract-stages-replay.json",
-        "sha256": "70ce2e084f6a660a9215687e94fbaaa9fb4c8d03507bd469412fecd30efce16d"
-      },
-      {
-        "path": "batches/DOC-030/compat/logs/contract-stages-compatcmp.log",
-        "sha256": "d4771a52ca5bf038bb8efff92e70c91d24d2180656e5e7732555ab2a926e3cdb"
-      }
-    ]
-  }
+    "verifiedAt": "2026-09-16T15:40:06.333Z"
+  },
+  "compatibilityReview": null,
+  "copyOnlyReview": null
 }

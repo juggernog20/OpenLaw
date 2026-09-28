@@ -1,0 +1,91 @@
+{
+  "section": "frInvites",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "firstrun",
+  "labProject": "openlaw-docs-9d2b1705-firstrun",
+  "appUrl": "http://127.0.0.1:43342",
+  "mailUrl": "http://127.0.0.1:48442",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "app-saved relay; unset environment (overlay-mail-stored.json)",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:46:58.502Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/settings/general",
+      "action": "Setup checklist: while a step is unfinished, Settings, Organization, General lists only the unfinished steps",
+      "expected": "Rows for the unfinished steps only; each row except Review seeded types links to Settings; Review seeded types has Mark as reviewed",
+      "startedAt": "2026-09-28T07:46:58.649Z",
+      "finishedAt": "2026-09-28T07:46:59.624Z",
+      "actual": "With Organization, Business-user portal and Email done, the Setup checklist rows were [{\"label\":\"Invite your team\",\"href\":\"/settings/users\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false},{\"label\":\"Review seeded types\",\"href\":null,\"markAsReviewed\":true}].",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Signing out clears the remaining drafts",
+      "expected": "An unsent invitation draft is gone after sign-out and sign-in; the wizard opens at Welcome",
+      "startedAt": "2026-09-28T07:46:59.624Z",
+      "finishedAt": "2026-09-28T07:47:01.944Z",
+      "actual": "The unsent Name \"Draft Person DOC-032\" survived a reload. After Sign out from the user menu and a new sign-in (password and authenticator code), /welcome opened /welcome (Welcome to OpenLaw) and Invite your team showed Name \"\".",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 7: in Invite your team enter Name and Email, select Legal team member, select Send invite",
+      "expected": "Name, Email, Legal team member, Administrator, Send invite; the invitation email header shows the organization name and logo",
+      "startedAt": "2026-09-28T07:47:01.945Z",
+      "finishedAt": "2026-09-28T07:47:02.188Z",
+      "actual": "Role choices [\"Legal team member\",\"Administrator\"]. Send invite showed \"1 invite sent:\". Mailpit received \"Set your OpenLaw password\" with header \"Harbor Legal DOC-032\" and the inline image org-logo@openlaw.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Step 7: invite an Administrator",
+      "expected": "The invitation is sent with the Administrator role",
+      "startedAt": "2026-09-28T07:47:02.189Z",
+      "finishedAt": "2026-09-28T07:47:02.411Z",
+      "actual": "Send invite showed \"2 invites sent:\"; Mailpit received [\"Set your OpenLaw password\"]; the Users API role for Sam Ortiz is administrator.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/welcome",
+      "action": "Set up later on Invite your team does not send a typed invitation",
+      "expected": "E-signature opens (Step 6 of 8); no mail for the unsent address",
+      "startedAt": "2026-09-28T07:47:02.411Z",
+      "finishedAt": "2026-09-28T07:47:04.523Z",
+      "actual": "Step 6 of 8: E-signature (DocuSign Integration). Mailpit had no message for unsent.person@harbor.example.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:47:04.532Z"
+}

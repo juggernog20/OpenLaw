@@ -1,0 +1,378 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-c",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+  "group": "admin-config",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "articles": [
+    {
+      "articleId": "types-statuses-fields",
+      "articlePath": "docs/user-guides/types-statuses-fields.md",
+      "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887"
+    },
+    {
+      "articleId": "request-forms",
+      "articlePath": "docs/user-guides/request-forms.md",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "articlePath": "docs/user-guides/reminders-and-audit.md",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e"
+    },
+    {
+      "articleId": "auto-doc-template",
+      "articlePath": "docs/user-guides/auto-doc-template.md",
+      "contentSha256": "4eef3f447d51058e092ada65c50670ae47e483c7a6552994e54423c6a852d496"
+    }
+  ],
+  "scenarios": {
+    "V-C38": "types-statuses-fields",
+    "V-C40": "request-forms",
+    "V-C41": "reminders-and-audit",
+    "V-C56": "auto-doc-template"
+  },
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "lab": {
+    "name": "work",
+    "project": "openlaw-docs-9d2b1705-work",
+    "appUrl": "http://127.0.0.1:43340",
+    "mailUrl": "http://127.0.0.1:48440",
+    "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T06:50:34.922Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T06:50:48.736Z"
+    }
+  },
+  "runs": [
+    {
+      "sections": ["forms"],
+      "lab": "work",
+      "project": "openlaw-docs-9d2b1705-work",
+      "appUrl": "http://127.0.0.1:43340",
+      "startedAt": "2026-09-28T07:17:55.726Z",
+      "stamp": "0928071755"
+    }
+  ],
+  "steps": [
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "fixture-setup",
+      "page": "/",
+      "action": "Before you start (fixture): live destination Contract and Matter types whose Forms hold the Rows to collect",
+      "expected": "Two destination types exist with intake Rows; a third Contract type exists for the archived-destination check.",
+      "startedAt": "2026-09-28T07:17:56.664Z",
+      "at": "2026-09-28T07:17:57.050Z",
+      "actual": "API fixtures as the Administrator: Contract types \"DOC-032 compat compat-c V-C40 MSA 0928071755\" and \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\"; Matter type \"DOC-032 compat compat-c V-C40 Advisory 0928071755\"; Contract Number Field \"DOC-032 compat compat-c V-C40 Deal value 0928071755\"; Matter Single select Field \"DOC-032 compat compat-c V-C40 Advice area 0928071755\" (Employment, Privacy, Tax). \"DOC-032 compat compat-c V-C40 MSA 0928071755\"'s Form: \"DOC-032 compat compat-c V-C40 Deal value 0928071755\" after Description (On intake form, Required for creation); Term type, Value and Counterparties On intake form; a Branch \"Term type is Fixed\" at the end holding Expiry date (On intake form, Required for creation). \"DOC-032 compat compat-c V-C40 Advisory 0928071755\"'s Form: \"DOC-032 compat compat-c V-C40 Advice area 0928071755\" On intake form and Required for creation.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0e6e0-ac0f-7256-af63-b5897ee1cc47",
+      "action": "Create the request type, steps 1-4: profile menu > Settings > Intake > Request types; Add request type (Cancel discards); Save; Edit; Description saves on leaving the field; a new type starts with a Matter destination",
+      "expected": "Cancel leaves no row; Save adds the row; the editor opens with Default destination Matter and Default matter type Default; the Description survives reload.",
+      "startedAt": "2026-09-28T07:17:57.051Z",
+      "at": "2026-09-28T07:18:01.418Z",
+      "actual": "Profile menu > Settings > Intake > Request types listed a Destination column (\"Destination\"). Add request type + Cancel left no row; Save added \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\" (row \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755 Destination: Matter · Default\"), \"DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755\" and \"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755\". Edit opened the editor with Default destination \"Matter\" and Default matter type \"Default\". The Description saved on Tab and read \"Ask Legal to review a supplier contract. Fictional DOC-032 compat compat-c walkthrough form.\" after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types",
+      "action": "Set the default destination, steps 1-3: Contract; Default contract type lists Default first; pick the destination type; changing the module clears the type; the Intake form card follows",
+      "expected": "Default contract type starts on Default, lists it first, and saves the chosen type; Matter then Contract resets it to Default; the card shows the destination Form; the list's Destination column reads Contract · type.",
+      "startedAt": "2026-09-28T07:18:01.429Z",
+      "at": "2026-09-28T07:18:07.461Z",
+      "actual": "Default destination Contract showed Default contract type \"Default\" with \"Default\" as the first option; choosing \"DOC-032 compat compat-c V-C40 MSA 0928071755\" refreshed the Intake form card to its Rows. Switching to Matter reset the type to \"Default\"; back to Contract it read \"Default\". After choosing \"DOC-032 compat compat-c V-C40 MSA 0928071755\" again and reloading it read \"DOC-032 compat compat-c V-C40 MSA 0928071755\". The list row reads \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755 Ask Legal to review a supplier contract. Fictional DOC-032 compat compat-c walkthrough form. Destination: Contract · DOC-032 compat compat-c V-C40 MSA 0928071755\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0e6e0-ac0f-7256-af63-b5897ee1cc47",
+      "action": "Publish an estimated turnaround: 0 to 36,500 or blank; save on leaving the control or Enter",
+      "expected": "36501 is refused with the range message; 5 saves and survives reload.",
+      "startedAt": "2026-09-28T07:18:07.462Z",
+      "at": "2026-09-28T07:18:10.543Z",
+      "actual": "36501 + Enter showed \"Enter a whole number from 0 to 36,500 business days, or leave it blank.\". 5 + Tab saved; after reload the control reads \"5\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0e6e0-ac0f-7256-af63-b5897ee1cc47",
+      "action": "Read and preview the Intake form: the read-only card lists Title, Department, Urgency, the Intake Rows with Branch headers, Attachments last, each Required or Optional; Preview intake form shows the name and description, follows the Branch, validates on Submit request and sends nothing; Escape returns to the eye button",
+      "expected": "The card order and markers match the Form; the preview shows the Request type name and description; Expiry date shows only for Fixed; Submit request refuses missing answers; Escape closes and focus returns to the eye button.",
+      "startedAt": "2026-09-28T07:18:10.544Z",
+      "at": "2026-09-28T07:18:12.043Z",
+      "actual": "The Intake form card has no inputs (0) and lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-032 compat compat-c V-C40 Deal value 0928071755 Number Required\",\"Counterparties Multi select Optional\",\"Term type Single select Optional\",\"Value Money Optional\",\"Show when all of: Term type is Fixed Expiry date Date Required\",\"Expiry date Date Required\",\"Attachments Files Optional\"]; its text includes the Branch header (Show when … Term type is Fixed present). The eye button opened a preview naming \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\" with its description. Expiry date showed for Fixed and not for Evergreen. Submit request showed \"Title is required. | Department is required. | DOC-032 compat compat-c V-C40 Deal value 0928071755 is required.\" and sent nothing. Escape closed it and focus returned to \"Preview intake form\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/types/01a0e6e0-a34f-796b-ba1c-918e01a80cee/form",
+      "action": "Choose the Intake Rows, step 1: Edit form in the card header opens the destination type's Form tab",
+      "expected": "Edit form opens the Form tab of the chosen Contract type.",
+      "startedAt": "2026-09-28T07:18:12.043Z",
+      "at": "2026-09-28T07:18:12.270Z",
+      "actual": "Edit form opened /settings/contracts/types/01a0e6e0-a34f-796b-ba1c-918e01a80cee/form (Form header \"Form DOC-032 compat compat-c V-C40 MSA 0928071755 Attach Field Create Field Add condition Preview intake form\"). Built-in Contract Rows: Counterparties: present, Effective date: present, Expiry date: present, Term type: present, Value: present; Status Row absent.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types/01a0e6e0-acb1-775e-a5d0-c78cc01fb138",
+      "action": "Second request type for a Matter destination; a module-only Contract destination reads the Default type's Form",
+      "expected": "The Matter request type saves its destination; with Default type the card reads the Default Contract type's Form.",
+      "startedAt": "2026-09-28T07:18:12.270Z",
+      "at": "2026-09-28T07:18:18.602Z",
+      "actual": "\"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755\" with Contract and type Default showed a card for the Default type (\"Intake form Edit form Default Title Text Required Department Single select Required Urgency Single select Required Descr\"…) whose Edit form link opens the Default Contract type (\"Default\"); it was then pointed at \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\". \"DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755\" saved Default destination Matter with \"DOC-032 compat compat-c V-C40 Advisory 0928071755\"; its card lists [\"Title Text Required\",\"Department Single select Required\",\"Urgency Single select Required\",\"Description Long text Optional\",\"DOC-032 compat compat-c V-C40 Advice area 0928071755 Single select Required\",\"Attachments Files Optional\"].",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/links",
+      "action": "Offer guidance before submission, steps 1-4: Deflection links > Add link; External address needs http(s); Knowledge item; Label; Placement; Edit; reorder",
+      "expected": "A bare address is refused; the external and Knowledge links save with their placements; Edit and keyboard reorder persist.",
+      "startedAt": "2026-09-28T07:18:18.602Z",
+      "at": "2026-09-28T07:18:23.916Z",
+      "actual": "A bare address was refused with \"Enter a full web address that starts with http:// or https://.\"; with https:// the External address link \"DOC-032 compat compat-c V-C40 Supplier checklist 0928071755\" saved with Placement \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\". Knowledge item offered 11 live items; \"How to ask legal for help\" saved as \"DOC-032 compat compat-c V-C40 How to ask Legal 0928071755\" for \"DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755\" after Edit changed its Label. ArrowUp moved it from 8 to 7, kept after reload.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/new/doc_032_compat_compat_c_v_c40_docs_contract_review_0928071755",
+      "action": "Negative check (V-C38, V-C40 editors): a Business User cannot open configuration; Check the result on the Portal: cards, Before you submit, Fields, order and required markers; submit with a required answer missing, then valid answers",
+      "expected": "Settings configuration URLs send the Business User away; the card shows the description and Estimated turnaround: 5 business days; the form shows the external guidance and the Rows in Form order with required markers; a missing required answer is refused; valid answers create a Request.",
+      "startedAt": "2026-09-28T07:18:23.958Z",
+      "at": "2026-09-28T07:31:31.004Z",
+      "actual": "Jonas Weber signed in with a fresh magic link from the lab Mailpit. /settings/contracts/types -> /portal; /settings/intake/request-types -> /portal. Portal card: \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755 Ask Legal to review a supplier contract. Fictional DOC-032 compat compat-c walkthrough form. Estimated turnaround: 5 business days\". \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\" shows Before you submit with \"DOC-032 compat compat-c V-C40 Supplier checklist 0928071755\" -> https://example.com/doc-030-supplier-checklist; labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-032 compat compat-c V-C40 Deal value 0928071755* (required)\",\"Counterparties\",\"Term type\",\"Value\",\"Currency\",\"Frequency\",\"Attachments\"]. Submit with only a Title showed \"DOC-032 compat compat-c V-C40 Deal value 0928071755 is required. | Fill DOC-032 compat compat-c V-C40 Deal value 0928071755 first — the form requires it.\" and stayed on the form. Term type offered [\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"]; with fixed the form showed [\"Expiry date* (required)\"], with evergreen no Expiry date. With Department \"Engineering\", \"DOC-032 compat compat-c V-C40 Deal value 0928071755\" 125000 and Term type evergreen, Submit showed \"Thanks! Your request has been submitted to legal.\" (R-62). Screenshot v-c40-portal-contract-form.png.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde",
+      "action": "Check the result on the Portal for the Matter form: guidance for that form only; submit valid answers",
+      "expected": "The Matter form shows the Knowledge link and not the external one; valid answers create a Request; the Knowledge link opens.",
+      "startedAt": "2026-09-28T07:31:31.005Z",
+      "at": "2026-09-28T07:31:33.232Z",
+      "actual": "\"DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755\" shows Before you submit with \"DOC-032 compat compat-c V-C40 How to ask Legal 0928071755\" only (external link count 0); labels [\"Title* (required)\",\"Department* (required)\",\"Urgency* (required)\",\"Description\",\"DOC-032 compat compat-c V-C40 Advice area 0928071755* (required)\",\"Attachments\"]. Submit with \"DOC-032 compat compat-c V-C40 Advice area 0928071755\" Privacy created R-63. The Knowledge link opened /portal/knowledge/01a0e6c7-af7d-7abe-9129-e2602ba51bde with heading \"How to ask legal for help\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/204/fields",
+      "action": "Check the result: convert the Contract form Request to a Contract and check the intended answers on the new record",
+      "expected": "The Convert dialog proposes the configured Contract type; the new Contract holds Deal value and Term type from the Request.",
+      "startedAt": "2026-09-28T07:31:33.233Z",
+      "at": "2026-09-28T07:31:35.911Z",
+      "actual": "Inbox R-62 > Triage > Convert to contract opened a dialog with Contract type \"DOC-032 compat compat-c V-C40 MSA 0928071755\" (\"Convert R-62 to a contract DOC-032 compat compat-c V-C40 Docs Contract review 0928071755 · submitted by Jonas Weber Title* Contract type* Type… NDA MSA SOW Sale\"…). After Convert the Request page read Status \"Status Converted C-204 Converted by Daniel Okafor on Sep 28\" with a link \"C-204\". C-204 is of type \"DOC-032 compat compat-c V-C40 MSA 0928071755\"; it holds \"DOC-032 compat compat-c V-C40 Deal value 0928071755\" 125000 (Fields tab shows \"125,000\") and Term type evergreen.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/inbox/63",
+      "action": "Check the result: convert the Matter form Request to a Matter and check the answer",
+      "expected": "The Convert dialog proposes the configured Matter type; the new Matter holds the Field answer.",
+      "startedAt": "2026-09-28T07:31:35.912Z",
+      "at": "2026-09-28T07:31:38.167Z",
+      "actual": "Inbox R-63 > Triage > Convert to matter proposed Matter type \"DOC-032 compat compat-c V-C40 Advisory 0928071755\". After Convert the Request page read Status \"Status Converted M-75 Converted by Daniel Okafor on Sep 28\"; M-75 (\"DOC-032 compat compat-c V-C40 Advisory 0928071755\") is holding \"DOC-032 compat compat-c V-C40 Advice area 0928071755\" = \"Privacy\".",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/new/doc_032_compat_compat_c_v_c40_docs_retired_destination_form_0928071755",
+      "action": "Negative check: archived destination type. Submit on the form while its type is live; archive the type; the editor shows it unavailable; the Portal still lists the form and opening it shows an error instead of the questions (suspected product bug)",
+      "expected": "The guide says the Business User sees an error instead of the questions and that OpenLaw does not send the form to another type or module.",
+      "startedAt": "2026-09-28T07:31:38.167Z",
+      "at": "2026-09-28T07:31:41.641Z",
+      "actual": "R-64 was submitted on \"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755\" while \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\" was live. The Administrator archived \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\" (no Contracts used it). The Request types list row then read \"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755 Fictional form whose destination type will be archived. Destination: Contract · DOC-032 compat compat-c V-C40 Retired destination 0928071755\"; the editor's Default contract type read \"DOC-032 compat compat-c V-C40 Retired destination 0928071755 (unavailable)\"; the Intake form card read \"Intake form Edit form DOC-032 compat compat-c V-C40 Retired destination 0928071755 Title Text Required Department Single select Required Urgency Single select R\". On the Portal the card is still listed (1); opening it showed \"Something went wrong. The page could not load. Reload to try again. Reload Back to Home\" with 0 Submit request buttons. The API detail read answers 400 \"This Request type needs a destination type.\". The guide's \"If it does not work\" describes this as an error instead of the questions; the product bug is recorded.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/inbox/64",
+      "action": "Negative check: conversion with an archived destination type does not switch modules",
+      "expected": "The Convert dialog for the Request stays on Contract (conversion reads the archived type as no type) and does not route to Matter.",
+      "startedAt": "2026-09-28T07:31:41.642Z",
+      "at": "2026-09-28T07:31:42.058Z",
+      "actual": "Inbox R-64 reads \"Converts to Contract\". Triage offered [\"Convert to contract\",\"Convert to matter\",\"Resolve request without converting\"]. Convert to contract opened \"Convert R-64 to a contract\" with Contract type \"Type…\"; the archived \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\" is not offered (20 options). The dialog stays in the Contract module. It was closed without converting.",
+      "result": "pass"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/intake/request-types",
+      "action": "Archive a request type: the dialog shows how many Requests use it; choose a live replacement; the Portal drops the form; Show archived > Restore offers it again",
+      "expected": "The count matches; after archive the Requests move and the Portal no longer lists the form; Restore brings it back.",
+      "startedAt": "2026-09-28T07:31:42.058Z",
+      "at": "2026-09-28T07:31:42.688Z",
+      "actual": "Archive \"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755\" read \"Archive DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755 DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755 is used by 1 request. Pick a replacement type — that request moves to it when the type is archived. Reassign 1 request to No reassignment NDA request Contract review Legal question Vendor onboarding Employment question DOC-032 compat compat-a Evaluation review 1790579782116 DOC-032 compat compat-a inbox Supplier contract request DOC-032 compat compat-a inbox Advisory matter request DOC-032 compat compat-c V-C40 Docs Contract review 0928071755 DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755 DOC-032 compat compat-b matter request 20260928071853 The change applies immediately and is recorded in the audit log. Cancel Archive type\"; with \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\" chosen, Archive type archived it. The Portal then listed it 0 times; R-64 reads request type \"DOC-032 compat compat-c V-C40 Docs Contract review 0928071755\". Show archived > Restore made it live again; it was archived again afterwards (no Requests left) so other walkers do not meet its error page.",
+      "result": "pass"
+    }
+  ],
+  "records": [
+    {
+      "section": "forms",
+      "kind": "contract type",
+      "name": "DOC-032 compat compat-c V-C40 MSA 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "contract type",
+      "name": "DOC-032 compat compat-c V-C40 Retired destination 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "matter type",
+      "name": "DOC-032 compat compat-c V-C40 Advisory 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "contract field",
+      "name": "DOC-032 compat compat-c V-C40 Deal value 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "matter field",
+      "name": "DOC-032 compat compat-c V-C40 Advice area 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-032 compat compat-c V-C40 Docs Contract review 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-032 compat compat-c V-C40 Docs Matter advice 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "request type",
+      "name": "DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "deflection link",
+      "name": "DOC-032 compat compat-c V-C40 Supplier checklist 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "deflection link",
+      "name": "DOC-032 compat compat-c V-C40 How to ask Legal 0928071755"
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-032 compat compat-c V-C40 Supplier contract request 0928071755",
+      "number": 62
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-032 compat compat-c V-C40 Advice request 0928071755",
+      "number": 63
+    },
+    {
+      "section": "forms",
+      "kind": "contract",
+      "name": "converted",
+      "number": "204"
+    },
+    {
+      "section": "forms",
+      "kind": "matter",
+      "name": "converted",
+      "number": "75"
+    },
+    {
+      "section": "forms",
+      "kind": "request",
+      "name": "DOC-032 compat compat-c V-C40 Retired destination request 0928071755",
+      "number": 64
+    }
+  ],
+  "productBugs": [
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "title": "The Portal form shows Term type choices as machine values",
+      "reproduction": "Turn on On intake form for the built-in Term type Row on a Contract type's Form, point a Request type at it, and open that form on the Portal as a Business User. The Term type choices read [\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"].",
+      "expected": "Not set, Fixed, Auto-renew, Evergreen (the labels the Form builder preview and the Create contract dialog show)",
+      "observed": "[\"Not set\",\"fixed\",\"auto_renew\",\"evergreen\"]",
+      "source": "apps/web/src/routes/portal-request-form.tsx built-in Term type Row options"
+    },
+    {
+      "section": "forms",
+      "scenario": "V-C40",
+      "title": "The Portal lists a Request type whose destination type is archived, and opening it shows the generic error page",
+      "reproduction": "As the Administrator, point Request type \"DOC-032 compat compat-c V-C40 Docs retired destination form 0928071755\" at Contract type \"DOC-032 compat compat-c V-C40 Retired destination 0928071755\", then archive that Contract type (Settings > Contracts > Types > Archive). As Jonas Weber (Business User) open the Portal: the card is still listed. Select it.",
+      "expected": "Either the Portal stops listing the form, or it opens the Default type's Form (INT-002 archived target type addendum: an archived target type reads as no type), or it names the problem.",
+      "observed": "The card stays listed (1). Opening it shows \"Something went wrong. The page could not load. Reload to try again. Reload Back to Home\" with no form questions. GET /api/v1/portal/request-types/{slug} answers 400 \"This Request type needs a destination type.\".",
+      "source": "apps/api/src/lib/intake-form.ts readIntakeTree (400 This Request type needs a destination type.); apps/web/src/routes/portal-request-form.tsx loader throws for any non-404 failure; apps/api/src/modules/portal/routes.ts lists the type",
+      "confirmsAuthorSuspicion": true
+    }
+  ],
+  "guideFailures": [],
+  "finishedAt": "2026-09-28T07:31:42.688Z",
+  "images": {
+    "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+  },
+  "summary": {
+    "total": 15,
+    "pass": 15,
+    "fail": 0
+  }
+}

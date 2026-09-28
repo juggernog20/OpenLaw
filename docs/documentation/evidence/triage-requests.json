@@ -94,5 +94,64 @@
     "verifiedAt": "2026-09-16T15:33:24.989Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:08:04.677Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/mcp/prompts.ts, packages/shared/src/index.ts and messages/en-US.json. No Inbox or triage source changed: inbox.tsx, inbox-request.tsx, inbox columns and filters, request-assignment.tsx, resolve-dialog.tsx, comment code, roles.ts, requests.ts, requester-status.ts, request-owner.tsx, portal-request.tsx and the requests module have no diff. apps/api/src/mcp/prompts.ts adds the triage_inbox MCP prompt, a Client feature that leaves decisions to the Inbox. shared/src/index.ts only adds exports. The replay passed its final 39 steps for Administrator and Legal Team Member and the Business User refusal. Replay log: batches/DOC-032/compat/compat-a/triage-requests-replay.json.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay.mjs",
+        "sha256": "b4054dde16a780db41436f32294aee354da4c742b92c087376c068885e8c0d9a"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/api.mjs",
+        "sha256": "39121b2b288fcb58fb9f42d4ff5e1088051d0ba9327835a846d26f5744c8f562"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures-ai.json",
+        "sha256": "c48fd1ea70728690f84ca88bc28df1826ed3d1aacf573bda9e87220eba6098d7"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/fixtures.json",
+        "sha256": "1db4cb1a92f71df762af3c56b942af6c8441285896d795bfd18ba28c9353505c"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/provider-standin.mjs",
+        "sha256": "b70eea1fd3249af8b2fbd568bb682e5da02112f2e09760fcf852b96d331cbfba"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests-ai.json",
+        "sha256": "27cd55f5b569384b3b4f2b0e6467f4223d6bf44b66fd4fbe058dcfa70b9b0e24"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/requests.json",
+        "sha256": "fe7d0086d8e1dbedb35e01026aeb6c3ce1a54f6f8e8a5f85bc6b32dcb497ddf8"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-ai.mjs",
+        "sha256": "1f66d3a0c6996f60073ea077ac704d12854037f3d57a5a1f4f7527bf8c3fc071"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-config.mjs",
+        "sha256": "930df585118070e7c1b4968dcadd774d43d6da736c5e76b2c899b9804c188c50"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/inbox-replay/setup-requests.mjs",
+        "sha256": "b298b0edc4289f748ec9455fa5caf10e04ce2cb62c6459caf1ea4b610ab9132a"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/triage-requests-replay.json",
+        "sha256": "71b4bc1214b0289a93b14a9d64a01e62d300041004208e539b655fbdcd6c62ca"
+      }
+    ]
+  }
 }

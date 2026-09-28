@@ -1,0 +1,1009 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "compat-c",
+  "reviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "independence": "The reviewer wrote none of these nine guides, none of their source reviews, and none of the DOC-030 walkthrough or replay scripts it replayed. It changed no guide text. It adapted the DOC-030 scripts only as each script header and this record state.",
+  "reviewedAt": "2026-09-28T07:47:04.000Z",
+  "fromAppCommit": {
+    "document-folders": "067c1646829df85e62b809ee9157921e867c84e7",
+    "document-repository": "067c1646829df85e62b809ee9157921e867c84e7",
+    "document-previews": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "compare-versions": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "publish-knowledge": "067c1646829df85e62b809ee9157921e867c84e7",
+    "entities-and-counterparties": "067c1646829df85e62b809ee9157921e867c84e7",
+    "entity-obligations": "067c1646829df85e62b809ee9157921e867c84e7",
+    "request-forms": "067c1646829df85e62b809ee9157921e867c84e7",
+    "reminders-and-audit": "067c1646829df85e62b809ee9157921e867c84e7"
+  },
+  "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+  "appDiffCommand": {
+    "067c1646829df85e62b809ee9157921e867c84e7": "git diff --name-only 067c1646829df85e62b809ee9157921e867c84e7 4ca41822b685a2a1e58a38b4f25e421cf735c54e -- apps packages services styles Dockerfile scripts/documentation messages CONTEXT.md",
+    "3fa407e3a846559914aa1a63249741f30cfb4f69": "git diff 3fa407e3a846559914aa1a63249741f30cfb4f69 4ca41822b685a2a1e58a38b4f25e421cf735c54e -- <inspectedFiles of document-previews and compare-versions>. The range 3fa407e3a846559914aa1a63249741f30cfb4f69..067c1646829df85e62b809ee9157921e867c84e7 was reviewed compatible in DOC-030 (batches/DOC-030/compat/compat.json); this review read the 067c1646829df85e62b809ee9157921e867c84e7..4ca41822b685a2a1e58a38b4f25e421cf735c54e hunks of those files in full."
+  },
+  "appDiffFiles": {
+    "067c1646829df85e62b809ee9157921e867c84e7": [
+      "CONTEXT.md",
+      "apps/api/openapi.json",
+      "apps/api/package.json",
+      "apps/api/src/account-issuer-migration.test.ts",
+      "apps/api/src/app.ts",
+      "apps/api/src/auth/limits.ts",
+      "apps/api/src/auth/oauth.test.ts",
+      "apps/api/src/auth/oauth.ts",
+      "apps/api/src/auth/sso-domains.ts",
+      "apps/api/src/envelope-history-migration.test.ts",
+      "apps/api/src/envelope-launch-migration.test.ts",
+      "apps/api/src/envelope-preparation-migration.test.ts",
+      "apps/api/src/index.ts",
+      "apps/api/src/lib/auto-doc-fill/engine.test.ts",
+      "apps/api/src/lib/contract-team.ts",
+      "apps/api/src/lib/document-erasure.ts",
+      "apps/api/src/lib/document-versions.ts",
+      "apps/api/src/lib/event-hub.test.ts",
+      "apps/api/src/lib/event-hub.ts",
+      "apps/api/src/lib/matter-team.ts",
+      "apps/api/src/lib/share-register.test.ts",
+      "apps/api/src/lib/signer-erasure.ts",
+      "apps/api/src/lib/signing/config.test.ts",
+      "apps/api/src/lib/signing/config.ts",
+      "apps/api/src/lib/signing/docusign.test.ts",
+      "apps/api/src/lib/signing/docusign.ts",
+      "apps/api/src/lib/signing/fake.test.ts",
+      "apps/api/src/lib/signing/fake.ts",
+      "apps/api/src/lib/signing/identity.ts",
+      "apps/api/src/lib/signing/provider.ts",
+      "apps/api/src/lib/signing/recovery-stage.ts",
+      "apps/api/src/lib/signing/recovery.ts",
+      "apps/api/src/lib/signing/resolver.test.ts",
+      "apps/api/src/lib/signing/resolver.ts",
+      "apps/api/src/lib/signing/status-check.ts",
+      "apps/api/src/lib/signing/transitions.ts",
+      "apps/api/src/lib/task-assignment.ts",
+      "apps/api/src/lib/team-person.ts",
+      "apps/api/src/mcp-settings-migration.test.ts",
+      "apps/api/src/mcp/administration.test.ts",
+      "apps/api/src/mcp/administration.ts",
+      "apps/api/src/mcp/calls.ts",
+      "apps/api/src/mcp/change-feed.ts",
+      "apps/api/src/mcp/documentation.test.ts",
+      "apps/api/src/mcp/documents.ts",
+      "apps/api/src/mcp/grant.test.ts",
+      "apps/api/src/mcp/guide.test.ts",
+      "apps/api/src/mcp/listen.test.ts",
+      "apps/api/src/mcp/matters-tasks.test.ts",
+      "apps/api/src/mcp/mcp.test.ts",
+      "apps/api/src/mcp/prompts.test.ts",
+      "apps/api/src/mcp/prompts.ts",
+      "apps/api/src/mcp/register.test.ts",
+      "apps/api/src/mcp/register.ts",
+      "apps/api/src/mcp/requests-comments-people.test.ts",
+      "apps/api/src/mcp/resources.test.ts",
+      "apps/api/src/mcp/resources.ts",
+      "apps/api/src/mcp/routes.ts",
+      "apps/api/src/mcp/selectable-toolsets.ts",
+      "apps/api/src/mcp/team.test.ts",
+      "apps/api/src/mcp/team.ts",
+      "apps/api/src/mcp/tool.ts",
+      "apps/api/src/modules/advanced-settings/routes.ts",
+      "apps/api/src/modules/ai-connector/routes.ts",
+      "apps/api/src/modules/api-keys/api-keys.test.ts",
+      "apps/api/src/modules/api-keys/routes.ts",
+      "apps/api/src/modules/approver-groups/approver-groups.test.ts",
+      "apps/api/src/modules/audit-log/routes.ts",
+      "apps/api/src/modules/audit-log/tool-calls.ts",
+      "apps/api/src/modules/auth/allowed-domains.test.ts",
+      "apps/api/src/modules/auth/auth-mode.test.ts",
+      "apps/api/src/modules/auth/authentication-policy-routes.ts",
+      "apps/api/src/modules/auth/authentication-policy.test.ts",
+      "apps/api/src/modules/auth/profile.test.ts",
+      "apps/api/src/modules/auth/routes.ts",
+      "apps/api/src/modules/auth/setup.test.ts",
+      "apps/api/src/modules/auth/sso.test.ts",
+      "apps/api/src/modules/contract-envelopes/completion.test.ts",
+      "apps/api/src/modules/contract-envelopes/launch.ts",
+      "apps/api/src/modules/contract-envelopes/reconciliation.test.ts",
+      "apps/api/src/modules/contract-envelopes/routes.ts",
+      "apps/api/src/modules/contract-envelopes/send.test.ts",
+      "apps/api/src/modules/contract-envelopes/void.test.ts",
+      "apps/api/src/modules/contract-statuses/contract-statuses.test.ts",
+      "apps/api/src/modules/contract-statuses/routes.ts",
+      "apps/api/src/modules/contracts/contracts.test.ts",
+      "apps/api/src/modules/contracts/create.ts",
+      "apps/api/src/modules/contracts/record.ts",
+      "apps/api/src/modules/contracts/renewal-vehicle.ts",
+      "apps/api/src/modules/contracts/routes.ts",
+      "apps/api/src/modules/contracts/service.ts",
+      "apps/api/src/modules/document-types/document-types.test.ts",
+      "apps/api/src/modules/document-types/routes.ts",
+      "apps/api/src/modules/documents/document-comparison.test.ts",
+      "apps/api/src/modules/documents/documents.test.ts",
+      "apps/api/src/modules/documents/repository-filters.test.ts",
+      "apps/api/src/modules/documents/repository.ts",
+      "apps/api/src/modules/documents/routes.ts",
+      "apps/api/src/modules/documents/service.ts",
+      "apps/api/src/modules/email-settings/routes.ts",
+      "apps/api/src/modules/entities/linked-records.test.ts",
+      "apps/api/src/modules/entities/linked-records.ts",
+      "apps/api/src/modules/entities/share-register.test.ts",
+      "apps/api/src/modules/events/routes.ts",
+      "apps/api/src/modules/matters/routes.ts",
+      "apps/api/src/modules/matters/service.ts",
+      "apps/api/src/modules/mcp-settings/allowed-clients.ts",
+      "apps/api/src/modules/mcp-settings/mcp-settings.test.ts",
+      "apps/api/src/modules/mcp-settings/routes.ts",
+      "apps/api/src/modules/notifications/record-activity.test.ts",
+      "apps/api/src/modules/oauth-grants/oauth-grants.test.ts",
+      "apps/api/src/modules/oauth-grants/routes.ts",
+      "apps/api/src/modules/onboarding/onboarding.test.ts",
+      "apps/api/src/modules/org/currencies.ts",
+      "apps/api/src/modules/org/general.test.ts",
+      "apps/api/src/modules/org/routes.ts",
+      "apps/api/src/modules/portal/document-service.ts",
+      "apps/api/src/modules/portal/documents.ts",
+      "apps/api/src/modules/settings/read.ts",
+      "apps/api/src/modules/signer-erasure/routes.ts",
+      "apps/api/src/modules/signing-connector/routes.ts",
+      "apps/api/src/modules/signing-connector/signing-connector.test.ts",
+      "apps/api/src/modules/signing-webhook/routes.ts",
+      "apps/api/src/modules/signing-webhook/webhook.test.ts",
+      "apps/api/src/origin-check.test.ts",
+      "apps/api/src/pipeline/automatic-contract-analysis.ts",
+      "apps/api/src/pipeline/executed-copy.ts",
+      "apps/api/src/pipeline/reconciliation.ts",
+      "apps/api/src/testing/harness.ts",
+      "apps/api/src/testing/signing-contract.ts",
+      "apps/web/index.html",
+      "apps/web/package.json",
+      "apps/web/src/components/ai-model-selector.tsx",
+      "apps/web/src/components/api-keys.tsx",
+      "apps/web/src/components/approvals/approvals-signing-card.tsx",
+      "apps/web/src/components/approvals/signer-name-field.tsx",
+      "apps/web/src/components/authentication-options.test.tsx",
+      "apps/web/src/components/authentication-options.tsx",
+      "apps/web/src/components/auto-docs/form-builder.tsx",
+      "apps/web/src/components/auto-docs/rule-value-input.tsx",
+      "apps/web/src/components/auto-docs/upload-dialog.tsx",
+      "apps/web/src/components/avatar.tsx",
+      "apps/web/src/components/connected-clients.tsx",
+      "apps/web/src/components/described-field.tsx",
+      "apps/web/src/components/documents/bulk-document-actions.tsx",
+      "apps/web/src/components/documents/documents-card.tsx",
+      "apps/web/src/components/documents/documents-columns.tsx",
+      "apps/web/src/components/entities/entity-chart.tsx",
+      "apps/web/src/components/entities/linked-records-table.tsx",
+      "apps/web/src/components/entities/officer-name-input.test.tsx",
+      "apps/web/src/components/entities/officer-name-input.tsx",
+      "apps/web/src/components/entities/officers-card.tsx",
+      "apps/web/src/components/linked-records-list.tsx",
+      "apps/web/src/components/list-editor.tsx",
+      "apps/web/src/components/portal/documents-section.tsx",
+      "apps/web/src/components/shell/shell.test.tsx",
+      "apps/web/src/components/smtp-settings-fields.tsx",
+      "apps/web/src/components/table/managed-table.tsx",
+      "apps/web/src/components/taxonomy-types-pane.tsx",
+      "apps/web/src/lib/activity.test.ts",
+      "apps/web/src/lib/activity.ts",
+      "apps/web/src/lib/documents.ts",
+      "apps/web/src/lib/envelopes.ts",
+      "apps/web/src/lib/linked-records.ts",
+      "apps/web/src/lib/oauth-return.ts",
+      "apps/web/src/lib/session.ts",
+      "apps/web/src/lib/setup-drafts.ts",
+      "apps/web/src/router.tsx",
+      "apps/web/src/routes/auth-layout.test.tsx",
+      "apps/web/src/routes/auto-doc-publish.test.tsx",
+      "apps/web/src/routes/auto-docs.test.tsx",
+      "apps/web/src/routes/connected-clients.test.tsx",
+      "apps/web/src/routes/contract-record-envelopes.test.tsx",
+      "apps/web/src/routes/contract-record-renewal.test.tsx",
+      "apps/web/src/routes/contract-record.test.tsx",
+      "apps/web/src/routes/contract-record.tsx",
+      "apps/web/src/routes/contracts-columns.test.tsx",
+      "apps/web/src/routes/documents-filters.test.tsx",
+      "apps/web/src/routes/documents.test.tsx",
+      "apps/web/src/routes/entity-record.test.tsx",
+      "apps/web/src/routes/entity-record.tsx",
+      "apps/web/src/routes/entity-share-register.test.tsx",
+      "apps/web/src/routes/login.test.tsx",
+      "apps/web/src/routes/login.tsx",
+      "apps/web/src/routes/matter-record-edit.test.tsx",
+      "apps/web/src/routes/matter-record.tsx",
+      "apps/web/src/routes/page-title.test.tsx",
+      "apps/web/src/routes/portal-documents.test.tsx",
+      "apps/web/src/routes/portal.test.tsx",
+      "apps/web/src/routes/route-guard.test.tsx",
+      "apps/web/src/routes/settings-api-keys.test.tsx",
+      "apps/web/src/routes/settings-approver-groups.test.tsx",
+      "apps/web/src/routes/settings-audit-log.test.tsx",
+      "apps/web/src/routes/settings-authentication.test.tsx",
+      "apps/web/src/routes/settings-authentication.tsx",
+      "apps/web/src/routes/settings-contract-fields.test.tsx",
+      "apps/web/src/routes/settings-contract-statuses.test.tsx",
+      "apps/web/src/routes/settings-contract-statuses.tsx",
+      "apps/web/src/routes/settings-contract-types.test.tsx",
+      "apps/web/src/routes/settings-document-types.test.tsx",
+      "apps/web/src/routes/settings-document-types.tsx",
+      "apps/web/src/routes/settings-e-signature.test.tsx",
+      "apps/web/src/routes/settings-e-signature.tsx",
+      "apps/web/src/routes/settings-entity-types.test.tsx",
+      "apps/web/src/routes/settings-general.tsx",
+      "apps/web/src/routes/settings-intake-links.test.tsx",
+      "apps/web/src/routes/settings-matter-templates.test.tsx",
+      "apps/web/src/routes/settings-matter-types.test.tsx",
+      "apps/web/src/routes/settings-mcp.test.tsx",
+      "apps/web/src/routes/settings-mcp.tsx",
+      "apps/web/src/routes/settings-reminders.test.tsx",
+      "apps/web/src/routes/settings-request-types.test.tsx",
+      "apps/web/src/routes/settings-users.test.tsx",
+      "apps/web/src/routes/settings.test.tsx",
+      "apps/web/src/routes/setup.test.tsx",
+      "apps/web/src/routes/setup.tsx",
+      "apps/web/src/routes/signing-return.tsx",
+      "apps/web/src/routes/welcome.test.tsx",
+      "apps/web/src/routes/welcome.tsx",
+      "apps/web/src/testing/helpers.tsx",
+      "apps/web/vite.config.ts",
+      "messages/en-US.json",
+      "packages/api-client/src/schema.ts",
+      "packages/db/migrations/0172_m42-toolset-ceiling.sql",
+      "packages/db/migrations/0173_durable-envelope-preparation.sql",
+      "packages/db/migrations/0174_envelope-launch-return.sql",
+      "packages/db/migrations/0175_envelope-launch-timestamps.sql",
+      "packages/db/migrations/0176_envelope-resume.sql",
+      "packages/db/migrations/0177_envelope-recovery.sql",
+      "packages/db/migrations/0178_envelope-recovery-intent.sql",
+      "packages/db/migrations/0179_envelope-reconciliation.sql",
+      "packages/db/migrations/0180_document-type-colors.sql",
+      "packages/db/migrations/0181_partial-signing.sql",
+      "packages/db/migrations/0182_partially-signed-document-type.sql",
+      "packages/db/migrations/0183_sso-provider-name.sql",
+      "packages/db/migrations/meta/0172_snapshot.json",
+      "packages/db/migrations/meta/0173_snapshot.json",
+      "packages/db/migrations/meta/0174_snapshot.json",
+      "packages/db/migrations/meta/0175_snapshot.json",
+      "packages/db/migrations/meta/0176_snapshot.json",
+      "packages/db/migrations/meta/0177_snapshot.json",
+      "packages/db/migrations/meta/0178_snapshot.json",
+      "packages/db/migrations/meta/0179_snapshot.json",
+      "packages/db/migrations/meta/0180_snapshot.json",
+      "packages/db/migrations/meta/0181_snapshot.json",
+      "packages/db/migrations/meta/0182_snapshot.json",
+      "packages/db/migrations/meta/0183_snapshot.json",
+      "packages/db/migrations/meta/_journal.json",
+      "packages/db/src/schema/auth.ts",
+      "packages/db/src/schema/contract-envelopes.ts",
+      "packages/db/src/schema/document-types.ts",
+      "packages/db/src/schema/documents.ts",
+      "packages/db/src/schema/org.ts",
+      "packages/shared/src/activity.ts",
+      "packages/shared/src/document-type-colors.ts",
+      "packages/shared/src/index.ts",
+      "packages/shared/src/live-events.ts",
+      "packages/shared/src/mcp.ts",
+      "packages/shared/src/start-blank.ts",
+      "scripts/documentation/lab-options.mjs",
+      "scripts/documentation/lab-options.test.mjs",
+      "scripts/documentation/lab.mjs",
+      "scripts/documentation/reader.css"
+    ],
+    "3fa407e3a846559914aa1a63249741f30cfb4f69": [
+      "CONTEXT.md",
+      "apps/api/src/lib/document-erasure.ts",
+      "apps/api/src/lib/document-versions.ts",
+      "apps/api/src/lib/preview-rendition.ts",
+      "apps/api/src/modules/comments/routes.ts",
+      "apps/api/src/modules/documents/routes.ts",
+      "apps/api/src/modules/portal/document-service.ts",
+      "apps/api/src/modules/portal/documents.ts",
+      "apps/web/src/components/comments/comment-attachments.tsx",
+      "apps/web/src/components/documents/documents-card.tsx",
+      "apps/web/src/components/portal/documents-section.tsx",
+      "apps/web/src/lib/documents.ts",
+      "apps/web/src/lib/roles.ts",
+      "apps/web/src/routes/document-compare.tsx",
+      "apps/web/src/routes/portal-request.tsx",
+      "messages/en-US.json",
+      "services/doc-engine/src/server.ts"
+    ]
+  },
+  "appChangesChecked": [
+    "dd28e33d Let Administrators delete one document version: whole-Document Delete on a Document row became an Administrator-only Delete version; the selection bar's Delete became Delete versions. No guide in this set states how to delete a Document; document-folders and document-previews only mention deletion and link to the Document deletion guide.",
+    "d0e50ae4 Document type colours: Type and Kind pills take a configured colour. No guide in this set names a colour.",
+    "46d9f1e5 and 3bc566bd: the Entity Contracts and Matters tabs are managed tables. entities-and-counterparties does not describe those tabs.",
+    "d3728c9b Officer names: not described in this set; entities-and-counterparties links to the corporate records guide.",
+    "3294f749 and the new activity narrations: the Audit log reads are shared with the Administration Tools and the Action filter lists more events. reminders-and-audit does not list the events."
+  ],
+  "labs": [
+    {
+      "name": "work",
+      "project": "openlaw-docs-9d2b1705-work",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43340",
+      "mailUrl": "http://127.0.0.1:48440",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T06:50:34.922Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T06:50:48.736Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Shared DOC-032 lab. The document-folders, document-repository, publish-knowledge, entities-and-counterparties, entity-obligations and request-forms replays ran here. Records made there are named 'DOC-032 compat compat-c ...'."
+    },
+    {
+      "name": "c3cmp",
+      "project": "openlaw-docs-9d2b1705-c3cmp",
+      "sourceCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "appUrl": "http://127.0.0.1:43383",
+      "mailUrl": "http://127.0.0.1:48483",
+      "seed": {
+        "status": "complete",
+        "scale": "light",
+        "randomSeed": 7,
+        "startedAt": "2026-09-28T07:13:24.369Z",
+        "ai": "disabled",
+        "signing": "unconfigured",
+        "completedAt": "2026-09-28T07:13:40.369Z"
+      },
+      "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+      "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+      "containerImages": [
+        {
+          "service": "app",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        },
+        {
+          "service": "doc-engine",
+          "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+        },
+        {
+          "service": "mailpit",
+          "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+        },
+        {
+          "service": "postgres",
+          "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+        },
+        {
+          "service": "worker",
+          "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+        }
+      ],
+      "createdFor": "Created by this reviewer with scripts/documentation/lab.mjs from the pinned commit (same app and engine image IDs as work), seeded light with random seed 7, backend 10.243.73.0/24, engine 10.244.73.0/24. The document-previews and compare-versions replays ran here, as DOC-030 ran them on its own compatcmp lab: compare-versions pauses the worker, which the shared-lab rules forbid. The reminders-and-audit replay ran here too: its reminders section runs a lab-wide morning round and holds organization lead-time changes across several steps, which would reach every other agent on work."
+    }
+  ],
+  "browser": "Playwright 1.63.0 Chromium, headless, one isolated context per identity (viewport as each DOC-030 script sets it)",
+  "articles": [
+    {
+      "articleId": "document-folders",
+      "scenario": "V-C27",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/batch-dialog.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/folders.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/documents/bulk-document-actions.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/document-folders-replay.json",
+        "sha256": "bf6aad17421e9db20eb9a47768274241780bc52acba5b8aade43f84c49839145",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 34,
+        "failed": 0,
+        "stepsForThisArticle": 34,
+        "adaptations": "Helpers from ./documents-2-replay/lib.mjs (root and Playwright path for this folder depth, app and Mailpit addresses from the work manifest), lab manifest work2 -> work, reviewer label, task, output and screenshot paths, record names 'DOC-032 compat compat-c ...', temporary folder prefix, and ARTICLE=<id>, which records only that article's steps (create-knowledge steps are never recorded). No step, selector or check changed. Run: ARTICLE=document-folders SECTIONS=setup,folders,business,teardown. Teardown archived the run's Matter Document type.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/documents-2-replay.mjs",
+            "sha256": "78afaef790780efda0be7180bba5bccd8d9702faae1c7ae5b266e35b74539756"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/documents-2-replay/lib.mjs",
+            "sha256": "5db32577778184975d39b1abfad7e8254982da528b75e063841bfaa0406bdfab"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-folders-replay.json",
+            "sha256": "bf6aad17421e9db20eb9a47768274241780bc52acba5b8aade43f84c49839145"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/documents-2-replay/legal-partial-import.png",
+            "sha256": "5ca2df203d007fa69341f41aa48e3221ee2d8297469ce4df5965fae9ba460822"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, bulk-document-actions.tsx, lib/documents.ts, documents/routes.ts, document-erasure.ts and messages/en-US.json. batch-dialog.tsx and lib/folders.ts did not change. New folder, Rename, Move, New subfolder, Move to folder, drag to a folder, the selection bar's Move, the import dialog and the folder Delete that dissolves the folder did not change. dd28e33d replaced the Document row's whole-Document Delete with an Administrator-only Delete version, and the selection bar's Delete became Delete versions. The guide says only that folder Delete does not delete the Documents and links to the Document deletion guide, so no statement in it changed. d0e50ae4 changed only the Type pill colour. I replayed the DOC-030 documents-2 setup, folders, Business and teardown sections on work: all 34 document-folders steps passed (17 Administrator, 16 Legal Team Member, 1 Business User), the same count as DOC-030.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "document-repository",
+      "scenario": "V-C30",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/documents.tsx",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/components/documents/document-filter-bar.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/api/src/modules/documents/repository.ts",
+        "apps/api/src/modules/search/service.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/modules/documents/repository.ts",
+        "apps/web/src/components/documents/documents-columns.tsx",
+        "apps/web/src/lib/documents.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/document-repository-replay.json",
+        "sha256": "75623e1d5d05bdae8efbee7527d57d02e017d8f932d2bc95d1ea7e262f444c7b",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 21,
+        "failed": 0,
+        "stepsForThisArticle": 21,
+        "adaptations": "Helpers from ./documents-2-replay/lib.mjs (root and Playwright path for this folder depth, app and Mailpit addresses from the work manifest), lab manifest work2 -> work, reviewer label, task, output and screenshot paths, record names 'DOC-032 compat compat-c ...', temporary folder prefix, and ARTICLE=<id>, which records only that article's steps (create-knowledge steps are never recorded). No step, selector or check changed. Run: ARTICLE=document-repository SECTIONS=repository,business.",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "batches/DOC-032/compat/compat-c/document-repository-replay.attempt1.json",
+            "outcome": "incomplete",
+            "reason": "All 20 staff steps passed. The Business section then stopped before its step: Jonas Weber's Portal sign-in link budget (3 per address in 15 minutes) was spent by parallel runs on the shared lab, and the helper gave up after 20 tries. Not an app change.",
+            "change": "None to the script. The repository and Business sections ran again when the budget had recovered."
+          }
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/documents-2-replay.mjs",
+            "sha256": "78afaef790780efda0be7180bba5bccd8d9702faae1c7ae5b266e35b74539756"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/documents-2-replay/lib.mjs",
+            "sha256": "5db32577778184975d39b1abfad7e8254982da528b75e063841bfaa0406bdfab"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-repository-replay.json",
+            "sha256": "75623e1d5d05bdae8efbee7527d57d02e017d8f932d2bc95d1ea7e262f444c7b"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-repository-replay.attempt1.json",
+            "sha256": "cacb9b90b1cbe9143e7d8a543e0675082fe91b7c316745cf35fdaaf2b000d9d2"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-columns.tsx, lib/documents.ts, documents/repository.ts and messages/en-US.json. routes/documents.tsx, document-filter-bar.tsx and search/service.ts did not change. The repository's Kind column pill now takes the Document type's colour (d0e50ae4), and the Kind filter also lists Partially signed. The guide names the Kind filter but does not list its kinds or colours, so no statement changed. The Delete version change (dd28e33d) is only on the record's Documents card; the repository offers no delete control, and the guide's remark that a permanently deleted Document cannot be restored here still holds. I replayed the DOC-030 documents-2 repository and Business sections on work: all 21 document-repository steps passed (10 Administrator, 10 Legal Team Member, 1 Business User as Jonas Weber), the same count as DOC-030, on the second attempt (see attempts)..",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "document-previews",
+      "scenario": "V-C28",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "apps/web/src/components/documents/doc-panel.tsx",
+        "apps/web/src/components/documents/pdf-preview.tsx",
+        "apps/web/src/components/documents/email-preview.tsx",
+        "apps/web/src/components/documents/reader-context.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/components/portal/record-shell.tsx",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/routes/portal-request.tsx",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/comments/attachment-preview.tsx",
+        "apps/api/src/modules/comments/routes.ts",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/api/src/lib/preview-rendition.ts",
+        "apps/web/src/lib/documents.ts"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/lib/preview-rendition.ts",
+        "apps/api/src/modules/comments/routes.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/modules/portal/document-service.ts",
+        "apps/api/src/modules/portal/documents.ts",
+        "apps/web/src/components/comments/comment-attachments.tsx",
+        "apps/web/src/components/portal/documents-section.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/routes/portal-request.tsx"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/document-previews-replay.json",
+        "sha256": "0add9f6d15881fddb3c8090de6ab7784d9f8a355310321c37858644ca2e38b43",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/compat/document-previews-replay.mjs",
+        "lab": "c3cmp",
+        "outcome": "pass",
+        "steps": 25,
+        "failed": 0,
+        "stepsForThisArticle": 21,
+        "adaptations": "Helpers from ./document-previews-replay/lib.mjs (root and Playwright path for this folder depth, app and Mailpit addresses from the lab manifest), lab name default c3cmp, lab status read with this Node binary instead of mise exec, reviewer label, set, task, app commit from the lab manifest, output path, record names 'DOC-032 compat compat-c'. Fixtures still load from DOC-029/documents/fixtures. Default SECTIONS=previews,portal. No step, selector or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-previews-replay.mjs",
+            "sha256": "9da22d0aee1df334226eabb8aba3fb4d2c6c4e70293ce6d237f7260526d30538"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-previews-replay/lib.mjs",
+            "sha256": "0c32f75237dee30ac5b10321ea948daa416fff313aa8f491dfe3bc0686be7a18"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/document-previews-replay.json",
+            "sha256": "0add9f6d15881fddb3c8090de6ab7784d9f8a355310321c37858644ca2e38b43"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-section.tsx, portal/documents.ts, portal/document-service.ts, documents/routes.ts and lib/documents.ts. The reader components (doc-panel, pdf-preview, email-preview, reader-context, attachment-preview, record-shell), portal-request.tsx, comment-attachments.tsx, comments/routes.ts, portal-knowledge.tsx and preview-rendition.ts did not change in this range. The Portal Documents section now labels a Version with its Document type name and colour, and falls back to the kind; the guide does not describe that label. documents/routes.ts adds the Administrator-only Version delete route (dd28e33d); the guide's statement that a Document may have been deleted still holds. No statement in the guide changed. I replayed the DOC-030 compatibility script (previews and Portal sections) on c3cmp: all 25 steps passed, 21 V-C28 steps for Administrator, Legal Team Member and Business User, plus 4 Business User refusal steps of neighbouring guides. Earlier review, DOC-030 compatibility reviewer (compat), 3fa407e3 to 067c1646: From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of documents-section.tsx, portal-request.tsx, comment-attachments.tsx, comments/routes.ts, portal/documents.ts, documents/routes.ts and the new preview-rendition.ts. The reader components did not change; the Portal and comment changes touch upload and filing dialogs, not reading; a comment attachment preview is now converted once and stored, with the same Preview unavailable message. I replayed the DOC-029 V-C28 sections for Administrator, Legal Team Member and Business User on lab compatcmp built from 067c1646; all 21 V-C28 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (documents)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Document, Version, folder, preview, repository, archive or delete behavior or labels; the only Document-surface change is the archived uploader color. I replayed the round 1 documents walkthrough on the work2 lab built from 57e77e38, and all 117 steps passed for Administrator, Legal Team Member and Business User. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "compare-versions",
+      "scenario": "V-C29",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+      "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+      "inspectedFiles": [
+        "messages/en-US.json",
+        "apps/web/src/routes/document-compare.tsx",
+        "apps/web/src/components/documents/doc-panel.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/roles.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/pipeline/document-comparison.ts",
+        "apps/web/src/lib/documents.ts",
+        "services/doc-engine/src/server.ts",
+        "CONTEXT.md"
+      ],
+      "inspectedFilesChangedInRange": [
+        "CONTEXT.md",
+        "apps/api/src/lib/document-erasure.ts",
+        "apps/api/src/lib/document-versions.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/lib/documents.ts",
+        "apps/web/src/lib/roles.ts",
+        "apps/web/src/routes/document-compare.tsx",
+        "messages/en-US.json",
+        "services/doc-engine/src/server.ts"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/compare-versions-replay.json",
+        "sha256": "4b3d194ed2643912652de31b08c19bc71302e50d5d33902ef9e44b30498476bd",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/compat/compare-versions-replay.mjs",
+        "lab": "c3cmp",
+        "outcome": "pass",
+        "steps": 20,
+        "failed": 0,
+        "stepsForThisArticle": 20,
+        "adaptations": "Harness from ./compare-versions-replay/harness.mjs (root for this folder depth; app, Mailpit and project from the lab manifest), lab manifest c3cmp (the compare step pauses that lab's worker), batch, set, reviewer label, providerMode text, output path, record names 'DOC-032 compat compat-c'. Default PARTS=compare,archived-pair. No step, selector or check changed. The script's final safety unpause printed 'Container ... is not paused' because the step had already resumed the worker; the log is complete.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/compare-versions-replay.mjs",
+            "sha256": "5a2b8849cc0015961289989e4af0b07fe22e22125a02f842720e9d1c0f368ca3"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/compare-versions-replay/harness.mjs",
+            "sha256": "10ec7cbb1976194bcd96cd3309858168f56c75869294dd7219cd4dc4f14a67c8"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/compare-versions-replay.json",
+            "sha256": "4b3d194ed2643912652de31b08c19bc71302e50d5d33902ef9e44b30498476bd"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, documents/routes.ts, document-versions.ts, document-erasure.ts, lib/documents.ts, messages/en-US.json and CONTEXT.md. document-compare.tsx, pipeline/document-comparison.ts, document-access.ts, roles.ts, doc-panel.tsx and the doc engine did not change in this range. dd28e33d adds an Administrator-only Delete version to the Version actions menu beside Compare with previous. The route refuses to delete a Version that a Generated redline was made from, and deleting a Version removes the stored Comparisons that use it; document-versions.ts does not reuse a deleted number. So after an export the original Versions and the Comparison stay available, as the guide says, until someone deletes the Generated redline first, which the guide does not describe. No statement in the guide changed. I replayed the DOC-030 compatibility script (compare and archived-pair parts) on c3cmp: all 20 steps passed, including Preparing comparison with the worker paused. Earlier review, DOC-030 compatibility reviewer (compat), 3fa407e3 to 067c1646: From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of document-compare.tsx, documents-card.tsx, lib/documents.ts, lib/roles.ts, documents/routes.ts and doc-engine server.ts. The Compare with previous action, the Changes view, export and the comparison pipeline did not change; the Documents card column is now Type and still shows Generated redline for an exported redline, which is the guide's wording. I replayed the DOC-029 V-C29 script and its archived-pair supplement for both roles on lab compatcmp built from 067c1646; all 20 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (analysis-standin)) found the article compatible: I inspected the 3fa407e3..57e77e38 app and message diff, and it changes no Comparison, Document reader, Document access or export file; the Documents list only restyles an archived uploader name. I replayed the round 1 V-C29 walkthrough and its archived-pair supplement on lab analysis-r2, and all 20 steps passed for the Administrator and the Legal Team Member. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "publish-knowledge",
+      "scenario": "V-C34",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/knowledge-record.tsx",
+        "apps/web/src/routes/portal-knowledge.tsx",
+        "apps/web/src/components/portal/deflection-panel.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/components/intake-settings-tabs.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/router.tsx",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/confidential-marker.tsx",
+        "apps/api/src/modules/knowledge/routes.ts",
+        "apps/api/src/modules/knowledge/service.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/intake-links/routes.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/api/src/lib/contract-access.ts",
+        "apps/api/src/lib/document-access.ts",
+        "apps/api/src/mcp/knowledge.ts",
+        "apps/api/src/mcp/documents.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/mcp/documents.ts",
+        "apps/api/src/modules/documents/routes.ts",
+        "apps/web/src/components/documents/documents-card.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/router.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/publish-knowledge-replay.json",
+        "sha256": "7f92e44ecde5e95cb78ac88b4828f2ea62fc48a6d0b111e5b4a1a2f38f4083c6",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/knowledge/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 28,
+        "failed": 0,
+        "stepsForThisArticle": 28,
+        "adaptations": "Playwright path and root for this folder depth, lab name work2 -> work, batch, set, reviewer label, output path, temporary folder prefix, record names 'DOC-032 compat compat-c V-C34'. The whole script covers only this article and ran whole. A first launch stopped at module load on a wrong relative path before any step ran and wrote no log. No step, selector or check changed.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/publish-knowledge-replay.mjs",
+            "sha256": "584f234b529f0caba7bda85546b161d77ada8306d2ea08769e786024d1b14cad"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/publish-knowledge-replay.json",
+            "sha256": "7f92e44ecde5e95cb78ac88b4828f2ea62fc48a6d0b111e5b4a1a2f38f4083c6"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, documents/routes.ts, mcp/documents.ts, router.tsx, list-editor.tsx and messages/en-US.json. knowledge-record.tsx, portal-knowledge.tsx, deflection-panel.tsx, settings-intake-links.tsx, knowledge routes and service, portal routes, intake-links routes, contract-access.ts, document-access.ts and mcp/knowledge.ts did not change. Publish, Unpublish, Audience, Archive and Restore, Mark confidential and the deflection links are unchanged. documents-card.tsx changed the Delete action to Delete version and the Type pill colour; mcp/documents.ts only adds partially_signed to a Tool description; router.tsx only adds /signing/return; list-editor.tsx only adds an optional expanded-row slot that the deflection link list does not use. No statement in the guide changed. I replayed the DOC-030 knowledge script on work: all 28 steps passed (14 Legal Team Member, 14 Administrator, each with Portal reader checks as Mei Tanaka and Sara Haddadi), the same count as DOC-030. Its one product note, that a Legal Team Member can mark a Knowledge Document confidential but cannot clear the mark, is the same as in DOC-030, and the guide already tells readers to ask an Administrator.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "scenario": "V-C31",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-filter-definitions.ts",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/type-form/creation-rows.tsx",
+        "apps/web/src/components/documents/create-attachments.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/components/type-form/record-rows.tsx",
+        "packages/shared/src/form-evaluator.ts",
+        "packages/shared/src/form-builtins.ts",
+        "apps/api/src/lib/type-form-routes.ts",
+        "apps/web/src/components/counterparty-picker.tsx",
+        "apps/web/src/lib/contracts.ts",
+        "apps/api/src/modules/entities/routes.ts",
+        "apps/api/src/lib/counterparty-link.ts",
+        "CONTEXT.md",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "CONTEXT.md",
+        "apps/web/src/components/entities/linked-records-table.tsx",
+        "apps/web/src/components/entities/officers-card.tsx",
+        "apps/web/src/routes/contract-record.tsx",
+        "apps/web/src/routes/entity-record.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/entities-and-counterparties-replay.json",
+        "sha256": "6ea778d69e07635bbd5430ebcbdbb1d04ceed216543f78d19e63502adeff23cd",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 27,
+        "failed": 0,
+        "stepsForThisArticle": 27,
+        "adaptations": "Helpers from ./entities-replay/api.mjs (root for this folder depth, work lab manifest and addresses), reviewer label, batch and task, set, output and screenshot paths, record names 'DOC-030 entities' -> 'DOC-032 compat compat-c'. Fixtures still load from DOC-030/entities/fixtures. No persona, fixture lookup, step, selector or check changed. Run: PHASES=c31.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/entities-replay.mjs",
+            "sha256": "20cdd8670f2849f0896778e9c0d93453a363936aea9bd73ba35f13f478255bc5"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/entities-replay/api.mjs",
+            "sha256": "a278c2635fd6cd094fb65b0a3cbdc6d6739dc39f6381208988b60a706da1aeb9"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/entities-and-counterparties-replay.json",
+            "sha256": "6ea778d69e07635bbd5430ebcbdbb1d04ceed216543f78d19e63502adeff23cd"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of entity-record.tsx, linked-records-table.tsx, officers-card.tsx, contract-record.tsx, CONTEXT.md and messages/en-US.json. entities.tsx, the Entity filter definitions, creation rows, create-attachments, record rows, the form evaluator, type-form routes, counterparty-picker.tsx, contracts.ts, entities/routes.ts and counterparty-link.ts did not change. 46d9f1e5 made the Entity Contracts and Matters tabs managed tables, and d3728c9b changed the Officer name input; the guide describes neither and points to the corporate records guide for Officers. On the Contract Overview, 791ad567 moved Legal Owner and Business Owner into an Owners section above the Contract card; Our entity and Counterparties stay on Overview with the same controls and labels. The CONTEXT.md Grant wording matches the guide. No statement in the guide changed. I replayed the DOC-030 entities c31 phase on work: all 27 steps passed (13 Legal Team Member, 13 Administrator, 1 Business User refusal as Diego Salas), the same count as DOC-030.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "entity-obligations",
+      "scenario": "V-C52",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/components/entities/obligations-panel.tsx",
+        "apps/web/src/routes/entities.tsx",
+        "apps/web/src/components/entities/entity-filter-definitions.ts",
+        "apps/web/src/components/table/record-filter-bar.tsx",
+        "apps/web/src/components/table/managed-table.tsx",
+        "apps/api/src/modules/entities/obligation-routes.ts",
+        "apps/api/src/modules/home/sections/obligations.ts",
+        "apps/web/src/lib/activity.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/table/managed-table.tsx",
+        "apps/web/src/lib/activity.ts",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/entity-obligations-replay.json",
+        "sha256": "9e668970eb1e61b23233605e76a437dea11bcf7a6663a8a1b35e0cb0641ff15e",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 37,
+        "failed": 0,
+        "stepsForThisArticle": 37,
+        "adaptations": "Helpers from ./entities-replay/api.mjs (root for this folder depth, work lab manifest and addresses), reviewer label, batch and task, set, output and screenshot paths, record names 'DOC-030 entities' -> 'DOC-032 compat compat-c'. Fixtures still load from DOC-030/entities/fixtures. No persona, fixture lookup, step, selector or check changed. Run: PHASES=c52.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/entities-replay.mjs",
+            "sha256": "20cdd8670f2849f0896778e9c0d93453a363936aea9bd73ba35f13f478255bc5"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/entities-replay/api.mjs",
+            "sha256": "a278c2635fd6cd094fb65b0a3cbdc6d6739dc39f6381208988b60a706da1aeb9"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/entity-obligations-replay.json",
+            "sha256": "9e668970eb1e61b23233605e76a437dea11bcf7a6663a8a1b35e0cb0641ff15e"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of activity.ts, managed-table.tsx and messages/en-US.json. obligations-panel.tsx, entities.tsx, the Entity filter definitions, record-filter-bar.tsx, obligation-routes.ts and the Home obligations section did not change. activity.ts only adds narrations for other actions (Version deleted, envelope preparation, identity provider removed) and the Partially signed kind label; managed-table.tsx changed one code comment. No statement in the guide changed. I replayed the DOC-030 entities c52 phase on work: all 37 steps passed (18 Legal Team Member, 18 Administrator, 1 Business User refusal as Diego Salas), the same count as DOC-030. The resize-strip product note is the same as in DOC-030 and does not contradict the guide.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "request-forms",
+      "scenario": "V-C40",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/settings-request-types.tsx",
+        "apps/web/src/routes/settings-request-type-editor.tsx",
+        "apps/web/src/components/type-form/intake-card.tsx",
+        "apps/web/src/components/type-form/preview.tsx",
+        "apps/web/src/components/type-form/model.ts",
+        "apps/web/src/components/type-form/builder.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/settings-intake-links.tsx",
+        "apps/web/src/routes/portal.tsx",
+        "apps/web/src/routes/portal-request-form.tsx",
+        "apps/web/src/components/intake/convert-dialog.tsx",
+        "apps/api/src/modules/request-types/routes.ts",
+        "apps/api/src/lib/intake-form.ts",
+        "apps/api/src/modules/portal/routes.ts",
+        "apps/api/src/modules/requests/convert.ts",
+        "packages/db/src/schema/request-types.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/web/src/components/list-editor.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/request-forms-replay.json",
+        "sha256": "2db1a98987c784637a3ff87e32f633ce2ffe6cf1c6b384af77d8b6b3920fa3a6",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "lab": "work",
+        "outcome": "pass",
+        "steps": 15,
+        "failed": 0,
+        "stepsForThisArticle": 15,
+        "adaptations": "Helpers from ./admin-config-replay/api.mjs (root for this folder depth; app, Mailpit and project from the manifest named by LAB_NAME), lab from LAB_NAME, run entries name their lab, reviewer label, task, output and screenshot paths, record names and fixture texts 'DOC-032 compat compat-c', invited-user address and temporary folder prefixes, the installed MCP client package path (2.0.0 -> 2.1.0), the worker image's pg-boss path (12.34.0 -> 12.35.0), and the Profile timezone fixture helper, which now types the zone's city with its underscore. No step, selector or check changed. Run: LAB_NAME=work SECTIONS=forms. The MCP, pg-boss and timezone path fixes were made after this run; the forms section uses none of them.",
+        "attempts": [],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay.mjs",
+            "sha256": "05cb2a824e7ce9613d774b51359faabc15a181fae42087831bceba2dfa2c7e3a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/api.mjs",
+            "sha256": "6eb6f71fd2c7033a38fb1aa9e585b923e1199ceff8e2573cfc830269a0e6b729"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/request-forms-replay.json",
+            "sha256": "2db1a98987c784637a3ff87e32f633ce2ffe6cf1c6b384af77d8b6b3920fa3a6"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/v-c40-portal-contract-form.png",
+            "sha256": "124277dfb1dd975c055fd2046cb63e185728c06c0fca6f0035578b913282b530"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/v-c40-portal-archived-destination.png",
+            "sha256": "aea81f4f005a5a4693be7ad36893140f7f50551fd1f12291ce0f91aac7f86516"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of list-editor.tsx and messages/en-US.json. settings-request-types.tsx, settings-request-type-editor.tsx, the type-form intake card, preview, model and builder, settings-intake-links.tsx, portal.tsx, portal-request-form.tsx, convert-dialog.tsx, request-types routes, intake-form.ts, portal routes, convert.ts and the request-types schema did not change. list-editor.tsx gained an optional expanded-row slot that only the Auto-Doc form builder passes; the request type list and the deflection link list keep their Rename, reorder handles, Edit and Remove. No statement in the guide changed. I replayed the DOC-030 admin-config forms section on work: all 15 steps passed (1 fixture setup, 11 Administrator, 3 Business User as Jonas Weber), the same count as DOC-030. Its two product notes (Term type machine values on the Portal form, archived destination error page) are the same as in DOC-030.",
+      "outcome": "compatible"
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "scenario": "V-C41",
+      "decision": "compat",
+      "triageDecision": "compat",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
+      "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+      "inspectedFiles": [
+        "apps/web/src/routes/settings.tsx",
+        "apps/web/src/routes/settings-reminders.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/lib/reminder-offsets.ts",
+        "apps/web/src/components/my-reminder-lead-times.tsx",
+        "apps/web/src/routes/settings-notifications.tsx",
+        "apps/web/src/routes/settings-audit-log.tsx",
+        "apps/web/src/components/audit-settings-tabs.tsx",
+        "apps/web/src/routes/settings-tool-calls.tsx",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/api/src/pipeline/morning-round.ts",
+        "apps/api/src/modules/notifications/round-trigger.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/modules/audit-log/tool-calls.ts",
+        "apps/api/src/lib/activity-redaction.ts",
+        "messages/en-US.json"
+      ],
+      "inspectedFilesChangedInRange": [
+        "apps/api/src/modules/audit-log/routes.ts",
+        "apps/api/src/modules/audit-log/tool-calls.ts",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/lib/activity.ts",
+        "apps/web/src/routes/settings-mcp.tsx",
+        "messages/en-US.json"
+      ],
+      "replay": {
+        "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.json",
+        "sha256": "175ac5bf27e3dbb981a295686bc95955b9a0a66d9c14edb0d34dc1c925e4541c",
+        "adaptedFrom": "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+        "lab": "c3cmp",
+        "outcome": "pass",
+        "steps": 24,
+        "failed": 0,
+        "stepsForThisArticle": 15,
+        "adaptations": "Helpers from ./admin-config-replay/api.mjs (root for this folder depth; app, Mailpit and project from the manifest named by LAB_NAME), lab from LAB_NAME, run entries name their lab, reviewer label, task, output and screenshot paths, record names and fixture texts 'DOC-032 compat compat-c', invited-user address and temporary folder prefixes, the installed MCP client package path (2.0.0 -> 2.1.0), the worker image's pg-boss path (12.34.0 -> 12.35.0), and the Profile timezone fixture helper, which now types the zone's city with its underscore. No step, selector or check changed. Runs: LAB_NAME=c3cmp SECTIONS=types,reminders,audit,toolcalls, then reminders,toolcalls, then reminders. The script keeps the steps of sections a run does not repeat. The types section (V-C38, another article) ran only because the audit steps search for its records; its 9 steps are in the log and are not credited to this article.",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt1.json",
+            "outcome": "fail",
+            "reason": "21 of 24 passed. Check delivery stopped in the fixture helper that sets a new colleague's Profile timezone: the clock picked America/New_York, the helper typed 'New York', and the picker labels the zone 'America/New_York (GMT-4)', so no option matched. DOC-030 ran at a time that picked Asia/Dubai and Pacific/Honolulu. The Tool calls fixture could not load the MCP client at @modelcontextprotocol+client@2.0.0, because node_modules now holds 2.1.0, and the next Tool calls step then found no call row. Not app changes: timezone-picker.tsx and settings-profile.tsx did not change in the range.",
+            "change": "The timezone helper types the city with its underscore; the MCP client path names 2.1.0."
+          },
+          {
+            "attempt": 2,
+            "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt2.json",
+            "outcome": "fail",
+            "reason": "23 of 24 passed, including the Tool calls fixture and steps. Check delivery set both timezones, then stopped where the harness queues the morning round inside the lab's worker: the worker image holds pg-boss 12.35.0, not 12.34.0. Not an app change.",
+            "change": "The pg-boss path names 12.35.0. The reminders section ran again and passed."
+          }
+        ],
+        "files": [
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay.mjs",
+            "sha256": "05cb2a824e7ce9613d774b51359faabc15a181fae42087831bceba2dfa2c7e3a"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/api.mjs",
+            "sha256": "6eb6f71fd2c7033a38fb1aa9e585b923e1199ceff8e2573cfc830269a0e6b729"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.json",
+            "sha256": "175ac5bf27e3dbb981a295686bc95955b9a0a66d9c14edb0d34dc1c925e4541c"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt1.json",
+            "sha256": "6cd2fc64addadd37be6f1ca8aa393beecbf2a44ba87556c2b58a15cecfc4cedb"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/reminders-and-audit-replay.attempt2.json",
+            "sha256": "c899d30ba4b2ab1cb7675c242d329b7be6aa220156ffa70a83edc4603914b2fb"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/v-c41-reminder-lead-times.png",
+            "sha256": "4b4a69b231004cd777282d2d2579d0742c0a5da24b95c6cdd62ad74f5a0de299"
+          },
+          {
+            "path": "batches/DOC-032/compat/compat-c/admin-config-replay/v-c41-audit-log-filtered.png",
+            "sha256": "9c93bbc87e551a7f712ac077801d11d55587995b26d1dda6fd02d6795565b0f0"
+          }
+        ]
+      },
+      "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of audit-log/routes.ts, audit-log/tool-calls.ts, org/routes.ts, settings-mcp.tsx, list-editor.tsx, activity.ts and messages/en-US.json. settings.tsx, settings-reminders.tsx, reminder-offsets.ts, my-reminder-lead-times.tsx, settings-notifications.tsx, settings-audit-log.tsx, audit-settings-tabs.tsx, settings-tool-calls.tsx, morning-round.ts, round-trigger.ts and activity-redaction.ts did not change. 3294f749 moved the Audit log, CSV export and Tool calls reads into shared functions for the Administration Tools; the filters, audience reach, redaction of an unreached second record, the export bound and the CSV columns are unchanged. org/routes.ts moved the reminder offset and comment-words reads into functions with the same answers. settings-mcp.tsx changed captions and moved the OAuth note; the Tool calls in the last day button did not change. activity.ts adds narrations, so the Action filter offers more events; the guide does not list them. list-editor.tsx only adds an optional expanded-row slot; the lead time list keeps Add lead time, Remove and the reorder handle. No statement in the guide changed. I replayed the DOC-030 admin-config reminders, audit and Tool calls sections on c3cmp: all 15 V-C41 steps passed (Administrator, with Legal Team Member and Administrator audience checks), the same count as DOC-030, after two harness-only attempts (see attempts).",
+      "outcome": "compatible"
+    }
+  ],
+  "findings": [
+    "No behavior that a guide in this set describes changed between each record's app commit and 4ca41822. Every credited replay step passed.",
+    "Harness only: the Profile timezone picker labels zones with their IANA name, such as America/New_York (GMT-4). The admin-config fixture helper typed the city with a space, which fails only when the clock picks a zone with an underscore.",
+    "Harness only: node_modules now holds @modelcontextprotocol/client 2.1.0, and the worker image holds pg-boss 12.35.0; the admin-config script named the earlier versions by path.",
+    "Harness only: Business User sign-in links on the shared work lab are limited to 3 per address and 30 per client address in 15 minutes, and parallel agents spend them. The first document-repository attempt lost its one Business User step to that budget.",
+    "Product notes carried unchanged from DOC-030: request-forms (Term type machine values; archived destination error page), publish-knowledge (a Legal Team Member cannot clear a confidential mark she set), entity-obligations (column resize strip)."
+  ],
+  "limitations": [
+    "Agent replay of DOC-030 scripts; not a human user study and not a new walkthrough written from the guide text.",
+    "document-previews, compare-versions and reminders-and-audit replayed on c3cmp, a lab built by this reviewer from the pinned commit with the same app and engine image IDs as work, not on the shared work lab. The reasons are in labs[].createdFor.",
+    "The reminders-and-audit log also holds 9 types-statuses-fields (V-C38) steps that ran only as the prerequisite for the audit steps; they are not credited to any article in this set."
+  ]
+}

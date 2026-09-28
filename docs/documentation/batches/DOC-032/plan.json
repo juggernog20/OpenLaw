@@ -1,0 +1,1306 @@
+{
+  "task": "DOC-032",
+  "issue": 1194,
+  "fromEdition": {
+    "supportedAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "applicationSha256": "34696f7630914abb33db524b3ae30eb4a89416460e5f2fe8df46457aa26f3c0d"
+  },
+  "pinned": {
+    "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385"
+  },
+  "labs": {
+    "work": ".documentation-labs/work/lab.json",
+    "firstrun": ".documentation-labs/firstrun/lab.json"
+  },
+  "groups": {
+    "contracts": [
+      {
+        "id": "contract-approvals",
+        "title": "Request and give approval",
+        "coverage": ["C16"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "45c6f9161c459b95c3205a6e0d4dac5a25d9f5dec2740cf480663ac18f1b6241",
+          "verifiedAt": "2026-09-25T10:37:03.318Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "Codex documentation author; corrections by DOC-030 source-review author agent (contracts-a)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-a)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/contracts-a/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C16",
+            "coverage": ["C16"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Editable Contract, two approvers, and a second actor for cancellation/rejection cases."
+            ],
+            "actions": [
+              "Request approvals, answer as the named people, re-request after rejection, and cross the Soft gate deliberately."
+            ],
+            "expectedResults": [
+              "Approval requests remain independent; the confirmed override is recorded and the Stage move succeeds."
+            ],
+            "negativeChecks": [
+              "A different user cannot answer someone else's request; unresolved approval is a warning, not an invented hard lock."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "documents": [
+      {
+        "id": "document-versions",
+        "title": "Upload Documents and add Document Versions",
+        "coverage": ["C26"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "52f85938179cb5abdade19f51ae795ad842c600ce94fc62524f78f417f0af444",
+          "verifiedAt": "2026-09-25T11:29:05.839Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (documents)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/documents/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/documents/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C26",
+            "coverage": ["C26"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Reached owning records, PDF/Word fixtures, two Versions, and comment paper."
+            ],
+            "actions": [
+              "Upload a Document, append a Document Version, inspect provenance/kind, and file conversation paper."
+            ],
+            "expectedResults": [
+              "A logical Document retains its linear Version chain and the paper's ownership/provenance is visible."
+            ],
+            "negativeChecks": [
+              "Unsupported corrections, failed uploads, and insufficient access do not silently alter a Version or its provenance."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "admin-org": [
+      {
+        "id": "first-run",
+        "title": "Set up a new OpenLaw instance",
+        "coverage": ["C35"],
+        "audiences": ["administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "ef145063a10347be4696a2ce3e25f507e520450f4fa0b10c8f80729e9d03b47f",
+          "verifiedAt": "2026-09-25T10:24:57.324Z",
+          "environment": "openlaw-docs-80ceef9e-firstrun2",
+          "author": "Codex documentation author; corrections by DOC-030 source-review author agent (first-run)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (first-run)",
+          "scriptEvidence": ["docs/documentation/batches/DOC-030/first-run/walkthrough.mjs"]
+        },
+        "scenarios": [
+          {
+            "id": "V-C35",
+            "coverage": ["C35"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "fresh",
+            "prerequisites": ["Fresh unseeded app and Mailpit; a fictional first Administrator."],
+            "actions": [
+              "Complete account setup and the nine-step welcome wizard: Welcome to OpenLaw, Your organization, Authentication, Business-user portal, Outbound email, Invite your team, E-signature, AI analysis, and Review."
+            ],
+            "expectedResults": [
+              "The Administrator reaches the app and the saved settings reflect the completed steps. Outbound email is required. The wizard cannot finish until a relay is saved or the environment pins one."
+            ],
+            "negativeChecks": [
+              "Validation/retry and resumed onboarding work. Finish is refused while outbound email is not configured. The Setup checklist and Review behave as the article states."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "organisation-and-users",
+        "title": "Manage your organization and users",
+        "coverage": ["C36"],
+        "audiences": ["administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "ce12f5670eaef7f50dd8bd15715ee1f0fea93073e2eba467b07563e51c782eab",
+          "verifiedAt": "2026-09-25T11:12:56.625Z",
+          "environment": "openlaw-docs-80ceef9e-work2 (shared Helix lab); openlaw-docs-80ceef9e-auth2w (owned unseeded lab) for the no-name branding, no-mailer invitation and last-Administrator checks",
+          "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org); DOC-030 corrections by DOC-030 source-review author agent (admin-org)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-org)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/admin-org/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C36",
+            "coverage": ["C36"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "Daniel's Administrator account, Mailpit, and disposable invited users."
+            ],
+            "actions": [
+              "Edit organization identity, invite/activate a user, change role, revoke sessions, and archive the user."
+            ],
+            "expectedResults": [
+              "Changes apply to the intended account and revoked sessions cease granting access."
+            ],
+            "negativeChecks": [
+              "Unauthorized administration, invalid invites, and self/last-Administrator safeguards behave as implemented."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "authentication-and-email",
+        "title": "Configure sign-in, portal access, and email",
+        "coverage": ["C37"],
+        "audiences": ["administrator", "operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "cdee48674cb2f6088c8a3c44160a80d121883585b5f045081ee7e3cc4a4a3733",
+          "verifiedAt": "2026-09-25T11:14:26.439Z",
+          "environment": "openlaw-docs-80ceef9e-auth2 (owned seeded lab with OIDC fixture); openlaw-docs-80ceef9e-auth2w (owned unseeded first-run lab)",
+          "author": "Codex documentation author; corrections by DOC-029 source-review author agent (admin-org); round 2 corrections by DOC-029r2 source-review author agent (admin-org); DOC-030 corrections by DOC-030 source-review author agent (admin-org)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-org)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/admin-org/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/admin-org/lib.mjs",
+            "docs/documentation/batches/DOC-030/admin-org/oidc-fixture.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C37",
+            "coverage": ["C37"],
+            "roles": ["administrator", "operator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "scenario-fixture",
+            "prerequisites": [
+              "Separate authentication lab, Mailpit, allowed domains, and a local OIDC/SAML fixture where supported."
+            ],
+            "actions": [
+              "Configure the separate Legal User Authentication and Business Portal Authentication policies, allowed domains, and email options. Verify that each account follows the policy for its actual role, and verify environment precedence for email."
+            ],
+            "expectedResults": [
+              "Administrators and Legal Team Members sign in with the methods enabled under Legal User Authentication. An Administrator with a password keeps emergency password sign-in when Email and password is off. Business Users sign in only with the methods enabled under Business Portal Authentication. Test mail reaches the controlled sink through the active configuration source."
+            ],
+            "negativeChecks": [
+              "Invalid issuer/relay, denied domain, and locked environment settings have recoverable outcomes without exposing secrets."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "mcp": [
+      {
+        "id": "configure-mcp",
+        "title": "Configure MCP",
+        "coverage": ["C57"],
+        "audiences": ["administrator", "operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "0db986245a7bc89d795e0f798185f48e24f46fb49b20521a19853270d000e297",
+          "verifiedAt": "2026-09-25T13:17:43.486Z",
+          "environment": "openlaw-docs-80ceef9e-work2 (V-M40-MCP Administrator) and openlaw-docs-80ceef9e-mcplan (V-M40-MCP operator, V-M41-MCP)",
+          "author": "DOC-030 source-review author agent (mcp)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (mcp)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-lan.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-m41.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-M40-MCP",
+            "coverage": ["C57"],
+            "roles": ["administrator", "operator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "disposable",
+            "prerequisites": ["A built M40 instance and fictional accounts."],
+            "actions": [
+              "Enable MCP and Legal Users API keys; set the ceiling, read-only policy and lifetime; approve and revoke a key; inspect Tool calls."
+            ],
+            "expectedResults": [
+              "Policy saves immediately and the next Client request uses it. Only Administrators manage the section."
+            ],
+            "negativeChecks": ["An expired or revoked key cannot connect."],
+            "status": "pass"
+          },
+          {
+            "id": "V-M41-MCP",
+            "coverage": ["C57"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "disposable",
+            "prerequisites": [
+              "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+            ],
+            "actions": [
+              "Toggle OAuth Clients, inspect each reachability failure and manage both Allowed Client kinds.",
+              "Generate and rotate a secret, change dynamic registration, set grant lifetime and revoke a grant from Active keys and grants."
+            ],
+            "expectedResults": [
+              "Labels and results match the article; new grants use the lifetime after restart."
+            ],
+            "negativeChecks": [
+              "A plain-HTTP LAN address refuses OAuth enablement by name while keys work.",
+              "Rotation invalidates the old secret without deleting grants."
+            ],
+            "status": "pass"
+          },
+          {
+            "id": "V-M42-MCP",
+            "coverage": ["C57"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "disposable",
+            "prerequisites": [
+              "A built M42 instance upgraded from M41 with every Toolset in the ceiling, fictional accounts of each type, and one modern and one legacy Client connected."
+            ],
+            "actions": [
+              "Confirm Team and Administration are unchecked after the upgrade; select each and save.",
+              "Request a key and open OAuth consent as a Legal Team Member and as a Business User; note the Toolsets offered.",
+              "Change the ceiling and Read-only while the modern Client and the legacy Client are connected."
+            ],
+            "expectedResults": [
+              "The captions read Starts off. and Starts off. Administrators only. Settings saved appears and the Audit log records each change.",
+              "A Legal Team Member is offered Team but not Administration; a Business User is offered neither. Nothing is pre-selected.",
+              "The modern Client reloads its lists without reconnecting; the legacy Client shows its old list until refreshed, and a call for a removed Toolset is refused."
+            ],
+            "negativeChecks": [
+              "Enabling a ceiling row does not add it to an existing key or grant.",
+              "Removing a Toolset from the ceiling blocks its Tools on an existing key at once."
+            ],
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": "connect-headless-client",
+        "title": "Connect a headless Client",
+        "coverage": ["C58"],
+        "audiences": ["legal_team_member", "administrator", "business_user"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "962c2db4f05be7dcc300ecdf257abd07ac6ff37e1fe68635a46490726fd912ab",
+          "verifiedAt": "2026-09-25T13:17:43.486Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (mcp)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (mcp)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/mcp/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/mcp/lib.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-m40.mjs",
+            "docs/documentation/batches/DOC-030/mcp/phase-m40r.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-M40-CLIENT",
+            "coverage": ["C58"],
+            "roles": ["legal_team_member", "administrator", "business_user"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "disposable",
+            "prerequisites": ["A built M40 instance and fictional accounts."],
+            "actions": [
+              "Request a key, approve from Your approvals, collect once and follow the Claude Code command; read these articles through Guide."
+            ],
+            "expectedResults": [
+              "The Client connects and lists the granted Tools; a later key read returns no secret."
+            ],
+            "negativeChecks": ["An expired or revoked key cannot connect."],
+            "status": "pass"
+          },
+          {
+            "id": "V-M42-C58",
+            "coverage": ["C58"],
+            "roles": ["legal_team_member", "administrator", "business_user"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "disposable",
+            "prerequisites": [
+              "A built M42 instance, an approved API key for each account type and a script Client on Streamable HTTP."
+            ],
+            "actions": [
+              "Call resources/templates/list, resources/list and resources/read for each address in the table.",
+              "Call prompts/list, then prompts/get for triage_inbox with a limit and for summarize_record with a record address and with a kind and number.",
+              "Open subscriptions/listen, change the Toolset ceiling and update a subscribed record."
+            ],
+            "expectedResults": [
+              "Each read returns the content the matching Tool returns; Document Version text is plain text with a continuation cursor when more text exists.",
+              "Each prompt returns instructions and an embedded resource; each read or get counts once against the rate limit.",
+              "The stream receives list_changed and resources/updated notifications for reached records only."
+            ],
+            "negativeChecks": [
+              "An address with a query, fragment or extra path segment is refused. A limit outside 1 to 100 is refused.",
+              "A revoked key closes the stream and the next call is unauthorized."
+            ],
+            "status": "pending"
+          }
+        ]
+      },
+      {
+        "id": "connect-claude",
+        "title": "Connect Claude",
+        "coverage": ["C59"],
+        "audiences": ["legal_team_member", "administrator", "business_user"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "50532b15c33c8fef038024c3e928be6771c1567346568febbd897731da9bc3d1",
+          "verifiedAt": "2026-09-25T20:48:17.618Z",
+          "environment": "openlaw-docs-80ceef9e-claudelive; openlaw-docs-80ceef9e-claudelocal",
+          "author": "DOC-030 source-review author agent (clients)",
+          "walkthroughReviewer": "DOC-030 independent live-provider walkthrough agent (claude-live)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/claude-live/phase-browser.mjs",
+            "docs/documentation/batches/DOC-030/claude-live/phase-local.mjs",
+            "docs/documentation/batches/DOC-030/claude-live/phase-round.mjs",
+            "docs/documentation/batches/DOC-030/claude-live/phase-origin443.mjs",
+            "docs/documentation/batches/DOC-030/claude-live/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-M41-C59",
+            "coverage": ["C59"],
+            "roles": ["legal_team_member", "administrator", "business_user"],
+            "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+            "environment": "disposable",
+            "prerequisites": [
+              "A built M41 instance, fictional accounts, and the vendor accounts and network profile required by the guide."
+            ],
+            "actions": [
+              "Connect claude.ai, Claude Desktop and Cowork through the custom connector and Claude Code through HTTP and /mcp; choose consent and disconnect.",
+              "Connect Claude Code over private HTTPS with its loopback callback.",
+              "Search for Connect Claude and read it through Guide; compare the text with Help."
+            ],
+            "expectedResults": [
+              "The Client acts as the signed-in person within the selected Toolsets, scope and record access.",
+              "Disconnect removes the grant and the next call is unauthorized."
+            ],
+            "negativeChecks": [
+              "Allow stays disabled without a Toolset and scope. Read and write is absent when the organization is read-only.",
+              "An expired consent link requires a fresh connection; disabled Clients and account groups are refused."
+            ],
+            "status": "pass"
+          },
+          {
+            "id": "V-M42-C59",
+            "coverage": ["C59"],
+            "roles": ["legal_team_member", "administrator", "business_user"],
+            "requiredMethods": ["browser-walkthrough", "live-provider-check"],
+            "environment": "disposable",
+            "prerequisites": [
+              "A built M42 instance, fictional accounts with reached Contracts and Requests, and the Claude accounts the guide requires."
+            ],
+            "actions": [
+              "In Claude Code, attach a Contract with @openlaw:openlaw://contracts/{number}, then run /openlaw:triage_inbox and /openlaw:summarize_record.",
+              "In claude.ai, open the OpenLaw attachment menu and add the Inbox resource and the summary prompt.",
+              "Search for triage_inbox and read Connect Claude through Guide; compare the text with Help."
+            ],
+            "expectedResults": [
+              "The attached resource and the summary follow the person's grant and record access. Triage proposes a Disposition, type, urgency and assignee and waits for confirmation before it assigns or comments.",
+              "Conversion ends at a link to the Request; the person completes the Convert dialog in OpenLaw."
+            ],
+            "negativeChecks": [
+              "A Business User sees no triage prompt. A record outside the grant or reach is refused by address.",
+              "A Contract address is refused when the Contracts Toolset is not in the grant."
+            ],
+            "status": "pending"
+          }
+        ]
+      }
+    ],
+    "access": [
+      {
+        "id": "staff-sign-in",
+        "title": "Set up your account and sign in",
+        "coverage": ["C01"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "29d19f729b8f1e04e4269fb930f962b1a0105e733327b2557c5407603fb1ba35",
+          "verifiedAt": "2026-09-25T10:45:02.630Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (access-2)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (access-2)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/access-2/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/access-2/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C01",
+            "coverage": ["C01"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "pilot",
+            "prerequisites": [
+              "Invited account, Mailpit activation message, and a separate authenticated session."
+            ],
+            "actions": [
+              "Activate the account, sign in, enroll and use two-factor authentication, then sign out."
+            ],
+            "expectedResults": [
+              "The intended account reaches its permitted landing page; two-factor and session controls have their documented effects."
+            ],
+            "negativeChecks": [
+              "Expired activation, incorrect password/code, and revoked-session behavior are observable without exposing another account."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "portal-sign-in",
+        "title": "Sign in to the Business Portal",
+        "coverage": ["C02"],
+        "audiences": ["business_user"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "d547143ab8f3c8f3969576cadb326df6e9aa58ed3eb7a340994ed41257dd6256",
+          "verifiedAt": "2026-09-25T11:29:16.286Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "Codex documentation author; corrections by DOC-029 source-review author agent (access); round 2 corrections by DOC-029r2 source-review author agent (access); DOC-030 corrections by DOC-030 source-review author agent (access)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (access)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/access/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C02",
+            "coverage": ["C02"],
+            "roles": ["business_user"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "pilot",
+            "prerequisites": [
+              "Portal enabled for helix.example; Jonas and Amara use separate browser contexts."
+            ],
+            "actions": [
+              "Request and redeem a magic link, sign out, then try an expired or already-used link."
+            ],
+            "expectedResults": [
+              "Only the intended Business User session opens; the portal shows that person's Requests."
+            ],
+            "negativeChecks": [
+              "An unapproved domain gets the supported refusal/neutral response; a bad link offers a working recovery route."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "contracts-2": [
+      {
+        "id": "create-contract",
+        "title": "Create and maintain a Contract",
+        "coverage": ["C14"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "f2e0f8f483189190429de4313ffbac136c0df54aa0b90e203c1906d67fc239db",
+          "verifiedAt": "2026-09-25T10:36:05.127Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "Codex integration author; corrections by DOC-030 source-review author agent (contracts-a)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-a)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/contracts-a/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C14",
+            "coverage": ["C14"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Active Entity, Counterparties, Contract type, prospective Owner, and team members."
+            ],
+            "actions": [
+              "Create a Contract, choose our Entity and Counterparties, assign its Owner/team, and edit business Fields."
+            ],
+            "expectedResults": [
+              "The Contract stores the intended parties, accountability, and values and is reached by the expected people."
+            ],
+            "negativeChecks": [
+              "Required/invalid values and archived references are handled without creating an unintended Contract."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "approver-groups",
+        "title": "Configure reusable Approver groups",
+        "coverage": ["C55"],
+        "audiences": ["administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "c0f132517840b0fd75f56250e1ed446326f13fd62027aef4577305ae37d4d88d",
+          "verifiedAt": "2026-09-25T10:37:26.860Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "Codex documentation author; corrections by DOC-030 source-review author agent (contracts-a)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-a)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/contracts-a/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/contracts-a/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C55",
+            "coverage": ["C55"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "Administrator, two Member+ approvers, and a Contract with an applied group."
+            ],
+            "actions": [
+              "Create/edit/archive an Approver group and apply it to a Contract before changing its membership."
+            ],
+            "expectedResults": [
+              "Applying a group snapshots members into Approval requests; later group edits do not rewrite those requests."
+            ],
+            "negativeChecks": [
+              "Non-Member+ selections and unauthorized configuration are refused; existing requests retain their recorded identities."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "terms-and-renewals",
+        "title": "Manage Contract terms and renewals",
+        "coverage": ["C18"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "6f22651cd832e3e936addad2c77864fa6237a12944c4ad161ed8933c7b6ec9ec",
+          "verifiedAt": "2026-09-25T11:50:28.438Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (shared-files)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/signing-2/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C18",
+            "coverage": ["C18"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Contracts with fixed terms, notice periods, and representative renewal options."
+            ],
+            "actions": [
+              "Edit the term, inspect derived notice/next-deadline values, and confirm a proposed renewal."
+            ],
+            "expectedResults": [
+              "The displayed dates reflect the recorded term and the renewal changes the term only through the supported action."
+            ],
+            "negativeChecks": [
+              "Invalid or stale dates are refused/re-read; Task due dates are not substituted for Contract deadlines."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "troubleshooting",
+        "title": "Resolve common problems",
+        "coverage": ["C49"],
+        "audiences": ["legal_team_member", "administrator", "business_user"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678",
+          "verifiedAt": "2026-09-25T11:55:31Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (support)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (support)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/support/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C49",
+            "coverage": ["C49"],
+            "roles": ["legal_team_member", "administrator", "business_user"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "Named app error fixtures from access, upload, preview, notifications, approvals, signing, and Analysis scenarios."
+            ],
+            "actions": [
+              "Start from each visible symptom and follow the troubleshooting article's checks and recovery links."
+            ],
+            "expectedResults": [
+              "The intended reader reaches an accurate resolution or a specific escalation with useful non-sensitive facts."
+            ],
+            "negativeChecks": [
+              "The article does not offer an access bypass, invent an unavailable action, or treat a provider stand-in as live-provider evidence."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "contract-stages",
+        "title": "Change a Contract Status",
+        "coverage": ["C15"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "status": "pass",
+          "contentSha256": "1fdab1e10d73f60cc207234a4752b3a282effca11b011380fc21ded5cf08d95b",
+          "verifiedAt": "2026-09-16T15:40:06.333Z",
+          "environment": "openlaw-docs-41255c61-work",
+          "author": "Codex documentation author; corrections by DOC-029 source-review author agent (contracts-a)",
+          "walkthroughReviewer": "DOC-029 independent walkthrough agent (contracts-a, round 1)",
+          "scriptEvidence": ["docs/documentation/batches/DOC-029/contracts-a/walkthrough-r1.mjs"]
+        },
+        "scenarios": [
+          {
+            "id": "V-C15",
+            "coverage": ["C15"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Contract Statuses covering the fixed Stages and an editable Contract."
+            ],
+            "actions": [
+              "Move through representative Statuses and inspect the displayed Stage and activity."
+            ],
+            "expectedResults": [
+              "Status labels use their configured Stage mapping and each successful move is visible."
+            ],
+            "negativeChecks": [
+              "An archived/read-only record offers no unsupported mutation; renaming a Status does not change its Stage."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "documents-2": [
+      {
+        "id": "archive-and-delete-documents",
+        "title": "Archive, restore, or permanently delete Documents",
+        "coverage": ["C54"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "5ddced602dd598518d23d7927a1204ef9fd2d3486697527b279ac9cfcebd7ece",
+          "verifiedAt": "2026-09-25T11:41:23.696Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (contracts-c)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (contracts-c)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/contracts-c/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/contracts-c/lib.mjs",
+            "docs/documentation/batches/DOC-030/contracts-c/documents.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C54",
+            "coverage": ["C54"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Disposable Documents with multiple Versions and independent Administrator, Legal Team Member, and Business User sessions."
+            ],
+            "actions": [
+              "Archive/restore permitted Documents and permanently delete a separate Document as Administrator."
+            ],
+            "expectedResults": [
+              "Archive/restore preserves supported history; permanent deletion removes the documented Versions/files and references."
+            ],
+            "negativeChecks": [
+              "Other roles cannot perform Administrator deletion; consequences and unavailable-file behavior match the guide."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "create-knowledge",
+        "title": "Create and organize Knowledge Items",
+        "coverage": ["C33"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "31863d786a429f225bfe0df5d4c70cc005efd11ffc006abdfd7d65d8e3900c3a",
+          "verifiedAt": "2026-09-25T13:30:47.511Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (shared-files)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (documents-2)",
+          "scriptEvidence": ["docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs"]
+        },
+        "scenarios": [
+          {
+            "id": "V-C33",
+            "coverage": ["C33"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "knowledge",
+            "prerequisites": [
+              "Knowledge types/folders and a draft Knowledge Item with fictional Documents."
+            ],
+            "actions": [
+              "Create and organize an item, edit guidance, and choose its primary Document."
+            ],
+            "expectedResults": [
+              "The item, its guidance, its folder, and its Documents remain distinct records with a working primary choice."
+            ],
+            "negativeChecks": [
+              "Unavailable/archived references have supported outcomes. A Business User cannot author or browse the staff Knowledge library."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "contributor-guide",
+        "title": "Work on a shared Contract or Matter",
+        "coverage": ["C25"],
+        "audiences": ["business_user"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "e11d9743d2fbf74a314460577b9c3661c00553c2c530f4e6caf9280d47c67921",
+          "verifiedAt": "2026-09-25T11:47:02.288Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "Codex integration author; corrections by DOC-029 source-review author agent (roles); link label correction by DOC-029 integration author agent; DOC-030 corrections by DOC-030 source-review author agent (access); Kind wording by DOC-030 source-review author agent (shared-files)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (access)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/access/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/access/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C25",
+            "coverage": ["C25"],
+            "roles": ["business_user"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "pilot",
+            "prerequisites": [
+              "Ravi is on one Contract and Matter team and absent from comparable records."
+            ],
+            "actions": [
+              "Edit permitted business Fields, add supporting Documents, and comment as Ravi."
+            ],
+            "expectedResults": [
+              "Business User actions succeed only on reached work and the guide identifies the actual legal-action limits."
+            ],
+            "negativeChecks": [
+              "Stage/Status moves and other reserved legal actions remain unavailable; removing Ravi's reach stops access."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "reference",
+        "title": "Look up terms, permissions, and file behavior",
+        "coverage": ["C50"],
+        "audiences": ["legal_team_member", "administrator", "business_user", "operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "1319240ad60cfe2077499ef55943bce00c40e6146b26a3f1b37bf77a3be412bb",
+          "verifiedAt": "2026-09-25T11:55:31Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (support)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (support)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/support/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/support/lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C50",
+            "coverage": ["C50"],
+            "roles": ["legal_team_member", "administrator", "business_user", "operator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "The target build's glossary, configured labels, role fixtures, and file-behavior examples."
+            ],
+            "actions": [
+              "Look up representative terms and limits, then compare the references with the relevant app actions."
+            ],
+            "expectedResults": [
+              "The reference separates fixed concepts from configured labels and accurately states role/file limits."
+            ],
+            "negativeChecks": [
+              "Examples do not equate Entity with Counterparty, Task due dates with Key dates, or Comparison with Document Version."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "records": [
+      {
+        "id": "create-matter",
+        "title": "Create a Matter and use a template",
+        "coverage": ["C22"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "27c935b35a5a7c80c8cd0ef80251dab68145a0bf9c8950f1505e7881c726bbf7",
+          "verifiedAt": "2026-09-25T11:02:20.097Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (matters)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (matters)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/matters/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/matters/lib.mjs",
+            "docs/documentation/batches/DOC-030/matters/setup.mjs",
+            "docs/documentation/batches/DOC-030/matters/wt-create-matter.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C22",
+            "coverage": ["C22"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Matter type/template, Entity reference Field, a linked Contract with a Counterparty, Matter Manager, and team."
+            ],
+            "actions": [
+              "Create a Matter directly and from a template, then edit its supported business Fields."
+            ],
+            "expectedResults": [
+              "The Matter has its intended Manager, team, references, and template defaults."
+            ],
+            "negativeChecks": [
+              "Missing required values and unavailable templates produce the supported validation or selection behavior."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "entity-records",
+        "title": "Manage Holdings, Officers, and Registrations",
+        "coverage": ["C32"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "c3209b12d7c67ec167125da9a559cefc5bbe6b07d1077e922bcecc8d1deb82ed",
+          "verifiedAt": "2026-09-25T11:38:23.867Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (entities)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (entities)",
+          "scriptEvidence": ["docs/documentation/batches/DOC-030/entities/walkthrough.mjs"]
+        },
+        "scenarios": [
+          {
+            "id": "V-C32",
+            "coverage": ["C32"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "entities",
+            "prerequisites": [
+              "Two Entities, an Officer, a Registration, and fictional corporate Documents."
+            ],
+            "actions": [
+              "Record a Holding, Officer appointment, Registration, and Document; archive/restore a separate Entity."
+            ],
+            "expectedResults": [
+              "The entered corporate facts and files persist with their supported dates and relationships."
+            ],
+            "negativeChecks": [
+              "Invalid ownership/date values and archived/read-only restrictions are handled without changing unrelated facts."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "entity-structure-and-access",
+        "title": "Manage Entity structure and access",
+        "coverage": ["C53"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "0a4b028bcaadc3fc71c1a3b820ad9e6fd5af217c3db2be999695c3beb4136c8f",
+          "verifiedAt": "2026-09-25T11:45:22.748Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (entities)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (entities)",
+          "scriptEvidence": ["docs/documentation/batches/DOC-030/entities/walkthrough.mjs"]
+        },
+        "scenarios": [
+          {
+            "id": "V-C53",
+            "coverage": ["C53"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "entities",
+            "prerequisites": [
+              "Ownership graph, share capital, linked work, confidential Entity, and allowed/denied readers."
+            ],
+            "actions": [
+              "Edit supported capital facts, inspect the chart/links, and grant then remove confidential access."
+            ],
+            "expectedResults": [
+              "Corporate facts and graph edges are accurate and explicit Grants control the intended reach."
+            ],
+            "negativeChecks": [
+              "Restricted linked records remain protected; a Holding or chart relationship does not grant access."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "types-statuses-fields",
+        "title": "Configure types, Statuses, and Fields",
+        "coverage": ["C38"],
+        "audiences": ["administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "eb7213b82ab840946b86875c9107eab42838024078b6d5a346a0c911c73f7060",
+          "verifiedAt": "2026-09-25T13:34:35.597Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (admin-config)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/admin-config/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C38",
+            "coverage": ["C38"],
+            "roles": ["administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "Administrator, active types/Statuses/Fields, and records retaining values from a retired definition."
+            ],
+            "actions": [
+              "Configure definitions and requiredness, then archive/reassign representative entries."
+            ],
+            "expectedResults": [
+              "New and existing records reflect the documented configuration and retained-value behavior."
+            ],
+            "negativeChecks": [
+              "Immutable Stage/Category mappings and invalid reassignment are refused; non-Administrators cannot edit configuration."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "auto-doc-template",
+        "title": "Write an Auto-Doc template",
+        "coverage": ["C56"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "324bcfd4ffd2796fcef942f3fe22a220194b764665cc7d95c11d1de840d6530f",
+          "verifiedAt": "2026-09-25T13:35:19.617Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (admin-config)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (admin-config)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/admin-config/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/admin-config/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C56",
+            "coverage": ["C56"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "auto-docs",
+            "prerequisites": [
+              "A draft Auto-Doc and a fictional Word file with Placeholders, one directive, and one Block."
+            ],
+            "actions": [
+              "Upload the file, read the template pane, edit a field from its card, write a Clause rule, re-upload a file that drops a Placeholder, and publish."
+            ],
+            "expectedResults": [
+              "The pane marks every Placeholder and Block, the form follows each commit, the orphaned field is marked and kept, and Publish pins the chosen pair."
+            ],
+            "negativeChecks": [
+              "An unclosed Block, an unclosed brace, and a directive on a mismatched field type are refused with the offending text named."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "operator": [
+      {
+        "id": "install",
+        "title": "Install OpenLaw",
+        "coverage": ["C44"],
+        "audiences": ["operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
+          "verifiedAt": "2026-09-25T13:46:30.937Z",
+          "environment": "openlaw-doc030-opinst2 (round 2); openlaw-doc030-opinst (round 1); same-host Caddy proxy at https://openlaw-doc030.localhost with an internal CA",
+          "author": "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-install); DOC-030 corrections by DOC-030 source-review author agent (shared-files) and DOC-030 source-review author agent (operator-2)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C44",
+            "coverage": ["C44"],
+            "roles": ["operator"],
+            "requiredMethods": ["container-operation"],
+            "environment": "operator",
+            "prerequisites": [
+              "Disposable host/project, selected immutable app/engine images, and a fictional operator with the draft guide."
+            ],
+            "actions": [
+              "Independently follow the production installation guide from an empty state and time the path to usable setup."
+            ],
+            "expectedResults": [
+              "The app reaches readiness and first-run setup with the documented production defaults and topology."
+            ],
+            "negativeChecks": [
+              "Missing secrets, occupied ports, and unavailable dependencies lead to the documented recovery; the authoring lab is not counted as production install evidence."
+            ],
+            "status": "pass"
+          }
+        ]
+      },
+      {
+        "id": "upgrade",
+        "title": "Upgrade a populated instance",
+        "coverage": ["C46"],
+        "audiences": ["operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "224f6e7a7fdc040b16b2811efe4ca48870d701e2826c314a9d7b5f05eb8841da",
+          "verifiedAt": "2026-09-25T13:49:34.278Z",
+          "environment": "openlaw-doc030-opup2 behind a same-host Caddy proxy at http://127.0.0.1:24651 (round 2); openlaw-doc030-opup and openlaw-doc030-oprecover (round 1)",
+          "author": "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-lifecycle); DOC-030 corrections by DOC-030 source-review author agent (operator-2)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (operator-2)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/operator-2/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/operator-2/op-lib.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C46",
+            "coverage": ["C46"],
+            "roles": ["operator"],
+            "requiredMethods": ["container-operation"],
+            "environment": "operator",
+            "prerequisites": [
+              "Pinned earlier supported image with populated records/files/configuration and a separate upgrade target."
+            ],
+            "actions": [
+              "Capture the baseline, follow the upgrade guide, and compare retained data and behavior after migration."
+            ],
+            "expectedResults": [
+              "Accounts, permissions, records, files, and required encrypted configuration survive the supported upgrade."
+            ],
+            "negativeChecks": [
+              "Exercise backup-based recovery in a separate target; do not imply that downgrading a migrated database is supported."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "signing": [
+      {
+        "id": "manual-signing",
+        "title": "Record a Contract signed outside OpenLaw",
+        "coverage": ["C17"],
+        "audiences": ["legal_team_member", "administrator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+          "status": "pass",
+          "contentSha256": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+          "verifiedAt": "2026-09-25T11:50:28.438Z",
+          "environment": "openlaw-docs-80ceef9e-work2",
+          "author": "DOC-030 source-review author agent (shared-files)",
+          "walkthroughReviewer": "DOC-030 independent walkthrough agent (signing-2)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+            "docs/documentation/batches/DOC-030/signing-2/api.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C17-manual",
+            "coverage": ["C17"],
+            "roles": ["legal_team_member", "administrator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "conversations",
+            "prerequisites": [
+              "Contract with an uploaded fictional executed PDF; no Signing connector."
+            ],
+            "actions": [
+              "Use the Manual hand-off, choose the Executed pin, and move to the intended active Status."
+            ],
+            "expectedResults": [
+              "The selected Document Version is explicitly pinned and the Contract reaches the chosen Stage without a connector."
+            ],
+            "negativeChecks": [
+              "A Version kind alone does not set the Executed pin; unsupported users cannot perform the legal action."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
+    ]
+  },
+  "compatibilitySets": {
+    "compat-a": [
+      "find-your-work",
+      "search-and-views",
+      "personal-settings",
+      "roles-and-access",
+      "comments-and-activity",
+      "notifications",
+      "submit-request",
+      "follow-request",
+      "portal-knowledge",
+      "triage-requests",
+      "convert-request"
+    ],
+    "compat-b": [
+      "manual-signing",
+      "contract-tasks-and-dates",
+      "contract-relations-and-ending",
+      "contract-analysis",
+      "matter-status-and-archive",
+      "matter-work",
+      "matter-templates"
+    ],
+    "compat-c": [
+      "document-folders",
+      "document-previews",
+      "compare-versions",
+      "document-repository",
+      "publish-knowledge",
+      "entities-and-counterparties",
+      "entity-obligations",
+      "request-forms",
+      "reminders-and-audit"
+    ],
+    "compat-d": [
+      "configure-analysis",
+      "deployment-configuration",
+      "backup-and-restore",
+      "operator-troubleshooting",
+      "versions-and-support"
+    ]
+  },
+  "notes": [
+    "contract-stages was a triage compat candidate. The contracts author asked for a change to its step 3 (a send for signature crosses the approval line without the Soft gate), so it moved to group contracts-2 for a source review and walkthrough.",
+    "electronic-signing and configure-signing stay blocked on the live DocuSign session of #1178. connect-chatgpt and connect-microsoft-365-copilot stay with DOC-031 (#1187)."
+  ]
+}

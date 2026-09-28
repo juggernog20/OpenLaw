@@ -131,6 +131,37 @@
     "contentSha256": "4a4ea2e07dbe4ca65c8765623fc7aafbbac0625ad5db496b3acb07475003255b",
     "verifiedAt": "2026-09-16T16:00:39Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:08:04.677Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/api-keys.tsx, apps/web/src/lib/activity.ts and messages/en-US.json. No notifier, catalog, preference, bell, device or reminder source changed (apps/api/src/lib/notifications/, notification-bell.tsx, notification-preferences.tsx, my-reminder-lead-times.tsx, settings-notifications.tsx, portal-settings.tsx, settings-reminders.tsx, key-date-reminders.ts, morning-round.ts and notification-email.ts have no diff). activity.ts adds narrations for new actions but no notification kind. api-keys.tsx only limits the Toolsets offered in a key request; the API key notification rows and their Approve and Deny controls did not change. The replay passed its final 38 steps for Legal Team Member, Administrator and Business User. Replay log: batches/DOC-032/compat/compat-a/notifications-replay.json.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay.mjs",
+        "sha256": "4c7094998452a37339aefdade61d3c61a7d68a8ba622275025c45e34764ec1b3"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay/fixtures.json",
+        "sha256": "ab94cca2cf9eb2f6a9f1a6517068f0dbb2a1a70cded91d85b04e57673e731a39"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/conversations-replay/lib.mjs",
+        "sha256": "091138a6ae2ff1b91d1b5e5d87808c5bb1aab9aac0b63efc801c66145397db80"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/notifications-replay.json",
+        "sha256": "dc5f9180ad2d4140005c0d9ce210d3c00616b89f47c83daa6564ed4d4f703282"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

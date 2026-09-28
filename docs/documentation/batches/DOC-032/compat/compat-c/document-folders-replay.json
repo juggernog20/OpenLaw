@@ -1,0 +1,608 @@
+{
+  "kind": "independent-article-walkthrough",
+  "task": "DOC-032",
+  "set": "compat-c",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/documents-2/walkthrough.mjs",
+  "group": "documents-2",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "lab": {
+    "name": "work",
+    "project": "openlaw-docs-9d2b1705-work",
+    "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T06:50:34.922Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T06:50:48.736Z"
+    }
+  },
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "browser": "Playwright 1.63.0 Chromium, headless, one browser context per identity",
+  "articleHashes": {
+    "document-folders": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+    "document-repository": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+    "create-knowledge": "4eb7700e3a16f0f12c3bab7fea8c3d2d7ee644eb7be0b59555ebcc18658a15ea"
+  },
+  "fixtures": [
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-a.txt",
+      "sha256": "c0dbc1f2090728af690515624fde1ce37d172b484369ff01bca40a5a4a038749"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-b.txt",
+      "sha256": "a3686c10a2d63e59d8e601e9a58c7eea07eddb39b88f1a3ed8b6df5d59b9c916"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-c.txt",
+      "sha256": "342c505925518d24e3503bdf2a7afe209e6ced5595047b831f151f274467ffdb"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-bulk-d.txt",
+      "sha256": "b7336358ec54ea046d5c273a35ce5ca5d6e0540885838d5e6ee2e765e5cb8fc8"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-services-text.pdf",
+      "sha256": "dac0eda00e4fb895be58fed622322e660f7a47c8a73f4ab9e8a2a6886d7f09b4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-scan.pdf",
+      "sha256": "bc1dad800ab8e67121dbf0f05c6eed62c592f2706ca50435f1752ffd34f8dd96"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-draft-v1.docx",
+      "sha256": "7ef62e21080b131fe52983809b9c4120003179cf4bad2616abe23ef5b559f24d"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/documents/fixtures/doc029-schedule.csv",
+      "sha256": "438b5f30d7bd6c963a345a71a705f6fa9b9248fb5db4bee7f85482ae8576dbc4"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/knowledge/fixtures/doc029-policy-a.pdf",
+      "sha256": "a9a1378630ec94eef1d167444261e7d9128524acd8e0c3d648d4a4ccdc436ae1"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/knowledge/fixtures/doc029-policy-b.pdf",
+      "sha256": "2f583bff04f5cb7a193437299bc9dbee7c5de73169218b9c6881fdf71de7b900"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/knowledge/fixtures/doc029-playbook.docx",
+      "sha256": "9b1cac7bf1621f18113d1da816b8f468fd0c7dd35a9ca1b1df037403515bd950"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/knowledge/fixtures/doc029-playbook-v2.docx",
+      "sha256": "9180a585441de53fa718a68938db563918f3f51ae4091958112b2ad3be9e5d8f"
+    },
+    {
+      "path": "docs/documentation/batches/DOC-029/knowledge/fixtures/doc029-checklist.pdf",
+      "sha256": "d69ff225e21422e74403363000b0cff15a113931e98bf342de1ded41d21bfa7a"
+    },
+    {
+      "path": "(generated at run time, not kept) repo-search-<role>-<stamp>.pdf and -v2.pdf",
+      "note": "one-page PDFs with one fictional line each; v1 holds a zulu marker word, v2 a yankee marker word"
+    },
+    {
+      "path": "(generated at run time, not kept) doc030-oversize.bin",
+      "note": "101 MiB of zero bytes, one MiB over the lab's default upload ceiling: the intentionally failing file"
+    }
+  ],
+  "sections": ["setup", "folders", "business", "teardown"],
+  "roles": ["administrator", "legal_team_member"],
+  "stamp": "09280715",
+  "settingsChanged": [
+    {
+      "setting": "Matter Document type list",
+      "added": "DOC-032 compat compat-c Matter type 09280715",
+      "id": "01a0e6de-3939-704a-a780-579e4b25e2ea",
+      "restore": "archive at teardown",
+      "restored": "archived at teardown (200)"
+    }
+  ],
+  "startedAt": "2026-09-28T07:15:17.097Z",
+  "finishedAt": "2026-09-28T07:16:15.394Z",
+  "records": [
+    {
+      "role": "administrator",
+      "kind": "document_type:matter",
+      "name": "DOC-032 compat compat-c Matter type 09280715",
+      "ref": "01a0e6de-3939-704a-a780-579e4b25e2ea"
+    },
+    {
+      "role": "administrator",
+      "kind": "contract",
+      "name": "DOC-032 compat compat-c Admin folders Contract 09280715",
+      "ref": "C-56"
+    },
+    {
+      "role": "administrator",
+      "kind": "matter",
+      "name": "DOC-032 compat compat-c Admin folders Matter 09280715",
+      "ref": "M-23"
+    },
+    {
+      "role": "administrator",
+      "kind": "entity",
+      "name": "DOC-032 compat compat-c Admin folders Entity 09280715 Ltd",
+      "ref": "01a0e6de-7fb0-7ec2-891d-063d11635339"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-032 compat compat-c Legal folders Contract 09280715",
+      "ref": "C-64"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "matter",
+      "name": "DOC-032 compat compat-c Legal folders Matter 09280715",
+      "ref": "M-24"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "entity",
+      "name": "DOC-032 compat compat-c Legal folders Entity 09280715 Ltd",
+      "ref": "01a0e6de-eed6-748d-9433-f41c915c7dc1"
+    },
+    {
+      "role": "legal_team_member",
+      "kind": "contract",
+      "name": "DOC-032 compat compat-c Portal Contract 09280715",
+      "ref": "C-67"
+    }
+  ],
+  "productBugs": [],
+  "limitations": [],
+  "steps": [
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/documents/matters",
+      "action": "Setup in the browser as Administrator: profile menu, Settings, Documents, Matters tab, Add type \"DOC-032 compat compat-c Matter type 09280715\"",
+      "expected": "The new type is listed on the Matters tab; Matter imports can then show Type",
+      "actual": "Settings → Documents opened /settings/documents/matters (active Matter types before: none). Add type, New type name, Save listed \"DOC-032 compat compat-c Matter type 09280715\" (read-back active).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:17.978Z",
+      "at": "2026-09-28T07:15:18.487Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders steps 1-2: Documents tab, New folder, Name, Save; an empty folder has no expand control",
+      "expected": "The folder row appears without an expand control",
+      "actual": "New folder opened a dialog with Name and Save. The \"DOC-032 compat compat-c Admin Parent\" row appeared reading \"DOC-032 compat compat-c Admin Parent Empty\" with no expand control.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:18.910Z",
+      "at": "2026-09-28T07:15:19.763Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders steps 2-3: New subfolder and Rename from Actions for the … folder; a folder with contents gets an expand control",
+      "expected": "The subfolder is created inside; the parent gains an expand/collapse control; Rename changes the name",
+      "actual": "Actions for the DOC-032 compat compat-c Admin Parent folder offered New subfolder; its dialog \"New folder in DOC-032 compat compat-c Admin Parent\" created the child, shown under the parent, which now had an expand/collapse control. Rename opened \"Rename folder\" and changed \"DOC-032 compat compat-c Admin Child draft\" to \"DOC-032 compat compat-c Admin Child\". Read-back: the child's parent is DOC-032 compat compat-c Admin Parent.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:19.764Z",
+      "at": "2026-09-28T07:15:20.135Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Folder name rules: a case-only duplicate sibling, a blank name, a slash, '.' and '..' are refused",
+      "expected": "Each attempt shows a refusal in the dialog and creates nothing",
+      "actual": "All five names were refused in the dialog and no folder was created (2 folders before and after). \"DOC-032 COMPAT COMPAT-C ADMIN PARENT\": A folder named DOC-032 COMPAT COMPAT-C ADMIN PARENT is already here.; \"   \": Give the folder a name.; \"DOC-032 compat compat-c a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder..",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:20.135Z",
+      "at": "2026-09-28T07:15:20.902Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+      "expected": "Move into omits the folder and its descendant, the server refuses a cycle, and None returns a folder to the top level",
+      "actual": "Move into for \"DOC-032 compat compat-c Admin Parent\" offered None, DOC-032 compat compat-c Admin Other: not the folder itself or its child. A second-actor request to move it into its own child was refused (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-032 compat compat-c Admin Child\" into \"DOC-032 compat compat-c Admin Other\" read back as DOC-032 compat compat-c Admin Other/DOC-032 compat compat-c Admin Child; Move into None put it at the top level.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:20.902Z",
+      "at": "2026-09-28T07:15:21.627Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders step 4: Actions, Move to folder, File in, Move; None moves it out",
+      "expected": "The Document is filed in the folder and then moved back to the record",
+      "actual": "Move to folder opened \"Move doc030-admin-loose-a.txt\" with File in; choosing \"DOC-032 compat compat-c Admin Parent\" filed the Document there, shown after expanding the folder. File in None moved it back onto the record (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:21.627Z",
+      "at": "2026-09-28T07:15:22.842Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+      "expected": "Dragging files the Document into the folder and back out",
+      "actual": "Dragging the \"doc030-admin-loose-b.txt\" row onto the \"DOC-032 compat compat-c Admin Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:22.843Z",
+      "at": "2026-09-28T07:15:24.638Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+      "expected": "Both selected Documents move into the chosen folder",
+      "actual": "Selecting both checkboxes showed \"2 selected\" with Move. The \"Move 2 documents\" dialog with File in \"DOC-032 compat compat-c Admin Parent\" filed both Documents there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:24.639Z",
+      "at": "2026-09-28T07:15:25.506Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Folder Delete dissolves the folder: contents move to its parent or the record; nothing is deleted",
+      "expected": "The confirmation says where contents go; the Documents stay live on the record",
+      "actual": "The confirmation read \"Delete the DOC-032 compat compat-c Admin Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:25.506Z",
+      "at": "2026-09-28T07:15:26.333Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Import several files step 3: Type starts on No type, or on the type chosen in the upload dialog; a Contract import always shows Type",
+      "expected": "The Import dialog's Type starts on No type after a plain pick and on the chosen type after one was picked in Upload document",
+      "actual": "Upload, Choose files with two files opened \"Import 2 files\" with Type on \"No type\"; its options were No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment. Choosing Type \"Executed\" in Upload document first, then two files, opened the Import dialog with Type already on \"Executed\". Cancel closed both without uploading.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:26.334Z",
+      "at": "2026-09-28T07:15:27.259Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Import several files steps 1-5 and Recover a partial import: Destination Record root, Type, a real oversize file and a dropped connection; counts, row Retry, Done",
+      "expected": "Good files stay as v1 Documents of the chosen type; the oversize row is named without Retry; the dropped row has Retry and a retry sends only it; Done closes",
+      "actual": "Choose files with three text files and a 101 MiB file opened \"Import 4 files\" reading \"Import 4 files Destination Record root doc029-bulk-a.txt 46 byte doc029-bulk-b.txt 46 byte doc029-bulk-c.txt 46 byte doc030-oversize.bin 105.9 MB Type No type Draft · ours Draft · theirs Redline · theirs Redline · ours Partially signed Exec\". The Type control's help (aria-describedby batch-type-help) read \"Applied to every file in this import. Notes are not collected in bulk.\". With Type \"Draft · theirs\" and the browser dropping the connection once for doc029-bulk-c.txt, the dialog settled as \"Imported 2 of 4 files 2 of 4 files uploaded doc029-bulk-c.txt That file could not be uploaded. Retry doc030-oversize.bin That file is over the 100 MB upload limit. doc029-bulk-a.txt Done doc029-bulk-b.txt Done 2 files failed. The other 2 are on the contract. Retry uploads the selected file again. Files over the size limit must be reduced before retrying. 2 files are already on the contract. Retry 1 file Done 2 of 4 u\". The oversize row had no Retry (count 0); the dropped row had \"Retry doc029-bulk-c.txt\"; the footer offered [\"Retry 1 file\"]. The two good files were already on the record (+2). Row Retry sent only the dropped file: \"Imported 3 of 4 files 3 of 4 files uploaded doc030-oversize.bin That file is over the 100 MB upload limit. doc029-bulk-a.txt Done doc029-bulk-b.txt Done doc029-\". Done closed it. The record gained exactly 3 Documents, each at Version 1 with Type Draft · theirs (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:27.259Z",
+      "at": "2026-09-28T07:15:28.802Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+      "expected": "The dialog closes by itself and both files are listed",
+      "actual": "A two-file import with no failure closed the dialog by itself; the Documents list showed the new rows and the record gained two Documents (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:28.802Z",
+      "at": "2026-09-28T07:15:29.028Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Recover a partial import: Cancel remaining stops queued work; uploaded files remain; final counts are shown",
+      "expected": "Queued files are cancelled, finished uploads stay on the record, and the dialog shows the final counts",
+      "actual": "With each upload slowed four seconds by the browser, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:29.028Z",
+      "at": "2026-09-28T07:15:33.580Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+      "expected": "The top-level folder and its nested child are created with their files; the empty folder is not; a second import reuses the path",
+      "actual": "Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc030-tree-admin-09280715 1 folder · 2 files sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ours Draft · theirs Redline\". The import created doc030-tree-admin-09280715 and doc030-tree-admin-09280715/sub-a with the files; the empty folder was not created. Importing the same tree again reused doc030-tree-admin-09280715 (still one folder of that name).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:33.580Z",
+      "at": "2026-09-28T07:15:34.730Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/56/documents",
+      "action": "Import steps 1-2 and Keep structure: drop a local folder on a folder row; Destination is that folder; a dropped tree recreates empty folders",
+      "expected": "The Import dialog names the folder as Destination and the empty folder is recreated",
+      "actual": "Dropping the local tree on the \"DOC-032 compat compat-c Admin Other\" row opened a dialog reading \"Import 2 files Destination DOC-032 compat compat-c Admin Other Folder structure is kept doc030-tree-admin-09280715 2 folders · 2 files empty-dir Empty sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No\". The import created DOC-032 compat compat-c Admin Other/doc030-tree-admin-09280715/sub-a and the empty DOC-032 compat compat-c Admin Other/doc030-tree-admin-09280715/empty-dir.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:34.731Z",
+      "at": "2026-09-28T07:15:35.595Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/matters/23/documents",
+      "action": "Import step 3: a Matter import shows Type when the Matter list has a type; the chosen type is applied",
+      "expected": "Import 2 files on a Matter shows Type with No type and \"DOC-032 compat compat-c Matter type 09280715\"; both new Versions carry it",
+      "actual": "The Matter's active type list held 1 type(s). Import 2 files showed Destination and Type (start \"No type\"; options No type, DOC-032 compat compat-c Matter type 09280715). With \"DOC-032 compat compat-c Matter type 09280715\" chosen, both new Documents were Version 1 of that type (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:35.596Z",
+      "at": "2026-09-28T07:15:36.478Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6de-7fb0-7ec2-891d-063d11635339/documents",
+      "action": "Import step 3: an Entity import shows Type only when the Entity list has a type",
+      "expected": "The Type control is present exactly when the Entity type list is not empty",
+      "actual": "The Entity type list held 0 active type(s) (none). On Entity \"DOC-032 compat compat-c Admin folders Entity 09280715 Ltd\", Import 2 files showed Destination and no Type control. Cancel closed it.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:36.479Z",
+      "at": "2026-09-28T07:15:45.259Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders steps 1-2: Documents tab, New folder, Name, Save; an empty folder has no expand control",
+      "expected": "The folder row appears without an expand control",
+      "actual": "New folder opened a dialog with Name and Save. The \"DOC-032 compat compat-c Legal Parent\" row appeared reading \"DOC-032 compat compat-c Legal Parent Empty\" with no expand control.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:45.737Z",
+      "at": "2026-09-28T07:15:46.659Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders steps 2-3: New subfolder and Rename from Actions for the … folder; a folder with contents gets an expand control",
+      "expected": "The subfolder is created inside; the parent gains an expand/collapse control; Rename changes the name",
+      "actual": "Actions for the DOC-032 compat compat-c Legal Parent folder offered New subfolder; its dialog \"New folder in DOC-032 compat compat-c Legal Parent\" created the child, shown under the parent, which now had an expand/collapse control. Rename opened \"Rename folder\" and changed \"DOC-032 compat compat-c Legal Child draft\" to \"DOC-032 compat compat-c Legal Child\". Read-back: the child's parent is DOC-032 compat compat-c Legal Parent.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:46.660Z",
+      "at": "2026-09-28T07:15:47.088Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Folder name rules: a case-only duplicate sibling, a blank name, a slash, '.' and '..' are refused",
+      "expected": "Each attempt shows a refusal in the dialog and creates nothing",
+      "actual": "All five names were refused in the dialog and no folder was created (2 folders before and after). \"DOC-032 COMPAT COMPAT-C LEGAL PARENT\": A folder named DOC-032 COMPAT COMPAT-C LEGAL PARENT is already here.; \"   \": Give the folder a name.; \"DOC-032 compat compat-c a/b\": A folder name cannot contain a slash. Make a folder inside instead.; \".\": A folder cannot be named . or .. — those address a path, not a folder.; \"..\": A folder cannot be named . or .. — those address a path, not a folder..",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:47.089Z",
+      "at": "2026-09-28T07:15:48.032Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders step 3: Move, Move into, None; a folder cannot move into itself or a descendant",
+      "expected": "Move into omits the folder and its descendant, the server refuses a cycle, and None returns a folder to the top level",
+      "actual": "Move into for \"DOC-032 compat compat-c Legal Parent\" offered None, DOC-032 compat compat-c Legal Other: not the folder itself or its child. A second-actor request to move it into its own child was refused (409: A folder cannot be moved inside itself.) and into itself (409). Moving \"DOC-032 compat compat-c Legal Child\" into \"DOC-032 compat compat-c Legal Other\" read back as DOC-032 compat compat-c Legal Other/DOC-032 compat compat-c Legal Child; Move into None put it at the top level.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:48.032Z",
+      "at": "2026-09-28T07:15:48.905Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders step 4: Actions, Move to folder, File in, Move; None moves it out",
+      "expected": "The Document is filed in the folder and then moved back to the record",
+      "actual": "Move to folder opened \"Move doc030-legal-loose-a.txt\" with File in; choosing \"DOC-032 compat compat-c Legal Parent\" filed the Document there, shown after expanding the folder. File in None moved it back onto the record (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:48.905Z",
+      "at": "2026-09-28T07:15:50.134Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders step 4: drag a Document row onto a folder row, then onto Drop here to move out of folders",
+      "expected": "Dragging files the Document into the folder and back out",
+      "actual": "Dragging the \"doc030-legal-loose-b.txt\" row onto the \"DOC-032 compat compat-c Legal Other\" folder row filed it there (read-back). Dragging it from inside the folder showed \"Drop here to move out of folders\"; dropping on it moved the Document back to the record.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:50.134Z",
+      "at": "2026-09-28T07:15:51.985Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Create and maintain folders step 4: select checkboxes and Move in the selection bar",
+      "expected": "Both selected Documents move into the chosen folder",
+      "actual": "Selecting both checkboxes showed \"2 selected\" with Move. The \"Move 2 documents\" dialog with File in \"DOC-032 compat compat-c Legal Parent\" filed both Documents there (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:51.986Z",
+      "at": "2026-09-28T07:15:52.866Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Folder Delete dissolves the folder: contents move to its parent or the record; nothing is deleted",
+      "expected": "The confirmation says where contents go; the Documents stay live on the record",
+      "actual": "The confirmation read \"Delete the DOC-032 compat compat-c Legal Parent folder? Anything in it moves onto the contract itself. Nothing is deleted. Cancel Delete\". After Delete the folder was gone and both Documents were live at the record root (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:52.867Z",
+      "at": "2026-09-28T07:15:53.669Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Import several files step 3: Type starts on No type, or on the type chosen in the upload dialog; a Contract import always shows Type",
+      "expected": "The Import dialog's Type starts on No type after a plain pick and on the chosen type after one was picked in Upload document",
+      "actual": "Upload, Choose files with two files opened \"Import 2 files\" with Type on \"No type\"; its options were No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment. Choosing Type \"Executed\" in Upload document first, then two files, opened the Import dialog with Type already on \"Executed\". Cancel closed both without uploading.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:53.669Z",
+      "at": "2026-09-28T07:15:54.676Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Import several files steps 1-5 and Recover a partial import: Destination Record root, Type, a real oversize file and a dropped connection; counts, row Retry, Done",
+      "expected": "Good files stay as v1 Documents of the chosen type; the oversize row is named without Retry; the dropped row has Retry and a retry sends only it; Done closes",
+      "actual": "Choose files with three text files and a 101 MiB file opened \"Import 4 files\" reading \"Import 4 files Destination Record root doc029-bulk-a.txt 46 byte doc029-bulk-b.txt 46 byte doc029-bulk-c.txt 46 byte doc030-oversize.bin 105.9 MB Type No type Draft · ours Draft · theirs Redline · theirs Redline · ours Partially signed Exec\". The Type control's help (aria-describedby batch-type-help) read \"Applied to every file in this import. Notes are not collected in bulk.\". With Type \"Draft · theirs\" and the browser dropping the connection once for doc029-bulk-c.txt, the dialog settled as \"Imported 2 of 4 files 2 of 4 files uploaded doc029-bulk-c.txt That file could not be uploaded. Retry doc030-oversize.bin That file is over the 100 MB upload limit. doc029-bulk-a.txt Done doc029-bulk-b.txt Done 2 files failed. The other 2 are on the contract. Retry uploads the selected file again. Files over the size limit must be reduced before retrying. 2 files are already on the contract. Retry 1 file Done 2 of 4 u\". The oversize row had no Retry (count 0); the dropped row had \"Retry doc029-bulk-c.txt\"; the footer offered [\"Retry 1 file\"]. The two good files were already on the record (+2). Row Retry sent only the dropped file: \"Imported 3 of 4 files 3 of 4 files uploaded doc030-oversize.bin That file is over the 100 MB upload limit. doc029-bulk-a.txt Done doc029-bulk-b.txt Done doc029-\". Done closed it. The record gained exactly 3 Documents, each at Version 1 with Type Draft · theirs (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:54.677Z",
+      "at": "2026-09-28T07:15:56.834Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Import step 5: when every file uploads the dialog closes after the list refreshes",
+      "expected": "The dialog closes by itself and both files are listed",
+      "actual": "A two-file import with no failure closed the dialog by itself; the Documents list showed the new rows and the record gained two Documents (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:56.835Z",
+      "at": "2026-09-28T07:15:57.128Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Recover a partial import: Cancel remaining stops queued work; uploaded files remain; final counts are shown",
+      "expected": "Queued files are cancelled, finished uploads stay on the record, and the dialog shows the final counts",
+      "actual": "With each upload slowed four seconds by the browser, the running dialog said \"Keep this dialog open until the import finishes.\" Cancel remaining settled it at \"Imported 3 of 5 files\": 2 file(s) read \"Cancelled before it was uploaded.\" and the 3 uploaded file(s) were on the record (read-back +3).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:15:57.129Z",
+      "at": "2026-09-28T07:16:01.703Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Keep a local folder structure: Choose folder keeps nested paths; the folder picker drops empty folders; a matching path is reused",
+      "expected": "The top-level folder and its nested child are created with their files; the empty folder is not; a second import reuses the path",
+      "actual": "Choose folder on a local tree (two files, one nested folder, one empty folder) opened \"Import 2 files\" reading \"Import 2 files Destination Record root Folder structure is kept doc030-tree-legal-09280715 1 folder · 2 files sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No type Draft · ours Draft · theirs Redline\". The import created doc030-tree-legal-09280715 and doc030-tree-legal-09280715/sub-a with the files; the empty folder was not created. Importing the same tree again reused doc030-tree-legal-09280715 (still one folder of that name).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:01.704Z",
+      "at": "2026-09-28T07:16:02.976Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/64/documents",
+      "action": "Import steps 1-2 and Keep structure: drop a local folder on a folder row; Destination is that folder; a dropped tree recreates empty folders",
+      "expected": "The Import dialog names the folder as Destination and the empty folder is recreated",
+      "actual": "Dropping the local tree on the \"DOC-032 compat compat-c Legal Other\" row opened a dialog reading \"Import 2 files Destination DOC-032 compat compat-c Legal Other Folder structure is kept doc030-tree-legal-09280715 2 folders · 2 files empty-dir Empty sub-a 1 file doc030-nested.txt 23 byte doc030-top.txt 20 byte Type No\". The import created DOC-032 compat compat-c Legal Other/doc030-tree-legal-09280715/sub-a and the empty DOC-032 compat compat-c Legal Other/doc030-tree-legal-09280715/empty-dir.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:02.977Z",
+      "at": "2026-09-28T07:16:03.958Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/matters/24/documents",
+      "action": "Import step 3: a Matter import shows Type when the Matter list has a type; the chosen type is applied",
+      "expected": "Import 2 files on a Matter shows Type with No type and \"DOC-032 compat compat-c Matter type 09280715\"; both new Versions carry it",
+      "actual": "The Matter's active type list held 1 type(s). Import 2 files showed Destination and Type (start \"No type\"; options No type, DOC-032 compat compat-c Matter type 09280715). With \"DOC-032 compat compat-c Matter type 09280715\" chosen, both new Documents were Version 1 of that type (read-back).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:03.959Z",
+      "at": "2026-09-28T07:16:04.918Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6de-eed6-748d-9433-f41c915c7dc1/documents",
+      "action": "Import step 3: an Entity import shows Type only when the Entity list has a type",
+      "expected": "The Type control is present exactly when the Entity type list is not empty",
+      "actual": "The Entity type list held 0 active type(s) (none). On Entity \"DOC-032 compat compat-c Legal folders Entity 09280715 Ltd\", Import 2 files showed Destination and no Type control. Cancel closed it.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:04.919Z",
+      "at": "2026-09-28T07:16:13.740Z"
+    },
+    {
+      "article": "document-folders",
+      "scenario": "V-C27",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal/contracts/67",
+      "action": "Before you start: Business Users upload several files at the record root in the Portal, but cannot create folders, move Documents or import a folder structure",
+      "expected": "Upload documents takes two files to the record root; no Choose folder or New folder; the folder and move requests are refused",
+      "actual": "Jonas Weber signed in to the Portal with a fresh magic link. On C-67, Upload documents (\"Upload documents Add as New documents New version of doc030-portal-seed-09280715.txt Drop files or choose files Kind General Draft · ours Dr\") had no Choose folder; the Documents section had no New folder or Move to folder. Two files uploaded together became two Documents at the record root (read-back by Legal). A folder create request answered 403 and moving a Document into a folder answered 403; the Document stayed at the root.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:16:15.006Z",
+      "at": "2026-09-28T07:16:15.371Z"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-032/compat/compat-c/documents-2-replay/legal-partial-import.png"
+  ]
+}

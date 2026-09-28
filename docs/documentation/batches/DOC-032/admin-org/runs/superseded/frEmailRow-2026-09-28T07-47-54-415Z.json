@@ -1,0 +1,35 @@
+{
+  "section": "frEmailRow",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "firstrun",
+  "labProject": "openlaw-docs-9d2b1705-firstrun",
+  "appUrl": "http://127.0.0.1:43342",
+  "mailUrl": "http://127.0.0.1:48442",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "incomplete after completion (overlay-mail-incomplete.json)",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:47:54.415Z",
+  "steps": [
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "firstrun",
+      "page": "http://127.0.0.1:43342/settings/email",
+      "action": "After completion, with the environment setting SMTP_URL but not SMTP_FROM, the Setup checklist shows Email; the Email row opens Settings, Advanced, Outbound email",
+      "expected": "Email row linking /settings/email, which shows the SMTP_FROM warning",
+      "startedAt": "2026-09-28T07:47:54.589Z",
+      "finishedAt": "2026-09-28T07:47:55.556Z",
+      "actual": "Setup checklist rows [{\"label\":\"Email\",\"href\":\"/settings/email\",\"markAsReviewed\":false}]. The Email row opened /settings/email, which said \"The deployment environment sets SMTP_URL but not SMTP_FROM, so mail cannot be sent. Set SMTP_FROM in the environment.\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:47:55.562Z"
+}

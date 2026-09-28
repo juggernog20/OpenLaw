@@ -277,6 +277,29 @@
     "contentSha256": "e50a783f16931ee6132b052fd520ee348b6dd73952cdf687e3cdce31366cd622",
     "verifiedAt": "2026-09-16T19:01:46Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:48:27.194Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): Deployment inputs 067c1646..4ca41822: compose.yml and Dockerfile did not change, so the SETUP_TOKEN pass-through, APP_BIND, ports, limits and volumes are as DOC-030 walked them. .env.example changed only the TRUSTED_PROXIES comment and example, to the Compose network gateway (172.18.0.1) with the docker network inspect command; the guide already says a same-host proxy arrives from the gateway, gives that command, and says 127.0.0.1,::1 trusts nothing. SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB are new and default off; only compose.dev.yml and the lab helper set them, not compose.yml or .env.example, and index.ts stops the boot only when LIVE_LAB names a signing stand-in; the guide names neither and no documented deployment sets them. docs/DEPLOYMENT.md changed to match the guide (gateway TRUSTED_PROXIES, sealed values, wrong-key start, migration 0157) and adds signing recovery and preparation-acceptance sections the guide does not cover. App: app.ts narrows the origin-check exemption to /api/v1/signing/<provider>/webhook and adds no-store and no-referrer on /signing/return (a new browser route behind the default-off preparation switch); oauth.ts no longer sends the set-auth-jwt header; mcp/routes.ts and calls.ts add resources, prompts and listen streams on /mcp, which the guide already forwards unbuffered with the listed headers; mcp-settings routes moved the read into readMcpSettings with the same server address, authorization-server check and reachability; settings-mcp.tsx rewords the OAuth caption, which the guide does not quote; the Toolset ceiling now starts without Team and Administration. setup.tsx adds a token check and reworded refusal, welcome.tsx drops the Portal step; the guide quotes neither, and the wizard's Outbound email step and Save relay are unchanged (firstrun phase passed). advanced-settings/config.ts, uploads.ts, mailer.ts, discovery.ts, guards.ts, reachability.ts, worker index.ts and rewrap.ts did not change. Live-provider rows (V-M41-PUBLIC with claude.ai): the hunks above are the only changes on the OAuth, discovery, consent and /mcp path; discovery.ts, the consent route and the public route list are unchanged, so the DOC-030 claude.ai observation still applies. The replay of the DOC-030 operator script on cd-cfg passed every required step. Replay of batches/DOC-030/operator/walkthrough.mjs on cd-cfg: 132 steps, 18 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-d.json",
+        "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/deployment-configuration-replay.mjs",
+        "sha256": "ef9ad84d7a889a1a8827ed917e8a084852d8ed198b52ee77299c6af058c6ea9f"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-d/deployment-configuration-replay.json",
+        "sha256": "a9c1a7e0859732c623d0534954446eccfe6640bf275171c6a0405218f6a90367"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

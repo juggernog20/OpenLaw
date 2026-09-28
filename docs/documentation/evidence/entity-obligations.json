@@ -81,6 +81,33 @@
     "contentSha256": "9e66336f58ac640455e2953d4231f4cb5e05c30dc9eee207e33908f372206b66",
     "verifiedAt": "2026-09-16T15:53:13.127Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-c)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T07:47:04.000Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of activity.ts, managed-table.tsx and messages/en-US.json. obligations-panel.tsx, entities.tsx, the Entity filter definitions, record-filter-bar.tsx, obligation-routes.ts and the Home obligations section did not change. activity.ts only adds narrations for other actions (Version deleted, envelope preparation, identity provider removed) and the Partially signed kind label; managed-table.tsx changed one code comment. No statement in the guide changed. I replayed the DOC-030 entities c52 phase on work: all 37 steps passed (18 Legal Team Member, 18 Administrator, 1 Business User refusal as Diego Salas), the same count as DOC-030. The resize-strip product note is the same as in DOC-030 and does not contradict the guide.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entities-replay.mjs",
+        "sha256": "20cdd8670f2849f0896778e9c0d93453a363936aea9bd73ba35f13f478255bc5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entities-replay/api.mjs",
+        "sha256": "a278c2635fd6cd094fb65b0a3cbdc6d6739dc39f6381208988b60a706da1aeb9"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entity-obligations-replay.json",
+        "sha256": "9e668970eb1e61b23233605e76a437dea11bcf7a6663a8a1b35e0cb0641ff15e"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

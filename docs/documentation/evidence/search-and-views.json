@@ -119,6 +119,37 @@
     "contentSha256": "605b3ebe1621d9e7e4d4449c32f12e5e35302d6d22392e7860375e3f512ffa1f",
     "verifiedAt": "2026-09-16T16:23:21Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T08:08:04.677Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/lib/documents.ts, apps/web/src/lib/session.ts, packages/db/src/schema/documents.ts, packages/shared/src/index.ts and messages/en-US.json. Search, list views, saved searches, Recent and the record filter bar did not change (search/*, list-views/*, views-menu.tsx, record-filter-bar.tsx, recent-searches.ts have no diff). lib/documents.ts and schema/documents.ts add the Partially signed version kind and Document type colours; the guide does not list Document kinds. session.ts only also clears setup drafts on sign-out, and Recent is still cleared. shared/src/index.ts only adds exports. The seeded saved views now belong to Devon Calloway, which the guide does not name. The replay passed its final 85 steps for Administrator, Legal Team Member and the Business User redirect, and the archived-Field re-walk passed 2 of 2 with the guide's two notices. The DOC-030 header-versus-results product bug for 'or' and a leading '-' still reproduces; the script's stale guideFailures note about the dialog notice tests pre-e68143e1 text, which the re-walk confirms. Replay log: batches/DOC-032/compat/compat-a/search-and-views-replay.json.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-a.json",
+        "sha256": "68470a5b83f6eed3ef071f4ae41acd40d1f10e79085ae0667c5ddd65656715c1"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.mjs",
+        "sha256": "8dfa94477be933f422d92c4beabc7a67fc0e20c05e5c79bc0881e8e03c2a16ae"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/search-and-views-rewalk-archived-field.mjs",
+        "sha256": "f89ce3727fe38a990d52a6ed08257e949eb5188b7dc95fd5596397af85c099a8"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/search-and-views-replay-legal_team_member-saved-view.png",
+        "sha256": "43d644adf79b03ab841016d8a09a2b0d479203563e665716a36cc5879655b940"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.json",
+        "sha256": "d6428bd1a5e2e06dfb527f86fe61eb4dc926a4a674a803b7dca9601cc6821c44"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

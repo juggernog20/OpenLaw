@@ -1,0 +1,78 @@
+{
+  "section": "ssoRemove",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "aoauth",
+  "labProject": "openlaw-docs-9d2b1705-aoauth",
+  "appUrl": "http://127.0.0.1:43351",
+  "mailUrl": "http://127.0.0.1:48451",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "base lab environment; OIDC fixture with two issuers running",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:33:14.925Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/users",
+      "action": "Remove {name} on a provider row deletes its configuration at once, with no confirmation; accounts that signed in through it keep their rows and sign in another way",
+      "expected": "Row gone without a dialog; the other provider stays; SSO stays on; the Harbor staff row stays Active; a sign-in link still works for that account",
+      "startedAt": "2026-09-28T07:33:15.566Z",
+      "finishedAt": "2026-09-28T07:33:20.148Z",
+      "actual": "Remove DOC-032 Harbor IdP removed the row at once with 0 confirmation dialogs; the card listed [\"DOC-032 Helix IdP helix.example Configured\"] and Legal SSO stayed true. The Harbor staff row stayed Active. With one provider left, Continue with single sign-on for the Harbor identity (by email: false) went to http://oidc:8080 and ended on /auth/login?error=sso with me 401 and \"Single sign-on failed. Try again.\". A sign-in link signed the same account in as legal_team_member.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/authentication",
+      "action": "Removing the last provider turns off Single sign-on (SSO) under both Legal User Authentication and Business Portal Authentication; with another Legal method on, the staff sign-in page keeps it",
+      "expected": "Both SSO switches off and unavailable; stored sso false in both groups; staff page offers the password form",
+      "startedAt": "2026-09-28T07:33:20.148Z",
+      "finishedAt": "2026-09-28T07:33:22.377Z",
+      "actual": "Before removal SSO was on in both groups ({\"legal\":{\"password\":true,\"magicLink\":true,\"sso\":true,\"requireTwoFactor\":false},\"business\":{\"password\":true,\"magicLink\":true,\"sso\":true,\"requireTwoFactor\":false}}). Remove DOC-032 Helix IdP (the last provider) left the card empty; both Single sign-on (SSO) switches read [\"false:disabled\",\"false:disabled\"] and the stored policy was {\"legal\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false},\"business\":{\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}}. The staff sign-in page offered the password form with buttons [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"].",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/authentication",
+      "action": "If single sign-on was the only Legal method when the last provider is removed, the staff sign-in page shows the unavailable message and offers no Administrator sign-in link; recover from the still-open Administrator session",
+      "expected": "\"Sign-in is unavailable. Contact your administrator.\"; no Administrator sign-in; Email and password turned back on from the live session",
+      "startedAt": "2026-09-28T07:33:22.377Z",
+      "finishedAt": "2026-09-28T07:33:27.166Z",
+      "actual": "The first provider was registered again and Legal User Authentication set to SSO only ({\"password\":false,\"magicLink\":false,\"sso\":true,\"requireTwoFactor\":false}). Removing that last provider left Legal {\"password\":false,\"magicLink\":false,\"sso\":false,\"requireTwoFactor\":false}. A signed-out browser on the staff sign-in page read \"Helix Software Group Legal Portal Powered by OpenLaw Sign in Sign-in is unavailable. Contact your administrator. Help wi\" with buttons [], so no Administrator sign-in link. Daniel's open session turned Email and password (\"Saved\") and Email magic link back on ({\"password\":true,\"magicLink\":true,\"sso\":false,\"requireTwoFactor\":false}), and Nadia signed in with a password (me 200).",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:33:27.169Z",
+  "startPolicy": {
+    "legal": {
+      "password": true,
+      "magicLink": true,
+      "sso": true,
+      "requireTwoFactor": false
+    },
+    "business": {
+      "password": true,
+      "magicLink": true,
+      "sso": false,
+      "requireTwoFactor": false
+    }
+  },
+  "startProviders": ["doc032-harbor", "doc032-helix"]
+}

@@ -1,0 +1,146 @@
+{
+  "requests": {
+    "administrator:ai-matter": {
+      "number": 16,
+      "reference": "R-16",
+      "id": "01a0e6e7-4cf2-717a-9807-817ecadade9f",
+      "title": "DOC-032 compat compat-a inbox Admin ai-matter 313159",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-admin-ai-matter-1.pdf",
+          "bytes": 974
+        },
+        {
+          "name": "doc032-compata-inbox-admin-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:25:13.370Z"
+    },
+    "administrator:ai-matter-edit": {
+      "number": 17,
+      "reference": "R-17",
+      "id": "01a0e6e7-4d21-75db-a9c4-3e38efa91f34",
+      "title": "DOC-032 compat compat-a inbox Admin ai-matter-edit 313159",
+      "requester": "requester_a",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:25:13.386Z"
+    },
+    "administrator:ai-contract": {
+      "number": 18,
+      "reference": "R-18",
+      "id": "01a0e6e7-4d30-7792-8a10-4ab779e216bd",
+      "title": "DOC-032 compat compat-a inbox Admin ai-contract 313159",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-admin-ai-contract-1.pdf",
+          "bytes": 978
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:25:13.416Z"
+    },
+    "administrator:ai-contract-fail": {
+      "number": 19,
+      "reference": "R-19",
+      "id": "01a0e6e7-4d4e-7480-a622-7927613a8463",
+      "title": "DOC-032 compat compat-a inbox Admin ai-contract-fail 313159",
+      "requester": "requester_a",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-admin-ai-contract-fail-1.pdf",
+          "bytes": 988
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:25:13.441Z"
+    },
+    "legal_team_member:ai-matter": {
+      "number": 28,
+      "reference": "R-28",
+      "id": "01a0e6f4-89b9-709c-9d2b-11a714a857f5",
+      "title": "DOC-032 compat compat-a inbox Member ai-matter 180702",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-member-ai-matter-1.pdf",
+          "bytes": 976
+        },
+        {
+          "name": "doc032-compata-inbox-member-ai-matter-2.pdf",
+          "bytes": 66
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:39:40.908Z"
+    },
+    "legal_team_member:ai-matter-edit": {
+      "number": 29,
+      "reference": "R-29",
+      "id": "01a0e6f4-89f3-7560-8c00-36d6ce63d433",
+      "title": "DOC-032 compat compat-a inbox Member ai-matter-edit 180702",
+      "requester": "requester_b",
+      "module": "matter",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:39:40.925Z"
+    },
+    "legal_team_member:ai-contract": {
+      "number": 30,
+      "reference": "R-30",
+      "id": "01a0e6f4-8a03-7fc1-a3fb-32f359181ce5",
+      "title": "DOC-032 compat compat-a inbox Member ai-contract 180702",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-member-ai-contract-1.pdf",
+          "bytes": 980
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:39:40.958Z"
+    },
+    "legal_team_member:ai-contract-fail": {
+      "number": 31,
+      "reference": "R-31",
+      "id": "01a0e6f4-8a26-7d5b-9497-d5da3fd778be",
+      "title": "DOC-032 compat compat-a inbox Member ai-contract-fail 180702",
+      "requester": "requester_b",
+      "module": "contract",
+      "urgency": "medium",
+      "neededBy": null,
+      "files": [
+        {
+          "name": "doc032-compata-inbox-member-ai-contract-fail-1.pdf",
+          "bytes": 990
+        }
+      ],
+      "carriesArchivedEntity": false,
+      "createdAt": "2026-09-28T07:39:40.990Z"
+    }
+  }
+}

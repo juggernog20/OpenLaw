@@ -98,5 +98,48 @@
     "verifiedAt": "2026-09-16T15:50:47.488Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-b)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T07:47:59.876Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of contract-record.tsx, task-assignment.ts, contract-team.ts and messages/en-US.json. The Tasks and Key dates cards, task dialog, key-date reminder code and their routes did not change. contract-record.tsx moved the Legal Owner and Business Owner controls into a new Owners section at the top of Overview (791ad567) and added a Signatures tab; the guide does not say where those controls sit. task-assignment.ts now always adds a Task assignee through addContractTeamMember, which it already did for Contracts; contract-team.ts only gained the shared add and remove helpers the team routes now call, with the same guards and activity. So the picker (team plus Legal Owner, no Business Users), Add someone to the team, and the Recipients default (Legal Owner, Business Owner and team) are unchanged. I replayed the DOC-030 V-C19 script for Legal Team Member and Administrator on work built from 4ca41822; all 34 steps passed after a fixture-title fix.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-b.json",
+        "sha256": "59266bfee347abd819b0fe2ff7c1c1e4ecfe43bce11dd4252960dc3ed0a854fa"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay.mjs",
+        "sha256": "d5eefe4760700ce05a444985a18e69741e2ae9b2c87369d0ea81a21d56cd809a"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay/c19.mjs",
+        "sha256": "fb30a378c4c83db76e800e41441eae7fbbadafc586ae1554dedb9b03c02c6969"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay/lib.mjs",
+        "sha256": "1d5724a9c3f28591bd35168e62ae08adc8c5e9b012a8bce9cb3ac3fd19979c53"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/contract-tasks-and-dates-replay.json",
+        "sha256": "79204b6f681e49c16f2fafd6c15f2ead88dd7e6132b232aebfd85c72b93cabc6"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-work.log",
+        "sha256": "ad75b4d5985040d9c9442fccf6540ac15e1730cedd0aa075efa04c89567c1fed"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-attempt1.json",
+        "sha256": "dfd39d8881d381aca0fbd08f6c957e90568413a5bdeb1762a1fa3f8c04e24081"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-b/logs/contract-tasks-and-dates-attempt1.log",
+        "sha256": "9ab0acf632090a57a4a04af9034450c3a5cf0001f11565de13a7ff2c5de52c8a"
+      }
+    ]
+  }
 }

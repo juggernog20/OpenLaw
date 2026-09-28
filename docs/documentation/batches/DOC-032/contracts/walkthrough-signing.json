@@ -1,0 +1,143 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "contracts",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (contracts)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-c16sign",
+  "labName": "c16sign",
+  "appUrl": "http://127.0.0.1:43357",
+  "mailUrl": "http://127.0.0.1:48457",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T07:07:44.002Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T07:07:59.710Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium from the worktree node_modules, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "contract-approvals": "6029b98fa17b35633c27c9d97b57fc714c8562d2f85ac48058513211650415c8"
+  },
+  "roles": ["legal_team_member", "administrator"],
+  "signingCheck": true,
+  "stamp": 1790579528080,
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in",
+      "context": "daniel"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in",
+      "context": "nadia"
+    },
+    {
+      "role": "legal_team_member (named approver and comparison reader)",
+      "person": "Priya Raman",
+      "entry": "password sign-in",
+      "context": "priya"
+    },
+    {
+      "role": "legal_team_member (reader outside a Confidential team, second actor)",
+      "person": "Marcus Oyelaran",
+      "entry": "password sign-in",
+      "context": "marcus"
+    },
+    {
+      "role": "legal_team_member (type default person on the fixture type, not creator or owner)",
+      "person": "Tom Iwu",
+      "entry": "password sign-in",
+      "context": "tom"
+    },
+    {
+      "role": "business_user (Business approver)",
+      "person": "Lena Vogel",
+      "entry": "fresh magic link from this lab's Mailpit, Portal sign-in",
+      "context": "lena"
+    }
+  ],
+  "fixtures": [
+    {
+      "kind": "Signing connector",
+      "name": "DocuSign (Demo, Polling) pointing at the e2e signing stand-in",
+      "detail": "saved 200; enabled true; test 200 \"OpenLaw E2E Signing\""
+    }
+  ],
+  "records": [
+    {
+      "title": "DOC-032 contracts V-C16 legal_team_member send bypass 1790579528080",
+      "reference": "C-40",
+      "note": "setup through Nadia Haddad's API session"
+    },
+    {
+      "title": "DOC-032 contracts V-C16 administrator send bypass 1790579528080",
+      "reference": "C-41",
+      "note": "setup through Daniel Okafor's API session"
+    }
+  ],
+  "orgSettings": [],
+  "productBugs": [],
+  "startedAt": "2026-09-28T07:12:08.080Z",
+  "finishedAt": "2026-09-28T07:12:46.544Z",
+  "steps": [
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Priya Raman"],
+      "page": "/contracts/:number/signatures Send for signature",
+      "action": "Move beyond Approval, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status without opening Move past approval and records no override",
+      "expected": "No Move past approval dialog; a new Out for signature row; the Contract is at a Signature Status; approvals keep Pending and Rejected; History has no override entry.",
+      "startedAt": "2026-09-28T07:12:11.037Z",
+      "finishedAt": "2026-09-28T07:12:28.765Z",
+      "actual": "C-40 stood at \"Awaiting approval\" (approval) with [\"Priya Raman:rejected\",\"Tom Iwu:pending\"]. Signatures > Send for signature opened the dialog with Version \"Version 1 — doc032-contracts-legal_team_member-send.pdf (current)\". With one Signer filled, Send envelope was disabled until \"Yes, all required signatures will be in place\" was chosen under \"Will the agreement be fully signed when this DocuSign round is complete?\" (a required question electronic-signing.md does not name); Send envelope closed the dialog. Move past approval did not open within 15 s. The tab then showed \"pdf Version 1 Out for signature Sep 28 Prepared by Nadia Haddad —\". The Contract is now \"Out for signature\" (signature). Approvals kept [\"Priya Raman:rejected\",\"Tom Iwu:pending\"]. History shows no override entry; its status line reads \"Nadia Haddad changed the status Awaiting approval → Out for signature this minute Nadia Haddad sent this contract for signature this minute Priya Ram\".",
+      "result": "pass"
+    },
+    {
+      "article": "contract-approvals",
+      "scenario": "V-C16",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Priya Raman"],
+      "page": "/contracts/:number/signatures Send for signature",
+      "action": "Move beyond Approval, second paragraph: at an Approval Status with one Pending and one Rejected approval, a confirmed send from the Signatures tab moves the Contract to a Signature Status without opening Move past approval and records no override",
+      "expected": "No Move past approval dialog; a new Out for signature row; the Contract is at a Signature Status; approvals keep Pending and Rejected; History has no override entry.",
+      "startedAt": "2026-09-28T07:12:28.817Z",
+      "finishedAt": "2026-09-28T07:12:46.528Z",
+      "actual": "C-41 stood at \"Awaiting approval\" (approval) with [\"Priya Raman:rejected\",\"Tom Iwu:pending\"]. Signatures > Send for signature opened the dialog with Version \"Version 1 — doc032-contracts-administrator-send.pdf (current)\". With one Signer filled, Send envelope was disabled until \"Yes, all required signatures will be in place\" was chosen under \"Will the agreement be fully signed when this DocuSign round is complete?\" (a required question electronic-signing.md does not name); Send envelope closed the dialog. Move past approval did not open within 15 s. The tab then showed \"pdf Version 1 Out for signature Sep 28 Prepared by Daniel Okafor —\". The Contract is now \"Out for signature\" (signature). Approvals kept [\"Priya Raman:rejected\",\"Tom Iwu:pending\"]. History shows no override entry; its status line reads \"Daniel Okafor changed the status Awaiting approval → Out for signature this minute Daniel Okafor sent this contract for signature this minute Priya Ra\".",
+      "result": "pass"
+    }
+  ],
+  "labLifecycle": "Owned lab c16sign created with lab.mjs from 4ca41822 (app port 43357, mail port 48457, subnets 10.243.66.0/24 and 10.244.66.0/24), seeded, stand-in applied with fixture/up.sh up, removed with fixture/up.sh down, then destroyed with lab.mjs destroy c16sign on 2026-09-28 before 07:20 UTC."
+}

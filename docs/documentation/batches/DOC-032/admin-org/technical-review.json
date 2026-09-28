@@ -1,0 +1,307 @@
+{
+  "batch": "DOC-032",
+  "group": "admin-org",
+  "reviewer": "DOC-032 source-review author agent (admin-org)",
+  "reviewerKind": "agent",
+  "role": "author and technical source reviewer",
+  "reviewedAt": "2026-09-28T08:00:59Z",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "comparedFrom": {
+    "previousAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "lastWalkedContent": {
+      "first-run": "f3e11862",
+      "organisation-and-users": "a9f1ffdb",
+      "authentication-and-email": "a9f1ffdb"
+    },
+    "lastArticleEdit": {
+      "first-run": "b656bfb6",
+      "organisation-and-users": "b656bfb6",
+      "authentication-and-email": "354a6b67"
+    },
+    "unwalkedGuideEdits": {
+      "first-run": ["1f2e77e1", "fd8ffd71", "184cf48a", "b656bfb6"],
+      "organisation-and-users": ["b656bfb6"],
+      "authentication-and-email": ["fd8ffd71", "354a6b67"]
+    },
+    "appCommitsCheckedWithExtraCare": [
+      "3e91951f",
+      "e924a3f3",
+      "b656bfb6",
+      "184cf48a",
+      "1f2e77e1",
+      "fd8ffd71",
+      "354a6b67"
+    ]
+  },
+  "method": "source-inspection",
+  "articles": [
+    {
+      "articleId": "first-run",
+      "scenario": ["V-C35"],
+      "contentSha256Before": "809ebd4a3ae05f5a42e4c720275cb89402ea511f3ba17c4344553fef006b627b",
+      "contentSha256": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+      "sources": [
+        "docs/user-guides/first-run.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/BRIEF-author.md",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/evidence/first-run.json",
+        "docs/documentation/batches/DOC-030/first-run/technical-review.json",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-004 M33/6 addendum; SET-004 amendments 2026-09-15 and 2026-09-27)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 addendum 2026-09-27)",
+        "docs/UX-REVIEW-CHECKLIST.md (setup steps 10 to 13, as edited by 3e91951f)",
+        "apps/web/src/routes/setup.tsx",
+        "apps/web/src/lib/setup-drafts.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/web/src/routes/home.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/components/smtp-settings-fields.tsx",
+        "apps/web/src/components/ai-model-selector.tsx",
+        "apps/web/src/routes/two-factor-enroll.tsx",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/modules/auth/authentication-policy.test.ts",
+        "apps/api/src/modules/onboarding/routes.ts",
+        "apps/api/src/modules/onboarding/onboarding.test.ts",
+        "packages/shared/src/start-blank.ts",
+        "packages/db/migrations/0181_partial-signing.sql",
+        "docs/documentation/batches/DOC-032/admin-org/walkthrough.json"
+      ],
+      "corrections": [
+        {
+          "claim": "Setup form validation and resume (1f2e77e1, b656bfb6 were never walked)",
+          "before": "Only the empty-field, wrong-token and mismatch messages were named.",
+          "after": "Adds 'Enter a valid email address.', 'Passwords must be 8 characters or more.', the Setup token verified confirmation, and that the form keeps entries in this browser tab on reload until setup succeeds.",
+          "source": "apps/web/src/routes/setup.tsx (setCustomValidity messages, auth.setup.tokenVerified, useSetupDraft 'administrator', clearDraft on 201/409); apps/api/src/modules/auth/routes.ts POST /auth/setup/validate-token"
+        },
+        {
+          "claim": "Authentication step: a policy with no method is refused",
+          "before": "OpenLaw refuses a policy with no sign-in method.",
+          "after": "OpenLaw refuses a Legal Users policy with no sign-in method; step 5 adds that a Business Users policy with no method is refused only while at least one domain is listed.",
+          "source": "apps/api/src/modules/auth/authentication-policy-routes.ts (3e91951f: business with empty allowedEmailDomains may have no method); authentication-policy.test.ts"
+        },
+        {
+          "claim": "Identity providers section after registration (fd8ffd71)",
+          "before": "...and offers **Add another identity provider** for organizations with more than one.",
+          "after": "After the first registration, the form heading changes to **Add another identity provider**. Each row has **Remove {name}**; removing the last provider turns off Single sign-on (SSO) for both groups.",
+          "source": "apps/web/src/routes/welcome.tsx (welcome.auth.register.another is the form heading, not a control; removeProvider); apps/api/src/modules/auth/routes.ts DELETE /auth/sso-providers (3e91951f)"
+        },
+        {
+          "claim": "Removing the last allowed domain in the wizard (fd8ffd71 text, contradicted by 3e91951f)",
+          "before": "Removing the last domain disables the switches again without changing their values.",
+          "after": "Removing the last domain turns off Email and password, Email magic link and Single sign-on (SSO) for Business Users and makes the switches unavailable; Require two-factor authentication keeps its value; adding a domain again leaves those methods off until one is turned on.",
+          "source": "apps/web/src/routes/welcome.tsx removeDomain/withoutSignInMethods; apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains; authentication-policy.test.ts 'removing the last domain turns off Business methods'; docs/UX-REVIEW-CHECKLIST.md item 12b"
+        },
+        {
+          "claim": "Narrowing the domain list and existing Business Users",
+          "before": "Narrowing the list later does not stop existing Business Users signing in.",
+          "after": "Removing some domains later does not stop existing Business Users signing in. Removing the last domain does, because it turns off their sign-in methods.",
+          "source": "apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains; apps/api/src/auth/instance.ts session create hook (optionsForRole)"
+        },
+        {
+          "claim": "E-signature step fields and button position (184cf48a)",
+          "before": "enter the DocuSign credentials and select **Test DocuSign connection** beside the credentials.",
+          "after": "choose the **Environment** and enter the **Integration key**, **User ID**, and **RSA private key**. Then select **Test DocuSign connection** below the credentials.",
+          "source": "apps/web/src/routes/welcome.tsx e-signature step (test button renders after the credential fieldset; disabled until key, user ID and a private key exist)"
+        },
+        {
+          "claim": "Start blank keeps Contract statuses",
+          "before": "The **Draft**, **Active**, and **Expired** Contract statuses.",
+          "after": "The **Draft**, **Partially signed**, **Active**, and **Expired** Contract statuses.",
+          "source": "packages/shared/src/start-blank.ts contract_status; apps/api/src/modules/onboarding/onboarding.test.ts CATALOG_LISTS"
+        },
+        {
+          "claim": "Stages after Start blank",
+          "before": "the Contract Stages Review, Approval, and Signature hold no Status",
+          "after": "the Contract Stages Review and Approval hold no Status, the Signature Stage holds only **Partially signed**",
+          "source": "packages/db/migrations/0181_partial-signing.sql (partially_signed, stage 'signature', is_system_default)"
+        },
+        {
+          "claim": "Editorial: UI label and straight quotes in edited lines",
+          "before": "Refresh models (plain); groups’ and step’s with curly apostrophes",
+          "after": "**Refresh models**; straight apostrophes",
+          "source": "apps/web/src/components/ai-model-selector.tsx settings.aiAnalysis.models.refresh label; docs/documentation/EDITORIAL.md exact labels"
+        },
+        {
+          "claim": "Setup token confirmation (walkthrough failure, docs/documentation/batches/DOC-032/admin-org/walkthrough.json, fr-setup-token-verified.png)",
+          "before": "When OpenLaw accepts the token, the field shows **Setup token verified**.",
+          "after": "When OpenLaw accepts the token, a green check mark appears in the field. A screen reader announces \"Setup token verified\".",
+          "source": "apps/web/src/routes/setup.tsx SetupInput: Check icon is visible; the description span is className sr-only and referenced by aria-describedby"
+        },
+        {
+          "claim": "Start blank dialog's Kept sentence (walkthrough observation)",
+          "before": "No mention of the dialog's Kept sentence.",
+          "after": "Adds that the dialog's \"Kept:\" sentence names only Draft, Active, and Expired, but Start blank also keeps Partially signed and the dialog does not count it as a row to remove.",
+          "source": "apps/web/src/routes/welcome.tsx welcome.review.startBlank.keeps; packages/shared/src/start-blank.ts START_BLANK_LISTS and isCatalogRow (shared by the dialog count and the route)"
+        }
+      ],
+      "confirmed": [
+        "Eight wizard steps with the titles and order named in Before you start, including 'E-signature (DocuSign Integration)', and 'Step {current} of {total}' (welcome.tsx STEPS, stepTitles, welcome.progress).",
+        "Wrong setup token message now ends 'from the SETUP_TOKEN environment variable.' (auth/routes.ts POST /auth/setup, b656bfb6).",
+        "Authentication step has collapsible Legal Users and Business Users sections, both starting collapsed, plus an Identity providers section with 'Register your identity provider', Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret and Register provider (welcome.tsx).",
+        "Providers list shows display name, email domains and a Configured or Missing credentials chip (welcome.tsx).",
+        "Require two-factor authentication for Legal Users: Continue saves Business then Legal policy, opens /auth/two-factor/enroll, and the wizard resumes at Outbound email through the stored step draft (welcome.tsx applyAuthentication; two-factor-enroll.tsx applicationUrl '/'; home.tsx redirect to /welcome; welcomeLoader stored-step redirect).",
+        "Business Users section: the domain list enables the switches; 'Add a domain to enable sign-in options.' when empty; Continue saves the list and both groups (welcome.tsx).",
+        "E-signature: Test saves credentials and tests without sending; success reads 'Connected to {account} as {email}.'; the Signing updates card with Update method Polling (default) or Webhook, Public callback URL and Connect HMAC secret; update choices save only on Continue (welcome.tsx applyESignature test flag).",
+        "Outbound email step has no Set up later and Continue is disabled until email is configured (welcome.tsx footer).",
+        "Drafts: tab-scoped sessionStorage keyed per Administrator; cleared on finish, on sign-out, and field by field when a credential is saved; AI model lists kept per provider, endpoint and key (setup-drafts.ts, session.ts, welcome.tsx aiModelLists).",
+        "Skip optional steps opens Outbound email while email is unset; Finish records the review (welcome.tsx finish).",
+        "Start blank refusal cases, notice text and audit entries unchanged since 067c1646 (onboarding routes not modified)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent browser walkthrough of V-C35 at 4ca41822.",
+        "The V-C35 registry action still lists nine steps including 'Business-user portal'. The app has eight: Business Users is a section of the Authentication step, and an old /welcome?step=portal link opens Authentication with Business Users expanded (welcome.tsx welcomeLoader). The Setup checklist keeps its 'Business-user portal' row, which opens Settings → Advanced → Authentication. The walkthrough should read the registry action as the eight-step flow; the registry text needs an update by the batch owner.",
+        "The SET-004 M33/6 addendum in docs/decision-records/DECISIONS-SETTINGS.md still says nine steps; the SET-004 2026-09-15 amendment is the current shape.",
+        "Observation for the owner, not a recorded contradiction: the wizard and setup drafts keep typed secrets (setup password, SMTP password, SSO client secret, DocuSign RSA private key and Connect HMAC secret, AI API key) in sessionStorage for the tab until they are saved, setup finishes, or the Administrator signs out (setup-drafts.ts, welcome.tsx useSetupDraft, setup.tsx). The guide describes this only as 'unfinished entries'."
+      ]
+    },
+    {
+      "articleId": "organisation-and-users",
+      "scenario": ["V-C36"],
+      "contentSha256Before": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+      "contentSha256": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+      "sources": [
+        "docs/user-guides/organisation-and-users.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/BRIEF-author.md",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/evidence/organisation-and-users.json",
+        "docs/documentation/batches/DOC-030/admin-org/technical-review.json",
+        "apps/web/src/routes/settings-general.tsx",
+        "apps/web/src/routes/settings-users.tsx",
+        "apps/web/src/routes/settings-users.test.tsx",
+        "apps/api/src/modules/org/routes.ts",
+        "apps/api/src/modules/users/routes.ts",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/web/src/routes/login.tsx"
+      ],
+      "corrections": [],
+      "confirmed": [
+        "The only post-walk edit (b656bfb6): an unsupported logo file shows 'Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.' (settings-general.tsx welcome.org.logo.rejected defaultMessage, which is the runtime string per apps/web/src/main.tsx).",
+        "Unreadable or oversized logo refusal text unchanged (apps/api/src/modules/org/routes.ts).",
+        "App changes since 067c1646 in this article's sources are refactors (org/routes.ts read helpers), an added logo guidance line under Upload, and test fixture renames to Devon Calloway; settings-users.tsx and users/routes.ts are unchanged, as are the invite 409 messages in auth/routes.ts.",
+        "Invite activation by SSO still depends on Legal User Authentication; with several providers the colleague also needs a provider that serves their domain, which the guide's 'matching email address' covers and authentication-and-email.md explains."
+      ],
+      "limitations": [
+        "Source inspection only. No bytes changed, so the V-C36 walkthrough evidence from DOC-030 still describes this content; the batch owner decides whether the app changes need a fresh walk."
+      ]
+    },
+    {
+      "articleId": "authentication-and-email",
+      "scenario": ["V-C37"],
+      "contentSha256Before": "22794687b6c8daaa698c38cd586cb77874685acbc5f76461244e1a2b958ba7f2",
+      "contentSha256": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673",
+      "sources": [
+        "docs/user-guides/authentication-and-email.md",
+        "CONTEXT.md",
+        "docs/documentation/EDITORIAL.md",
+        "docs/documentation/templates/how-to.md",
+        "docs/documentation/batches/DOC-032/BRIEF-author.md",
+        "docs/documentation/batches/DOC-032/plan.json",
+        "docs/documentation/evidence/authentication-and-email.json",
+        "docs/documentation/batches/DOC-030/admin-org/technical-review.json",
+        "docs/decision-records/DECISIONS-SETTINGS.md (SET-004 amendments 2026-09-15 and 2026-09-27)",
+        "docs/decision-records/DECISIONS-TECH-STACK.md (TECH-008 addendum 2026-09-27)",
+        "docs/decision-records/SCHEMA.md (org_settings.allowed_email_domains)",
+        "docs/UX-REVIEW-CHECKLIST.md (items 10e, 10f, 11, 12b)",
+        "apps/web/src/routes/settings-authentication.tsx",
+        "apps/web/src/components/authentication-options.tsx",
+        "apps/web/src/components/list-editor.tsx",
+        "apps/web/src/routes/login.tsx",
+        "apps/web/src/routes/welcome.tsx",
+        "apps/api/src/modules/auth/routes.ts",
+        "apps/api/src/modules/auth/authentication-policy-routes.ts",
+        "apps/api/src/auth/authentication-policy.ts",
+        "apps/api/src/auth/instance.ts",
+        "apps/api/src/auth/sso-domains.ts",
+        "apps/api/src/modules/auth/sso.test.ts",
+        "apps/api/src/modules/auth/authentication-policy.test.ts",
+        "apps/api/src/modules/auth/allowed-domains.test.ts",
+        "apps/api/src/modules/email-settings/routes.ts",
+        "apps/api/src/modules/advanced-settings/routes.ts",
+        "node_modules/@better-auth/sso dist (shared redirectURI option)",
+        "messages/en-US.json",
+        "apps/web/src/main.tsx"
+      ],
+      "corrections": [
+        {
+          "claim": "At least one method per card",
+          "before": "Keep at least one sign-in method on in each card. OpenLaw refuses a policy with no method...",
+          "after": "Adds the exception: Business Portal Authentication while Allowed email domains is empty has its sign-in methods off and its switches unavailable, with a link to Control Business Portal entry.",
+          "source": "authentication-policy-routes.ts (3e91951f); settings-authentication.tsx Business card value/disabled/domainsConfigured"
+        },
+        {
+          "claim": "Business SSO switch prerequisite",
+          "before": "Turn it on under Business Portal Authentication too if Business Users sign in through an identity provider.",
+          "after": "Adds: That switch needs at least one allowed email domain.",
+          "source": "authentication-options.tsx domainsConfigured reason; settings-authentication.tsx"
+        },
+        {
+          "claim": "Unserved-domain message on the sign-in page (fd8ffd71)",
+          "before": "\"No single sign-on provider is set up for {domain}.\"",
+          "after": "\"No single sign-on provider is set up for {domain}. Check the address or contact your administrator.\"",
+          "source": "apps/web/src/routes/login.tsx auth.login.error.ssoNoProvider"
+        },
+        {
+          "claim": "Removing the last identity provider (3e91951f)",
+          "before": "Removal deletes the provider's configuration at once... To recover, use Administrator password sign-in...",
+          "after": "Removing the last provider turns off Single sign-on (SSO) under both groups. Turn on another Legal method first; if SSO was the only Legal method, the staff sign-in page shows 'Sign-in is unavailable. Contact your administrator.' and no Administrator sign-in link. The recovery sentence is scoped to a failing provider.",
+          "source": "apps/api/src/modules/auth/routes.ts DELETE /auth/sso-providers; sso.test.ts 'removing the last provider disables SSO for both groups'; login.tsx initialView and unavailable view"
+        },
+        {
+          "claim": "Removing the last allowed domain (3e91951f)",
+          "before": "Removing a domain prevents new accounts on that domain; existing active users can still sign in...",
+          "after": "Adds that removing the last domain turns off Email and password, Email magic link and Single sign-on (SSO) under Business Portal Authentication, so existing Business Users can no longer sign in.",
+          "source": "apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains; instance.ts session create hook; authentication-policy.test.ts"
+        },
+        {
+          "claim": "Narrowing the list",
+          "before": "Narrowing the list does not by itself end Portal access.",
+          "after": "Removing some domains, but not the last one, does not by itself end Portal access.",
+          "source": "as above"
+        },
+        {
+          "claim": "Empty domain list state",
+          "before": "Existing Business Users keep signing in with the methods enabled for their group.",
+          "after": "The sign-in method switches show off and all four are unavailable, with the tooltip 'Add an allowed email domain to enable Business User sign-in options.' (SSO also asks for a provider when none exists); Require two-factor authentication keeps its value; after removing the last domain the Business Portal sign-in page shows 'Sign-in is unavailable. Contact your administrator.'; existing sessions keep working; adding a domain does not turn methods back on.",
+          "source": "authentication-options.tsx reasons (settings.auth.domainRequired, settings.auth.domainsAndProviderRequired); settings-authentication.tsx; login.tsx initialView; authentication-policy.test.ts (re-adding keeps business off)"
+        }
+      ],
+      "confirmed": [
+        "Two policy cards with the four switches; each change saves at once; the SSO switch help reads 'Configure an identity provider below to enable single sign-on.' (settings-authentication.tsx, authentication-options.tsx Label help).",
+        "Administrator break-glass password sign-in is enforced in the API while any group allows password or the user is an Administrator (instance.ts assertPasswordSignIn and session hook).",
+        "Identity providers card: Add provider dialog fields Display name, Provider ID, Issuer URL, Email domains, Client ID, Client secret; 'Separate several domains with commas.'; Register provider; Edit {name}/Save provider; Provider ID absent from the edit dialog; blank secret keeps the stored one; Remove {name} has no confirmation (settings-authentication.tsx ProviderDialog, list-editor.tsx).",
+        "Registration does not change either group policy (auth/routes.ts POST /auth/sso-providers).",
+        "One callback URL for every provider, ending /api/auth/sso/callback (instance.ts sso redirectURI '/sso/callback'; better-auth sso shared redirectURI).",
+        "Configured / Missing credentials chips keyed on a readable client ID (settings-authentication.tsx rowDetails).",
+        "Domain overlap refusal covers exact, subdomain and parent domains and names the holder (sso-domains.ts findDomainConflict; auth/routes.ts resolveProviderDomains).",
+        "One provider: single Continue with single sign-on button; several: the page asks for Email and resolves by domain (login.tsx ssoByEmail).",
+        "Failed provider update restores the previous configuration (auth/routes.ts PATCH under ADVISORY_LOCK.ssoProviderUpdate).",
+        "Email setup, test, replace, clear and environment precedence paragraphs: no source change since 067c1646 beyond a read-helper refactor and the wizard's SMTP draft (email-settings/routes.ts, smtp-settings-fields.tsx, advanced-settings/routes.ts)."
+      ],
+      "limitations": [
+        "Source inspection only. It does not replace the independent V-C37 walkthrough at 4ca41822.",
+        "The V-C37 expected result 'An Administrator with a password keeps emergency password sign-in when Email and password is off' holds only while Legal User Authentication keeps another method. After the last identity provider is removed from an SSO-only Legal policy, the API still accepts the Administrator's password but the staff sign-in page offers no form (see productBugs).",
+        "The fresh-install display mismatch in productBugs was found by reading the code, not by running it. The walkthrough can confirm it on the unseeded lab: finish the wizard without adding a domain, change a staff account to Business user, and try Business Portal sign-in."
+      ]
+    }
+  ],
+  "productBugs": [
+    "apps/web/src/routes/login.tsx initialView/'unavailable' view with apps/api/src/modules/auth/routes.ts DELETE /auth/sso-providers (3e91951f): removing the last identity provider turns off legal.sso even when it is the only Legal method (sso.test.ts asserts this). The staff sign-in page then shows 'Sign-in is unavailable. Contact your administrator.' with no Administrator sign-in link, so an Administrator without a live session cannot reach the password form. Contradicts TECH-008 break-glass ('a broken or misconfigured IdP must not lock the org out', instance.ts assertPasswordSignIn) and the pane's own 'Administrators retain emergency password sign-in.'",
+    "apps/api/src/modules/auth/routes.ts PUT /auth/allowed-domains (3e91951f): emptying the list now turns off every Business sign-in method, which locks out existing Business Users. No decision record covers this. The TECH-008 2026-09-27 addendum and SET-004 say the allowed domains govern new Business User accounts, and DOC-030 documented that existing Business Users keep signing in. The behavior needs an owner decision and a record (the guide now describes the built behavior).",
+    "apps/web/src/routes/settings-authentication.tsx (Business card value) and apps/web/src/routes/welcome.tsx (applyAuthentication): with an empty list the panes display Business methods as off, but they never save that state unless the list is emptied through PUT. On a fresh install, authentication_policy is null and the legacy fallback in apps/api/src/auth/authentication-policy.ts keeps business password and magic link on. The wizard sends no Business PATCH when the draft is unchanged. A Business User (for example a staff account changed to Business user) can then sign in on the Business Portal while Settings shows every method off. Contradicts SET-004 (2026-09-15 amendment): the panes expose each group's policy. Found by source inspection, not run.",
+    "messages/en-US.json is stale against the code (DES-013 extraction artifact): welcome.org.logo.rejected still reads 'That logo must be…'. The catalog also lacks auth.setup.invalidEmail, auth.setup.passwordTooShort, settings.auth.domainRequired, settings.auth.domainsAndProviderRequired and settings.auth.waitForSave. The runtime strings come from defaultMessage (apps/web/src/main.tsx), so the guides quote the code. The i18n drift check should catch this.",
+    "apps/web/src/routes/welcome.tsx welcome.review.startBlank.keeps: the Start blank dialog says 'Kept: … the Draft, Active, and Expired contract statuses …'. Since packages/shared/src/start-blank.ts added partially_signed (with migration 0181), Start blank also keeps Partially signed. The dialog copy is stale against the shared list that SET-004's Start blank addendum makes the single definition."
+  ],
+  "sharedFileRequests": [
+    "docs/user-guides/staff-sign-in.md: with two or more identity providers, Continue with single sign-on first asks for Email ('Enter your work email. Your organization's identity provider opens next.') and shows 'No single sign-on provider is set up for {domain}. Check the address or contact your administrator.' for an unserved domain (login.tsx ssoByEmail). Line 22's Administrator sign-in note should also say the link is absent when Legal User Authentication has no method, which happens after the last identity provider is removed from an SSO-only policy.",
+    "docs/user-guides/portal-sign-in.md: after an Administrator removes the last allowed email domain, every Business sign-in method is off and the Business Portal sign-in page shows 'Sign-in is unavailable. Contact your administrator.', even for existing accounts (auth/routes.ts PUT /auth/allowed-domains). With several providers the single sign-on option asks for Email first."
+  ],
+  "statusChange": null
+}

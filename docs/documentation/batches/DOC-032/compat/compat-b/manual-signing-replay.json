@@ -1,0 +1,370 @@
+{
+  "kind": "independent-article-walkthrough-log",
+  "task": "DOC-032",
+  "group": "signing-2",
+  "set": "compat-b",
+  "issue": 1194,
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-b)",
+  "adaptedFrom": "docs/documentation/batches/DOC-030/signing-2/walkthrough.mjs",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900 CSS px, one isolated context per identity",
+  "articleHashes": {
+    "manual-signing": "a00df8fec16d91f386707dd941fdfc7b87db1cd1a9e7f2c6d4796ec8af1e1572",
+    "terms-and-renewals": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414"
+  },
+  "selection": {
+    "articles": ["manual-signing"],
+    "roles": ["legal_team_member", "administrator"]
+  },
+  "stamp": 1790579729996,
+  "records": [
+    {
+      "article": "manual-signing",
+      "role": "legal_team_member",
+      "purpose": "manual signing",
+      "reference": "C-62",
+      "title": "DOC-032 compat compat-b manual-signing V-C17-manual legal_team_member 1790579729996"
+    },
+    {
+      "article": "manual-signing",
+      "role": "administrator",
+      "purpose": "manual signing",
+      "reference": "C-108",
+      "title": "DOC-032 compat compat-b manual-signing V-C17-manual administrator 1790579729996"
+    }
+  ],
+  "screenshots": [
+    "docs/documentation/batches/DOC-032/compat/compat-b/manual-signing-c17-executed-designation.png"
+  ],
+  "startedAt": "2026-09-28T07:15:29.997Z",
+  "finishedAt": "2026-09-28T07:19:59.050Z",
+  "steps": [
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-28T07:15:30.812Z",
+      "finishedAt": "2026-09-28T07:15:30.891Z",
+      "actual": "C-62 \"DOC-032 compat compat-b manual-signing V-C17-manual legal_team_member 1790579729996\" (MSA) created by Nadia Haddad; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
+      "startedAt": "2026-09-28T07:15:30.891Z",
+      "finishedAt": "2026-09-28T07:16:31.790Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log:   - waiting for getByRole('region', { name: 'Approvals & signing' }) to be visible ",
+      "result": "fail"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
+      "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
+      "startedAt": "2026-09-28T07:16:31.790Z",
+      "finishedAt": "2026-09-28T07:16:32.532Z",
+      "actual": "Upload document: Type started on \"No type\"; the draft filed as Document \"doc032-compatb-legal_team_member-draft.pdf\" (1 Document). Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Executed and uploaded doc032-compatb-legal_team_member-executed.pdf. Read-back: 2 Versions on the same Document; v2 type Executed (kind executed); the row's Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
+      "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-28T07:16:32.533Z",
+      "finishedAt": "2026-09-28T07:17:32.704Z",
+      "actual": "Selecting \"doc032-compatb-legal_team_member-draft.pdf\" opened the reader \"doc032-compatb-legal_team_member-draft.pdf, version 2\"; the executed text did not render within 60 s. Download saved doc032-compatb-legal_team_member-executed.pdf with SHA-256 equal to the uploaded executed file (a1629cda27a87cb5...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the executed designation",
+      "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
+      "startedAt": "2026-09-28T07:17:32.705Z",
+      "finishedAt": "2026-09-28T07:17:32.726Z",
+      "actual": "Read-back isExecuted for v1/v2: v1=false, v2=false. The Version cell reads \"v2\" with no Executed mark while the Type column reads Executed.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
+      "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-28T07:17:32.727Z",
+      "finishedAt": "2026-09-28T07:17:33.594Z",
+      "actual": "Actions for doc032-compatb-legal_team_member-draft.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive\"; Mark as executed copy set the designation on v2 (v1=false, v2=true); the Version cell reads \"v2 Executed\". After a second Document \"doc032-compatb-legal_team_member-schedule.pdf\" was uploaded, the rows read \"doc032-compatb-legal_team_member-draft.pdf Primary\" and \"doc032-compatb-legal_team_member-schedule.pdf\": the contract paper keeps Primary. Status still Out for signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
+      "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
+      "startedAt": "2026-09-28T07:17:33.595Z",
+      "finishedAt": "2026-09-28T07:17:36.534Z",
+      "actual": "Add version filed doc032-compatb-legal_team_member-later.pdf as v3 on the same Document: v3 current, v2 still designated. Mark as executed copy on the Document moved the designation to v3 (one designation per chain). \"Show the 2 earlier versions\" -> v2's actions offered \"Compare with previous, Mark as executed copy\"; Mark as executed copy moved it back to v2; then \"Compare with previous, Unmark as executed copy\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy\" -> Mark restored it. Version cells: head \"v3\", earlier v2 \"v2 Executed\". v2 still downloads the executed bytes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad"],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
+      "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
+      "startedAt": "2026-09-28T07:17:36.535Z",
+      "finishedAt": "2026-09-28T07:17:39.029Z",
+      "actual": "Stage control moved C-62 to Active (no Soft gate opened (no approvals)). Stage control reads \"Active\"; read-back Active/active. History: \"Nadia Haddad changed the status Out for signature → Active this minute Nadia Haddad pinned version 2 of doc032-compatb-legal_team_member-draft.pdf as the executed copy this minute Nadia Haddad cleared the executed copy of doc032-compatb-legal_team_member-draft.pdf this minute Nadia Haddad pinned version 2 of doc032-compatb-legal_team_member-draft.pdf as the executed copy this minute Nadia Haddad pinned version 3 of d\". Envelopes: 0.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "actors": ["Nadia Haddad", "Karim Aziz (Portal)"],
+      "page": "Portal and API",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
+      "startedAt": "2026-09-28T07:17:39.029Z",
+      "finishedAt": "2026-09-28T07:17:45.588Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-032 compat compat-b manual-signing V-C17-manual legal_team_member 1790579729996 C-62 Overview Counterparty Not recorded S\" with 0 executed-copy controls; his direct designation of v3 answered 403. Archived C-62 showed 0 \"Actions for doc032-compatb-legal_team_member-draft.pdf\" menus; clearing the designation answered 409. Restore answered 200; v2 is still designated.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "fixture (API)",
+      "action": "Prerequisite: an unarchived Contract owned by the actor, with Business User Karim Aziz on the team; the lab has no Signing connector",
+      "expected": "The Contract exists in Draft; the lab reports Signing unconfigured",
+      "startedAt": "2026-09-28T07:17:45.589Z",
+      "finishedAt": "2026-09-28T07:17:45.856Z",
+      "actual": "C-108 \"DOC-032 compat compat-b manual-signing V-C17-manual administrator 1790579729996\" (MSA) created by Daniel Okafor; Status Draft; Karim Aziz added to the team. lab.json seed.signing = \"unconfigured\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 1: use the Stage control to choose the Signature Status Out for signature",
+      "expected": "The Contract moves to Out for signature; with no Signing connector there is no Send for signature control and no Envelope",
+      "startedAt": "2026-09-28T07:17:45.857Z",
+      "finishedAt": "2026-09-28T07:18:47.449Z",
+      "actual": "Check did not complete: locator.waitFor: Timeout 30000ms exceeded. Call log:   - waiting for getByRole('region', { name: 'Approvals & signing' }) to be visible ",
+      "result": "fail"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Hand off step 2: open Documents; no Document yet, so Upload the first Document; then on it use Add version to upload the executed file with Type Executed",
+      "expected": "The first upload makes one Document; Add version adds v2 on the same chain with the Executed type",
+      "startedAt": "2026-09-28T07:18:47.450Z",
+      "finishedAt": "2026-09-28T07:18:48.187Z",
+      "actual": "Upload document: Type started on \"No type\"; the draft filed as Document \"doc032-compatb-administrator-draft.pdf\" (1 Document). Actions -> Add version: Type offered \"No type, Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Partially signed, Executed, Amendment\"; chose Executed and uploaded doc032-compatb-administrator-executed.pdf. Read-back: 2 Versions on the same Document; v2 type Executed (kind executed); the row's Type column reads \"Executed\".",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents reader",
+      "action": "Hand off step 3: read or download the uploaded Document Version and check that it is the executed copy",
+      "expected": "The reader opens the current Version and Download returns the exact uploaded bytes",
+      "startedAt": "2026-09-28T07:18:48.188Z",
+      "finishedAt": "2026-09-28T07:19:48.369Z",
+      "actual": "Selecting \"doc032-compatb-administrator-draft.pdf\" opened the reader \"doc032-compatb-administrator-draft.pdf, version 2\"; the executed text did not render within 60 s. Download saved doc032-compatb-administrator-executed.pdf with SHA-256 equal to the uploaded executed file (d729bb09f9e661bc...).",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Negative: choosing the Executed type during upload does not set the executed designation",
+      "expected": "No Version carries the executed designation; the Version cell shows no Executed mark",
+      "startedAt": "2026-09-28T07:19:48.369Z",
+      "finishedAt": "2026-09-28T07:19:48.387Z",
+      "actual": "Read-back isExecuted for v1/v2: v1=false, v2=false. The Version cell reads \"v2\" with no Executed mark while the Type column reads Executed.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Hand off step 4: open the Document's actions, select Mark as executed copy, check the designation; with several Documents, check the contract paper is the primary Document",
+      "expected": "v2 carries the executed designation; the Status does not change; after a second Document is uploaded the paper keeps Primary",
+      "startedAt": "2026-09-28T07:19:48.387Z",
+      "finishedAt": "2026-09-28T07:19:49.019Z",
+      "actual": "Actions for doc032-compatb-administrator-draft.pdf offered \"Compare with previous, Mark as executed copy, Add version, Edit details, Move to folder, Mark confidential, Archive, Delete version\"; Mark as executed copy set the designation on v2 (v1=false, v2=true); the Version cell reads \"v2 Executed\". After a second Document \"doc032-compatb-administrator-schedule.pdf\" was uploaded, the rows read \"doc032-compatb-administrator-draft.pdf Primary\" and \"doc032-compatb-administrator-schedule.pdf\": the contract paper keeps Primary. Status still Out for signature.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "Documents",
+      "action": "Correct the wrong selection: Add version for a new round keeps the chain and the earlier signed Version keeps the designation; mark the correct Version (replaces the designation); then use the earlier Version's own actions to Unmark and Mark again",
+      "expected": "v3 becomes current while v2 stays designated; marking v3 moves the designation; v2's own actions offer Unmark as executed copy / Mark as executed copy",
+      "startedAt": "2026-09-28T07:19:49.019Z",
+      "finishedAt": "2026-09-28T07:19:51.831Z",
+      "actual": "Add version filed doc032-compatb-administrator-later.pdf as v3 on the same Document: v3 current, v2 still designated. Mark as executed copy on the Document moved the designation to v3 (one designation per chain). \"Show the 2 earlier versions\" -> v2's actions offered \"Compare with previous, Mark as executed copy, Delete version\"; Mark as executed copy moved it back to v2; then \"Compare with previous, Unmark as executed copy, Delete version\" -> Unmark cleared it; then \"Compare with previous, Mark as executed copy, Delete version\" -> Mark restored it. Version cells: head \"v3\", earlier v2 \"v2 Executed\". v2 still downloads the executed bytes.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor"],
+      "page": "/contracts/{n}",
+      "action": "Hand off step 5: use the Stage control to choose the intended Active Status; confirm a Soft gate override only if appropriate; check the Status and Activity",
+      "expected": "The Contract reaches Active without a connector; History records the executed designation and the Status change; no Envelope row exists",
+      "startedAt": "2026-09-28T07:19:51.832Z",
+      "finishedAt": "2026-09-28T07:19:54.168Z",
+      "actual": "Stage control moved C-108 to Active (no Soft gate opened (no approvals)). Stage control reads \"Active\"; read-back Active/active. History: \"Daniel Okafor changed the status Out for signature → Active this minute Daniel Okafor pinned version 2 of doc032-compatb-administrator-draft.pdf as the executed copy this minute Daniel Okafor cleared the executed copy of doc032-compatb-administrator-draft.pdf this minute Daniel Okafor pinned version 2 of doc032-compatb-administrator-draft.pdf as the executed copy this minute Daniel Okafor pinned version 3 of doc032-c\". Envelopes: 0.",
+      "result": "pass"
+    },
+    {
+      "article": "manual-signing",
+      "scenario": "V-C17-manual",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "actors": ["Daniel Okafor", "Karim Aziz (Portal)"],
+      "page": "Portal and API",
+      "action": "Negative: a Business User on the team cannot perform the legal action; an archived record offers no legal actions and refuses the designation; after Restore the designation is unchanged",
+      "expected": "Karim Aziz sees no executed-copy control and the API refuses his write; the archived Contract shows no Document action menus and refuses a clear; v2 stays designated",
+      "startedAt": "2026-09-28T07:19:54.168Z",
+      "finishedAt": "2026-09-28T07:19:59.050Z",
+      "actual": "Karim Aziz in the Portal saw \"Your Contracts DOC-032 compat compat-b manual-signing V-C17-manual administrator 1790579729996 C-108 Overview Counterparty Not recorded Stag\" with 0 executed-copy controls; his direct designation of v3 answered 403. Archived C-108 showed 0 \"Actions for doc032-compatb-administrator-draft.pdf\" menus; clearing the designation answered 409. Restore answered 200; v2 is still designated.",
+      "result": "pass"
+    }
+  ],
+  "identities": [
+    {
+      "role": "administrator",
+      "person": "Daniel Okafor",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "legal_team_member",
+      "person": "Nadia Haddad",
+      "entry": "password sign-in"
+    },
+    {
+      "role": "business_user (negative check only)",
+      "person": "Karim Aziz",
+      "entry": "new magic link from the work Mailpit, Portal sign-in"
+    }
+  ],
+  "retries": [
+    {
+      "at": "2026-09-28T07:16:01.759Z",
+      "page": "/contracts/62/approvals",
+      "waitedFor": "Approvals & signing region",
+      "shown": "Skip to content openlaw / Helix Software Group / Help 9+ NH Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contracts C-62 DOC-032 compat compat-b manual-signing V-C17-manual legal_team_member 1790579729996 Out ",
+      "abortedRequests": []
+    },
+    {
+      "at": "2026-09-28T07:18:17.418Z",
+      "page": "/contracts/108/approvals",
+      "waitedFor": "Approvals & signing region",
+      "shown": "Skip to content openlaw / Helix Software Group / Help 9+ DO Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contracts C-108 DOC-032 compat compat-b manual-signing V-C17-manual administrator 1790579729996 Out for",
+      "abortedRequests": []
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "pass": 16,
+    "fail": 2
+  }
+}

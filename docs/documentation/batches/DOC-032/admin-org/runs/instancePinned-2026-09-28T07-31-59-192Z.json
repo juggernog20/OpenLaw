@@ -1,0 +1,35 @@
+{
+  "section": "instancePinned",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "aoauth",
+  "labProject": "openlaw-docs-9d2b1705-aoauth",
+  "appUrl": "http://127.0.0.1:43351",
+  "mailUrl": "http://127.0.0.1:48451",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "base lab environment; OIDC fixture with two issuers running",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:31:59.192Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "aoauth",
+      "page": "http://127.0.0.1:43351/settings/authentication",
+      "action": "Instance address set by the deployment: Application address shows Deployment configuration and Read only; the SSO callback uses it",
+      "expected": "Deployment configuration; Read only; active BASE_URL; callback on it",
+      "startedAt": "2026-09-28T07:31:59.621Z",
+      "finishedAt": "2026-09-28T07:32:01.499Z",
+      "actual": "Settings, Advanced, Instance address showed \"Application address Deployment configuration · Read only\" (field value http://127.0.0.1:43351, read-only true). Save provider then showed the callback http://127.0.0.1:43351/api/auth/sso/callback.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:32:01.506Z"
+}

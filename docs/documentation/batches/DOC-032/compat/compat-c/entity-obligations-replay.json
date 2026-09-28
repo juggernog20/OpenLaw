@@ -1,0 +1,633 @@
+{
+  "kind": "independent-article-walkthrough",
+  "batch": "DOC-032",
+  "task": "DOC-032",
+  "group": "entities",
+  "set": "compat-c",
+  "replayOf": "docs/documentation/batches/DOC-030/entities/walkthrough.mjs",
+  "walkthroughReviewer": "DOC-032 compatibility reviewer (compat-c)",
+  "reviewerKind": "agent",
+  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "environment": "openlaw-docs-9d2b1705-work",
+  "lab": "work",
+  "buildId": "app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "containerImages": [
+    {
+      "service": "app",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    },
+    {
+      "service": "doc-engine",
+      "imageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398"
+    },
+    {
+      "service": "mailpit",
+      "imageId": "sha256:f0a3ee4447422f324d5e0e20a6f44343e394a7e246a4e91c9db3d221fcd0edb0"
+    },
+    {
+      "service": "postgres",
+      "imageId": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
+    },
+    {
+      "service": "worker",
+      "imageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+    }
+  ],
+  "runningImageCheck": {
+    "app": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+    "doc-engine": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+    "worker": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7"
+  },
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T06:50:34.922Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T06:50:48.736Z"
+  },
+  "articleHashes": {
+    "entities-and-counterparties": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+    "entity-records": "eaa170c8f107f0bc76ea54a8b57edba028727d669ad04c8d138feff3dfed1e5e",
+    "entity-obligations": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+    "entity-structure-and-access": "b9627fc5aeb90d2f34d508d2bc8066d9322e4a1564caa1bc9c6078a453af9798"
+  },
+  "browser": "Playwright 1.63.0 Chromium, headless, 1280x900, one browser context per identity",
+  "appUrl": "http://127.0.0.1:43340",
+  "mailUrl": "http://127.0.0.1:48440",
+  "tag": "0928-0717",
+  "phases": ["c52"],
+  "roles": ["legal_team_member", "administrator"],
+  "startedAt": "2026-09-28T07:17:34.189Z",
+  "finishedAt": "2026-09-28T07:19:17.451Z",
+  "steps": [
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Add steps 1-4: recurring Obligation with Registration, Assignee, Matter and Note",
+      "expected": "The row shows the due date, recurrence and links.",
+      "actual": "After Add obligation and a reload the row read {\"Due date\":\"Sep 30, 2015\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L annual return\",\"Repeat every (months)\":\"12\",\"Registration\":\"Kessel L 0928-0717 · KS-0928-0717\",\"Assignee\":\"Nadia Haddad\",\"Matter\":\"M-1 · Sub-processor onboarding - Copperfield Learning Ltd\",\"Note\":\"Fictional annual return for the walkthrough.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}. The Matter list offered 33 reachable Matters and not the other role's Confidential Matter.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:35.451Z",
+      "finishedAt": "2026-09-28T07:17:38.103Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Add step 2: a blank recurrence makes a one-off",
+      "expected": "The one-off row has no recurrence.",
+      "actual": "The one-off saved with due 2026-11-20 and no recurrence; its row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L one-off licence\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Nadia Haddad\",\"Matter\":\"—\",\"Note\":\"—\",\"col7\":\"\",\"Actions\":\"Mark complete\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:38.103Z",
+      "finishedAt": "2026-09-28T07:17:39.652Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Negative: recurrence outside 1 to 1,200 months and a blank Label are refused",
+      "expected": "1201 and 0 keep the dialog open with a message; a blank Label does not submit; nothing is created.",
+      "actual": "Outcomes [{\"months\":\"1201\",\"open\":true,\"message\":\"One or more request fields are invalid.\"},{\"months\":\"0\",\"open\":true,\"message\":\"Value must be greater than or equal to 1.\"}]. A blank Label kept the dialog open (\"Please fill out this field.\"). No bad-recurrence Obligation was stored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:39.653Z",
+      "finishedAt": "2026-09-28T07:17:44.346Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Add step 5: the menu beside Mark complete, Edit, Save changes; Cancel discards",
+      "expected": "Edit obligation saves the note with Save changes; a Cancelled assignee change is not stored.",
+      "actual": "Edit from the row menu opened \"Edit obligation\"; Save changes stored the note. A second Edit that chose Unassigned and then Cancel left the assignee Nadia Haddad. After a reload the row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L one-off licence\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Nadia Haddad\",\"Matter\":\"—\",\"Note\":\"Renew before the end of November.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:44.351Z",
+      "finishedAt": "2026-09-28T07:17:46.879Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Restricted matter: a linked Matter outside your reach shows Restricted matter; editing keeps the link",
+      "expected": "The Matter cell reads Restricted matter with no number or title; Save changes keeps the stored link.",
+      "actual": "The row read {\"Due date\":\"May 31, 2027\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L restricted link\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Unassigned\",\"Matter\":\"Restricted matter\",\"Note\":\"—\",\"col7\":\"\",\"Actions\":\"Mark complete\"}; neither the Matter title nor M-34 appeared. Edit obligation showed Matter \"Restricted matter\". After Save changes, Daniel Okafor's read still linked M-34.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:46.879Z",
+      "finishedAt": "2026-09-28T07:17:47.179Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Column widths: drag a heading edge or use the arrow keys; the actions stay at the right; widths are remembered across Entity obligation tables in this browser",
+      "expected": "The Note column narrows by a drag on its edge and by ArrowLeft; the second Entity's table opens with the same width; Home resets it.",
+      "actual": "Note column width 151px. A drag that started on the edge line left it at 151px (hit test across the strip [\"separator\",\"separator\",\"TH\",\"TH\",\"TH\"]); a drag that started just left of the line narrowed it to 121px; ArrowLeft on the focused edge made it 105px. Mark complete stayed at the right of the table (right edge 1154, table end 1198). DOC-032 compat compat-c V-C52 0928-0717 L second entity's table opened with the Note column at 105px; Home on the edge reset it to 153px.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:47.180Z",
+      "finishedAt": "2026-09-28T07:17:49.282Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e0-4fc4-7ee2-9c79-345f87528504&assignee=01a0e6c7-9730-78af-95e8-da76f0eb29b4",
+      "action": "Calendar steps 1-2: Calendar, Due-date list puts overdue open Obligations first; Filter, Entity and Assignee, Apply",
+      "expected": "Overdue rows lead; the filter narrows to this Entity and assignee.",
+      "actual": "The unfiltered list had 8 overdue rows, all before the first open future row (of 115). Filter with Entity then Assignee and Apply left [\"Sep 30, 2015 DOC-032 compat compat-c V-C52 0928-0717 L annual return DOC-032 compat compat-c V-C52 0928-0717 L entity Nadia Haddad Every 12 months\",\"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 L one-off licence DOC-032 compat compat-c V-C52 0928-0717 L entity Nadia Haddad One-off\"], overdue first.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:49.283Z",
+      "finishedAt": "2026-09-28T07:17:52.086Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e0-4fc4-7ee2-9c79-345f87528504&assignee=01a0e6c7-9730-78af-95e8-da76f0eb29b4",
+      "action": "Calendar step 3: Month, Previous month, Next month, Today, and back to Due-date list keep the filters",
+      "expected": "The Entity and Assignee filters stay in the address across each change.",
+      "actual": "Each change kept the filters: [[\"Month\",true,1],[\"Previous month\",true,null],[\"Next month\",true,null],[\"Today\",true,null],[\"Due-date list\",true]]; the list again showed 2 rows.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:52.087Z",
+      "finishedAt": "2026-09-28T07:17:55.775Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e0-4fc4-7ee2-9c79-345f87528504&assignee=01a0e6c7-9730-78af-95e8-da76f0eb29b4&from=2026-11-01&to=2026-11-20",
+      "action": "Calendar step 2 and recovery: Due date From and To include both dates; an end before the start shows the refusal and Apply stays unavailable",
+      "expected": "2026-11-01 to 2026-11-20 keeps the one-off due 2026-11-20; a reversed range shows 'End date must be on or after start date.' with Apply disabled.",
+      "actual": "From 2026-12-01 and To 2026-11-01 showed \"End date must be on or after start date.\" and Apply was disabled; the editor said \"Includes both dates\". From 2026-11-01 to 2026-11-20 left [\"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 L one-off licence DOC-032 compat compat-c V-C52 0928-0717 L entity Nadia Haddad One-off\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:55.776Z",
+      "finishedAt": "2026-09-28T07:17:56.646Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Calendar step 4: no results; Clear all; opening an Obligation goes to its Entity",
+      "expected": "An empty window shows 'No obligations match' and Clear all; the row link opens the Entity's Obligations tab.",
+      "actual": "A 2099 window showed \"No obligations match\"; Clear all left the address \"(no filters)\". Selecting DOC-032 compat compat-c V-C52 0928-0717 L annual return opened /entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:56.647Z",
+      "finishedAt": "2026-09-28T07:17:59.924Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Home: open Obligations assigned to you; past-due items remain open and are not filed by reading",
+      "expected": "Home's Entity obligations lists the overdue item; afterwards it is still due 2015-09-30, not completed, and still offers Mark complete.",
+      "actual": "Home's Entity obligations listed \"DOC-032 compat compat-c V-C52 0928-0717 L annual return DOC-032 compat compat-c V-C52 0928-0717 L entity · Due Sep 30, 2015 Overdue Sep 30, 2015\". After reading the calendar and Home the Obligation was still due 2015-09-30 with completedOn null, and its row still offered Mark complete.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:17:59.925Z",
+      "finishedAt": "2026-09-28T07:18:01.768Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Home: Administrators also see unassigned Obligations on Entities they reach; others do not",
+      "expected": "An unassigned Obligation does not appear on the Legal Team Member's Home.",
+      "actual": "Nadia Haddad's Home did not list the unassigned Obligation (first rows [\"DOC-032 compat compat-c V-C52 0928-0717 L annual return DOC-032 compat compat-c V-C52 0928-0717 L entity · Due Sep 30, 2015 Overdue Sep 30, 2015\",\"DOC-032 compat compat-c V-C52 0928-0717 L one-off licence DOC-032 compat compat-c V-C52 0928-0717 L entity · Due Nov 20, 2026 Nov 20\",\"Corporate income tax return Helix Software Foundation · Due Jan 25, 2027 Jan 25, 2027\"]). Delete from the row menu then removed it at once, with no confirmation step.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:01.769Z",
+      "finishedAt": "2026-09-28T07:18:04.799Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Mark a filing steps 1-3: Mark complete dialog, explanation and Completed on default; filing 2026-10-05 advances the annual to 2027-09-30; History records it",
+      "expected": "Explanation names 12 months; Completed on starts at the local date; the new due date is 2027-09-30; History shows the filing.",
+      "actual": "Mark complete explained \"Completing this occurrence moves the due date forward by 12 months until it is after the completion date. The recurring obligation stays open.\"; Completed on started at 2026-09-28 (the browser's local date 2026-09-28). Completing on 2026-10-05 moved the due date from 2015-09-30 to 2027-09-30 (row {\"Due date\":\"Sep 30, 2027\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L annual return\",\"Repeat every (months)\":\"12\",\"Registration\":\"Kessel L 0928-0717 · KS-0928-0717\",\"Assignee\":\"Nadia Haddad\",\"Matter\":\"M-1 · Sub-processor onboarding - Copperfield Learning Ltd\",\"Note\":\"Fictional annual return for the walkthrough.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}). History showed [\"Nadia Haddad marked DOC-032 compat compat-c V-C52 0928-0717 L annual return filed on DOC-032 compat compat-c V-C52 0928-0717 L entity\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:04.800Z",
+      "finishedAt": "2026-09-28T07:18:07.556Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e0-4fc4-7ee2-9c79-345f87528504&includeCompleted=true",
+      "action": "One-off filing: keeps its due date, shows Completed <date>, leaves open Obligations, cannot be filed again, row read-only; Show completed finds it with Filed",
+      "expected": "The one-off stays 2026-11-20 with Completed; no Mark complete or menu; the calendar shows it only with Show completed, marked Filed; a second filing is refused.",
+      "actual": "Mark complete said \"This marks the one-off obligation as complete.\". The one-off kept due 2026-11-20 and its row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 L one-off licence Completed Sep 28, 2026\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Nadia Haddad\",\"Matter\":\"—\",\"Note\":\"Renew before the end of November.\",\"col7\":\"\",\"Actions\":\"\"} with 0 buttons (no Mark complete, no menu). The Entity-filtered calendar listed it 0 times; after Filter, Show completed it read \"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 L one-off licenceFiled DOC-032 compat compat-c V-C52 0928-0717 L entity Nadia Haddad One-off\". A second filing request was refused 409 \"This one-off obligation is already filed.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:07.557Z",
+      "finishedAt": "2026-09-28T07:18:11.037Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Recovery: correct an open recurring row with Edit; Delete in the row menu removes an Obligation at once without filing",
+      "expected": "The due date correction saves; Delete removes the scrap Obligation; the filed annual is unchanged.",
+      "actual": "Edit saved the scrap schedule's due date as 2027-07-31. Delete removed it with no confirmation dialog (0 dialogs); DOC-032 compat compat-c V-C52 0928-0717 L annual return still read 2027-09-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:11.037Z",
+      "finishedAt": "2026-09-28T07:18:15.733Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504/obligations",
+      "action": "Negative: an invalid due date in Edit is not saved",
+      "expected": "Clearing the due date keeps the dialog from saving; the stored date is unchanged.",
+      "actual": "Save changes with an empty Due date kept the dialog open (\"Please fill out this field.\"); the stored date stayed 2027-09-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:15.734Z",
+      "finishedAt": "2026-09-28T07:18:16.765Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities",
+      "action": "Archiving the Entity removes its Obligations from the calendar and Home until restored",
+      "expected": "After Archive the Obligation is absent from Home and the calendar and the Entity filter; after Restore it returns.",
+      "actual": "With the due date reset to 2015-09-30 by a state write, Home listed DOC-032 compat compat-c V-C52 0928-0717 L annual return. After Archive, Home did not list it, the calendar had 0 rows for it, and the Entity filter did not offer the Entity. After Restore the calendar listed it again (1 row).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:16.765Z",
+      "finishedAt": "2026-09-28T07:18:23.905Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504",
+      "action": "Negative: changes on an archived Entity are refused with a clear outcome",
+      "expected": "Add obligation and the row actions are absent while archived; a filing request is refused with the archive message.",
+      "actual": "While archived the tab offered 0 Add obligation, 0 Mark complete and 0 row menus; a filing request was refused 409 \"This entity is archived. Restore it before editing.\". The Entity was restored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:23.909Z",
+      "finishedAt": "2026-09-28T07:18:27.475Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Add steps 1-4: recurring Obligation with Registration, Assignee, Matter and Note",
+      "expected": "The row shows the due date, recurrence and links.",
+      "actual": "After Add obligation and a reload the row read {\"Due date\":\"Sep 30, 2015\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A annual return\",\"Repeat every (months)\":\"12\",\"Registration\":\"Kessel A 0928-0717 · KS-0928-0717\",\"Assignee\":\"Daniel Okafor\",\"Matter\":\"M-1 · Sub-processor onboarding - Copperfield Learning Ltd\",\"Note\":\"Fictional annual return for the walkthrough.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}. The Matter list offered 39 reachable Matters and not the other role's Confidential Matter.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:27.572Z",
+      "finishedAt": "2026-09-28T07:18:29.908Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Add step 2: a blank recurrence makes a one-off",
+      "expected": "The one-off row has no recurrence.",
+      "actual": "The one-off saved with due 2026-11-20 and no recurrence; its row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A one-off licence\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Daniel Okafor\",\"Matter\":\"—\",\"Note\":\"—\",\"col7\":\"\",\"Actions\":\"Mark complete\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:29.926Z",
+      "finishedAt": "2026-09-28T07:18:32.296Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Negative: recurrence outside 1 to 1,200 months and a blank Label are refused",
+      "expected": "1201 and 0 keep the dialog open with a message; a blank Label does not submit; nothing is created.",
+      "actual": "Outcomes [{\"months\":\"1201\",\"open\":true,\"message\":\"One or more request fields are invalid.\"},{\"months\":\"0\",\"open\":true,\"message\":\"Value must be greater than or equal to 1.\"}]. A blank Label kept the dialog open (\"Please fill out this field.\"). No bad-recurrence Obligation was stored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:32.297Z",
+      "finishedAt": "2026-09-28T07:18:36.830Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Add step 5: the menu beside Mark complete, Edit, Save changes; Cancel discards",
+      "expected": "Edit obligation saves the note with Save changes; a Cancelled assignee change is not stored.",
+      "actual": "Edit from the row menu opened \"Edit obligation\"; Save changes stored the note. A second Edit that chose Unassigned and then Cancel left the assignee Daniel Okafor. After a reload the row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A one-off licence\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Daniel Okafor\",\"Matter\":\"—\",\"Note\":\"Renew before the end of November.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:36.831Z",
+      "finishedAt": "2026-09-28T07:18:38.663Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Restricted matter: a linked Matter outside your reach shows Restricted matter; editing keeps the link",
+      "expected": "The Matter cell reads Restricted matter with no number or title; Save changes keeps the stored link.",
+      "actual": "The row read {\"Due date\":\"May 31, 2027\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A restricted link\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Unassigned\",\"Matter\":\"Restricted matter\",\"Note\":\"—\",\"col7\":\"\",\"Actions\":\"Mark complete\"}; neither the Matter title nor M-43 appeared. Edit obligation showed Matter \"Restricted matter\". After Save changes, Nadia Haddad's read still linked M-43.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:38.664Z",
+      "finishedAt": "2026-09-28T07:18:38.953Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Column widths: drag a heading edge or use the arrow keys; the actions stay at the right; widths are remembered across Entity obligation tables in this browser",
+      "expected": "The Note column narrows by a drag on its edge and by ArrowLeft; the second Entity's table opens with the same width; Home resets it.",
+      "actual": "Note column width 151px. A drag that started on the edge line left it at 151px (hit test across the strip [\"separator\",\"separator\",\"TH\",\"TH\",\"TH\"]); a drag that started just left of the line narrowed it to 121px; ArrowLeft on the focused edge made it 105px. Mark complete stayed at the right of the table (right edge 1154, table end 1198). DOC-032 compat compat-c V-C52 0928-0717 A second entity's table opened with the Note column at 105px; Home on the edge reset it to 153px.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:38.956Z",
+      "finishedAt": "2026-09-28T07:18:41.173Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e1-1b9b-7e99-b2a4-0661436255dd&assignee=01a0e6c7-9732-71e1-834c-8452f24236b0",
+      "action": "Calendar steps 1-2: Calendar, Due-date list puts overdue open Obligations first; Filter, Entity and Assignee, Apply",
+      "expected": "Overdue rows lead; the filter narrows to this Entity and assignee.",
+      "actual": "The unfiltered list had 9 overdue rows, all before the first open future row (of 118). Filter with Entity then Assignee and Apply left [\"Sep 30, 2015 DOC-032 compat compat-c V-C52 0928-0717 A annual return DOC-032 compat compat-c V-C52 0928-0717 A entity Daniel Okafor Every 12 months\",\"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 A one-off licence DOC-032 compat compat-c V-C52 0928-0717 A entity Daniel Okafor One-off\"], overdue first.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:41.173Z",
+      "finishedAt": "2026-09-28T07:18:43.659Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e1-1b9b-7e99-b2a4-0661436255dd&assignee=01a0e6c7-9732-71e1-834c-8452f24236b0",
+      "action": "Calendar step 3: Month, Previous month, Next month, Today, and back to Due-date list keep the filters",
+      "expected": "The Entity and Assignee filters stay in the address across each change.",
+      "actual": "Each change kept the filters: [[\"Month\",true,1],[\"Previous month\",true,null],[\"Next month\",true,null],[\"Today\",true,null],[\"Due-date list\",true]]; the list again showed 2 rows.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:43.660Z",
+      "finishedAt": "2026-09-28T07:18:47.637Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e1-1b9b-7e99-b2a4-0661436255dd&assignee=01a0e6c7-9732-71e1-834c-8452f24236b0&from=2026-11-01&to=2026-11-20",
+      "action": "Calendar step 2 and recovery: Due date From and To include both dates; an end before the start shows the refusal and Apply stays unavailable",
+      "expected": "2026-11-01 to 2026-11-20 keeps the one-off due 2026-11-20; a reversed range shows 'End date must be on or after start date.' with Apply disabled.",
+      "actual": "From 2026-12-01 and To 2026-11-01 showed \"End date must be on or after start date.\" and Apply was disabled; the editor said \"Includes both dates\". From 2026-11-01 to 2026-11-20 left [\"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 A one-off licence DOC-032 compat compat-c V-C52 0928-0717 A entity Daniel Okafor One-off\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:47.638Z",
+      "finishedAt": "2026-09-28T07:18:48.491Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Calendar step 4: no results; Clear all; opening an Obligation goes to its Entity",
+      "expected": "An empty window shows 'No obligations match' and Clear all; the row link opens the Entity's Obligations tab.",
+      "actual": "A 2099 window showed \"No obligations match\"; Clear all left the address \"(no filters)\". Selecting DOC-032 compat compat-c V-C52 0928-0717 A annual return opened /entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:48.492Z",
+      "finishedAt": "2026-09-28T07:18:52.016Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Home: open Obligations assigned to you; past-due items remain open and are not filed by reading",
+      "expected": "Home's Entity obligations lists the overdue item; afterwards it is still due 2015-09-30, not completed, and still offers Mark complete.",
+      "actual": "Home's Entity obligations listed \"DOC-032 compat compat-c V-C52 0928-0717 A annual return DOC-032 compat compat-c V-C52 0928-0717 A entity · Due Sep 30, 2015 Overdue Sep 30, 2015\". After reading the calendar and Home the Obligation was still due 2015-09-30 with completedOn null, and its row still offered Mark complete.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:52.017Z",
+      "finishedAt": "2026-09-28T07:18:53.436Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Home: Administrators also see unassigned Obligations on Entities they reach; others do not",
+      "expected": "An unassigned overdue Obligation appears on the Administrator's Home.",
+      "actual": "Daniel Okafor's Home listed \"DOC-032 compat compat-c V-C52 0928-0717 A unassigned review Unassigned DOC-032 compat compat-c V-C52 0928-0717 A entity · Due Jan 15, 2014 Overdue Jan 15, 2014\" (first rows [\"DOC-032 compat compat-a V-C03 1790579719295 unassigned obligation Unassigned DOC-032 compat compat-a V-C03 1790579719295 open entity · Due Jan 1, 2001 Overdue Jan 1, 2001\",\"DOC-032 compat compat-c V-C52 0928-0717 A unassigned review Unassigned DOC-032 compat compat-c V-C52 0928-0717 A entity · Due Jan 15, 2014 Overdue Jan 15, 2014\",\"DOC-032 compat compat-c V-C52 0928-0717 A annual return DOC-032 compat compat-c V-C52 0928-0717 A entity · Due Sep 30, 2015 Overdue Sep 30, 2015\"]). Delete from the row menu then removed it at once, with no confirmation step.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:53.437Z",
+      "finishedAt": "2026-09-28T07:18:55.886Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Mark a filing steps 1-3: Mark complete dialog, explanation and Completed on default; filing 2026-10-05 advances the annual to 2027-09-30; History records it",
+      "expected": "Explanation names 12 months; Completed on starts at the local date; the new due date is 2027-09-30; History shows the filing.",
+      "actual": "Mark complete explained \"Completing this occurrence moves the due date forward by 12 months until it is after the completion date. The recurring obligation stays open.\"; Completed on started at 2026-09-28 (the browser's local date 2026-09-28). Completing on 2026-10-05 moved the due date from 2015-09-30 to 2027-09-30 (row {\"Due date\":\"Sep 30, 2027\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A annual return\",\"Repeat every (months)\":\"12\",\"Registration\":\"Kessel A 0928-0717 · KS-0928-0717\",\"Assignee\":\"Daniel Okafor\",\"Matter\":\"M-1 · Sub-processor onboarding - Copperfield Learning Ltd\",\"Note\":\"Fictional annual return for the walkthrough.\",\"col7\":\"\",\"Actions\":\"Mark complete\"}). History showed [\"Daniel Okafor marked DOC-032 compat compat-c V-C52 0928-0717 A annual return filed on DOC-032 compat compat-c V-C52 0928-0717 A entity\"].",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:55.887Z",
+      "finishedAt": "2026-09-28T07:18:58.373Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities?entity=01a0e6e1-1b9b-7e99-b2a4-0661436255dd&includeCompleted=true",
+      "action": "One-off filing: keeps its due date, shows Completed <date>, leaves open Obligations, cannot be filed again, row read-only; Show completed finds it with Filed",
+      "expected": "The one-off stays 2026-11-20 with Completed; no Mark complete or menu; the calendar shows it only with Show completed, marked Filed; a second filing is refused.",
+      "actual": "Mark complete said \"This marks the one-off obligation as complete.\". The one-off kept due 2026-11-20 and its row read {\"Due date\":\"Nov 20, 2026\",\"Obligation\":\"DOC-032 compat compat-c V-C52 0928-0717 A one-off licence Completed Sep 28, 2026\",\"Repeat every (months)\":\"—\",\"Registration\":\"—\",\"Assignee\":\"Daniel Okafor\",\"Matter\":\"—\",\"Note\":\"Renew before the end of November.\",\"col7\":\"\",\"Actions\":\"\"} with 0 buttons (no Mark complete, no menu). The Entity-filtered calendar listed it 0 times; after Filter, Show completed it read \"Nov 20, 2026 DOC-032 compat compat-c V-C52 0928-0717 A one-off licenceFiled DOC-032 compat compat-c V-C52 0928-0717 A entity Daniel Okafor One-off\". A second filing request was refused 409 \"This one-off obligation is already filed.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:18:58.374Z",
+      "finishedAt": "2026-09-28T07:19:01.600Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Recovery: correct an open recurring row with Edit; Delete in the row menu removes an Obligation at once without filing",
+      "expected": "The due date correction saves; Delete removes the scrap Obligation; the filed annual is unchanged.",
+      "actual": "Edit saved the scrap schedule's due date as 2027-07-31. Delete removed it with no confirmation dialog (0 dialogs); DOC-032 compat compat-c V-C52 0928-0717 A annual return still read 2027-09-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:01.600Z",
+      "finishedAt": "2026-09-28T07:19:05.013Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd/obligations",
+      "action": "Negative: an invalid due date in Edit is not saved",
+      "expected": "Clearing the due date keeps the dialog from saving; the stored date is unchanged.",
+      "actual": "Save changes with an empty Due date kept the dialog open (\"Please fill out this field.\"); the stored date stayed 2027-09-30.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:05.014Z",
+      "finishedAt": "2026-09-28T07:19:06.464Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities",
+      "action": "Archiving the Entity removes its Obligations from the calendar and Home until restored",
+      "expected": "After Archive the Obligation is absent from Home and the calendar and the Entity filter; after Restore it returns.",
+      "actual": "With the due date reset to 2015-09-30 by a state write, Home listed DOC-032 compat compat-c V-C52 0928-0717 A annual return. After Archive, Home did not list it, the calendar had 0 rows for it, and the Entity filter did not offer the Entity. After Restore the calendar listed it again (1 row).",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:06.465Z",
+      "finishedAt": "2026-09-28T07:19:12.805Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e1-1b9b-7e99-b2a4-0661436255dd",
+      "action": "Negative: changes on an archived Entity are refused with a clear outcome",
+      "expected": "Add obligation and the row actions are absent while archived; a filing request is refused with the archive message.",
+      "actual": "While archived the tab offered 0 Add obligation, 0 Mark complete and 0 row menus; a filing request was refused 409 \"This entity is archived. Restore it before editing.\". The Entity was restored.",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:12.807Z",
+      "finishedAt": "2026-09-28T07:19:17.007Z"
+    },
+    {
+      "article": "entity-obligations",
+      "scenario": "V-C52",
+      "role": "business_user (Diego Salas, magic link)",
+      "method": "browser-walkthrough",
+      "page": "/entities/01a0e6e0-4fc4-7ee2-9c79-345f87528504",
+      "action": "Negative: an unauthorized change has a clear outcome",
+      "expected": "A Business User's Obligation write is refused.",
+      "actual": "POST to the Entity's obligations as Diego Salas returned 403 \"You do not have permission to perform this action.\".",
+      "result": "pass",
+      "startedAt": "2026-09-28T07:19:17.054Z",
+      "finishedAt": "2026-09-28T07:19:17.451Z"
+    }
+  ],
+  "errorScreens": [],
+  "shots": [],
+  "guideFailures": [],
+  "productBugs": [
+    {
+      "id": "resize-strip-covered",
+      "summary": "A table column's resize strip takes the pointer only on its left few pixels; the next heading cell paints over the rest, so a drag that starts on the visible edge line does nothing.",
+      "reproduction": "Entity Obligations tab at 1280px; press on the centre of the Note column's heading edge and drag left 30px; then press 2px left of the line and drag again.",
+      "observed": "Hit test across the strip [\"separator\",\"separator\",\"TH\",\"TH\",\"TH\"]; a drag from the line left the width at 151px; a drag from 2px left of it changed 151px to 121px.",
+      "alsoSeen": [
+        {
+          "scenario": "V-C52",
+          "observed": "Hit test across the strip [\"separator\",\"separator\",\"TH\",\"TH\",\"TH\"]; a drag from the line left the width at 151px; a drag from 2px left of it changed 151px to 121px."
+        }
+      ]
+    }
+  ],
+  "fixtures": [
+    {
+      "at": "2026-09-28T07:17:35.314Z",
+      "scenario": "V-C52",
+      "what": "Entity DOC-032 compat compat-c V-C52 0928-0717 L entity",
+      "how": "POST /entities as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:17:35.333Z",
+      "scenario": "V-C52",
+      "what": "Entity DOC-032 compat compat-c V-C52 0928-0717 L second entity",
+      "how": "POST /entities as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:17:35.347Z",
+      "scenario": "V-C52",
+      "what": "Registration Kessel L 0928-0717 on DOC-032 compat compat-c V-C52 0928-0717 L entity",
+      "how": "POST /entities/:id/registrations as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:17:35.364Z",
+      "scenario": "V-C52",
+      "what": "Obligation on DOC-032 compat compat-c V-C52 0928-0717 L second entity",
+      "how": "POST /entities/:id/obligations as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:17:35.451Z",
+      "scenario": "V-C52",
+      "what": "Confidential Matter M-34 and Obligation DOC-032 compat compat-c V-C52 0928-0717 L restricted link linked to it",
+      "how": "POST /matters and POST /entities/:id/obligations as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:18:27.487Z",
+      "scenario": "V-C52",
+      "what": "Entity DOC-032 compat compat-c V-C52 0928-0717 A entity",
+      "how": "POST /entities as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:18:27.498Z",
+      "scenario": "V-C52",
+      "what": "Entity DOC-032 compat compat-c V-C52 0928-0717 A second entity",
+      "how": "POST /entities as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:18:27.508Z",
+      "scenario": "V-C52",
+      "what": "Registration Kessel A 0928-0717 on DOC-032 compat compat-c V-C52 0928-0717 A entity",
+      "how": "POST /entities/:id/registrations as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:18:27.522Z",
+      "scenario": "V-C52",
+      "what": "Obligation on DOC-032 compat compat-c V-C52 0928-0717 A second entity",
+      "how": "POST /entities/:id/obligations as Daniel Okafor"
+    },
+    {
+      "at": "2026-09-28T07:18:27.572Z",
+      "scenario": "V-C52",
+      "what": "Confidential Matter M-43 and Obligation DOC-032 compat compat-c V-C52 0928-0717 A restricted link linked to it",
+      "how": "POST /matters and POST /entities/:id/obligations as Nadia Haddad"
+    },
+    {
+      "at": "2026-09-28T07:19:17.053Z",
+      "scenario": "V-C52",
+      "what": "Entity DOC-032 compat compat-c V-C52 0928-0717 business refusal",
+      "how": "POST /entities as Nadia Haddad"
+    }
+  ],
+  "notes": []
+}

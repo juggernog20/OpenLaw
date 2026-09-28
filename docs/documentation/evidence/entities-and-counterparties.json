@@ -91,6 +91,33 @@
     "contentSha256": "ddbbf1cfcd46f72fc735c67dcd9162a47480641221e06d2fcd2362d660607c35",
     "verifiedAt": "2026-09-16T15:53:13.127Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
+    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
+    "reviewer": "DOC-032 compatibility reviewer (compat-c)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T07:47:04.000Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of entity-record.tsx, linked-records-table.tsx, officers-card.tsx, contract-record.tsx, CONTEXT.md and messages/en-US.json. entities.tsx, the Entity filter definitions, creation rows, create-attachments, record rows, the form evaluator, type-form routes, counterparty-picker.tsx, contracts.ts, entities/routes.ts and counterparty-link.ts did not change. 46d9f1e5 made the Entity Contracts and Matters tabs managed tables, and d3728c9b changed the Officer name input; the guide describes neither and points to the corporate records guide for Officers. On the Contract Overview, 791ad567 moved Legal Owner and Business Owner into an Owners section above the Contract card; Our entity and Counterparties stay on Overview with the same controls and labels. The CONTEXT.md Grant wording matches the guide. No statement in the guide changed. I replayed the DOC-030 entities c31 phase on work: all 27 steps passed (13 Legal Team Member, 13 Administrator, 1 Business User refusal as Diego Salas), the same count as DOC-030.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/compat/compat-c.json",
+        "sha256": "244aca72a3fcba87fd970e2df9d1aff5acd66767e83beff05ae4abefd0ae7af5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entities-replay.mjs",
+        "sha256": "20cdd8670f2849f0896778e9c0d93453a363936aea9bd73ba35f13f478255bc5"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entities-replay/api.mjs",
+        "sha256": "a278c2635fd6cd094fb65b0a3cbdc6d6739dc39f6381208988b60a706da1aeb9"
+      },
+      {
+        "path": "batches/DOC-032/compat/compat-c/entities-and-counterparties-replay.json",
+        "sha256": "6ea778d69e07635bbd5430ebcbdbb1d04ceed216543f78d19e63502adeff23cd"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

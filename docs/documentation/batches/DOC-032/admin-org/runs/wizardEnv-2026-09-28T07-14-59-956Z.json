@@ -1,0 +1,77 @@
+{
+  "section": "wizardEnv",
+  "reviewer": "DOC-032 independent walkthrough agent (admin-org)",
+  "reviewerKind": "agent",
+  "labName": "aowiz",
+  "labProject": "openlaw-docs-9d2b1705-aowiz",
+  "appUrl": "http://127.0.0.1:43371",
+  "mailUrl": "http://127.0.0.1:48471",
+  "appImageId": "sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7",
+  "engineImageId": "sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398",
+  "phase": "env: SMTP_URL smtp://mailpit:1025 and SMTP_FROM DOC-032 Environment <env-relay@helix.example> (overlay-mail-env.json); stored relay saved",
+  "articleHashes": {
+    "first-run": "e0359f32038487d3308c5b31f108e7e47a35e8fb243ee767a319517d0ce43111",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T07:14:59.956Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "aowiz",
+      "page": "http://127.0.0.1:43371/welcome",
+      "action": "Deployment sets SMTP_URL and SMTP_FROM: the wizard step names the environment source and sender, with no relay form and no Send test email",
+      "expected": "Environment message; no Save relay, Replace relay, Clear relay or Send test email; a save is refused",
+      "startedAt": "2026-09-28T07:15:01.074Z",
+      "finishedAt": "2026-09-28T07:15:01.716Z",
+      "actual": "The Outbound email step read \"Outbound email is set by the deployment environment. Mail is sent from DOC-032 Environment <env-relay@helix.example>.\". Its buttons were [\"Back\",\"Continue\"]. A direct save answered 409 (\"SMTP is set by the deployment environment (SMTP_URL / SMTP_FROM), which always wins over settings saved here. Change it in the environment instead.\").",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "aowiz",
+      "page": "http://127.0.0.1:43371/settings/email",
+      "action": "Settings, Advanced, Outbound email with an environment relay: Managed by your deployment configuration; only Send test email; the test arrives from the environment sender, not the stored relay",
+      "expected": "Managed message; Sender line; one button; test mail from env-relay@helix.example",
+      "startedAt": "2026-09-28T07:15:01.717Z",
+      "finishedAt": "2026-09-28T07:15:02.643Z",
+      "actual": "The pane at /settings/email read \"Managed by your deployment configuration. Contact your system administrator to change the relay.\" and \"Sender: DOC-032 Environment <env-relay@helix.example>\". Pane buttons: [\"Send test email\"]. Send test email showed \"Test email sent to doc032-wiz-admin@helix.example. Check your inbox.\" and the message arrived from DOC-032 Environment <env-relay@helix.example> although the stored relay (stored-relay@helix.example) was still saved.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "aowiz",
+      "page": "http://127.0.0.1:43371/welcome",
+      "action": "Invite your team from the wizard while the environment relay is active: the invitation arrives from the environment sender",
+      "expected": "Set password email from env-relay@helix.example",
+      "startedAt": "2026-09-28T07:15:02.643Z",
+      "finishedAt": "2026-09-28T07:15:03.773Z",
+      "actual": "The Invite your team step sent \"Set your OpenLaw password\" to doc032-wiz-pending@helix.example from env-relay@helix.example. The row stays pending for the resend check.",
+      "result": "pass"
+    },
+    {
+      "article": "first-run",
+      "scenario": "V-C35",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "aowiz",
+      "page": "http://127.0.0.1:43371/settings/general",
+      "action": "first-run: Skip optional steps on the Welcome step with email configured ends onboarding and enters the app; it does not record the review; the wizard cannot be reopened",
+      "expected": "Skip optional steps completes setup; /welcome redirects; the Setup checklist shows Review seeded types with Mark as reviewed",
+      "startedAt": "2026-09-28T07:15:03.774Z",
+      "finishedAt": "2026-09-28T07:15:05.237Z",
+      "actual": "Skip optional steps on the Welcome step, with email configured, completed setup and went to /. Opening /welcome again went to /. The onboarding API reported completed true and review done false. The Setup checklist on Settings General listed [{\"label\":\"Organization\",\"href\":\"/settings/general\",\"markAsReviewed\":false},{\"label\":\"Business-user portal\",\"href\":\"/settings/authentication\",\"markAsReviewed\":false},{\"label\":\"E-signature\",\"href\":\"/settings/integrations/e-signature\",\"markAsReviewed\":false},{\"label\":\"AI analysis\",\"href\":\"/settings/ai-analysis\",\"markAsReviewed\":false},{\"label\":\"Review seeded types\",\"href\":null,\"markAsReviewed\":true}]: Review seeded types with Mark as reviewed and no Email row.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T07:15:05.244Z"
+}
