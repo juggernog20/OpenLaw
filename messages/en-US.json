@@ -1592,8 +1592,14 @@
   "auth.setup.hint": {
     "defaultMessage": "Create the first Administrator account. This screen disables itself once a user exists."
   },
+  "auth.setup.invalidEmail": {
+    "defaultMessage": "Enter a valid email address."
+  },
   "auth.setup.pageTitle": {
     "defaultMessage": "Set up"
+  },
+  "auth.setup.passwordTooShort": {
+    "defaultMessage": "Passwords must be 8 characters or more."
   },
   "auth.setup.submit": {
     "defaultMessage": "Create Administrator"
@@ -10043,8 +10049,14 @@
   "settings.auth.domainPlaceholder": {
     "defaultMessage": "acme.example"
   },
+  "settings.auth.domainRequired": {
+    "defaultMessage": "Add an allowed email domain to enable Business User sign-in options."
+  },
   "settings.auth.domains": {
     "defaultMessage": "Allowed email domains"
+  },
+  "settings.auth.domainsAndProviderRequired": {
+    "defaultMessage": "Add an allowed email domain and configure an identity provider to enable single sign-on."
   },
   "settings.auth.domainsHint": {
     "defaultMessage": "Separate several domains with commas. Sign-in routes by the email domain a person enters, so each domain can belong to one provider."
@@ -10135,6 +10147,9 @@
   },
   "settings.auth.secretPlaceholder": {
     "defaultMessage": "••••••••••••••••"
+  },
+  "settings.auth.waitForSave": {
+    "defaultMessage": "Wait for the current changes to finish saving."
   },
   "settings.autoDocs.acknowledgementFrequency": {
     "defaultMessage": "Acknowledgement frequency"
@@ -13689,7 +13704,7 @@
     "defaultMessage": "Organization logo"
   },
   "welcome.org.logo.rejected": {
-    "defaultMessage": "That logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
+    "defaultMessage": "Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file."
   },
   "welcome.org.logo.unreadable": {
     "defaultMessage": "That file could not be read. Pick another one."
