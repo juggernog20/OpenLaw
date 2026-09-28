@@ -47,11 +47,13 @@ export function AuthenticationOptionsFields({
           ? missingProvider
             ? intl.formatMessage({
                 id: "settings.auth.domainsAndProviderRequired",
-                defaultMessage: "Add an allowed email domain and configure an identity provider to enable single sign-on.",
+                defaultMessage:
+                  "Add an allowed email domain and configure an identity provider to enable single sign-on.",
               })
             : intl.formatMessage({
                 id: "settings.auth.domainRequired",
-                defaultMessage: "Add an allowed email domain to enable Business User sign-in options.",
+                defaultMessage:
+                  "Add an allowed email domain to enable Business User sign-in options.",
               })
           : missingProvider
             ? intl.formatMessage({
@@ -75,42 +77,40 @@ export function AuthenticationOptionsFields({
           />
         );
         return (
-        <div key={method} className="flex items-center justify-between gap-4">
-          <Label
-            htmlFor={`${id}-${method}`}
-            help={
-              method === "sso" && !ssoConfigured ? (
-                <FormattedMessage
-                  id="settings.auth.configureSso"
-                  defaultMessage="Configure an identity provider below to enable single sign-on."
-                />
-              ) : method === "requireTwoFactor" ? (
-                <FormattedMessage
-                  id="settings.auth.factorAllMethods"
-                  defaultMessage="An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
-                />
-              ) : undefined
-            }
-          >
-            <FormattedMessage {...labels[method]} />
-          </Label>
-          {reason ? (
-            <>
-              <span id={reasonId} className="sr-only">{reason}</span>
-              <Tooltip content={reason}>
-                <span
-                  role="group"
-                  tabIndex={0}
-                  aria-label={intl.formatMessage(labels[method])}
-                  aria-describedby={reasonId}
-                  className="inline-flex cursor-not-allowed rounded-full focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link [&>button]:pointer-events-none"
-                >
-                  {control}
-                </span>
-              </Tooltip>
-            </>
-          ) : control}
-        </div>
+          <div key={method} className="flex items-center justify-between gap-4">
+            <Label
+              htmlFor={`${id}-${method}`}
+              help={
+                method === "sso" && !ssoConfigured ? (
+                  <FormattedMessage
+                    id="settings.auth.configureSso"
+                    defaultMessage="Configure an identity provider below to enable single sign-on."
+                  />
+                ) : method === "requireTwoFactor" ? (
+                  <FormattedMessage
+                    id="settings.auth.factorAllMethods"
+                    defaultMessage="An authenticator app is required with every enabled sign-in method. Users must complete setup before accessing OpenLaw."
+                  />
+                ) : undefined
+              }
+            >
+              <FormattedMessage {...labels[method]} />
+            </Label>
+            <span id={reasonId} className="sr-only">
+              {reason}
+            </span>
+            <Tooltip content={reason} open={reason ? undefined : false}>
+              <span
+                role={reason ? "group" : undefined}
+                tabIndex={reason ? 0 : undefined}
+                aria-label={reason ? intl.formatMessage(labels[method]) : undefined}
+                aria-describedby={reason ? reasonId : undefined}
+                className={`inline-flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link ${reason ? "cursor-not-allowed [&>button]:pointer-events-none" : ""}`}
+              >
+                {control}
+              </span>
+            </Tooltip>
+          </div>
         );
       })}
     </div>

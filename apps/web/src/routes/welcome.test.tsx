@@ -2635,7 +2635,7 @@ it("requires an added domain before editing Business User sign-in options", asyn
   const switches = screen.getAllByRole("switch");
   for (const control of switches) expect(control).toBeDisabled();
   const magicLink = screen.getByRole("switch", { name: "Email magic link" });
-  await user.click(magicLink);
+  await user.click(screen.getByRole("group", { name: "Email magic link" }));
   expect(magicLink).not.toBeChecked();
   await user.type(screen.getByLabelText("Allowed email domains"), "example.com");
   for (const control of switches) expect(control).toBeDisabled();
