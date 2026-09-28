@@ -6,7 +6,7 @@ Replace the application build while preserving the installation's database, file
 
 Use the operator account and installation directory from [installation](install.md). Record the existing source revision, app and engine image identities, Compose project name, file list, and storage configuration. An Administrator can also save the instance address, upload limit, storage and document-service settings in **Settings → Advanced**. Record every field there that shows **Saved in OpenLaw**. Keep the existing authentication and credential encryption keys. A new project name creates a different set of default volumes; it is not an upgrade of the original installation.
 
-This edition uses source revision `4ca41822b685a2a1e58a38b4f25e421cf735c54e` as its candidate. The starting build for this procedure's checks is revision `067c1646829df85e62b809ee9157921e867c84e7`, which the previous edition of [installation](install.md) built. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
+This edition uses source revision `ad345da5842c22b7d1012bf9f5d7d12dfdb4e496` as its candidate. The starting build for this procedure's checks is revision `067c1646829df85e62b809ee9157921e867c84e7`, which the previous edition of [installation](install.md) built. Do not assume that every older release or database schema can be upgraded without additional work. Read the target build's migration and deployment changes first.
 
 From that starting build, the candidate applies the 12 migrations from `0172_m42-toolset-ceiling` to `0183_sso-provider-name`. Some of them change existing data or add built-in settings:
 
@@ -35,7 +35,7 @@ Tell users when writes will pause. Check outstanding signing and processing work
 2. Select the intended committed target and update `OPENLAW_BUILD_COMMIT` in `.env` to the same revision. Keep `COMPOSE_PROJECT_NAME`, the keys, and existing storage/database settings unchanged unless a separately planned migration requires a change.
 
    ```bash
-   git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e
+   git checkout --detach ad345da5842c22b7d1012bf9f5d7d12dfdb4e496
    docker compose config --quiet
    docker compose build app doc-engine
    ```
