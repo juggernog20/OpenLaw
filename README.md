@@ -70,7 +70,7 @@ sed -i "s|^OPENLAW_SECRET_KEY=$|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|" 
 docker compose up -d
 ```
 
-Open `http://<host>:3000`. A new install opens on first-run setup, which asks for a setup token. The app prints the token to its log:
+Open `http://<host>:3000`. A new install opens on first-run setup, which asks for a setup token. If you set `SETUP_TOKEN` in `.env`, enter that value. If you did not, the app makes a new token each time it starts and prints it to its log:
 
 ```bash
 docker compose logs app | grep -A2 "setup token"

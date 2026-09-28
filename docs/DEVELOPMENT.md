@@ -1,8 +1,8 @@
 # Developing OpenLaw
 
-This file is for people who work on the OpenLaw code. It covers the repository layout, the local development loop, the demo seed, the tests and CI. To run OpenLaw for a legal team, read [Install OpenLaw](user-guides/install.md) and [`DEPLOYMENT.md`](DEPLOYMENT.md) instead.
+Use this file to work on the OpenLaw code: the repository layout, the local development loop, the demo seed, the tests and CI. To run OpenLaw for a legal team, read [Install OpenLaw](user-guides/install.md) and [`DEPLOYMENT.md`](DEPLOYMENT.md) instead.
 
-Read [`CONTRIBUTING.md`](../CONTRIBUTING.md) first. It has the branch rules, the local check and the code rules.
+Read [`CONTRIBUTING.md`](../CONTRIBUTING.md) first for the branch rules, the local check and the code rules.
 
 ## Repository layout
 
