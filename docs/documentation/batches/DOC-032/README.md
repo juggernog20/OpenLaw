@@ -53,6 +53,15 @@ history. A bridge review then carried the evidence to `ad345da5`.
    development version. The sentence now names `0.1.0`, and the guide was walked
    again on `ad345da5` in [support](support/).
 
+The first PR run found two checks tied to the old state. The API test
+`apps/api/src/mcp/documentation.test.ts` looks for "legacy Clients" in
+configure-mcp, and the author had capitalised it at the start of a sentence.
+The sentence now reads "Older, legacy Clients…", and an independent
+copy-only review in the evidence record keeps the walkthrough observations.
+The E2E reader test expected "Create and maintain a Contract" to carry the
+validation badge, which was true only while every guide was stale. It now
+checks that guide has no badge and that electronic-signing has one.
+
 For the three operator guides that carry a compatibility review,
 the bridge did not rerun the compat-d container scripts. No hunk touches
 their container steps. The install and upgrade walks on `ad345da5` ran the same

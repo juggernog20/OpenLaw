@@ -60,7 +60,7 @@ and vocabulary do not send resource updates.
 Revoking a credential closes its stream. OpenLaw also checks expiry, account
 changes and disabled access while a stream is open. A Client must reconnect after
 a role change. These checks apply even if the Client has a cached list.
-Legacy Clients use an earlier protocol revision and reload by hand. Use the Client's refresh control or reconnect
+Older, legacy Clients use an earlier protocol revision and reload by hand. Use the Client's refresh control or reconnect
 after a change. Every call checks current access, so a stale list cannot retain removed access.
 
 ## Enable OAuth Clients

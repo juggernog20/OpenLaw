@@ -1,6 +1,6 @@
 {
   "articleId": "configure-mcp",
-  "contentSha256": "5b5270c48c1bf85fab193e3a0ebfdd26ab188827637410ef70d7a7bdc33c1b9f",
+  "contentSha256": "7f1656f2c0a93398cb21228538fd236f1314023060eb1b545950cbe962355469",
   "environment": "openlaw-docs-9d2b1705-mcp42 (V-M40-MCP, V-M41-MCP; the Tool calls check of V-M42-MCP) and openlaw-docs-9d2b1705-mcpup (V-M42-MCP, upgraded from 067c1646 to the pin)",
   "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
   "buildId": "mcp42: app sha256:81f3bf32dbf3c281f7f6af965d76db3cf60fa2c92611bd6994460ebf3bd494f7; engine sha256:1d3be4864fe2b42a2c4a2ec5a20c549efb663a98669ce2e846ac871690bff398. mcpup after the upgrade: app sha256:76484d4469cb794027dc9ad3bc6495105426f1408ca8d354f1fe945e822b5dc4; engine sha256:67479c0c519c9b7b43d88f28d00497344a2b408b39d40e364a273b05387bdf17 (built by docker compose build from the same commit; mcpup before the upgrade: app sha256:506e20d184bebdc0cb91f7035e470671fd2fd71f614a49d90b7b8a5948338fba, engine sha256:eabde72b06b74e47fc40f4932468164cfa76b8587150870801038c80bd117e7e at 067c1646)",
@@ -178,7 +178,7 @@
   "compatibilityReview": {
     "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
     "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
-    "contentSha256": "5b5270c48c1bf85fab193e3a0ebfdd26ab188827637410ef70d7a7bdc33c1b9f",
+    "contentSha256": "7f1656f2c0a93398cb21228538fd236f1314023060eb1b545950cbe962355469",
     "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
     "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
@@ -191,5 +191,18 @@
       }
     ]
   },
-  "copyOnlyReview": null
+  "copyOnlyReview": {
+    "previousContentSha256": "5b5270c48c1bf85fab193e3a0ebfdd26ab188827637410ef70d7a7bdc33c1b9f",
+    "contentSha256": "7f1656f2c0a93398cb21228538fd236f1314023060eb1b545950cbe962355469",
+    "reviewer": "DOC-032 copy-only reviewer (configure-mcp)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T12:09:24.909Z",
+    "classification": "copy-only",
+    "change": {
+      "before": "Legacy Clients use an earlier protocol revision and reload by hand.",
+      "after": "Older, legacy Clients use an earlier protocol revision and reload by hand."
+    },
+    "reason": "The sentence in Receive change notifications gained the word \"Older\" so the bundled section keeps the lowercase phrase \"legacy Clients\" that apps/api/src/mcp/documentation.test.ts checks. \"Older\" restates the earlier protocol revision the same sentence already names. apps/api/src/mcp/routes.ts puts every revision before 2026-07-28 in the legacy era, and the walkthrough's legacy Client negotiated 2025-11-25. No action, prerequisite, result or meaning changes: legacy Clients still get no change notifications and still reload by hand.",
+    "retainedObservations": "The walkthrough observations in docs/documentation/batches/DOC-032/mcp/walkthrough.json (including the legacy Client steps: 0 notifications, stale list, refused calls, manual refresh), the app build (appCommit, buildId), verifiedAt and the compatibility review are retained unchanged. No fresh walkthrough was run."
+  }
 }
