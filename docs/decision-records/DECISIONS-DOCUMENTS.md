@@ -346,7 +346,7 @@ Supporting uploads on Matters and Contracts mint the same immutable `<driver>:<k
 - **Decision** —
   - **One list per module.** Settings → Documents has three tabs: Matters, Contracts, and Entities. Each tab is its own Administrator-managed list on the shared taxonomy machinery: add, rename, reorder, archive, restore. All three live in one `document_types` table with a `module` column. Knowledge has no list (see the addendum below).
   - **The type replaces the kind on Contracts.** A Document Version names at most one type from its owner's list. No type is a valid answer, and it is the upload default in every module, Contracts included.
-  - **Types that code reads are fixed.** The Contract list starts with the six negotiation types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment. Each one carries the Version kind it stands for, and none of them can be renamed, archived, or deleted. Administrators add their own types beside them. The other three lists start empty.
+  - **Types that code reads are fixed.** The Contract list starts with the six negotiation types: Draft · ours, Draft · theirs, Redline · theirs, Redline · ours, Executed, and Amendment. _Revised by the DOC-015 addendum of 2026-09-28: Partially signed is a seventh fixed type._ Each one carries the Version kind it stands for, and none of them can be renamed, archived, or deleted. Administrators add their own types beside them. The other three lists start empty.
   - **The kind follows the type.** A Version of a fixed type stores that type's kind. A Version of an added type, or of no type, stores `general`. A generated Version keeps the kind that records how it was made. A generated redline has no type. The executed pin, comparisons, Auto-Doc provenance, and the pill colours keep reading the kind, so they did not change.
   - **Archive keeps references.** An archived type still labels the Versions that carry it and leaves the pickers. It is never reassigned, because a Version records what somebody called that round.
   - **Where people pick it.** The upload composer, a new Version, the batch import, record-creation attachments (including intake conversion), and comment-attachment filing. A Member+ corrects a type from the Type column on the record's Documents tab, now shown for every module. The repository's column shows the type name. Its filter stays on the fixed kinds.
@@ -454,9 +454,28 @@ the whole-document delete does. The next version number reads the
 `document.version_deleted` entries, so a deleted number is never reused and the
 chain still shows where a Version was.
 
-In the web app the row and Version menus offer Delete version. Bulk delete in
-the Documents section removes each selected Document's current Version rather
-than the whole Document; the whole-document hard delete stays on its own menu.
+In the web app the row and Version menus offer Delete version, and bulk delete
+in the Documents section removes each selected Document's current Version. The
+web app no longer offers the whole-document delete. An Administrator erases a
+Document there by deleting its Versions, and the last one takes the Document
+with it. The whole-document route stays in the API as DOC-010 describes it.
+
 The DOC-010 rationale stands for everything else: bytes, order, note, author and
-provenance of a Version remain immutable, and the whole-document hard delete
-remains the erasure path.
+provenance of a Version remain immutable, and every erasure keeps the typed
+confirmation and the activity entry. One gap is open: on an archived owning
+record the row menu is hidden, but an earlier Version's menu still offers Delete
+version to an Administrator. [#1211](https://github.com/juggernog20/OpenLaw/issues/1211)
+tracks whether that is wanted.
+
+### DOC-015 addendum, 2026-09-28, 229909d4. Partially signed is a seventh fixed type
+
+A partial signing round used to land as a Version with no Document type and a
+free-text note saying more signatures were needed. It could not be filtered, it
+had no kind pill, and anyone could edit the note away.
+
+Partially signed is now a fixed Contract Document type with its own Version kind,
+placed just before Executed. Like the other six it maps to a system kind, so it
+cannot be renamed, archived or deleted. A Member+ can pick it on upload and in a
+kind correction. The executed-copy pipeline files each partial round with this
+kind and no note. Migration 0182 widens the kind checks, seeds the row, and moves
+the Versions that earlier partial rounds filed onto it, clearing their old note.
