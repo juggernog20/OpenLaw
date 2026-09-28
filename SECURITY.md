@@ -8,8 +8,8 @@ Security fixes go into the latest release line only.
 
 | Version        | Supported |
 | -------------- | --------- |
-| 0.1.x          | Yes       |
-| Older than 0.1 | No        |
+| 0.2.x          | Yes       |
+| Older than 0.2 | No        |
 
 ## Report a vulnerability
 

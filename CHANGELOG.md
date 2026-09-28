@@ -4,6 +4,39 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+## 0.2.0 - 2026-09-28
+
+### Upgrading
+
+- This release adds no database migrations, environment variables or Compose changes. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)).
+- API clients that send for signature must handle a new refusal. `POST /api/v1/contracts/{number}/envelopes` and `.../envelopes/prepare` now return 409 `urn:openlaw:problem:approval-soft-gate` when the send would move a Contract past the approval Stage with approvals pending or rejected. Send again with `overrideSoftGate: true` to go ahead and record the override. (#1207)
+- `DELETE` on the last identity provider now returns 409 while Legal Users or Business Users can sign in only with SSO. Turn on another sign-in method for that group first. (#1208)
+- An empty allowed-domain list no longer turns Business sign-in off. To stop Business Users signing in, turn off their sign-in methods in Settings, Authentication. (#1209, #1210)
+
+### Changed
+
+- Send for signature meets the soft gate. The Signatures card asks you to confirm before a send moves a Contract past approval with approvals still open, and the Activity records the override. (#1207)
+- A send moves the Status forward only. An Active or Ended Contract keeps its Status and end date when you send it for signature. (#1207)
+- The allowed-domain list controls only who can create a new Business User account. The Business card in Settings and in the welcome wizard shows the sign-in methods that apply when the list is empty. (#1209, #1210)
+- On an archived owning record, an Administrator can delete any Version, including the current one. (#1211)
+- The Knowledge Item Type cell is read-only. (#1214)
+- Changing the type of a Contract, Matter or Entity skips the required Rows under a Branch whose condition does not hold. (#1214)
+- Help and the documentation edition no longer show a Validation in progress or Unverified article badge on guides. (#1220)
+- The README now describes OpenLaw for the people who run and use it. The developer notes moved to `docs/DEVELOPMENT.md`. (#1219)
+
+### Fixed
+
+- The staff "Sign-in is unavailable" page offers Administrator sign-in. (#1208)
+- The archive dialog in Settings, Contract Statuses no longer counts Partially signed as a live Signature status. (#1212)
+- The Field archive dialog counts types and records separately. (#1214)
+- Holding History entries show the percentage and the owner's name. (#1214)
+- Copy shows "Copy failed" when the browser has no clipboard access. (#1214)
+- Start blank lists every Status it keeps. The MCP OAuth note names both kinds of Client. Two-factor enrollment has text for an account with no password. (#1213)
+- Adding an identity provider whose issuer does not answer names the discovery URL that failed. (#1213)
+- The welcome wizard refuses a localhost or private DocuSign webhook URL, which DocuSign cannot reach. (#1213)
+
+Full changes: https://github.com/juggernog20/OpenLaw/compare/v0.1.0...v0.2.0
+
 ## 0.1.0 - 2026-09-28
 
 First public release.
