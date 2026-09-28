@@ -15,17 +15,14 @@ on:
         required: true
         type: string
 
-# One run per tag. A second run for the same tag waits instead of racing
-# the first to the registry.
+# One release run at a time. `latest` and the major.minor tags move, so
+# two tags publishing side by side could leave the older build's tags on
+# top. A second run waits for the first instead of racing it.
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: release
   cancel-in-progress: false
 
-# Contents for the GitHub release, packages for ghcr.io. Every permission
-# not named here is none, id-token included.
-permissions:
-  contents: write
-  packages: write
+permissions: {}
 
 jobs:
   publish:
@@ -34,6 +31,11 @@ jobs:
     if: github.repository == 'juggernog20/OpenLaw'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # Contents for the GitHub release, packages for ghcr.io. Every
+    # permission not named here is none, id-token included.
+    permissions:
+      contents: write
+      packages: write
     env:
       TAG: ${{ inputs.tag || github.ref_name }}
     steps:
@@ -82,11 +84,17 @@ jobs:
       # `latest` and `0.1` are moving tags. They belong to the newest
       # release, and to the newest patch of that minor. A manual run for
       # an older tag republishes its exact version only, and does not
-      # pull `latest` back to it.
+      # pull `latest` back to it. Only tags on main count: a tag that
+      # failed the first guard was never published and must not hold the
+      # moving tags back.
       - name: Decide which moving tags this release takes
         id: moving
         run: |
-          stable=$(git tag --list 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V)
+          stable=$(
+            for t in $(git tag --list 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'); do
+              git merge-base --is-ancestor "$t^{commit}" origin/main && echo "$t"
+            done | sort -V
+          )
           newest=$(printf '%s\n' "$stable" | tail -n 1)
           newest_in_minor=$(printf '%s\n' "$stable" | awk -v p="${TAG%.*}." 'index($0, p) == 1' | tail -n 1)
           if [ "$TAG" = "$newest" ]; then latest=true; else latest=false; fi
@@ -103,36 +111,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # An exact version tag is written once. A manual run for a tag whose
+      # images already exist skips the builds and only adds the moving tags
+      # and the GitHub release, so a re-run cannot replace the bytes a
+      # pinned install already pulled. Base images and Debian packages are
+      # not pinned to a digest, so a rebuild would not be byte-identical.
+      - name: Check which exact-version images already exist
+        id: exists
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          for image in openlaw openlaw-doc-engine; do
+            if docker buildx imagetools inspect "ghcr.io/juggernog20/$image:$VERSION" >/dev/null 2>&1; then
+              echo "$image=true" >> "$GITHUB_OUTPUT"
+              echo "ghcr.io/juggernog20/$image:$VERSION already exists; keeping it." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$image=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
       # The image names must match the `image:` lines in compose.yml, or
-      # `docker compose pull` finds nothing. `value=` feeds the tag in by
-      # hand because a manual run starts from a branch, not a tag.
-      - name: Name the app image tags
-        id: app-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/juggernog20/openlaw
-          flavor: latest=false
-          tags: |
-            type=semver,pattern={{version}},value=${{ env.TAG }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }},enable=${{ steps.moving.outputs.minor }}
-            type=raw,value=latest,enable=${{ steps.moving.outputs.latest }}
-          labels: |
-            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
-
-      - name: Name the doc-engine image tags
-        id: doc-engine-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/juggernog20/openlaw-doc-engine
-          flavor: latest=false
-          tags: |
-            type=semver,pattern={{version}},value=${{ env.TAG }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }},enable=${{ steps.moving.outputs.minor }}
-            type=raw,value=latest,enable=${{ steps.moving.outputs.latest }}
-          labels: |
-            org.opencontainers.image.title=openlaw-doc-engine
-            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
-
+      # `docker compose pull` finds nothing. Each build pushes the exact
+      # version only. The moving tags follow below, once both images are
+      # in the registry, so a failed doc-engine build cannot leave a new
+      # app `latest` beside an old doc engine.
+      #
       # linux/amd64 only. The doc-engine image carries LibreOffice, and an
       # arm64 build under emulation would take hours. arm64 is a follow-up.
       #
@@ -143,14 +146,20 @@ jobs:
       # main, the default branch, so a tag run can read them. The release
       # scope helps only a re-run from the same tag or branch.
       - name: Build and push the app image
+        if: steps.exists.outputs.openlaw != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
           push: true
           provenance: false
-          tags: ${{ steps.app-meta.outputs.tags }}
-          labels: ${{ steps.app-meta.outputs.labels }}
+          tags: ghcr.io/juggernog20/openlaw:${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=openlaw
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
           build-args: |
             OPENLAW_BUILD_COMMIT=${{ steps.commit.outputs.sha }}
             OPENLAW_BUILD_DIRTY=false
@@ -160,6 +169,7 @@ jobs:
           cache-to: type=gha,scope=release-app-v1,mode=max
 
       - name: Build and push the doc-engine image
+        if: steps.exists.outputs.openlaw-doc-engine != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -167,12 +177,38 @@ jobs:
           platforms: linux/amd64
           push: true
           provenance: false
-          tags: ${{ steps.doc-engine-meta.outputs.tags }}
-          labels: ${{ steps.doc-engine-meta.outputs.labels }}
+          tags: ghcr.io/juggernog20/openlaw-doc-engine:${{ steps.version.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=openlaw-doc-engine
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.commit.outputs.sha }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
           cache-from: |
             type=gha,scope=ci-doc-engine-v1
             type=gha,scope=release-doc-engine-v1
           cache-to: type=gha,scope=release-doc-engine-v1,mode=max
+
+      # Both exact versions are in the registry now. The moving tags point
+      # at those manifests; nothing is rebuilt.
+      - name: Point the moving tags at this release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          LATEST: ${{ steps.moving.outputs.latest }}
+          MINOR: ${{ steps.moving.outputs.minor }}
+        run: |
+          for image in openlaw openlaw-doc-engine; do
+            source="ghcr.io/juggernog20/$image:$VERSION"
+            args=()
+            if [ "$MINOR" = true ]; then args+=(-t "ghcr.io/juggernog20/$image:${VERSION%.*}"); fi
+            if [ "$LATEST" = true ]; then args+=(-t "ghcr.io/juggernog20/$image:latest"); fi
+            if [ "${#args[@]}" -eq 0 ]; then
+              echo "$source: no moving tags, a newer release holds them."
+              continue
+            fi
+            docker buildx imagetools create "${args[@]}" "$source"
+            echo "$source now also carries: ${args[*]}"
+          done
 
       # The notes come from the matching CHANGELOG.md section when there
       # is one, and from GitHub's generated notes when there is not. The

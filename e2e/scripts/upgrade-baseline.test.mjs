@@ -118,3 +118,14 @@ test("a first release skips an event base that predates the Dockerfile", () => {
   git("commit", "-m", "no dockerfile");
   assert.equal(upgradeBaseline({ cwd, eventName: "push", event: { before: first } }), first);
 });
+
+test("a candidate with the only Dockerfile has no baseline and says so", () => {
+  writeFileSync(join(cwd, "Dockerfile"), "FROM scratch\n");
+  git("add", "Dockerfile");
+  git("commit", "-m", "first dockerfile");
+  git("update-ref", "refs/remotes/origin/dev", git("rev-parse", "HEAD"));
+  assert.throws(
+    () => upgradeBaseline({ cwd, eventName: "push", event: { before: first } }),
+    /No upgrade baseline with a Dockerfile/,
+  );
+});

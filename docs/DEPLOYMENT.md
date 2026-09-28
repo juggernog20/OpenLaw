@@ -59,7 +59,7 @@ Every release tag `vX.Y.Z` publishes two images to GitHub Container Registry:
 - `ghcr.io/juggernog20/openlaw`, which the app and the worker both run
 - `ghcr.io/juggernog20/openlaw-doc-engine`, the doc engine
 
-Each image carries three tags. The exact version, such as `0.1.0`, never moves. The major.minor tag, such as `0.1`, follows the newest patch of that minor version. `latest` follows the newest release. `compose.yml` names `latest`, so `docker compose up` pulls the newest release when the images are not on the host yet. To run the code in your checkout instead, use `docker compose up -d --build`.
+Each image carries three tags. The exact version, such as `0.1.0`, is written once and never rebuilt. The major.minor tag, such as `0.1`, follows the newest patch of that minor version. `latest` follows the newest release. `compose.yml` names `latest`, so `docker compose up` pulls the newest release when the images are not on the host yet. To run the code in your checkout instead, use `docker compose up -d --build`.
 
 The images are linux/amd64 only for now. On an arm64 host, run `docker compose build` before `docker compose up -d`. That builds both images from your checkout.
 

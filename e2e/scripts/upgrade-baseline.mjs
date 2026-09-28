@@ -73,7 +73,10 @@ export function upgradeBaseline({ cwd, event = {}, eventName, head = "HEAD", exp
   // Manual/local runs have no event base. On dev itself, use its parent
   // instead of turning the rehearsal into a restart of the same image.
   const dev = commit("origin/dev");
-  return distinct(dev === candidate ? `${candidate}^1` : dev);
+  const fallback = dev === candidate ? `${candidate}^1` : dev;
+  if (!buildable(fallback))
+    throw new Error(`No upgrade baseline with a Dockerfile exists before ${candidate}.`);
+  return distinct(fallback);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -31,7 +31,7 @@ _Queue cleared 2026-08-04 (DOC-001 through DOC-011). Templates/precedents routed
 - **Context** — The foundational shape for the module; must satisfy CTR-014's contract-side requirements (version kinds, executed pin, generated-redline provenance). Gates grill-plan K.H3.
 - **Decision** —
   - **`documents`** is the logical record: title, ownership links (`matter_id` / `contract_id` / `entity_id` / `knowledge_item_id`, exactly one set per **DOC-008** — every document has exactly one owning record), metadata, and an explicit executed pin: `executed_version_id` FK (**same-document invariant**: the pinned row must be a version of this document — enforced at write time, like DOC-008's one-owner rule; a composite FK is the implementer's option). _Settled in M11/4: the invariant is enforced in the write path — the route reads the version by its own id **and** the document's, inside the locked transaction that then writes it. The composite FK is declined, because `(id, executed_version_id) → (document_id, id)` cannot carry the plain `ON DELETE SET NULL` that DOC-010's hard delete needs without nulling the primary key beside it._
-  - **`document_versions`** are immutable file snapshots in a **strictly linear** chain (`version_number` 1..n): `kind` (`draft_ours | redline_theirs | redline_ours | executed | amendment | generated_redline`), `source` (`uploaded | generated`), `compared_from_version_id` + `compared_to_version_id` (provenance for generated redlines — both comparison operands: the redline shows changes from the older `from` version to the newer `to` version, so the original comparison is reconstructable even after the result is appended to the chain), `note`, `created_by`. Individual versions are never edited or deleted; corrections add a new version.
+  - **`document_versions`** are immutable file snapshots in a **strictly linear** chain (`version_number` 1..n): `kind` (`draft_ours | redline_theirs | redline_ours | executed | amendment | generated_redline`), `source` (`uploaded | generated`), `compared_from_version_id` + `compared_to_version_id` (provenance for generated redlines — both comparison operands: the redline shows changes from the older `from` version to the newer `to` version, so the original comparison is reconstructable even after the result is appended to the chain), `note`, `created_by`. Individual versions are never edited or deleted; corrections add a new version. _Revised by the DOC-010 addendum of 2026-09-28: an Administrator may delete one Version; editing stays impossible._
   - The K.H3 version pill renders `version_number` of the viewed version.
 - **Rationale** — A stable logical identity is what contracts/matters link to (CTR-014's primary-document designation); immutable snapshots make the chain trustworthy as negotiation history. Linear beats DAG: real negotiation rounds supersede each other, and the rare parallel-drafts case is servable with a second document record instead of branch/merge UI.
 - **Alternatives considered** — DAG with branches: git-for-lawyers UI for a rare case. Self-referencing single table (`prev_version_id`): no stable identity to link from; every query collapses chains.
@@ -447,11 +447,12 @@ behind them, inside one transaction and in DOC-010's blob-first order. It refuse
 with 409 while a generated Comparison Version depends on the Version, and for an
 Auto-Doc template, which ADO-012 erases as one record.
 
-Deleting the last Version removes the Document. That path records
-`document.hard_deleted` and clears the primary pin, as the whole-document delete
-does. Every other case records a new `document.version_deleted` Activity entry
-that carries the version number. The next version number reads those entries, so
-a deleted number is never reused and the chain still shows where a Version was.
+Every deletion records a new `document.version_deleted` Activity entry that
+carries the version number. Deleting the last Version also removes the Document:
+that path records `document.hard_deleted` as well and clears the primary pin, as
+the whole-document delete does. The next version number reads the
+`document.version_deleted` entries, so a deleted number is never reused and the
+chain still shows where a Version was.
 
 In the web app the row and Version menus offer Delete version. Bulk delete in
 the Documents section removes each selected Document's current Version rather
