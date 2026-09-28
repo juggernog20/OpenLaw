@@ -1210,6 +1210,35 @@ function keepKeys(p) {
 
 // ---------------------------------------------------------------- upgrade (V-C46): starting build and seed
 
+/** Scratch copy of the starting build's seed with the two fixture fixes described in phase up-seed. */
+phases["seed-prepare"] = async () => {
+  await step(
+    {
+      ...UPGRADE,
+      method: "automated-test",
+      action:
+        "Fixture: scratch copy of scripts/seed at 067c1646 with 00528360's contracts.mjs fix and the stand-in's base_uri on its network alias",
+      critical: true,
+    },
+    () => {
+      const dir = path.join(WORK, "seed067");
+      rmSync(dir, { recursive: true, force: true });
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+      must(`git archive ${BASELINE} scripts/seed | tar -x -C ${dir}`, root);
+      must(`git show 00528360 -- scripts/seed/contracts.mjs | patch -p1 -d ${dir}`, root);
+      const stub = path.join(dir, "scripts/seed/signing-stub.mjs");
+      const before = readFileSync(stub, "utf8");
+      const after = before.replace(
+        "base_uri: `http://127.0.0.1:${port}`,",
+        "base_uri: `http://doc032-seed:${port}`,",
+      );
+      check(after !== before, "base_uri line not found");
+      writeFileSync(stub, after);
+      return "git archive 067c1646 scripts/seed; patch from 00528360 applied to contracts.mjs; signing-stub.mjs base_uri http://doc032-seed:8129";
+    },
+  );
+};
+
 const FIXTURE_ENV = [
   "SETUP_TOKEN",
   "AUTH_RATE_LIMIT",
@@ -1870,6 +1899,18 @@ phases["up-before"] = async () => {
       critical: true,
     },
     async () => {
+      // Let the seed's queued processing finish first, so the baseline is the state the pause will copy.
+      let pending = "";
+      for (let i = 0; i < 120; i += 1) {
+        pending = psql(
+          p,
+          "select count(*) from pgboss.job where state in ('created','retry','active') and start_after <= now()",
+        );
+        if (pending === "0") break;
+        await sleep(5000);
+      }
+      check(pending === "0", `${pending} jobs still due`);
+      await sleep(10_000);
       const inv = await inventory(p, "before");
       const fx = pickFixtures(p);
       state.fx = fx;
@@ -3040,35 +3081,36 @@ phases.recover = async () => {
 // ---------------------------------------------------------------- findings
 
 phases.findings = async () => {
+  log.publicationBlockers = [];
   log.observations = [
     {
-      article: "upgrade",
-      note: "Start step 5: a tab opened before the upgrade navigated Matters, Entities, Knowledge, Documents, Settings and Contracts after it without showing 'This part of OpenLaw was updated. Reload to continue.'. The guide says an old tab can show it; not showing it is consistent with that wording.",
-    },
-    {
-      article: "upgrade",
-      note: "The Toolset change is observable only through the ceiling: the starting build has no Team or Administration Tools, so the API key listed none before the upgrade. After it, the ceiling lacks both and the key lists none of the pin's Team/Administration Tools; after an Administrator selects them again, the same key lists openlaw_audit_log_query and openlaw_settings_get.",
-    },
-    {
-      article: "upgrade",
-      note: "The seed made 3 Envelopes (2 signed, 1 declined). After the upgrade each has completes_contract=true and no Version became Partially signed, as the guide says.",
-    },
-    {
-      article: "upgrade",
-      note: "Fixture deviations on the starting build, not guide steps: the 067c1646 seed stops with 409 'This person is already on the team.' at random seed 7 (fixed later in 00528360), so the one-file fix was applied to a scratch copy; its signing stand-in reports base_uri http://127.0.0.1:8129, which a containerised app cannot reach, so the scratch copy answers as doc032-seed; the seed ran with the lab overlay's settings (SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM), which were removed and the containers recreated before any baseline was taken.",
-    },
-    {
       article: "install",
-      note: "Image IDs differ between builds of the same revision in different checkouts (install a6bd0b38, upgrade target 14a3c8fb, starting build 93e64d4b, recovery target 38ac71d5); each project recorded the IDs its containers ran.",
+      note: "At ad345da5 the guide's git clone from GitHub and git checkout --detach worked (the pin is on origin/dev). The 4ca41822 run's checkout failure is gone; that run is kept in walkthrough-4ca41822.json.",
+    },
+    {
+      article: "upgrade",
+      note: "Start step 5: a tab opened before the upgrade navigated Matters, Entities, Knowledge, Documents, Settings and Contracts after it without showing 'This part of OpenLaw was updated. Reload to continue.'. The guide says an old tab can show it.",
+    },
+    {
+      article: "upgrade",
+      note: "The starting build has no Team or Administration Tools, so the API key listed none before the upgrade. After it the ceiling lacks both and the key lists none; after an Administrator selects them again the same key lists openlaw_audit_log_query and openlaw_settings_get.",
+    },
+    {
+      article: "upgrade",
+      note: "This run's seed left 4 Envelopes (2 sent, 1 declined, 1 voided; the seed's outcomes depend on timing, and the 4ca41822 run had 2 signed). After the upgrade each has completes_contract=true and no Version became Partially signed.",
+    },
+    {
+      article: "upgrade",
+      note: "Fixture deviations on the starting build, not guide steps: 00528360's contracts.mjs fix and a network-alias base_uri in a scratch copy of the 067c1646 seed; the lab overlay's seed-only settings were removed and the containers recreated before the baseline; the baseline waits until no pg-boss job is due.",
     },
   ];
   log.supersededAttempts =
-    "Failed steps other than the two publication-blocker checkouts were walkthrough-script defects, rerun after the fix: the address check first counted the walkthrough's own direct 127.0.0.1 probes and ran API reads outside the browser's host mapping; one navigation hit ERR_NETWORK_CHANGED; the seed ran three times against a fresh starting instance (Origin mismatch, missing deployment email, the starting build's seed bug) with docker compose -p openlaw-doc032-opup down -v between runs; the fixture check read an empty SETUP_TOKEN as set; the verification first read the target checkout's seed identity, and the Business User step first used the older sign-in link control. The last run of each step is the result.";
+    "The first upgrade attempt in this log took its baseline while 63 seeded processing jobs were still queued, so 4 derived files appeared before the pause and the file-count check failed (all 175 baseline file hashes still matched); its recovery step then had no post-upgrade upload to look for. Both upgrade projects were removed with docker compose -p ... down -v and the whole scenario was rerun with the baseline taken after the queue drained. The last run of each step is the result.";
   log.summary = {
     install:
-      "V-C44 operator/container-operation: every step passed on openlaw-doc032-opinst except Prepare step 1's checkout, which fails for any reader until 4ca41822 is on a GitHub branch (publicationBlockers).",
+      "V-C44 operator/container-operation at ad345da5 on openlaw-doc032-opinst: every step passed, including the GitHub clone and checkout.",
     upgrade:
-      "V-C46 operator/container-operation from 067c1646 to 4ca41822 on openlaw-doc032-opup, recovery on openlaw-doc032-oprecover: every step passed except Prepare step 2's checkout after git fetch origin (same publication blocker).",
+      "V-C46 operator/container-operation from 067c1646 to ad345da5 on openlaw-doc032-opup, recovery on openlaw-doc032-oprecover: every step passed.",
   };
   saveLog();
   console.log("findings saved");

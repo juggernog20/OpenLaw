@@ -1,0 +1,230 @@
+{
+  "batch": "DOC-032",
+  "group": "contracts-2",
+  "kind": "independent-article-walkthrough",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "appUrl": "http://127.0.0.1:43390",
+  "mailUrl": "http://127.0.0.1:48490",
+  "lab": {
+    "name": "final",
+    "project": "openlaw-docs-9d2b1705-final",
+    "sourceCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+    "runningAppImage": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "runningWorkerImage": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "runningEngineImage": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+    "seed": {
+      "status": "complete",
+      "scale": "light",
+      "randomSeed": 7,
+      "startedAt": "2026-09-28T09:41:01.834Z",
+      "ai": "disabled",
+      "signing": "unconfigured",
+      "completedAt": "2026-09-28T09:41:17.492Z"
+    }
+  },
+  "articles": {
+    "troubleshooting": {
+      "path": "docs/user-guides/troubleshooting.md",
+      "contentSha256": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, one browser context per identity",
+  "accounts": {
+    "administrator": "Daniel Okafor (daniel.okafor@helix.example), password sign-in",
+    "legal_team_member": "Nadia Haddad (nadia.haddad@helix.example), password sign-in",
+    "business_user": "Lena Fischer (doc032-bridge-bu@helix.example), a Business User this walkthrough created by Portal sign-in on the allowed helix.example domain; fresh links from the lab Mailpit",
+    "business_user_link_check": "doc032-bridge-bu2@helix.example, a second created Business User used only for the spent-link check",
+    "operator": "no app account; signed-out browser context and container-level reads"
+  },
+  "fixtures": {
+    "stamp": "09281019",
+    "shared": {
+      "number": 36,
+      "title": "DOC-032 bridge V-C49 shared DPA contract 09281019",
+      "primaryDocumentId": "01a0e786-7fec-71a5-8504-954707718e96",
+      "pngDocumentId": "01a0e786-7ffe-752b-8364-9155fc60767a",
+      "folderId": "01a0e786-8014-7a02-9a85-7f592db1ff7f",
+      "fieldsPatch": 200,
+      "securityReview": "Not required"
+    },
+    "confidential": {
+      "number": 37,
+      "title": "DOC-032 bridge V-C49 confidential contract 09281019"
+    },
+    "adminConfidential": {
+      "number": 38,
+      "title": "DOC-032 bridge V-C49 administrator confidential contract 09281019"
+    },
+    "confidentialPortal": {
+      "number": 39,
+      "title": "DOC-032 bridge V-C49 confidential portal contract 09281019"
+    },
+    "archived": {
+      "number": 40,
+      "title": "DOC-032 bridge V-C49 archived contract 09281019"
+    },
+    "approval": {
+      "number": 41,
+      "title": "DOC-032 bridge V-C49 approval contract 09281019"
+    },
+    "buApproval": {
+      "number": 42,
+      "title": "DOC-032 bridge V-C49 business approver buApproval 09281019",
+      "approvalId": "01a0e786-8129-713e-9b51-5fcc50f604ed"
+    },
+    "buWithdraw": {
+      "number": 43,
+      "title": "DOC-032 bridge V-C49 business approver buWithdraw 09281019",
+      "approvalId": "01a0e786-815c-7698-bfe0-5e93c94d508b"
+    },
+    "buArchive": {
+      "number": 44,
+      "title": "DOC-032 bridge V-C49 business approver buArchive 09281019",
+      "approvalId": "01a0e786-8190-7e30-b300-9f4605f2638d"
+    },
+    "uploads": {
+      "number": 45,
+      "title": "DOC-032 bridge V-C49 upload contract 09281019"
+    },
+    "files": {
+      "number": 46,
+      "title": "DOC-032 bridge V-C49 file behavior contract 09281019"
+    },
+    "relatedMatter": {
+      "number": 21,
+      "title": "DOC-032 bridge V-C49 related matter 09281019"
+    },
+    "entity": {
+      "id": "01a0e786-81e8-75b8-bc53-bc772020bedf",
+      "name": "DOC-032 bridge V-C49 confidential entity Ltd 09281019"
+    },
+    "registerEntity": {
+      "id": "01a0e786-81fe-7d65-9bff-401e240daed8",
+      "name": "DOC-032 bridge V-C49 register entity Ltd 09281019",
+      "holder": "Marta Kowalczyk",
+      "holderEntity": {
+        "id": "01a0e786-823d-79e0-9b7c-cdcd0258771f",
+        "name": "DOC-032 bridge V-C49 holder entity Ltd 09281019"
+      }
+    },
+    "knowledge": {
+      "id": "01a0e786-826f-7a51-8933-aa56fe7018b0",
+      "title": "DOC-032 bridge V-C49 Portal Knowledge 09281019"
+    },
+    "request": {
+      "number": 31,
+      "contract": 47
+    },
+    "openRequest": {
+      "number": 32
+    },
+    "createdAt": "2026-09-28T10:19:07.427Z",
+    "createdBy": "Nadia Haddad and Daniel Okafor API sessions, and the created Business User's Portal session (Requests)",
+    "file": "docs/documentation/batches/DOC-032/bridge/walkthrough-troubleshooting/fixtures.json",
+    "businessUserOnboarding": "/portal"
+  },
+  "settingsChanged": [],
+  "productBugs": [],
+  "observations": [],
+  "runs": [
+    {
+      "startedAt": "2026-09-28T10:18:57.527Z",
+      "sections": ["T"]
+    }
+  ],
+  "steps": [
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error on the staff sign-in page, and the account still signs in with the right password (one failure, well under the ten-failure lockout).",
+      "startedAt": "2026-09-28T10:19:07.428Z",
+      "at": "2026-09-28T10:19:09.439Z",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]. A wrong password showed \"Check your email and password.\" and stayed on the page. The correct password then signed in to /.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: staff sign-in with a wrong password, then the correct one",
+      "expected": "A wrong password shows a visible error on the staff sign-in page, and the account still signs in with the right password (one failure, well under the ten-failure lockout).",
+      "startedAt": "2026-09-28T10:19:09.439Z",
+      "at": "2026-09-28T10:19:11.373Z",
+      "page": "/",
+      "actual": "The staff sign-in page offered [\"Sign in\",\"Set up or reset your password\",\"Email me a sign-in link\"]. A wrong password showed \"Check your email and password.\" and stayed on the page. The correct password then signed in to /.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "I cannot sign in: a Portal link already used; request a new link and open the newest message",
+      "expected": "Reusing a spent link shows a link-specific expired or already-used message; a new link from the newest message signs in; the Portal session does not open staff pages.",
+      "startedAt": "2026-09-28T10:19:11.374Z",
+      "at": "2026-09-28T10:19:17.640Z",
+      "page": "/portal/onboarding",
+      "actual": "The first link (subject \"Sign in to OpenLaw\") signed in once and landed on /portal. Opening the same link in a new browser context landed on /auth/link-expired with heading \"Sign-in link expired\" and the text \"The link has expired or was already used. Enter your email to get a fresh one.\". A new link from the newest message signed in and landed on /portal. Going to /contracts in that session landed on /portal/onboarding. Screenshot docs/documentation/batches/DOC-032/bridge/walkthrough-troubleshooting/business-user-link-expired.png.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff groups with In-app, Email and Push, Briefing, Devices, Reminder lead times, and profile timezone",
+      "expected": "Groups show In-app, Email and Push choices and a Briefing section; Devices offers Turn on for this browser when the browser allows notifications and says In-app off silences Push; Reminder lead times has Use the organization's default lead times; Profile has a Timezone control.",
+      "startedAt": "2026-09-28T10:19:17.673Z",
+      "at": "2026-09-28T10:19:22.595Z",
+      "page": "/settings/profile",
+      "actual": "Settings > Personal > Notifications switches: [\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Push on\",\"New requests In-app on\",\"New requests Email off\",\"New requests Push off\",\"Knowledge items Email on\",\"Show details in notifications on\",\"Use the organization's default lead times on\",\"Approvals Email on\",\"Tasks Email on\",\"Dates Email on\",\"Obligations Email on\",\"Intake Email off\"]. Briefing heading present. Devices: \"Devices\"; with browser notification permission granted the page offered Turn on for this browser (not selected). Reminder lead times: switch \"Use the organization's default lead times\" on, list [\"30 days before 14 days before 7 days before 1 day before On the day\"]. Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: staff groups with In-app, Email and Push, Briefing, Devices, Reminder lead times, and profile timezone",
+      "expected": "Groups show In-app, Email and Push choices and a Briefing section; Devices offers Turn on for this browser when the browser allows notifications and says In-app off silences Push; Reminder lead times has Use the organization's default lead times; Profile has a Timezone control.",
+      "startedAt": "2026-09-28T10:19:22.595Z",
+      "at": "2026-09-28T10:19:27.481Z",
+      "page": "/settings/profile",
+      "actual": "Settings > Personal > Notifications switches: [\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Push on\",\"New requests In-app on\",\"New requests Email off\",\"New requests Push off\",\"Knowledge items Email on\",\"Show details in notifications on\",\"Use the organization's default lead times on\",\"Approvals Email on\",\"Tasks Email on\",\"Dates Email on\",\"Obligations Email on\",\"Intake Email off\"]. Briefing heading present. Devices: \"Devices\"; with browser notification permission granted the page offered Turn on for this browser (not selected). Reminder lead times: switch \"Use the organization's default lead times\" on, list [\"30 days before 14 days before 7 days before 1 day before On the day\"]. Profile showed a Timezone control.",
+      "result": "pass"
+    },
+    {
+      "section": "T",
+      "article": "troubleshooting",
+      "scenario": "V-C49",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "A notification is missing: Portal Notification settings, and In-app off stops the group's email",
+      "expected": "Notification settings lists Request updates, Assigned to you, Activity on your records and Dates approaching; there is no personal lead-time control; with Request updates In-app off a Legal reply sends no email, and with it back on the next reply does.",
+      "startedAt": "2026-09-28T10:19:27.482Z",
+      "at": "2026-09-28T10:19:59.383Z",
+      "page": "/portal/settings",
+      "actual": "The header link Notification settings opened /portal/settings with switches [\"Request updates In-app on\",\"Request updates Email on\",\"Request updates Push on\",\"Assigned to you In-app on\",\"Assigned to you Email on\",\"Assigned to you Push on\",\"Activity on your records In-app on\",\"Activity on your records Email off\",\"Activity on your records Push off\",\"Dates approaching In-app on\",\"Dates approaching Email on\",\"Dates approaching Push on\",\"Show details in notifications on\"] and the note \"Get notifications on your devices, even when OpenLaw is closed. Turning In-app off for an event group also silences its Push notifications.\". No lead-time control was shown (0 matches). With Request updates In-app off the switches read [\"Request updates In-app off\",\"Request updates Email on\",\"Request updates Push on\"]: the Email switch stays as it was. Nadia then replied on R-32; after 25 s Mailpit held 1 messages for this Business User about R-32 (was 1), so no email went out. With In-app back on ([\"Request updates In-app on\",\"Request updates Email on\",\"Request updates Push on\"]) the next reply produced a new email (2 messages).",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:19:59.403Z",
+  "summary": {
+    "total": 6,
+    "pass": 6,
+    "fail": 0
+  }
+}

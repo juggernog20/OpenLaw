@@ -73,13 +73,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-c)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T07:47:04.000Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, bulk-document-actions.tsx, lib/documents.ts, documents/routes.ts, document-erasure.ts and messages/en-US.json. batch-dialog.tsx and lib/folders.ts did not change. New folder, Rename, Move, New subfolder, Move to folder, drag to a folder, the selection bar's Move, the import dialog and the folder Delete that dissolves the folder did not change. dd28e33d replaced the Document row's whole-Document Delete with an Administrator-only Delete version, and the selection bar's Delete became Delete versions. The guide says only that folder Delete does not delete the Documents and links to the Document deletion guide, so no statement in it changed. d0e50ae4 changed only the Type pill colour. I replayed the DOC-030 documents-2 setup, folders, Business and teardown sections on work: all 34 document-folders steps passed (17 Administrator, 16 Legal Team Member, 1 Business User), the same count as DOC-030.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-c): I read the diff of documents-card.tsx, bulk-document-actions.tsx, lib/documents.ts, documents/routes.ts, document-erasure.ts and messages/en-US.json. batch-dialog.tsx and lib/folders.ts did not change. New folder, Rename, Move, New subfolder, Move to folder, drag to a folder, the selection bar's Move, the import dialog and the folder Delete that dissolves the folder did not change. dd28e33d replaced the Document row's whole-Document Delete with an Administrator-only Delete version, and the selection bar's Delete became Delete versions. The guide says only that folder Delete does not delete the Documents and links to the Document deletion guide, so no statement in it changed. d0e50ae4 changed only the Type pill colour. I replayed the DOC-030 documents-2 setup, folders, Business and teardown sections on work: all 34 document-folders steps passed (17 Administrator, 16 Legal Team Member, 1 Business User), the same count as DOC-030; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-c.json",
@@ -96,6 +96,10 @@
       {
         "path": "batches/DOC-032/compat/compat-c/document-folders-replay.json",
         "sha256": "bf6aad17421e9db20eb9a47768274241780bc52acba5b8aade43f84c49839145"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

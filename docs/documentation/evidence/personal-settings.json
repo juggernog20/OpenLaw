@@ -88,13 +88,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/auth/oauth.ts, apps/web/src/components/api-keys.tsx and messages/en-US.json. settings.tsx, settings-profile.tsx, settings-appearance.tsx, settings-app-view.tsx, avatar.ts and auth/handler.ts have no diff. api-keys.tsx now offers only the Toolsets the account may use and can show 'No Toolsets are available for your account'; the guide sends API key work to Connect a headless Client, so no statement here changes. auth/oauth.ts stops sending the set-auth-jwt header (7abd2a8f); the replay saw a 6.4 MB photo save and Profile reload without error, which matches the guide's 'a large photo is accepted'. The replay passed 18 of 18 steps for Administrator and Legal Team Member. Replay log: batches/DOC-032/compat/compat-a/personal-settings-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/auth/oauth.ts, apps/web/src/components/api-keys.tsx and messages/en-US.json. settings.tsx, settings-profile.tsx, settings-appearance.tsx, settings-app-view.tsx, avatar.ts and auth/handler.ts have no diff. api-keys.tsx now offers only the Toolsets the account may use and can show 'No Toolsets are available for your account'; the guide sends API key work to Connect a headless Client, so no statement here changes. auth/oauth.ts stops sending the set-auth-jwt header (7abd2a8f); the replay saw a 6.4 MB photo save and Profile reload without error, which matches the guide's 'a large photo is accepted'. The replay passed 18 of 18 steps for Administrator and Legal Team Member. Replay log: batches/DOC-032/compat/compat-a/personal-settings-replay.json; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. Profile photos are scaled in the browser (apps/web/src/lib/avatar.ts, canvas), not by sharp, and the guide only links to notification preferences for email. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -111,6 +111,10 @@
       {
         "path": "batches/DOC-032/compat/compat-a/personal-settings-replay.json",
         "sha256": "c4e2f5d38c5db7cc3f4f27af7eefa8e98ef3e7486d493735570b4b587b0d2201"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

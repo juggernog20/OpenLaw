@@ -216,5 +216,62 @@
     "CONTEXT.md, Document type: says 'The six Contract negotiation types are fixed'. At the pin there are seven fixed Contract types, including Partially signed (0182; document-versions.md and types-statuses-fields.md already say seven).",
     "docs/documentation/evidence/{install,upgrade}.json, edition.json and scenarios.json: content hashes become 08464391... (install) and a3fda3bf... (upgrade); both need new walkthroughs at the pin, and V-C46's prerequisite starting build is now 067c1646."
   ],
-  "statusChange": null
+  "statusChange": null,
+  "round2": {
+    "reviewedAt": "2026-09-28T09:57:00Z",
+    "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "comparedFrom": {
+      "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+      "reason": "4ca41822 is on no GitHub branch, so a fresh clone cannot check it out; ad345da5 (merge of PR #1206, version 0.1.0) is on origin/dev."
+    },
+    "method": "source-inspection",
+    "diffRead": "git diff 4ca41822..ad345da5 -- apps packages styles package.json compose.yml Dockerfile .env.example docs/DEPLOYMENT.md .github messages: version 0.0.1 to 0.1.0 (package.json files, OPENLAW_VERSION, openapi.json), dependency patch bumps, .github/workflows/release.yml (new), DEPLOYMENT.md 'Release images' section and Upgrades comment, four setup and authentication messages, one welcome logo message, style tokens. compose.yml, Dockerfile, .env.example, apps/api/src/index.ts, apps/worker/src and packages/db/migrations are unchanged.",
+    "articles": [
+      {
+        "articleId": "install",
+        "contentSha256Before": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7",
+        "contentSha256": "2b4c20bc26965bf59c7671645a078dbef97530c18750472ccd268edc8ad39187",
+        "corrections": [
+          {
+            "claim": "Documented application revision (Before you start, checkout command, OPENLAW_BUILD_COMMIT)",
+            "before": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+            "after": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+            "source": "Batch owner's new candidate; git branch -r --contains ad345da5 lists origin/dev"
+          }
+        ],
+        "confirmed": [
+          "Published images are not mentioned, and the guide keeps its source build. release.yml publishes ghcr.io/juggernog20/openlaw and openlaw-doc-engine only when a vX.Y.Z tag on main is pushed. At ad345da5 no such tag exists: git tag --list 'v*' and git ls-remote --tags origin return nothing. The images are also linux/amd64 only. The guide's compose.operator.yml already replaces compose.yml's ghcr.io ...:latest names with per-revision local tags, and the guide already warns against a latest tag.",
+          "The version change to 0.1.0 touches no sentence in the guide.",
+          "The guide does not quote the wrong-token message or the welcome wizard's step count. It names only Set up OpenLaw and says the wizard cannot finish without outbound email, and both still hold. The setup log line in apps/api/src/index.ts is unchanged.",
+          "compose.yml, Dockerfile and .env.example are unchanged, so every command and setting stays valid."
+        ],
+        "limitations": [
+          "If a v0.1.0 release is tagged and published later, the batch owner may want install.md to offer the published images. That would be a new install path and would need its own walkthrough."
+        ]
+      },
+      {
+        "articleId": "upgrade",
+        "contentSha256Before": "a3fda3bfc3ffe13b7a90529335a02046dc935d4a333be3d782ca3b1f89013afd",
+        "contentSha256": "f22691ca436265481bbb910ddded601af40ad1579681967e46ee81cc8304cc59",
+        "corrections": [
+          {
+            "claim": "Candidate and checkout revision",
+            "before": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+            "after": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+            "source": "Batch owner's new candidate"
+          }
+        ],
+        "confirmed": [
+          "The starting build stays 067c1646. No migration changed between 4ca41822 and ad345da5, so the upgrade still applies 0172_m42-toolset-ceiling to 0183_sso-provider-name with the same data effects.",
+          "DEPLOYMENT.md's new Release images text and pull-based Upgrades comment describe published images. This guide builds from a source checkout with per-revision tags, so no step changes.",
+          "The worker, the migration runner and the startup code are unchanged, so the start and verification steps still hold."
+        ],
+        "limitations": []
+      }
+    ],
+    "productBugs": [],
+    "sharedFileRequests": [
+      "docs/documentation/evidence, edition.json and scenarios.json: the content hashes become 2b4c20bc... (install) and f22691ca... (upgrade), and the app commit becomes ad345da5."
+    ]
+  }
 }

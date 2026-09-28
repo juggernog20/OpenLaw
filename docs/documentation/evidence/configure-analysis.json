@@ -160,17 +160,21 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:48:27.194Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): Diff 067c1646..4ca41822 read hunk by hunk. (1) ai-model-selector.tsx (184cf48a): the header comment; the ModelList type is exported as AiModelList; two optional props, initialList (default null) and onListLoaded; the list state starts from initialList; load() calls onListLoaded after a list arrives. Only welcome.tsx passes the two props. settings-ai-analysis.tsx did not change and mounts AiModelSelector without them, so on the AI analysis page the list starts empty and fills only after Load models, as before. No label, message, request body, error text or model choice changed. (2) ai-connector/routes.ts: the private envelope() read moved to exported readAiEnvelope(db, row) and readAiSettings(db), with the same query and response; the models, test and save handlers are otherwise unchanged. (3) automatic-contract-analysis.ts: no automatic run starts for a Version that is the executed copy of an Envelope with completesContract false, unless it is the Contract's own executed Version. The guide says a run can start when a ready Version becomes the Contract's executed copy; a partially signed copy is not that, so the statement stays true. (4) messages/en-US.json: 181 keys changed, none on the AI analysis page (no settings.ai key); welcome.aiAnalysis.hint changed, which the guide does not quote. apps/api/src/lib/ai and every other source of the DOC-030 record did not change. The DOC-030 live OpenRouter observations (Load models, model choice, Test connection 'Connection successful.', refusals with HTTP 400, 401 and 404, the Analysis runs) therefore still apply to 4ca41822. Not replayed: live-provider-check without a live key; decided from the diff hunks.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): Diff 067c1646..4ca41822 read hunk by hunk. (1) ai-model-selector.tsx (184cf48a): the header comment; the ModelList type is exported as AiModelList; two optional props, initialList (default null) and onListLoaded; the list state starts from initialList; load() calls onListLoaded after a list arrives. Only welcome.tsx passes the two props. settings-ai-analysis.tsx did not change and mounts AiModelSelector without them, so on the AI analysis page the list starts empty and fills only after Load models, as before. No label, message, request body, error text or model choice changed. (2) ai-connector/routes.ts: the private envelope() read moved to exported readAiEnvelope(db, row) and readAiSettings(db), with the same query and response; the models, test and save handlers are otherwise unchanged. (3) automatic-contract-analysis.ts: no automatic run starts for a Version that is the executed copy of an Envelope with completesContract false, unless it is the Contract's own executed Version. The guide says a run can start when a ready Version becomes the Contract's executed copy; a partially signed copy is not that, so the statement stays true. (4) messages/en-US.json: 181 keys changed, none on the AI analysis page (no settings.ai key); welcome.aiAnalysis.hint changed, which the guide does not quote. apps/api/src/lib/ai and every other source of the DOC-030 record did not change. The DOC-030 live OpenRouter observations (Load models, model choice, Test connection 'Connection successful.', refusals with HTTP 400, 401 and 404, the Analysis runs) therefore still apply to 4ca41822. Not replayed: live-provider-check without a live key; decided from the diff hunks; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-d.json",
         "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

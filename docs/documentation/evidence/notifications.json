@@ -133,13 +133,13 @@
   },
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/api-keys.tsx, apps/web/src/lib/activity.ts and messages/en-US.json. No notifier, catalog, preference, bell, device or reminder source changed (apps/api/src/lib/notifications/, notification-bell.tsx, notification-preferences.tsx, my-reminder-lead-times.tsx, settings-notifications.tsx, portal-settings.tsx, settings-reminders.tsx, key-date-reminders.ts, morning-round.ts and notification-email.ts have no diff). activity.ts adds narrations for new actions but no notification kind. api-keys.tsx only limits the Toolsets offered in a key request; the API key notification rows and their Approve and Deny controls did not change. The replay passed its final 38 steps for Legal Team Member, Administrator and Business User. Replay log: batches/DOC-032/compat/compat-a/notifications-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/api-keys.tsx, apps/web/src/lib/activity.ts and messages/en-US.json. No notifier, catalog, preference, bell, device or reminder source changed (apps/api/src/lib/notifications/, notification-bell.tsx, notification-preferences.tsx, my-reminder-lead-times.tsx, settings-notifications.tsx, portal-settings.tsx, settings-reminders.tsx, key-date-reminders.ts, morning-round.ts and notification-email.ts have no diff). activity.ts adds narrations for new actions but no notification kind. api-keys.tsx only limits the Toolsets offered in a key request; the API key notification rows and their Approve and Deny controls did not change. The replay passed its final 38 steps for Legal Team Member, Administrator and Business User. Replay log: batches/DOC-032/compat/compat-a/notifications-replay.json; from 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches every email this guide describes. The conversations replay on final passed its 33 current steps: bell and email per group, Portal emails, the 280-character words, the comment-words switch, the morning round with the daily briefing and the Business User date summary. 'The email reads the words at send time' failed 5 times before passing on the 6th run: the mail was created 25 to 100 ms after the delete returned, the same worker race DOC-030 and compat-a met, in code with no diff. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -160,6 +160,26 @@
       {
         "path": "batches/DOC-032/compat/compat-a/notifications-replay.json",
         "sha256": "dc5f9180ad2d4140005c0d9ce210d3c00616b89f47c83daa6564ed4d4f703282"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay.mjs",
+        "sha256": "2ee88610abead0f5e07ce6a1f2843b71c35d0d7ef9dcb4498ba23e9309f3b94c"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay/fixtures.json",
+        "sha256": "f9ea2c7a1a760c494003342e811291450cbc7c58a691800ab34d14c829711be7"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay/lib.mjs",
+        "sha256": "d5486eba2533f2b287e216f0d1b7941ae06dd0426854422e8d30e6713746d58a"
+      },
+      {
+        "path": "batches/DOC-032/bridge/conversations-replay.json",
+        "sha256": "fff3efb355bd23c9dc83908f6e91771f62a51aa7a6c5a09b8cb1b2ff3df568ed"
       }
     ]
   },

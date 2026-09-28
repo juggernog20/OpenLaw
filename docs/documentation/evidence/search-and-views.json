@@ -121,13 +121,13 @@
   },
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/lib/documents.ts, apps/web/src/lib/session.ts, packages/db/src/schema/documents.ts, packages/shared/src/index.ts and messages/en-US.json. Search, list views, saved searches, Recent and the record filter bar did not change (search/*, list-views/*, views-menu.tsx, record-filter-bar.tsx, recent-searches.ts have no diff). lib/documents.ts and schema/documents.ts add the Partially signed version kind and Document type colours; the guide does not list Document kinds. session.ts only also clears setup drafts on sign-out, and Recent is still cleared. shared/src/index.ts only adds exports. The seeded saved views now belong to Devon Calloway, which the guide does not name. The replay passed its final 85 steps for Administrator, Legal Team Member and the Business User redirect, and the archived-Field re-walk passed 2 of 2 with the guide's two notices. The DOC-030 header-versus-results product bug for 'or' and a leading '-' still reproduces; the script's stale guideFailures note about the dialog notice tests pre-e68143e1 text, which the re-walk confirms. Replay log: batches/DOC-032/compat/compat-a/search-and-views-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/lib/documents.ts, apps/web/src/lib/session.ts, packages/db/src/schema/documents.ts, packages/shared/src/index.ts and messages/en-US.json. Search, list views, saved searches, Recent and the record filter bar did not change (search/*, list-views/*, views-menu.tsx, record-filter-bar.tsx, recent-searches.ts have no diff). lib/documents.ts and schema/documents.ts add the Partially signed version kind and Document type colours; the guide does not list Document kinds. session.ts only also clears setup drafts on sign-out, and Recent is still cleared. shared/src/index.ts only adds exports. The seeded saved views now belong to Devon Calloway, which the guide does not name. The replay passed its final 85 steps for Administrator, Legal Team Member and the Business User redirect, and the archived-Field re-walk passed 2 of 2 with the guide's two notices. The DOC-030 header-versus-results product bug for 'or' and a leading '-' still reproduces; the script's stale guideFailures note about the dialog notice tests pre-e68143e1 text, which the re-walk confirms. Replay log: batches/DOC-032/compat/compat-a/search-and-views-replay.json; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -148,6 +148,10 @@
       {
         "path": "batches/DOC-032/compat/compat-a/search-and-views-replay.json",
         "sha256": "d6428bd1a5e2e06dfb527f86fe61eb4dc926a4a674a803b7dca9601cc6821c44"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   },

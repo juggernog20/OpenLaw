@@ -1,0 +1,116 @@
+{
+  "kind": "bridge-sign-in-smoke",
+  "task": "DOC-032",
+  "issue": 1194,
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "lab": "final",
+  "project": "openlaw-docs-9d2b1705-final",
+  "sourceCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "buildId": "app sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3; engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "seed": {
+    "status": "complete",
+    "scale": "light",
+    "randomSeed": 7,
+    "startedAt": "2026-09-28T09:41:01.834Z",
+    "ai": "disabled",
+    "signing": "unconfigured",
+    "completedAt": "2026-09-28T09:41:17.492Z"
+  },
+  "appUrl": "http://127.0.0.1:43390",
+  "mailUrl": "http://127.0.0.1:48490",
+  "startedAt": "2026-09-28T10:05:21.761Z",
+  "finishedAt": "2026-09-28T10:05:43.292Z",
+  "steps": [
+    {
+      "role": "anonymous",
+      "action": "GET /api/v1/meta on the running API",
+      "expected": "The candidate reports OpenLaw 0.1.0 (the release bump in packages/shared OPENLAW_VERSION).",
+      "startedAt": "2026-09-28T10:05:21.809Z",
+      "actual": "GET /api/v1/meta answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}.",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:21.821Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Password sign-in at /auth/login as daniel.okafor@helix.example",
+      "expected": "The sign-in lands in the staff app and /api/v1/me names the account with its role.",
+      "startedAt": "2026-09-28T10:05:21.821Z",
+      "actual": "Signed in; landed on /; /api/v1/me: daniel.okafor@helix.example, role administrator.",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:22.202Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Open each staff module list: /, /home/tasks, /inbox, /contracts, /matters, /documents, /entities, /knowledge, /auto-docs",
+      "expected": "Each list opens with its heading and no error boundary.",
+      "startedAt": "2026-09-28T10:05:22.202Z",
+      "actual": "Opened: / \"Home\"; /home/tasks \"Your Tasks\"; /inbox \"Inbox\"; /contracts \"Contracts\"; /matters \"Matters\"; /documents \"Documents\"; /entities \"Entities\"; /knowledge \"Knowledge\"; /auto-docs \"Auto-Docs\".",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:28.035Z"
+    },
+    {
+      "role": "administrator",
+      "action": "Open Settings → General and Settings → Users",
+      "expected": "Both settings pages open with their headings and no error boundary.",
+      "startedAt": "2026-09-28T10:05:28.035Z",
+      "actual": "Opened: /settings/general \"Settings\"; /settings/users \"Settings\".",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:29.293Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Password sign-in at /auth/login as nadia.haddad@helix.example",
+      "expected": "The sign-in lands in the staff app and /api/v1/me names the account with its role.",
+      "startedAt": "2026-09-28T10:05:29.298Z",
+      "actual": "Signed in; landed on /; /api/v1/me: nadia.haddad@helix.example, role legal_team_member.",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:29.645Z"
+    },
+    {
+      "role": "legal_team_member",
+      "action": "Open each staff module list: /, /home/tasks, /inbox, /contracts, /matters, /documents, /entities, /knowledge, /auto-docs",
+      "expected": "Each list opens with its heading and no error boundary.",
+      "startedAt": "2026-09-28T10:05:29.645Z",
+      "actual": "Opened: / \"Home\"; /home/tasks \"Your Tasks\"; /inbox \"Inbox\"; /contracts \"Contracts\"; /matters \"Matters\"; /documents \"Documents\"; /entities \"Entities\"; /knowledge \"Knowledge\"; /auto-docs \"Auto-Docs\".",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:35.330Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Fresh sign-in link from /portal/login (Email me a sign-in link) for ravi.menon@helix.example, read from Mailpit and opened once",
+      "expected": "OpenLaw sends one sign-in email through its relay; the link in the message signs the Business User in to the Portal.",
+      "startedAt": "2026-09-28T10:05:35.335Z",
+      "actual": "Request answered 202; message \"Sign in to OpenLaw\" from OpenLaw <legal@helix.example>; part transfer encodings quoted-printable, base64; link origin http://127.0.0.1:43390, link path also in the HTML part: true; after opening it /api/v1/me names ravi.menon@helix.example, role business_user; landed on /portal.",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:36.874Z"
+    },
+    {
+      "role": "contributor",
+      "action": "Open each Portal module list: /portal, /portal/contracts, /portal/matters, /portal/approvals",
+      "expected": "Each Portal list opens with its heading and no error boundary.",
+      "startedAt": "2026-09-28T10:05:36.875Z",
+      "actual": "Opened: /portal \"What do you need from Legal?\"; /portal/contracts \"Your Contracts\"; /portal/matters \"Your Matters\"; /portal/approvals \"Your approvals\".",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:39.334Z"
+    },
+    {
+      "role": "business_user",
+      "action": "Fresh sign-in link from /portal/login (Email me a sign-in link) for lena.vogel@helix.example, read from Mailpit and opened once",
+      "expected": "OpenLaw sends one sign-in email through its relay; the link in the message signs the Business User in to the Portal.",
+      "startedAt": "2026-09-28T10:05:39.338Z",
+      "actual": "Request answered 202; message \"Sign in to OpenLaw\" from OpenLaw <legal@helix.example>; part transfer encodings quoted-printable, base64; link origin http://127.0.0.1:43390, link path also in the HTML part: true; after opening it /api/v1/me names lena.vogel@helix.example, role business_user; landed on /portal.",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:40.821Z"
+    },
+    {
+      "role": "business_user",
+      "action": "Open each Portal module list: /portal, /portal/contracts, /portal/matters, /portal/approvals",
+      "expected": "Each Portal list opens with its heading and no error boundary.",
+      "startedAt": "2026-09-28T10:05:40.821Z",
+      "actual": "Opened: /portal \"What do you need from Legal?\"; /portal/contracts \"Your Contracts\"; /portal/matters \"Your Matters\"; /portal/approvals \"Your approvals\".",
+      "result": "pass",
+      "finishedAt": "2026-09-28T10:05:43.274Z"
+    }
+  ]
+}

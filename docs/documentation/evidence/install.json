@@ -1,14 +1,14 @@
 {
   "articleId": "install",
-  "contentSha256": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7",
-  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-  "buildId": "app and worker sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e; engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43 (openlaw-doc032-opinst, built by the guide's docker compose build app doc-engine at 4ca41822)",
+  "contentSha256": "2b4c20bc26965bf59c7671645a078dbef97530c18750472ccd268edc8ad39187",
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "buildId": "app and worker sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a; engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43 (openlaw-doc032-opinst, built by the guide's docker compose build app doc-engine at ad345da5)",
   "environment": "openlaw-doc032-opinst behind a same-host Caddy proxy at https://openlaw-doc032-opinst.test:24711 with an internal CA",
   "author": "Codex documentation author; corrections by DOC-029 and DOC-029r2 source-review author agents (operator-install); DOC-030 corrections by DOC-030 source-review author agent (shared-files) and DOC-030 source-review author agent (operator-2); DOC-032 corrections by DOC-032 source-review author agent (operator)",
   "technicalReviewer": "DOC-032 source-review author agent (operator)",
   "walkthroughReviewer": "DOC-032 independent walkthrough agent (operator)",
   "reviewerKind": "agent",
-  "verifiedAt": "2026-09-28T07:43:04.546Z",
+  "verifiedAt": "2026-09-28T10:00:28.223Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/install.md",
@@ -34,7 +34,8 @@
     "apps/web/src/routes/setup.tsx",
     "apps/web/src/routes/welcome.tsx",
     "apps/api/src/modules/onboarding/routes.ts",
-    "messages/en-US.json"
+    "messages/en-US.json",
+    "docs/documentation/batches/DOC-032/operator/walkthrough-4ca41822.json"
   ],
   "scenarios": [
     {
@@ -43,31 +44,32 @@
       "role": "operator",
       "method": "container-operation",
       "prerequisites": [
-        "Disposable Compose project openlaw-doc032-opinst on this host (Docker Engine 29.8.1, Compose 5.5.1), cloned from GitHub into an empty directory, images built by the guide at 4ca41822, fictional operator and Administrator.",
+        "Disposable Compose project openlaw-doc032-opinst on this host (Docker Engine 29.8.1, Compose 5.5.1), cloned from GitHub into an empty directory, images built by the guide at ad345da5, fictional operator and Administrator.",
         "Owned Mailpit relay, an unrelated listener on a loopback port, and Caddy on the host network as the same-host TLS proxy."
       ],
       "expected": "The app reaches readiness and first-run setup with the documented production defaults and topology; missing secrets, occupied ports and unavailable dependencies lead to the documented recovery.",
-      "actual": "Before you start: git, OpenSSL 3.6.4, Docker 29.8.1, Compose 5.5.1, context default. Step 1: git clone from GitHub exit 0, but git checkout --detach 4ca41822 exit 128 'unable to read tree' because the pin is on no GitHub branch; the pin was fetched from the local repository and checked out (see limitations). Step 2: the grouped commands made .env mode 600 with two 44-character keys; a second run refused with '.env: cannot overwrite existing file' and left .env unchanged. Step 3: each key once, TRUSTED_PROXIES and SETUP_TOKEN left out. Step 4: compose.operator.yml. Build step 1: config --quiet printed nothing; services app, doc-engine, postgres, worker. Step 2: pull, build (16 s, warm cache), up, ps all running. Step 3: curl --fail /readyz {\"status\":\"ok\"}, worker running, doc-engine healthy, 79 s from the first command; port 127.0.0.1:24710 only, no answer on the LAN address. Step 4: the start log warned 'TRUSTED_PROXIES is not set...'; the guide's docker network inspect printed '10.245.70.1 10.245.70.0/24'; TRUSTED_PROXIES=10.245.70.1 and up recreated the app without the warning. Step 5: the token followed 'First-run setup is open. Paste this setup token into the setup screen:'; a restart printed a new one; no line once a user existed. Step 6: https origin reached 'Set up OpenLaw'; the pre-restart token showed 'The setup token is missing or wrong. Copy it from the server log, or from the SETUP_TOKEN environment variable.'; the current token showed 'Setup token verified' and Create Administrator opened 'Welcome to OpenLaw' 120 s after the first command; Steps 2 to 8 of 8, Continue disabled on Outbound email until Save relay, test email and invitation delivered, Finish entered the app. The guide's remoteAddress command showed the browser's 192.168.122.1 for every proxied request; the only gateway lines were the walkthrough's direct /readyz probes. Working installation: sign-in through the origin, Contract C-1 created, PDF uploaded, downloaded with the same SHA-256 and processed to ready; the invitation link used the origin and set a password for a Legal Team Member; after docker compose restart worker a new upload reached ready. Negatives: a blank AUTH_SECRET made config --quiet and up exit 1 with 'required variable AUTH_SECRET is missing a value' and left the containers alone; PORT on an occupied port made up exit 1 ('port is already allocated'), ps --all showed app and worker created, plain ps did not list them, and the same up after correcting PORT recovered; with postgres stopped /healthz 200 and /readyz 503, and after starting it a Contract read and write answered 200. No lab.mjs lab or seed was used.",
+      "actual": "Before you start: git, OpenSSL 3.6.4, Docker 29.8.1, Compose 5.5.1, context default. Step 1: git clone https://github.com/juggernog20/OpenLaw.git exit 0 in 5 s; git checkout --detach ad345da5 exit 0; HEAD ad345da5. Step 2: the grouped commands made .env mode 600 with two 44-character keys; a second run refused with '.env: cannot overwrite existing file' and left .env unchanged. Step 3: each key once, TRUSTED_PROXIES and SETUP_TOKEN left out. Step 4: compose.operator.yml. Build step 1: config --quiet printed nothing; services app, doc-engine, postgres, worker. Step 2: pull, build (14 s, warm cache), up, ps all running. Step 3: curl --fail /readyz {\"status\":\"ok\"}, worker running, doc-engine healthy, 32 s from the first command; port 127.0.0.1:24710 only, no answer on the LAN address. Step 4: the start log warned 'TRUSTED_PROXIES is not set...'; the guide's docker network inspect printed '10.245.70.1 10.245.70.0/24'; TRUSTED_PROXIES=10.245.70.1 and up recreated the app without the warning. Step 5: the token followed 'First-run setup is open. Paste this setup token into the setup screen:'; a restart printed a new one; no line once a user existed. Step 6: https origin reached 'Set up OpenLaw'; the pre-restart token showed 'The setup token is missing or wrong. Copy it from the server log, or from the SETUP_TOKEN environment variable.'; the current token showed 'Setup token verified' and Create Administrator opened 'Welcome to OpenLaw' 68 s after the first command; Steps 2 to 8 of 8, Continue disabled on Outbound email until Save relay, test email and invitation delivered, Finish entered the app. The guide's remoteAddress command showed the browser's 192.168.122.1 for every proxied request; the only gateway lines were the walkthrough's direct /readyz probes. Working installation: sign-in through the origin, Contract C-1 created, PDF uploaded, downloaded with the same SHA-256 and processed to ready; the invitation link used the origin and set a password for a Legal Team Member; after docker compose restart worker a new upload reached ready. Negatives: a blank AUTH_SECRET made config --quiet and up exit 1 with 'required variable AUTH_SECRET is missing a value' and left the containers alone; PORT on an occupied port made up exit 1 ('port is already allocated'), ps --all showed app and worker created, plain ps did not list them, and the same up after correcting PORT recovered; with postgres stopped /healthz 200 and /readyz 503, and after starting it a Contract read and write answered 200. No lab.mjs lab or seed was used.",
       "result": "pass",
       "evidence": [
         "docs/documentation/batches/DOC-032/operator/walkthrough.json",
         "docs/documentation/batches/DOC-032/operator/walkthrough.mjs",
-        "docs/documentation/batches/DOC-032/operator/op-lib.mjs"
+        "docs/documentation/batches/DOC-032/operator/op-lib.mjs",
+        "docs/documentation/batches/DOC-032/operator/walkthrough-4ca41822.json"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by an agent that did not write or source-review the guide; container-operation by an agent acting as a fictional operator, not a human operator study.",
-    "Publication precondition: 4ca41822 is on no GitHub branch. After the guide's git clone from GitHub, git checkout --detach 4ca41822 exits 128 with 'fatal: unable to read tree' (install Prepare step 1; upgrade Prepare step 2 after git fetch origin). The walkthrough fetched the pin from the local repository into the GitHub clone and continued; the guide text is correct once the revision is published on a branch or tag. Publish it before this edition is released.",
     "Host deviation: compose.doc032-net.yml was appended to COMPOSE_FILE to give the two Compose networks explicit subnets, because this host's Docker default address pools are exhausted. The gateway command then printed the chosen subnet's gateway.",
     "The same-host proxy was Caddy on the host network bound to a local-only address (192.168.122.1) with an internal CA; the browser mapped the hostname to it. Public certificate issuance and DNS were not tested. Builds used a warm Docker cache, so build times are not first-build times.",
     "Mail went to an owned Mailpit relay, not a live SMTP provider.",
-    "Every project, support container, network and volume was removed after the walk; see the teardown steps in walkthrough.json."
+    "Every project, support container, network and volume was removed after the walk; see the teardown steps in walkthrough.json.",
+    "The earlier run at 4ca41822 (walkthrough-4ca41822.json) passed the same steps except the GitHub checkout, because 4ca41822 was on no GitHub branch; at ad345da5 the guide's own clone and checkout work."
   ],
   "previousEvidence": {
-    "appCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "contentSha256": "aabcaf18cf5eb6ead802523d2a716e88e9dce98cb5b351903f618d43c074d16e",
-    "verifiedAt": "2026-09-25T13:46:30.937Z"
+    "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "contentSha256": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7",
+    "verifiedAt": "2026-09-28T07:43:04.546Z"
   },
   "compatibilityReview": null,
   "copyOnlyReview": null

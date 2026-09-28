@@ -20,7 +20,8 @@ export const WORK = path.join(HOME, ".cache/openlaw-doc032-operator");
 export const LOG = path.join(here, "walkthrough.json");
 const STATE = path.join(WORK, "state.json");
 const SECRETS = path.join(WORK, "secret-store.json");
-export const COMMIT = "4ca41822b685a2a1e58a38b4f25e421cf735c54e";
+// Round 2 candidate (the 4ca41822 run is kept in walkthrough-4ca41822.json).
+export const COMMIT = "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496";
 export const BASELINE = "067c1646829df85e62b809ee9157921e867c84e7";
 export const REPO = "https://github.com/juggernog20/OpenLaw.git";
 export const REVIEWER = "DOC-032 independent walkthrough agent (operator)";
@@ -102,6 +103,9 @@ export const log = readJson(LOG, {
   helper: "docs/documentation/batches/DOC-032/operator/op-lib.mjs",
   projects: Object.values(PROJECTS).map((p) => p.project),
   supportContainers: Object.values(SUPPORT).map((s) => s.name),
+  round: 2,
+  previousRun:
+    "docs/documentation/batches/DOC-032/operator/walkthrough-4ca41822.json (same scripts at COMMIT 4ca41822)",
   note: "Container-operation walkthrough by an agent acting as a fictional operator, not a human operator study. Every command ran against disposable Compose projects owned by this walkthrough (openlaw-doc032-op*), cloned from GitHub at the named revisions and built by the guides' own commands. Keys, passwords, setup tokens, API keys, cookies, mail bodies and links are not recorded; command output is reduced to exit codes and selected, redacted lines. The starting build's seed Administrator is shown as [seed Administrator].",
   articles: {},
   images: {},

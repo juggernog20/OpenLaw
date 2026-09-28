@@ -279,13 +279,13 @@
   },
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:48:27.194Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): Deployment inputs 067c1646..4ca41822: compose.yml and Dockerfile did not change, so the SETUP_TOKEN pass-through, APP_BIND, ports, limits and volumes are as DOC-030 walked them. .env.example changed only the TRUSTED_PROXIES comment and example, to the Compose network gateway (172.18.0.1) with the docker network inspect command; the guide already says a same-host proxy arrives from the gateway, gives that command, and says 127.0.0.1,::1 trusts nothing. SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB are new and default off; only compose.dev.yml and the lab helper set them, not compose.yml or .env.example, and index.ts stops the boot only when LIVE_LAB names a signing stand-in; the guide names neither and no documented deployment sets them. docs/DEPLOYMENT.md changed to match the guide (gateway TRUSTED_PROXIES, sealed values, wrong-key start, migration 0157) and adds signing recovery and preparation-acceptance sections the guide does not cover. App: app.ts narrows the origin-check exemption to /api/v1/signing/<provider>/webhook and adds no-store and no-referrer on /signing/return (a new browser route behind the default-off preparation switch); oauth.ts no longer sends the set-auth-jwt header; mcp/routes.ts and calls.ts add resources, prompts and listen streams on /mcp, which the guide already forwards unbuffered with the listed headers; mcp-settings routes moved the read into readMcpSettings with the same server address, authorization-server check and reachability; settings-mcp.tsx rewords the OAuth caption, which the guide does not quote; the Toolset ceiling now starts without Team and Administration. setup.tsx adds a token check and reworded refusal, welcome.tsx drops the Portal step; the guide quotes neither, and the wizard's Outbound email step and Save relay are unchanged (firstrun phase passed). advanced-settings/config.ts, uploads.ts, mailer.ts, discovery.ts, guards.ts, reachability.ts, worker index.ts and rewrap.ts did not change. Live-provider rows (V-M41-PUBLIC with claude.ai): the hunks above are the only changes on the OAuth, discovery, consent and /mcp path; discovery.ts, the consent route and the public route list are unchanged, so the DOC-030 claude.ai observation still applies. The replay of the DOC-030 operator script on cd-cfg passed every required step. Replay of batches/DOC-030/operator/walkthrough.mjs on cd-cfg: 132 steps, 18 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-d): Deployment inputs 067c1646..4ca41822: compose.yml and Dockerfile did not change, so the SETUP_TOKEN pass-through, APP_BIND, ports, limits and volumes are as DOC-030 walked them. .env.example changed only the TRUSTED_PROXIES comment and example, to the Compose network gateway (172.18.0.1) with the docker network inspect command; the guide already says a same-host proxy arrives from the gateway, gives that command, and says 127.0.0.1,::1 trusts nothing. SIGNING_PREPARATION_ENABLED and SIGNING_PREPARATION_LIVE_LAB are new and default off; only compose.dev.yml and the lab helper set them, not compose.yml or .env.example, and index.ts stops the boot only when LIVE_LAB names a signing stand-in; the guide names neither and no documented deployment sets them. docs/DEPLOYMENT.md changed to match the guide (gateway TRUSTED_PROXIES, sealed values, wrong-key start, migration 0157) and adds signing recovery and preparation-acceptance sections the guide does not cover. App: app.ts narrows the origin-check exemption to /api/v1/signing/<provider>/webhook and adds no-store and no-referrer on /signing/return (a new browser route behind the default-off preparation switch); oauth.ts no longer sends the set-auth-jwt header; mcp/routes.ts and calls.ts add resources, prompts and listen streams on /mcp, which the guide already forwards unbuffered with the listed headers; mcp-settings routes moved the read into readMcpSettings with the same server address, authorization-server check and reachability; settings-mcp.tsx rewords the OAuth caption, which the guide does not quote; the Toolset ceiling now starts without Team and Administration. setup.tsx adds a token check and reworded refusal, welcome.tsx drops the Portal step; the guide quotes neither, and the wizard's Outbound email step and Save relay are unchanged (firstrun phase passed). advanced-settings/config.ts, uploads.ts, mailer.ts, discovery.ts, guards.ts, reachability.ts, worker index.ts and rewrap.ts did not change. Live-provider rows (V-M41-PUBLIC with claude.ai): the hunks above are the only changes on the OAuth, discovery, consent and /mcp path; discovery.ts, the consent route and the public route list are unchanged, so the DOC-030 claude.ai observation still applies. The replay of the DOC-030 operator script on cd-cfg passed every required step. Replay of batches/DOC-030/operator/walkthrough.mjs on cd-cfg: 132 steps, 18 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change; from 4ca41822 to ad345da5 (bridge): This operator guide sets the relay through the environment and checks test emails. The only claims a hunk can reach are the test-email sends and their results, which go through apps/api/src/lib/mailer.ts and nodemailer. No hunk touches Compose, the Dockerfile, environment parsing, OPENLAW_SECRET_KEY handling, backups, restores or migrations, so the container phases of batches/DOC-032/compat/compat-d were not re-run. The same mailer path was replayed on the candidate by the admin-org replay: environment relay, stored relay, SMTP_URL without SMTP_FROM, an unreachable relay (\"The relay host could not be found. Check the SMTP server name.\") and delivered test emails, 0 failures. The nodemailer 10.0.11 changes (fetch form-body errors, CommonJS entry, quoted-printable wrap at short line lengths, password login on an XOAUTH2-only server) change none of those results.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-d.json",
@@ -298,6 +298,162 @@
       {
         "path": "batches/DOC-032/compat/compat-d/deployment-configuration-replay.json",
         "sha256": "a9c1a7e0859732c623d0534954446eccfe6640bf275171c6a0405218f6a90367"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay.mjs",
+        "sha256": "5b477e33ff1cfb0eebea32f30373fb94c9d6af2236ad2be73bf9f45322e0c6fd"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-logo.svg",
+        "sha256": "357a37f19b1cbdd969df60fe668d0ca5e0b07257e1908407b19a2807c2dff562"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-not-an-image.txt",
+        "sha256": "ea2bc81cf052067db5092bd29594d7a34f127e2766554d30297baf9398684e5e"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/lib.mjs",
+        "sha256": "3a2175feea25128cabfab0432a497c4d083789274bfa1484e683041387dc79dc"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/oidc-fixture.mjs",
+        "sha256": "bee5699e17256e2e9e7614f5cf34be524cc00996740419d8c1711359d1a353e8"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-baseurl-unset.json",
+        "sha256": "f7dcf368008f7219d47a18b74e80a5f71cb55847157f3b1d9d3891de5ee58c3d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-env.json",
+        "sha256": "4297085a95ae7c43b5f9b540014c5707908bda461dd452bbc41ba3d172928366"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-incomplete.json",
+        "sha256": "d6dfd1cc19b3c5aeeed295c46c3bbfbe060bd7e911267bbd4115a2327d5e35fd"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-stored.json",
+        "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/overlay-oidc.json",
+        "sha256": "d2187d29c9ef02560300db32192a542e5bb2817eaceee4cd9bbd752063d6faaa"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/phase.sh",
+        "sha256": "68be8914f9173b3aad765eda6bdba962e65086bda681cd2caca1aed4ecb792a5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/run.sh",
+        "sha256": "8b241875ba52a62d1f3d7026afd470615dce259c84b8137d8277099463bef1e6"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/crossPage-2026-09-28T10-24-56-133Z.json",
+        "sha256": "548ea2dc65e8080d9a89d95bb5ee0b24bbb94ab3b195a28b71148b9586e1fd7f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAfter-2026-09-28T10-07-55-684Z.json",
+        "sha256": "ea37954b037c3bb5969dcbeff837e18270f2be7fd5f3038c4a28d394ed2a3b59"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAuth-2026-09-28T10-07-13-239Z.json",
+        "sha256": "e66f2a10a124a23dc7213caa36756b6e3ef2aad922e514bd5a77e3107fe24ed1"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frConnectors-2026-09-28T10-07-29-329Z.json",
+        "sha256": "52c5680aec1a6372f25fb32d8c46a2d2f9fd76bc6e4f04475846c082efafbb44"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmail-2026-09-28T10-07-20-083Z.json",
+        "sha256": "7d01937f1832d5f09a9c4d6ee3bd40812bd61b51e5b2d3989264315c72eaf85a"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmailRow-2026-09-28T10-08-17-180Z.json",
+        "sha256": "f34b60016a54f34b044d6550657e8e8fd3b4b1601fc403e4c58b4ed66ab31454"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frInvites-2026-09-28T10-07-23-631Z.json",
+        "sha256": "1a75655129c2faafd717a088eb4bd3716fcaeeb45aa4cc9ec2cf56be69f19124"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frOrg-2026-09-28T10-07-04-464Z.json",
+        "sha256": "bbb15b2630e075394b39afddc513a049c18cac10b8712669ea1386d4adc50a0b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frReview-2026-09-28T10-07-49-363Z.json",
+        "sha256": "c78d904d8177771cfe8615b93e1dbc71bbb44cf7458bd81572941e3333b0fb74"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/frSetup-2026-09-28T10-06-33-644Z.json",
+        "sha256": "c85a5e23827bbf22a273374bff96ac0073ea1c8b7becbf2ac3218f06f7463f2b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/guards-2026-09-28T10-08-38-757Z.json",
+        "sha256": "b354c11ba96fe228699b8986ae68516edee9d7310c3a0da63eec707ff44f0e08"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/instancePinned-2026-09-28T10-25-05-106Z.json",
+        "sha256": "6ee5d6c45716d06377e3d4e3e8b5d009ad2a604f8c4f64d7aa5c2598fbb78ecc"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/instanceSaved-2026-09-28T10-25-08-115Z.json",
+        "sha256": "81078e68849033a2baf735f135c5bb596d826a63442e67c899b64bc17cd3f760"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/org-2026-09-28T10-06-17-425Z.json",
+        "sha256": "594e7df30c03f41eb70fda94e15ae76475c995529f64ececf19daa1b16d76204"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/policy-2026-09-28T10-06-51-526Z.json",
+        "sha256": "ee4bf2a6a1a52b224c36f8a5d7c4d433bed9d39b22fcd7c90a1e156fd1aa4460"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsIncomplete-2026-09-28T10-08-11-065Z.json",
+        "sha256": "5bc9a629339459f58face49cc1932790e084367829462950a2b9b0f2fd022d25"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsStored-2026-09-28T10-08-32-665Z.json",
+        "sha256": "1db254e12f9cfd4840c6db314000416575a054306ddc020bfb98d3922c257232"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-12-08-840Z.json",
+        "sha256": "0fde0cf23fa279b734ecffe38bad608a42c4a11a334966ff3a66453820158c2d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-23-41-743Z.json",
+        "sha256": "c1baab38d55a78ed0b3a1b6d73c0be85d0f66d930b302f7cc9636cc8643b91e8"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/ssoRemove-2026-09-28T10-26-11-692Z.json",
+        "sha256": "de1f1007ac775600372a002d3e4312a27da89f6800fbd7dfb73874420596f050"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-13-17-332Z.json",
+        "sha256": "91b0e951575f2fd077bdeff6492808f784ff0b0a1a3e1bdf5ed24fb117ceb1f4"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-24-42-914Z.json",
+        "sha256": "48824a8f48d36f2075688dfda3f2f6fa2e6598df85ff5c14fe233b424b962fc3"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardEnv-2026-09-28T10-07-49-852Z.json",
+        "sha256": "ca832eaba9adb927e1e92ff97d4ff034b7bc48dae386fa66f3e740253010407d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardIncomplete-2026-09-28T10-07-25-893Z.json",
+        "sha256": "eed7c37834d8bf49db277ddd15a2bed0af88cce4c2ef195d385a31a7b3e4b11f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardStored-2026-09-28T10-06-32-817Z.json",
+        "sha256": "86692c6450b2ea9288f812bcae6a258f143627b5ae3d9bb4ff4a7b5cd0712190"
+      },
+      {
+        "path": "batches/DOC-032/bridge/admin-org-replay.json",
+        "sha256": "03f0128a9fcf83f23e2b06977c892064e64e6c895eb88eaa830bda3f77fc4dd5"
       }
     ]
   },

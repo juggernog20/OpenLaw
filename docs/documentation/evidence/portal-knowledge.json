@@ -71,13 +71,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/documents/documents-card.tsx and messages/en-US.json. portal-knowledge.tsx, deflection-panel.tsx, portal.tsx, portal-request-form.tsx, portal-nav.tsx, portal-shell.tsx, the Portal routes, knowledge/service.ts and contract-access.ts have no diff. documents-card.tsx is the staff Documents card: Delete now removes one version and the type pill takes the Document type colour; Mark confidential and canFlag, which the fixture uses, are unchanged, and the Portal shows no such control. The replay passed 11 of 11 steps for the Business User. Replay log: batches/DOC-032/compat/compat-a/portal-knowledge-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/components/documents/documents-card.tsx and messages/en-US.json. portal-knowledge.tsx, deflection-panel.tsx, portal.tsx, portal-request-form.tsx, portal-nav.tsx, portal-shell.tsx, the Portal routes, knowledge/service.ts and contract-access.ts have no diff. documents-card.tsx is the staff Documents card: Delete now removes one version and the type pill takes the Document type colour; Mark confidential and canFlag, which the fixture uses, are unchanged, and the Portal shows no such control. The replay passed 11 of 11 steps for the Business User. Replay log: batches/DOC-032/compat/compat-a/portal-knowledge-replay.json; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -94,6 +94,10 @@
       {
         "path": "batches/DOC-032/compat/compat-a/portal-knowledge-replay.json",
         "sha256": "54623e4d6c15793d85e6467d607cf8462b783dce04f36d4d91c69eb8c3dfb414"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

@@ -18,8 +18,8 @@ replaying the checks that diff can touch on a lab built from the candidate.
 - The release candidate is `ad345da5842c22b7d1012bf9f5d7d12dfdb4e496` (dev, the
   merge of PR #1206). Read its digest with
   `node --input-type=module -e 'import {applicationDigest} from "./scripts/documentation/build.mjs"; console.log(applicationDigest())'`
-  from the worktree root (the worktree is rebased onto it, so its `apps/`,
-  `packages/` and `styles/` are the candidate's).
+  from the worktree root; it prints `5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c`
+  (the worktree is rebased onto the candidate).
 - `edition.json` already pins the candidate commit and digest.
 - Lab `final` (`.documentation-labs/final/lab.json`, app http://127.0.0.1:43390,
   Mailpit http://127.0.0.1:48490) is built from the candidate and seeded (Helix

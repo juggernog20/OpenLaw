@@ -1,19 +1,26 @@
 {
   "articleId": "versions-and-support",
-  "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
-  "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-  "buildId": "app sha256:e59c2bfe229e8837e09599e7f077a7ae163aaea3b3eb3e2023c14416374614c0; engine sha256:b5b543a2f97c7fdcdc930d3609b6e9746f498089e74a22e93205d55133225837",
-  "environment": "openlaw-docs-41255c61-admin",
-  "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
+  "contentSha256": "b20496f4527640e7c94b017f07ac5b5d8a88d398677451ce84ecff7af2538421",
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "buildId": "app sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3; engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "environment": "openlaw-docs-9d2b1705-final (lab final, Helix seed, light profile, random seed 7)",
+  "walkthroughReviewer": "DOC-032 independent walkthrough agent (support)",
   "reviewerKind": "agent",
-  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (support)",
-  "technicalReviewer": "DOC-029 source-review author agent (support)",
-  "verifiedAt": "2026-09-16T16:25:31Z",
+  "author": "Codex documentation author; corrections by DOC-029 source-review author agent (support); DOC-032 corrections by DOC-032 batch owner agent (support copy correction)",
+  "technicalReviewer": "DOC-032 batch owner agent (support copy correction)",
+  "verifiedAt": "2026-09-28T11:30:10.637Z",
   "status": "pass",
   "sources": [
     "docs/user-guides/versions-and-support.md",
-    "docs/documentation/batches/DOC-029/support/technical-review.json",
-    "docs/documentation/batches/DOC-029/support/walkthrough-r1.json"
+    "docs/documentation/batches/DOC-032/support/technical-review.json",
+    "docs/documentation/batches/DOC-032/support/walkthrough.mjs",
+    "docs/documentation/batches/DOC-032/support/walkthrough/lib.mjs",
+    "docs/documentation/batches/DOC-032/support/walkthrough.json",
+    "docs/documentation/batches/DOC-032/bridge/versions-and-support-replay.mjs",
+    "packages/shared/src/index.ts",
+    "package.json",
+    "apps/api/openapi.json",
+    "docs/documentation/batches/DOC-032/bridge/bridge.json"
   ],
   "scenarios": [
     {
@@ -22,17 +29,18 @@
       "role": "administrator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Administrator (Daniel Okafor) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Lab final (openlaw-docs-9d2b1705-final), built from ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 and seeded (Helix, light profile, random seed 7).",
+        "Seeded fictional Administrator (Daniel Okafor) in his own browser context, password sign-in.",
+        "Reviewer-created records named DOC-032 support V-C51 mul5yacn ... (see fixtures in walkthrough.json); fictional files from docs/documentation/batches/DOC-029/support/fixtures."
       ],
-      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
-      "actual": "5 recorded steps passed for this role on 3fa407e3. Header Help opened /help. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. The guide showed the Validation in progress badge. Edition details listed Edition details documentation-development (Development), Supported app 0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e, Distribution commit 3fa407e3a846559914aa1a63249741f30cfb4f69, Content digest 9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a and Publication target development-app. It also showed Open standalone edition, Download standalone edition and the retention sentence. An unknown edition and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed its notice with On this page. No external requests were made. /help/upgrade offered \"Read this article in the full documentation\", which opened the formal article. Search \"version information\" listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article read again. A Confidential Contract without named access answered Contract not found.",
+      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. The package version alone does not name a build. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
+      "actual": "6 recorded steps passed for Daniel Okafor on ad345da5. Header Help opened Help, and /help/versions-and-support showed \"Find version information and get help\" with the Validation in progress badge. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. Edition details listed Edition details documentation-development (Development), Supported app 0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7, Distribution commit ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, Content digest e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022 and Publication target development-app, with Open standalone edition, Download standalone edition and the sentence \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". For the changed sentence, /api/v1/meta opened in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}: the running app reports only the package version 0.1.0, the example the guide now names. That version matches the version part of Supported app, while the build commit (067c1646) and the Distribution commit (ad345da5) appear only in Edition details, so the version alone does not name the build. An unknown edition (?edition=doc029-support-older-edition) and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. No external requests were made. Search \"version information\" in Help listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article and its report section read again. /help/upgrade (\"Upgrade a populated instance\") offered \"Read this article in the full documentation\", which opened /documentation/upgrade. For Check the relevant limitation, Daniel opened Confidential C-56 without named access and saw \"Contract not found\".",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/r1-admin-edition-details.png"
+        "docs/documentation/batches/DOC-032/support/walkthrough.json",
+        "docs/documentation/batches/DOC-032/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/support/walkthrough/lib.mjs",
+        "docs/documentation/batches/DOC-032/support/walkthrough/doc032-support-admin-edition-details.png"
       ]
     },
     {
@@ -41,16 +49,17 @@
       "role": "legal_team_member",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Legal Team Member (Nadia Haddad) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Lab final (openlaw-docs-9d2b1705-final), built from ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 and seeded (Helix, light profile, random seed 7).",
+        "Seeded fictional Legal Team Member (Nadia Haddad) in her own browser context, password sign-in.",
+        "Reviewer-created records named DOC-032 support V-C51 mul5yacn ... (see fixtures in walkthrough.json); fictional files from docs/documentation/batches/DOC-029/support/fixtures."
       ],
-      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
-      "actual": "4 recorded steps passed for this role on 3fa407e3. Header Help opened /help. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. The guide showed the Validation in progress badge. Edition details listed Edition details documentation-development (Development), Supported app 0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e, Distribution commit 3fa407e3a846559914aa1a63249741f30cfb4f69, Content digest 9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a and Publication target development-app. It also showed Open standalone edition, Download standalone edition and the retention sentence. An unknown edition and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed its notice with On this page. No external requests were made. /help/upgrade offered \"Read this article in the full documentation\", which opened the formal article. Search \"version information\" listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article read again.",
+      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. The package version alone does not name a build. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
+      "actual": "5 recorded steps passed for Nadia Haddad on ad345da5. Header Help opened Help, and /help/versions-and-support showed \"Find version information and get help\" with the Validation in progress badge. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. Edition details listed Edition details documentation-development (Development), Supported app 0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7, Distribution commit ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, Content digest e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022 and Publication target development-app, with Open standalone edition, Download standalone edition and the sentence \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". For the changed sentence, /api/v1/meta opened in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}: the running app reports only the package version 0.1.0, the example the guide now names. That version matches the version part of Supported app, while the build commit (067c1646) and the Distribution commit (ad345da5) appear only in Edition details, so the version alone does not name the build. An unknown edition (?edition=doc029-support-older-edition) and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. No external requests were made. Search \"version information\" in Help listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article and its report section read again. /help/upgrade (\"Upgrade a populated instance\") offered \"Read this article in the full documentation\", which opened /documentation/upgrade.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-032/support/walkthrough.json",
+        "docs/documentation/batches/DOC-032/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/support/walkthrough/lib.mjs"
       ]
     },
     {
@@ -59,16 +68,17 @@
       "role": "business_user",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Seeded fictional Business User (Jonas Weber, fresh magic links from the lab Mailpit) account in its own browser context on the shared admin documentation lab.",
-        "Reviewer-created records named DOC-029 support ... (see fixtures in walkthrough-r1.json); fictional files in docs/documentation/batches/DOC-029/support/fixtures."
+        "Lab final (openlaw-docs-9d2b1705-final), built from ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 and seeded (Helix, light profile, random seed 7).",
+        "Seeded fictional Business User (Jonas Weber) in his own browser context, signed in with a fresh magic link read from the lab Mailpit.",
+        "Reviewer-created records named DOC-032 support V-C51 mul5yacn ... (see fixtures in walkthrough.json); fictional files from docs/documentation/batches/DOC-029/support/fixtures."
       ],
-      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
-      "actual": "4 recorded steps passed for this role on 3fa407e3. Header Help opened /portal/help. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. The guide showed the Validation in progress badge. Edition details listed Edition details documentation-development (Development), Supported app 0.0.1 / 7f7e917aa1db4baee34fd6613466c6458a1f4b8e, Distribution commit 3fa407e3a846559914aa1a63249741f30cfb4f69, Content digest 9209d16fb31c193a307c60b9912239c85e09b068f5f0e8142343a5ffcc92fd4a and Publication target development-app. It also showed Open standalone edition, Download standalone edition and the retention sentence. An unknown edition and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed its notice with On this page. No external requests were made. /portal/help/configure-analysis offered \"Read this article in the full documentation\", which opened the formal article. Search \"version information\" listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article read again.",
+      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. The package version alone does not name a build. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
+      "actual": "5 recorded steps passed for Jonas Weber on ad345da5. Header Help opened Help, and /portal/help/versions-and-support showed \"Find version information and get help\" with the Validation in progress badge. The Documentation navigation after Browse guides held Help and All documentation, and All documentation opened /documentation. Edition details listed Edition details documentation-development (Development), Supported app 0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7, Distribution commit ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, Content digest e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022 and Publication target development-app, with Open standalone edition, Download standalone edition and the sentence \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". For the changed sentence, /api/v1/meta opened in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}: the running app reports only the package version 0.1.0, the example the guide now names. That version matches the version part of Supported app, while the build commit (067c1646) and the Distribution commit (ad345da5) appear only in Edition details, so the version alone does not name the build. An unknown edition (?edition=doc029-support-older-edition) and a missing article showed \"Article unavailable\" with their explanations and an Overview link, and a missing section showed \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. No external requests were made. Search \"version information\" in Help listed the guide. The tracker link was https://github.com/juggernog20/OpenLaw/issues; with github.com blocked the request failed, and the local article and its report section read again. /portal/help/configure-analysis (\"Configure the AI connector and Field prompts\") offered \"Read this article in the full documentation\", which opened /documentation/configure-analysis.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-032/support/walkthrough.json",
+        "docs/documentation/batches/DOC-032/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/support/walkthrough/lib.mjs"
       ]
     },
     {
@@ -77,97 +87,36 @@
       "role": "operator",
       "method": "browser-walkthrough",
       "prerequisites": [
-        "Signed-out browser context with no app account.",
-        "A private scratch directory outside the instance for the extracted standalone edition."
+        "Lab final (openlaw-docs-9d2b1705-final), built from ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 and seeded (Helix, light profile, random seed 7).",
+        "Signed-out browser contexts with no app account.",
+        "A private scratch directory under /tmp, outside the instance, for the extracted standalone edition.",
+        "The lab's own build record from lab.mjs status and docker inspect."
       ],
-      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
-      "actual": "2 recorded steps passed for this role on 3fa407e3. Signed out, /documentation/versions-and-support opened with no app API requests. Download standalone edition gave openlaw-documentation.tar.gz, and Open standalone edition served /documentation-export/index.html. The archive was extracted outside the instance. In an offline browser context from file://, the index, the Reference and troubleshooting section and the support article read with JavaScript and without it. Without JavaScript the index showed \"Search requires JavaScript.\" All internal link targets in the reviewed versions-and-support and troubleshooting bytes opened in the formal reader.",
+      "expected": "The reader can identify the supported build and content and reach the intended local or external support path. The package version alone does not name a build. An older or unknown edition does not silently switch to latest, and an external-site failure leaves local reading usable.",
+      "actual": "3 recorded steps passed on ad345da5. Signed out, /documentation/versions-and-support opened with no app API requests. Download standalone edition gave openlaw-documentation.tar.gz (444160 bytes), and Open standalone edition served /documentation-export/index.html (\"Documentation · OpenLaw\"). The archive extracted outside the instance. In an offline browser context from file://, the index, the Reference and troubleshooting section and the support article read with JavaScript and without it; without JavaScript the index showed the search notice. Signed out, Edition details showed Supported app 0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7 and Distribution commit ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, and /api/v1/meta answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}. The lab's build record named source ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, app image sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3 and engine image sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7, so the installed build comes from the operator's records, not from the version or from Supported app, as the guide says. All 10 internal link targets in the reviewed versions-and-support bytes and all 24 in the troubleshooting bytes opened in the formal reader.",
       "result": "pass",
       "evidence": [
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.json",
-        "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
-        "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+        "docs/documentation/batches/DOC-032/support/walkthrough.json",
+        "docs/documentation/batches/DOC-032/support/walkthrough.mjs",
+        "docs/documentation/batches/DOC-032/support/walkthrough/lib.mjs"
       ]
     }
   ],
   "limitations": [
     "Independent agent walkthrough by a different agent from the source-review author; not a human user study and not feature-owner approval.",
-    "The lab Help and formal readers serve the article bytes committed at 3fa407e3, which differ from the reviewed corrected bytes. Steps followed the reviewed bytes against the app. Reader checks prove the routes, headings and UI behavior; link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
-    "The admin lab is shared with other DOC-029 agents. The walkthrough created only records named DOC-029 support ... and changed no organisation settings.",
-    "Two earlier recorded attempts (walkthrough-r1-attempt1.json, walkthrough-r1-attempt2.json) each had one reviewer harness fault and are kept with their disposition. Exploratory probes and development runs before them are not evidence.",
-    "Supported app showed a recorded build (0.0.1 / 7f7e917a...), so the Not yet verified value and the Working changes marker were not observed. The Unverified article badge was not shown; the Validation in progress badge was.",
-    "The offline check used an offline browser context and file:// loading of the extracted export while the lab kept running. It did not stop the shared lab.",
+    "The lab serves the article bytes committed at ad345da5, which still read \"The package version alone is insufficient for development builds: different builds can share 0.0.1.\" The reviewed bytes read \"... different development builds can share one version, such as `0.1.0`.\" Steps followed the reviewed bytes against the app; reader checks prove the routes, headings and UI behavior, and the link checks opened every internal link of the reviewed bytes in the bundled formal reader.",
+    "The final lab's Help bundle comes from dev's own edition.json, so Edition details showed Supported app \"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\", not the re-pinned ad345da5. Distribution commit showed ad345da5. The guide makes no claim about the specific values, and the running app reported version 0.1.0 on /api/v1/meta, which matches the example in the changed sentence.",
+    "Supported app showed a recorded build, so the Not yet verified value and the Working changes marker were not observed. The Unverified article badge and the development preview notice were not shown; the Validation in progress badge was.",
+    "operator is a responsibility, not an OpenLaw account. Operator steps ran signed out, and the build record came from lab.mjs status and docker inspect.",
+    "The offline check used an offline browser context and file:// loading of the extracted export while the lab kept running. It did not stop the lab.",
     "The external failure was a browser-blocked github.com request, not a real outage. No GitHub issue was opened.",
-    "The administrator screenshot shows the lab's served article bytes, whose example section name differs from the reviewed bytes."
+    "The walkthrough created only records named DOC-032 support V-C51 ... and changed no organisation settings. The fixture set is the bridge replay's; only the Confidential Contract is used by the V section."
   ],
   "previousEvidence": {
-    "appCommit": "6a8873dbda333fd9992eb77525d4bfa3f47af20d",
-    "contentSha256": "7d9c38056ec82206d5cab8f13b7940c960c18ab0d337a77dfc0ca81dd08e013e",
-    "verifiedAt": "2026-09-08T12:04:42.974Z"
+    "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+    "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+    "verifiedAt": "2026-09-16T16:25:31Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": {
-    "fromAppCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-    "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-d)",
-    "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:48:27.194Z",
-    "summary": "From 3fa407e3 to 4ca41822 (DOC-032, set compat-d): 3fa407e3..067c1646 was reviewed compatible by DOC-030 (set compat) with a 15-step replay. From 067c1646 to 4ca41822, help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile did not change. reader.css only makes a whole search result card clickable with a focus outline; index.html adds a no-referrer meta tag; router.tsx adds the /signing/return route. None touches Help, the reader, Edition details or the standalone export. The replay on the work lab passed 15 of 15 steps for Administrator, Legal Team Member, Business User and operator. Edition details showed Supported app '0.0.1 / 067c1646…' and Distribution commit 4ca41822: the lab serves the edition.json committed at 4ca41822, and the guide names no app revision. Replay of batches/DOC-030/compat/versions-and-support-replay.mjs on work: 15 steps, 0 failed attempts, each with a passing repeat or a DOC-030-identical disposition; no behavior change. Earlier review, DOC-030 compatibility reviewer (compat) (3fa407e3 to 067c1646): From 3fa407e3 to 067c1646 (DOC-030, set compat): I read the diff of help.tsx, vite-documentation.ts, compiler.mjs, build.mjs, app-header.tsx, portal-shell.tsx and the Dockerfile. The reader, Help links and Edition details did not change; development builds now show pending-review guides with validation badges, which the guide already describes; the headers changed only branding. I replayed the DOC-029 V-C51 section for Administrator, Legal Team Member, Business User and operator on lab compatcmp built from 067c1646; all 15 steps passed. Earlier review, DOC-029 round 3 compatibility reviewer (3fa407e3 to 432dba3a): From 3fa407e3 to 57e77e38, round 2 (DOC-029r2 compatibility reviewer (support)) found the article compatible: I inspected the app diff from 3fa407e3 to 57e77e38 and found no change to Help, the documentation reader, Edition details or the standalone export. I replayed the round 1 V-C51 walkthrough on the admin2 lab and all 15 steps passed. From 57e77e38 to 432dba3a, round 3 found only apps/web/src/routes/welcome.tsx and its test changed. The wizard now goes to /auth/two-factor/enroll after it saves a policy that requires two-factor authentication. The article makes no statement about the setup wizard Authentication step or two-factor enrollment. The change touches only apps/web/src/routes/welcome.tsx and its test, so no statement in the article can become wrong.",
-    "evidence": [
-      {
-        "path": "batches/DOC-032/compat/compat-d.json",
-        "sha256": "aa76173fa2af4f9275e5e84e8970c92aacb11c6b0ead12764d48ed5945f806d0"
-      },
-      {
-        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay.mjs",
-        "sha256": "fd477578b74995a1282d86d97f36662c9a136970192cce9329d07459281cb944"
-      },
-      {
-        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay/lib.mjs",
-        "sha256": "95142b7585eea43e0095cf8361123ec0e8f7352df7aeadd855057f52b3d0ec9d"
-      },
-      {
-        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay.json",
-        "sha256": "603eb25111a42e0cb0073190e54f1ec71e8ef7ec4618bcd67100af77ad9a687c"
-      },
-      {
-        "path": "batches/DOC-032/compat/compat-d/versions-and-support-replay/doc032-admin-edition-details.png",
-        "sha256": "cab5705e820aa4afef41a50c9cf98891de3a275740a1cecc95315a05c61d1d73"
-      },
-      {
-        "path": "batches/DOC-029/compat-r2/support.json",
-        "sha256": "2a585ecc57a52770b2a537f10edc806b7b22535f91701f6265ecef59d916f18f"
-      },
-      {
-        "path": "batches/DOC-029/compat-r3/review.json",
-        "sha256": "7d6db97f6d68edb11bdae4793f8230ce6593091f82c30d470cb7484de19d1e93"
-      },
-      {
-        "path": "batches/DOC-030/compat/compat.json",
-        "sha256": "d9a07db3c8cbe6f3fd991351231c693cb73629dee8c2cd14ec849dc7a8042ce3"
-      },
-      {
-        "path": "batches/DOC-030/compat/versions-and-support-replay.mjs",
-        "sha256": "ee3cf07518ff4dd612dce517cede9e449fba1e4bcbc51df45f4c11b95ef8266b"
-      },
-      {
-        "path": "batches/DOC-030/compat/versions-and-support-replay/lib.mjs",
-        "sha256": "6635d3892e430ad9a4d8a1526fa880f7f7a666bc9ba000117408c1d6ad3b0823"
-      },
-      {
-        "path": "batches/DOC-030/compat/versions-and-support-replay.json",
-        "sha256": "982b474b98e6b0597e3be2cd7fc5ee27f43de7fce1e05ad771ebbeb5d78f5318"
-      },
-      {
-        "path": "batches/DOC-030/compat/logs/versions-and-support-compatcmp.log",
-        "sha256": "87b693d408dc360378c6f4e0d2af817ccbc17ea5397aeeea97f44bb409eec43f"
-      },
-      {
-        "path": "batches/DOC-030/compat/versions-and-support-replay/doc030-admin-edition-details.png",
-        "sha256": "dba2d7748b5a195a2ebff343711ec4c564f22e83b259b7aaf3b0ca5d61e35465"
-      }
-    ]
-  }
+  "compatibilityReview": null
 }

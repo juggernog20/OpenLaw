@@ -128,6 +128,37 @@
     "contentSha256": "7bdfd9be072d31a28150ff9843949782d325ca9605e129a463cc515d0cdf4678",
     "verifiedAt": "2026-09-25T11:55:31Z"
   },
-  "compatibilityReview": null,
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches the \"A notification or email is missing\" advice. The troubleshooting replay on final passed 6 of 6 steps, including the notification switches for staff and Portal and the rule that In-app off stops that group's email. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/walkthrough-troubleshooting.mjs",
+        "sha256": "04f7c3e0dc39f8c62c61eeae69fe2a2e10cc20eb79f1a1dbddcc1a00a73b70f6"
+      },
+      {
+        "path": "batches/DOC-032/bridge/walkthrough-troubleshooting/troubleshooting-fixtures.json",
+        "sha256": "62cf5a39c354d013b53680bad250f9fe8335733f907bcf8b0ac28684bfdeb2e8"
+      },
+      {
+        "path": "batches/DOC-032/bridge/walkthrough-troubleshooting/troubleshooting-lib.mjs",
+        "sha256": "751928c584b56e4db2377299e3020f94ad120521e73604773044a4ca9f6a78b4"
+      },
+      {
+        "path": "batches/DOC-032/bridge/walkthrough-troubleshooting.json",
+        "sha256": "8aecf0b74818d9b3172cf073277c01011c99fa687362c673dd9b091315cae73a"
+      }
+    ]
+  },
   "copyOnlyReview": null
 }

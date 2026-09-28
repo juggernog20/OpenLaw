@@ -96,13 +96,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/mcp/prompts.ts, packages/shared/src/index.ts and messages/en-US.json. No Inbox or triage source changed: inbox.tsx, inbox-request.tsx, inbox columns and filters, request-assignment.tsx, resolve-dialog.tsx, comment code, roles.ts, requests.ts, requester-status.ts, request-owner.tsx, portal-request.tsx and the requests module have no diff. apps/api/src/mcp/prompts.ts adds the triage_inbox MCP prompt, a Client feature that leaves decisions to the Inbox. shared/src/index.ts only adds exports. The replay passed its final 39 steps for Administrator and Legal Team Member and the Business User refusal. Replay log: batches/DOC-032/compat/compat-a/triage-requests-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/mcp/prompts.ts, packages/shared/src/index.ts and messages/en-US.json. No Inbox or triage source changed: inbox.tsx, inbox-request.tsx, inbox columns and filters, request-assignment.tsx, resolve-dialog.tsx, comment code, roles.ts, requests.ts, requester-status.ts, request-owner.tsx, portal-request.tsx and the requests module have no diff. apps/api/src/mcp/prompts.ts adds the triage_inbox MCP prompt, a Client feature that leaves decisions to the Inbox. shared/src/index.ts only adds exports. The replay passed its final 39 steps for Administrator and Legal Team Member and the Business User refusal. Replay log: batches/DOC-032/compat/compat-a/triage-requests-replay.json; from 4ca41822 to ad345da5 (bridge): The nodemailer patch reaches the resolution email. The inbox replay on final passed 36 of 36 steps; for both roles the requester received \"Your request is resolved: R-<n>\" in Mailpit and a later reply did not reopen the Request. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -151,6 +151,38 @@
       {
         "path": "batches/DOC-032/compat/compat-a/triage-requests-replay.json",
         "sha256": "71b4bc1214b0289a93b14a9d64a01e62d300041004208e539b655fbdcd6c62ca"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay.mjs",
+        "sha256": "4b17260cda499de7ccab26c0911d0815bd3bc01d0d69e669d4b3b4a06de91849"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay/api.mjs",
+        "sha256": "c0664d9ad7b096ce9f33326536d8f348333189dee6098523815fa7beba6f6be3"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay/fixtures.json",
+        "sha256": "2c425c79aa987497d7563f0cf18bb385730b03029da93ddb95e57eb72e3e585a"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay/requests.json",
+        "sha256": "fd1ba5da31f5abb81834f207ac44a6e448a2223aee554a31708ba7d31f374801"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay/setup-config.mjs",
+        "sha256": "f0ee6f069265183d6d627e37d392f54fdd623e9ea0d086b340a537ae35776c48"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay/setup-requests.mjs",
+        "sha256": "f8debea788f8bb54b28c393fa116922527026704ce0a004345d891344b90cc6d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/inbox-replay.json",
+        "sha256": "fed1124be4ebcc11906af3d1f6af44bf69352bd52e1240b0022563a7c9935bfd"
       }
     ]
   }

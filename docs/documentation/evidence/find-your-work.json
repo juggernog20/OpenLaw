@@ -101,13 +101,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/routes/contract-record.tsx, apps/web/src/routes/matter-record.tsx and messages/en-US.json. Home, the header search box, My Tasks, keyboard shortcuts and the not-found page did not change (home.tsx, apps/api/src/modules/home/, home-tasks.tsx, search-input.tsx, empty-search-entries.tsx, keyboard-shortcuts.tsx and not-found.tsx have no diff). contract-record.tsx and matter-record.tsx moved the owner pickers into an Owners section and added a Signatures tab on Contracts; the guide only names the Fields and Documents section links, the Your contracts section by Owner and the Contract not found page, which are unchanged. messages/en-US.json removes or changes no string the guide quotes. The replay passed 28 of 28 steps for Administrator and Legal Team Member. Replay log: batches/DOC-032/compat/compat-a/find-your-work-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/web/src/routes/contract-record.tsx, apps/web/src/routes/matter-record.tsx and messages/en-US.json. Home, the header search box, My Tasks, keyboard shortcuts and the not-found page did not change (home.tsx, apps/api/src/modules/home/, home-tasks.tsx, search-input.tsx, empty-search-entries.tsx, keyboard-shortcuts.tsx and not-found.tsx have no diff). contract-record.tsx and matter-record.tsx moved the owner pickers into an Owners section and added a Signatures tab on Contracts; the guide only names the Fields and Documents section links, the Your contracts section by Owner and the Contract not found page, which are unchanged. messages/en-US.json removes or changes no string the guide quotes. The replay passed 28 of 28 steps for Administrator and Legal Team Member. Replay log: batches/DOC-032/compat/compat-a/find-your-work-replay.json; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -124,6 +124,10 @@
       {
         "path": "batches/DOC-032/compat/compat-a/find-your-work-replay.json",
         "sha256": "56547258ee51fca4146ea93c8ee2651cc46b6bb16553f98814e0b07c5402305d"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

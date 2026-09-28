@@ -1,0 +1,334 @@
+{
+  "batch": "DOC-032",
+  "group": "support",
+  "set": "support",
+  "kind": "independent-article-walkthrough",
+  "reviewer": "DOC-032 independent walkthrough agent (support)",
+  "reviewerKind": "agent",
+  "appUrl": "http://127.0.0.1:43390",
+  "mailUrl": "http://127.0.0.1:48490",
+  "lab": {
+    "project": "openlaw-docs-9d2b1705-final",
+    "source": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "appImage": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "workerImage": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+    "engineImage": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7"
+  },
+  "articles": {
+    "troubleshooting": {
+      "path": "docs/user-guides/troubleshooting.md",
+      "contentSha256": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616"
+    },
+    "reference": {
+      "path": "docs/user-guides/reference.md",
+      "contentSha256": "a94b05c5bb2379640d9d29d9aadd3264a9f9d5365e07d340b24683c68a990d2c"
+    },
+    "versions-and-support": {
+      "path": "docs/user-guides/versions-and-support.md",
+      "contentSha256": "b20496f4527640e7c94b017f07ac5b5d8a88d398677451ce84ecff7af2538421"
+    }
+  },
+  "browser": "Playwright 1.63.0 Chromium from node_modules/.pnpm, headless, one browser context per identity",
+  "fixtures": {
+    "stamp": "mul5yacn",
+    "confidential": {
+      "number": 56,
+      "title": "DOC-032 support V-C51 mul5yacn confidential contract"
+    },
+    "adminConfidential": {
+      "number": 57,
+      "title": "DOC-032 support V-C51 mul5yacn administrator confidential contract"
+    },
+    "shared": {
+      "number": 58,
+      "title": "DOC-032 support V-C51 mul5yacn shared contract",
+      "documentId": "01a0e7c5-6246-76ea-b1d1-b4809380298a",
+      "folderId": "01a0e7c5-625e-7cd2-b29e-0dfb72150084"
+    },
+    "knowledge": {
+      "id": "01a0e7c5-62a3-72fe-aba8-ff2b6ef74313",
+      "title": "DOC-032 support V-C51 mul5yacn Portal Knowledge"
+    },
+    "confidentialPortal": {
+      "number": 59,
+      "title": "DOC-032 support V-C51 mul5yacn confidential portal contract"
+    },
+    "archived": {
+      "number": 60,
+      "title": "DOC-032 support V-C51 mul5yacn archived contract"
+    },
+    "approval": {
+      "number": 61,
+      "title": "DOC-032 support V-C51 mul5yacn approval contract"
+    },
+    "uploads": {
+      "number": 62,
+      "title": "DOC-032 support V-C51 mul5yacn upload contract"
+    },
+    "files": {
+      "number": 63,
+      "title": "DOC-032 support V-C51 mul5yacn file behavior contract"
+    },
+    "relatedMatter": {
+      "number": 25,
+      "title": "DOC-032 support V-C51 mul5yacn related matter"
+    },
+    "entity": {
+      "id": "01a0e7c5-6375-746c-8556-15aacb82547d",
+      "name": "DOC-032 support V-C51 mul5yacn confidential entity Ltd"
+    },
+    "createdAt": "2026-09-28T11:27:48.097Z",
+    "createdBy": "Nadia Haddad and Daniel Okafor API sessions, Jonas Weber Portal session"
+  },
+  "startedAt": "2026-09-28T11:27:43.636Z",
+  "steps": [
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-28T11:27:48.097Z",
+      "at": "2026-09-28T11:27:54.367Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\"],[\"Distribution commit\",\"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\"],[\"Content digest\",\"e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation. Screenshot docs/documentation/batches/DOC-032/support/walkthrough/doc032-support-admin-edition-details.png.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Why the package version does not identify a build: the running app's version against Supported app and Distribution commit",
+      "expected": "/api/v1/meta reports the package version 0.1.0, the example the changed sentence names; Supported app pairs that version with a build commit and Distribution commit names the source, and neither commit comes from the version.",
+      "startedAt": "2026-09-28T11:27:54.367Z",
+      "at": "2026-09-28T11:27:56.222Z",
+      "actual": "Daniel Okafor opened /help/versions-and-support. Reviewed guide sentence: \"The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.\". The lab-served article reads \"The package version alone is insufficient for development builds: different builds can share 0.0.1. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. Working changes means the bundle included uncommitted source changes.\". Edition details: Supported app \"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\", Distribution commit \"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\". http://127.0.0.1:43390/api/v1/meta in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}. The running app reports only the package version 0.1.0, which matches the version part of Supported app; the build commit (067c1646) and the distribution commit (ad345da5) appear only in Edition details, so the version alone does not name either build.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-28T11:27:56.223Z",
+      "at": "2026-09-28T11:28:01.651Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-28T11:28:01.651Z",
+      "at": "2026-09-28T11:28:07.774Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-28T11:28:07.774Z",
+      "at": "2026-09-28T11:28:12.797Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-28T11:28:12.798Z",
+      "at": "2026-09-28T11:28:18.983Z",
+      "actual": "Header Help worked; /help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\"],[\"Distribution commit\",\"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\"],[\"Content digest\",\"e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Why the package version does not identify a build: the running app's version against Supported app and Distribution commit",
+      "expected": "/api/v1/meta reports the package version 0.1.0, the example the changed sentence names; Supported app pairs that version with a build commit and Distribution commit names the source, and neither commit comes from the version.",
+      "startedAt": "2026-09-28T11:28:18.984Z",
+      "at": "2026-09-28T11:28:20.889Z",
+      "actual": "Nadia Haddad opened /help/versions-and-support. Reviewed guide sentence: \"The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.\". The lab-served article reads \"The package version alone is insufficient for development builds: different builds can share 0.0.1. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. Working changes means the bundle included uncommitted source changes.\". Edition details: Supported app \"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\", Distribution commit \"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\". http://127.0.0.1:43390/api/v1/meta in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}. The running app reports only the package version 0.1.0, which matches the version part of Supported app; the build commit (067c1646) and the distribution commit (ad345da5) appear only in Edition details, so the version alone does not name either build.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-28T11:28:20.889Z",
+      "at": "2026-09-28T11:28:26.252Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-28T11:28:26.253Z",
+      "at": "2026-09-28T11:28:32.375Z",
+      "actual": "/help/upgrade showed \"Upgrade a populated instance\" with Read this article in the full documentation, which opened /documentation/upgrade (\"Upgrade a populated instance\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-28T11:28:32.376Z",
+      "at": "2026-09-28T11:28:37.437Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Find the applicable edition: Help, All documentation below Browse guides, Edition details",
+      "expected": "Header Help opens Help; the Documentation navigation below Browse guides holds Help and All documentation; Edition details lists the edition, Supported app, Distribution commit, Content digest and Publication target with the standalone links.",
+      "startedAt": "2026-09-28T11:28:37.438Z",
+      "at": "2026-09-28T11:28:43.630Z",
+      "actual": "Header Help worked; /portal/help/versions-and-support opened \"Find version information and get help\" with badge \"Validation in progress\" and 0 development preview notices outside the article prose. The Documentation navigation after Guide navigation (Browse guides) held [\"Help\",\"All documentation\"]. Edition details: [[\"Edition details\",\"documentation-development (Development)\"],[\"Supported app\",\"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\"],[\"Distribution commit\",\"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\"],[\"Content digest\",\"e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022\"],[\"Publication target\",\"development-app\"]]; links [\"Open standalone edition\",\"Download standalone edition\"]; \"Keep an extracted copy outside this instance to read it when the app is unavailable.\". All documentation opened /documentation.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Why the package version does not identify a build: the running app's version against Supported app and Distribution commit",
+      "expected": "/api/v1/meta reports the package version 0.1.0, the example the changed sentence names; Supported app pairs that version with a build commit and Distribution commit names the source, and neither commit comes from the version.",
+      "startedAt": "2026-09-28T11:28:43.630Z",
+      "at": "2026-09-28T11:28:45.495Z",
+      "actual": "Jonas Weber opened /portal/help/versions-and-support. Reviewed guide sentence: \"The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.\". The lab-served article reads \"The package version alone is insufficient for development builds: different builds can share 0.0.1. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. Working changes means the bundle included uncommitted source changes.\". Edition details: Supported app \"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\", Distribution commit \"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\". http://127.0.0.1:43390/api/v1/meta in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}. The running app reports only the package version 0.1.0, which matches the version part of Supported app; the build commit (067c1646) and the distribution commit (ad345da5) appear only in Edition details, so the version alone does not name either build.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "If a link names another edition, a missing article or a missing section",
+      "expected": "An unknown edition and a missing article show Article unavailable with their explanation and a way back; a missing section shows its notice and On this page; nothing loads an external manual.",
+      "startedAt": "2026-09-28T11:28:45.496Z",
+      "at": "2026-09-28T11:28:50.841Z",
+      "actual": "?edition=doc029-support-older-edition: \"Article unavailable\" / \"The requested edition is not bundled with this instance. Open the current index or use your retained copy of that edition.\". Missing article: \"Article unavailable\" / \"This article is not available in the bundled edition. Search the available guides or return to the index.\" with an Overview link. Missing section: \"The requested section is unavailable. Use the page outline to find the current instructions.\" with On this page. External requests: [].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "An article outside the Help selection offers the full documentation; search finds the support guide",
+      "expected": "The out-of-selection article offers Read this article in the full documentation, which opens the formal article; searching for version information finds this guide.",
+      "startedAt": "2026-09-28T11:28:50.842Z",
+      "at": "2026-09-28T11:28:56.953Z",
+      "actual": "/portal/help/configure-analysis showed \"Configure the AI connector and Field prompts\" with Read this article in the full documentation, which opened /documentation/configure-analysis (\"Configure the AI connector and Field prompts\"). Search \"version information\" in Help listed the guide.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "action": "Report a defect: the GitHub tracker link, and an external failure leaves local reading usable",
+      "expected": "The tracker link points at the OpenLaw GitHub issues; with GitHub blocked the navigation fails and the local article reads again.",
+      "startedAt": "2026-09-28T11:28:56.954Z",
+      "at": "2026-09-28T11:29:01.983Z",
+      "actual": "Tracker link href \"https://github.com/juggernog20/OpenLaw/issues\". With github.com blocked: request to github.com failed. Returning to the local article showed \"Find version information and get help\" and its report section.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Signed-out reading, standalone edition, and an offline copy with and without JavaScript",
+      "expected": "Formal documentation reads signed out; Open standalone edition loads; the downloaded edition extracts and its index and prose open from disk offline, with and without JavaScript.",
+      "startedAt": "2026-09-28T11:29:01.983Z",
+      "at": "2026-09-28T11:29:06.265Z",
+      "actual": "Signed out, /documentation/versions-and-support showed \"Find version information and get help\" (app API calls []). Download standalone edition gave openlaw-documentation.tar.gz (444160 bytes). Open standalone edition (/documentation-export/index.html) served \"Documentation · OpenLaw\". The archive extracted to an index at index.html. In an offline context from file://, with JavaScript the index and the support article read; without JavaScript the index read (search notice shown: true) and the article prose included \"Report a product defect or documentation correction\".",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Why the package version does not identify a build: signed out, compare /api/v1/meta, Edition details and the lab's build records",
+      "expected": "Signed out, /api/v1/meta reports 0.1.0 and Edition details shows Supported app and Distribution commit; the lab's own build record (source commit and image IDs) names the installed build, which the version does not.",
+      "startedAt": "2026-09-28T11:29:06.266Z",
+      "at": "2026-09-28T11:29:08.353Z",
+      "actual": "A signed-out operator opened /documentation/versions-and-support. Reviewed guide sentence: \"The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.\". The lab-served article reads \"The package version alone is insufficient for development builds: different builds can share 0.0.1. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. Working changes means the bundle included uncommitted source changes.\". Edition details: Supported app \"0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7\", Distribution commit \"ad345da5842c22b7d1012bf9f5d7d12dfdb4e496\". http://127.0.0.1:43390/api/v1/meta in the same browser answered {\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}. The running app reports only the package version 0.1.0, which matches the version part of Supported app; the build commit (067c1646) and the distribution commit (ad345da5) appear only in Edition details, so the version alone does not name either build. The lab's build record: source commit ad345da5842c22b7d1012bf9f5d7d12dfdb4e496, app image sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine image sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7. Supported app names build 067c1646, the installed source is ad345da5: the edition declares its checked build and does not measure the running server, as the guide says.",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "action": "Links in the reviewed versions-and-support and troubleshooting bytes resolve",
+      "expected": "Every internal link and anchor opens in the bundled edition.",
+      "startedAt": "2026-09-28T11:29:08.353Z",
+      "at": "2026-09-28T11:30:08.742Z",
+      "actual": "versions-and-support: 10 internal targets from the reviewed bytes all opened in /documentation: [\"upgrade\",\"roles-and-access\",\"contributor-guide\",\"document-previews\",\"contract-approvals\",\"electronic-signing\",\"contract-analysis\",\"notifications\",\"troubleshooting\",\"operator-troubleshooting\"]. troubleshooting: 24 internal targets from the reviewed bytes all opened in /documentation: [\"operator-troubleshooting\",\"staff-sign-in\",\"portal-sign-in\",\"authentication-and-email\",\"search-and-views\",\"roles-and-access\",\"follow-request\",\"portal-knowledge\",\"contributor-guide\",\"types-statuses-fields\",\"document-versions\",\"contributor-guide#work-with-documents\",\"reference#file-behavior-and-limits\",\"document-previews\",\"notifications\",\"contract-approvals#approve-from-the-business-portal\",\"contract-approvals\",\"electronic-signing\",\"manual-signing\",\"contract-analysis\",\"configure-analysis#request-conversion-switches\",\"connect-headless-client#fix-a-connection-or-stop-access\",\"connect-claude#disconnect-or-fix-a-connection\",\"versions-and-support\"].",
+      "result": "pass"
+    },
+    {
+      "article": "versions-and-support",
+      "scenario": "V-C51",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "action": "Check the relevant limitation: Administrators need named access to Confidential Contracts",
+      "expected": "The Administrator without a team entry or Legal Owner role gets Contract not found for a Confidential Contract.",
+      "startedAt": "2026-09-28T11:30:08.743Z",
+      "at": "2026-09-28T11:30:10.616Z",
+      "actual": "Daniel opened Confidential C-56 and saw \"Contract not found\".",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T11:30:10.637Z",
+  "edition": {
+    "Edition details": "documentation-development (Development)",
+    "Supported app": "0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7",
+    "Distribution commit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "Content digest": "e120fc90b3fb51fa72cea9e995600c72f6eea449be062514ca74d34cbdfd1022",
+    "Publication target": "development-app"
+  },
+  "versionCheck": {
+    "meta": "{\"name\":\"OpenLaw\",\"version\":\"0.1.0\"}",
+    "supportedApp": "0.1.0 / 067c1646829df85e62b809ee9157921e867c84e7",
+    "distributionCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "reviewedSentence": "The package version alone does not identify a build: different development builds can share one version, such as `0.1.0`. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. **Working changes** means the bundle included uncommitted source changes.",
+    "servedSentence": "The package version alone is insufficient for development builds: different builds can share 0.0.1. The distribution commit identifies the source used to assemble the docs, while the content digest identifies the bundled documentation content. Working changes means the bundle included uncommitted source changes."
+  },
+  "summary": {
+    "total": 19,
+    "pass": 19,
+    "fail": 0
+  }
+}

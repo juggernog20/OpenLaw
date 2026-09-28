@@ -1,0 +1,35 @@
+{
+  "section": "instancePinned",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bao",
+  "labProject": "openlaw-docs-9d2b1705-bao",
+  "appUrl": "http://127.0.0.1:43388",
+  "mailUrl": "http://127.0.0.1:48488",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "base lab environment (BASE_URL set by the deployment)",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:25:05.107Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": "http://127.0.0.1:43388/settings/authentication",
+      "action": "Instance address set by the deployment: Application address shows Deployment configuration and Read only; the SSO callback uses it",
+      "expected": "Deployment configuration; Read only; active BASE_URL; callback on it",
+      "startedAt": "2026-09-28T10:25:06.091Z",
+      "finishedAt": "2026-09-28T10:25:07.797Z",
+      "actual": "Settings, Advanced, Instance address showed \"Application address Deployment configuration · Read only\" (field value http://127.0.0.1:43388, read-only true). Save provider then showed the callback http://127.0.0.1:43388/api/auth/sso/callback.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:25:07.802Z"
+}

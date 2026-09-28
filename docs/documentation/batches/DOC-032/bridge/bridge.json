@@ -1,0 +1,1200 @@
+{
+  "kind": "article-compatibility-review",
+  "task": "DOC-032",
+  "issue": 1194,
+  "set": "bridge",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "independence": "This seat wrote none of the guides, none of their DOC-030 or DOC-032 walkthrough or compatibility scripts, and none of the DOC-032 walkthroughs. It copied the scripts the evidence records name and changed only lab addresses, manifest names, fixture names and log paths. Parts of this review were run by an earlier agent in the same seat, stopped by an account limit (WIP commit aaaf4791), and by its email helper; this agent re-read the diff, checked each log and finished the access replay.",
+  "reviewedAt": "2026-09-28T11:14:22.298Z",
+  "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+  "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+  "appDiffCommand": "git diff 4ca41822b685a2a1e58a38b4f25e421cf735c54e ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 -- apps packages styles package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json messages",
+  "appDiffFiles": [
+    "apps/api/openapi.json",
+    "apps/api/package.json",
+    "apps/api/src/modules/comments/comments.test.ts",
+    "apps/web/package.json",
+    "apps/web/src/components/avatar.tsx",
+    "apps/web/src/components/table/managed-table.tsx",
+    "apps/web/src/routes/contracts-columns.test.tsx",
+    "apps/worker/package.json",
+    "messages/en-US.json",
+    "package.json",
+    "packages/api-client/package.json",
+    "packages/db/package.json",
+    "packages/shared/package.json",
+    "packages/shared/src/index.ts",
+    "pnpm-lock.yaml",
+    "styles/globals.css",
+    "styles/lint-contrast.mjs",
+    "styles/themes/dark.css",
+    "styles/themes/light.css",
+    "styles/themes/warm.css"
+  ],
+  "commits": [
+    "ad345da5 Merge pull request #1206 from juggernog20/chore/release-prep",
+    "4c08cb46 Tighten the release workflow after review",
+    "e1bfc54f Add the security policy, contributing guide and changelog",
+    "b0efff65 Publish the release images on a version tag",
+    "4026eb79 Stop turbo from writing AGENTS.md at the repository root",
+    "b5be8e1b Skip an upgrade baseline that predates the Dockerfile",
+    "8044ff68 Record the Administrator per-Version delete under DOC-010",
+    "a5ea033e Add the SPDX header to scripts and styles",
+    "9f9caa23 Bump every version to 0.1.0 for the first release",
+    "999bf318 Merge pull request #1203 from juggernog20/agent/cool-goodall-issurw",
+    "63044d75 Merge pull request #1202 from juggernog20/fix/i18n-catalog-drift-20260928",
+    "16125362 Merge pull request #1204 from juggernog20/chore/release-prune",
+    "5bb98c66 Merge pull request #1205 from juggernog20/fix/e2e-journeys",
+    "549b26a7 Answer the fully-signed question before sending an Envelope",
+    "1ff23269 Follow the per-version delete in the M11 journey",
+    "f1d00a9c Match the M33 checklist row to the Settings label",
+    "bb447b70 Neutralise competitor names in the decision records",
+    "5cd352e2 Replace the maintainer's name with a fictional test persona",
+    "a4cebd96 chore(deps): bump nodemailer, sharp, and turbo to latest patch versions",
+    "1d249fd9 Regenerate i18n catalog to fix drift from unregenerated string edits"
+  ],
+  "dependencyChanges": [
+    "nodemailer 10.0.10 -> 10.0.11 (CHANGELOG.md in node_modules): fetch reports a form body that cannot be encoded through the returned stream; the CommonJS entry and services subpath stay compatible with the pre-TypeScript build; qp wrap() terminates for short line lengths and a trailing incomplete escape; smtp-connection fails a password login cleanly when the server offers only XOAUTH2; bundled type declarations restored. None changes a message OpenLaw builds or the result of a send to a relay that offers password or no authentication.",
+    "sharp 0.35.4 -> 0.35.5 (no changelog in the package; read from the installed sources): prebuilt libvips 8.18.6 -> 8.18.7 (@img/sharp-libvips-* 1.3.3 -> 1.3.4, with cairo 1.18.6, rsvg 2.63.2, harfbuzz 14.5.0, heif 1.23.5, glib 2.90.0, expat 2.8.5, xml2 2.15.4, aom 3.15.1, cgif 0.5.4); gain maps now follow rotate, flip and extract; creating a blank image fills bands with linear(); the JXL options accept animation settings. OpenLaw calls sharp only in apps/api/src/lib/email-logo.ts: read the logo with limitInputPixels 16,000,000, resize to 48 x 48 contain on transparent, write PNG.",
+    "turbo 2.11.4 -> 2.11.5: build orchestration only; not loaded by any request."
+  ],
+  "runtimeCheck": "The final lab's app image (sha256:88db6b8c6ba0…) holds nodemailer@10.0.11, sharp@0.35.5 and @img/sharp-libvips-linux-x64@1.3.4 under /app/node_modules/.pnpm.",
+  "hunkClassCounts": {
+    "version string": 9,
+    "dependency version": 15,
+    "test": 1,
+    "comment": 8,
+    "message catalog": 4
+  },
+  "hunks": [
+    {
+      "file": "apps/api/openapi.json",
+      "hunk": "@@ -3,7 +3,7 @@",
+      "class": "version string",
+      "reach": "OpenAPI document info.version 0.0.1 -> 0.1.0. No guide names it."
+    },
+    {
+      "file": "apps/api/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "apps/api/package.json",
+      "hunk": "@@ -49,12 +49,12 @@",
+      "class": "dependency version",
+      "reach": "nodemailer ^10.0.10 -> ^10.0.11 and sharp ^0.35.4 -> ^0.35.5. Email sending (nodemailer): sign-in links, invitations, password setup, test email, notification, comment, reminder, morning and Request emails. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "apps/api/src/modules/comments/comments.test.ts",
+      "hunk": "@@ -745,9 +745,10 @@",
+      "class": "test",
+      "reach": "None: a test expectation reordered to display-name order after the test persona rename, plus a comment. Tests are not in the image."
+    },
+    {
+      "file": "apps/web/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "apps/web/src/components/avatar.tsx",
+      "hunk": "@@ -10,7 +10,7 @@",
+      "class": "comment",
+      "reach": "None: a doc comment example (BW -> DC)."
+    },
+    {
+      "file": "apps/web/src/components/table/managed-table.tsx",
+      "hunk": "@@ -95,7 +95,7 @@",
+      "class": "comment",
+      "reach": "None: a doc comment example."
+    },
+    {
+      "file": "apps/web/src/routes/contracts-columns.test.tsx",
+      "hunk": "@@ -292,7 +292,7 @@",
+      "class": "comment",
+      "reach": "None: a comment in a test."
+    },
+    {
+      "file": "apps/worker/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "messages/en-US.json",
+      "hunk": "@@ -1592,9 +1592,15 @@",
+      "class": "message catalog",
+      "reach": "Adds auth.setup.invalidEmail and auth.setup.passwordTooShort (first-run step 3). No runtime reach: apps/web/src/main.tsx renders IntlProvider without messages, so the defaultMessage in setup.tsx, identical at both commits, is what the screen shows."
+    },
+    {
+      "file": "messages/en-US.json",
+      "hunk": "@@ -10043,9 +10049,15 @@",
+      "class": "message catalog",
+      "reach": "Adds settings.auth.domainRequired and settings.auth.domainsAndProviderRequired (authentication-and-email). No runtime reach: the defaultMessage in authentication-options.tsx is unchanged."
+    },
+    {
+      "file": "messages/en-US.json",
+      "hunk": "@@ -10136,6 +10148,9 @@",
+      "class": "message catalog",
+      "reach": "Adds settings.auth.waitForSave (authentication-and-email). No runtime reach: the defaultMessage is unchanged."
+    },
+    {
+      "file": "messages/en-US.json",
+      "hunk": "@@ -13689,7 +13704,7 @@",
+      "class": "message catalog",
+      "reach": "welcome.org.logo.rejected catalog text 'That logo must ...' -> 'Logo must ...', matching the defaultMessage that welcome.tsx and settings-general.tsx already rendered at 4ca41822 (first-run, organisation-and-users). No runtime reach."
+    },
+    {
+      "file": "package.json",
+      "hunk": "@@ -2,7 +2,7 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "package.json",
+      "hunk": "@@ -68,7 +68,7 @@",
+      "class": "dependency version",
+      "reach": "turbo ^2.11.4 -> ^2.11.5: the build orchestrator only; it is not in the runtime image path of any request."
+    },
+    {
+      "file": "packages/api-client/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "packages/db/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "packages/shared/package.json",
+      "hunk": "@@ -1,6 +1,6 @@",
+      "class": "version string",
+      "reach": "None at runtime: package metadata that the build reads but no screen or API shows."
+    },
+    {
+      "file": "packages/shared/src/index.ts",
+      "hunk": "@@ -16,7 +16,7 @@",
+      "class": "version string",
+      "reach": "OPENLAW_VERSION reaches GET /api/v1/meta, the OpenAPI info.version and the MCP initialize serverInfo. No guide names these values. versions-and-support gives 0.0.1 as its example of a shared development version."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -44,8 +44,8 @@",
+      "class": "dependency version",
+      "reach": "Root importer turbo 2.11.4 -> 2.11.5 (build only)."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -140,8 +140,8 @@",
+      "class": "dependency version",
+      "reach": "apps/api importer nodemailer 10.0.10 -> 10.0.11. Email sending (nodemailer): sign-in links, invitations, password setup, test email, notification, comment, reminder, morning and Request emails."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -155,8 +155,8 @@",
+      "class": "dependency version",
+      "reach": "apps/api importer sharp 0.35.4 -> 0.35.5. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -1517,160 +1517,160 @@",
+      "class": "dependency version",
+      "reach": "@img/sharp-* platform binaries 0.35.5 and @img/sharp-libvips-* 1.3.3 -> 1.3.4 (libvips 8.18.6 -> 8.18.7) package entries. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -2758,33 +2758,33 @@",
+      "class": "dependency version",
+      "reach": "@turbo/* platform binaries 2.11.5 package entries (build only)."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -4570,8 +4570,8 @@",
+      "class": "dependency version",
+      "reach": "nodemailer 10.0.11 package entry. Email sending (nodemailer): sign-in links, invitations, password setup, test email, notification, comment, reminder, morning and Request emails."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -5066,8 +5066,8 @@",
+      "class": "dependency version",
+      "reach": "sharp 0.35.5 package entry. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -5302,8 +5302,8 @@",
+      "class": "dependency version",
+      "reach": "turbo 2.11.5 package entry (build only)."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -6689,108 +6689,108 @@",
+      "class": "dependency version",
+      "reach": "@img/sharp-* and libvips snapshots. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -7827,22 +7827,22 @@",
+      "class": "dependency version",
+      "reach": "@turbo/* snapshots (build only)."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -9473,7 +9473,7 @@",
+      "class": "dependency version",
+      "reach": "nodemailer snapshot. Email sending (nodemailer): sign-in links, invitations, password setup, test email, notification, comment, reminder, morning and Request emails."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -10000,37 +10000,37 @@",
+      "class": "dependency version",
+      "reach": "sharp snapshot and its optional @img dependencies. Organization logo save and the 48x48 email-logo PNG (sharp in apps/api/src/lib/email-logo.ts, also run by the boot backfill); the refusal of an unreadable or over-16-million-pixel logo."
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "hunk": "@@ -10308,14 +10308,14 @@",
+      "class": "dependency version",
+      "reach": "turbo snapshot and its @turbo/* optional dependencies (build only)."
+    },
+    {
+      "file": "styles/globals.css",
+      "hunk": "@@ -1,3 +1,4 @@",
+      "class": "comment",
+      "reach": "None: SPDX licence header comment."
+    },
+    {
+      "file": "styles/lint-contrast.mjs",
+      "hunk": "@@ -1,3 +1,5 @@",
+      "class": "comment",
+      "reach": "None: SPDX licence header in a lint script."
+    },
+    {
+      "file": "styles/themes/dark.css",
+      "hunk": "@@ -1,3 +1,4 @@",
+      "class": "comment",
+      "reach": "None: SPDX licence header comment."
+    },
+    {
+      "file": "styles/themes/light.css",
+      "hunk": "@@ -1,3 +1,4 @@",
+      "class": "comment",
+      "reach": "None: SPDX licence header comment."
+    },
+    {
+      "file": "styles/themes/warm.css",
+      "hunk": "@@ -1,3 +1,4 @@",
+      "class": "comment",
+      "reach": "None: SPDX licence header comment."
+    }
+  ],
+  "replays": [
+    {
+      "script": "batches/DOC-032/bridge/smoke.mjs",
+      "log": "batches/DOC-032/bridge/smoke.json",
+      "sha256": "7c9da8c1098ba4818a0279fedeae71f1e04bf72aad05f81118e14e32484fa09a",
+      "scriptSha256": "99263c02987b7108be91f1df25248d0d4a4495264edffb896eb98c1258667807",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/smoke.mjs",
+          "sha256": "99263c02987b7108be91f1df25248d0d4a4495264edffb896eb98c1258667807"
+        },
+        {
+          "path": "batches/DOC-032/bridge/smoke.json",
+          "sha256": "7c9da8c1098ba4818a0279fedeae71f1e04bf72aad05f81118e14e32484fa09a"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 10,
+      "failed": 0,
+      "articles": ["staff-sign-in", "portal-sign-in", "versions-and-support"],
+      "notes": "One sign-in per role: Administrator (Daniel Okafor) and Legal Team Member (Nadia Haddad) by password, Contributor (Ravi Menon) and Business User (Lena Vogel) by a fresh Portal sign-in link read from Mailpit, then every module list. GET /api/v1/meta answered version 0.1.0. The sign-in mail used quoted-printable and base64 parts (nodemailer 10.0.11 encoding)."
+    },
+    {
+      "script": "batches/DOC-032/bridge/access-replay.mjs",
+      "log": "batches/DOC-032/bridge/access-replay.json",
+      "sha256": "b0113af405532fb3cade2737289cdd1567e863fdd32fa75866e3f8663e0c5893",
+      "scriptSha256": "91121ab3f30907ee98e550e8c393e598928ec2983050af24864423b8f6f8a94f",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/access-replay.mjs",
+          "sha256": "91121ab3f30907ee98e550e8c393e598928ec2983050af24864423b8f6f8a94f"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/fixtures.json",
+          "sha256": "19ecd8d43fd1e7d9fc06202f0b14bab784d6c29e3632863315e3f6bd1b6b2b49"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/lib.mjs",
+          "sha256": "e74308770e7321da719cbadd107150b8a3ff3482d495f759b476ca5fd3665bc7"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/overlay-mail-off.json",
+          "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/overlay-oidc.json",
+          "sha256": "c1e697d0b54f32f2e62cb805e5afc1d8532c8ad536421b96aa996a7a18d6dd8b"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/phase.sh",
+          "sha256": "7004c1c56627c0cd19b6a80a13f1131f796947356165d4ae84aea3a65b0e0fa1"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay/portal-attempt1.json",
+          "sha256": "32fb4a738e8356f30e53c9dcd64074ed621a8ad46878410b0395c9bc0b2a4262"
+        },
+        {
+          "path": "batches/DOC-032/bridge/access-replay.json",
+          "sha256": "b0113af405532fb3cade2737289cdd1567e863fdd32fa75866e3f8663e0c5893"
+        }
+      ],
+      "lab": "bacc (openlaw-docs-9d2b1705-bacc, http://127.0.0.1:43394, Mailpit 48494, subnets 10.243.94.0/24 and 10.244.94.0/24; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7; two-issuer OIDC fixture beside it)",
+      "steps": 98,
+      "failed": 0,
+      "articles": ["staff-sign-in", "portal-sign-in"],
+      "notes": "All six sections of DOC-032/access/walkthrough.mjs: fixtures 1, staff 46, staffSso 17, portal 24, portalSso 7, mailOff 3 (65 staff-sign-in and 33 portal-sign-in steps). Portal attempt 1 (10:14 UTC, access-replay/portal-attempt1.json) failed 4 of 24 steps for a fixture reason: on bacc the seed gave Jonas Weber no Request that was not converted and no Matter team seat (the query for his own Request returned nothing, so the check read an undefined title; Your Matters listed 0 of 0). The previous bridge seat added the fixture Request R-18 'DOC-032 bridge Jonas own request 09281006' as Jonas and put Jonas on the seeded Matter M-6 team at 10:20:55 UTC. Attempt 2 of the portal section (10:50 UTC) passed 24 of 24; the run replaced the section's steps in the log. No step, selector or check changed."
+    },
+    {
+      "script": "batches/DOC-032/bridge/admin-org-replay.mjs",
+      "log": "batches/DOC-032/bridge/admin-org-replay.json",
+      "sha256": "03f0128a9fcf83f23e2b06977c892064e64e6c895eb88eaa830bda3f77fc4dd5",
+      "scriptSha256": "5b477e33ff1cfb0eebea32f30373fb94c9d6af2236ad2be73bf9f45322e0c6fd",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay.mjs",
+          "sha256": "5b477e33ff1cfb0eebea32f30373fb94c9d6af2236ad2be73bf9f45322e0c6fd"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-logo.svg",
+          "sha256": "357a37f19b1cbdd969df60fe668d0ca5e0b07257e1908407b19a2807c2dff562"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/fixtures/doc032-not-an-image.txt",
+          "sha256": "ea2bc81cf052067db5092bd29594d7a34f127e2766554d30297baf9398684e5e"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/lib.mjs",
+          "sha256": "3a2175feea25128cabfab0432a497c4d083789274bfa1484e683041387dc79dc"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/oidc-fixture.mjs",
+          "sha256": "bee5699e17256e2e9e7614f5cf34be524cc00996740419d8c1711359d1a353e8"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/overlay-baseurl-unset.json",
+          "sha256": "f7dcf368008f7219d47a18b74e80a5f71cb55847157f3b1d9d3891de5ee58c3d"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-env.json",
+          "sha256": "4297085a95ae7c43b5f9b540014c5707908bda461dd452bbc41ba3d172928366"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-incomplete.json",
+          "sha256": "d6dfd1cc19b3c5aeeed295c46c3bbfbe060bd7e911267bbd4115a2327d5e35fd"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/overlay-mail-stored.json",
+          "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/overlay-oidc.json",
+          "sha256": "d2187d29c9ef02560300db32192a542e5bb2817eaceee4cd9bbd752063d6faaa"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/phase.sh",
+          "sha256": "68be8914f9173b3aad765eda6bdba962e65086bda681cd2caca1aed4ecb792a5"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/run.sh",
+          "sha256": "8b241875ba52a62d1f3d7026afd470615dce259c84b8137d8277099463bef1e6"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/crossPage-2026-09-28T10-24-56-133Z.json",
+          "sha256": "548ea2dc65e8080d9a89d95bb5ee0b24bbb94ab3b195a28b71148b9586e1fd7f"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAfter-2026-09-28T10-07-55-684Z.json",
+          "sha256": "ea37954b037c3bb5969dcbeff837e18270f2be7fd5f3038c4a28d394ed2a3b59"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frAuth-2026-09-28T10-07-13-239Z.json",
+          "sha256": "e66f2a10a124a23dc7213caa36756b6e3ef2aad922e514bd5a77e3107fe24ed1"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frConnectors-2026-09-28T10-07-29-329Z.json",
+          "sha256": "52c5680aec1a6372f25fb32d8c46a2d2f9fd76bc6e4f04475846c082efafbb44"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmail-2026-09-28T10-07-20-083Z.json",
+          "sha256": "7d01937f1832d5f09a9c4d6ee3bd40812bd61b51e5b2d3989264315c72eaf85a"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frEmailRow-2026-09-28T10-08-17-180Z.json",
+          "sha256": "f34b60016a54f34b044d6550657e8e8fd3b4b1601fc403e4c58b4ed66ab31454"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frInvites-2026-09-28T10-07-23-631Z.json",
+          "sha256": "1a75655129c2faafd717a088eb4bd3716fcaeeb45aa4cc9ec2cf56be69f19124"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frOrg-2026-09-28T10-07-04-464Z.json",
+          "sha256": "bbb15b2630e075394b39afddc513a049c18cac10b8712669ea1386d4adc50a0b"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frReview-2026-09-28T10-07-49-363Z.json",
+          "sha256": "c78d904d8177771cfe8615b93e1dbc71bbb44cf7458bd81572941e3333b0fb74"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/frSetup-2026-09-28T10-06-33-644Z.json",
+          "sha256": "c85a5e23827bbf22a273374bff96ac0073ea1c8b7becbf2ac3218f06f7463f2b"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/guards-2026-09-28T10-08-38-757Z.json",
+          "sha256": "b354c11ba96fe228699b8986ae68516edee9d7310c3a0da63eec707ff44f0e08"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/instancePinned-2026-09-28T10-25-05-106Z.json",
+          "sha256": "6ee5d6c45716d06377e3d4e3e8b5d009ad2a604f8c4f64d7aa5c2598fbb78ecc"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/instanceSaved-2026-09-28T10-25-08-115Z.json",
+          "sha256": "81078e68849033a2baf735f135c5bb596d826a63442e67c899b64bc17cd3f760"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/org-2026-09-28T10-06-17-425Z.json",
+          "sha256": "594e7df30c03f41eb70fda94e15ae76475c995529f64ececf19daa1b16d76204"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/policy-2026-09-28T10-06-51-526Z.json",
+          "sha256": "ee4bf2a6a1a52b224c36f8a5d7c4d433bed9d39b22fcd7c90a1e156fd1aa4460"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsIncomplete-2026-09-28T10-08-11-065Z.json",
+          "sha256": "5bc9a629339459f58face49cc1932790e084367829462950a2b9b0f2fd022d25"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/settingsStored-2026-09-28T10-08-32-665Z.json",
+          "sha256": "1db254e12f9cfd4840c6db314000416575a054306ddc020bfb98d3922c257232"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-12-08-840Z.json",
+          "sha256": "0fde0cf23fa279b734ecffe38bad608a42c4a11a334966ff3a66453820158c2d"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/sso-2026-09-28T10-23-41-743Z.json",
+          "sha256": "c1baab38d55a78ed0b3a1b6d73c0be85d0f66d930b302f7cc9636cc8643b91e8"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/ssoRemove-2026-09-28T10-26-11-692Z.json",
+          "sha256": "de1f1007ac775600372a002d3e4312a27da89f6800fbd7dfb73874420596f050"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-13-17-332Z.json",
+          "sha256": "91b0e951575f2fd077bdeff6492808f784ff0b0a1a3e1bdf5ed24fb117ceb1f4"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/twoFactor-2026-09-28T10-24-42-914Z.json",
+          "sha256": "48824a8f48d36f2075688dfda3f2f6fa2e6598df85ff5c14fe233b424b962fc3"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardEnv-2026-09-28T10-07-49-852Z.json",
+          "sha256": "ca832eaba9adb927e1e92ff97d4ff034b7bc48dae386fa66f3e740253010407d"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardIncomplete-2026-09-28T10-07-25-893Z.json",
+          "sha256": "eed7c37834d8bf49db277ddd15a2bed0af88cce4c2ef195d385a31a7b3e4b11f"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay/runs/wizardStored-2026-09-28T10-06-32-817Z.json",
+          "sha256": "86692c6450b2ea9288f812bcae6a258f143627b5ae3d9bb4ff4a7b5cd0712190"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-org-replay.json",
+          "sha256": "03f0128a9fcf83f23e2b06977c892064e64e6c895eb88eaa830bda3f77fc4dd5"
+        }
+      ],
+      "lab": "bfr (openlaw-docs-9d2b1705-bfr, 43385/48485, empty), bwiz (openlaw-docs-9d2b1705-bwiz, 43383/48483, empty), bao (openlaw-docs-9d2b1705-bao, 43388/48488, Helix seed light, random seed 7); app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; all built from ad345da5",
+      "steps": 151,
+      "failed": 0,
+      "articles": ["first-run", "organisation-and-users", "authentication-and-email"],
+      "notes": "first-run 61, organisation-and-users 31, authentication-and-email 59 steps. The afr2 sections (frLater, frFinish, frSkip) were not run: they send no email, read no Mailpit message, save no logo and check none of the setup, allowed-domain or provider messages. Two superseded attempts on bao (sso attempt 1, 2 of 12 steps failed; twoFactor attempt 1, 1 of 5 failed) got 429 'Too many sign-in link requests' from the shared per-address sign-in link budget (apps/api/src/auth/limits.ts, unchanged in the range) after the seed, org and policy sections ran back to back; the retries passed. The runs are in admin-org-replay/runs/."
+    },
+    {
+      "script": "batches/DOC-032/bridge/conversations-replay.mjs",
+      "log": "batches/DOC-032/bridge/conversations-replay.json",
+      "sha256": "fff3efb355bd23c9dc83908f6e91771f62a51aa7a6c5a09b8cb1b2ff3df568ed",
+      "scriptSha256": "2ee88610abead0f5e07ce6a1f2843b71c35d0d7ef9dcb4498ba23e9309f3b94c",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/conversations-replay.mjs",
+          "sha256": "2ee88610abead0f5e07ce6a1f2843b71c35d0d7ef9dcb4498ba23e9309f3b94c"
+        },
+        {
+          "path": "batches/DOC-032/bridge/conversations-replay/fixtures.json",
+          "sha256": "f9ea2c7a1a760c494003342e811291450cbc7c58a691800ab34d14c829711be7"
+        },
+        {
+          "path": "batches/DOC-032/bridge/conversations-replay/lib.mjs",
+          "sha256": "d5486eba2533f2b287e216f0d1b7941ae06dd0426854422e8d30e6713746d58a"
+        },
+        {
+          "path": "batches/DOC-032/bridge/conversations-replay.json",
+          "sha256": "fff3efb355bd23c9dc83908f6e91771f62a51aa7a6c5a09b8cb1b2ff3df568ed"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 39,
+      "failed": 5,
+      "articles": ["notifications", "comments-and-activity", "contract-tasks-and-dates"],
+      "notes": "V-C08 sections setup-n, leadtimes, keydate, leadtimes-reset, morning-ready, member-bell, admin-notifications, portal-notifications, emails and morning-check (after the 11:00 UTC morning round). 33 current steps pass. 'The email reads the words at send time' failed 5 times before it passed on the 6th run (10:14:41 UTC): the mail was created 25 to 100 ms after the delete returned 200, a worker race that DOC-030 and the DOC-032 compat-a set also met; notification-email.ts and comment-email.ts have no diff in the range. The failed attempts and one repeated lead-time reset are marked superseded in the log. The comment-section (V-C07) steps were not run: none of them reads mail."
+    },
+    {
+      "script": "batches/DOC-032/bridge/inbox-replay.mjs",
+      "log": "batches/DOC-032/bridge/inbox-replay.json",
+      "sha256": "fed1124be4ebcc11906af3d1f6af44bf69352bd52e1240b0022563a7c9935bfd",
+      "scriptSha256": "4b17260cda499de7ccab26c0911d0815bd3bc01d0d69e669d4b3b4a06de91849",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay.mjs",
+          "sha256": "4b17260cda499de7ccab26c0911d0815bd3bc01d0d69e669d4b3b4a06de91849"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay/api.mjs",
+          "sha256": "c0664d9ad7b096ce9f33326536d8f348333189dee6098523815fa7beba6f6be3"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay/fixtures.json",
+          "sha256": "2c425c79aa987497d7563f0cf18bb385730b03029da93ddb95e57eb72e3e585a"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay/requests.json",
+          "sha256": "fd1ba5da31f5abb81834f207ac44a6e448a2223aee554a31708ba7d31f374801"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay/setup-config.mjs",
+          "sha256": "f0ee6f069265183d6d627e37d392f54fdd623e9ea0d086b340a537ae35776c48"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay/setup-requests.mjs",
+          "sha256": "f8debea788f8bb54b28c393fa116922527026704ce0a004345d891344b90cc6d"
+        },
+        {
+          "path": "batches/DOC-032/bridge/inbox-replay.json",
+          "sha256": "fed1124be4ebcc11906af3d1f6af44bf69352bd52e1240b0022563a7c9935bfd"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 36,
+      "failed": 0,
+      "articles": ["triage-requests"],
+      "notes": "V-C12 for Administrator and Legal Team Member, including the resolution email 'Your request is resolved: R-<n>' that reached the requester in Mailpit."
+    },
+    {
+      "script": "batches/DOC-032/bridge/portal-replay.mjs",
+      "log": "batches/DOC-032/bridge/portal-replay.json",
+      "sha256": "6263bfe7563e9815fab5c73e6a0f627de060ff12ff2efe9f07a9ab906be2c7c3",
+      "scriptSha256": "a229fde29790d9af4a5bf911a0148096a8d50c2dfad9fae7ff5ddb4ff657493c",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/portal-replay.mjs",
+          "sha256": "a229fde29790d9af4a5bf911a0148096a8d50c2dfad9fae7ff5ddb4ff657493c"
+        },
+        {
+          "path": "batches/DOC-032/bridge/portal-replay/fixtures.mjs",
+          "sha256": "f7271a60c1090813c1e0669ed838653714e25d1a91b5dafea4da79f12bc81e11"
+        },
+        {
+          "path": "batches/DOC-032/bridge/portal-replay/lib.mjs",
+          "sha256": "cb7c3749b5c7fb346d6f526b1a86a628b484790d7a1cf0fe04ff9f32fb9f0d62"
+        },
+        {
+          "path": "batches/DOC-032/bridge/portal-replay/pdf.mjs",
+          "sha256": "a927ed8acd9be96706983732520349225e651e8a115108e9d643e72c959cca2f"
+        },
+        {
+          "path": "batches/DOC-032/bridge/portal-replay.json",
+          "sha256": "6263bfe7563e9815fab5c73e6a0f627de060ff12ff2efe9f07a9ab906be2c7c3"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 26,
+      "failed": 0,
+      "articles": ["follow-request"],
+      "notes": "follow-request status, conversation and notification steps for the Business User."
+    },
+    {
+      "script": "batches/DOC-032/bridge/versions-and-support-replay.mjs",
+      "log": "batches/DOC-032/bridge/versions-and-support-replay.json",
+      "sha256": "7851f6e724f5adaf44eefce8e2fb75bc74a99ee4cc0f96d21b96170112a18d5f",
+      "scriptSha256": "89c395260736bc1263461c2a54b35d6c68b634aa6cd6afd7f9bc0aa466051bc3",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/versions-and-support-replay.mjs",
+          "sha256": "89c395260736bc1263461c2a54b35d6c68b634aa6cd6afd7f9bc0aa466051bc3"
+        },
+        {
+          "path": "batches/DOC-032/bridge/versions-and-support-replay/lib.mjs",
+          "sha256": "ade0edc278bc1d2d2327949f7e6e75601428453f2a7a0517ec00c6426de071f8"
+        },
+        {
+          "path": "batches/DOC-032/bridge/versions-and-support-replay.json",
+          "sha256": "7851f6e724f5adaf44eefce8e2fb75bc74a99ee4cc0f96d21b96170112a18d5f"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 15,
+      "failed": 0,
+      "articles": ["versions-and-support"],
+      "notes": "Edition details for Administrator, Legal Team Member and Business User, the unavailable-article paths, the standalone edition and its offline copy, and the link check."
+    },
+    {
+      "script": "batches/DOC-032/bridge/walkthrough-troubleshooting.mjs",
+      "log": "batches/DOC-032/bridge/walkthrough-troubleshooting.json",
+      "sha256": "8aecf0b74818d9b3172cf073277c01011c99fa687362c673dd9b091315cae73a",
+      "scriptSha256": "04f7c3e0dc39f8c62c61eeae69fe2a2e10cc20eb79f1a1dbddcc1a00a73b70f6",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/walkthrough-troubleshooting.mjs",
+          "sha256": "04f7c3e0dc39f8c62c61eeae69fe2a2e10cc20eb79f1a1dbddcc1a00a73b70f6"
+        },
+        {
+          "path": "batches/DOC-032/bridge/walkthrough-troubleshooting/troubleshooting-fixtures.json",
+          "sha256": "62cf5a39c354d013b53680bad250f9fe8335733f907bcf8b0ac28684bfdeb2e8"
+        },
+        {
+          "path": "batches/DOC-032/bridge/walkthrough-troubleshooting/troubleshooting-lib.mjs",
+          "sha256": "751928c584b56e4db2377299e3020f94ad120521e73604773044a4ca9f6a78b4"
+        },
+        {
+          "path": "batches/DOC-032/bridge/walkthrough-troubleshooting.json",
+          "sha256": "8aecf0b74818d9b3172cf073277c01011c99fa687362c673dd9b091315cae73a"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 6,
+      "failed": 0,
+      "articles": ["troubleshooting"],
+      "notes": "troubleshooting.md, including the missing-notification section (In-app off stops that group's email and Push)."
+    },
+    {
+      "script": "batches/DOC-032/bridge/admin-config-replay.mjs",
+      "log": "batches/DOC-032/bridge/admin-config-replay.json",
+      "sha256": "7d8ec72d4bcf062c2a84c7f39cbf1954ce43c2b47c0f40fc6136d6572d1c5855",
+      "scriptSha256": "f90ae466dda0912fa2ee7f739f6839213e57a2988448a22c15aaca19923a5b28",
+      "files": [
+        {
+          "path": "batches/DOC-032/bridge/admin-config-replay.mjs",
+          "sha256": "f90ae466dda0912fa2ee7f739f6839213e57a2988448a22c15aaca19923a5b28"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-config-replay/api.mjs",
+          "sha256": "f07f7067b69e8f376b696859f2cc8d449dfbdf36264745e65792d1bfad3d3796"
+        },
+        {
+          "path": "batches/DOC-032/bridge/admin-config-replay.json",
+          "sha256": "7d8ec72d4bcf062c2a84c7f39cbf1954ce43c2b47c0f40fc6136d6572d1c5855"
+        }
+      ],
+      "lab": "final (openlaw-docs-9d2b1705-final, http://127.0.0.1:43390, Mailpit 48490; app and worker sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3, engine sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7; built from ad345da5, Helix seed light, random seed 7)",
+      "steps": 5,
+      "failed": 0,
+      "articles": ["reminders-and-audit"],
+      "notes": "Section reminders only (V-C41): lead times, the Comment emails switch, delivery through the morning round with a briefing email for the colleague past 08:00 and none before 08:00, and the restore of the lead-time list. Run after the conversations morning-check, because its round and lead-time changes would reach that check."
+    }
+  ],
+  "articles": [
+    {
+      "articleId": "staff-sign-in",
+      "contentSha256": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): invitation, password-setup and sign-in link emails; organization logo check and email logo (sharp 0.35.4 -> 0.35.5, libvips 8.18.6 -> 8.18.7): the sign-in page shows the saved logo.",
+      "replayed": [
+        "access-replay.json sections fixtures, staff, staffSso, mailOff (65 staff-sign-in steps)",
+        "smoke.json password sign-in for Administrator and Legal Team Member"
+      ],
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. The hunks that reach this guide are the nodemailer patch (every invitation, password-setup and sign-in link email) and the sharp patch (the saved logo on the sign-in page is stored at save time; sharp only checks it and makes the email logo). The access replay on bacc, built from ad345da5, passed all 65 staff-sign-in steps, with links read from Mailpit, two-factor, SSO with the OIDC fixture and the no-relay case. The smoke signed in Administrator and Legal Team Member. No statement changed."
+    },
+    {
+      "articleId": "portal-sign-in",
+      "contentSha256": "08ed0f7c185123aa669d7d43334d201733f9645a43b39a37a668b9d5e8c35d2e",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): Portal sign-in link emails and their expiry; organization logo check and email logo (sharp 0.35.4 -> 0.35.5, libvips 8.18.6 -> 8.18.7): the Portal sign-in page shows the saved logo.",
+      "replayed": [
+        "access-replay.json sections portal, portalSso, mailOff (33 portal-sign-in steps)",
+        "smoke.json fresh Portal sign-in links for Contributor and Business User"
+      ],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches the Portal sign-in link emails, and the sharp patch reaches the logo check. The access replay on bacc passed all 33 portal-sign-in steps: fresh links, expiry, isolation, Contracts, Matters, links off, two-factor, the logo, SSO and the empty domain list. Portal attempt 1 failed 4 steps because the bacc seed gave Jonas Weber no open Request and no Matter team seat; after the fixture Request R-18 and the M-6 team seat were added, attempt 2 passed 24 of 24. The smoke sent fresh links to a Contributor and a Business User. No statement changed."
+    },
+    {
+      "articleId": "find-your-work",
+      "contentSha256": "01c1bcf58fea70d121d132f90808ff57fb17a3bbd8521216a5650295fd23f0ce",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "search-and-views",
+      "contentSha256": "e68143e10c8c688b6731c7eeaf369d2174cff91a9b6df81e795e0b4f3381bf1a",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "personal-settings",
+      "contentSha256": "f5d303b5f9e66961dc16f177136c7ecab071e0017f4df6f79c1239abc6a7c807",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. Profile photos are scaled in the browser (apps/web/src/lib/avatar.ts, canvas), not by sharp, and the guide only links to notification preferences for email. No statement changed."
+    },
+    {
+      "articleId": "roles-and-access",
+      "contentSha256": "24154ab5101e2dd5148e99935ad7ad3e3a4d0562f844b4db89a6a0ffaa9da1a7",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "comments-and-activity",
+      "contentSha256": "71aad5ef98b19a27bd910f8421a569a20aaba7e4288ab8ca1f11364768239de4",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): mention, comment and reply emails carry the words only for people who can read the comment.",
+      "replayed": [
+        "conversations-replay.json emails: Read comment emails (280-character cut)",
+        "conversations-replay.json emails: Portal emails show the words and no tier; only people who can read the comment receive the email",
+        "conversations-replay.json emails: The email reads the words at send time (6th run)"
+      ],
+      "outcome": "compatible",
+      "summary": "Only the nodemailer patch reaches this guide, through its sentence on mention, comment and reply emails. Those emails were replayed on final by the conversations script's email steps (the notifications scenario), which passed: the words appear, cut at 280 characters, only for readers of the thread's tier, and a delete before the send leaves no words. The V-C07 comment steps read no mail and were not re-run; comments code has no diff apart from a test expectation. No statement changed."
+    },
+    {
+      "articleId": "notifications",
+      "contentSha256": "83f09bea287b1c4a5a5000f18afe413f157e200c1383cbcf9d6add136a24f9d2",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): comment, mention, reply, Request and reminder emails and the daily briefing.",
+      "replayed": [
+        "conversations-replay.json sections setup-n, leadtimes, keydate, leadtimes-reset, morning-ready, member-bell, admin-notifications, portal-notifications, emails, morning-check (33 current steps)"
+      ],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches every email this guide describes. The conversations replay on final passed its 33 current steps: bell and email per group, Portal emails, the 280-character words, the comment-words switch, the morning round with the daily briefing and the Business User date summary. 'The email reads the words at send time' failed 5 times before passing on the 6th run: the mail was created 25 to 100 ms after the delete returned, the same worker race DOC-030 and compat-a met, in code with no diff. No statement changed."
+    },
+    {
+      "articleId": "submit-request",
+      "contentSha256": "c563d0fa9c8f17b1ba97b117516abc056c1266a980c1861f71bfd21b75a61f67",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. The portal replay on final also ran the Portal steps this guide shares with follow-request and passed. No statement changed."
+    },
+    {
+      "articleId": "follow-request",
+      "contentSha256": "257a2a24c146025cca08e77a3071d6fe1a3a9c59c2fe4dddc4c6d820a17999ae",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): Request update emails and the advice to use the Portal when an email has not arrived.",
+      "replayed": ["portal-replay.json (26 follow-request steps)"],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches the Request update emails. The portal replay on final passed 26 of 26 follow-request steps for the Business User and Legal. No statement changed."
+    },
+    {
+      "articleId": "portal-knowledge",
+      "contentSha256": "7b5cd75d18a163f454fa45306035c940cc4a51488604c8090903dbacb492c0ed",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "triage-requests",
+      "contentSha256": "5d7bff6aa7630edcc5b720fb93a478d66160e440ca89f64f97cdc651bb51f58d",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): the resolution note is emailed to the requester.",
+      "replayed": [
+        "inbox-replay.json (36 steps), including 'Requester reads the resolution note on the Portal, receives the email' for Administrator and Legal Team Member"
+      ],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches the resolution email. The inbox replay on final passed 36 of 36 steps; for both roles the requester received \"Your request is resolved: R-<n>\" in Mailpit and a later reply did not reopen the Request. No statement changed."
+    },
+    {
+      "articleId": "convert-request",
+      "contentSha256": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "create-contract",
+      "contentSha256": "8f7f98a37901c8b3f11739126a4ff202a6037b41b91d34e9cafe4161715075fd",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "contract-stages",
+      "contentSha256": "a186659b9221537bff7b995298386a5a88022f59a4f6be3e4b33a73690d73dae",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "contract-approvals",
+      "contentSha256": "6029b98fa17b35633c27c9d97b57fc714c8562d2f85ac48058513211650415c8",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. It links to notifications for email; that guide's email steps were replayed. No statement changed."
+    },
+    {
+      "articleId": "manual-signing",
+      "contentSha256": "d28d44c1df641f202c0c0fe248c2c1673e6b6f7629f9c3597d0de78f03311e94",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "terms-and-renewals",
+      "contentSha256": "accfd51366885eeca5b713daa1fdb5744d7cd741e6e77b297dd3550d71542414",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "contract-tasks-and-dates",
+      "contentSha256": "74eda32981658e4f1dd2c7ed3f69b846c143753fd84baa782bc01885df9574bb",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): Business Users receive Key-date reminders in a daily email summary.",
+      "replayed": [
+        "conversations-replay.json morning-check: Business Users receive Key-date reminders on their Contracts, including one daily email summary linking to their Portal records"
+      ],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches one sentence: Business Users receive date reminders in a daily email summary. The article's own replay steps read no mail. The conversations replay on final checked that email after the 11:00 UTC round: the Business User got one \"2 dates on your contracts\" email with Portal links and the two expected Key dates. The Task and Key date code has no diff. No statement changed."
+    },
+    {
+      "articleId": "contract-relations-and-ending",
+      "contentSha256": "6108b0fdf48999c06cf2e50cdea4ed766f5142fe58f1fb25d35218ce08a1e475",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "contract-analysis",
+      "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "create-matter",
+      "contentSha256": "6853f351870d5258d985c37301875646c05ac58985c233678b7c89b2db85ce5e",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "matter-status-and-archive",
+      "contentSha256": "42b5a0bcdbce561a30d998a493cdacac31e89c3abfb8f53d9175fff5c95076a3",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "matter-work",
+      "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "contributor-guide",
+      "contentSha256": "a15f5f8b5f1f0f297928a187e699430f040240e6348277467c0569a2ffe2d474",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "document-versions",
+      "contentSha256": "7a6faa9ea580c647a381ba1785e426da6c59fc5a7bf1536fbc25939ca8231ee4",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "document-folders",
+      "contentSha256": "827703e03b632fcbcf3286aaf0f1d36b6470986afc290fd84e17767ac5eb81c3",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "document-previews",
+      "contentSha256": "ead5fe883f672604d5fd327672577ef7d0118e9d4e48f43ed3afa10b1465db0b",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. Previews and thumbnails come from the doc-engine image, whose only change is its package.json version; EML parsing uses postal-mime, unchanged. No statement changed."
+    },
+    {
+      "articleId": "compare-versions",
+      "contentSha256": "925f160852bdbdbb77f92dcdd5569e6d2f04143478e2741c71827de3fe1cde63",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "document-repository",
+      "contentSha256": "136781c9af2801bb4a743ffa84972fea28040ca2e7e535cee124a7c80524e13e",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "entities-and-counterparties",
+      "contentSha256": "cb99542f244a9fbe2fa0f688083897453f1aa7f80057a3039f0d9c2001dcacd2",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "entity-records",
+      "contentSha256": "eaa170c8f107f0bc76ea54a8b57edba028727d669ad04c8d138feff3dfed1e5e",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "create-knowledge",
+      "contentSha256": "4eb7700e3a16f0f12c3bab7fea8c3d2d7ee644eb7be0b59555ebcc18658a15ea",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "publish-knowledge",
+      "contentSha256": "36def04a8dc161e960fc437bfda658a7358fe7c0949edb93ecd24c621dfbccd1",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "first-run",
+      "contentSha256": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): test email and invitations from the wizard; organization logo check and email logo (sharp 0.35.4 -> 0.35.5, libvips 8.18.6 -> 8.18.7): logo refusals and the over-16-million-pixel check; message catalog hunks for the setup validation messages (no runtime reach, rendered text checked).",
+      "replayed": [
+        "admin-org-replay.json sections frSetup, frOrg, frAuth, frEmail, frInvites, frConnectors, frReview, frAfter, frEmailRow on the empty lab bfr (61 steps)"
+      ],
+      "outcome": "compatible",
+      "summary": "The catalog hunks add auth.setup.invalidEmail and auth.setup.passwordTooShort and change the catalog text of welcome.org.logo.rejected. The app renders the defaultMessage in code (main.tsx gives IntlProvider no messages), and that text is the same at both commits. On the empty candidate lab bfr the replay saw \"Enter a valid email address.\", \"Passwords must be 8 characters or more.\", the 5 MB logo refusal, the 16-million-pixel refusal from sharp, the saved logo on the sign-in pages and in the header, the test email and the invitations in Mailpit. 61 of 61 steps passed. No statement changed."
+    },
+    {
+      "articleId": "organisation-and-users",
+      "contentSha256": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+      "reach": "organization logo check and email logo (sharp 0.35.4 -> 0.35.5, libvips 8.18.6 -> 8.18.7): logo upload refusals and the email header logo; Email sending (nodemailer 10.0.10 -> 10.0.11): invitations and resends; message catalog (logo refusal text; no runtime reach).",
+      "replayed": [
+        "admin-org-replay.json sections org (bao), wizardStored, settingsIncomplete, settingsStored (bwiz) for organisation-and-users (31 steps)"
+      ],
+      "outcome": "compatible",
+      "summary": "The sharp patch reaches the logo check and the 48-pixel email logo, and the nodemailer patch reaches invitations. The replay on bao and bwiz, built from ad345da5, saw the 5 MB refusal \"Logo must be a PNG, JPEG, WebP, or SVG image 5 MB or smaller. Pick another file.\" (the guide's text; the changed catalog entry is not loaded), the readability refusal for an unreadable file and a 4001 x 4001 PNG, the saved logo on both sign-in pages, the inline org-logo image in the invitation, resends, refusals and the not-sent messages. 31 of 31 steps passed. No statement changed."
+    },
+    {
+      "articleId": "authentication-and-email",
+      "contentSha256": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): test email, relay precedence, sign-in links; message catalog hunks for the allowed-domain, provider and wait-for-save messages (no runtime reach, rendered text checked).",
+      "replayed": [
+        "admin-org-replay.json sections wizardStored, wizardIncomplete, wizardEnv, settingsIncomplete, settingsStored (bwiz), policy, sso, twoFactor, ssoRemove, guards, crossPage, instancePinned, instanceSaved (bao) (59 steps)"
+      ],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches every relay and test-email claim, and the catalog hunks add settings.auth.domainRequired, settings.auth.domainsAndProviderRequired and settings.auth.waitForSave, whose rendered defaultMessage did not change. The replay on bwiz and bao saw the stored, environment, incomplete and unreachable relays with their exact messages, delivered test emails, sign-in links, the domain and provider tooltips, SSO with the OIDC fixture and two-factor. 59 of 59 current steps passed; three steps in two superseded attempts hit the per-address sign-in link limit and passed on retry. No statement changed."
+    },
+    {
+      "articleId": "types-statuses-fields",
+      "contentSha256": "c734b944d44d699f6f5db345bc5193525262eb1b011376c133f80f3ac5b28887",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "matter-templates",
+      "contentSha256": "23a0b3e2c7cf381fbca65e866491d7a64715710842e5783085085eff07487994",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "request-forms",
+      "contentSha256": "d4d4ef7a8b303a22a4a10758f2a339c7b29ef16ed992ea821d1836972288d8fe",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "reminders-and-audit",
+      "contentSha256": "deec5d325418143721c13876e012b85d97e2839a823ad3511a6803cda6ca746e",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): comment emails with or without the words, and reminder delivery in the daily briefing.",
+      "replayed": ["admin-config-replay.json section reminders (5 steps)"],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches the Comment emails switch and the briefing email. The admin-config replay on final (section reminders) passed 5 of 5 steps: lead times, the switch on by default and saved on change, delivery through the morning round with a \"Your daily briefing\" email for the colleague past 08:00 and none before 08:00, and the restore of the list. The comment-words effect on the email itself was also replayed by the conversations script. No statement changed."
+    },
+    {
+      "articleId": "configure-analysis",
+      "contentSha256": "db82673ef2aae4879ab476cc18bfcfd087763897fed91b92f135229fe18bfd8c",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "deployment-configuration",
+      "contentSha256": "01f46836a35b0971b50a0857815a70bc6634351c958340c106ec6485c75ddd9b",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): SMTP_URL and SMTP_FROM precedence, test email after key rotation and with an unreachable relay.",
+      "replayed": [
+        "admin-org-replay.json bwiz wizardStored: Wizard email step 7: a relay that cannot be reached saves but fails its test",
+        "admin-org-replay.json bwiz wizardEnv: Deployment sets SMTP_URL and SMTP_FROM: the wizard step names the environment source and sender",
+        "admin-org-replay.json bwiz wizardEnv: Settings, Advanced, Outbound email with an environment relay: Send test email",
+        "admin-org-replay.json bwiz settingsIncomplete: Settings, Advanced, Outbound email with SMTP_URL but no SMTP_FROM",
+        "admin-org-replay.json bwiz settingsStored: Return to a stored relay: remove the environment override and restart; a test email arrives",
+        "admin-org-replay.json bfr frEmail: Step 6: enter the relay and select Save relay; select Send test email and check the inbox"
+      ],
+      "outcome": "compatible",
+      "summary": "This operator guide sets the relay through the environment and checks test emails. The only claims a hunk can reach are the test-email sends and their results, which go through apps/api/src/lib/mailer.ts and nodemailer. No hunk touches Compose, the Dockerfile, environment parsing, OPENLAW_SECRET_KEY handling, backups, restores or migrations, so the container phases of batches/DOC-032/compat/compat-d were not re-run. The same mailer path was replayed on the candidate by the admin-org replay: environment relay, stored relay, SMTP_URL without SMTP_FROM, an unreachable relay (\"The relay host could not be found. Check the SMTP server name.\") and delivered test emails, 0 failures. The nodemailer 10.0.11 changes (fetch form-body errors, CommonJS entry, quoted-printable wrap at short line lengths, password login on an XOAUTH2-only server) change none of those results."
+    },
+    {
+      "articleId": "backup-and-restore",
+      "contentSha256": "c9e9d5d4e4f7e68546b5a27d8ba77d7cb235ae7aaf8647f3f016f925b0a7d9b5",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): a restored target sends a test email with its saved relay.",
+      "replayed": [
+        "admin-org-replay.json bwiz wizardStored: Wizard email step 7: a relay that cannot be reached saves but fails its test",
+        "admin-org-replay.json bwiz wizardEnv: Deployment sets SMTP_URL and SMTP_FROM: the wizard step names the environment source and sender",
+        "admin-org-replay.json bwiz wizardEnv: Settings, Advanced, Outbound email with an environment relay: Send test email",
+        "admin-org-replay.json bwiz settingsIncomplete: Settings, Advanced, Outbound email with SMTP_URL but no SMTP_FROM",
+        "admin-org-replay.json bwiz settingsStored: Return to a stored relay: remove the environment override and restart; a test email arrives",
+        "admin-org-replay.json bfr frEmail: Step 6: enter the relay and select Save relay; select Send test email and check the inbox"
+      ],
+      "outcome": "compatible",
+      "summary": "This operator guide checks a restored target by sending a test email with its saved relay. The only claims a hunk can reach are the test-email sends and their results, which go through apps/api/src/lib/mailer.ts and nodemailer. No hunk touches Compose, the Dockerfile, environment parsing, OPENLAW_SECRET_KEY handling, backups, restores or migrations, so the container phases of batches/DOC-032/compat/compat-d were not re-run. The same mailer path was replayed on the candidate by the admin-org replay: environment relay, stored relay, SMTP_URL without SMTP_FROM, an unreachable relay (\"The relay host could not be found. Check the SMTP server name.\") and delivered test emails, 0 failures. The nodemailer 10.0.11 changes (fetch form-body errors, CommonJS entry, quoted-printable wrap at short line lengths, password login on an XOAUTH2-only server) change none of those results."
+    },
+    {
+      "articleId": "operator-troubleshooting",
+      "contentSha256": "a685d653b2b8da37a179868dde0955f0f747b83438d6af345771ab4a3606cdd0",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): email and stored-credential troubleshooting, the test-email messages.",
+      "replayed": [
+        "admin-org-replay.json bwiz wizardStored: Wizard email step 7: a relay that cannot be reached saves but fails its test",
+        "admin-org-replay.json bwiz wizardEnv: Deployment sets SMTP_URL and SMTP_FROM: the wizard step names the environment source and sender",
+        "admin-org-replay.json bwiz wizardEnv: Settings, Advanced, Outbound email with an environment relay: Send test email",
+        "admin-org-replay.json bwiz settingsIncomplete: Settings, Advanced, Outbound email with SMTP_URL but no SMTP_FROM",
+        "admin-org-replay.json bwiz settingsStored: Return to a stored relay: remove the environment override and restart; a test email arrives",
+        "admin-org-replay.json bfr frEmail: Step 6: enter the relay and select Save relay; select Send test email and check the inbox"
+      ],
+      "outcome": "compatible",
+      "summary": "This operator guide explains test-email failures; the wrong-key message is produced before any transport is made. The only claims a hunk can reach are the test-email sends and their results, which go through apps/api/src/lib/mailer.ts and nodemailer. No hunk touches Compose, the Dockerfile, environment parsing, OPENLAW_SECRET_KEY handling, backups, restores or migrations, so the container phases of batches/DOC-032/compat/compat-d were not re-run. The same mailer path was replayed on the candidate by the admin-org replay: environment relay, stored relay, SMTP_URL without SMTP_FROM, an unreachable relay (\"The relay host could not be found. Check the SMTP server name.\") and delivered test emails, 0 failures. The nodemailer 10.0.11 changes (fetch form-body errors, CommonJS entry, quoted-printable wrap at short line lengths, password login on an XOAUTH2-only server) change none of those results."
+    },
+    {
+      "articleId": "troubleshooting",
+      "contentSha256": "9f0874f5ba018336581611416041250a0dca0f27f2951d7dc90f5114e2492616",
+      "reach": "Email sending (nodemailer 10.0.10 -> 10.0.11): missing notification or email advice.",
+      "replayed": ["walkthrough-troubleshooting.json (6 steps)"],
+      "outcome": "compatible",
+      "summary": "The nodemailer patch reaches the \"A notification or email is missing\" advice. The troubleshooting replay on final passed 6 of 6 steps, including the notification switches for staff and Portal and the rule that In-app off stops that group's email. No statement changed."
+    },
+    {
+      "articleId": "reference",
+      "contentSha256": "a94b05c5bb2379640d9d29d9aadd3264a9f9d5365e07d340b24683c68a990d2c",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. The versions-and-support replay also checked this guide's links. No statement changed."
+    },
+    {
+      "articleId": "versions-and-support",
+      "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+      "reach": "Version string: OPENLAW_VERSION 0.0.1 -> 0.1.0 (GET /api/v1/meta, OpenAPI info.version, MCP serverInfo). Edition details shows the bundled edition's own supportedAppVersion.",
+      "replayed": ["versions-and-support-replay.json (15 steps)", "smoke.json GET /api/v1/meta"],
+      "outcome": "compatible",
+      "summary": "The version hunk reaches this guide. The replay on final passed 15 of 15 steps and Edition details listed every label the guide names. Limitation: the final lab's Help bundle is built from dev's own edition.json, so Supported app read \"0.1.0 / 067c1646…\", not the re-pinned ad345da5; the guide names no app revision, so no claim depends on it. GET /api/v1/meta answered 0.1.0. Follow-up: the sentence \"different builds can share 0.0.1\" keeps 0.0.1 as its example of a shared package version, while this build shows 0.1.0. The point still holds, but the example is stale and needs a copy change."
+    },
+    {
+      "articleId": "entity-obligations",
+      "contentSha256": "17405bc7b31003e70206b88d8f85d80e430810a7dfc7463ec25e8152f43c5665",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "entity-structure-and-access",
+      "contentSha256": "b9627fc5aeb90d2f34d508d2bc8066d9322e4a1564caa1bc9c6078a453af9798",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "archive-and-delete-documents",
+      "contentSha256": "0c15ae30b9f8412328bb98518d924140f1f05fc249c007d5658b937c128f284a",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "approver-groups",
+      "contentSha256": "591486689995657de3bbb0dfe04ef442d97dd23cbf8376579309802a397667d1",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "auto-doc-template",
+      "contentSha256": "4eef3f447d51058e092ada65c50670ae47e483c7a6552994e54423c6a852d496",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed."
+    },
+    {
+      "articleId": "configure-mcp",
+      "contentSha256": "5b5270c48c1bf85fab193e3a0ebfdd26ab188827637410ef70d7a7bdc33c1b9f",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. The MCP initialize serverInfo version is now 0.1.0, but neither MCP guide nor its recorded steps name it. No statement changed."
+    },
+    {
+      "articleId": "connect-headless-client",
+      "contentSha256": "a5a4215995d48bef84146fab2c7a487a0b805d12ea09b8a50442303129992bd8",
+      "reach": "None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo.",
+      "replayed": null,
+      "outcome": "compatible",
+      "summary": "I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. The MCP initialize serverInfo version is now 0.1.0, but neither MCP guide nor its recorded steps name it. No statement changed."
+    }
+  ],
+  "notes": [
+    "Not replayed, as the brief says: install and upgrade (fresh walkthroughs at ad345da5 by another seat), and electronic-signing, configure-signing, connect-claude, connect-chatgpt and connect-microsoft-365-copilot (records untouched).",
+    "The message catalog (messages/en-US.json) is not loaded at runtime: apps/web/src/main.tsx renders IntlProvider with no messages, so every screen shows the defaultMessage in code. The catalog hunks are a regeneration that catches the catalog up with code that already existed at 4ca41822.",
+    "The operator guides' container phases (compat-d scripts) were not re-run; see their article summaries for the mailer steps that stand in for their test-email claims."
+  ]
+}

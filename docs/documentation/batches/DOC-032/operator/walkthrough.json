@@ -4,7 +4,7 @@
   "reviewer": "DOC-032 independent walkthrough agent (operator)",
   "reviewerKind": "agent",
   "method": "container-operation",
-  "appCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+  "appCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
   "startingBuild": "067c1646829df85e62b809ee9157921e867c84e7",
   "script": "docs/documentation/batches/DOC-032/operator/walkthrough.mjs",
   "helper": "docs/documentation/batches/DOC-032/operator/op-lib.mjs",
@@ -17,39 +17,41 @@
     "openlaw-doc032-op-occupier",
     "openlaw-doc032-op-proxy"
   ],
+  "round": 2,
+  "previousRun": "docs/documentation/batches/DOC-032/operator/walkthrough-4ca41822.json (same scripts at COMMIT 4ca41822)",
   "note": "Container-operation walkthrough by an agent acting as a fictional operator, not a human operator study. Every command ran against disposable Compose projects owned by this walkthrough (openlaw-doc032-op*), cloned from GitHub at the named revisions and built by the guides' own commands. Keys, passwords, setup tokens, API keys, cookies, mail bodies and links are not recorded; command output is reduced to exit codes and selected, redacted lines. The starting build's seed Administrator is shown as [seed Administrator].",
   "articles": {
     "install": {
-      "contentSha256": "084643916b86070994c1600a324b530700dba08d926b5e1f0bc48a28797996a7"
+      "contentSha256": "2b4c20bc26965bf59c7671645a078dbef97530c18750472ccd268edc8ad39187"
     },
     "upgrade": {
-      "contentSha256": "a3fda3bfc3ffe13b7a90529335a02046dc935d4a333be3d782ca3b1f89013afd"
+      "contentSha256": "f22691ca436265481bbb910ddded601af40ad1579681967e46ee81cc8304cc59"
     }
   },
   "images": {
     "install": {
       "project": "openlaw-doc032-opinst",
-      "at": "2026-09-28T07:38:45.985Z",
+      "at": "2026-09-28T09:58:43.784Z",
       "containers": {
-        "app": "sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e",
-        "worker": "sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e",
+        "app": "sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a",
+        "worker": "sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a",
         "doc-engine": "sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "install-final": {
       "project": "openlaw-doc032-opinst",
-      "at": "2026-09-28T07:41:05.838Z",
+      "at": "2026-09-28T09:59:52.451Z",
       "containers": {
-        "app": "sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e",
-        "worker": "sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e",
+        "app": "sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a",
+        "worker": "sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a",
         "doc-engine": "sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "upgrade-starting-build": {
       "project": "openlaw-doc032-opup",
-      "at": "2026-09-28T07:48:30.779Z",
+      "at": "2026-09-28T10:06:08.684Z",
       "containers": {
         "app": "sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490",
         "worker": "sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490",
@@ -59,7 +61,7 @@
     },
     "upgrade-before": {
       "project": "openlaw-doc032-opup",
-      "at": "2026-09-28T07:52:29.162Z",
+      "at": "2026-09-28T10:09:51.893Z",
       "containers": {
         "app": "sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490",
         "worker": "sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490",
@@ -68,23 +70,23 @@
       }
     },
     "upgradeTarget": {
-      "app": "openlaw-local:4ca41822b685a2a1e58a38b4f25e421cf735c54e sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986",
-      "engine": "openlaw-engine-local:4ca41822b685a2a1e58a38b4f25e421cf735c54e sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
+      "app": "openlaw-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610",
+      "engine": "openlaw-engine-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
       "postgres": "postgres:16"
     },
     "upgrade-after": {
       "project": "openlaw-doc032-opup",
-      "at": "2026-09-28T07:53:49.484Z",
+      "at": "2026-09-28T10:10:56.677Z",
       "containers": {
-        "app": "sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986",
-        "worker": "sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986",
+        "app": "sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610",
+        "worker": "sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610",
         "doc-engine": "sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
         "postgres": "sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c"
       }
     },
     "recover": {
       "project": "openlaw-doc032-oprecover",
-      "at": "2026-09-28T08:05:07.197Z",
+      "at": "2026-09-28T10:11:58.363Z",
       "containers": {
         "app": "sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c",
         "worker": "sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c",
@@ -98,391 +100,262 @@
       "phase": "support-up",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:37:25.092Z",
-      "finishedAt": "2026-09-28T07:37:26.543Z"
+      "startedAt": "2026-09-28T09:58:10.577Z",
+      "finishedAt": "2026-09-28T09:58:11.715Z"
     },
     {
       "phase": "inst-prereq",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:37:26.785Z",
-      "finishedAt": "2026-09-28T07:37:26.909Z"
+      "startedAt": "2026-09-28T09:58:11.928Z",
+      "finishedAt": "2026-09-28T09:58:12.052Z"
     },
     {
       "phase": "inst-source",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:37:27.181Z",
-      "finishedAt": "2026-09-28T07:37:31.545Z",
-      "error": "critical step failed: Prepare step 1: clone into a new directory, enter it, and select the documented revision"
-    },
-    {
-      "phase": "inst-source",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:38:12.303Z",
-      "finishedAt": "2026-09-28T07:38:13.067Z"
+      "startedAt": "2026-09-28T09:58:12.280Z",
+      "finishedAt": "2026-09-28T09:58:17.296Z"
     },
     {
       "phase": "inst-build",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:38:17.430Z",
-      "finishedAt": "2026-09-28T07:38:46.357Z"
+      "startedAt": "2026-09-28T09:58:17.534Z",
+      "finishedAt": "2026-09-28T09:58:44.137Z"
     },
     {
       "phase": "inst-trust",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:38:51.117Z",
-      "finishedAt": "2026-09-28T07:39:08.609Z"
+      "startedAt": "2026-09-28T09:58:44.349Z",
+      "finishedAt": "2026-09-28T09:59:01.707Z"
     },
     {
       "phase": "inst-token",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:39:08.842Z",
-      "finishedAt": "2026-09-28T07:39:23.602Z"
+      "startedAt": "2026-09-28T09:59:01.919Z",
+      "finishedAt": "2026-09-28T09:59:16.622Z"
     },
     {
       "phase": "inst-setup",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:39:23.835Z",
-      "finishedAt": "2026-09-28T07:39:41.878Z"
-    },
-    {
-      "phase": "inst-addr",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:39:57.653Z",
-      "finishedAt": "2026-09-28T07:39:58.792Z"
-    },
-    {
-      "phase": "inst-addr",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:40:22.310Z",
-      "finishedAt": "2026-09-28T07:40:23.365Z"
-    },
-    {
-      "phase": "inst-addr",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:40:36.544Z",
-      "finishedAt": "2026-09-28T07:40:38.829Z"
+      "startedAt": "2026-09-28T09:59:16.876Z",
+      "finishedAt": "2026-09-28T09:59:24.682Z"
     },
     {
       "phase": "inst-checks",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:40:41.745Z",
-      "finishedAt": "2026-09-28T07:41:06.164Z"
+      "startedAt": "2026-09-28T09:59:28.790Z",
+      "finishedAt": "2026-09-28T09:59:52.774Z"
     },
     {
       "phase": "inst-negatives",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:41:09.859Z",
-      "finishedAt": "2026-09-28T07:41:44.507Z"
+      "startedAt": "2026-09-28T09:59:53.001Z",
+      "finishedAt": "2026-09-28T10:00:28.223Z"
     },
     {
-      "phase": "inst-negatives",
+      "phase": "seed-prepare",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:41:53.954Z",
-      "finishedAt": "2026-09-28T07:43:04.547Z"
-    },
-    {
-      "phase": "up-baseline",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:43:10.137Z",
-      "finishedAt": "2026-09-28T07:43:40.690Z"
-    },
-    {
-      "phase": "up-seed",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:43:45.250Z",
-      "finishedAt": "2026-09-28T07:43:46.061Z",
-      "error": "critical step failed: Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)"
+      "startedAt": "2026-09-28T10:00:28.448Z",
+      "finishedAt": "2026-09-28T10:00:28.471Z"
     },
     {
       "phase": "up-baseline",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:44:52.460Z",
-      "finishedAt": "2026-09-28T07:45:05.312Z"
+      "startedAt": "2026-09-28T10:00:28.689Z",
+      "finishedAt": "2026-09-28T10:00:47.613Z"
     },
     {
       "phase": "up-seed",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:45:08.638Z",
-      "finishedAt": "2026-09-28T07:45:09.697Z",
-      "error": "critical step failed: Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)"
-    },
-    {
-      "phase": "up-baseline",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:45:35.112Z",
-      "finishedAt": "2026-09-28T07:45:47.931Z"
-    },
-    {
-      "phase": "up-seed",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:45:52.451Z",
-      "finishedAt": "2026-09-28T07:46:03.937Z",
-      "error": "critical step failed: Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)"
-    },
-    {
-      "phase": "up-baseline",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:46:42.126Z",
-      "finishedAt": "2026-09-28T07:46:55.153Z"
-    },
-    {
-      "phase": "up-seed",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:46:58.438Z",
-      "finishedAt": "2026-09-28T07:47:19.859Z"
-    },
-    {
-      "phase": "up-baseline",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:48:17.964Z",
-      "finishedAt": "2026-09-28T07:48:31.082Z"
-    },
-    {
-      "phase": "up-seed",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:48:31.307Z",
-      "finishedAt": "2026-09-28T07:48:59.630Z"
+      "startedAt": "2026-09-28T10:00:47.832Z",
+      "finishedAt": "2026-09-28T10:01:14.188Z"
     },
     {
       "phase": "up-fixture",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:49:04.335Z",
-      "finishedAt": "2026-09-28T07:49:19.478Z",
-      "error": "critical step failed: Fixture: remove the seed-only settings (SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM) and recreate app and worker"
-    },
-    {
-      "phase": "up-fixture",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:49:30.341Z",
-      "finishedAt": "2026-09-28T07:49:44.795Z",
-      "error": "sign-in answered 403: {\"message\":\"Missing or null Origin\",\"code\":\"MISSING_OR_NULL_ORIGIN\"}"
-    },
-    {
-      "phase": "up-fixture",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:49:53.730Z",
-      "finishedAt": "2026-09-28T07:50:22.951Z"
+      "startedAt": "2026-09-28T10:01:14.420Z",
+      "finishedAt": "2026-09-28T10:01:44.470Z"
     },
     {
       "phase": "up-before",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:50:54.453Z",
-      "finishedAt": "2026-09-28T07:52:07.743Z"
+      "startedAt": "2026-09-28T10:01:44.768Z",
+      "finishedAt": "2026-09-28T10:02:58.670Z"
     },
     {
       "phase": "upgrade",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:52:14.111Z",
-      "finishedAt": "2026-09-28T07:52:16.896Z",
-      "error": "critical step failed: Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating the running containers"
-    },
-    {
-      "phase": "upgrade",
-      "argument": null,
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:52:27.264Z",
-      "finishedAt": "2026-09-28T07:54:10.711Z"
+      "startedAt": "2026-09-28T10:03:03.294Z",
+      "finishedAt": "2026-09-28T10:04:43.903Z"
     },
     {
       "phase": "up-verify",
-      "argument": null,
+      "argument": "inventory,admin,lower,reselect,jobs",
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T07:54:19.707Z",
-      "finishedAt": "2026-09-28T07:57:52.984Z",
-      "error": "critical step failed: Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's"
-    },
-    {
-      "phase": "up-verify",
-      "argument": "admin,lower,jobs",
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T07:58:28.934Z",
-      "finishedAt": "2026-09-28T08:02:03.095Z",
-      "error": "critical step failed: Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's"
-    },
-    {
-      "phase": "up-verify",
-      "argument": "admin,lower,jobs",
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T08:02:10.063Z",
-      "finishedAt": "2026-09-28T08:02:11.280Z",
-      "error": "critical step failed: Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's"
-    },
-    {
-      "phase": "up-verify",
-      "argument": "admin,lower,jobs",
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T08:02:23.169Z",
-      "finishedAt": "2026-09-28T08:03:41.363Z"
-    },
-    {
-      "phase": "up-verify",
-      "argument": "lower,reselect",
-      "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
-      },
-      "startedAt": "2026-09-28T08:04:26.616Z",
-      "finishedAt": "2026-09-28T08:04:32.441Z"
+      "startedAt": "2026-09-28T10:04:44.170Z",
+      "finishedAt": "2026-09-28T10:04:46.197Z",
+      "error": "critical step failed: After the upgrade, before any new work: migration outcome, record counts, row digests, file hashes and sealed settings against the baseline"
     },
     {
       "phase": "recover",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T08:04:36.277Z",
-      "finishedAt": "2026-09-28T08:05:12.287Z"
+      "startedAt": "2026-09-28T10:04:46.405Z",
+      "finishedAt": "2026-09-28T10:05:06.249Z"
+    },
+    {
+      "phase": "up-baseline",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:05:51.362Z",
+      "finishedAt": "2026-09-28T10:06:08.985Z"
+    },
+    {
+      "phase": "up-seed",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:06:09.193Z",
+      "finishedAt": "2026-09-28T10:06:36.522Z"
+    },
+    {
+      "phase": "up-fixture",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:06:36.765Z",
+      "finishedAt": "2026-09-28T10:07:05.214Z"
+    },
+    {
+      "phase": "up-before",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:07:05.486Z",
+      "finishedAt": "2026-09-28T10:09:14.217Z"
+    },
+    {
+      "phase": "upgrade",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:09:14.463Z",
+      "finishedAt": "2026-09-28T10:11:17.887Z"
+    },
+    {
+      "phase": "up-verify",
+      "argument": "inventory,admin,lower,reselect,jobs",
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:11:18.136Z",
+      "finishedAt": "2026-09-28T10:11:41.575Z"
+    },
+    {
+      "phase": "recover",
+      "argument": null,
+      "articleHashes": {
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
+      },
+      "startedAt": "2026-09-28T10:11:41.831Z",
+      "finishedAt": "2026-09-28T10:12:03.034Z"
     },
     {
       "phase": "findings",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T08:05:48.031Z",
-      "finishedAt": "2026-09-28T08:05:48.035Z"
+      "startedAt": "2026-09-28T10:12:31.579Z",
+      "finishedAt": "2026-09-28T10:12:31.581Z"
     },
     {
       "phase": "destroy",
       "argument": null,
       "articleHashes": {
-        "install": "084643916b860709",
-        "upgrade": "a3fda3bfc3ffe13b"
+        "install": "2b4c20bc26965bf5",
+        "upgrade": "f22691ca43626548"
       },
-      "startedAt": "2026-09-28T08:05:52.698Z",
-      "finishedAt": "2026-09-28T08:06:28.804Z"
+      "startedAt": "2026-09-28T10:12:31.811Z",
+      "finishedAt": "2026-09-28T10:13:07.285Z"
     }
   ],
   "steps": [
@@ -493,11 +366,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Start owned support containers: two Mailpit relays, an AI provider stand-in, an OIDC discovery stand-in, an unrelated listener, and the same-host Caddy proxy",
-      "startedAt": "2026-09-28T07:37:25.092Z",
-      "at": "2026-09-28T07:37:26.542Z",
+      "startedAt": "2026-09-28T09:58:10.577Z",
+      "at": "2026-09-28T09:58:11.714Z",
       "actual": "openlaw-doc032-op-mail: Mailpit v1.30, UI 127.0.0.1:24701, joins project networks as doc032-mail; openlaw-doc032-op-mailup: Mailpit v1.30, UI 127.0.0.1:24704, joins project networks as doc032-mail; openlaw-doc032-op-ai: OpenAI-compatible stand-in (not a live provider), answers 200 only for the expected key; openlaw-doc032-op-idp: OIDC discovery stand-in (not a live identity provider) as doc032-idp; openlaw-doc032-op-occupier: unrelated listener on 127.0.0.1:24703; openlaw-doc032-op-proxy: Caddy on the host network, internal-CA TLS on 192.168.122.1, https://openlaw-doc032-opinst.test:24711 -> 127.0.0.1:24710, https://openlaw-doc032-opup.test:24721 -> 127.0.0.1:24720",
       "result": "pass",
-      "elapsedMs": 1450
+      "elapsedMs": 1137
     },
     {
       "phase": "inst-prereq",
@@ -508,11 +381,11 @@
       "page": null,
       "action": "Before you start: check Git, OpenSSL, docker version, docker compose version and docker context show",
       "command": "git --version; openssl version; docker version; docker compose version; docker context show",
-      "startedAt": "2026-09-28T07:37:26.785Z",
-      "at": "2026-09-28T07:37:26.908Z",
+      "startedAt": "2026-09-28T09:58:11.929Z",
+      "at": "2026-09-28T09:58:12.051Z",
       "actual": "git version 2.55.0; OpenSSL 3.6.4 25 Aug 2026 (Library: OpenSSL 3.6.4 25 Aug 2026); Docker Engine 29.8.1; Docker Compose version 5.5.1; docker context show: default (unix:///var/run/docker.sock); free space 1.5T",
       "result": "pass",
-      "elapsedMs": 123
+      "elapsedMs": 122
     },
     {
       "phase": "inst-source",
@@ -522,42 +395,12 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 1: clone into a new directory, enter it, and select the documented revision",
-      "command": "git clone https://github.com/juggernog20/OpenLaw.git openlaw; cd openlaw; git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-      "startedAt": "2026-09-28T07:37:27.181Z",
-      "at": "2026-09-28T07:37:31.543Z",
-      "actual": "git checkout exit 128: fatal: unable to read tree (4ca41822b685a2a1e58a38b4f25e421cf735c54e)\n",
-      "result": "fail",
-      "elapsedMs": 4362
-    },
-    {
-      "phase": "inst-source",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Prepare step 1: clone into a new directory, enter it, and select the documented revision",
-      "command": "git clone https://github.com/juggernog20/OpenLaw.git openlaw; cd openlaw; git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-      "startedAt": "2026-09-28T07:38:12.303Z",
-      "at": "2026-09-28T07:38:12.308Z",
-      "actual": "git clone exit 0 (already present); git checkout --detach exit 128: fatal: unable to read tree (4ca41822b685a2a1e58a38b4f25e421cf735c54e)\n",
-      "result": "fail",
-      "elapsedMs": 5
-    },
-    {
-      "phase": "inst-source",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Walkthrough deviation: fetch the unpublished pin from the local repository into the GitHub clone, then git checkout --detach",
-      "command": "git fetch <local repository> 4ca41822b685a2a1e58a38b4f25e421cf735c54e; git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-      "startedAt": "2026-09-28T07:38:12.311Z",
-      "at": "2026-09-28T07:38:13.036Z",
-      "actual": "git fetch exit 0; git checkout --detach exit 0; HEAD 4ca41822b685a2a1e58a38b4f25e421cf735c54e; the source tree is byte-identical to the pin (git status --short: \"\")",
+      "command": "git clone https://github.com/juggernog20/OpenLaw.git openlaw; cd openlaw; git checkout --detach ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+      "startedAt": "2026-09-28T09:58:12.280Z",
+      "at": "2026-09-28T09:58:17.261Z",
+      "actual": "git clone exit 0 in 5 s; git checkout --detach exit 0; HEAD ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
       "result": "pass",
-      "elapsedMs": 725
+      "elapsedMs": 4981
     },
     {
       "phase": "inst-source",
@@ -569,8 +412,8 @@
       "action": "Prepare step 2: copy .env.example to .env with the grouped commands; a second run refuses to overwrite",
       "command": "(\n  umask 077\n  set -C\n  cat .env.example > .env || exit 1\n  chmod 600 .env\n  sed -i \"s|^AUTH_SECRET=$|AUTH_SECRET=$(openssl rand -base64 32)|\" .env\n  sed -i \"s|^OPENLAW_SECRET_KEY=$|OPENLAW_SECRET_KEY=$(openssl rand -base64 32)|\" .env\n)",
       "expected": "The grouped commands refuse to overwrite an existing .env and stop before changing its keys.",
-      "startedAt": "2026-09-28T07:38:13.037Z",
-      "at": "2026-09-28T07:38:13.061Z",
+      "startedAt": "2026-09-28T09:58:17.266Z",
+      "at": "2026-09-28T09:58:17.290Z",
       "actual": "first run exit 0; .env mode 600; AUTH_SECRET and OPENLAW_SECRET_KEY hold 44-character base64 values; second run exit 1 with \"bash: line 4: .env: cannot overwrite existing file\"; .env unchanged",
       "result": "pass",
       "elapsedMs": 24
@@ -583,9 +426,9 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 3: edit .env with project name, file list, revision, origin and port (each once); leave TRUSTED_PROXIES out",
-      "command": "COMPOSE_PROJECT_NAME=openlaw-doc032-opinst; COMPOSE_FILE=compose.yml:compose.operator.yml (+ host network override); OPENLAW_BUILD_COMMIT=4ca41822b685a2a1e58a38b4f25e421cf735c54e; OPENLAW_BUILD_DIRTY=false; BASE_URL=https://openlaw-doc032-opinst.test:24711; PORT=24710",
-      "startedAt": "2026-09-28T07:38:13.062Z",
-      "at": "2026-09-28T07:38:13.065Z",
+      "command": "COMPOSE_PROJECT_NAME=openlaw-doc032-opinst; COMPOSE_FILE=compose.yml:compose.operator.yml (+ host network override); OPENLAW_BUILD_COMMIT=ad345da5842c22b7d1012bf9f5d7d12dfdb4e496; OPENLAW_BUILD_DIRTY=false; BASE_URL=https://openlaw-doc032-opinst.test:24711; PORT=24710",
+      "startedAt": "2026-09-28T09:58:17.290Z",
+      "at": "2026-09-28T09:58:17.293Z",
       "actual": "keys set once: AUTH_SECRET, OPENLAW_SECRET_KEY, COMPOSE_PROJECT_NAME, COMPOSE_FILE, OPENLAW_BUILD_COMMIT, OPENLAW_BUILD_DIRTY, BASE_URL, PORT; TRUSTED_PROXIES and SETUP_TOKEN left out; host-specific deviation: compose.doc032-net.yml appended to COMPOSE_FILE to give the two networks explicit subnets 10.245.70.0/24 and 10.245.71.0/24 (this host's default address pools are exhausted); .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=172.18.0.1",
       "result": "pass",
       "elapsedMs": 3
@@ -598,11 +441,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 4: create compose.operator.yml beside compose.yml",
-      "startedAt": "2026-09-28T07:38:13.065Z",
-      "at": "2026-09-28T07:38:13.066Z",
+      "startedAt": "2026-09-28T09:58:17.294Z",
+      "at": "2026-09-28T09:58:17.294Z",
       "actual": "compose.operator.yml written with the guide's three image lines (sha256 d304966daadfcb4d)",
       "result": "pass",
-      "elapsedMs": 1
+      "elapsedMs": 0
     },
     {
       "phase": "inst-source",
@@ -612,11 +455,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 5: save both generated keys in the secret store, apart from backups",
-      "startedAt": "2026-09-28T07:38:13.066Z",
-      "at": "2026-09-28T07:38:13.067Z",
+      "startedAt": "2026-09-28T09:58:17.295Z",
+      "at": "2026-09-28T09:58:17.295Z",
       "actual": "both keys copied to a private secret store (mode 600) outside the installation and backup directories; exported shell deployment overrides: none",
       "result": "pass",
-      "elapsedMs": 1
+      "elapsedMs": 0
     },
     {
       "phase": "inst-build",
@@ -628,11 +471,11 @@
       "action": "Build step 1: check Compose resolves the configuration without printing secrets",
       "command": "docker compose config --quiet; docker compose config --services",
       "expected": "The base installation has app, worker, postgres, and doc-engine.",
-      "startedAt": "2026-09-28T07:38:17.431Z",
-      "at": "2026-09-28T07:38:17.543Z",
+      "startedAt": "2026-09-28T09:58:17.534Z",
+      "at": "2026-09-28T09:58:17.644Z",
       "actual": "config --quiet exit 0 with no output; config --services: app, doc-engine, postgres, worker",
       "result": "pass",
-      "elapsedMs": 112
+      "elapsedMs": 110
     },
     {
       "phase": "inst-build",
@@ -643,11 +486,11 @@
       "page": null,
       "action": "Build step 2: pull Postgres, build the two selected images, start, and list",
       "command": "docker compose pull postgres; docker compose build app doc-engine; docker compose up -d --no-build --pull never; docker compose ps",
-      "startedAt": "2026-09-28T07:38:17.544Z",
-      "at": "2026-09-28T07:38:41.824Z",
-      "actual": "pull postgres exit 0 (1 s); build app doc-engine exit 0 in 16 s (warm Docker build cache); openlaw-local:4ca41822b685a2a1e58a38b4f25e421cf735c54e sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e; openlaw-engine-local:4ca41822b685a2a1e58a38b4f25e421cf735c54e sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43; up exit 0; ps: app running; doc-engine running; postgres running; worker running",
+      "startedAt": "2026-09-28T09:58:17.646Z",
+      "at": "2026-09-28T09:58:39.632Z",
+      "actual": "pull postgres exit 0 (1 s); build app doc-engine exit 0 in 14 s (warm Docker build cache); openlaw-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a; openlaw-engine-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43; up exit 0; ps: app running; doc-engine running; postgres running; worker running",
       "result": "pass",
-      "elapsedMs": 24280
+      "elapsedMs": 21986
     },
     {
       "phase": "inst-build",
@@ -658,11 +501,11 @@
       "page": null,
       "action": "Build step 3: curl --fail /readyz on the chosen port; worker running; document engine healthy",
       "command": "curl --fail http://127.0.0.1:24710/readyz",
-      "startedAt": "2026-09-28T07:38:41.825Z",
-      "at": "2026-09-28T07:38:46.290Z",
-      "actual": "curl --fail exit 0, body {\"status\":\"ok\"}; worker running; doc-engine healthy; containers app sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e, worker sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e, engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43; elapsed from the first prerequisite command to readiness 79 s",
+      "startedAt": "2026-09-28T09:58:39.633Z",
+      "at": "2026-09-28T09:58:44.086Z",
+      "actual": "curl --fail exit 0, body {\"status\":\"ok\"}; worker running; doc-engine healthy; containers app sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a, worker sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a, engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43; elapsed from the first prerequisite command to readiness 32 s",
       "result": "pass",
-      "elapsedMs": 4465
+      "elapsedMs": 4453
     },
     {
       "phase": "inst-build",
@@ -674,11 +517,11 @@
       "action": "The base Compose file publishes the app port only on the host's 127.0.0.1",
       "command": "docker compose port app 3000; LAN address probe",
       "expected": "A proxy on the same host can reach it and other hosts cannot.",
-      "startedAt": "2026-09-28T07:38:46.291Z",
-      "at": "2026-09-28T07:38:46.356Z",
+      "startedAt": "2026-09-28T09:58:44.087Z",
+      "at": "2026-09-28T09:58:44.136Z",
       "actual": "docker compose port app 3000 printed 127.0.0.1:24710; http://<host LAN address>:24710/readyz got no answer (ECONNREFUSED)",
       "result": "pass",
-      "elapsedMs": 65
+      "elapsedMs": 49
     },
     {
       "phase": "inst-trust",
@@ -689,11 +532,11 @@
       "page": null,
       "action": "Build step 4: the app logs a warning at start without TRUSTED_PROXIES; read the gateway with the guide's command",
       "command": "docker network inspect openlaw-doc032-opinst_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'",
-      "startedAt": "2026-09-28T07:38:51.118Z",
-      "at": "2026-09-28T07:38:51.198Z",
+      "startedAt": "2026-09-28T09:58:44.349Z",
+      "at": "2026-09-28T09:58:44.430Z",
       "actual": "start log warning: TRUSTED_PROXIES is not set. Sign-in rate limits are keyed on the socket address, which behind a reverse proxy is the proxy itself. Set TRUSTED_PROXIES to the proxy's address so each client gets its own bucket. See docs/D; the guide's command printed \"10.245.70.1 10.245.70.0/24\"",
       "result": "pass",
-      "elapsedMs": 80
+      "elapsedMs": 81
     },
     {
       "phase": "inst-trust",
@@ -704,11 +547,11 @@
       "page": null,
       "action": "Build step 4: add TRUSTED_PROXIES=<gateway> to .env and apply it",
       "command": "TRUSTED_PROXIES=<gateway>; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:38:51.199Z",
-      "at": "2026-09-28T07:39:08.607Z",
+      "startedAt": "2026-09-28T09:58:44.431Z",
+      "at": "2026-09-28T09:59:01.706Z",
       "actual": "up exit 0; Container openlaw-doc032-opinst-doc-engine-1 Running | Container openlaw-doc032-opinst-postgres-1 Running | Container openlaw-doc032-opinst-app-1 Recreate | Container openlaw-doc032-opinst-app-1 Recreated; the app container now has TRUSTED_PROXIES=10.245.70.1; the new start log has no TRUSTED_PROXIES warning; readyz 200",
       "result": "pass",
-      "elapsedMs": 17408
+      "elapsedMs": 17275
     },
     {
       "phase": "inst-token",
@@ -720,11 +563,11 @@
       "action": "Build step 5: read the setup token from docker compose logs app",
       "command": "docker compose logs app",
       "expected": "The app prints the token after \"First-run setup is open. Paste this setup token into the setup screen:\"",
-      "startedAt": "2026-09-28T07:39:08.842Z",
-      "at": "2026-09-28T07:39:08.913Z",
+      "startedAt": "2026-09-28T09:59:01.919Z",
+      "at": "2026-09-28T09:59:01.980Z",
       "actual": "the documented line appears 1 time(s) (one per start so far); a 32-character token follows it (not recorded)",
       "result": "pass",
-      "elapsedMs": 71
+      "elapsedMs": 61
     },
     {
       "phase": "inst-token",
@@ -735,11 +578,11 @@
       "page": null,
       "action": "Build step 5: a restart replaces a printed token; read the log again",
       "command": "docker compose restart app; docker compose logs app",
-      "startedAt": "2026-09-28T07:39:08.914Z",
-      "at": "2026-09-28T07:39:23.601Z",
+      "startedAt": "2026-09-28T09:59:01.981Z",
+      "at": "2026-09-28T09:59:16.622Z",
       "actual": "after docker compose restart app the log shows the documented line again with a different token",
       "result": "pass",
-      "elapsedMs": 14687
+      "elapsedMs": 14641
     },
     {
       "phase": "inst-setup",
@@ -749,11 +592,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Build step 6: configure the reverse proxy on the same host (Caddy, internal TLS) and open the intended HTTPS address",
-      "startedAt": "2026-09-28T07:39:23.835Z",
-      "at": "2026-09-28T07:39:23.849Z",
+      "startedAt": "2026-09-28T09:59:16.876Z",
+      "at": "2026-09-28T09:59:16.891Z",
       "actual": "Caddy on the host network serves https://openlaw-doc032-opinst.test:24711 (bound to 192.168.122.1) with an internal-CA certificate and reverse_proxy 127.0.0.1:24710; /readyz through the proxy 200. The browser maps openlaw-doc032-opinst.test to 192.168.122.1 and accepts the internal CA; public certificate issuance is not tested.",
       "result": "pass",
-      "elapsedMs": 14
+      "elapsedMs": 15
     },
     {
       "phase": "inst-setup",
@@ -764,11 +607,11 @@
       "page": "/setup",
       "action": "Build step 6: the address reaches Set up OpenLaw; the token printed before the restart is refused",
       "expected": "Set up OpenLaw; a replaced token shows \"The setup token is missing or wrong. Copy it from the server log, or from the SETUP_TOKEN environment variable.\"",
-      "startedAt": "2026-09-28T07:39:23.927Z",
-      "at": "2026-09-28T07:39:25.777Z",
+      "startedAt": "2026-09-28T09:59:16.962Z",
+      "at": "2026-09-28T09:59:18.806Z",
       "actual": "GET https://openlaw-doc032-opinst.test:24711 200 lands on /auth/setup with heading \"Set up OpenLaw\" and Setup token, Name, Email, Password, Confirm password; the old token shows no \"Setup token verified\" (true); Create Administrator shows \"The setup token is missing or wrong. Copy it from the server log, or from the SETUP_TOKEN environment variable.\"",
       "result": "pass",
-      "elapsedMs": 1850
+      "elapsedMs": 1844
     },
     {
       "phase": "inst-setup",
@@ -779,11 +622,11 @@
       "page": "/setup",
       "action": "Build step 6: create the initial account with the current setup token (first-run setup)",
       "expected": "Setup token verified; a successful setup signs you in and opens Welcome to OpenLaw.",
-      "startedAt": "2026-09-28T07:39:25.778Z",
-      "at": "2026-09-28T07:39:26.864Z",
-      "actual": "the current token shows \"Setup token verified\"; Create Administrator signed in the fictional Administrator and opened \"Welcome to OpenLaw\" at /welcome; elapsed from the first prerequisite command to usable first-run setup 120 s (build 16 s with a warm cache)",
+      "startedAt": "2026-09-28T09:59:18.807Z",
+      "at": "2026-09-28T09:59:19.791Z",
+      "actual": "the current token shows \"Setup token verified\"; Create Administrator signed in the fictional Administrator and opened \"Welcome to OpenLaw\" at /welcome; elapsed from the first prerequisite command to usable first-run setup 68 s (build 14 s with a warm cache)",
       "result": "pass",
-      "elapsedMs": 1086
+      "elapsedMs": 984
     },
     {
       "phase": "inst-setup",
@@ -794,11 +637,11 @@
       "page": "/welcome",
       "action": "first-run hand-off: work through the welcome steps; save and test the relay; invite a colleague; Finish",
       "expected": "Continue on Outbound email stays unavailable until email is configured; the test email and the invitation arrive; Finish enters the app.",
-      "startedAt": "2026-09-28T07:39:26.865Z",
-      "at": "2026-09-28T07:39:30.661Z",
+      "startedAt": "2026-09-28T09:59:19.792Z",
+      "at": "2026-09-28T09:59:23.607Z",
       "actual": "steps seen Step 2 of 8, Step 3 of 8, Step 4 of 8, Step 5 of 8, Step 6 of 8, Step 7 of 8, Step 8 of 8; Continue on Outbound email disabled before a relay: true; SMTP server doc032-mail, Port 1025, Connection security None, Authentication Username and password; Save relay then Send test email delivered \"OpenLaw test email\"; Send invite delivered \"Set your OpenLaw password\"; E-signature and AI analysis set up later; Finish entered the app at /",
       "result": "pass",
-      "elapsedMs": 3796
+      "elapsedMs": 3815
     },
     {
       "phase": "inst-setup",
@@ -810,59 +653,11 @@
       "action": "Build step 6: check that the app records the browser's address, not the gateway (Find the trusted proxy address)",
       "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
       "expected": "Ignoring 127.0.0.1 (health checks), the other lines show the browser's address.",
-      "startedAt": "2026-09-28T07:39:30.666Z",
-      "at": "2026-09-28T07:39:41.877Z",
-      "actual": "apiRequestContext.get: getaddrinfo EAI_AGAIN openlaw-doc032-opinst.test\nCall log:\n  - → GET https://openlaw-doc032-opinst.test:24711/api/v1/me\n    - user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36\n    - accept: */*\n    - accept-encoding: gzip,deflate,br\n    - cookie: __Secure-better-auth.session_token=[redacted]\n",
-      "result": "fail",
-      "elapsedMs": 11211
-    },
-    {
-      "phase": "inst-addr",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Build step 6: check that the app records the browser's address, not the gateway (Find the trusted proxy address)",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "expected": "Ignoring 127.0.0.1 (health checks), the other lines show the browser's address.",
-      "startedAt": "2026-09-28T07:39:57.653Z",
-      "at": "2026-09-28T07:39:58.791Z",
-      "actual": "[\"2 \\\"remoteAddress\\\":\\\"10.245.70.1\\\"\",\"3 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"85 \\\"remoteAddress\\\":\\\"192.168.122.1\\\"\"]",
-      "result": "fail",
-      "elapsedMs": 1138
-    },
-    {
-      "phase": "inst-addr",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Build step 6: check that the app records the browser's address, not the gateway (Find the trusted proxy address)",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "expected": "Ignoring 127.0.0.1 (health checks), the other lines show the browser's address.",
-      "startedAt": "2026-09-28T07:40:22.311Z",
-      "at": "2026-09-28T07:40:23.364Z",
-      "actual": "page.evaluate: TypeError: Failed to fetch\n    at eval (eval at evaluate (:311:30), <anonymous>:2:27)\n    at UtilityScript.evaluate (<anonymous>:313:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)",
-      "result": "fail",
-      "elapsedMs": 1053
-    },
-    {
-      "phase": "inst-addr",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Build step 6: check that the app records the browser's address, not the gateway (Find the trusted proxy address)",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "expected": "Ignoring 127.0.0.1 (health checks), the other lines show the browser's address.",
-      "startedAt": "2026-09-28T07:40:36.544Z",
-      "at": "2026-09-28T07:40:38.828Z",
-      "actual": "browser sign-in through https://openlaw-doc032-opinst.test:24711 as the Administrator; the guide's command listed: 2 \"remoteAddress\":\"10.245.70.1\"; 4 \"remoteAddress\":\"127.0.0.1\"; 132 \"remoteAddress\":\"192.168.122.1\"; the browser's requests show 192.168.122.1; the only gateway (10.245.70.1) lines are the walkthrough's own direct curl /readyz probes on 127.0.0.1:24710 (non-probe gateway requests: 0)",
+      "startedAt": "2026-09-28T09:59:23.613Z",
+      "at": "2026-09-28T09:59:24.682Z",
+      "actual": "browser sign-in through https://openlaw-doc032-opinst.test:24711 as the Administrator; the guide's command listed: 2 \"remoteAddress\":\"10.245.70.1\"; 2 \"remoteAddress\":\"127.0.0.1\"; 63 \"remoteAddress\":\"192.168.122.1\"; the browser's requests show 192.168.122.1; the only gateway (10.245.70.1) lines are the walkthrough's own direct curl /readyz probes on 127.0.0.1:24710 (non-probe gateway requests: 0)",
       "result": "pass",
-      "elapsedMs": 2284
+      "elapsedMs": 1069
     },
     {
       "phase": "inst-checks",
@@ -873,11 +668,11 @@
       "page": null,
       "action": "Build step 5: the app prints no token once a user exists",
       "command": "docker compose restart app; docker compose logs app",
-      "startedAt": "2026-09-28T07:40:41.745Z",
-      "at": "2026-09-28T07:40:56.383Z",
+      "startedAt": "2026-09-28T09:59:28.790Z",
+      "at": "2026-09-28T09:59:43.417Z",
       "actual": "after a restart the app log has no \"First-run setup is open\" line; GET /api/v1/auth/setup 200 {\"needsSetup\":false}",
       "result": "pass",
-      "elapsedMs": 14638
+      "elapsedMs": 14627
     },
     {
       "phase": "inst-checks",
@@ -887,8 +682,8 @@
       "method": "container-operation",
       "page": "/auth/login",
       "action": "Check the working installation: sign in through the intended origin",
-      "startedAt": "2026-09-28T07:40:57.527Z",
-      "at": "2026-09-28T07:40:57.527Z",
+      "startedAt": "2026-09-28T09:59:44.524Z",
+      "at": "2026-09-28T09:59:44.524Z",
       "actual": "password sign-in at https://openlaw-doc032-opinst.test:24711/auth/login as the Administrator; landed on /",
       "result": "pass",
       "elapsedMs": 0
@@ -901,11 +696,11 @@
       "method": "container-operation",
       "page": "/contracts",
       "action": "Check the working installation: create a fictional Contract, upload a small supported Document, download it again, check its processing result",
-      "startedAt": "2026-09-28T07:40:57.528Z",
-      "at": "2026-09-28T07:41:00.435Z",
+      "startedAt": "2026-09-28T09:59:44.525Z",
+      "at": "2026-09-28T09:59:47.364Z",
       "actual": "Contracts, Create contract, Title \"DOC-032 operator install check contract\", Contract type \"Default\", Create opened /contracts/1; Documents tab, Upload, Upload document dialog, Choose files doc032-install-check.pdf, Upload (201); download 200 with the uploaded SHA-256 bc75abbe9529918c; processing state ready with the uploaded words",
       "result": "pass",
-      "elapsedMs": 2907
+      "elapsedMs": 2839
     },
     {
       "phase": "inst-checks",
@@ -915,11 +710,11 @@
       "method": "container-operation",
       "page": "/auth/reset-password",
       "action": "Check the working installation: the test invitation reached the recipient with a usable link",
-      "startedAt": "2026-09-28T07:41:00.440Z",
-      "at": "2026-09-28T07:41:01.778Z",
+      "startedAt": "2026-09-28T09:59:47.371Z",
+      "at": "2026-09-28T09:59:48.598Z",
       "actual": "the invitation link uses https://openlaw-doc032-opinst.test:24711; opening it and setting a password showed \"Password set\"; the colleague signed in through the origin as legal_team_member",
       "result": "pass",
-      "elapsedMs": 1338
+      "elapsedMs": 1227
     },
     {
       "phase": "inst-checks",
@@ -930,11 +725,11 @@
       "page": null,
       "action": "Check the working installation: the worker processes new work after a restart",
       "command": "docker compose restart worker",
-      "startedAt": "2026-09-28T07:41:01.779Z",
-      "at": "2026-09-28T07:41:05.815Z",
+      "startedAt": "2026-09-28T09:59:48.598Z",
+      "at": "2026-09-28T09:59:52.429Z",
       "actual": "docker compose restart worker exit 0; a PDF uploaded in the browser afterwards reached ready with its words",
       "result": "pass",
-      "elapsedMs": 4036
+      "elapsedMs": 3831
     },
     {
       "phase": "inst-checks",
@@ -944,11 +739,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Record the source revision, resolved images, project name, origin and storage location",
-      "startedAt": "2026-09-28T07:41:05.816Z",
-      "at": "2026-09-28T07:41:06.164Z",
-      "actual": "source 4ca41822b685a2a1e58a38b4f25e421cf735c54e; project openlaw-doc032-opinst; origin https://openlaw-doc032-opinst.test:24711; storage local driver on volume openlaw-doc032-opinst_openlaw-files; images app sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e, worker sha256:a6bd0b38c38e21fc6827c7aaac0a3212d3a7c5b214026023bcbbed9f475e638e, engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43, postgres sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c; operator contact: fictional",
+      "startedAt": "2026-09-28T09:59:52.430Z",
+      "at": "2026-09-28T09:59:52.773Z",
+      "actual": "source ad345da5842c22b7d1012bf9f5d7d12dfdb4e496; project openlaw-doc032-opinst; origin https://openlaw-doc032-opinst.test:24711; storage local driver on volume openlaw-doc032-opinst_openlaw-files; images app sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a, worker sha256:9cd033c5b0de23174850082ffc6096608db243195a75198fa9bc2eb98583fb5a, engine sha256:bbbe0978d6fb887799f19c67ac8fc2eaf95fdd162180ffa1f66bc4915312ec43, postgres sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c; operator contact: fictional",
       "result": "pass",
-      "elapsedMs": 348
+      "elapsedMs": 343
     },
     {
       "phase": "inst-negatives",
@@ -959,11 +754,11 @@
       "page": null,
       "action": "Negative (missing secret): a blank AUTH_SECRET is refused by Compose; the retained key recovers (If startup fails -> operator troubleshooting)",
       "expected": "Troubleshooting row: Compose refuses the command when either key is missing.",
-      "startedAt": "2026-09-28T07:41:09.859Z",
-      "at": "2026-09-28T07:41:10.128Z",
+      "startedAt": "2026-09-28T09:59:53.001Z",
+      "at": "2026-09-28T09:59:53.265Z",
       "actual": "config --quiet exit 1: \"error while interpolating services.app.environment.AUTH_SECRET: required variable AUTH_SECRET is missing a value: AUTH_SECRET is required — generate one with `openssl rand -base64 32` and set it in .env\"; up exit 1; containers unchanged; retained key restored: config --quiet exit 0, readyz 200",
       "result": "pass",
-      "elapsedMs": 269
+      "elapsedMs": 264
     },
     {
       "phase": "inst-negatives",
@@ -974,11 +769,11 @@
       "page": null,
       "action": "Negative (occupied port): the documented recovery (ps --all shows created; choose an unused port; same up again)",
       "expected": "Troubleshooting row: after a failed bind, ps --all shows app and worker created, plain ps does not list them; the instance stays down until the port is corrected.",
-      "startedAt": "2026-09-28T07:41:10.129Z",
-      "at": "2026-09-28T07:41:25.590Z",
+      "startedAt": "2026-09-28T09:59:53.266Z",
+      "at": "2026-09-28T10:00:08.387Z",
       "actual": "{\"upExit\":1,\"error\":[\"Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint openlaw-doc032-opinst-app-1 (…): Bind for 127.0.0.1:24703 failed: port is already allocated\"],\"psAll\":[\"app created\",\"doc-engine running\",\"postgres running\",\"worker created\"],\"plainPs\":[\"doc-engine running\",\"postgres running\"],\"readyzWhileFailed\":0,\"unrelatedListener\":200,\"recovery\":\"PORT=24710 restored; same up exit 0; readyz 200\"}",
       "result": "pass",
-      "elapsedMs": 15461
+      "elapsedMs": 15121
     },
     {
       "phase": "inst-negatives",
@@ -989,11 +784,11 @@
       "page": null,
       "action": "Negative (unavailable dependency): database stopped; /healthz works, /readyz fails; restoring it recovers a record read and write",
       "expected": "Troubleshooting row: restore connectivity, then verify a record read and write.",
-      "startedAt": "2026-09-28T07:41:25.591Z",
-      "at": "2026-09-28T07:41:44.504Z",
-      "actual": "page.goto: net::ERR_NETWORK_CHANGED at https://openlaw-doc032-opinst.test:24711/auth/login\nCall log:\n  - navigating to \"https://openlaw-doc032-opinst.test:24711/auth/login\", waiting until \"domcontentloaded\"\n",
-      "result": "fail",
-      "elapsedMs": 18913
+      "startedAt": "2026-09-28T10:00:08.388Z",
+      "at": "2026-09-28T10:00:28.222Z",
+      "actual": "with postgres stopped: healthz 200, readyz 503 {\"status\":\"unavailable\"}; after docker compose start postgres: readyz 200, Contract read 200, write 200 from the Administrator's browser session",
+      "result": "pass",
+      "elapsedMs": 19834
     },
     {
       "phase": "inst-negatives",
@@ -1003,114 +798,25 @@
       "method": "container-operation",
       "page": null,
       "action": "Negative: the authoring lab is not counted as production install evidence",
-      "startedAt": "2026-09-28T07:41:44.506Z",
-      "at": "2026-09-28T07:41:44.506Z",
+      "startedAt": "2026-09-28T10:00:28.223Z",
+      "at": "2026-09-28T10:00:28.223Z",
       "actual": "Every V-C44 step ran against openlaw-doc032-opinst, cloned from GitHub and built by the guide's own commands, with the guide's .env, compose.operator.yml and a same-host Caddy proxy. No lab.mjs lab, seed data or development overlay was used. Only host deviation: compose.doc032-net.yml (explicit subnets) in COMPOSE_FILE.",
       "result": "pass",
       "elapsedMs": 0
     },
     {
-      "phase": "inst-negatives",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Negative (missing secret): a blank AUTH_SECRET is refused by Compose; the retained key recovers (If startup fails -> operator troubleshooting)",
-      "expected": "Troubleshooting row: Compose refuses the command when either key is missing.",
-      "startedAt": "2026-09-28T07:41:53.954Z",
-      "at": "2026-09-28T07:41:54.211Z",
-      "actual": "config --quiet exit 1: \"error while interpolating services.app.environment.AUTH_SECRET: required variable AUTH_SECRET is missing a value: AUTH_SECRET is required — generate one with `openssl rand -base64 32` and set it in .env\"; up exit 1; containers unchanged; retained key restored: config --quiet exit 0, readyz 200",
-      "result": "pass",
-      "elapsedMs": 257
-    },
-    {
-      "phase": "inst-negatives",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Negative (occupied port): the documented recovery (ps --all shows created; choose an unused port; same up again)",
-      "expected": "Troubleshooting row: after a failed bind, ps --all shows app and worker created, plain ps does not list them; the instance stays down until the port is corrected.",
-      "startedAt": "2026-09-28T07:41:54.212Z",
-      "at": "2026-09-28T07:42:09.612Z",
-      "actual": "{\"upExit\":1,\"error\":[\"Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint openlaw-doc032-opinst-app-1 (…): Bind for 127.0.0.1:24703 failed: port is already allocated\"],\"psAll\":[\"app created\",\"doc-engine running\",\"postgres running\",\"worker created\"],\"plainPs\":[\"doc-engine running\",\"postgres running\"],\"readyzWhileFailed\":0,\"unrelatedListener\":200,\"recovery\":\"PORT=24710 restored; same up exit 0; readyz 200\"}",
-      "result": "pass",
-      "elapsedMs": 15400
-    },
-    {
-      "phase": "inst-negatives",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Negative (unavailable dependency): database stopped; /healthz works, /readyz fails; restoring it recovers a record read and write",
-      "expected": "Troubleshooting row: restore connectivity, then verify a record read and write.",
-      "startedAt": "2026-09-28T07:42:09.613Z",
-      "at": "2026-09-28T07:43:04.544Z",
-      "actual": "with postgres stopped: healthz 200, readyz 503 {\"status\":\"unavailable\"}; after docker compose start postgres: readyz 200, Contract read 200, write 200 from the Administrator's browser session",
-      "result": "pass",
-      "elapsedMs": 54931
-    },
-    {
-      "phase": "inst-negatives",
-      "article": "install",
-      "scenario": "V-C44",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Negative: the authoring lab is not counted as production install evidence",
-      "startedAt": "2026-09-28T07:43:04.545Z",
-      "at": "2026-09-28T07:43:04.546Z",
-      "actual": "Every V-C44 step ran against openlaw-doc032-opinst, cloned from GitHub and built by the guide's own commands, with the guide's .env, compose.operator.yml and a same-host Caddy proxy. No lab.mjs lab, seed data or development overlay was used. Only host deviation: compose.doc032-net.yml (explicit subnets) in COMPOSE_FILE.",
-      "result": "pass",
-      "elapsedMs": 1
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
-      "startedAt": "2026-09-28T07:43:10.137Z",
-      "at": "2026-09-28T07:43:14.745Z",
-      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (4 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129",
-      "result": "pass",
-      "elapsedMs": 4608
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: build and start the starting build; readiness",
-      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:43:14.746Z",
-      "at": "2026-09-28T07:43:40.688Z",
-      "actual": "build 14 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
-      "result": "pass",
-      "elapsedMs": 25942
-    },
-    {
-      "phase": "up-seed",
+      "phase": "seed-prepare",
       "article": "upgrade",
       "scenario": "V-C46",
       "role": "operator",
       "method": "automated-test",
       "page": null,
-      "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
-      "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network)",
-      "startedAt": "2026-09-28T07:43:45.251Z",
-      "at": "2026-09-28T07:43:46.058Z",
-      "actual": "seed exit 1: \n[00:00] preflight\n[00:00]   api at http://app:3000, mail catcher up, first-run setup open\n[00:00]   mail catcher emptied\n\n[00:00] the administrator\n[00:00]   first-run setup as [seed Administrator]\n\nseed failed: ApiError: POST /api/auth/sign-in/email answered 403: {\"message\":\"Invalid origin\",\"code\":\"INVALID_ORIGIN\"}\n    at Session.request (file:///seed/scripts/seed/client.mjs:93:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async signIn (file:///seed/scripts/seed/people.mjs:60:3)\n    at async establishAdministrator (file:///seed/scripts/seed/people.mjs:99:17)\n    at async main (file:///seed/scripts/seed/index.mjs:270:19)\n",
-      "result": "fail",
-      "elapsedMs": 807
+      "action": "Fixture: scratch copy of scripts/seed at 067c1646 with 00528360's contracts.mjs fix and the stand-in's base_uri on its network alias",
+      "startedAt": "2026-09-28T10:00:28.448Z",
+      "at": "2026-09-28T10:00:28.469Z",
+      "actual": "git archive 067c1646 scripts/seed; patch from 00528360 applied to contracts.mjs; signing-stub.mjs base_uri http://doc032-seed:8129",
+      "result": "pass",
+      "elapsedMs": 21
     },
     {
       "phase": "up-baseline",
@@ -1120,11 +826,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
-      "startedAt": "2026-09-28T07:44:52.460Z",
-      "at": "2026-09-28T07:44:52.962Z",
-      "actual": "git checkout --detach 067c1646 exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129",
+      "startedAt": "2026-09-28T10:00:28.689Z",
+      "at": "2026-09-28T10:00:34.337Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (5 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129, SMTP_URL=[redacted], SMTP_FROM (as the lab overlay sets them)",
       "result": "pass",
-      "elapsedMs": 502
+      "elapsedMs": 5648
     },
     {
       "phase": "up-baseline",
@@ -1135,143 +841,11 @@
       "page": null,
       "action": "Fixture: build and start the starting build; readiness",
       "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:44:52.964Z",
-      "at": "2026-09-28T07:45:05.309Z",
-      "actual": "build 1 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
-      "result": "pass",
-      "elapsedMs": 12345
-    },
-    {
-      "phase": "up-seed",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "automated-test",
-      "page": null,
-      "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
-      "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network, SEED_BASE_URL = the instance origin through an in-network Caddy)",
-      "startedAt": "2026-09-28T07:45:08.638Z",
-      "at": "2026-09-28T07:45:09.695Z",
-      "actual": "seed exit 1: 00:00]   api at https://openlaw-doc032-opup.test:24721, mail catcher up, first-run setup open\n[00:00]   mail catcher emptied\n\n[00:00] the administrator\n[00:00]   first-run setup as [seed Administrator]\n\nseed failed: ApiError: POST /api/v1/onboarding/complete answered 409: {\"type\":\"/problems/email-setup-required\",\"title\":\"Configure outbound email before finishing instance setup.\",\"status\":409,\"detail\":\"Configure outbound email before finishing instance setup.\",\"instance\":\"/api/v1/onboarding/complete\"}\n    at Session.request (file:///seed/scripts/seed/client.mjs:93:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async establishAdministrator (file:///seed/scripts/seed/people.mjs:100:3)\n    at async main (file:///seed/scripts/seed/index.mjs:270:19)\n",
-      "result": "fail",
-      "elapsedMs": 1057
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
-      "startedAt": "2026-09-28T07:45:35.112Z",
-      "at": "2026-09-28T07:45:35.130Z",
-      "actual": "git checkout --detach 067c1646 exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129, SMTP_URL=[redacted], SMTP_FROM (as the lab overlay sets them)",
-      "result": "pass",
-      "elapsedMs": 18
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: build and start the starting build; readiness",
-      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:45:35.132Z",
-      "at": "2026-09-28T07:45:47.930Z",
+      "startedAt": "2026-09-28T10:00:34.338Z",
+      "at": "2026-09-28T10:00:47.604Z",
       "actual": "build 2 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
       "result": "pass",
-      "elapsedMs": 12798
-    },
-    {
-      "phase": "up-seed",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "automated-test",
-      "page": null,
-      "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
-      "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network, SEED_BASE_URL = the instance origin through an in-network Caddy)",
-      "startedAt": "2026-09-28T07:45:52.452Z",
-      "at": "2026-09-28T07:46:03.935Z",
-      "actual": "seed exit 1: [00:08] contracts (30)\n\nseed failed: ApiError: POST /api/v1/contracts/3/team answered 409: {\"type\":\"about:blank\",\"title\":\"This person is already on the team.\",\"status\":409,\"detail\":\"This person is already on the team.\",\"instance\":\"/api/v1/contracts/3/team\"}\n    at Session.request (file:///seed/scripts/seed/client.mjs:93:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///seed/scripts/seed/contracts.mjs:386:7\n    at async file:///seed/scripts/seed/client.mjs:162:24\n    at async Promise.all (index 1)\n    at async pool (file:///seed/scripts/seed/client.mjs:165:3)\n    at async seedContracts (file:///seed/scripts/seed/contracts.mjs:319:3)\n    at async main (file:///seed/scripts/seed/index.mjs:297:23)\n[00:10]     25 of 30 contracts created\n",
-      "result": "fail",
-      "elapsedMs": 11483
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
-      "startedAt": "2026-09-28T07:46:42.127Z",
-      "at": "2026-09-28T07:46:42.145Z",
-      "actual": "git checkout --detach 067c1646 exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129, SMTP_URL=[redacted], SMTP_FROM (as the lab overlay sets them)",
-      "result": "pass",
-      "elapsedMs": 18
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: build and start the starting build; readiness",
-      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:46:42.146Z",
-      "at": "2026-09-28T07:46:55.150Z",
-      "actual": "build 1 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
-      "result": "pass",
-      "elapsedMs": 13004
-    },
-    {
-      "phase": "up-seed",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "automated-test",
-      "page": null,
-      "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 plus the one-file seed fix 00528360 (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
-      "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network, SEED_BASE_URL = the instance origin through an in-network Caddy)",
-      "startedAt": "2026-09-28T07:46:58.438Z",
-      "at": "2026-09-28T07:47:19.857Z",
-      "actual": "{\"exit\":0,\"minutes\":0.3,\"phases\":[\"preflight\",\"the administrator\",\"the organisation\",\"people\",\"configuration\",\"entities\",\"knowledge\",\"contracts (30)\",\"matters (18)\",\"intake (15)\",\"comparisons\",\"signature\",\"finishing\",\"done\"],\"notes\":[\"(node:1) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\",\"[00:00] people\",\"[00:01]   signing in the business\",\"[00:02]   22 people in the instance\",\"[00:05] entities\",\"[00:06]   30 entities\",\"[00:10] knowledge\",\"[00:10]   7 knowledge folders\",\"[00:11]   25 knowledge items (23 published)\",\"[00:11] contracts (30)\",\"[00:13]     25 of 30 contracts created\",\"[00:13]   30 contracts created\",\"[00:15]   3 contracts archived\",\"[00:15] matters (18)\",\"[00:16]   17 matters created (1 from templates)\",\"[00:17]   15 matter relations, 10 sub-matters\",\"[00:17]   1 matters archived\",\"[00:17]   23 contracts linked to matters\",\"[00:17]   15 requests submitted\",\"[00:17]   9 requests picked up\"]}",
-      "result": "pass",
-      "elapsedMs": 21419
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
-      "startedAt": "2026-09-28T07:48:17.964Z",
-      "at": "2026-09-28T07:48:17.983Z",
-      "actual": "git checkout --detach 067c1646 exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129, SMTP_URL=[redacted], SMTP_FROM (as the lab overlay sets them)",
-      "result": "pass",
-      "elapsedMs": 19
-    },
-    {
-      "phase": "up-baseline",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Fixture: build and start the starting build; readiness",
-      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
-      "startedAt": "2026-09-28T07:48:17.985Z",
-      "at": "2026-09-28T07:48:31.080Z",
-      "actual": "build 2 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
-      "result": "pass",
-      "elapsedMs": 13095
+      "elapsedMs": 13266
     },
     {
       "phase": "up-seed",
@@ -1282,11 +856,11 @@
       "page": null,
       "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 plus the one-file seed fix 00528360 and the signing stand-in answering as doc032-seed (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
       "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network, SEED_BASE_URL = the instance origin through an in-network Caddy)",
-      "startedAt": "2026-09-28T07:48:31.307Z",
-      "at": "2026-09-28T07:48:59.628Z",
-      "actual": "{\"exit\":0,\"minutes\":0.5,\"phases\":[\"preflight\",\"the administrator\",\"the organisation\",\"people\",\"configuration\",\"entities\",\"knowledge\",\"contracts (30)\",\"matters (18)\",\"intake (15)\",\"comparisons\",\"signature\",\"finishing\",\"done\"],\"notes\":[\"(node:1) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\",\"[00:00] people\",\"[00:01]   signing in the business\",\"[00:01]   22 people in the instance\",\"[00:04] entities\",\"[00:05]   30 entities\",\"[00:08] knowledge\",\"[00:08]   7 knowledge folders\",\"[00:09]   25 knowledge items (23 published)\",\"[00:09] contracts (30)\",\"[00:11]     25 of 30 contracts created\",\"[00:11]   30 contracts created\",\"[00:14]   1 contracts archived\",\"[00:14] matters (18)\",\"[00:14]   18 matters created (2 from templates)\",\"[00:16]   17 matter relations, 10 sub-matters\",\"[00:16]   0 matters archived\",\"[00:16]   29 contracts linked to matters\",\"[00:16]   15 requests submitted\",\"[00:16]   11 requests picked up\"]}",
+      "startedAt": "2026-09-28T10:00:47.832Z",
+      "at": "2026-09-28T10:01:14.186Z",
+      "actual": "{\"exit\":0,\"minutes\":0.4,\"phases\":[\"preflight\",\"the administrator\",\"the organisation\",\"people\",\"configuration\",\"entities\",\"knowledge\",\"contracts (30)\",\"matters (18)\",\"intake (15)\",\"comparisons\",\"signature\",\"finishing\",\"done\"],\"notes\":[\"(node:1) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\",\"[00:00] people\",\"[00:01]   signing in the business\",\"[00:01]   22 people in the instance\",\"[00:04] entities\",\"[00:04]   30 entities\",\"[00:07] knowledge\",\"[00:07]   7 knowledge folders\",\"[00:07]   25 knowledge items (23 published)\",\"[00:07] contracts (30)\",\"[00:08]     25 of 30 contracts created\",\"[00:09]   30 contracts created\",\"[00:11]   0 contracts archived\",\"[00:11] matters (18)\",\"[00:11]   18 matters created (1 from templates)\",\"[00:12]   16 matter relations, 10 sub-matters\",\"[00:12]   0 matters archived\",\"[00:12]   30 contracts linked to matters\",\"[00:12]   15 requests submitted\",\"[00:13]   13 requests picked up\"]}",
       "result": "pass",
-      "elapsedMs": 28321
+      "elapsedMs": 26354
     },
     {
       "phase": "up-fixture",
@@ -1296,39 +870,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Fixture: remove the seed-only settings (SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM) and recreate app and worker",
-      "startedAt": "2026-09-28T07:49:04.337Z",
-      "at": "2026-09-28T07:49:19.475Z",
-      "actual": "a fixture setting is still set",
-      "result": "fail",
-      "elapsedMs": 15138
-    },
-    {
-      "phase": "up-fixture",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "automated-test",
-      "page": null,
-      "action": "Fixture: remove the seed-only settings (SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM) and recreate app and worker",
-      "startedAt": "2026-09-28T07:49:30.343Z",
-      "at": "2026-09-28T07:49:44.768Z",
+      "startedAt": "2026-09-28T10:01:14.422Z",
+      "at": "2026-09-28T10:01:30.171Z",
       "actual": "recreated; readyz 200; none of SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM has a value in the app container (compose.yml passes SETUP_TOKEN as an empty string)",
       "result": "pass",
-      "elapsedMs": 14425
-    },
-    {
-      "phase": "up-fixture",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "automated-test",
-      "page": null,
-      "action": "Fixture: remove the seed-only settings (SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM) and recreate app and worker",
-      "startedAt": "2026-09-28T07:49:53.732Z",
-      "at": "2026-09-28T07:50:08.199Z",
-      "actual": "recreated; readyz 200; none of SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM has a value in the app container (compose.yml passes SETUP_TOKEN as an empty string)",
-      "result": "pass",
-      "elapsedMs": 14467
+      "elapsedMs": 15749
     },
     {
       "phase": "up-fixture",
@@ -1338,11 +884,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Fixture: a saved relay with an SMTP password; its test email arrives",
-      "startedAt": "2026-09-28T07:50:08.240Z",
-      "at": "2026-09-28T07:50:08.329Z",
+      "startedAt": "2026-09-28T10:01:30.276Z",
+      "at": "2026-09-28T10:01:30.401Z",
       "actual": "relay smtp://[redacted]@doc032-mail:1025 saved in the app; test email delivered to the Administrator",
       "result": "pass",
-      "elapsedMs": 89
+      "elapsedMs": 125
     },
     {
       "phase": "up-fixture",
@@ -1352,11 +898,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Fixture: AI connector (custom endpoint stand-in) with a saved key; its test passes",
-      "startedAt": "2026-09-28T07:50:08.330Z",
-      "at": "2026-09-28T07:50:08.367Z",
+      "startedAt": "2026-09-28T10:01:30.403Z",
+      "at": "2026-09-28T10:01:30.470Z",
       "actual": "connector preset custom, hasApiKey true; test 200 through the stand-in",
       "result": "pass",
-      "elapsedMs": 37
+      "elapsedMs": 67
     },
     {
       "phase": "up-fixture",
@@ -1366,11 +912,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Fixture: register an SSO provider (OIDC discovery stand-in) with a client secret",
-      "startedAt": "2026-09-28T07:50:08.368Z",
-      "at": "2026-09-28T07:50:08.399Z",
+      "startedAt": "2026-09-28T10:01:30.471Z",
+      "at": "2026-09-28T10:01:30.537Z",
       "actual": "provider doc032-idp issuer http://doc032-idp:8080 domain doc032-sso.example; callback https://openlaw-doc032-opup.test:24721/api/auth/sso/callback",
       "result": "pass",
-      "elapsedMs": 31
+      "elapsedMs": 66
     },
     {
       "phase": "up-fixture",
@@ -1380,11 +926,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Fixture: MCP on with a Toolset ceiling that includes Team and Administration; an Administrator's API key with Team and Administration",
-      "startedAt": "2026-09-28T07:50:08.400Z",
-      "at": "2026-09-28T07:50:08.498Z",
+      "startedAt": "2026-09-28T10:01:30.538Z",
+      "at": "2026-09-28T10:01:30.621Z",
       "actual": "MCP enabled; ceiling workspace, contracts, matters, tasks, requests, comments, documents, auto-docs, entities, knowledge, people, team, administration; API key request active for workspace, contracts, team, administration (key held privately); tools/list through the origin: 9 tools, Team/Administration tools present: none",
       "result": "pass",
-      "elapsedMs": 98
+      "elapsedMs": 83
     },
     {
       "phase": "up-fixture",
@@ -1394,11 +940,11 @@
       "method": "browser-walkthrough",
       "page": "/settings/uploads",
       "action": "Fixture: save Maximum file size (MiB) = 40 in Settings → Advanced → File uploads so a field shows Saved in OpenLaw",
-      "startedAt": "2026-09-28T07:50:10.207Z",
-      "at": "2026-09-28T07:50:10.372Z",
+      "startedAt": "2026-09-28T10:01:31.716Z",
+      "at": "2026-09-28T10:01:31.926Z",
       "actual": "saved; the page says \"Settings saved. Restart the API and worker to apply changes.\"",
       "result": "pass",
-      "elapsedMs": 165
+      "elapsedMs": 210
     },
     {
       "phase": "up-fixture",
@@ -1409,11 +955,11 @@
       "page": null,
       "action": "Fixture: restart app and worker so the saved Advanced value is active on the starting build",
       "command": "docker compose restart app worker",
-      "startedAt": "2026-09-28T07:50:10.378Z",
-      "at": "2026-09-28T07:50:22.949Z",
+      "startedAt": "2026-09-28T10:01:31.932Z",
+      "at": "2026-09-28T10:01:44.469Z",
       "actual": "restarted; readyz 200",
       "result": "pass",
-      "elapsedMs": 12571
+      "elapsedMs": 12537
     },
     {
       "phase": "up-before",
@@ -1424,11 +970,11 @@
       "page": null,
       "action": "Baseline inventory on the starting build: migration journal, record counts, file hashes, sealed settings, Contract vocabulary",
       "command": "psql reads; find /var/lib/openlaw/files -type f -exec sha256sum",
-      "startedAt": "2026-09-28T07:50:54.455Z",
-      "at": "2026-09-28T07:50:57.397Z",
-      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":\"112 tables, 75 non-empty\",\"keyCounts\":{\"users\":22,\"contracts\":36,\"matters\":18,\"entities\":30,\"documents\":106,\"document_versions\":127,\"contract_envelopes\":3,\"requests\":15,\"comments\":60,\"knowledge_items\":25,\"fields\":20,\"activity_log\":1572,\"sso_providers\":1,\"api_key_requests\":1,\"ai_saved_keys\":1,\"signing_connectors\":1},\"files\":{\"count\":174,\"digest\":\"8f2f4fed89f2e5e4d0005a1fcc0aa240b611f81325b5562ce9f8a8e1cd7109ff\"},\"sealed\":{\"api_key_requests.sealed_key\":{\"nonNull\":0,\"sha256\":\"\"},\"ai_saved_keys.api_key\":{\"nonNull\":1,\"sha256\":\"cce4601a42a4dc34\"},\"signing_connectors.private_key\":{\"nonNull\":1,\"sha256\":\"819d455e9bba342a\"},\"signing_connectors.webhook_secret\":{\"nonNull\":1,\"sha256\":\"35bc03457278259e\"},\"org_settings.smtp_url\":{\"nonNull\":1,\"sha256\":\"2e286b48aa5f7fee\"},\"org_settings.vapid_private_key\":{\"nonNull\":1,\"sha256\":\"89e531cb6e0c03a4\"},\"org_settings.advanced_settings\":{\"nonNull\":1,\"sha256\":\"427ee22ce661c744\"},\"sso_providers.oidc_config\":{\"nonNull\":1,\"sha256\":\"119f68e9dcc9661b\"}},\"vocabulary\":{\"statuses\":[\"Draft [draft]\",\"Internal review [review]\",\"With counterparty [review]\",\"Awaiting approval [approval]\",\"Out for signature [signature]\",\"Active [active]\",\"Expired [ended]\",\"Terminated [ended]\",\"Signed, awaiting countersignature [signature]\",\"Superseded [ended]\"],\"documentTypes\":[\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Executed\",\"Amendment\"]},\"envelopes\":[\"declined|1\",\"signed|2\"],\"ceiling\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"fixtures\":{\"ltm\":\"priya.raman@helix.example\",\"businessUser\":\"ade.balogun@helix.example\",\"confidentialOutsideLtm\":\"4\",\"confidentialOutsideBu\":\"4\",\"representativeVersions\":8}}",
+      "startedAt": "2026-09-28T10:01:44.770Z",
+      "at": "2026-09-28T10:01:48.056Z",
+      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":\"112 tables, 76 non-empty\",\"keyCounts\":{\"users\":22,\"contracts\":34,\"matters\":20,\"entities\":30,\"documents\":109,\"document_versions\":129,\"contract_envelopes\":5,\"requests\":15,\"comments\":83,\"knowledge_items\":25,\"fields\":20,\"activity_log\":1617,\"sso_providers\":1,\"api_key_requests\":1,\"ai_saved_keys\":1,\"signing_connectors\":1},\"files\":{\"count\":175,\"digest\":\"2a786cb3fb909cf4f12bb1f6e3375f84b45e2530f53d6a2cf28c4d5e5b5211e1\"},\"sealed\":{\"api_key_requests.sealed_key\":{\"nonNull\":0,\"sha256\":\"\"},\"ai_saved_keys.api_key\":{\"nonNull\":1,\"sha256\":\"9bb7c281838b8571\"},\"signing_connectors.private_key\":{\"nonNull\":1,\"sha256\":\"e1d999db215ac06b\"},\"signing_connectors.webhook_secret\":{\"nonNull\":1,\"sha256\":\"85d5ca63bea4c767\"},\"org_settings.smtp_url\":{\"nonNull\":1,\"sha256\":\"110762d0a67b7b6a\"},\"org_settings.vapid_private_key\":{\"nonNull\":1,\"sha256\":\"23f227dabc3a75ef\"},\"org_settings.advanced_settings\":{\"nonNull\":1,\"sha256\":\"88155fb59f70d8a5\"},\"sso_providers.oidc_config\":{\"nonNull\":1,\"sha256\":\"fcca914d9cce5c1a\"}},\"vocabulary\":{\"statuses\":[\"Draft [draft]\",\"Internal review [review]\",\"With counterparty [review]\",\"Awaiting approval [approval]\",\"Out for signature [signature]\",\"Active [active]\",\"Expired [ended]\",\"Terminated [ended]\",\"Signed, awaiting countersignature [signature]\",\"Superseded [ended]\"],\"documentTypes\":[\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Executed\",\"Amendment\"]},\"envelopes\":[\"declined|2\",\"signed|2\",\"voided|1\"],\"ceiling\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"fixtures\":{\"ltm\":\"nadia.haddad@helix.example\",\"businessUser\":\"ravi.menon@helix.example\",\"confidentialOutsideLtm\":\"4\",\"confidentialOutsideBu\":\"4\",\"representativeVersions\":10}}",
       "result": "pass",
-      "elapsedMs": 2942
+      "elapsedMs": 3286
     },
     {
       "phase": "up-before",
@@ -1438,11 +984,11 @@
       "method": "automated-test",
       "page": null,
       "action": "Baseline: representative Version hashes, lower-access reach, MCP tools",
-      "startedAt": "2026-09-28T07:50:57.400Z",
-      "at": "2026-09-28T07:50:57.696Z",
-      "actual": "{\"versions\":[\"doc 01a0e6fc v1 draft_ours/uploaded 0f43d4ef3fd9b41d\",\"doc 01a0e6fc v2 redline_theirs/uploaded 1ad1bd7952adfa2b\",\"doc 01a0e6fc v1 draft_ours/uploaded 7be99023e618c78d\",\"doc 01a0e6fc v2 executed/uploaded 7be99023e618c78d\",\"doc 01a0e6fc v1 draft_ours/uploaded 40a681b7e81f026d\",\"doc 01a0e6fc v2 executed/uploaded 40a681b7e81f026d\",\"doc 01a0e6fc v2 executed/uploaded 40a681b7e81f026d\",\"doc 01a0e6fc v2 executed/uploaded 7be99023e618c78d\"],\"legalTeamMemberOnConfidential\":\"C-4 answered 404\",\"mcpTools\":\"9 tools; Team/Administration-like names 0\"}",
+      "startedAt": "2026-09-28T10:01:48.059Z",
+      "at": "2026-09-28T10:01:48.439Z",
+      "actual": "{\"versions\":[\"doc 01a0e775 v1 draft_ours/uploaded a6914629d522107d\",\"doc 01a0e775 v2 executed/uploaded a6914629d522107d\",\"doc 01a0e775 v3 executed/uploaded afa0432a363d71cf\",\"doc 01a0e775 v1 draft_ours/uploaded 5b25313a8e5c6351\",\"doc 01a0e775 v2 executed/uploaded 5b25313a8e5c6351\",\"doc 01a0e775 v1 draft_ours/uploaded e22b143fc9fd7038\",\"doc 01a0e775 v2 executed/uploaded e22b143fc9fd7038\",\"doc 01a0e775 v3 executed/uploaded 6dd2e757c7ab6a89\",\"doc 01a0e775 v2 executed/uploaded a6914629d522107d\",\"doc 01a0e775 v2 executed/uploaded 5b25313a8e5c6351\"],\"legalTeamMemberOnConfidential\":\"C-4 answered 404\",\"mcpTools\":\"9 tools; Team/Administration-like names 0\"}",
       "result": "pass",
-      "elapsedMs": 296
+      "elapsedMs": 380
     },
     {
       "phase": "up-before",
@@ -1452,11 +998,11 @@
       "method": "browser-walkthrough",
       "page": "/settings/uploads",
       "action": "Before you start: record every Settings → Advanced field that shows Saved in OpenLaw; System status on the starting build",
-      "startedAt": "2026-09-28T07:50:58.788Z",
-      "at": "2026-09-28T07:52:07.736Z",
-      "actual": "{\"fileUploads\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"systemStatus\":{\"rows\":[\"Worker Running Current 11:51 AM\",\"API Running Current 11:51 AM\"],\"activeStorage\":\"Active storage: local\",\"missingWarning\":false,\"ok\":true,\"attempts\":2}}",
+      "startedAt": "2026-09-28T10:01:49.685Z",
+      "at": "2026-09-28T10:02:58.661Z",
+      "actual": "{\"fileUploads\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"systemStatus\":{\"rows\":[\"Worker Running Current 2:02 PM\",\"API Running Current 2:02 PM\"],\"activeStorage\":\"Active storage: local\",\"missingWarning\":false,\"ok\":true,\"attempts\":2}}",
       "result": "pass",
-      "elapsedMs": 68948
+      "elapsedMs": 68976
     },
     {
       "phase": "upgrade",
@@ -1466,11 +1012,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Before you start: record source revision, image identities, project name, file list, storage configuration and keys",
-      "startedAt": "2026-09-28T07:52:15.873Z",
-      "at": "2026-09-28T07:52:16.308Z",
+      "startedAt": "2026-09-28T10:03:05.025Z",
+      "at": "2026-09-28T10:03:05.447Z",
       "actual": "{\"sourceRevision\":\"067c1646829df85e62b809ee9157921e867c84e7\",\"images\":{\"app\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"worker\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"},\"project\":\"openlaw-doc032-opup\",\"composeFile\":\"compose.yml:compose.operator.yml:compose.doc032-net.yml\",\"storage\":{\"STORAGE_DRIVER\":\"(unset: local)\",\"volume\":\"openlaw-doc032-opup_openlaw-files\"},\"advancedSavedInOpenLaw\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"keysInSecretStore\":true}",
       "result": "pass",
-      "elapsedMs": 435
+      "elapsedMs": 422
     },
     {
       "phase": "upgrade",
@@ -1481,11 +1027,11 @@
       "page": null,
       "action": "Prepare step 1: fetch the source and inspect local changes",
       "command": "git status --short; git fetch origin; git rev-parse HEAD",
-      "startedAt": "2026-09-28T07:52:16.311Z",
-      "at": "2026-09-28T07:52:16.888Z",
+      "startedAt": "2026-09-28T10:03:05.448Z",
+      "at": "2026-09-28T10:03:06.440Z",
       "actual": "git status --short: \"?? compose.doc032-net.yml\\n?? compose.operator.yml\"; git fetch origin exit 0; HEAD 067c1646829df85e62b809ee9157921e867c84e7",
       "result": "pass",
-      "elapsedMs": 577
+      "elapsedMs": 992
     },
     {
       "phase": "upgrade",
@@ -1495,86 +1041,12 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating the running containers",
-      "command": "git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e; docker compose config --quiet; docker compose build app doc-engine",
-      "startedAt": "2026-09-28T07:52:16.890Z",
-      "at": "2026-09-28T07:52:16.893Z",
-      "actual": "checkout exit 128: fatal: unable to read tree (4ca41822b685a2a1e58a38b4f25e421cf735c54e)\n",
-      "result": "fail",
-      "elapsedMs": 3
-    },
-    {
-      "phase": "upgrade",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Before you start: record source revision, image identities, project name, file list, storage configuration and keys",
-      "startedAt": "2026-09-28T07:52:29.037Z",
-      "at": "2026-09-28T07:52:29.493Z",
-      "actual": "{\"sourceRevision\":\"067c1646829df85e62b809ee9157921e867c84e7\",\"images\":{\"app\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"worker\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"},\"project\":\"openlaw-doc032-opup\",\"composeFile\":\"compose.yml:compose.operator.yml:compose.doc032-net.yml\",\"storage\":{\"STORAGE_DRIVER\":\"(unset: local)\",\"volume\":\"openlaw-doc032-opup_openlaw-files\"},\"advancedSavedInOpenLaw\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"keysInSecretStore\":true}",
+      "command": "git checkout --detach ad345da5842c22b7d1012bf9f5d7d12dfdb4e496; docker compose config --quiet; docker compose build app doc-engine",
+      "startedAt": "2026-09-28T10:03:06.446Z",
+      "at": "2026-09-28T10:03:21.445Z",
+      "actual": "checkout exit 0; build 15 s; 4 containers kept their IDs and states; app and worker both resolve to openlaw-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 (sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610); engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d; postgres stays postgres:16",
       "result": "pass",
-      "elapsedMs": 456
-    },
-    {
-      "phase": "upgrade",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Prepare step 1: fetch the source and inspect local changes",
-      "command": "git status --short; git fetch origin; git rev-parse HEAD",
-      "startedAt": "2026-09-28T07:52:29.495Z",
-      "at": "2026-09-28T07:52:30.102Z",
-      "actual": "git status --short: \"?? compose.doc032-net.yml\\n?? compose.operator.yml\"; git fetch origin exit 0; HEAD 067c1646829df85e62b809ee9157921e867c84e7",
-      "result": "pass",
-      "elapsedMs": 607
-    },
-    {
-      "phase": "upgrade",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Prepare step 2: git checkout --detach the target after git fetch origin",
-      "command": "git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-      "startedAt": "2026-09-28T07:52:30.110Z",
-      "at": "2026-09-28T07:52:30.114Z",
-      "actual": "git checkout --detach exit 128: fatal: unable to read tree (4ca41822b685a2a1e58a38b4f25e421cf735c54e) (the pin is on no GitHub branch; see publicationBlockers)",
-      "result": "fail",
-      "elapsedMs": 4
-    },
-    {
-      "phase": "upgrade",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Walkthrough deviation: fetch the unpublished pin from the local repository into the GitHub clone",
-      "command": "git fetch <local repository> 4ca41822b685a2a1e58a38b4f25e421cf735c54e",
-      "startedAt": "2026-09-28T07:52:30.116Z",
-      "at": "2026-09-28T07:52:30.189Z",
-      "actual": "git fetch exit 0",
-      "result": "pass",
-      "elapsedMs": 73
-    },
-    {
-      "phase": "upgrade",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating the running containers",
-      "command": "git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e; docker compose config --quiet; docker compose build app doc-engine",
-      "startedAt": "2026-09-28T07:52:30.191Z",
-      "at": "2026-09-28T07:52:47.718Z",
-      "actual": "checkout exit 0; build 17 s; 4 containers kept their IDs and states; app and worker both resolve to openlaw-local:4ca41822b685a2a1e58a38b4f25e421cf735c54e (sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986); engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d; postgres stays postgres:16",
-      "result": "pass",
-      "elapsedMs": 17527
+      "elapsedMs": 14999
     },
     {
       "phase": "upgrade",
@@ -1584,12 +1056,12 @@
       "method": "container-operation",
       "page": null,
       "action": "Prepare step 3: review TRUSTED_PROXIES before the target starts; the Compose file is unchanged",
-      "command": "git diff --stat 067c1646829df85e62b809ee9157921e867c84e7 4ca41822b685a2a1e58a38b4f25e421cf735c54e -- compose.yml; docker network inspect openlaw-doc032-opup_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'; TRUSTED_PROXIES=<gateway>",
-      "startedAt": "2026-09-28T07:52:47.721Z",
-      "at": "2026-09-28T07:52:47.799Z",
+      "command": "git diff --stat 067c1646829df85e62b809ee9157921e867c84e7 ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 -- compose.yml; docker network inspect openlaw-doc032-opup_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'; TRUSTED_PROXIES=<gateway>",
+      "startedAt": "2026-09-28T10:03:21.447Z",
+      "at": "2026-09-28T10:03:21.524Z",
       "actual": "{\"composeYmlDiff\":\"(empty)\",\"trustedProxiesBefore\":\"127.0.0.1,::1\",\"gatewayRead\":\"10.245.72.1 10.245.72.0/24\",\"trustedProxiesAfter\":\"10.245.72.1\",\"appPorts\":[\"127.0.0.1:24720->3000\"],\"composePrivateOverlay\":false}",
       "result": "pass",
-      "elapsedMs": 78
+      "elapsedMs": 77
     },
     {
       "phase": "upgrade",
@@ -1600,11 +1072,11 @@
       "page": null,
       "action": "Before you start: check outstanding signing and processing work before the pause",
       "command": "psql: pg-boss job states; contract_envelopes by status",
-      "startedAt": "2026-09-28T07:52:47.800Z",
-      "at": "2026-09-28T07:52:48.087Z",
-      "actual": "pg-boss: completed|504; contract_envelopes: declined|1; signed|2; executed-copy fetch states: n/a",
+      "startedAt": "2026-09-28T10:03:21.526Z",
+      "at": "2026-09-28T10:03:21.806Z",
+      "actual": "pg-boss: created|63; completed|470; contract_envelopes: declined|2; signed|2; voided|1; executed-copy fetch states: n/a",
       "result": "pass",
-      "elapsedMs": 287
+      "elapsedMs": 280
     },
     {
       "phase": "upgrade",
@@ -1615,11 +1087,11 @@
       "page": null,
       "action": "Upgrade step 4 / backup step 1: create a fresh private backup directory",
       "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
-      "startedAt": "2026-09-28T07:52:48.089Z",
-      "at": "2026-09-28T07:52:48.097Z",
+      "startedAt": "2026-09-28T10:03:21.808Z",
+      "at": "2026-09-28T10:03:21.815Z",
       "actual": "mode 700",
       "result": "pass",
-      "elapsedMs": 8
+      "elapsedMs": 7
     },
     {
       "phase": "upgrade",
@@ -1630,11 +1102,11 @@
       "page": null,
       "action": "Upgrade step 4 / backup step 2: stop app and worker, keep Postgres running",
       "command": "docker compose stop app worker; docker compose ps --all",
-      "startedAt": "2026-09-28T07:52:48.100Z",
-      "at": "2026-09-28T07:52:58.958Z",
+      "startedAt": "2026-09-28T10:03:21.817Z",
+      "at": "2026-09-28T10:03:32.526Z",
       "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\"}",
       "result": "pass",
-      "elapsedMs": 10858
+      "elapsedMs": 10709
     },
     {
       "phase": "upgrade",
@@ -1645,11 +1117,11 @@
       "page": null,
       "action": "Upgrade step 4 / backup step 3: dump the database, archive the file volume, record source and images",
       "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; docker compose run -T --rm --no-deps app tar -czf - -C /var/lib/openlaw/files . > \"$BACKUP_DIR/files.tar.gz\"; git rev-parse HEAD > app-source.txt; docker compose images --format json > images.json",
-      "startedAt": "2026-09-28T07:52:58.961Z",
-      "at": "2026-09-28T07:52:59.839Z",
-      "actual": "exit codes 0, 0, 0, 0; app-source.txt 4ca41822b685a2a1e58a38b4f25e421cf735c54e (the checkout already points at the target); images.json app openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; pre-upgrade revision 067c1646829df85e62b809ee9157921e867c84e7 recorded beside it; dump 696571 bytes; files 871283 bytes",
+      "startedAt": "2026-09-28T10:03:32.528Z",
+      "at": "2026-09-28T10:03:33.196Z",
+      "actual": "exit codes 0, 0, 0, 0; app-source.txt ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 (the checkout already points at the target); images.json app openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; pre-upgrade revision 067c1646829df85e62b809ee9157921e867c84e7 recorded beside it; dump 703473 bytes; files 844072 bytes",
       "result": "pass",
-      "elapsedMs": 878
+      "elapsedMs": 668
     },
     {
       "phase": "upgrade",
@@ -1660,11 +1132,11 @@
       "page": null,
       "action": "Upgrade step 4 / backup step 4: list both archives and record hashes; copy to a retained location and verify there",
       "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS; sha256sum --check",
-      "startedAt": "2026-09-28T07:52:59.841Z",
-      "at": "2026-09-28T07:52:59.970Z",
-      "actual": "pg_restore --list 884 TOC entries; tar lists 174 files; SHA256SUMS 0a9c616abdf2aa419a734981d4a286212683ba16eaf08a34dc031c8de6e01b4a database.dump 1e54ef4e0b5a809ed3a1e04fa9344d50236f31d8c98af1b56c5a9ea012e50dd7 files.tar.gz; retained copy: database.dump: OK; files.tar.gz: OK",
+      "startedAt": "2026-09-28T10:03:33.197Z",
+      "at": "2026-09-28T10:03:33.316Z",
+      "actual": "pg_restore --list 884 TOC entries; tar lists 179 files; SHA256SUMS a2f36c18ccbe379d9db20c696a06bea7d636e798360d45d26d6498379e2bd780 database.dump 1b5da50fb17066b4049f471f682b9c52fbe8940c1550cdd52c85a419044199ef files.tar.gz; retained copy: database.dump: OK; files.tar.gz: OK",
       "result": "pass",
-      "elapsedMs": 128
+      "elapsedMs": 118
     },
     {
       "phase": "upgrade",
@@ -1676,11 +1148,11 @@
       "action": "Start step 1: start the target with the retained project and volumes; ps; port; logs",
       "command": "docker compose up -d --no-build --pull never; docker compose ps; docker compose port app 3000; docker compose logs --tail=100 app worker",
       "expected": "The app runs the 12 migrations 0172 to 0183 at startup; readiness; the worker stays running; port 127.0.0.1:<PORT>.",
-      "startedAt": "2026-09-28T07:52:59.973Z",
-      "at": "2026-09-28T07:53:49.781Z",
-      "actual": "{\"psRightAfterUp\":[\"app running Up 1 second (health: starting)\",\"doc-engine running Up 1 second (health: starting)\",\"postgres running Up 4 minutes (healthy)\",\"worker running Up Less than a second\"],\"port\":\"127.0.0.1:24720\",\"readyAfterSeconds\":4,\"journal\":\"172 rows ending 0171_m41-oauth-clients before; 184 rows ending 0183_sso-provider-name after\",\"appMigrationLines\":[\"postgres: relation \\\"__drizzle_migrations\\\" already exists, skipping\"],\"startWarnings\":[],\"appRestartsAndState\":\"0 running\",\"workerRestartsAndState\":\"0 running\",\"errorLikeLines\":[],\"tail100Lines\":16,\"images\":{\"app\":\"sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986\",\"worker\":\"sha256:14a3c8fb381f18a0167c1978bc07bf4e56afbac903986719a73f5fcc4c0ab986\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
+      "startedAt": "2026-09-28T10:03:33.319Z",
+      "at": "2026-09-28T10:04:22.992Z",
+      "actual": "{\"psRightAfterUp\":[\"app running Up Less than a second (health: starting)\",\"doc-engine running Up 1 second (health: starting)\",\"postgres running Up 2 minutes (healthy)\",\"worker running Up Less than a second\"],\"port\":\"127.0.0.1:24720\",\"readyAfterSeconds\":4,\"journal\":\"172 rows ending 0171_m41-oauth-clients before; 184 rows ending 0183_sso-provider-name after\",\"appMigrationLines\":[\"postgres: relation \\\"__drizzle_migrations\\\" already exists, skipping\"],\"startWarnings\":[],\"appRestartsAndState\":\"0 running\",\"workerRestartsAndState\":\"0 running\",\"errorLikeLines\":[],\"tail100Lines\":19,\"images\":{\"app\":\"sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610\",\"worker\":\"sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
       "result": "pass",
-      "elapsedMs": 49808
+      "elapsedMs": 49673
     },
     {
       "phase": "upgrade",
@@ -1691,11 +1163,11 @@
       "page": "/contracts",
       "action": "Start step 5: a browser tab opened before the upgrade, used after it",
       "expected": "An old tab can show This part of OpenLaw was updated. Reload to continue.",
-      "startedAt": "2026-09-28T07:53:49.790Z",
-      "at": "2026-09-28T07:54:10.707Z",
+      "startedAt": "2026-09-28T10:04:22.993Z",
+      "at": "2026-09-28T10:04:43.901Z",
       "actual": "{\"navigationsInOldTab\":[\"Matters: /matters\",\"Entities: /entities\",\"Knowledge: /knowledge\",\"Documents: /documents\",\"Settings: /documents\",\"Contracts: /contracts\"],\"afterReload\":\"/contracts\"}",
       "result": "pass",
-      "elapsedMs": 20917
+      "elapsedMs": 20908
     },
     {
       "phase": "up-verify",
@@ -1706,282 +1178,11 @@
       "page": null,
       "action": "After the upgrade, before any new work: migration outcome, record counts, row digests, file hashes and sealed settings against the baseline",
       "command": "psql reads; find /var/lib/openlaw/files -type f -exec sha256sum",
-      "startedAt": "2026-09-28T07:54:19.709Z",
-      "at": "2026-09-28T07:54:21.924Z",
-      "actual": "{\"journalBefore\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"journalAfter\":{\"rows\":184,\"last\":\"0183_sso-provider-name\"},\"tables\":113,\"identicalRowDigests\":102,\"countChanges\":[\"contract_statuses 10 -> 11\",\"document_types 6 -> 7\",\"envelope_launches absent -> 0\",\"runtime_status 6 -> 7\",\"sessions 24 -> 29\"],\"sameCountDifferentRows\":[\"api_keys\",\"contract_envelopes\",\"notifications\",\"org_settings\",\"sso_providers\",\"users\"],\"filesBefore\":174,\"filesAfter\":174,\"fileHashMismatches\":0,\"sealedChanged\":[],\"vocabularyAfter\":{\"statuses\":[\"Draft [draft]\",\"Internal review [review]\",\"With counterparty [review]\",\"Awaiting approval [approval]\",\"Out for signature [signature]\",\"Active [active]\",\"Expired [ended]\",\"Terminated [ended]\",\"Signed, awaiting countersignature [signature]\",\"Partially signed [signature]\",\"Superseded [ended]\"],\"documentTypes\":[\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Partially signed\",\"Executed\",\"Amendment\"]},\"envelopesAfter\":[\"declined|1\",\"signed|2\"],\"ceilingBefore\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"ceilingAfter\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\"]\",\"ssoAfter\":[\"doc032-idp\"],\"sealedAfter\":{\"api_key_requests.sealed_key\":{\"nonNull\":0,\"sha256\":\"\"},\"ai_saved_keys.api_key\":{\"nonNull\":1,\"sha256\":\"cce4601a42a4dc34\"},\"signing_connectors.private_key\":{\"nonNull\":1,\"sha256\":\"819d455e9bba342a\"},\"signing_connectors.webhook_secret\":{\"nonNull\":1,\"sha256\":\"35bc03457278259e\"},\"org_settings.smtp_url\":{\"nonNull\":1,\"sha256\":\"2e286b48aa5f7fee\"},\"org_settings.vapid_private_key\":{\"nonNull\":1,\"sha256\":\"89e531cb6e0c03a4\"},\"org_settings.advanced_settings\":{\"nonNull\":1,\"sha256\":\"427ee22ce661c744\"},\"sso_providers.oidc_config\":{\"nonNull\":1,\"sha256\":\"119f68e9dcc9661b\"}}}",
-      "result": "pass",
-      "elapsedMs": 2215
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/auth/login",
-      "action": "Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "startedAt": "2026-09-28T07:57:52.975Z",
-      "at": "2026-09-28T07:57:52.976Z",
-      "actual": "role null attempt 1: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 2: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 3: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 4: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 5: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 6: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password",
+      "startedAt": "2026-09-28T10:04:44.179Z",
+      "at": "2026-09-28T10:04:46.195Z",
+      "actual": "files {\"tables\":113,\"identicalRowDigests\":97,\"countChanges\":[\"activity_log 1617 -> 1622\",\"contract_analysis_runs 1 -> 6\",\"contract_statuses 10 -> 11\",\"document_types 6 -> 7\",\"envelope_launches absent -> 0\",\"runtime_status 4 -> 5\",\"sessions 24 -> 28\"],\"sameCountDifferentRows\":[\"api_keys\",\"contract_envelopes\",\"document_comparisons\",\"document_version_rendition\",\"document_version_text\",\"notifications\",\"org_settings\",\"sso_providers\",\"users\"],\"filesBefore\":175,\"filesAfter\":179,\"fileHashMismatches\":0,\"sealedChanged\":[]}",
       "result": "fail",
-      "elapsedMs": 1
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/auth/login",
-      "action": "Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "startedAt": "2026-09-28T08:02:03.086Z",
-      "at": "2026-09-28T08:02:03.087Z",
-      "actual": "role null attempt 1: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 2: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 3: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 4: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Check your email and password. Email Password Sign in Set up or reset your password; attempt 5: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Too many attempts. Wait 15 minutes, then try again. Email Password Sign in Set up o; attempt 6: Skip to content Helix Software Group Legal Portal Powered by OpenLaw Sign in Too many attempts. Wait 15 minutes, then try again. Email Password Sign in Set up o",
-      "result": "fail",
-      "elapsedMs": 1
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/auth/login",
-      "action": "Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "startedAt": "2026-09-28T08:02:11.145Z",
-      "at": "2026-09-28T08:02:11.272Z",
-      "actual": "{\"rows\":[\"2 \\\"remoteAddress\\\":\\\"10.245.72.1\\\"\",\"10 \\\"remoteAddress\\\":\\\"127.0.0.1\\\"\",\"95 \\\"remoteAddress\\\":\\\"192.168.122.1\\\"\"],\"gwOther\":2}",
-      "result": "fail",
-      "elapsedMs": 127
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/auth/login",
-      "action": "Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's",
-      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
-      "startedAt": "2026-09-28T08:02:24.235Z",
-      "at": "2026-09-28T08:02:24.445Z",
-      "actual": "Administrator signed in at https://openlaw-doc032-opup.test:24721 and landed on /; the guide's command listed 2 \"remoteAddress\":\"10.245.72.1\"; 10 \"remoteAddress\":\"127.0.0.1\"; 112 \"remoteAddress\":\"192.168.122.1\"; the browser's requests show 192.168.122.1; gateway (10.245.72.1) lines are only the walkthrough's direct /readyz probes (non-probe gateway requests: 0); since the browser sign-in only: 23 \"remoteAddress\":\"192.168.122.1\". Earlier gateway lines in the 5-minute window are the walkthrough's own direct API probes on 127.0.0.1:24720",
-      "result": "pass",
-      "elapsedMs": 210
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/contracts/:number",
-      "action": "Verify step 3: known Contracts, a Matter and an Entity open with their saved values",
-      "startedAt": "2026-09-28T08:02:24.447Z",
-      "at": "2026-09-28T08:02:27.167Z",
-      "actual": "[\"C-1 heading shown; 1 Field values saved, 1 string values visible on its Fields tab\",\"C-2 heading shown; 2 Field values saved, 2 string values visible on its Fields tab\",\"C-3 heading shown; 4 Field values saved, 3 string values visible on its Fields tab\",\"M-1 heading shown\",\"Entity \\\"Helix Software Group, Inc.\\\" shown\",\"row digests identical for contracts true, matters true, entities true, fields true\"]",
-      "result": "pass",
-      "elapsedMs": 2720
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/contracts/statuses",
-      "action": "Verify step 3: Contract Statuses and Document types keep their names, with Partially signed added",
-      "startedAt": "2026-09-28T08:02:27.169Z",
-      "at": "2026-09-28T08:02:28.340Z",
-      "actual": "Settings → Contracts → Statuses shows all 10 earlier names plus Partially signed (added: Partially signed [signature]; last in the Signature Stage); Settings → Documents → Contracts shows all 6 earlier types plus Partially signed (just before Executed); the earlier order is kept",
-      "result": "pass",
-      "elapsedMs": 1171
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": null,
-      "action": "Verify step 3: download representative original and later Document Versions and compare hashes with the pre-upgrade inventory",
-      "startedAt": "2026-09-28T08:02:28.342Z",
-      "at": "2026-09-28T08:02:28.412Z",
-      "actual": "[\"doc 01a0e6fc v1 draft_ours/uploaded 0f43d4ef3fd9b41d match\",\"doc 01a0e6fc v2 redline_theirs/uploaded 1ad1bd7952adfa2b match\",\"doc 01a0e6fc v1 draft_ours/uploaded 7be99023e618c78d match\",\"doc 01a0e6fc v2 executed/uploaded 7be99023e618c78d match\",\"doc 01a0e6fc v1 draft_ours/uploaded 40a681b7e81f026d match\",\"doc 01a0e6fc v2 executed/uploaded 40a681b7e81f026d match\",\"doc 01a0e6fc v2 executed/uploaded 40a681b7e81f026d match\",\"doc 01a0e6fc v2 executed/uploaded 7be99023e618c78d match\"]",
-      "result": "pass",
-      "elapsedMs": 70
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/contracts/:number/documents",
-      "action": "Verify step 4: a new upload in the browser is processed by the worker",
-      "startedAt": "2026-09-28T08:02:28.414Z",
-      "at": "2026-09-28T08:02:30.868Z",
-      "actual": "Documents tab, Upload, Upload document dialog, Choose files doc032-op-upgrade-1790582548415.pdf, Upload (201); processing ready with the uploaded words",
-      "result": "pass",
-      "elapsedMs": 2454
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/email",
-      "action": "Verify step 4: an actual use of the saved encrypted relay: Send test email",
-      "startedAt": "2026-09-28T08:02:30.870Z",
-      "at": "2026-09-28T08:02:33.030Z",
-      "actual": "Settings → Advanced → Outbound email → Send test email: \"Test email sent to [seed Administrator]\"; \"OpenLaw test email\" reached the controlled recipient through the relay saved on the starting build",
-      "result": "pass",
-      "elapsedMs": 2160
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/ai-analysis",
-      "action": "Verify step 4: Test connection on the configured AI connector (stand-in accepts only the saved key)",
-      "startedAt": "2026-09-28T08:02:33.033Z",
-      "at": "2026-09-28T08:02:33.739Z",
-      "actual": "Settings → AI analysis → Test connection: \"Connection successful.\"",
-      "result": "pass",
-      "elapsedMs": 706
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/system-status",
-      "action": "Verify step 4: Settings → Advanced → System status → Refresh: API and Worker Running and Current; the Saved in OpenLaw field keeps its value",
-      "startedAt": "2026-09-28T08:02:33.742Z",
-      "at": "2026-09-28T08:02:35.994Z",
-      "actual": "{\"systemStatus\":{\"rows\":[\"API Running Current 12:02 PM\",\"Worker Running Current 12:02 PM\"],\"activeStorage\":\"Active storage: local\",\"missingWarning\":false,\"ok\":true,\"attempts\":1},\"fileUploads\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"before\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"}}",
-      "result": "pass",
-      "elapsedMs": 2252
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/mcp",
-      "action": "Listed change: the saved Toolset ceiling loses Team and Administration; the existing API key cannot run their Tools",
-      "startedAt": "2026-09-28T08:02:35.996Z",
-      "at": "2026-09-28T08:02:36.776Z",
-      "actual": "{\"ceilingBefore\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"ceilingAfter\":[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"],\"keyToolsetsStillRecorded\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"team\\\", \\\"administration\\\"]\",\"settingsPageMentionsTeam\":true,\"settingsPageMentionsAdministration\":false,\"toolsBefore\":9,\"toolsAfter\":9,\"teamAdministrationToolsListedForTheKey\":[],\"earlierToolsNoLongerListed\":[]}",
-      "result": "pass",
-      "elapsedMs": 780
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/authentication",
-      "action": "Listed change: the registered SSO provider has an empty display name, so Settings shows its Provider ID",
-      "startedAt": "2026-09-28T08:02:36.778Z",
-      "at": "2026-09-28T08:02:38.468Z",
-      "actual": "sso_providers.name (empty); Settings → Authentication lists \"doc032-idp\" with its domain doc032-sso.example: true; a \"Remove doc032-idp\" control: true",
-      "result": "pass",
-      "elapsedMs": 1690
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "page": "/contracts/:number",
-      "action": "Verify step 2: a lower-access account (Legal Team Member) still cannot reach a Confidential record outside its audience",
-      "startedAt": "2026-09-28T08:02:38.475Z",
-      "at": "2026-09-28T08:02:40.147Z",
-      "actual": "signed in as legal_team_member; Confidential C-4 (not a team member, Owner or Business Owner) answered 404 before the upgrade 404 and 404 after; its title is not shown; the page reads \"Skip to content openlaw / Helix Software Group / Help 9+ PR Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contract not found C-4 \"; a non-confidential C-1 still opens (200)",
-      "result": "pass",
-      "elapsedMs": 1672
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "page": "/portal",
-      "action": "Verify step 2: a Business User signs in with a fresh magic link and cannot reach a Confidential record outside its audience",
-      "startedAt": "2026-09-28T08:02:40.150Z",
-      "at": "2026-09-28T08:03:40.783Z",
-      "actual": "no sign-in link for ade.balogun@helix.example",
-      "result": "fail",
-      "elapsedMs": 60633
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "operator",
-      "method": "container-operation",
-      "page": null,
-      "action": "Verify step 5: inspect outstanding jobs and Envelopes; the worker is still running",
-      "command": "psql: pg-boss job states; contract_envelopes; docker inspect worker",
-      "startedAt": "2026-09-28T08:03:40.788Z",
-      "at": "2026-09-28T08:03:41.357Z",
-      "actual": "pg-boss completed|540; failed by queue: none; contract_envelopes declined completes_contract=true|1; signed completes_contract=true|2; Versions of type Partially signed: 0; worker restarts/state 0 running",
-      "result": "pass",
-      "elapsedMs": 569
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "legal_team_member",
-      "method": "browser-walkthrough",
-      "page": "/contracts/:number",
-      "action": "Verify step 2: a lower-access account (Legal Team Member) still cannot reach a Confidential record outside its audience",
-      "startedAt": "2026-09-28T08:04:26.618Z",
-      "at": "2026-09-28T08:04:28.398Z",
-      "actual": "signed in as legal_team_member; Confidential C-4 (not a team member, Owner or Business Owner) answered 404 before the upgrade 404 and 404 after; its title is not shown; the page reads \"Skip to content openlaw / Helix Software Group / Help 9+ PR Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contract not found C-4 \"; a non-confidential C-1 still opens (200)",
-      "result": "pass",
-      "elapsedMs": 1780
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "business_user",
-      "method": "browser-walkthrough",
-      "page": "/portal",
-      "action": "Verify step 2: a Business User signs in with a fresh magic link and cannot reach a Confidential record outside its audience",
-      "startedAt": "2026-09-28T08:04:28.402Z",
-      "at": "2026-09-28T08:04:31.389Z",
-      "actual": "magic link from Mailpit uses https://openlaw-doc032-opup.test:24721; signed in as business_user, landed on /portal; Confidential C-4 answered 403 (staff API) and 404 (Portal API)",
-      "result": "pass",
-      "elapsedMs": 2987
-    },
-    {
-      "phase": "up-verify",
-      "article": "upgrade",
-      "scenario": "V-C46",
-      "role": "administrator",
-      "method": "browser-walkthrough",
-      "page": "/settings/mcp",
-      "action": "Listed change, follow-up: once an Administrator selects Team and Administration again, the existing API key lists their Tools",
-      "startedAt": "2026-09-28T08:04:32.343Z",
-      "at": "2026-09-28T08:04:32.435Z",
-      "actual": "with the migrated ceiling the key lists 9 tools and no Team or Administration tool; after the Administrator adds Team and Administration to the ceiling (PATCH /api/v1/mcp-settings from the signed-in browser, 200) the same key lists 11 tools including openlaw_audit_log_query, openlaw_settings_get",
-      "result": "pass",
-      "elapsedMs": 92
+      "elapsedMs": 2016
     },
     {
       "phase": "recover",
@@ -1991,11 +1192,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Recovery step 1: prepare the starting build's source and images, retained keys, distinct project, origin and port; no first-run setup",
-      "startedAt": "2026-09-28T08:04:36.278Z",
-      "at": "2026-09-28T08:04:56.909Z",
-      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (5 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; build 15 s; project openlaw-doc032-oprecover, BASE_URL http://127.0.0.1:24730, PORT 24730; retained keys from the secret store; backup images.json names openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; target app image openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 (sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c)",
+      "startedAt": "2026-09-28T10:04:46.406Z",
+      "at": "2026-09-28T10:04:53.169Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (5 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; build 2 s; project openlaw-doc032-oprecover, BASE_URL http://127.0.0.1:24730, PORT 24730; retained keys from the secret store; backup images.json names openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; target app image openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 (sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c)",
       "result": "pass",
-      "elapsedMs": 20631
+      "elapsedMs": 6763
     },
     {
       "phase": "recover",
@@ -2006,11 +1207,11 @@
       "page": null,
       "action": "Recovery step 2: verify the hashes on the target host and start Postgres; confirm the target is empty",
       "command": "(cd \"$BACKUP_DIR\" && sha256sum --check SHA256SUMS); docker compose up -d postgres",
-      "startedAt": "2026-09-28T08:04:56.912Z",
-      "at": "2026-09-28T08:05:00.018Z",
+      "startedAt": "2026-09-28T10:04:53.172Z",
+      "at": "2026-09-28T10:04:56.231Z",
       "actual": "database.dump: OK; files.tar.gz: OK; target non-system tables 0; entries under /var/lib/openlaw/files 0",
       "result": "pass",
-      "elapsedMs": 3106
+      "elapsedMs": 3059
     },
     {
       "phase": "recover",
@@ -2020,11 +1221,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Recovery steps 3 and 4: restore the database with --exit-on-error and the files through the target app service's volume",
-      "startedAt": "2026-09-28T08:05:00.021Z",
-      "at": "2026-09-28T08:05:02.856Z",
+      "startedAt": "2026-09-28T10:04:56.233Z",
+      "at": "2026-09-28T10:04:58.573Z",
       "actual": "pg_restore exit 0; tar exit 0",
       "result": "pass",
-      "elapsedMs": 2835
+      "elapsedMs": 2340
     },
     {
       "phase": "recover",
@@ -2035,11 +1236,11 @@
       "page": null,
       "action": "Recovery step 5: start the target (controlled relay and stand-ins reachable under their saved names) and check readiness",
       "command": "docker compose up -d --no-build --pull never; docker compose ps",
-      "startedAt": "2026-09-28T08:05:02.859Z",
-      "at": "2026-09-28T08:05:07.552Z",
+      "startedAt": "2026-09-28T10:04:58.576Z",
+      "at": "2026-09-28T10:05:02.984Z",
       "actual": "{\"readyz\":200,\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"images\":{\"app\":\"sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c\",\"worker\":\"sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c\",\"doc-engine\":\"sha256:8ae45e9ec07867c453efa9fd0d0a994ec463a7af20931c50616b1bf7bdbc2aaf\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
       "result": "pass",
-      "elapsedMs": 4693
+      "elapsedMs": 4408
     },
     {
       "phase": "recover",
@@ -2049,11 +1250,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Recovery target matches the pre-upgrade inventory: journal, counts, row digests, file hashes, sealed settings",
-      "startedAt": "2026-09-28T08:05:07.555Z",
-      "at": "2026-09-28T08:05:09.876Z",
-      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":112,\"identicalRowDigests\":106,\"countChanges\":[\"oauth_resources 1 -> 2\",\"runtime_status 6 -> 7\",\"sessions 24 -> 29\"],\"sameCountDifferentRows\":[\"api_keys\",\"notifications\",\"users\"],\"filesBefore\":174,\"filesAfter\":174,\"fileHashMismatches\":0,\"sealedChanged\":[]}",
+      "startedAt": "2026-09-28T10:05:02.986Z",
+      "at": "2026-09-28T10:05:04.986Z",
+      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":112,\"identicalRowDigests\":101,\"countChanges\":[\"activity_log 1617 -> 1622\",\"contract_analysis_runs 1 -> 6\",\"oauth_resources 1 -> 2\",\"runtime_status 4 -> 5\",\"sessions 24 -> 28\"],\"sameCountDifferentRows\":[\"api_keys\",\"document_comparisons\",\"document_version_rendition\",\"document_version_text\",\"notifications\",\"users\"],\"filesBefore\":175,\"filesAfter\":179,\"fileHashMismatches\":0,\"sealedChanged\":[]}",
       "result": "pass",
-      "elapsedMs": 2321
+      "elapsedMs": 2000
     },
     {
       "phase": "recover",
@@ -2063,11 +1264,661 @@
       "method": "browser-walkthrough",
       "page": "/contracts",
       "action": "Recovery target: sign in; hashes match; work accepted after the backup is absent; a Legal Team Member stays refused on the Confidential record",
-      "startedAt": "2026-09-28T08:05:11.001Z",
-      "at": "2026-09-28T08:05:12.279Z",
-      "actual": "Administrator signed in at http://127.0.0.1:24730; 8 representative Version hashes match; the Document uploaded after the backup is absent; Legal Team Member on Confidential C-4 answered 404; test email through the restored relay 200 and delivered; app image sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c is the starting build; openlaw-doc032-opup was never started on an older image",
+      "startedAt": "2026-09-28T10:05:06.126Z",
+      "at": "2026-09-28T10:05:06.241Z",
+      "actual": "Cannot read properties of undefined (reading 'contract')",
+      "result": "fail",
+      "elapsedMs": 115
+    },
+    {
+      "phase": "up-baseline",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Fixture: install the starting build 067c1646 with the installation guide's files (TRUSTED_PROXIES as the starting build's .env.example suggested)",
+      "startedAt": "2026-09-28T10:05:51.363Z",
+      "at": "2026-09-28T10:05:56.110Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (5 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; starting build .env.example TRUSTED_PROXIES lines: #TRUSTED_PROXIES=127.0.0.1,::1; fixture-only settings for the seed (removed before the upgrade): SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN=true, DOCUSIGN_BASE_URL=http://doc032-seed:8129, SMTP_URL=[redacted], SMTP_FROM (as the lab overlay sets them)",
       "result": "pass",
-      "elapsedMs": 1278
+      "elapsedMs": 4747
+    },
+    {
+      "phase": "up-baseline",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Fixture: build and start the starting build; readiness",
+      "command": "docker compose config --quiet; docker compose build app doc-engine; docker compose up -d --no-build --pull never",
+      "startedAt": "2026-09-28T10:05:56.111Z",
+      "at": "2026-09-28T10:06:08.983Z",
+      "actual": "build 2 s; readyz 200; port 127.0.0.1:24720; app sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, worker sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490, engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d",
+      "result": "pass",
+      "elapsedMs": 12872
+    },
+    {
+      "phase": "up-seed",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: populate the starting instance with scripts/seed from 067c1646 plus the one-file seed fix 00528360 and the signing stand-in answering as doc032-seed (light profile, random seed 7, e-signature Envelopes against the seed's own stand-in)",
+      "command": "node scripts/seed/index.mjs --scale light --seed 7 --skip-ai --with-signing --only-if-empty --wait (inside a node:24-slim container on the project's backend network, SEED_BASE_URL = the instance origin through an in-network Caddy)",
+      "startedAt": "2026-09-28T10:06:09.193Z",
+      "at": "2026-09-28T10:06:36.520Z",
+      "actual": "{\"exit\":0,\"minutes\":0.4,\"phases\":[\"preflight\",\"the administrator\",\"the organisation\",\"people\",\"configuration\",\"entities\",\"knowledge\",\"contracts (30)\",\"matters (18)\",\"intake (15)\",\"comparisons\",\"signature\",\"finishing\",\"done\"],\"notes\":[\"(node:1) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\",\"[00:00] people\",\"[00:01]   signing in the business\",\"[00:01]   22 people in the instance\",\"[00:04] entities\",\"[00:04]   30 entities\",\"[00:07] knowledge\",\"[00:07]   7 knowledge folders\",\"[00:08]   25 knowledge items (23 published)\",\"[00:08] contracts (30)\",\"[00:09]     25 of 30 contracts created\",\"[00:09]   30 contracts created\",\"[00:11]   0 contracts archived\",\"[00:11] matters (18)\",\"[00:12]   17 matters created (2 from templates)\",\"[00:12]   15 matter relations, 9 sub-matters\",\"[00:12]   1 matters archived\",\"[00:13]   26 contracts linked to matters\",\"[00:13]   15 requests submitted\",\"[00:13]   13 requests picked up\"]}",
+      "result": "pass",
+      "elapsedMs": 27327
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: remove the seed-only settings (SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM) and recreate app and worker",
+      "startedAt": "2026-09-28T10:06:36.767Z",
+      "at": "2026-09-28T10:06:51.070Z",
+      "actual": "recreated; readyz 200; none of SETUP_TOKEN, AUTH_RATE_LIMIT, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM has a value in the app container (compose.yml passes SETUP_TOKEN as an empty string)",
+      "result": "pass",
+      "elapsedMs": 14303
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: a saved relay with an SMTP password; its test email arrives",
+      "startedAt": "2026-09-28T10:06:51.130Z",
+      "at": "2026-09-28T10:06:51.239Z",
+      "actual": "relay smtp://[redacted]@doc032-mail:1025 saved in the app; test email delivered to the Administrator",
+      "result": "pass",
+      "elapsedMs": 109
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: AI connector (custom endpoint stand-in) with a saved key; its test passes",
+      "startedAt": "2026-09-28T10:06:51.240Z",
+      "at": "2026-09-28T10:06:51.283Z",
+      "actual": "connector preset custom, hasApiKey true; test 200 through the stand-in",
+      "result": "pass",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: register an SSO provider (OIDC discovery stand-in) with a client secret",
+      "startedAt": "2026-09-28T10:06:51.284Z",
+      "at": "2026-09-28T10:06:51.320Z",
+      "actual": "provider doc032-idp issuer http://doc032-idp:8080 domain doc032-sso.example; callback https://openlaw-doc032-opup.test:24721/api/auth/sso/callback",
+      "result": "pass",
+      "elapsedMs": 36
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: MCP on with a Toolset ceiling that includes Team and Administration; an Administrator's API key with Team and Administration",
+      "startedAt": "2026-09-28T10:06:51.322Z",
+      "at": "2026-09-28T10:06:51.402Z",
+      "actual": "MCP enabled; ceiling workspace, contracts, matters, tasks, requests, comments, documents, auto-docs, entities, knowledge, people, team, administration; API key request active for workspace, contracts, team, administration (key held privately); tools/list through the origin: 9 tools, Team/Administration tools present: none",
+      "result": "pass",
+      "elapsedMs": 80
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/uploads",
+      "action": "Fixture: save Maximum file size (MiB) = 40 in Settings → Advanced → File uploads so a field shows Saved in OpenLaw",
+      "startedAt": "2026-09-28T10:06:52.475Z",
+      "at": "2026-09-28T10:06:52.644Z",
+      "actual": "saved; the page says \"Settings saved. Restart the API and worker to apply changes.\"",
+      "result": "pass",
+      "elapsedMs": 169
+    },
+    {
+      "phase": "up-fixture",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Fixture: restart app and worker so the saved Advanced value is active on the starting build",
+      "command": "docker compose restart app worker",
+      "startedAt": "2026-09-28T10:06:52.651Z",
+      "at": "2026-09-28T10:07:05.212Z",
+      "actual": "restarted; readyz 200",
+      "result": "pass",
+      "elapsedMs": 12561
+    },
+    {
+      "phase": "up-before",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Baseline inventory on the starting build: migration journal, record counts, file hashes, sealed settings, Contract vocabulary",
+      "command": "psql reads; find /var/lib/openlaw/files -type f -exec sha256sum",
+      "startedAt": "2026-09-28T10:07:05.489Z",
+      "at": "2026-09-28T10:09:10.629Z",
+      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":\"112 tables, 76 non-empty\",\"keyCounts\":{\"users\":22,\"contracts\":36,\"matters\":17,\"entities\":30,\"documents\":113,\"document_versions\":131,\"contract_envelopes\":4,\"requests\":15,\"comments\":74,\"knowledge_items\":25,\"fields\":20,\"activity_log\":1624,\"sso_providers\":1,\"api_key_requests\":1,\"ai_saved_keys\":1,\"signing_connectors\":1},\"files\":{\"count\":182,\"digest\":\"cb859baf0c1168be0eecd475954b4cad952c7e7a6ca38a2f01f8c054ca84c53f\"},\"sealed\":{\"api_key_requests.sealed_key\":{\"nonNull\":0,\"sha256\":\"\"},\"ai_saved_keys.api_key\":{\"nonNull\":1,\"sha256\":\"224b12203e9581c9\"},\"signing_connectors.private_key\":{\"nonNull\":1,\"sha256\":\"8f0ed8a65ab1eea0\"},\"signing_connectors.webhook_secret\":{\"nonNull\":1,\"sha256\":\"7af22244ab60283f\"},\"org_settings.smtp_url\":{\"nonNull\":1,\"sha256\":\"775079d3e5b294d9\"},\"org_settings.vapid_private_key\":{\"nonNull\":1,\"sha256\":\"fa6dbeb29a6c53bc\"},\"org_settings.advanced_settings\":{\"nonNull\":1,\"sha256\":\"b34711a6487d2ca8\"},\"sso_providers.oidc_config\":{\"nonNull\":1,\"sha256\":\"41d78e8ffb8ddfc2\"}},\"vocabulary\":{\"statuses\":[\"Draft [draft]\",\"Internal review [review]\",\"With counterparty [review]\",\"Awaiting approval [approval]\",\"Out for signature [signature]\",\"Active [active]\",\"Expired [ended]\",\"Terminated [ended]\",\"Signed, awaiting countersignature [signature]\",\"Superseded [ended]\"],\"documentTypes\":[\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Executed\",\"Amendment\"]},\"envelopes\":[\"declined|1\",\"sent|2\",\"voided|1\"],\"ceiling\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"fixtures\":{\"ltm\":\"priya.raman@helix.example\",\"businessUser\":\"ade.balogun@helix.example\",\"confidentialOutsideLtm\":\"23\",\"confidentialOutsideBu\":\"23\",\"representativeVersions\":8}}",
+      "result": "pass",
+      "elapsedMs": 125140
+    },
+    {
+      "phase": "up-before",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "automated-test",
+      "page": null,
+      "action": "Baseline: representative Version hashes, lower-access reach, MCP tools",
+      "startedAt": "2026-09-28T10:09:10.631Z",
+      "at": "2026-09-28T10:09:10.897Z",
+      "actual": "{\"versions\":[\"doc 01a0e77a v1 draft_ours/uploaded fb9ddca9dfd9f261\",\"doc 01a0e77a v2 executed/uploaded fb9ddca9dfd9f261\",\"doc 01a0e77a v1 draft_ours/uploaded 467b20bdfce7db00\",\"doc 01a0e77a v2 executed/uploaded 467b20bdfce7db00\",\"doc 01a0e77a v1 draft_ours/uploaded fa938533ce682bd2\",\"doc 01a0e77a v2 executed/uploaded fa938533ce682bd2\",\"doc 01a0e77a v2 executed/uploaded fb9ddca9dfd9f261\",\"doc 01a0e77a v2 executed/uploaded 467b20bdfce7db00\"],\"legalTeamMemberOnConfidential\":\"C-23 answered 404\",\"mcpTools\":\"9 tools; Team/Administration-like names 0\"}",
+      "result": "pass",
+      "elapsedMs": 266
+    },
+    {
+      "phase": "up-before",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/uploads",
+      "action": "Before you start: record every Settings → Advanced field that shows Saved in OpenLaw; System status on the starting build",
+      "startedAt": "2026-09-28T10:09:11.932Z",
+      "at": "2026-09-28T10:09:14.210Z",
+      "actual": "{\"fileUploads\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"systemStatus\":{\"rows\":[\"Worker Running Current 2:09 PM\",\"API Running Current 2:09 PM\"],\"activeStorage\":\"Active storage: local\",\"missingWarning\":false,\"ok\":true,\"attempts\":1}}",
+      "result": "pass",
+      "elapsedMs": 2278
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Before you start: record source revision, image identities, project name, file list, storage configuration and keys",
+      "startedAt": "2026-09-28T10:09:51.778Z",
+      "at": "2026-09-28T10:09:52.197Z",
+      "actual": "{\"sourceRevision\":\"067c1646829df85e62b809ee9157921e867c84e7\",\"images\":{\"app\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"worker\":\"sha256:93e64d4b46cc5d5cf533ac97352b19c71d753f21c9de4fb786e7be49065fd490\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"},\"project\":\"openlaw-doc032-opup\",\"composeFile\":\"compose.yml:compose.operator.yml:compose.doc032-net.yml\",\"storage\":{\"STORAGE_DRIVER\":\"(unset: local)\",\"volume\":\"openlaw-doc032-opup_openlaw-files\"},\"advancedSavedInOpenLaw\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"keysInSecretStore\":true}",
+      "result": "pass",
+      "elapsedMs": 419
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Prepare step 1: fetch the source and inspect local changes",
+      "command": "git status --short; git fetch origin; git rev-parse HEAD",
+      "startedAt": "2026-09-28T10:09:52.206Z",
+      "at": "2026-09-28T10:09:53.070Z",
+      "actual": "git status --short: \"?? compose.doc032-net.yml\\n?? compose.operator.yml\"; git fetch origin exit 0; HEAD 067c1646829df85e62b809ee9157921e867c84e7",
+      "result": "pass",
+      "elapsedMs": 864
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Prepare step 2: select the target, update OPENLAW_BUILD_COMMIT, validate and build without recreating the running containers",
+      "command": "git checkout --detach ad345da5842c22b7d1012bf9f5d7d12dfdb4e496; docker compose config --quiet; docker compose build app doc-engine",
+      "startedAt": "2026-09-28T10:09:53.076Z",
+      "at": "2026-09-28T10:09:55.234Z",
+      "actual": "checkout exit 0; build 2 s; 4 containers kept their IDs and states; app and worker both resolve to openlaw-local:ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 (sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610); engine sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d; postgres stays postgres:16",
+      "result": "pass",
+      "elapsedMs": 2158
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Prepare step 3: review TRUSTED_PROXIES before the target starts; the Compose file is unchanged",
+      "command": "git diff --stat 067c1646829df85e62b809ee9157921e867c84e7 ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 -- compose.yml; docker network inspect openlaw-doc032-opup_openlaw-backend --format '{{range .IPAM.Config}}{{.Gateway}} {{.Subnet}}{{end}}'; TRUSTED_PROXIES=<gateway>",
+      "startedAt": "2026-09-28T10:09:55.236Z",
+      "at": "2026-09-28T10:09:55.317Z",
+      "actual": "{\"composeYmlDiff\":\"(empty)\",\"trustedProxiesBefore\":\"127.0.0.1,::1\",\"gatewayRead\":\"10.245.72.1 10.245.72.0/24\",\"trustedProxiesAfter\":\"10.245.72.1\",\"appPorts\":[\"127.0.0.1:24720->3000\"],\"composePrivateOverlay\":false}",
+      "result": "pass",
+      "elapsedMs": 81
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Before you start: check outstanding signing and processing work before the pause",
+      "command": "psql: pg-boss job states; contract_envelopes by status",
+      "startedAt": "2026-09-28T10:09:55.320Z",
+      "at": "2026-09-28T10:09:55.606Z",
+      "actual": "pg-boss: completed|542; contract_envelopes: declined|1; sent|2; voided|1; executed-copy fetch states: n/a",
+      "result": "pass",
+      "elapsedMs": 286
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade (step 4 follows backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Upgrade step 4 / backup step 1: create a fresh private backup directory",
+      "command": "BACKUP_DIR=...; umask 077; mkdir -p \"$BACKUP_DIR\"; chmod 700 \"$BACKUP_DIR\"",
+      "startedAt": "2026-09-28T10:09:55.609Z",
+      "at": "2026-09-28T10:09:55.614Z",
+      "actual": "mode 700",
+      "result": "pass",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade (step 4 follows backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Upgrade step 4 / backup step 2: stop app and worker, keep Postgres running",
+      "command": "docker compose stop app worker; docker compose ps --all",
+      "startedAt": "2026-09-28T10:09:55.616Z",
+      "at": "2026-09-28T10:10:06.503Z",
+      "actual": "{\"app\":\"exited\",\"doc-engine\":\"running\",\"postgres\":\"running\",\"worker\":\"exited\"}",
+      "result": "pass",
+      "elapsedMs": 10887
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade (step 4 follows backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Upgrade step 4 / backup step 3: dump the database, archive the file volume, record source and images",
+      "command": "pg_dump --format=custom > \"$BACKUP_DIR/database.dump\"; docker compose run -T --rm --no-deps app tar -czf - -C /var/lib/openlaw/files . > \"$BACKUP_DIR/files.tar.gz\"; git rev-parse HEAD > app-source.txt; docker compose images --format json > images.json",
+      "startedAt": "2026-09-28T10:10:06.506Z",
+      "at": "2026-09-28T10:10:07.189Z",
+      "actual": "exit codes 0, 0, 0, 0; app-source.txt ad345da5842c22b7d1012bf9f5d7d12dfdb4e496 (the checkout already points at the target); images.json app openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; pre-upgrade revision 067c1646829df85e62b809ee9157921e867c84e7 recorded beside it; dump 705972 bytes; files 790812 bytes",
+      "result": "pass",
+      "elapsedMs": 683
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade (step 4 follows backup-and-restore)",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Upgrade step 4 / backup step 4: list both archives and record hashes; copy to a retained location and verify there",
+      "command": "pg_restore --list; tar -tzf; sha256sum > SHA256SUMS; sha256sum --check",
+      "startedAt": "2026-09-28T10:10:07.191Z",
+      "at": "2026-09-28T10:10:07.316Z",
+      "actual": "pg_restore --list 884 TOC entries; tar lists 182 files; SHA256SUMS d3964f85f5adacd096038553a2d3f2367c94be5134cbc4769d4adf9b0ffab4ef database.dump 3bc1c40eeb245b6c23c01aaaa6eb168b0aad546e625b795b443208ff27c3290c files.tar.gz; retained copy: database.dump: OK; files.tar.gz: OK",
+      "result": "pass",
+      "elapsedMs": 125
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Start step 1: start the target with the retained project and volumes; ps; port; logs",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps; docker compose port app 3000; docker compose logs --tail=100 app worker",
+      "expected": "The app runs the 12 migrations 0172 to 0183 at startup; readiness; the worker stays running; port 127.0.0.1:<PORT>.",
+      "startedAt": "2026-09-28T10:10:07.319Z",
+      "at": "2026-09-28T10:10:56.969Z",
+      "actual": "{\"psRightAfterUp\":[\"app running Up Less than a second (health: starting)\",\"doc-engine running Up 1 second (health: starting)\",\"postgres running Up 4 minutes (healthy)\",\"worker running Up Less than a second\"],\"port\":\"127.0.0.1:24720\",\"readyAfterSeconds\":4,\"journal\":\"172 rows ending 0171_m41-oauth-clients before; 184 rows ending 0183_sso-provider-name after\",\"appMigrationLines\":[\"postgres: relation \\\"__drizzle_migrations\\\" already exists, skipping\"],\"startWarnings\":[],\"appRestartsAndState\":\"0 running\",\"workerRestartsAndState\":\"0 running\",\"errorLikeLines\":[],\"tail100Lines\":18,\"images\":{\"app\":\"sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610\",\"worker\":\"sha256:652c0ccca0ba639da0dbb048c524dd3b04a68af172c7f8f35f0944729dbd6610\",\"doc-engine\":\"sha256:87d58932143b45c57fad258ead7088c81b240aa1f9da0be7c9aeb3c55636769d\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
+      "result": "pass",
+      "elapsedMs": 49650
+    },
+    {
+      "phase": "upgrade",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts",
+      "action": "Start step 5: a browser tab opened before the upgrade, used after it",
+      "expected": "An old tab can show This part of OpenLaw was updated. Reload to continue.",
+      "startedAt": "2026-09-28T10:10:56.978Z",
+      "at": "2026-09-28T10:11:17.884Z",
+      "actual": "{\"navigationsInOldTab\":[\"Matters: /matters\",\"Entities: /entities\",\"Knowledge: /knowledge\",\"Documents: /documents\",\"Settings: /documents\",\"Contracts: /contracts\"],\"afterReload\":\"/contracts\"}",
+      "result": "pass",
+      "elapsedMs": 20906
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "After the upgrade, before any new work: migration outcome, record counts, row digests, file hashes and sealed settings against the baseline",
+      "command": "psql reads; find /var/lib/openlaw/files -type f -exec sha256sum",
+      "startedAt": "2026-09-28T10:11:18.138Z",
+      "at": "2026-09-28T10:11:20.166Z",
+      "actual": "{\"journalBefore\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"journalAfter\":{\"rows\":184,\"last\":\"0183_sso-provider-name\"},\"tables\":113,\"identicalRowDigests\":103,\"countChanges\":[\"contract_statuses 10 -> 11\",\"document_types 6 -> 7\",\"envelope_launches absent -> 0\",\"runtime_status 4 -> 5\",\"sessions 24 -> 28\"],\"sameCountDifferentRows\":[\"api_keys\",\"contract_envelopes\",\"org_settings\",\"sso_providers\",\"users\"],\"filesBefore\":182,\"filesAfter\":182,\"fileHashMismatches\":0,\"sealedChanged\":[],\"vocabularyAfter\":{\"statuses\":[\"Draft [draft]\",\"Internal review [review]\",\"With counterparty [review]\",\"Awaiting approval [approval]\",\"Out for signature [signature]\",\"Active [active]\",\"Expired [ended]\",\"Terminated [ended]\",\"Signed, awaiting countersignature [signature]\",\"Partially signed [signature]\",\"Superseded [ended]\"],\"documentTypes\":[\"Draft · ours\",\"Draft · theirs\",\"Redline · theirs\",\"Redline · ours\",\"Partially signed\",\"Executed\",\"Amendment\"]},\"envelopesAfter\":[\"declined|1\",\"sent|2\",\"voided|1\"],\"ceilingBefore\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"ceilingAfter\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\"]\",\"ssoAfter\":[\"doc032-idp\"],\"sealedAfter\":{\"api_key_requests.sealed_key\":{\"nonNull\":0,\"sha256\":\"\"},\"ai_saved_keys.api_key\":{\"nonNull\":1,\"sha256\":\"224b12203e9581c9\"},\"signing_connectors.private_key\":{\"nonNull\":1,\"sha256\":\"8f0ed8a65ab1eea0\"},\"signing_connectors.webhook_secret\":{\"nonNull\":1,\"sha256\":\"7af22244ab60283f\"},\"org_settings.smtp_url\":{\"nonNull\":1,\"sha256\":\"775079d3e5b294d9\"},\"org_settings.vapid_private_key\":{\"nonNull\":1,\"sha256\":\"fa6dbeb29a6c53bc\"},\"org_settings.advanced_settings\":{\"nonNull\":1,\"sha256\":\"b34711a6487d2ca8\"},\"sso_providers.oidc_config\":{\"nonNull\":1,\"sha256\":\"41d78e8ffb8ddfc2\"}}}",
+      "result": "pass",
+      "elapsedMs": 2028
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/auth/login",
+      "action": "Verify step 2: sign in through the normal origin; the app records the browser's address rather than the proxy's",
+      "command": "docker compose logs --since=5m app | grep -o '\"remoteAddress\":\"[^\"]*\"' | sort | uniq -c",
+      "startedAt": "2026-09-28T10:11:21.288Z",
+      "at": "2026-09-28T10:11:21.465Z",
+      "actual": "Administrator signed in at https://openlaw-doc032-opup.test:24721 and landed on /; the guide's command listed 1 \"remoteAddress\":\"10.245.72.1\"; 3 \"remoteAddress\":\"127.0.0.1\"; 76 \"remoteAddress\":\"192.168.122.1\"; the browser's requests show 192.168.122.1; gateway (10.245.72.1) lines are only the walkthrough's direct /readyz probes (non-probe gateway requests: 0); since the browser sign-in only: 23 \"remoteAddress\":\"192.168.122.1\". Earlier gateway lines in the 5-minute window are the walkthrough's own direct API probes on 127.0.0.1:24720",
+      "result": "pass",
+      "elapsedMs": 177
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/:number",
+      "action": "Verify step 3: known Contracts, a Matter and an Entity open with their saved values",
+      "startedAt": "2026-09-28T10:11:21.468Z",
+      "at": "2026-09-28T10:11:24.059Z",
+      "actual": "[\"C-1 heading shown; 5 Field values saved, 3 string values visible on its Fields tab\",\"C-3 heading shown; 4 Field values saved, 3 string values visible on its Fields tab\",\"C-4 heading shown; 2 Field values saved, 1 string values visible on its Fields tab\",\"M-1 heading shown\",\"Entity \\\"Helix Software Group, Inc.\\\" shown\",\"row digests identical for contracts true, matters true, entities true, fields true\"]",
+      "result": "pass",
+      "elapsedMs": 2591
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/contracts/statuses",
+      "action": "Verify step 3: Contract Statuses and Document types keep their names, with Partially signed added",
+      "startedAt": "2026-09-28T10:11:24.062Z",
+      "at": "2026-09-28T10:11:25.238Z",
+      "actual": "Settings → Contracts → Statuses shows all 10 earlier names plus Partially signed (added: Partially signed [signature]; last in the Signature Stage); Settings → Documents → Contracts shows all 6 earlier types plus Partially signed (just before Executed); the earlier order is kept",
+      "result": "pass",
+      "elapsedMs": 1176
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": null,
+      "action": "Verify step 3: download representative original and later Document Versions and compare hashes with the pre-upgrade inventory",
+      "startedAt": "2026-09-28T10:11:25.240Z",
+      "at": "2026-09-28T10:11:25.309Z",
+      "actual": "[\"doc 01a0e77a v1 draft_ours/uploaded fb9ddca9dfd9f261 match\",\"doc 01a0e77a v2 executed/uploaded fb9ddca9dfd9f261 match\",\"doc 01a0e77a v1 draft_ours/uploaded 467b20bdfce7db00 match\",\"doc 01a0e77a v2 executed/uploaded 467b20bdfce7db00 match\",\"doc 01a0e77a v1 draft_ours/uploaded fa938533ce682bd2 match\",\"doc 01a0e77a v2 executed/uploaded fa938533ce682bd2 match\",\"doc 01a0e77a v2 executed/uploaded fb9ddca9dfd9f261 match\",\"doc 01a0e77a v2 executed/uploaded 467b20bdfce7db00 match\"]",
+      "result": "pass",
+      "elapsedMs": 69
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts/:number/documents",
+      "action": "Verify step 4: a new upload in the browser is processed by the worker",
+      "startedAt": "2026-09-28T10:11:25.313Z",
+      "at": "2026-09-28T10:11:27.938Z",
+      "actual": "Documents tab, Upload, Upload document dialog, Choose files doc032-op-upgrade-1790590285313.pdf, Upload (201); processing ready with the uploaded words",
+      "result": "pass",
+      "elapsedMs": 2625
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/email",
+      "action": "Verify step 4: an actual use of the saved encrypted relay: Send test email",
+      "startedAt": "2026-09-28T10:11:27.940Z",
+      "at": "2026-09-28T10:11:30.087Z",
+      "actual": "Settings → Advanced → Outbound email → Send test email: \"Test email sent to [seed Administrator] Check your inbox.\"; \"OpenLaw test email\" reached the controlled recipient through the relay saved on the starting build",
+      "result": "pass",
+      "elapsedMs": 2147
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/ai-analysis",
+      "action": "Verify step 4: Test connection on the configured AI connector (stand-in accepts only the saved key)",
+      "startedAt": "2026-09-28T10:11:30.090Z",
+      "at": "2026-09-28T10:11:30.797Z",
+      "actual": "Settings → AI analysis → Test connection: \"Connection successful.\"",
+      "result": "pass",
+      "elapsedMs": 707
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/system-status",
+      "action": "Verify step 4: Settings → Advanced → System status → Refresh: API and Worker Running and Current; the Saved in OpenLaw field keeps its value",
+      "startedAt": "2026-09-28T10:11:30.799Z",
+      "at": "2026-09-28T10:11:33.015Z",
+      "actual": "{\"systemStatus\":{\"rows\":[\"API Running Current 2:11 PM\",\"Worker Running Current 2:11 PM\"],\"activeStorage\":\"Active storage: local\",\"missingWarning\":false,\"ok\":true,\"attempts\":1},\"fileUploads\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"},\"before\":{\"value\":\"40\",\"source\":\"Saved in OpenLaw\"}}",
+      "result": "pass",
+      "elapsedMs": 2216
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/mcp",
+      "action": "Listed change: the saved Toolset ceiling loses Team and Administration; the existing API key cannot run their Tools",
+      "startedAt": "2026-09-28T10:11:33.017Z",
+      "at": "2026-09-28T10:11:33.802Z",
+      "actual": "{\"ceilingBefore\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"matters\\\", \\\"tasks\\\", \\\"requests\\\", \\\"comments\\\", \\\"documents\\\", \\\"auto-docs\\\", \\\"entities\\\", \\\"knowledge\\\", \\\"people\\\", \\\"team\\\", \\\"administration\\\"]\",\"ceilingAfter\":[\"workspace\",\"contracts\",\"matters\",\"tasks\",\"requests\",\"comments\",\"documents\",\"auto-docs\",\"entities\",\"knowledge\",\"people\"],\"keyToolsetsStillRecorded\":\"[\\\"workspace\\\", \\\"contracts\\\", \\\"team\\\", \\\"administration\\\"]\",\"settingsPageMentionsTeam\":true,\"settingsPageMentionsAdministration\":false,\"toolsBefore\":9,\"toolsAfter\":9,\"teamAdministrationToolsListedForTheKey\":[],\"earlierToolsNoLongerListed\":[]}",
+      "result": "pass",
+      "elapsedMs": 785
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/authentication",
+      "action": "Listed change: the registered SSO provider has an empty display name, so Settings shows its Provider ID",
+      "startedAt": "2026-09-28T10:11:33.804Z",
+      "at": "2026-09-28T10:11:35.504Z",
+      "actual": "sso_providers.name (empty); Settings → Authentication lists \"doc032-idp\" with its domain doc032-sso.example: true; a \"Remove doc032-idp\" control: true",
+      "result": "pass",
+      "elapsedMs": 1700
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "legal_team_member",
+      "method": "browser-walkthrough",
+      "page": "/contracts/:number",
+      "action": "Verify step 2: a lower-access account (Legal Team Member) still cannot reach a Confidential record outside its audience",
+      "startedAt": "2026-09-28T10:11:35.510Z",
+      "at": "2026-09-28T10:11:37.134Z",
+      "actual": "signed in as legal_team_member; Confidential C-23 (not a team member, Owner or Business Owner) answered 404 before the upgrade 404 and 404 after; its title is not shown; the page reads \"Skip to content openlaw / Helix Software Group / Help 9+ PR Home Inbox My Tasks Matters Contracts Documents Entities Knowledge Auto-Docs Contract not found C-23\"; a non-confidential C-1 still opens (200)",
+      "result": "pass",
+      "elapsedMs": 1624
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "business_user",
+      "method": "browser-walkthrough",
+      "page": "/portal",
+      "action": "Verify step 2: a Business User signs in with a fresh magic link and cannot reach a Confidential record outside its audience",
+      "startedAt": "2026-09-28T10:11:37.137Z",
+      "at": "2026-09-28T10:11:40.074Z",
+      "actual": "magic link from Mailpit uses https://openlaw-doc032-opup.test:24721; signed in as business_user, landed on /portal; Confidential C-23 answered 403 (staff API) and 404 (Portal API)",
+      "result": "pass",
+      "elapsedMs": 2937
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/settings/mcp",
+      "action": "Listed change, follow-up: once an Administrator selects Team and Administration again, the existing API key lists their Tools",
+      "startedAt": "2026-09-28T10:11:41.018Z",
+      "at": "2026-09-28T10:11:41.107Z",
+      "actual": "with the migrated ceiling the key lists 9 tools and no Team or Administration tool; after the Administrator adds Team and Administration to the ceiling (PATCH /api/v1/mcp-settings from the signed-in browser, 200) the same key lists 11 tools including openlaw_audit_log_query, openlaw_settings_get",
+      "result": "pass",
+      "elapsedMs": 88
+    },
+    {
+      "phase": "up-verify",
+      "article": "upgrade",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Verify step 5: inspect outstanding jobs and Envelopes; the worker is still running",
+      "command": "psql: pg-boss job states; contract_envelopes; docker inspect worker",
+      "startedAt": "2026-09-28T10:11:41.112Z",
+      "at": "2026-09-28T10:11:41.572Z",
+      "actual": "pg-boss completed|549; failed by queue: none; contract_envelopes declined completes_contract=true|1; sent completes_contract=true|2; voided completes_contract=true|1; Versions of type Partially signed: 0; worker restarts/state 0 running",
+      "result": "pass",
+      "elapsedMs": 460
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Recovery step 1: prepare the starting build's source and images, retained keys, distinct project, origin and port; no first-run setup",
+      "startedAt": "2026-09-28T10:11:41.831Z",
+      "at": "2026-09-28T10:11:48.442Z",
+      "actual": "git clone https://github.com/juggernog20/OpenLaw.git exit 0 (5 s); git checkout --detach 067c1646 exit 0; grouped .env commands exit 0; build 2 s; project openlaw-doc032-oprecover, BASE_URL http://127.0.0.1:24730, PORT 24730; retained keys from the secret store; backup images.json names openlaw-local:067c1646829df85e62b809ee9157921e867c84e7; target app image openlaw-local:067c1646829df85e62b809ee9157921e867c84e7 (sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c)",
+      "result": "pass",
+      "elapsedMs": 6611
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Recovery step 2: verify the hashes on the target host and start Postgres; confirm the target is empty",
+      "command": "(cd \"$BACKUP_DIR\" && sha256sum --check SHA256SUMS); docker compose up -d postgres",
+      "startedAt": "2026-09-28T10:11:48.446Z",
+      "at": "2026-09-28T10:11:51.472Z",
+      "actual": "database.dump: OK; files.tar.gz: OK; target non-system tables 0; entries under /var/lib/openlaw/files 0",
+      "result": "pass",
+      "elapsedMs": 3026
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Recovery steps 3 and 4: restore the database with --exit-on-error and the files through the target app service's volume",
+      "startedAt": "2026-09-28T10:11:51.475Z",
+      "at": "2026-09-28T10:11:54.440Z",
+      "actual": "pg_restore exit 0; tar exit 0",
+      "result": "pass",
+      "elapsedMs": 2965
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Recovery step 5: start the target (controlled relay and stand-ins reachable under their saved names) and check readiness",
+      "command": "docker compose up -d --no-build --pull never; docker compose ps",
+      "startedAt": "2026-09-28T10:11:54.443Z",
+      "at": "2026-09-28T10:11:58.656Z",
+      "actual": "{\"readyz\":200,\"ps\":[\"app running\",\"doc-engine running\",\"postgres running\",\"worker running\"],\"images\":{\"app\":\"sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c\",\"worker\":\"sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c\",\"doc-engine\":\"sha256:8ae45e9ec07867c453efa9fd0d0a994ec463a7af20931c50616b1bf7bdbc2aaf\",\"postgres\":\"sha256:1b3c642526f8d274b12bdcd93b90aeb7e68a1f59eb20613adb96ed561c01d98c\"}}",
+      "result": "pass",
+      "elapsedMs": 4213
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "operator",
+      "method": "container-operation",
+      "page": null,
+      "action": "Recovery target matches the pre-upgrade inventory: journal, counts, row digests, file hashes, sealed settings",
+      "startedAt": "2026-09-28T10:11:58.665Z",
+      "at": "2026-09-28T10:12:00.712Z",
+      "actual": "{\"journal\":{\"rows\":172,\"last\":\"0171_m41-oauth-clients\"},\"tables\":112,\"identicalRowDigests\":107,\"countChanges\":[\"oauth_resources 1 -> 2\",\"runtime_status 4 -> 5\",\"sessions 24 -> 28\"],\"sameCountDifferentRows\":[\"api_keys\",\"users\"],\"filesBefore\":182,\"filesAfter\":182,\"fileHashMismatches\":0,\"sealedChanged\":[]}",
+      "result": "pass",
+      "elapsedMs": 2047
+    },
+    {
+      "phase": "recover",
+      "article": "upgrade (If the upgrade cannot be accepted) + backup-and-restore",
+      "scenario": "V-C46",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "page": "/contracts",
+      "action": "Recovery target: sign in; hashes match; work accepted after the backup is absent; a Legal Team Member stays refused on the Confidential record",
+      "startedAt": "2026-09-28T10:12:01.813Z",
+      "at": "2026-09-28T10:12:03.026Z",
+      "actual": "Administrator signed in at http://127.0.0.1:24730; 8 representative Version hashes match; the Document uploaded after the backup is absent; Legal Team Member on Confidential C-23 answered 404; test email through the restored relay 200 and delivered; app image sha256:38ac71d55a63e84cafd63b468c9518a978935f2e7d81fcd985f0669ae5008d0c is the starting build; openlaw-doc032-opup was never started on an older image",
+      "result": "pass",
+      "elapsedMs": 1213
     },
     {
       "phase": "destroy",
@@ -2076,11 +1927,11 @@
       "method": "container-operation",
       "page": null,
       "action": "Tear down every owned project, support container, and the private scratch directory",
-      "startedAt": "2026-09-28T08:05:52.698Z",
-      "at": "2026-09-28T08:06:28.799Z",
+      "startedAt": "2026-09-28T10:12:31.812Z",
+      "at": "2026-09-28T10:13:07.281Z",
       "actual": "openlaw-doc032-opinst: down -v exit 0; openlaw-doc032-opup: down -v exit 0; openlaw-doc032-oprecover: down -v exit 0; openlaw-doc032-op-mail: rm exit 0; openlaw-doc032-op-mailup: rm exit 0; openlaw-doc032-op-ai: rm exit 0; openlaw-doc032-op-idp: rm exit 0; openlaw-doc032-op-occupier: rm exit 0; openlaw-doc032-op-proxy: rm exit 0; openlaw-doc032-op-seed: rm exit 0; openlaw-doc032-op-seedproxy: rm exit 0; remaining containers: none; networks: openlaw-doc032-opinst_openlaw-backend\nopenlaw-doc032-oprecover_openlaw-backend\nopenlaw-doc032-opup_openlaw-backend; volumes: none",
       "result": "pass",
-      "elapsedMs": 36101
+      "elapsedMs": 35469
     },
     {
       "phase": "destroy",
@@ -2092,9 +1943,9 @@
       "action": "Remove the three backend networks that the attached support containers held during down -v",
       "command": "docker network rm openlaw-doc032-opinst_openlaw-backend openlaw-doc032-oprecover_openlaw-backend openlaw-doc032-opup_openlaw-backend",
       "expected": null,
-      "startedAt": "2026-09-28T08:06:43.139Z",
-      "at": "2026-09-28T08:06:43.139Z",
-      "actual": "removed all three; docker ps/network ls/volume ls show no openlaw-doc032-op* resources",
+      "startedAt": "2026-09-28T10:13:38.276Z",
+      "at": "2026-09-28T10:13:38.277Z",
+      "actual": "removed all three; docker ps, network ls and volume ls show no openlaw-doc032-op* resources",
       "result": "pass",
       "elapsedMs": 0
     }
@@ -2103,38 +1954,31 @@
   "productBugs": [],
   "observations": [
     {
-      "article": "upgrade",
-      "note": "Start step 5: a tab opened before the upgrade navigated Matters, Entities, Knowledge, Documents, Settings and Contracts after it without showing 'This part of OpenLaw was updated. Reload to continue.'. The guide says an old tab can show it; not showing it is consistent with that wording."
-    },
-    {
-      "article": "upgrade",
-      "note": "The Toolset change is observable only through the ceiling: the starting build has no Team or Administration Tools, so the API key listed none before the upgrade. After it, the ceiling lacks both and the key lists none of the pin's Team/Administration Tools; after an Administrator selects them again, the same key lists openlaw_audit_log_query and openlaw_settings_get."
-    },
-    {
-      "article": "upgrade",
-      "note": "The seed made 3 Envelopes (2 signed, 1 declined). After the upgrade each has completes_contract=true and no Version became Partially signed, as the guide says."
-    },
-    {
-      "article": "upgrade",
-      "note": "Fixture deviations on the starting build, not guide steps: the 067c1646 seed stops with 409 'This person is already on the team.' at random seed 7 (fixed later in 00528360), so the one-file fix was applied to a scratch copy; its signing stand-in reports base_uri http://127.0.0.1:8129, which a containerised app cannot reach, so the scratch copy answers as doc032-seed; the seed ran with the lab overlay's settings (SETUP_TOKEN, AUTH_RATE_LIMIT=off, SIGNING_STANDIN, DOCUSIGN_BASE_URL, SMTP_URL, SMTP_FROM), which were removed and the containers recreated before any baseline was taken."
-    },
-    {
       "article": "install",
-      "note": "Image IDs differ between builds of the same revision in different checkouts (install a6bd0b38, upgrade target 14a3c8fb, starting build 93e64d4b, recovery target 38ac71d5); each project recorded the IDs its containers ran."
-    }
-  ],
-  "updatedAt": "2026-09-28T08:06:28.804Z",
-  "publicationBlockers": [
+      "note": "At ad345da5 the guide's git clone from GitHub and git checkout --detach worked (the pin is on origin/dev). The 4ca41822 run's checkout failure is gone; that run is kept in walkthrough-4ca41822.json."
+    },
     {
-      "articles": ["install", "upgrade"],
-      "step": "install Prepare step 1 (git clone from GitHub, git checkout --detach 4ca41822...) and upgrade Prepare steps 1-2 (git fetch origin; git checkout --detach 4ca41822...)",
-      "observed": "git clone https://github.com/juggernog20/OpenLaw.git then git checkout --detach 4ca41822b685a2a1e58a38b4f25e421cf735c54e exit 128: \"fatal: unable to read tree (4ca41822b685a2a1e58a38b4f25e421cf735c54e)\". The revision is on no GitHub branch (git ls-remote shows dev at e924a3f3; the pin is 6 commits past it on the unpublished local branch docs/edition-refresh).",
-      "consequence": "A reader cannot build the documented revision until it is published on a GitHub branch or tag. The guide text is otherwise correct for the pin; the walkthrough continued by fetching the pin from the local repository into the GitHub clone."
+      "article": "upgrade",
+      "note": "Start step 5: a tab opened before the upgrade navigated Matters, Entities, Knowledge, Documents, Settings and Contracts after it without showing 'This part of OpenLaw was updated. Reload to continue.'. The guide says an old tab can show it."
+    },
+    {
+      "article": "upgrade",
+      "note": "The starting build has no Team or Administration Tools, so the API key listed none before the upgrade. After it the ceiling lacks both and the key lists none; after an Administrator selects them again the same key lists openlaw_audit_log_query and openlaw_settings_get."
+    },
+    {
+      "article": "upgrade",
+      "note": "This run's seed left 4 Envelopes (2 sent, 1 declined, 1 voided; the seed's outcomes depend on timing, and the 4ca41822 run had 2 signed). After the upgrade each has completes_contract=true and no Version became Partially signed."
+    },
+    {
+      "article": "upgrade",
+      "note": "Fixture deviations on the starting build, not guide steps: 00528360's contracts.mjs fix and a network-alias base_uri in a scratch copy of the 067c1646 seed; the lab overlay's seed-only settings were removed and the containers recreated before the baseline; the baseline waits until no pg-boss job is due."
     }
   ],
-  "supersededAttempts": "Failed steps other than the two publication-blocker checkouts were walkthrough-script defects, rerun after the fix: the address check first counted the walkthrough's own direct 127.0.0.1 probes and ran API reads outside the browser's host mapping; one navigation hit ERR_NETWORK_CHANGED; the seed ran three times against a fresh starting instance (Origin mismatch, missing deployment email, the starting build's seed bug) with docker compose -p openlaw-doc032-opup down -v between runs; the fixture check read an empty SETUP_TOKEN as set; the verification first read the target checkout's seed identity, and the Business User step first used the older sign-in link control. The last run of each step is the result.",
+  "updatedAt": "2026-09-28T10:13:07.285Z",
+  "publicationBlockers": [],
+  "supersededAttempts": "The first upgrade attempt in this log took its baseline while 63 seeded processing jobs were still queued, so 4 derived files appeared before the pause and the file-count check failed (all 175 baseline file hashes still matched); its recovery step then had no post-upgrade upload to look for. Both upgrade projects were removed with docker compose -p ... down -v and the whole scenario was rerun with the baseline taken after the queue drained. The last run of each step is the result.",
   "summary": {
-    "install": "V-C44 operator/container-operation: every step passed on openlaw-doc032-opinst except Prepare step 1's checkout, which fails for any reader until 4ca41822 is on a GitHub branch (publicationBlockers).",
-    "upgrade": "V-C46 operator/container-operation from 067c1646 to 4ca41822 on openlaw-doc032-opup, recovery on openlaw-doc032-oprecover: every step passed except Prepare step 2's checkout after git fetch origin (same publication blocker)."
+    "install": "V-C44 operator/container-operation at ad345da5 on openlaw-doc032-opinst: every step passed, including the GitHub clone and checkout.",
+    "upgrade": "V-C46 operator/container-operation from 067c1646 to ad345da5 on openlaw-doc032-opup, recovery on openlaw-doc032-oprecover: every step passed."
   }
 }

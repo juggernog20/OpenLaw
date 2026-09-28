@@ -121,13 +121,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "e19199c43077ee32e49970e41b657b74903860fb52177f08f72b41afbc5357b7",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-a)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T08:08:04.677Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/lib/contract-team.ts, apps/api/src/lib/matter-team.ts, apps/api/src/modules/contracts/create.ts, apps/web/src/routes/contract-record.tsx, apps/web/src/routes/matter-record.tsx and messages/en-US.json. create.ts now uses the shared team insert and moves the renewal vehicle list; conversion still makes the converter Legal Owner or Matter Manager and adds the Requester as Business Owner and team member (both replays read those values). contract-team.ts and matter-team.ts only move the team writes out of the routes. contract-record.tsx and matter-record.tsx moved Legal Owner, Matter Manager and Business Owner out of the Contract and Matter cards into an Owners section; the guide checks Title, Type, Priority, Description, Department and Needed by in Fields or the Matter section, which still hold them, and does not place the owner controls. The Convert dialogs, conversion-draft.ts, conversion-analysis.ts, matter-record-preparation.ts, contract-analysis.ts, request-evidence.ts and requests/convert.ts have no diff; automatic-contract-analysis.ts only skips partially signed versions. The replay passed its final 46 steps for Administrator and Legal Team Member on work (manual paths) and on compataai with the provider stand-in (AI preparation, record-Row preparation, Fill Contract Fields and failure paths). Replay log: batches/DOC-032/compat/compat-a/convert-request-replay.json.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-a): I read the diff of apps/api/src/lib/contract-team.ts, apps/api/src/lib/matter-team.ts, apps/api/src/modules/contracts/create.ts, apps/web/src/routes/contract-record.tsx, apps/web/src/routes/matter-record.tsx and messages/en-US.json. create.ts now uses the shared team insert and moves the renewal vehicle list; conversion still makes the converter Legal Owner or Matter Manager and adds the Requester as Business Owner and team member (both replays read those values). contract-team.ts and matter-team.ts only move the team writes out of the routes. contract-record.tsx and matter-record.tsx moved Legal Owner, Matter Manager and Business Owner out of the Contract and Matter cards into an Owners section; the guide checks Title, Type, Priority, Description, Department and Needed by in Fields or the Matter section, which still hold them, and does not place the owner controls. The Convert dialogs, conversion-draft.ts, conversion-analysis.ts, matter-record-preparation.ts, contract-analysis.ts, request-evidence.ts and requests/convert.ts have no diff; automatic-contract-analysis.ts only skips partially signed versions. The replay passed its final 46 steps for Administrator and Legal Team Member on work (manual paths) and on compataai with the provider stand-in (AI preparation, record-Row preparation, Fill Contract Fields and failure paths). Replay log: batches/DOC-032/compat/compat-a/convert-request-replay.json; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-a.json",
@@ -176,6 +176,10 @@
       {
         "path": "batches/DOC-032/compat/compat-a/convert-request-replay.json",
         "sha256": "9a0110c238fc78262eb9d14a45cc7c65865c1114fb7cac31f0511bd2b23de45b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

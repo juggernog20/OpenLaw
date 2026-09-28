@@ -115,13 +115,13 @@
   },
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "44f50c0d10154808d3824afdb9a811eb915fc456f9badb4ccd9a2e771cd9ec34",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-b)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T07:47:59.876Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of matter-record.tsx, task-assignment.ts, the new lib/matter-team.ts, matters/routes.ts, matters/service.ts and messages/en-US.json. The Matter Tasks, Key dates, Related Matters and Linked Contracts cards, the task dialog and assignee picker, and the matter-tasks and matter-relations routes did not change. 254d4d40 makes a Task assignee team add call addMatterTeamMember, which inserts the same matter_team row and writes the same matter.team_added entry as before; the Matter team routes and the Business Owner change use the same helper. matter-record.tsx only moved the Matter Manager and Business Owner controls into a new Owners section, which this guide does not place. I replayed the DOC-030 matter-work script for Administrator and Legal Team Member on work built from 4ca41822; all 34 steps passed, 17 per role, as in DOC-030.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of matter-record.tsx, task-assignment.ts, the new lib/matter-team.ts, matters/routes.ts, matters/service.ts and messages/en-US.json. The Matter Tasks, Key dates, Related Matters and Linked Contracts cards, the task dialog and assignee picker, and the matter-tasks and matter-relations routes did not change. 254d4d40 makes a Task assignee team add call addMatterTeamMember, which inserts the same matter_team row and writes the same matter.team_added entry as before; the Matter team routes and the Business Owner change use the same helper. matter-record.tsx only moved the Matter Manager and Business Owner controls into a new Owners section, which this guide does not place. I replayed the DOC-030 matter-work script for Administrator and Legal Team Member on work built from 4ca41822; all 34 steps passed, 17 per role, as in DOC-030; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-b.json",
@@ -146,6 +146,10 @@
       {
         "path": "batches/DOC-032/compat/compat-b/logs/matter-work-work.log",
         "sha256": "0d7de3ac820d4258748b13707ee030eed5d02028783bf3b38f3dac8942874dd0"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   },

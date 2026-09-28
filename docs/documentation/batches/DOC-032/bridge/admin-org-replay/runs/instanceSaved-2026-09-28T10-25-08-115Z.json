@@ -1,0 +1,63 @@
+{
+  "section": "instanceSaved",
+  "reviewer": "DOC-032 compatibility reviewer (bridge)",
+  "reviewerKind": "agent",
+  "labName": "bao",
+  "labProject": "openlaw-docs-9d2b1705-bao",
+  "appUrl": "http://127.0.0.1:43388",
+  "mailUrl": "http://127.0.0.1:48488",
+  "appImageId": "sha256:88db6b8c6ba01c7c7ec9404d795716a9589e112fd369fabc03a76fe292fff9a3",
+  "engineImageId": "sha256:eafd797fd144d1fc296b91ac3f81a5407f0626ab2afcdabbc4b38481322136c7",
+  "phase": "base, then baseurl-unset applied twice by the section (overlay-baseurl-unset.json)",
+  "articleHashes": {
+    "first-run": "dd0ed2d133d9919bd14a8680fb152a5b2520d541974f21a6b260e662325b32e2",
+    "organisation-and-users": "b053c91ef562f44add6ea32c8ebcdad506595953279bb863c37d4073d87a394b",
+    "authentication-and-email": "4cca4dde3a0c14e374e7d97b91cef9ff1cfd81764fff206f6c03cfa473f41673"
+  },
+  "startedAt": "2026-09-28T10:25:08.116Z",
+  "steps": [
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": "http://localhost:3000/settings/instance",
+      "action": "The operator removes BASE_URL from the deployment and restarts; Application address becomes editable and the API falls back to its default",
+      "expected": "Field editable with source Default; sign-in works only at the default address",
+      "startedAt": "2026-09-28T10:25:08.279Z",
+      "finishedAt": "2026-09-28T10:25:31.857Z",
+      "actual": "phase baseurl-unset applied to openlaw-docs-9d2b1705-bao (2026-09-28T10:25:24Z). A password sign-in at http://127.0.0.1:43388 got me 401 with \"Invalid origin\". At http://localhost:3000 Daniel signed in, and Instance address showed \"Application address Default\" (field value \"http://localhost:3000\", read-only false).",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "administrator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": "http://localhost:3000/settings/authentication",
+      "action": "An Administrator saves Application address; it waits for a restart of the API and worker",
+      "expected": "Save shows the restart notice and the pending notice; the callback still uses the old address",
+      "startedAt": "2026-09-28T10:25:31.858Z",
+      "finishedAt": "2026-09-28T10:25:34.469Z",
+      "actual": "Entering http://127.0.0.1:43388 and Save showed \"Settings saved. Restart the API and worker to apply changes.\" The pane then showed \"Application address Saved in OpenLaw; Active: http://localhost:3000; Saved changes are waiting for a restart. The active values below are still in use by this API.\" (field value \"http://127.0.0.1:43388\"). Before the restart, Save provider showed the callback http://localhost:3000/api/auth/sso/callback.",
+      "result": "pass"
+    },
+    {
+      "article": "authentication-and-email",
+      "scenario": "V-C37",
+      "role": "operator",
+      "method": "browser-walkthrough",
+      "lab": "bao",
+      "page": null,
+      "action": "After the API and worker restart, the saved Application address is active: new sign-ins and the SSO callback use it",
+      "expected": "Saved in OpenLaw; sign-in at the saved address works; callback on it",
+      "startedAt": "2026-09-28T10:25:34.470Z",
+      "finishedAt": "2026-09-28T10:25:54.763Z",
+      "actual": "phase baseurl-unset applied to openlaw-docs-9d2b1705-bao (2026-09-28T10:25:50Z). A password sign-in at http://127.0.0.1:43388 worked again. Instance address showed \"Application address Saved in OpenLaw\" (field value \"http://127.0.0.1:43388\"). Save provider showed the callback http://127.0.0.1:43388/api/auth/sso/callback.",
+      "result": "pass"
+    }
+  ],
+  "finishedAt": "2026-09-28T10:25:54.779Z"
+}

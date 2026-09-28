@@ -107,13 +107,13 @@
   "copyOnlyReview": null,
   "compatibilityReview": {
     "fromAppCommit": "067c1646829df85e62b809ee9157921e867c84e7",
-    "toAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
     "contentSha256": "450aba9d948cd3c501b93a07ad336f621608c10a1e58668a6423b34fa0fb8fe3",
-    "applicationSha256": "e55f16c19344144766f5fc92f0f417fa5d222d657a150f4db1836d9e37f76385",
-    "reviewer": "DOC-032 compatibility reviewer (compat-b)",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
     "reviewerKind": "agent",
-    "reviewedAt": "2026-09-28T07:47:59.876Z",
-    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of automatic-contract-analysis.ts, contract-record.tsx, contracts/record.ts, contracts/routes.ts, contracts/service.ts, web lib/activity.ts, ai-connector/routes.ts and executed-copy.ts. analysis.tsx, ai-field-evidence.tsx, key-dates-card.tsx, record-actions-menu.tsx, the contract-analysis module and pipelines, analysis-targets.ts, analysis-key-dates.ts and conversion-draft.ts did not change. automatic-contract-analysis.ts now skips a Version filed by a DocuSign round that does not complete the Contract, and executed-copy.ts files such a round without the executed pin; the guide says Analysis can start automatically when target text is ready or a ready Version is marked executed, which stays true for a completing round and for manual marking. ai-connector/routes.ts only shares its read code. contract-record.tsx adds the Owners section, the Signatures tab and a reload on a Status change; Run analysis, Confirm and Confirm all are unchanged. I replayed the DOC-030 V-C21 script (full run plus the Request conversion part) for Legal Team Member and Administrator on my own lab compatb built from 4ca41822, with DOC-030's provider stand-in; all 38 steps passed, 19 per role, and the script put the lab back to no AI connector.",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 067c1646 to 4ca41822 (DOC-032, set compat-b): I read the diff of automatic-contract-analysis.ts, contract-record.tsx, contracts/record.ts, contracts/routes.ts, contracts/service.ts, web lib/activity.ts, ai-connector/routes.ts and executed-copy.ts. analysis.tsx, ai-field-evidence.tsx, key-dates-card.tsx, record-actions-menu.tsx, the contract-analysis module and pipelines, analysis-targets.ts, analysis-key-dates.ts and conversion-draft.ts did not change. automatic-contract-analysis.ts now skips a Version filed by a DocuSign round that does not complete the Contract, and executed-copy.ts files such a round without the executed pin; the guide says Analysis can start automatically when target text is ready or a ready Version is marked executed, which stays true for a completing round and for manual marking. ai-connector/routes.ts only shares its read code. contract-record.tsx adds the Owners section, the Signatures tab and a reload on a Status change; Run analysis, Confirm and Confirm all are unchanged. I replayed the DOC-030 V-C21 script (full run plus the Request conversion part) for Legal Team Member and Administrator on my own lab compatb built from 4ca41822, with DOC-030's provider stand-in; all 38 steps passed, 19 per role, and the script put the lab back to no AI connector; from 4ca41822 to ad345da5 (bridge): I read the whole app diff. None. No hunk reaches a claim of this guide: the range changes only version strings, comments, tests, the unused message catalog, the build tool turbo, and nodemailer and sharp patch releases. The guide makes no claim about the app version, email content or delivery, or organization logo processing, and its recorded steps read no mail and save no logo. No statement changed.",
     "evidence": [
       {
         "path": "batches/DOC-032/compat/compat-b.json",
@@ -142,6 +142,10 @@
       {
         "path": "batches/DOC-032/compat/compat-b/logs/contract-analysis-compatb.log",
         "sha256": "886060dac60108923d5148fb5263e245213843dc8f4aea36ba6f44eb03919489"
+      },
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
       }
     ]
   }

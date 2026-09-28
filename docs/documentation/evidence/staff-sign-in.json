@@ -108,5 +108,60 @@
     "verifiedAt": "2026-09-25T10:45:02.630Z"
   },
   "copyOnlyReview": null,
-  "compatibilityReview": null
+  "compatibilityReview": {
+    "fromAppCommit": "4ca41822b685a2a1e58a38b4f25e421cf735c54e",
+    "toAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
+    "contentSha256": "5d2d5d4b7825a7844ea8aeb3c9cfa64fd6a428fcb199e12e9ab1ce3f87617fca",
+    "applicationSha256": "5dadf909d0eb1d6ebb61274783be2e69c69a813f1a7ef32b8b4a4527cf390e7c",
+    "reviewer": "DOC-032 compatibility reviewer (bridge)",
+    "reviewerKind": "agent",
+    "reviewedAt": "2026-09-28T11:14:45.592Z",
+    "summary": "From 4ca41822 to ad345da5 (bridge): I read the whole app diff. The hunks that reach this guide are the nodemailer patch (every invitation, password-setup and sign-in link email) and the sharp patch (the saved logo on the sign-in page is stored at save time; sharp only checks it and makes the email logo). The access replay on bacc, built from ad345da5, passed all 65 staff-sign-in steps, with links read from Mailpit, two-factor, SSO with the OIDC fixture and the no-relay case. The smoke signed in Administrator and Legal Team Member. No statement changed.",
+    "evidence": [
+      {
+        "path": "batches/DOC-032/bridge/bridge.json",
+        "sha256": "003f41b304e8a443448cf2db11607317ccefc69acbea5e7825c0d6b8bc9370b5"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay.mjs",
+        "sha256": "91121ab3f30907ee98e550e8c393e598928ec2983050af24864423b8f6f8a94f"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/fixtures.json",
+        "sha256": "19ecd8d43fd1e7d9fc06202f0b14bab784d6c29e3632863315e3f6bd1b6b2b49"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/lib.mjs",
+        "sha256": "e74308770e7321da719cbadd107150b8a3ff3482d495f759b476ca5fd3665bc7"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/overlay-mail-off.json",
+        "sha256": "4d07234f4c7b324755cc63bab017b0672cd14657e51dcd33bedb3e53cc942ebf"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/overlay-oidc.json",
+        "sha256": "c1e697d0b54f32f2e62cb805e5afc1d8532c8ad536421b96aa996a7a18d6dd8b"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/phase.sh",
+        "sha256": "7004c1c56627c0cd19b6a80a13f1131f796947356165d4ae84aea3a65b0e0fa1"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay/portal-attempt1.json",
+        "sha256": "32fb4a738e8356f30e53c9dcd64074ed621a8ad46878410b0395c9bc0b2a4262"
+      },
+      {
+        "path": "batches/DOC-032/bridge/access-replay.json",
+        "sha256": "b0113af405532fb3cade2737289cdd1567e863fdd32fa75866e3f8663e0c5893"
+      },
+      {
+        "path": "batches/DOC-032/bridge/smoke.mjs",
+        "sha256": "99263c02987b7108be91f1df25248d0d4a4495264edffb896eb98c1258667807"
+      },
+      {
+        "path": "batches/DOC-032/bridge/smoke.json",
+        "sha256": "7c9da8c1098ba4818a0279fedeae71f1e04bf72aad05f81118e14e32484fa09a"
+      }
+    ]
+  }
 }

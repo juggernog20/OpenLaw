@@ -1255,6 +1255,50 @@
           }
         ]
       }
+    ],
+    "support": [
+      {
+        "id": "versions-and-support",
+        "title": "Find version information and get help",
+        "coverage": ["C51"],
+        "audiences": ["legal_team_member", "administrator", "business_user", "operator"],
+        "status": "verified",
+        "priorEvidence": {
+          "appCommit": "3fa407e3a846559914aa1a63249741f30cfb4f69",
+          "status": "pass",
+          "contentSha256": "fa41210b4fefc7374bdc784b4fa49dfadee5d39f54c516cae3284ae297bce93b",
+          "verifiedAt": "2026-09-16T16:25:31Z",
+          "environment": "openlaw-docs-41255c61-admin",
+          "author": "Codex documentation author; corrections by DOC-029 source-review author agent (support)",
+          "walkthroughReviewer": "DOC-029 independent walkthrough agent (support, round 1)",
+          "scriptEvidence": [
+            "docs/documentation/batches/DOC-029/support/walkthrough-r1.mjs",
+            "docs/documentation/batches/DOC-029/support/lib-r1.mjs"
+          ]
+        },
+        "scenarios": [
+          {
+            "id": "V-C51",
+            "coverage": ["C51"],
+            "roles": ["legal_team_member", "administrator", "business_user", "operator"],
+            "requiredMethods": ["browser-walkthrough"],
+            "environment": "authoring",
+            "prerequisites": [
+              "Installed documentation edition, standalone export, and an older or unavailable article link."
+            ],
+            "actions": [
+              "Identify the app/docs edition, follow version/support links, and inspect the unavailable-link behavior."
+            ],
+            "expectedResults": [
+              "The reader can identify supported build/content and reach the intended local or external support path."
+            ],
+            "negativeChecks": [
+              "An older app does not silently switch to latest; an external-site failure leaves local reading usable."
+            ],
+            "status": "pass"
+          }
+        ]
+      }
     ]
   },
   "compatibilitySets": {
