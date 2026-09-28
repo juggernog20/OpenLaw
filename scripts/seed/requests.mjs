@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Intake: what the business sends in, and what triage does with it
  * (INT-001 to INT-007).
  *

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* OpenLaw — contrast lint gate (DES-011, #42).
  *
  * Reads the three committed theme files and fails when any meaningful

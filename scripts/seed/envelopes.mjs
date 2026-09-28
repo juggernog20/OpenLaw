@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Sending contracts out for signature (CTR-013).
  *
  * One round of signature on one version of one document, held by the

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
@@ -88,5 +88,44 @@ test("an explicit or event baseline equal to the candidate is refused", () => {
   assert.throws(
     () => upgradeBaseline({ cwd, eventName: "push", event: { before: head } }),
     /is the candidate/,
+  );
+});
+
+test("a first release skips an event base that predates the Dockerfile", () => {
+  // `first` has no Dockerfile. `base` and `head` do: the tree a release ships.
+  writeFileSync(join(cwd, "Dockerfile"), "FROM scratch\n");
+  git("add", "Dockerfile");
+  git("commit", "-m", "dockerfile");
+  const shipped = git("rev-parse", "HEAD");
+  git("commit", "--allow-empty", "-m", "release candidate");
+  const candidate = git("rev-parse", "HEAD");
+  // dev->main PR: main still sits at the initial commit.
+  git("update-ref", "refs/remotes/origin/dev", shipped);
+  assert.equal(
+    upgradeBaseline({
+      cwd,
+      eventName: "pull_request",
+      event: { pull_request: { base: { sha: first } } },
+    }),
+    shipped,
+  );
+  // The fast-forward push to main: `before` is the initial commit and
+  // origin/dev is the candidate itself, so the parent is used.
+  git("update-ref", "refs/remotes/origin/dev", candidate);
+  assert.equal(upgradeBaseline({ cwd, eventName: "push", event: { before: first } }), shipped);
+  // A repository without any Dockerfile keeps the plain event rules.
+  git("rm", "-q", "Dockerfile");
+  git("commit", "-m", "no dockerfile");
+  assert.equal(upgradeBaseline({ cwd, eventName: "push", event: { before: first } }), first);
+});
+
+test("a candidate with the only Dockerfile has no baseline and says so", () => {
+  writeFileSync(join(cwd, "Dockerfile"), "FROM scratch\n");
+  git("add", "Dockerfile");
+  git("commit", "-m", "first dockerfile");
+  git("update-ref", "refs/remotes/origin/dev", git("rev-parse", "HEAD"));
+  assert.throws(
+    () => upgradeBaseline({ cwd, eventName: "push", event: { before: first } }),
+    /No upgrade baseline with a Dockerfile/,
   );
 });

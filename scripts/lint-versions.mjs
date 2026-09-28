@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* OpenLaw: one version, checked (#391).
  *
  * The product's version is written down in every workspace member's

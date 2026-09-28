@@ -24,6 +24,29 @@ export function upgradeBaseline({ cwd, event = {}, eventName, head = "HEAD", exp
       throw new Error(`Upgrade baseline ${ref} is the candidate ${candidate}.`);
     return sha;
   };
+  // The rehearsal builds the baseline's images from its own tree, so a
+  // baseline with no Dockerfile cannot be started. That is the repository's
+  // first commits, which a first release meets as the PR base of dev->main
+  // and as the `before` of the push that fast-forwards main. Such a base is
+  // skipped and the fallback below is used. The check only applies when the
+  // candidate itself ships a Dockerfile; a repository that has none cannot
+  // rehearse anything and should fail later, on its own terms.
+  const ships = (sha) => {
+    try {
+      git("cat-file", "-e", `${sha}:Dockerfile`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const buildable = (ref) => {
+    const sha = commit(ref);
+    if (ships(candidate) && !ships(sha)) {
+      console.error(`Baseline ${ref} predates the Dockerfile; using the fallback.`);
+      return null;
+    }
+    return sha;
+  };
 
   if (explicit) return distinct(explicit);
 
@@ -35,19 +58,25 @@ export function upgradeBaseline({ cwd, event = {}, eventName, head = "HEAD", exp
   }
 
   if (eventName === "pull_request" && event.pull_request?.base?.sha) {
-    return distinct(event.pull_request.base.sha);
+    if (buildable(event.pull_request.base.sha)) return distinct(event.pull_request.base.sha);
   }
   if (eventName === "push" && event.before && !/^0+$/.test(event.before)) {
     // A force push names a `before` that nothing refers to any more, so
     // the checkout never fetched it. Say so and use the fallback below.
-    if (resolves(event.before)) return distinct(event.before);
-    console.error(`Previous revision ${event.before} is gone (force push?); using the fallback.`);
+    if (resolves(event.before)) {
+      if (buildable(event.before)) return distinct(event.before);
+    } else {
+      console.error(`Previous revision ${event.before} is gone (force push?); using the fallback.`);
+    }
   }
 
   // Manual/local runs have no event base. On dev itself, use its parent
   // instead of turning the rehearsal into a restart of the same image.
   const dev = commit("origin/dev");
-  return distinct(dev === candidate ? `${candidate}^1` : dev);
+  const fallback = dev === candidate ? `${candidate}^1` : dev;
+  if (!buildable(fallback))
+    throw new Error(`No upgrade baseline with a Dockerfile exists before ${candidate}.`);
+  return distinct(fallback);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Filling the instance with people.
  *
  * Three kinds of account come into existence three different ways, and

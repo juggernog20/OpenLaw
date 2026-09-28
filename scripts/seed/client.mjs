@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* The HTTP client the demo seed drives the instance through.
  *
  * The seed writes nothing to Postgres directly. Everything goes through

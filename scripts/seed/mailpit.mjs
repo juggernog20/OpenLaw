@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Reading the mail the instance sends, so the seed can finish the flows
  * that only complete through a link.
  *

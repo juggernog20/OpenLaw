@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* OpenLaw migration journal gate (#330).
  *
  * Drizzle applies a migration only when its journal stamp is later than

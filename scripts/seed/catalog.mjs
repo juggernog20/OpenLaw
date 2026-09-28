@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* What Helix's legal team is actually working on.
  *
  * The corpus of work: the Contract and Matter titles, the Requests the

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /* Who Helix Software Group is.
  *
  * One fictional company, described once. Everything the seed writes is

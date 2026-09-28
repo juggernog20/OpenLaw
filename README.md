@@ -2,20 +2,29 @@
 
 Open-source, self-hosted legal operations platform: contract lifecycle management, matter management, legal intake, entity management, and knowledge for in-house legal teams.
 
-> Status: pre-alpha. The product and technical decision records in [`docs/`](docs/) are the source of truth.
+> Status: v0.1.0 is the first public release. [`CHANGELOG.md`](CHANGELOG.md) lists what it contains. The product and technical decision records in [`docs/decision-records/`](docs/decision-records/) explain why things are the way they are.
 
 ## Repository layout
 
 ```text
-apps/api      Fastify REST API (OpenAPI-described)
-apps/web      Vite + React SPA (staff app + requester portal)
-apps/worker   Background jobs (pg-boss)
-services/     Sidecar containers (doc-engine: LibreOffice + OCR)
-packages/     Shared types and utilities
-styles/       Theme substrate (Tailwind v4 CSS-first, three themes)
-docs/         Product & decision records (DECISIONS*.md, PRODUCT.md, SCHEMA.md)
-designs/      Pencil (.pen) design files
+apps/api                Fastify REST API (OpenAPI-described)
+apps/web                Vite + React SPA (staff app + requester portal)
+apps/worker             Background jobs (pg-boss)
+services/               Sidecar containers (doc-engine: LibreOffice + OCR)
+packages/               Database schema and migrations, shared types, generated API client
+styles/                 Theme substrate (Tailwind v4 CSS-first, three themes)
+messages/               The en-US message catalog, written by the i18n extractor
+e2e/                    Playwright browser suite and the upgrade-fidelity rehearsal
+scripts/                Dev loop, demo seed, lint checks, and the documentation build
+docs/                   Deployment, CI, and the implementation plan
+docs/decision-records/  Product & decision records (DECISIONS*.md, PRODUCT.md, SCHEMA.md)
+docs/user-guides/       The user manual, one Markdown article per guide
+docs/documentation/     How the user manual is built, checked, and published
+.agents/                Guidance that coding agents read
+CONTEXT.md              The glossary of domain terms
 ```
+
+The design records cite Pencil `.pen` mock files. Those files are not in this repository.
 
 ## Development
 
@@ -86,12 +95,12 @@ manually with `pnpm dev` are outside this loop's tracking.
 Keep the usual loop running in the main checkout, then run this from another worktree:
 
 ```sh
-pnpm dev:hot:w --worktree      # this worktree's web/API, sharing Calloway's data
+pnpm dev:hot --worktree        # this worktree's web/API, sharing the main loop's data
 pnpm dev:stop --worktree       # stop only this worktree's host processes
-pnpm dev:down:w --worktree     # same; shared containers stay running
+pnpm dev:down --worktree       # same; shared containers stay running
 ```
 
-`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `COMPOSE_PROJECT_NAME`, `STORAGE_PATH`, or backing-service ports, export the same values here. Use `pnpm dev:hot --worktree` for the default container engine; `:w` selects root Docker, where the personal Calloway instance lives.
+`--worktree` gives each checkout its own web/API ports and prints its URL. Add `--offset N` (1–80) if another process occupies the derived ports. It shares the main loop's Compose project, Postgres, doc engine, and Mailpit, and uses the main Git checkout's `.storage/` for uploads. If the main loop uses a custom `COMPOSE_PROJECT_NAME`, `STORAGE_PATH`, or backing-service ports, export the same values here. Use `pnpm dev:hot:w --worktree` and `pnpm dev:down:w --worktree` to run the same loop against the root Docker socket.
 
 Refresh another worktree's page to load shared saved data. Keep the main loop running so its worker handles jobs from all worktrees. Keep both checkouts' database migrations compatible and use the same authentication/encryption secrets; the launcher copies a missing `.env` from the main checkout. Each API still runs its branch's migrations against the shared database. Use `--isolated` for incompatible schemas or worker code; it creates separate data and seeds Helix. Do not seed with `--worktree` or combine it with `--seed`, `--fresh`, or `--isolated`; the launcher rejects these combinations.
 
@@ -136,7 +145,7 @@ To walk through SMTP setup in the wizard, stop the loop and run `pnpm dev:hot --
 
 `dev:hot` (including `--fresh`) and `dev:down` use the rootless Podman socket at `$XDG_RUNTIME_DIR/podman/podman.sock` when available, falling back to `/run/user/$(id -u)` when `XDG_RUNTIME_DIR` is unset. Explicit `DOCKER_HOST` or `DOCKER_CONTEXT` settings take precedence; without either setting or a Podman socket, Docker's CLI default applies. The selected connection is printed before setup. Direct Compose commands such as `dev:infra` and `stack` still need `DOCKER_HOST` exported when using Podman, so they reach the same containers.
 
-The two engines keep separate database volumes under the same name. The Podman one holds the seeded Helix instance that the tests and CI expect. Root Docker holds a personal instance. `pnpm dev:hot:w` and `pnpm dev:down:w` pin `DOCKER_HOST` to `/var/run/docker.sock` and run the loop against that one. Both engines publish the same ports, so stop one loop before starting the other.
+Some machines run both rootless Podman and root Docker. On those, `pnpm dev:hot:w` and `pnpm dev:down:w` run the same loop against the root Docker socket. They pin `DOCKER_HOST` to `/var/run/docker.sock`. The two engines keep separate database volumes under the same name, so each engine holds its own instance. Both engines publish the same ports, so stop one loop before starting the other.
 
 Everything E2E and every milestone acceptance runs against the built Compose stack instead (TECH-018):
 
@@ -157,7 +166,7 @@ pnpm e2e
 
 ## Continuous integration
 
-Four workflows in [`.github/workflows/`](.github/workflows/). A fork gets the process along with the code — nothing here depends on a check that lives outside this repository.
+Five workflows in [`.github/workflows/`](.github/workflows/). A fork gets the process along with the code — nothing here depends on a check that lives outside this repository.
 
 | Workflow       | What it guards                                                                                                                                             | Blocking                            |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
@@ -165,6 +174,7 @@ Four workflows in [`.github/workflows/`](.github/workflows/). A fork gets the pr
 | `i18n.yml`     | `messages/en-US.json` still matches what the extractor writes (DES-013)                                                                                    | No — it reports on the pull request |
 | `codeql.yml`   | Static analysis of the JavaScript and TypeScript                                                                                                           | Yes                                 |
 | `security.yml` | Dependency review and secret scanning                                                                                                                      | Yes                                 |
+| `release.yml`  | On a `vX.Y.Z` tag, builds the two container images, publishes them to ghcr.io, and creates the GitHub release                                              | Release only                        |
 
 Both stack gates have a local command: `pnpm e2e:local` for the browser suite, `pnpm upgrade-fidelity` for the upgrade job. Each runs in its own compose project, so neither touches the instance you develop against.
 
@@ -173,6 +183,10 @@ The i18n job is deliberately non-blocking. en-US is the only v1 locale and the `
 ## Deployment
 
 `docker compose up` from a clean Linux VM is the whole story — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the quickstart, the reverse-proxy contract, upgrades, and backups.
+
+## Contributing and security
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before you open a pull request. Report a vulnerability privately, as [`SECURITY.md`](SECURITY.md) describes. Do not open a public issue for it.
 
 ## License
 

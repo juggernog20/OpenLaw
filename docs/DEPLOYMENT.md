@@ -52,6 +52,38 @@ Paste it into the setup screen with the Administrator's name, email and password
 
 `compose.yml` references the release image and carries a `build:` context, so the same file works before any release exists: Compose builds the image locally when it isn't present.
 
+### Release images
+
+Every release tag `vX.Y.Z` publishes two images to GitHub Container Registry:
+
+- `ghcr.io/juggernog20/openlaw`, which the app and the worker both run
+- `ghcr.io/juggernog20/openlaw-doc-engine`, the doc engine
+
+Each image carries three tags. The exact version, such as `0.1.0`, is written once and never rebuilt. The major.minor tag, such as `0.1`, follows the newest patch of that minor version. `latest` follows the newest release. `compose.yml` names `latest`, so `docker compose up` pulls the newest release when the images are not on the host yet. To run the code in your checkout instead, use `docker compose up -d --build`.
+
+The images are linux/amd64 only for now. On an arm64 host, run `docker compose build` before `docker compose up -d`. That builds both images from your checkout.
+
+To pin a version, edit the `image:` lines in `compose.yml`. The app and the worker run one image, so give both lines the same tag. Pin the doc engine to the same version:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/juggernog20/openlaw:0.1.0
+  worker:
+    image: ghcr.io/juggernog20/openlaw:0.1.0
+  doc-engine:
+    image: ghcr.io/juggernog20/openlaw-doc-engine:0.1.0
+```
+
+Then fetch and start that version:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+To upgrade a pinned install, change the three tags to the new version and run the same two commands. [Upgrades](#upgrades) says what to do before and after.
+
 ## Configuration
 
 Deployment configuration uses environment variables in `.env`; [`.env.example`](../.env.example) documents every one. Administrators configure organization settings and providers in the app, including SMTP in the welcome wizard when it is not pinned by the environment. The deployment settings in brief:
@@ -353,10 +385,12 @@ Every message the app sends is then visible at `http://localhost:8025`. The over
 ## Upgrades
 
 ```bash
-git pull                  # or: edit the image tag in compose.yml to the new release
+git pull                  # or: set the three image tags in compose.yml to the new version
 docker compose pull
 docker compose up -d
 ```
+
+`docker compose pull` fetches the tags the `image:` lines name. On `latest` that is the newest release. On a pinned version it is the version you set, so change the tags first. See [Release images](#release-images).
 
 Migrations run automatically when the app container boots (TECH-005); replicas booting together serialize on an advisory lock. Data lives in two named volumes — `openlaw-pgdata` (the database) and `openlaw-files` (uploads, see [Files](#files)) — and both survive `docker compose down`, image upgrades, and rebuilds. The doc engine holds nothing, so it upgrades by being replaced. (`docker compose down -v` deletes them — don't.)
 
