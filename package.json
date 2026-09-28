@@ -68,7 +68,7 @@
     "prettier": "^3.9.9",
     "sanitize-html": "2.17.7",
     "secretlint": "^13.0.6",
-    "turbo": "^2.11.4",
+    "turbo": "^2.11.5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.70.1"
   }
