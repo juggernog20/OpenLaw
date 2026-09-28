@@ -22,7 +22,7 @@ jobs:
     name: Secret scan (history)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # gitleaks scans commit history, not just the tip.
           fetch-depth: 0
@@ -30,7 +30,7 @@ jobs:
       # Complements the in-tree `pnpm secretlint` (working copy only) by
       # covering every commit reachable from this ref. Free for public
       # repositories; no licence key required.
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -38,11 +38,11 @@ jobs:
     name: Dependency audit and licences
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm

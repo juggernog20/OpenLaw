@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: quality
@@ -38,17 +38,17 @@ jobs:
         package: [api, web]
         shard: [1, 2]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: tests-${{ matrix.package }}-${{ matrix.shard }}
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: matrix.package == 'api'
 
       - name: Build the real doc-engine image
         if: matrix.package == 'api'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: services/doc-engine/Dockerfile
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload task timings
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: timings-${{ matrix.package }}-${{ matrix.shard }}
           path: .turbo/runs/*.json
@@ -92,7 +92,7 @@ jobs:
     name: OpenAPI artifact is current
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-workspace
         with:
@@ -121,13 +121,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: e2e
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Install the Playwright browser
         run: pnpm --filter @openlaw/e2e exec playwright install --with-deps chromium
@@ -143,7 +143,7 @@ jobs:
           } > .env
 
       - name: Build the stack from the real Dockerfiles
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           source: .
           files: |
@@ -190,7 +190,7 @@ jobs:
       # under CI — download and `playwright show-report` to replay.
       - name: Upload Playwright traces and report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-artifacts
           path: |
@@ -232,7 +232,7 @@ jobs:
     steps:
       # Full history: the job checks out the baseline in place, in the
       # same working copy, and needs the tags to find it.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -247,12 +247,12 @@ jobs:
       # green check turned red by cleanup. Turning the cache off also
       # takes the pnpm setup step with it — it was only ever here to put
       # the manager the cache had chosen on PATH.
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           package-manager-cache: false
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # Throwaway per-run secrets, as in the E2E job. Written once and
       # kept across both halves: OPENLAW_SECRET_KEY has to be the same
@@ -288,7 +288,7 @@ jobs:
           echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Build the baseline images
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           # Bake's default Git context would ignore the baseline checkout.
           source: .
@@ -337,7 +337,7 @@ jobs:
         run: git checkout --force "$HEAD_SHA"
 
       - name: Build this commit's images
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           source: .
           files: |
