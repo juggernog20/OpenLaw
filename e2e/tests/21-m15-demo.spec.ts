@@ -674,6 +674,11 @@ async function sendForSignature(page: Page, number: number, currentOption: strin
   await dialog.getByLabel("Signer 2 name").fill(SIGNERS[1].name);
   await dialog.getByLabel("Signer 2 email").fill(SIGNERS[1].email);
   await dialog.getByLabel("Subject", { exact: true }).fill(SUBJECT);
+  // Send stays disabled until the sender says whether this round
+  // completes the agreement. This journey's one round does.
+  await dialog
+    .getByRole("radio", { name: "Yes, all required signatures will be in place" })
+    .check();
   const sent = page.waitForResponse(
     (response) =>
       response.url().endsWith(`/api/v1/contracts/${number}/envelopes`) &&

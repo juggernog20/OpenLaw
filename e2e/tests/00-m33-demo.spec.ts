@@ -21,13 +21,16 @@ import { extractLink, waitForMailTo } from "./mailpit.js";
 const ORGANIZATION = "M33 Legal";
 const LOGO =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#154e41" d="M0 0h32v32H0z"/></svg>';
+// The Settings checklist's row labels, not the wizard's headings. The
+// wizard names step 6 "E-signature (DocuSign Integration)", but its
+// checklist row still reads "E-signature".
 const STEP_LABELS = {
   organization: "Organization",
   authentication: "Authentication",
   portal: "Business-user portal",
   email: "Email",
   invites: "Invite your team",
-  "e-signature": "E-signature (DocuSign Integration)",
+  "e-signature": "E-signature",
   "ai-analysis": "AI analysis",
   review: "Review seeded types",
 } as const;

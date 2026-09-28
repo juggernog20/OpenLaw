@@ -73,6 +73,9 @@ for (const scenario of ["resume", "discard"] as const)
       await dialog.getByLabel("Signer 1 name").fill("Dana Signer");
       await dialog.getByLabel("Signer 1 email").fill("dana@example.test");
       await dialog.getByLabel("Subject", { exact: true }).fill("Review this agreement");
+      await dialog
+        .getByRole("radio", { name: "Yes, all required signatures will be in place" })
+        .check();
       const preparation = page.waitForResponse(
         (response) =>
           response.url().endsWith(`/contracts/${contract.number}/envelopes/prepare`) &&
