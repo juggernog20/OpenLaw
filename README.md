@@ -103,7 +103,7 @@ The user manual has 62 guides. Each instance also serves the manual at `/documen
 
 ## Project status
 
-0.2.0 is the latest release, from 28 September 2026. The first public release, 0.1.0, came out earlier the same day. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
+0.2.0 is the latest release, from 29 September 2026. The first public release, 0.1.0, came out the day before. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
 
 Some things are left out on purpose, for now:
 

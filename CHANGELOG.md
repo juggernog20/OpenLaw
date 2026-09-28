@@ -4,7 +4,7 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
-## 0.2.0 - 2026-09-28
+## 0.2.0 - 2026-09-29
 
 ### Upgrading
 
