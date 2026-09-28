@@ -94,24 +94,19 @@ test("public documentation and export avoid API reads and all themes fit narrow 
       exact: true,
     }),
   ).toHaveCount(0);
-  // DOC-032 verified this guide against the pinned build. Any later app change
-  // moves the application digest, so a development edition marks every guide
-  // unverified until the next compatibility review. The reader must agree with
-  // the build's own verdict, which the retained export prints for the same guide.
+  // TECH-027's 2026-09-28 addendum: no guide carries a validation badge in the
+  // reader or the retained export, verified or not.
+  await expect(page.getByText("Validation in progress", { exact: true })).toHaveCount(0);
   const exported = await request.get("/documentation-export/create-contract.html");
   expect(exported.status()).toBe(200);
-  const meta = /class="docs-article-meta">(.*?)<\/div>/s.exec(await exported.text());
-  expect(meta).not.toBeNull();
-  await expect(page.getByText("Validation in progress", { exact: true })).toHaveCount(
-    meta![1]!.includes("docs-badge") ? 1 : 0,
-  );
+  expect(await exported.text()).not.toContain("docs-badge");
   // This guide waits for a live DocuSign check (#1178). A development edition
-  // still shows it, with the validation badge.
+  // still shows it, without a badge.
   await page.goto("/documentation/electronic-signing");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Send a Contract for electronic signature",
   );
-  await expect(page.getByText("Validation in progress", { exact: true })).toBeVisible();
+  await expect(page.getByText("Validation in progress", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Development preview/)).toHaveCount(0);
   expect(apiRequests).toEqual([]);
   await page.goto("/documentation/unavailable-fixture");

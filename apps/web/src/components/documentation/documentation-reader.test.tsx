@@ -46,7 +46,8 @@ describe("public documentation", () => {
     expect(
       screen.queryByText("Guide validation is in progress. Some instructions may change."),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Validation in progress")).toBeVisible();
+    // TECH-027's 2026-09-28 addendum: verification status stays out of the reader.
+    expect(screen.queryByText("Validation in progress")).not.toBeInTheDocument();
     expect(screen.queryByText("Unverified article")).not.toBeInTheDocument();
   });
 
@@ -124,7 +125,7 @@ describe("public documentation", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: "Try the documentation reader" }),
     ).toHaveFocus();
-    expect(screen.getByText("Unverified article")).toBeVisible();
+    expect(screen.queryByText("Unverified article")).not.toBeInTheDocument();
     expect(calls).toEqual([]);
     expect(document.title).toBe("Try the documentation reader · OpenLaw");
   });

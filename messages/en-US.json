@@ -4244,12 +4244,6 @@
   "docs.unavailableBody": {
     "defaultMessage": "This article is not available in the bundled edition. Search the available guides or return to the index."
   },
-  "docs.unverified": {
-    "defaultMessage": "Unverified article"
-  },
-  "docs.validationBadge": {
-    "defaultMessage": "Validation in progress"
-  },
   "docs.writtenFor": {
     "defaultMessage": "For {roles}"
   },

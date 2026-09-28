@@ -53,14 +53,11 @@ const scale = icon(
 export function standaloneFiles(bundle, assets) {
   const files = new Map(assets);
   const available = searchDocumentation(bundle);
-  const validationBadge = bundle.validationPending
-    ? "Validation in progress"
-    : "Unverified article";
   const sections = bundle.sections.filter((s) => available.some((a) => a.section === s.id));
   const collectionHref = (id) => `section-${id}.html`;
   const label = (id) => bundle.sections.find((s) => s.id === id)?.title ?? id;
   const articleList = (items) =>
-    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(documentationExcerpt(a, "", 180))}</p>${a.unverified ? `<span class="docs-badge">${validationBadge}</span>` : ""}</div>${arrow}</section>`).join("")}</div>`;
+    `<div class="docs-results">${items.map((a) => `<section class="docs-result"><div><span class="docs-eyebrow">${escape(label(a.section))}</span><h2><a href="${a.id}.html">${escape(a.title)}</a></h2><p>${escape(documentationExcerpt(a, "", 180))}</p></div>${arrow}</section>`).join("")}</div>`;
   const sidebar = (article, section) =>
     `<aside class="docs-sidebar"><details class="docs-navigation" open><summary>Browse guides</summary><nav aria-label="Guide navigation"><a class="docs-overview" href="index.html"${!article && !section ? ' aria-current="page"' : ""}>${book}Overview</a><p class="docs-nav-label">Browse guides</p><ul>${sections
       .map(
@@ -149,7 +146,7 @@ export function standaloneFiles(bundle, assets) {
       `${a.id}.html`,
       page(
         a.title,
-        `<div class="docs-search-bar">${searchForm}</div><nav class="docs-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Documentation</a><span aria-hidden="true">/</span><a href="${collectionHref(a.section)}">${escape(label(a.section))}</a></nav><div class="docs-article-meta"><span>For ${a.audiences.map((r) => ROLES[r]).join(" · ")}</span>${a.unverified ? `<span class="docs-badge">${validationBadge}</span>` : ""}</div>${moved}<div class="docs-columns"><article>${a.html.standalone}</article>${outline ? `<nav class="docs-outline" aria-label="On this page"><details open><summary>On this page</summary><ul>${outline}</ul></details></nav>` : ""}</div><nav class="docs-adjacent" aria-label="Article navigation">${adjacent}</nav>`,
+        `<div class="docs-search-bar">${searchForm}</div><nav class="docs-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Documentation</a><span aria-hidden="true">/</span><a href="${collectionHref(a.section)}">${escape(label(a.section))}</a></nav><div class="docs-article-meta"><span>For ${a.audiences.map((r) => ROLES[r]).join(" · ")}</span></div>${moved}<div class="docs-columns"><article>${a.html.standalone}</article>${outline ? `<nav class="docs-outline" aria-label="On this page"><details open><summary>On this page</summary><ul>${outline}</ul></details></nav>` : ""}</div><nav class="docs-adjacent" aria-label="Article navigation">${adjacent}</nav>`,
         a,
       ),
     );
