@@ -224,9 +224,9 @@ describe("the Term timeline card", () => {
     expect(periods.getAllByRole("listitem")).toHaveLength(3);
     expect(periods.getByText("Jan 1, 2024 – Jan 1, 2025")).toBeInTheDocument();
     expect(periods.getByText("Renewal 1")).toBeInTheDocument();
-    expect(periods.getByText("Jan 1, 2025 – Jan 1")).toBeInTheDocument();
+    expect(periods.getByText("Jan 1, 2025 – Jan 1, 2026")).toBeInTheDocument();
     expect(periods.getByText("Renewal 2")).toBeInTheDocument();
-    expect(periods.getByText("Jan 1 – Jan 1, 2027")).toBeInTheDocument();
+    expect(periods.getByText("Jan 1, 2026 – Jan 1, 2027")).toBeInTheDocument();
     expect(periods.queryByText("Renewal 3")).not.toBeInTheDocument();
     // Rolls are drawn, so the key names them.
     expect(keyOf(card).getByText("Renewals")).toBeInTheDocument();
@@ -250,7 +250,7 @@ describe("the Term timeline card", () => {
     renderAt("/contracts/42");
 
     const periods = periodsOf(await timeline());
-    expect(periods.getByText("Dec 31, 2025 – Jan 31")).toBeInTheDocument();
+    expect(periods.getByText("Dec 31, 2025 – Jan 31, 2026")).toBeInTheDocument();
     expect(periods.getByText("Jan 31 – Feb 28")).toBeInTheDocument();
     expect(periods.getByText("Feb 28 – Mar 31")).toBeInTheDocument();
   });
@@ -424,6 +424,6 @@ describe("the Term timeline card", () => {
     // end, so the reader can see how far past the term they are.
     const pill = card.getByText("Today").parentElement;
     expect(pill?.style.getPropertyValue("inset-inline-start")).toBe("100%");
-    expect(card.getByText("Aug 17")).toBeInTheDocument();
+    expect(card.getByText("Aug 17, 2026")).toBeInTheDocument();
   });
 });
