@@ -22,6 +22,7 @@
 
 import net from "node:net";
 import dns from "node:dns";
+import { computeDiscoveryUrl, fetchDiscoveryDocument } from "@better-auth/sso";
 import { isPublicAddress, type Resolver } from "../pipeline/push-endpoint.js";
 
 /** The discovery fields the plugin checks against the trusted origins. */
@@ -100,18 +101,20 @@ export async function trustableEndpointOrigins(
 }
 
 /**
- * Reads the issuer's discovery document from the same URL the plugin
- * uses. Any failure answers null: the plugin then makes the same
- * request and reports the failure in its own words.
+ * Reads the issuer's discovery document through the plugin's own
+ * fetcher, from the same URL and under the same guard the plugin uses:
+ * only the issuer's origin is trusted, and redirects are refused. Any
+ * failure answers null. The plugin then makes the same request and
+ * reports the failure in its own words.
  */
-async function fetchDiscoveryDocument(issuer: string): Promise<unknown> {
-  const base = issuer.endsWith("/") ? issuer.slice(0, -1) : issuer;
+async function readDiscoveryDocument(issuer: string): Promise<unknown> {
+  const issuerOrigin = new URL(issuer).origin;
   try {
-    const response = await fetch(`${base}/.well-known/openid-configuration`, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(DISCOVERY_TIMEOUT_MS),
-    });
-    return response.ok ? await response.json() : null;
+    return await fetchDiscoveryDocument(
+      computeDiscoveryUrl(issuer),
+      DISCOVERY_TIMEOUT_MS,
+      (url) => new URL(url).origin === issuerOrigin,
+    );
   } catch {
     return null;
   }
@@ -141,7 +144,7 @@ export async function withTrustedIdpOrigins<T>(
 ): Promise<T> {
   const origins = [
     new URL(issuer).origin,
-    ...(await trustableEndpointOrigins(issuer, await fetchDiscoveryDocument(issuer), resolve)),
+    ...(await trustableEndpointOrigins(issuer, await readDiscoveryDocument(issuer), resolve)),
   ];
   const ctx = await auth.$context;
   ctx.trustedOrigins.push(...origins);
