@@ -28,7 +28,7 @@ You run OpenLaw on your own server with Docker Compose. Your contracts and legal
 | [Documents](docs/user-guides/document-versions.md) | Every file belongs to one record and keeps a chain of Versions. Previews for Word and PowerPoint, OCR for scanned PDFs, and a redline between any two Versions.                                                     |
 | [Auto-Docs](docs/user-guides/auto-doc-template.md) | Upload a Word template. OpenLaw builds a form from its Placeholders and fills it into a `.docx` and a `.pdf`. Business Users can run an Auto-Doc from the Portal too.                                               |
 
-Also in 0.2.0:
+Also in 0.3.0:
 
 - **E-signature through DocuSign.** When everyone has signed, the executed PDF comes back onto the Contract and the Contract becomes active.
 - **AI Analysis with your own API key.** It reads a Contract's Document and fills in the term, the value, the notice period and your custom Fields. Each value stays marked Unverified until a person confirms it. It works with Anthropic, OpenAI and Gemini APIs, and with other providers that use the same protocols.
@@ -103,7 +103,7 @@ The user manual has 62 guides. Each instance also serves the manual at `/documen
 
 ## Project status
 
-0.2.0 is the latest release, from 29 September 2026. The first public release, 0.1.0, came out the day before. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
+0.3.0 is the latest release, from 29 September 2026. The first public release, 0.1.0, came out the day before. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
 
 Some things are left out on purpose, for now:
 
