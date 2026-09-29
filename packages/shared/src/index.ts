@@ -16,7 +16,7 @@ export { LOGO_BYTE_LIMIT, LOGO_DATA_URI_LIMIT, LOGO_TYPES } from "./logo.js";
  * it. `pnpm lint:versions` fails the build when the two disagree, so a
  * release bump that misses one of them cannot ship (#391).
  */
-export const OPENLAW_VERSION = "0.2.0";
+export const OPENLAW_VERSION = "0.3.0";
 
 /** CTR-008's shared Contract analysis vocabulary. */
 export {

@@ -4,6 +4,37 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+## 0.3.0 - 2026-09-29
+
+### Upgrading
+
+- The app applies one database migration when it starts. It adds the `runtime_metrics` table for System status. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)). (#1230)
+- This release adds no environment variables and no Compose changes.
+
+### Added
+
+- Settings, Advanced, System status shows how the app performs. The process table shows CPU and memory. New cards show API, worker, and database and queue performance for the last 5 minutes, hour and 24 hours. The page reads again every 30 seconds. (#1230)
+
+### Changed
+
+- Each process deletes performance data and stale process heartbeats after 24 hours. Before, stale heartbeats went away only when a process started. (#1230)
+- Dependency updates, including the AWS SDK, nodemailer and the MCP SDK. (#1228, #1232)
+
+### Fixed
+
+- An Administrator can add Entra ID or Google as an identity provider. Registration failed before, because these providers put some endpoints on hosts other than the issuer's. (#1231)
+- Sign-in works with an internal identity provider whose endpoints are on a different private host from its issuer. (#1231)
+
+### Security
+
+- undici moves to 7.30.0 for GHSA-3wwx-pv8p-q78v (CVE-2026-85024), a denial of service through WebSocket decompression. (#1232)
+- drizzle-kit's loader moves to esbuild 0.25.12 for GHSA-67mh-4wv8-2f99. Only development tooling used the old esbuild. The published images did not contain it. (#1232)
+- A public identity provider cannot use its discovery document to make the server call addresses on the install's private network. (#1231)
+- A crafted comment can no longer stall the comment email worker. A 150,000-character body now takes 90 ms. (#1232)
+- Matter updates no longer accept `__proto__` as a field name. Custom Field writes use only the Fields attached to the record. (#1232)
+
+Full changes: https://github.com/juggernog20/OpenLaw/compare/v0.2.0...v0.3.0
+
 ## 0.2.0 - 2026-09-29
 
 ### Upgrading
