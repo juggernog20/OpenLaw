@@ -65,6 +65,7 @@ import {
   unlinkContracts,
 } from "../../lib/contract-relations.js";
 import { escapeLikePattern } from "../../lib/like.js";
+import { recordNumberFrom } from "../../lib/record-number.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 
 /** The contract read floor (CTR-021): a Contributor on the team reads the
@@ -331,11 +332,8 @@ export const contractRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!anchor) throw httpError(404, NO_CONTRACT);
 
       const { q } = request.query;
-      // Match by number when the digits fit CTR-003's integer reference
-      // — a longer digit string cannot be a number the column holds, and
-      // handing it to Postgres anyway would error the whole read.
-      const digits = /^\d+$/.test(q) ? Number(q) : null;
-      const numberMatch = digits !== null && digits <= 2_147_483_647 ? digits : null;
+      // Match by number too, typed bare or as printed ("C-92").
+      const numberMatch = recordNumberFrom(q, "C");
       // Wildcards typed into the query match literally, as every
       // typeahead here matches (the counterparty search's rule).
       const titlePattern = `%${escapeLikePattern(q)}%`;

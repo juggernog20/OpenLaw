@@ -485,6 +485,21 @@ describe("link-candidates picker (CTR-018)", () => {
     expect(found).toBeDefined();
   });
 
+  it("matches the number typed as the app prints it", async () => {
+    const anchor = await create({ title: "Printed anchor" });
+    const target = await create({ title: "Printed target" });
+
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/contracts/${anchor.number}/link-candidates?q=C-${target.number}`,
+      cookies: memberCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const body = res.json() as { candidates: { number: number }[] };
+    expect(body.candidates.map((c) => c.number)).toContain(target.number);
+  });
+
   it("matches a typed wildcard literally, not as a pattern", async () => {
     const anchor = await create({ title: "Wild anchor" });
     const literal = await create({ title: "Uptime 99% service level" });

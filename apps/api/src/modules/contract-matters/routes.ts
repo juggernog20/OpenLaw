@@ -23,6 +23,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { contractTeamScope, NO_CONTRACT, reachedContract } from "../../lib/contract-access.js";
 import { escapeLikePattern } from "../../lib/like.js";
+import { recordNumberFrom } from "../../lib/record-number.js";
 import { matterTeamScope, NO_MATTER, reachedMatter } from "../../lib/matter-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 
@@ -169,7 +170,7 @@ async function reachedMatterById(tx: Transaction, user: AuthenticatedUser, id: s
 }
 
 async function matterCandidates(db: Executor, user: AuthenticatedUser, q: string) {
-  const number = /^\d+$/.test(q) && Number(q) <= 2_147_483_647 ? Number(q) : null;
+  const number = recordNumberFrom(q, "M");
   const rows = await db
     .select({
       number: matters.number,
@@ -306,7 +307,7 @@ export const contractMattersRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!matter) throw httpError(404, NO_MATTER);
       if (matter.archivedAt) return { candidates: [] };
       const q = request.query.q;
-      const number = /^\d+$/.test(q) && Number(q) <= 2_147_483_647 ? Number(q) : null;
+      const number = recordNumberFrom(q, "C");
       const rows = await app.db
         .select({
           number: contracts.number,
