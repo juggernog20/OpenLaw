@@ -1305,7 +1305,7 @@ Contract keys: `description`, `entity`, `counterparties`, `owning_department`, `
 
 Matter keys: `description`, `department`, `region`, `priority`, `risk`, `needed_by`.
 
-Description starts On intake form. Value is one compound Row for amount, currency and cadence. Needed by becomes a Key date at creation. There is no Entity built-in Row table. Entity built-ins stay on the existing create form and record.
+Description starts On intake form. On a new Contract type, Counterparties starts On intake form too (DD-028 amendment 2026-09-29). Value is one compound Row for amount, currency and cadence. Needed by becomes a Key date at creation. There is no Entity built-in Row table. Entity built-ins stay on the existing create form and record.
 
 #### Branch tables
 
