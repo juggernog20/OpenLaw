@@ -342,7 +342,7 @@ test.describe.serial("M21 demo path", () => {
 
       await portal.getByLabel("Title").fill(TITLE);
       await portal.getByLabel(/^Description/).fill(DESCRIPTION);
-      await portal.getByLabel("Urgency").selectOption("high");
+      await portal.getByLabel("Priority").selectOption("high");
       await portal.getByRole("textbox", { name: FIELD_NAME }).fill(FIELD_ANSWER);
       await portal.getByLabel("Attachments").setInputFiles({
         name: ATTACHMENT,
