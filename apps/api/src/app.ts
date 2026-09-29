@@ -38,6 +38,7 @@ import {
 import type { MailerResolver } from "./lib/mailer.js";
 import type { DocEngine } from "./lib/doc-engine/engine.js";
 import type { AutoDocFillEngine } from "./lib/auto-doc-fill/engine.js";
+import type { RuntimeMetrics } from "./lib/runtime-metrics.js";
 import type { JobQueue } from "./pipeline/jobs.js";
 import type { Notifier } from "./lib/notifications/notifier.js";
 import type { StorageAdapter } from "./lib/storage/adapter.js";
@@ -241,6 +242,11 @@ export interface AppDeps {
    * Left unset, the route does not exist at all.
    */
   morningRoundTrigger?: boolean;
+  /**
+   * TECH-036 in-memory request counters for the System status page.
+   * Unset (the tests, the OpenAPI emitter) counts nothing.
+   */
+  metrics?: RuntimeMetrics;
 }
 
 declare module "fastify" {
@@ -457,6 +463,18 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
       },
     });
   }
+
+  // TECH-036: count API and MCP requests only. Static files and health
+  // probes would drown the numbers, and an event stream's duration is
+  // how long the tab stayed open, not how fast the server answered.
+  const metrics = deps.metrics;
+  if (metrics)
+    app.addHook("onResponse", async (request, reply) => {
+      const pathname = request.url.split("?", 1)[0] ?? request.url;
+      if (!pathname.startsWith("/api/") && pathname !== "/mcp") return;
+      if (String(reply.raw.getHeader("content-type") ?? "").startsWith("text/event-stream")) return;
+      metrics.recordRequest(reply.elapsedTime, reply.statusCode);
+    });
 
   app.addHook("onSend", async (request, reply, payload) => {
     if (request.url.split("?", 1)[0] === "/signing/return") {

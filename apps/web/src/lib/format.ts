@@ -370,6 +370,28 @@ export function formatFileSize(bytes: number, options?: FormatOptions): string {
 }
 
 /**
+ * Duration rule: Intl unit style in the largest unit that keeps the
+ * number at 1 or more ("75 ms", "1.2 sec", "3 min", "2.5 hr"), one
+ * fraction digit at most.
+ */
+export function formatDuration(milliseconds: number, options?: FormatOptions): string {
+  const steps = [
+    { unit: "hour", threshold: 3_600_000 },
+    { unit: "minute", threshold: 60_000 },
+    { unit: "second", threshold: 1000 },
+  ];
+  const step = steps.find((s) => Math.abs(milliseconds) >= s.threshold) ?? {
+    unit: "millisecond",
+    threshold: 1,
+  };
+  return numberFormatter(resolveLocale(options), {
+    style: "unit",
+    unit: step.unit,
+    maximumFractionDigits: 1,
+  }).format(milliseconds / step.threshold);
+}
+
+/**
  * A money value as stored (DES-014): integer amount in the currency's
  * smallest unit plus its ISO 4217 code — never a bare number, never
  * floats.

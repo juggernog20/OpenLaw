@@ -4012,14 +4012,140 @@
                           },
                           "current": {
                             "type": "boolean"
+                          },
+                          "cpuPercent": {
+                            "type": ["number", "null"]
+                          },
+                          "rssBytes": {
+                            "type": ["number", "null"]
                           }
                         },
-                        "required": ["role", "startedAt", "heartbeatAt", "online", "current"],
+                        "required": [
+                          "role",
+                          "startedAt",
+                          "heartbeatAt",
+                          "online",
+                          "current",
+                          "cpuPercent",
+                          "rssBytes"
+                        ],
                         "additionalProperties": false
                       }
+                    },
+                    "performance": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "role": {
+                            "type": "string",
+                            "enum": ["api", "worker"]
+                          },
+                          "window": {
+                            "type": "string",
+                            "enum": ["5m", "1h", "24h"]
+                          },
+                          "processes": {
+                            "type": "number"
+                          },
+                          "requests": {
+                            "type": ["number", "null"]
+                          },
+                          "serverErrors": {
+                            "type": ["number", "null"]
+                          },
+                          "latencyP50Ms": {
+                            "type": ["number", "null"]
+                          },
+                          "latencyP95Ms": {
+                            "type": ["number", "null"]
+                          },
+                          "eventLoopP99Ms": {
+                            "type": ["number", "null"]
+                          },
+                          "cpuPercent": {
+                            "type": ["number", "null"]
+                          },
+                          "peakRssBytes": {
+                            "type": ["number", "null"]
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "window",
+                          "processes",
+                          "requests",
+                          "serverErrors",
+                          "latencyP50Ms",
+                          "latencyP95Ms",
+                          "eventLoopP99Ms",
+                          "cpuPercent",
+                          "peakRssBytes"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "postgres": {
+                      "type": "object",
+                      "properties": {
+                        "sizeBytes": {
+                          "type": "number"
+                        },
+                        "connections": {
+                          "type": "number"
+                        },
+                        "maxConnections": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["sizeBytes", "connections", "maxConnections"],
+                      "additionalProperties": false
+                    },
+                    "queue": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "waiting": {
+                              "type": "number"
+                            },
+                            "running": {
+                              "type": "number"
+                            },
+                            "completedLastDay": {
+                              "type": "number"
+                            },
+                            "failedLastDay": {
+                              "type": "number"
+                            },
+                            "oldestWaitingSeconds": {
+                              "type": ["number", "null"]
+                            }
+                          },
+                          "required": [
+                            "waiting",
+                            "running",
+                            "completedLastDay",
+                            "failedLastDay",
+                            "oldestWaitingSeconds"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
-                  "required": ["database", "storageDriver", "documentEngine", "processes"],
+                  "required": [
+                    "database",
+                    "storageDriver",
+                    "documentEngine",
+                    "processes",
+                    "performance",
+                    "postgres",
+                    "queue"
+                  ],
                   "additionalProperties": false
                 }
               }

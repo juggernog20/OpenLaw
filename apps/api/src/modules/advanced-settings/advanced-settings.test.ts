@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, eq, orgSettings, sql, runtimeStatus } from "@openlaw/db";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { activityLog, eq, orgSettings, sql, runtimeMetrics, runtimeStatus } from "@openlaw/db";
+import { createRuntimeMetrics } from "../../lib/runtime-metrics.js";
 import {
   signInCookies,
   startHarness,
@@ -17,6 +18,7 @@ import {
   parsePlainHttpHosts,
   parseSettings,
   preserveStorageLocations,
+  pruneRuntimeRows,
   requireSecureEndpoints,
   resolveAdvancedSettings,
   startRuntimeHeartbeat,
@@ -26,8 +28,9 @@ import {
 let harness: TestHarness;
 let cookies: Record<string, string>;
 let staffCookies: Record<string, string>;
+const metrics = createRuntimeMetrics({ servesRequests: true });
 beforeAll(async () => {
-  harness = await startHarness();
+  harness = await startHarness({ metrics });
   await harness.app.inject({ method: "POST", url: "/api/v1/auth/setup", payload: TEST_ADMIN });
   cookies = await signInCookies(harness.app, TEST_ADMIN.email, TEST_ADMIN.password);
   const staff = {
@@ -50,6 +53,7 @@ beforeAll(async () => {
   staffCookies = await signInCookies(harness.app, staff.email, staff.password);
 });
 afterAll(async () => {
+  metrics.stop();
   await harness?.stop();
 });
 async function read(section = "instance") {
@@ -451,6 +455,190 @@ describe("advanced settings", () => {
       await stop();
     }
     expect(await harness.db.select().from(runtimeStatus)).toEqual([]);
+  });
+});
+describe("system performance (TECH-036)", () => {
+  const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000);
+  const buckets = (index: number, count: number) => {
+    const counts = new Array<number>(12).fill(0);
+    counts[index] = count;
+    return counts;
+  };
+  const clearRuntimeRows = async () => {
+    await harness.db.delete(runtimeMetrics);
+    await harness.db.delete(runtimeStatus);
+  };
+
+  it("counts API requests and leaves health probes and the web shell out", async () => {
+    metrics.snapshot();
+    await harness.app.inject({ method: "GET", url: "/healthz" });
+    await harness.app.inject({ method: "GET", url: "/readyz" });
+    await harness.app.inject({ method: "GET", url: "/matters" });
+    await harness.app.inject({ method: "GET", url: "/api/v1/system-status", cookies });
+    await harness.app.inject({ method: "GET", url: "/api/v1/system-status?probe=1" });
+    const snapshot = metrics.snapshot();
+    expect(snapshot.requests).toBe(2);
+    expect(snapshot.serverErrors).toBe(0);
+  });
+
+  it("writes a snapshot a minute beside the heartbeat", async () => {
+    await clearRuntimeRows();
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      const env = effectiveEnvironment({ STORAGE_PATH: harness.storageRoot }, emptySettings());
+      const stop = await startRuntimeHeartbeat(
+        harness.db,
+        "worker",
+        env,
+        createRuntimeMetrics({ servesRequests: false }),
+      );
+      vi.advanceTimersByTime(120_000);
+      await stop();
+    } finally {
+      vi.useRealTimers();
+    }
+    const rows = await harness.db.select().from(runtimeMetrics);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ role: "worker", requests: null, latencyBuckets: null });
+    expect(rows[0]!.rssBytes).toBeGreaterThan(0);
+    await clearRuntimeRows();
+  });
+
+  it("deletes heartbeat and metrics rows older than 24 hours", async () => {
+    await clearRuntimeRows();
+    const status = (id: string, heartbeatAt: Date) => ({
+      id,
+      role: "api",
+      configDigest: "digest",
+      startedAt: heartbeatAt,
+      heartbeatAt,
+    });
+    await harness.db
+      .insert(runtimeStatus)
+      .values([status("stale", minutesAgo(25 * 60)), status("recent", minutesAgo(60))]);
+    const snapshot = (processId: string, recordedAt: Date) => ({
+      processId,
+      role: "api",
+      recordedAt,
+      intervalMs: 60_000,
+      eventLoopP99Ms: 1,
+      cpuPercent: 1,
+      rssBytes: 1,
+      heapUsedBytes: 1,
+    });
+    await harness.db
+      .insert(runtimeMetrics)
+      .values([snapshot("stale", minutesAgo(25 * 60)), snapshot("recent", minutesAgo(60))]);
+    await pruneRuntimeRows(harness.db);
+    expect((await harness.db.select().from(runtimeStatus)).map((row) => row.id)).toEqual([
+      "recent",
+    ]);
+    expect((await harness.db.select().from(runtimeMetrics)).map((row) => row.processId)).toEqual([
+      "recent",
+    ]);
+    await clearRuntimeRows();
+  });
+
+  it("summarises snapshots by role and window, with database and queue numbers", async () => {
+    await clearRuntimeRows();
+    await harness.db.insert(runtimeStatus).values({
+      id: "api-1",
+      role: "api",
+      configDigest: "digest",
+      startedAt: minutesAgo(40),
+      heartbeatAt: new Date(),
+    });
+    const base = { intervalMs: 60_000, heapUsedBytes: 1 };
+    await harness.db.insert(runtimeMetrics).values([
+      {
+        ...base,
+        processId: "api-1",
+        role: "api",
+        recordedAt: minutesAgo(2),
+        requests: 10,
+        serverErrors: 1,
+        latencyBuckets: buckets(4, 10),
+        eventLoopP99Ms: 5,
+        cpuPercent: 20,
+        rssBytes: 100_000_000,
+      },
+      {
+        ...base,
+        processId: "api-1",
+        role: "api",
+        recordedAt: minutesAgo(30),
+        requests: 30,
+        serverErrors: 0,
+        latencyBuckets: buckets(2, 30),
+        eventLoopP99Ms: 50,
+        cpuPercent: 40,
+        rssBytes: 200_000_000,
+      },
+      {
+        ...base,
+        processId: "worker-1",
+        role: "worker",
+        recordedAt: minutesAgo(2),
+        eventLoopP99Ms: 2,
+        cpuPercent: 5,
+        rssBytes: 50_000_000,
+      },
+    ]);
+    try {
+      const result = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/system-status",
+        cookies,
+      });
+      expect(result.statusCode).toBe(200);
+      const body = result.json();
+      const row = (role: string, window: string) =>
+        body.performance.find(
+          (item: { role: string; window: string }) => item.role === role && item.window === window,
+        );
+      expect(row("api", "5m")).toEqual({
+        role: "api",
+        window: "5m",
+        processes: 1,
+        requests: 10,
+        serverErrors: 1,
+        latencyP50Ms: 75,
+        latencyP95Ms: 97.5,
+        eventLoopP99Ms: 5,
+        cpuPercent: 20,
+        peakRssBytes: 100_000_000,
+      });
+      // The hour adds the older minute: 30 requests in the 10–25 ms
+      // bucket put the median at rank 20 of 40.
+      expect(row("api", "1h")).toMatchObject({
+        requests: 40,
+        serverErrors: 1,
+        latencyP50Ms: 20,
+        eventLoopP99Ms: 50,
+        cpuPercent: 30,
+        peakRssBytes: 200_000_000,
+      });
+      expect(row("worker", "5m")).toMatchObject({
+        processes: 1,
+        requests: null,
+        latencyP50Ms: null,
+        cpuPercent: 5,
+      });
+      expect(body.processes).toEqual([
+        expect.objectContaining({ role: "api", cpuPercent: 20, rssBytes: 100_000_000 }),
+      ]);
+      expect(body.postgres.sizeBytes).toBeGreaterThan(0);
+      expect(body.postgres.connections).toBeGreaterThan(0);
+      expect(body.postgres.maxConnections).toBeGreaterThan(0);
+      expect(body.queue).toMatchObject({
+        waiting: expect.any(Number),
+        running: expect.any(Number),
+        completedLastDay: expect.any(Number),
+        failedLastDay: expect.any(Number),
+      });
+    } finally {
+      await clearRuntimeRows();
+    }
   });
 });
 it("protects old storage locations and refuses undecryptable settings", () => {

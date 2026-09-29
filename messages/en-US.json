@@ -9452,6 +9452,9 @@
   "settings.advanced.allLocked": {
     "defaultMessage": "The deployment configuration sets this value. Change it there, then restart the API and worker."
   },
+  "settings.advanced.apiPerformance": {
+    "defaultMessage": "API performance"
+  },
   "settings.advanced.azureEndpoint": {
     "defaultMessage": "Azure endpoint (optional for Azure)"
   },
@@ -9467,6 +9470,12 @@
   "settings.advanced.configuration": {
     "defaultMessage": "Configuration"
   },
+  "settings.advanced.connections": {
+    "defaultMessage": "Database connections"
+  },
+  "settings.advanced.connectionsValue": {
+    "defaultMessage": "{used} of {max}"
+  },
   "settings.advanced.container": {
     "defaultMessage": "Azure container"
   },
@@ -9475,6 +9484,12 @@
   },
   "settings.advanced.database": {
     "defaultMessage": "Database: available"
+  },
+  "settings.advanced.databaseQueue": {
+    "defaultMessage": "Database and queue"
+  },
+  "settings.advanced.databaseSize": {
+    "defaultMessage": "Database size"
   },
   "settings.advanced.driver": {
     "defaultMessage": "Store new documents in"
@@ -9506,6 +9521,18 @@
   "settings.advanced.instanceHelp": {
     "defaultMessage": "The address people use to reach OpenLaw, including from email links. An internal hostname accessible over your LAN or VPN works without public internet access. Configure DNS, HTTPS and your identity provider's callback address to match."
   },
+  "settings.advanced.jobsCompleted": {
+    "defaultMessage": "Jobs completed in the last 24 hours"
+  },
+  "settings.advanced.jobsFailed": {
+    "defaultMessage": "Jobs failed in the last 24 hours"
+  },
+  "settings.advanced.jobsRunning": {
+    "defaultMessage": "Jobs running"
+  },
+  "settings.advanced.jobsWaiting": {
+    "defaultMessage": "Jobs waiting"
+  },
   "settings.advanced.localPath": {
     "defaultMessage": "Local storage path"
   },
@@ -9521,17 +9548,50 @@
   "settings.advanced.mcpRate": {
     "defaultMessage": "Calls per hour per credential"
   },
+  "settings.advanced.measure": {
+    "defaultMessage": "Measure"
+  },
+  "settings.advanced.measure.cpu": {
+    "defaultMessage": "Average CPU"
+  },
+  "settings.advanced.measure.eventLoop": {
+    "defaultMessage": "Worst event loop delay"
+  },
+  "settings.advanced.measure.latencyP50": {
+    "defaultMessage": "Median response time"
+  },
+  "settings.advanced.measure.latencyP95": {
+    "defaultMessage": "95th percentile response time"
+  },
+  "settings.advanced.measure.memory": {
+    "defaultMessage": "Peak memory"
+  },
+  "settings.advanced.measure.requests": {
+    "defaultMessage": "Requests"
+  },
+  "settings.advanced.measure.serverErrors": {
+    "defaultMessage": "Server errors"
+  },
   "settings.advanced.missing": {
     "defaultMessage": "An API or worker heartbeat is missing. Check that both services are running."
   },
   "settings.advanced.networkError": {
     "defaultMessage": "The server could not be reached. Try again."
   },
+  "settings.advanced.noData": {
+    "defaultMessage": "No data"
+  },
   "settings.advanced.noValue": {
     "defaultMessage": "—"
   },
+  "settings.advanced.nothingWaiting": {
+    "defaultMessage": "Nothing waiting"
+  },
   "settings.advanced.offline": {
     "defaultMessage": "No recent heartbeat"
+  },
+  "settings.advanced.oldestWaiting": {
+    "defaultMessage": "Longest wait"
   },
   "settings.advanced.online": {
     "defaultMessage": "Running"
@@ -9548,11 +9608,20 @@
   "settings.advanced.process": {
     "defaultMessage": "Process"
   },
+  "settings.advanced.processCpu": {
+    "defaultMessage": "CPU"
+  },
+  "settings.advanced.processMemory": {
+    "defaultMessage": "Memory"
+  },
   "settings.advanced.processing": {
     "defaultMessage": "Document processing"
   },
   "settings.advanced.processingHelp": {
     "defaultMessage": "Connect to the document service used for conversion, OCR and comparisons. The address must be reachable from both the API and worker. These timeouts control the clients; configure the document service's own limits separately."
+  },
+  "settings.advanced.queueMissing": {
+    "defaultMessage": "The job queue has not started yet. Start the worker to see job counts."
   },
   "settings.advanced.readOnly": {
     "defaultMessage": "Read only"
@@ -9589,6 +9658,12 @@
   },
   "settings.advanced.secretKey": {
     "defaultMessage": "S3 secret access key"
+  },
+  "settings.advanced.serverErrorShare": {
+    "defaultMessage": "{count} ({share})"
+  },
+  "settings.advanced.snapshots": {
+    "defaultMessage": "Each API and worker process records its performance once a minute. Records older than 24 hours are deleted. This page refreshes every 30 seconds."
   },
   "settings.advanced.sourceApp": {
     "defaultMessage": "Saved in OpenLaw"
@@ -9628,6 +9703,21 @@
   },
   "settings.advanced.uploadsHelp": {
     "defaultMessage": "The maximum size of an individual uploaded file. Your reverse proxy may enforce a lower limit."
+  },
+  "settings.advanced.value": {
+    "defaultMessage": "Value"
+  },
+  "settings.advanced.window.1h": {
+    "defaultMessage": "Last hour"
+  },
+  "settings.advanced.window.24h": {
+    "defaultMessage": "Last 24 hours"
+  },
+  "settings.advanced.window.5m": {
+    "defaultMessage": "Last 5 minutes"
+  },
+  "settings.advanced.workerPerformance": {
+    "defaultMessage": "Worker performance"
   },
   "settings.aiAnalysis.answerStyle": {
     "defaultMessage": "Answer style"
