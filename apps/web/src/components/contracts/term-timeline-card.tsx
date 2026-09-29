@@ -46,7 +46,7 @@
 import { FormattedMessage, useIntl } from "react-intl";
 import { ChevronsRight } from "lucide-react";
 import { termPeriods, type ContractRow, type TermPeriod } from "../../lib/contracts";
-import { civilToday, formatShortDate } from "../../lib/format";
+import { civilToday, formatShortDate, formatShortDateRange } from "../../lib/format";
 
 /** Civil dates are calendar days, so the plot spans and compares them
  * as whole UTC days — never as instants, which a timezone could move
@@ -199,8 +199,8 @@ function TermPlot({
                     id="contracts.termTimeline.periodDates"
                     defaultMessage="{start} – {end}"
                     values={{
-                      start: formatShortDate(period.start),
-                      end: formatShortDate(period.end),
+                      start: formatShortDateRange(period.start, period.end)[0],
+                      end: formatShortDateRange(period.start, period.end)[1],
                     }}
                   />
                 )}
@@ -289,12 +289,16 @@ function TermPlot({
               it says so rather than printing the room its bar runs
               into. */}
           <div className="mt-2 flex items-baseline justify-between gap-2 text-xs text-muted">
-            <span>{formatShortDate(scale.start)}</span>
+            <span>
+              {open
+                ? formatShortDate(scale.start)
+                : formatShortDateRange(scale.start, scale.end)[0]}
+            </span>
             <span>
               {open ? (
                 <FormattedMessage id="contracts.termTimeline.noEnd" defaultMessage="No end date" />
               ) : (
-                formatShortDate(scale.end)
+                formatShortDateRange(scale.start, scale.end)[1]
               )}
             </span>
           </div>
