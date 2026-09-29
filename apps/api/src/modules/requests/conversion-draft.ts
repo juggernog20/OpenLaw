@@ -487,10 +487,12 @@ export const conversionDraftRoutes: FastifyPluginAsyncZod = async (app) => {
       await app.db.transaction(async (tx) => {
         const row = await reachedMatter(tx, request.user, request.params.number, { lock: true });
         if (!row || row.archivedAt) throw httpError(404, "The Matter is unavailable.");
-        if (!row.aiUnverified?.[request.params.slug])
+        const slug = request.params.slug;
+        if (!row.aiUnverified || !Object.hasOwn(row.aiUnverified, slug))
           throw httpError(400, "That value is not awaiting confirmation.");
-        const flags = { ...row.aiUnverified };
-        delete flags[request.params.slug];
+        const flags = Object.fromEntries(
+          Object.entries(row.aiUnverified).filter(([key]) => key !== slug),
+        );
         await tx
           .update(matters)
           .set({ aiUnverified: Object.keys(flags).length ? flags : null })

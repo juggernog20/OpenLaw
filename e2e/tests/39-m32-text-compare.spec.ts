@@ -140,7 +140,7 @@ test.describe.serial("M32 text comparison", () => {
       expect(requested.status(), await requested.text()).toBe(202);
       const pending = Comparison.parse(await requested.json()).comparison;
       expect(pending.mode).toBe("text");
-      let ready = pending;
+      let ready: typeof pending;
       // Same reason as `waitForText`: a failed comparison is reported
       // now, carrying the reason the worker recorded, rather than after
       // a full minute of retries that could only report the state.

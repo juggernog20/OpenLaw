@@ -398,7 +398,7 @@ export async function applyCustomFields(
       throw httpError(400, "That field is not on this record's type.");
     }
     const value = coerceCustomFieldValue(field, raw);
-    return { slug, field, value };
+    return { slug: field.slug, field, value };
   });
 
   // Validation above keeps caller-order refusal precedence. Locks are a
