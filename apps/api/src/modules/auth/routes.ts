@@ -31,7 +31,8 @@ import {
   AuthenticationPolicySchema,
 } from "./authentication-policy-routes.js";
 import { authenticationPolicy, authenticationForEmail } from "../../auth/authentication-policy.js";
-import { provisionUser, withTrustedIssuerOrigin } from "../../auth/instance.js";
+import { provisionUser } from "../../auth/instance.js";
+import { withTrustedIdpOrigins } from "../../auth/idp-origins.js";
 import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
 import {
   findDomainConflict,
@@ -848,12 +849,13 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
           // The plugin's register endpoint does the real work — issuer
           // validation, discovery, persistence — under the admin's forwarded
-          // session. Its SSRF guard only fetches discovery documents from
-          // trusted origins, so the runtime-supplied issuer is trusted for
+          // session. Its SSRF guard only accepts discovery endpoints on
+          // trusted origins, so the runtime-supplied issuer, and the
+          // endpoint origins its discovery document names, are trusted for
           // exactly this call.
           let registered: { redirectURI: string };
           try {
-            registered = await withTrustedIssuerOrigin(app.auth, issuer, () =>
+            registered = await withTrustedIdpOrigins(app.auth, issuer, () =>
               app.auth.api.registerSSOProvider({
                 body: { providerId, issuer, domain, oidcConfig: { clientId, clientSecret } },
                 headers: fromNodeHeaders(request.headers),
@@ -1010,7 +1012,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           await app.db.delete(ssoProviders).where(eq(ssoProviders.id, existing.id));
           let registered: { redirectURI: string };
           try {
-            registered = await withTrustedIssuerOrigin(app.auth, merged.issuer, () =>
+            registered = await withTrustedIdpOrigins(app.auth, merged.issuer, () =>
               app.auth.api.registerSSOProvider({
                 body: {
                   providerId: merged.providerId,

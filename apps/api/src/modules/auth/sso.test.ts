@@ -8,7 +8,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { OAuth2Server } from "oauth2-mock-server";
+import { OAuth2Server, type OAuth2Options } from "oauth2-mock-server";
 import { symmetricDecrypt } from "better-auth/crypto";
 import {
   accounts,
@@ -75,8 +75,8 @@ afterAll(async () => {
 });
 
 /** One mock issuer asserting whatever `idpIdentity` holds at the time. */
-async function startIdp(): Promise<OAuth2Server> {
-  const server = new OAuth2Server();
+async function startIdp(options?: OAuth2Options): Promise<OAuth2Server> {
+  const server = new OAuth2Server(undefined, undefined, options);
   await server.issuer.keys.generate("RS256");
   await server.start(0);
   server.service.on("beforeUserinfo", (userInfoResponse) => {
@@ -969,6 +969,78 @@ describe("several identity providers, routed by email domain", () => {
       cookies: adminCookies,
     });
     expect(cleanup.statusCode).toBe(204);
+  });
+});
+
+describe("an identity provider with endpoints on another origin (#1229)", () => {
+  // Entra ID's issuer is on login.microsoftonline.com, but its discovery
+  // document puts userinfo on graph.microsoft.com. This mock does the
+  // same: `127.0.0.1` reaches the same server as the issuer's
+  // `localhost`, but it is a different origin.
+  let splitIdp: OAuth2Server;
+  let splitIssuer: string;
+  let userinfoUrl: string;
+  const SPLIT = {
+    providerId: "split-idp",
+    domain: "split.example",
+    clientId: "openlaw-split",
+    clientSecret: "split-client-secret",
+  } as const;
+
+  beforeAll(async () => {
+    splitIdp = await startIdp({ endpoints: { wellKnownDocument: "/upstream-discovery" } });
+    splitIssuer = splitIdp.issuer.url!;
+    userinfoUrl = `http://127.0.0.1:${splitIdp.address().port}/userinfo`;
+    splitIdp.service.addRoute("GET", "/.well-known/openid-configuration", async (_req, res) => {
+      const upstream = (await (await fetch(`${splitIssuer}/upstream-discovery`)).json()) as object;
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ...upstream, userinfo_endpoint: userinfoUrl }));
+    });
+    await harness.db
+      .update(orgSettings)
+      .set({ allowedEmailDomains: [...ALLOWED_DOMAINS, SPLIT.domain] });
+  });
+
+  afterAll(async () => {
+    await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/auth/sso-providers/${SPLIT.providerId}`,
+      cookies: adminCookies,
+    });
+    await splitIdp.stop();
+    await harness.db.update(orgSettings).set({ allowedEmailDomains: ALLOWED_DOMAINS });
+  });
+
+  it("registers the provider and keeps the userinfo endpoint discovery named", async () => {
+    const res = await registerProvider(adminCookies, { ...SPLIT, issuer: splitIssuer });
+    expect(res.statusCode, res.body).toBe(201);
+    const [row] = await harness.db
+      .select()
+      .from(ssoProviders)
+      .where(eq(ssoProviders.providerId, SPLIT.providerId));
+    const oidc = JSON.parse(row!.oidcConfig!) as Record<string, unknown>;
+    expect(oidc.userInfoEndpoint).toBe(userinfoUrl);
+    expect(oidc.tokenEndpoint).toContain(splitIssuer);
+  });
+
+  it("drops the registration-time trust once registration is over", async () => {
+    const ctx = await harness.app.auth.$context;
+    expect(ctx.trustedOrigins).not.toContain(new URL(splitIssuer).origin);
+    expect(ctx.trustedOrigins).not.toContain(new URL(userinfoUrl).origin);
+  });
+
+  it("signs a user in through it, fetching userinfo from the other origin", async () => {
+    const email = "sam@split.example";
+    const redeemed = await ssoRoundTrip(
+      { sub: "split-sam", email, name: "Sam Split" },
+      { email, requestSignUp: true },
+      splitIssuer,
+    );
+    expect(redeemed.statusCode, redeemed.body).toBe(302);
+    expect(redeemed.headers.location).not.toContain("error");
+    const cookies = sessionCookies(redeemed);
+    expect(cookies, "callback set no session cookie").not.toBeNull();
+    expect((await me(cookies!)).json().user).toMatchObject({ email, displayName: "Sam Split" });
   });
 });
 

@@ -23,6 +23,7 @@ import { renderEmailLayout } from "../lib/email-layout.js";
 import type { MailerResolver } from "../lib/mailer.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../lib/org-settings.js";
 import { createProfileAuditHook } from "./audit.js";
+import { storedProviderOrigins } from "./idp-origins.js";
 import {
   authenticationForEmail,
   authenticationPolicy,
@@ -197,36 +198,6 @@ async function magicLinkDenied(
   );
 }
 
-/**
- * Runs `fn` with the issuer's origin temporarily added to better-auth's
- * trusted origins, so registration-time endpoint discovery from a
- * runtime-supplied issuer passes the sso plugin's SSRF guard — TECH-008
- * configures IdPs at runtime, so there is no boot-time list to put an
- * issuer on. Direct `auth.api` calls run against the boot context (the
- * per-request `trustedOrigins` function below is only re-evaluated on
- * the HTTP handler path), so the boot context's live array is what must
- * gain the origin; it is removed again even when `fn` throws. Concurrent
- * requests during the window can observe the origin — accepted: it is an
- * origin an Administrator is in the act of asserting as the org's IdP,
- * and no isolated per-call context is reachable through the public API.
- * After registration the provider row itself carries the trust.
- */
-export async function withTrustedIssuerOrigin<T>(
-  auth: Auth,
-  issuer: string,
-  fn: () => Promise<T>,
-): Promise<T> {
-  const origin = new URL(issuer).origin;
-  const ctx = await auth.$context;
-  ctx.trustedOrigins.push(origin);
-  try {
-    return await fn();
-  } finally {
-    const index = ctx.trustedOrigins.lastIndexOf(origin);
-    if (index >= 0) ctx.trustedOrigins.splice(index, 1);
-  }
-}
-
 // The resolver, not a fixed mailer (#37): every send resolves the
 // current configuration, so an SMTP relay saved through the wizard is
 // used by the very next email with no restart.
@@ -242,25 +213,20 @@ export function createAuth(
     secret: config.secret,
     ...(config.disableRateLimit ? { rateLimit: { enabled: false } } : {}),
     database: authAdapter(db),
-    // Registered providers' issuer origins stay trusted so the plugin can
-    // re-run endpoint discovery after registration if it ever needs to;
-    // the table is only consulted on SSO paths to keep the extra query
-    // off every other auth request. Registration-time trust is separate —
-    // see `withTrustedIssuerOrigin` (the row does not exist yet).
+    // Registered providers stay trusted after registration: the issuer's
+    // origin, and for a private IdP the origins of its stored endpoints
+    // (#1229, see idp-origins.ts). The plugin checks them again when it
+    // re-runs discovery for a row with missing endpoints, and before it
+    // fetches a private endpoint at sign-in. The table is only read on SSO paths, to keep the extra
+    // query off every other auth request. Registration-time trust is
+    // separate (see `withTrustedIdpOrigins`): the row does not exist yet.
     trustedOrigins: async (request) => {
-      const origins: string[] = [];
       // Matches /sign-in/sso as well as every /sso/* route.
-      if (request && new URL(request.url).pathname.includes("/sso")) {
-        const rows = await db.select({ issuer: ssoProviders.issuer }).from(ssoProviders);
-        for (const row of rows) {
-          try {
-            origins.push(new URL(row.issuer).origin);
-          } catch {
-            // A malformed issuer trusts nothing.
-          }
-        }
-      }
-      return origins;
+      if (!request || !new URL(request.url).pathname.includes("/sso")) return [];
+      const rows = await db
+        .select({ issuer: ssoProviders.issuer, oidcConfig: ssoProviders.oidcConfig })
+        .from(ssoProviders);
+      return (await Promise.all(rows.map((row) => storedProviderOrigins(row)))).flat();
     },
     account: {
       // The OIDC tokens better-auth stores are encrypted before they
