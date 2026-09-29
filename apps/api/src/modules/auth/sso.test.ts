@@ -625,7 +625,8 @@ describe("the provider management surface (#64)", () => {
 
   it("restores the provider untouched when the new issuer cannot be discovered", async () => {
     const before = await listProviders(adminCookies);
-    const res = await patchProvider(PROVIDER.providerId, { issuer: "http://127.0.0.1:9" });
+    // Trailing slashes are trimmed before the discovery path is added.
+    const res = await patchProvider(PROVIDER.providerId, { issuer: "http://127.0.0.1:9///" });
     expect(res.statusCode).toBe(502);
     expect(res.headers["content-type"]).toContain("application/problem+json");
     expect(res.json().detail).toContain(
