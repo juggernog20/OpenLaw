@@ -324,9 +324,11 @@ export function KeyDatesCard({
                     { type: "conjunction" },
                   ),
                   link: (chunks: ReactNode) => (
+                    // Underlined at rest: inside a sentence, colour alone
+                    // does not tell the link apart (axe link-in-text-block).
                     <Link
                       to="/settings/notifications"
-                      className="text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                      className="text-link underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
                     >
                       {chunks}
                     </Link>
