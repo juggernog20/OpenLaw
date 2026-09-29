@@ -4,24 +4,6 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
-### Upgrading
-
-- To collect Department or Priority from Business Users, enable **On intake form** for those Rows in each destination Contract or Matter Form. Existing Forms may have these Rows off. Department is required only when its visible Row is marked **Required for creation**. (#1225)
-
-### Changed
-
-- A new Contract type asks for Counterparties on Create contract. The Row starts On intake form and is not Required. Contract types that already exist keep their Forms. (#1223)
-- Key dates says under the table when the expiry and notice deadline remind you, with your own lead times and a link to change them. (#1223)
-
-### Fixed
-
-- Business Portal intake and its preview follow the destination Form's field order, required settings, and conditions. Department appears once, and fields turned off for intake stay off the Portal form.
-- `pnpm dev:hot --seed`, `--fresh` and `--isolated` seed again. The seed failed with 403 `INVALID_ORIGIN` since 0.1.0. (#1223)
-- The Counterparties list closes after a pick, so it no longer covers the next field. (#1223)
-- Set parent and the other Contract and Matter link pickers find a record typed as printed, such as C-92. (#1223)
-- Needed by shows its date like the other term dates, such as Oct 1, 2026. (#1223)
-- The term timeline shows the year on both ends of a term that crosses a year. (#1223)
-
 ## 0.2.0 - 2026-09-29
 
 ### Upgrading
@@ -30,6 +12,7 @@ This file records the notable changes in each OpenLaw release. The format follow
 - API clients that send for signature must handle a new refusal. `POST /api/v1/contracts/{number}/envelopes` and `.../envelopes/prepare` now return 409 `urn:openlaw:problem:approval-soft-gate` when the send would move a Contract past the approval Stage while an Approval request is pending or rejected. Send again with `overrideSoftGate: true` to go ahead and record the override. (#1207)
 - `DELETE` on the last identity provider now returns 409 while Legal Users or Business Users can sign in only with SSO. Turn on another sign-in method for that group first. (#1208)
 - An empty allowed-domain list no longer turns Business sign-in off. To stop Business Users signing in, turn off their sign-in methods in Settings, Authentication. (#1209, #1210)
+- Business Portal intake now shows Department and Priority only when the destination Contract or Matter Form has them On intake form. Check those Rows in each Form that Business Users submit through. Department is required only when its Row is visible and Required for creation. (#1225)
 
 ### Changed
 
@@ -41,6 +24,8 @@ This file records the notable changes in each OpenLaw release. The format follow
 - Changing the type of a Contract, Matter or Entity skips the required Rows under a Branch whose condition does not hold. (#1214)
 - Help and the documentation edition no longer show a Validation in progress or Unverified article badge on guides. (#1220)
 - The README now describes OpenLaw for the people who run and use it. The developer notes moved to `docs/DEVELOPMENT.md`. (#1219)
+- A new Contract type asks for Counterparties on Create contract. The Row starts On intake form and is not Required. Contract types that already exist keep their Forms. (#1223)
+- Key dates says under the table when the expiry and notice deadline remind you, with your own lead times and a link to change them. (#1223)
 
 ### Fixed
 
@@ -52,6 +37,11 @@ This file records the notable changes in each OpenLaw release. The format follow
 - Start blank lists every Status it keeps. The MCP OAuth note names both kinds of Client. Two-factor enrollment has text for an account with no password. (#1213)
 - Adding an identity provider whose issuer does not answer names the discovery URL that failed. (#1213)
 - The welcome wizard refuses a localhost or private DocuSign webhook URL, which DocuSign cannot reach. (#1213)
+- Business Portal intake and its preview follow the destination Form's field order, required settings and conditions. Department appears once, and fields turned off for intake stay off the Portal form. (#1225)
+- The Counterparties list closes after a pick, so it no longer covers the next field. (#1223)
+- Set parent and the other Contract and Matter link pickers find a record typed as printed, such as C-92. (#1223)
+- Needed by shows its date like the other term dates, such as Oct 1, 2026. (#1223)
+- The term timeline shows the year on both ends of a term that crosses a year. (#1223)
 
 Full changes: https://github.com/juggernog20/OpenLaw/compare/v0.1.0...v0.2.0
 
