@@ -4,6 +4,19 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+### Changed
+
+- A new Contract type asks for Counterparties on Create contract. The Row starts On intake form and is not Required. Contract types that already exist keep their Forms. (#1223)
+- Key dates says under the table when the expiry and notice deadline remind you, with your own lead times and a link to change them. (#1223)
+
+### Fixed
+
+- `pnpm dev:hot --seed`, `--fresh` and `--isolated` seed again. The seed failed with 403 `INVALID_ORIGIN` since 0.1.0. (#1223)
+- The Counterparties list closes after a pick, so it no longer covers the next field. (#1223)
+- Set parent and the other Contract and Matter link pickers find a record typed as printed, such as C-92. (#1223)
+- Needed by shows its date like the other term dates, such as Oct 1, 2026. (#1223)
+- The term timeline shows the year on both ends of a term that crosses a year. (#1223)
+
 ## 0.2.0 - 2026-09-29
 
 ### Upgrading
