@@ -239,6 +239,26 @@ export function formatShortDate(value: Date | string, options?: FormatOptions): 
 }
 
 /**
+ * A range's two ends under the upload-column rule, except that ends in
+ * different years both carry the year. Left to the rule alone, a term
+ * from this year into the next reads "May 21 – May 21, 2027", which
+ * looks like a term of no length at all.
+ */
+export function formatShortDateRange(
+  start: Date | string,
+  end: Date | string,
+  options?: FormatOptions,
+): [string, string] {
+  const yearOf = (value: Date | string) => {
+    const { date, dateOnly } = parseValue(value);
+    return civilDate(date, dateOnly ? "UTC" : resolveTimeZone(options)).year;
+  };
+  if (yearOf(start) !== yearOf(end))
+    return [formatFullDate(start, options), formatFullDate(end, options)];
+  return [formatShortDate(start, options), formatShortDate(end, options)];
+}
+
+/**
  * Date-input rule: "May 3, 2026" — always the year. A picker showing
  * the value it will write cannot elide the year the way a list column
  * can; "Jan 1" in a form is a guess.

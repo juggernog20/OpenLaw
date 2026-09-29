@@ -92,7 +92,6 @@ export function CounterpartyPicker({
    * "Searching" is derived from it: the list is open and its term has
    * no answer yet. */
   const [failed, setFailed] = useState(false);
-  const [refresh, setRefresh] = useState(0);
   const [answeredFor, setAnsweredFor] = useState<string | null>(null);
   const listboxId = useId();
 
@@ -132,7 +131,7 @@ export function CounterpartyPicker({
       live = false;
       clearTimeout(timer);
     };
-  }, [open, trimmed, search, refresh]);
+  }, [open, trimmed, search]);
 
   const searching = open && answeredFor !== trimmed;
 
@@ -171,13 +170,15 @@ export function CounterpartyPicker({
     } else {
       return;
     }
-    // Cleared and still focused: the next party is typed straight in,
-    // which is what a tripartite deal needs (CTR-011).
+    // Cleared and still focused, so the next party is typed straight in,
+    // which is what a tripartite deal needs (CTR-011). The list closes:
+    // left open on an empty term it lists every counterparty over the
+    // field below. Typing, a click, or an Arrow key opens it again.
     setQuery("");
     setActiveIndex(0);
     setMatches([]);
     setAnsweredFor(null);
-    setRefresh((value) => value + 1);
+    setOpen(false);
   }
 
   const createLabel = addNewLabel
@@ -215,6 +216,9 @@ export function CounterpartyPicker({
         className="h-8 w-full rounded-button border border-border-default bg-raised px-2.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link disabled:pointer-events-none disabled:opacity-50"
         value={query}
         onFocus={() => setOpen(true)}
+        // A pick closes the list with the focus kept, so a click on the
+        // focused input has to be able to open it again.
+        onClick={() => setOpen(true)}
         onChange={(event) => {
           setQuery(event.target.value);
           setActiveIndex(0);

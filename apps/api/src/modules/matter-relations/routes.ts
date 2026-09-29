@@ -33,6 +33,7 @@ import {
   unrelateMatters,
 } from "../../lib/matter-relations.js";
 import { escapeLikePattern } from "../../lib/like.js";
+import { recordNumberFrom } from "../../lib/record-number.js";
 import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 
 const requireReader = requireRole("administrator", "legal_team_member");
@@ -229,8 +230,7 @@ export const matterRelationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const anchor = await reachedMatter(app.db, request.user, request.params.number);
       if (!anchor) throw httpError(404, NO_MATTER);
-      const number = /^\d+$/.test(request.query.q) ? Number(request.query.q) : null;
-      const numberMatch = number !== null && number <= 2_147_483_647 ? number : null;
+      const numberMatch = recordNumberFrom(request.query.q, "M");
       const title = `%${escapeLikePattern(request.query.q)}%`;
       const rows = await app.db
         .select({

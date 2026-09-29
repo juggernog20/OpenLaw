@@ -22,6 +22,7 @@ import {
   formatPercent,
   formatRelativeOrShort,
   formatShortDate,
+  formatShortDateRange,
   toMajorUnits,
   toMinorUnits,
 } from "./format";
@@ -57,6 +58,23 @@ describe("formatRelativeOrShort (activity-feed rule)", () => {
     expect(formatRelativeOrShort(minus(8 * DAY), enGB)).toBe("25 Apr");
     expect(formatRelativeOrShort(minus(8 * DAY), deDE)).toBe("25. Apr.");
     expect(formatRelativeOrShort("2025-12-20T12:00:00Z", enUS)).toBe("Dec 20, 2025");
+  });
+});
+
+describe("formatShortDateRange", () => {
+  it("gives both ends the year when they fall in different years", () => {
+    expect(formatShortDateRange("2026-05-21", "2027-05-21", enUS)).toEqual([
+      "May 21, 2026",
+      "May 21, 2027",
+    ]);
+  });
+
+  it("keeps the upload-column rule when both ends share a year", () => {
+    expect(formatShortDateRange("2026-01-01", "2026-12-31", enUS)).toEqual(["Jan 1", "Dec 31"]);
+    expect(formatShortDateRange("2027-01-01", "2027-06-30", enUS)).toEqual([
+      "Jan 1, 2027",
+      "Jun 30, 2027",
+    ]);
   });
 });
 

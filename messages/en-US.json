@@ -6557,6 +6557,12 @@
   "keyDates.countLabel": {
     "defaultMessage": "{count, plural, one {# date} other {# dates}}"
   },
+  "keyDates.derivedReminders": {
+    "defaultMessage": "Reminders for the expiry and the notice deadline follow your lead times: {leadTimes}. <link>Change lead times</link>"
+  },
+  "keyDates.derivedReminders.offset": {
+    "defaultMessage": "{days, plural, =0 {on the day} one {# day before} other {# days before}}"
+  },
   "keyDates.edit": {
     "defaultMessage": "Edit date"
   },

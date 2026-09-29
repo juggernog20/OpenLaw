@@ -122,7 +122,12 @@ export async function seedTypeForm(tx: Transaction, module: FormModule, typeId: 
       displayOrder: index - Object.keys(FORM_BUILTINS[module]).length + 1,
       // The Portal form drew Description as a basic before DD-028; it stays
       // a question on every new type until an Administrator switches it off.
-      onIntakeForm: builtinKey === "description",
+      // A Contract nearly always has another side, so a new Contract type
+      // asks for Counterparties up front too (DD-028 amendment 2026-09-29).
+      // On intake, not Required: a create that names the parties afterwards,
+      // as the seed and Auto-Docs do, must still go through.
+      onIntakeForm:
+        builtinKey === "description" || (module === "contract" && builtinKey === "counterparties"),
     })),
   );
 }

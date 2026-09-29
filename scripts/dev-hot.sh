@@ -344,11 +344,13 @@ esac
 # Where the seed reads the mail the loop sends. Moves with MAILPIT_PORT,
 # like everything else here.
 export SEED_MAILPIT_URL="${SEED_MAILPIT_URL:-http://127.0.0.1:${MAILPIT_PORT:-8025}}"
-# Which API the seed signs in to. Left unset it falls back to port 3000,
-# which belongs to the shared instance: an isolated loop would then wait
-# for an API that never answers on its port, or worse, seed a whole org
-# into the instance that does answer there.
-export SEED_BASE_URL="${SEED_BASE_URL:-$DEV_API_ORIGIN}"
+# Where the seed signs in. Left unset it falls back to port 3000, which
+# belongs to the shared instance: an isolated loop would then wait for an
+# API that never answers on its port, or worse, seed a whole org into the
+# instance that does answer there. The seed goes through Vite, not
+# straight to the API, because it sends its base URL as the Origin and
+# better-auth trusts only BASE_URL, the web port.
+export SEED_BASE_URL="${SEED_BASE_URL:-$BASE_URL}"
 # Where the seed tells you to sign in. The API address is the wrong one
 # to print for this loop, because Vite serves the app on its own port.
 export SEED_WEB_URL="${SEED_WEB_URL:-http://localhost:$WEB_PORT}"
