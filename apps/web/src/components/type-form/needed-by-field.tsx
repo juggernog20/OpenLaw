@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** The Needed by Row's control (DD-028.3): a date that lands as the
- * "Needed by" key date on the record it creates. */
+ * "Needed by" key date on the record it creates. The same date picker
+ * as the record's other dates, so it reads "Oct 1, 2026" like they do. */
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
-import { Input } from "../ui/input";
+import { DatePicker } from "../date-picker";
 import { Label } from "../ui/label";
 import { StatusNote } from "../status-note";
 
@@ -25,10 +26,11 @@ export function NeededByField({
     setSeed(date);
     setDraft(date ?? "");
   }
-  async function commit() {
-    if (status === "saving" || draft === (date ?? "")) return;
+  async function commit(next: string) {
+    if (status === "saving" || next === (date ?? "")) return;
+    setDraft(next);
     setStatus("saving");
-    const refusal = await onCommit(draft);
+    const refusal = await onCommit(next);
     setError(refusal);
     setStatus(refusal ? "error" : "saved");
   }
@@ -37,17 +39,12 @@ export function NeededByField({
       <Label htmlFor="record-needed-by">
         <FormattedMessage id="typeForm.needed-by" defaultMessage="Needed by" />
       </Label>
-      <Input
+      <DatePicker
         id="record-needed-by"
-        type="date"
         value={draft}
         disabled={frozen || status === "saving"}
-        onChange={(event) => setDraft(event.target.value)}
-        onBlur={() => void commit()}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") void commit();
-          if (event.key === "Escape") setDraft(date ?? "");
-        }}
+        onChange={(next) => void commit(next)}
+        onRevert={() => setDraft(date ?? "")}
       />
       <StatusNote status={status} detail={error} />
     </div>
