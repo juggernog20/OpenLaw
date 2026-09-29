@@ -220,9 +220,10 @@ export const portalRecordWorkRoutes: FastifyPluginAsyncZod = async (app) => {
             references: await references(app.db, projection.fields, projection.customFields),
             originalRequests: await Promise.all(
               originals.map(async ({ row: original, requester }) => {
-                const { fields } = await readIntakeForm(app.db, original.requestTypeId, {
+                const intake = await readIntakeForm(app.db, original.requestTypeId, {
                   includeArchived: true,
                 });
+                const fields = intake.fields.filter((field) => field.builtInKey !== "title");
                 const paper = await app.db
                   .select({
                     filename: requestAttachments.filename,

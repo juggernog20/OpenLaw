@@ -119,11 +119,13 @@ it("reads the destination Intake tree, evaluates Required, and labels built-in a
   });
   expect(read.statusCode, read.body).toBe(200);
   expect(read.json().form).toEqual([
+    pinnedFormRows("contract")[0],
     rows[0],
     form[3],
     builtin.find((r) => r.rowRef === "effective_date"),
   ]);
   expect(read.json().fields.map((f: { slug: string }) => f.slug)).toEqual([
+    "title",
     rows[0]!.rowRef,
     rows[1]!.rowRef,
     "effective_date",
@@ -515,3 +517,117 @@ it("lands a Region answered by id on the Contract's region name at conversion", 
     .where(eq(contracts.number, converted.json().request.convertedContract.number));
   expect(contract?.region).toBe("EMEA");
 });
+
+it.each(["contract", "matter"] as const)(
+  "uses the %s Form's Department visibility and required setting for submission",
+  async (module) => {
+    const made = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types`,
+      cookies,
+      payload: { displayName: `Configured ${module} intake` },
+    });
+    expect(made.statusCode, made.body).toBe(201);
+    const typeId = made.json()[`${module}Type`].id;
+    const departmentKey = module === "contract" ? "owning_department" : "department";
+    const builtin = Object.entries(FORM_BUILTINS[module]).map(([rowRef, fieldType]) => ({
+      kind: "row" as const,
+      id: rowRef,
+      rowRef,
+      fieldType,
+      isRequired: false,
+      onIntakeForm: ["description", "priority", departmentKey].includes(rowRef),
+      visibleOnPortal: true,
+    }));
+    const departmentRow = {
+      ...builtin.find((row) => row.rowRef === departmentKey)!,
+      isRequired: true,
+    };
+    const form: FormNode[] = [
+      ...pinnedFormRows(module),
+      builtin.find((row) => row.rowRef === "description")!,
+      builtin.find((row) => row.rowRef === "priority")!,
+      {
+        kind: "branch",
+        id: "department-condition",
+        match: "all",
+        conditions: [{ rowRef: "description", operator: "equals", value: "Route to team" }],
+        children: [departmentRow],
+      },
+      ...builtin.filter((row) => !["description", "priority", departmentKey].includes(row.rowRef)),
+    ];
+    const write = () =>
+      h.app.inject({
+        method: "PUT",
+        url: `/api/v1/${module}-types/${typeId}/form`,
+        cookies,
+        payload: { form },
+      });
+    expect((await write()).statusCode).toBe(200);
+    const madeRequest = await h.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies,
+      payload: { displayName: `Configured ${module} request` },
+    });
+    const rt = madeRequest.json().requestType;
+    const destination = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/request-types/${rt.id}`,
+      cookies,
+      payload: { targetModule: module, targetTypeId: typeId },
+    });
+    expect(destination.statusCode, destination.body).toBe(200);
+    const read = await h.app.inject({
+      method: "GET",
+      url: `/api/v1/portal/request-types/${rt.slug}`,
+      cookies: requesterCookies,
+    });
+    expect(read.json().form.map((node: FormNode) => node.id)).toEqual([
+      "title",
+      "description",
+      "priority",
+      "department-condition",
+    ]);
+    expect(
+      read.json().fields.filter((field: { slug: string }) => field.slug === departmentKey),
+    ).toHaveLength(1);
+    const submit = (customFields: Record<string, string>) =>
+      h.app.inject({
+        method: "POST",
+        url: "/api/v1/requests",
+        cookies: requesterCookies,
+        payload: {
+          requestTypeId: rt.id,
+          title: "Form-driven request",
+          urgency: "medium",
+          customFields,
+        },
+      });
+    const hidden = await submit({ description: "No team needed" });
+    expect(hidden.statusCode, hidden.body).toBe(201);
+    expect(hidden.json().request.departmentId).toBeNull();
+    const required = await submit({ description: "Route to team" });
+    expect(required.statusCode).toBe(400);
+    expect(required.json().detail).toContain("Department");
+    const answered = await submit({
+      description: "Route to team",
+      [departmentKey]: departmentId,
+      priority: "high",
+    });
+    expect(answered.statusCode, answered.body).toBe(201);
+    expect(answered.json().request).toMatchObject({
+      departmentId,
+      urgency: "high",
+      title: "Form-driven request",
+    });
+    expect(answered.json().request.customFields.title).toBeUndefined();
+    const stale = await submit({ description: "No team needed", [departmentKey]: departmentId });
+    expect(stale.statusCode).toBe(400);
+    departmentRow.isRequired = false;
+    expect((await write()).statusCode).toBe(200);
+    const optional = await submit({ description: "Route to team" });
+    expect(optional.statusCode, optional.body).toBe(201);
+    expect(optional.json().request.departmentId).toBeNull();
+  },
+);

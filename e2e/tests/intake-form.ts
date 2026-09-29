@@ -59,6 +59,8 @@ export async function configureRequestIntake(
     nodes.map((node) => {
       if (node.kind === "branch") return { ...node, children: configure(node.children!) };
       if (node.rowRef === field.slug) found = true;
+      if (node.rowRef === "owning_department" || node.rowRef === "priority")
+        return { ...node, onIntakeForm: true, visibleOnPortal: true, isRequired: false };
       return node.rowRef === field.slug || node.rowRef === "description"
         ? { ...node, onIntakeForm: true, visibleOnPortal: true, isRequired: true }
         : node;

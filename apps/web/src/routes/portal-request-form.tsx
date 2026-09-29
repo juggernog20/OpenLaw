@@ -36,7 +36,6 @@ import { DeflectionPanel } from "../components/portal/deflection-panel";
 import { PortalShell } from "../components/portal/portal-shell";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { DepartmentPicker } from "../components/department-picker";
 
 type FormResponse =
   paths["/api/v1/portal/request-types/{slug}"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -71,9 +70,6 @@ const TITLE = defineMessage({
   defaultMessage: "New request",
 });
 
-/** The three basics that carry a value. Attachments are the fourth. */
-type BasicKey = "title" | "description" | "urgency";
-
 /** What the confirmation knows: the Request that exists, whether its
  * paper is still going up, and the files that did not make it with the
  * seam's own reason for each. */
@@ -99,17 +95,8 @@ export function PortalRequestFormPage() {
   } = useLoaderData<typeof portalRequestFormLoader>();
   const intl = useIntl();
 
-  const [title, setTitle] = useState("");
   const [value, setValue] = useState<ContractValue | null>(null);
   const [valueError, setValueError] = useState<string>();
-  /** DES-018's ramp, and `medium` until the requester says otherwise —
-   * the same default a contract's priority is born with. */
-  const [urgency, setUrgency] = useState<(typeof SEVERITY_LEVELS)[number]>("medium");
-  const [departmentId, setDepartmentId] = useState<string | null>(
-    departments.some((department) => department.id === user.departmentId)
-      ? user.departmentId
-      : null,
-  );
   const [drafts, setDrafts] = useState<Record<string, CustomFieldDraft>>({});
   /** The paper, chosen but not yet sent: an attachment is a row against
    * a Request, and there is no Request until Submit is pressed. */
@@ -130,7 +117,7 @@ export function PortalRequestFormPage() {
 
   /** A key stops being marked the moment it is answered, so a refusal
    * clears box by box rather than only on the next press. */
-  function clearMark(key: BasicKey | string) {
+  function clearMark(key: string) {
     setUnanswered((current) => {
       if (!current.has(key)) return current;
       const next = new Set(current);
@@ -139,9 +126,19 @@ export function PortalRequestFormPage() {
     });
   }
 
+  function initialDraft(field: FormField): CustomFieldDraft {
+    if (["department", "owning_department"].includes(field.builtInKey ?? "")) {
+      return departments.some((department) => department.id === user.departmentId)
+        ? (user.departmentId ?? "")
+        : "";
+    }
+    if (field.builtInKey === "priority") return "medium";
+    return emptyDraft(field);
+  }
+
   const answers: Record<string, CustomFieldValue> = {};
   for (const field of fields) {
-    const parsed = toValue(field, drafts[field.slug] ?? emptyDraft(field));
+    const parsed = toValue(field, drafts[field.slug] ?? initialDraft(field));
     if ("value" in parsed && parsed.value !== null) answers[field.slug] = parsed.value;
   }
   if (value)
@@ -170,7 +167,7 @@ export function PortalRequestFormPage() {
       return;
     }
     for (const field of visibleFields) {
-      if ("error" in toValue(field, drafts[field.slug] ?? emptyDraft(field))) {
+      if ("error" in toValue(field, drafts[field.slug] ?? initialDraft(field))) {
         setError(
           intl.formatMessage(
             {
@@ -190,15 +187,6 @@ export function PortalRequestFormPage() {
     // refusal sentence names fields, and a sentence cannot point.
     const missing: string[] = [];
     const marks = new Set<string>();
-    if (title.trim() === "") {
-      missing.push(intl.formatMessage(BASIC_LABELS.title));
-      marks.add("title");
-    }
-    if (departments.length > 0 && !departmentId) {
-      missing.push(intl.formatMessage({ id: "records.department", defaultMessage: "Department" }));
-      marks.add("department");
-    }
-
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of visibleFields) {
       const parsed = { value: answers[field.slug] ?? null };
@@ -209,7 +197,7 @@ export function PortalRequestFormPage() {
         }
         continue;
       }
-      customFields[field.slug] = parsed.value;
+      if (field.builtInKey !== "title") customFields[field.slug] = parsed.value;
     }
 
     if (missing.length > 0) {
@@ -234,9 +222,17 @@ export function PortalRequestFormPage() {
       .POST("/api/v1/requests", {
         body: {
           requestTypeId: requestType.id,
-          departmentId,
-          title: title.trim(),
-          urgency,
+          departmentId: (() => {
+            const field = visibleFields.find((field) =>
+              ["department", "owning_department"].includes(field.builtInKey ?? ""),
+            );
+            const value = field ? answers[field.slug] : null;
+            return typeof value === "string" ? value : null;
+          })(),
+          title: String(answers.title ?? "").trim(),
+          urgency: visibleKeys.has("priority")
+            ? (SEVERITY_LEVELS.find((level) => level === answers.priority) ?? "medium")
+            : "medium",
           customFields,
           ...(visibleFields.some((field) => field.builtInKey === "counterparties")
             ? { counterparties: counterparties.map((selection) => selection.pick) }
@@ -282,93 +278,8 @@ export function PortalRequestFormPage() {
     setSubmitted((current) => (current === null ? current : { ...current, uploading: false }));
   }
 
-  const fieldOrder = [
-    "basic:title",
-    "basic:department",
-    "basic:urgency",
-    ...visibleRows.map((row) => row.rowRef),
-    "basic:attachments",
-  ];
+  const fieldOrder = [...visibleRows.map((row) => row.rowRef), "basic:attachments"];
   const formControls: Record<string, ReactNode> = {
-    "basic:title": (
-      <Field
-        htmlFor="request-title"
-        label={intl.formatMessage(BASIC_LABELS.title)}
-        required
-        unanswered={unanswered.has("title")}
-      >
-        <Input
-          id="request-title"
-          value={title}
-          aria-required="true"
-          aria-invalid={unanswered.has("title") || undefined}
-          placeholder={intl.formatMessage({
-            id: "portal.form.summaryHint",
-            defaultMessage: "Enter a descriptive title for your request",
-          })}
-          onChange={(event) => {
-            setTitle(event.target.value);
-            clearMark("title");
-          }}
-        />
-      </Field>
-    ),
-    "basic:department": (
-      <Field
-        htmlFor="request-department"
-        required={departments.length > 0}
-        unanswered={unanswered.has("department")}
-        label={intl.formatMessage({
-          id: "records.department",
-          defaultMessage: "Department",
-        })}
-      >
-        <DepartmentPicker
-          id="request-department"
-          required={departments.length > 0}
-          invalid={unanswered.has("department")}
-          value={departmentId}
-          options={departments}
-          onChange={(value) => {
-            setDepartmentId(value);
-            clearMark("department");
-          }}
-          disabled={busy || departments.length === 0}
-        />
-        {departments.length === 0 && (
-          <p className="text-sm text-muted">
-            <FormattedMessage
-              id="portal.form.noDepartments"
-              defaultMessage="No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
-            />
-          </p>
-        )}
-      </Field>
-    ),
-    "basic:urgency": (
-      <Field htmlFor="request-urgency" label={intl.formatMessage(BASIC_LABELS.urgency)} required>
-        <select
-          id="request-urgency"
-          value={urgency}
-          className={CONTROL_CLASS}
-          aria-required="true"
-          // Read back off the ramp rather than asserted onto
-          // it: the four options are the only ones the select
-          // draws, and this is what makes that a fact rather
-          // than a promise the compiler was told to believe.
-          onChange={(event) => {
-            const picked = SEVERITY_LEVELS.find((level) => level === event.target.value);
-            if (picked) setUrgency(picked);
-          }}
-        >
-          {SEVERITY_LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {severityLabel(intl, level)}
-            </option>
-          ))}
-        </select>
-      </Field>
-    ),
     "basic:attachments": <AttachmentsField files={files} onFiles={setFiles} />,
     value: (
       <ValueField
@@ -399,12 +310,17 @@ export function PortalRequestFormPage() {
               ? regions
               : ["department", "owning_department"].includes(field.builtInKey ?? "")
                 ? departments
-                : undefined
+                : field.builtInKey === "priority"
+                  ? SEVERITY_LEVELS.map((level) => ({
+                      id: level,
+                      displayName: severityLabel(intl, level),
+                    }))
+                  : undefined
           }
           requestTypeId={requestType.id}
           counterparties={counterparties}
           onCounterparties={setCounterparties}
-          draft={drafts[field.slug] ?? emptyDraft(field)}
+          draft={drafts[field.slug] ?? initialDraft(field)}
           unanswered={unanswered.has(field.slug)}
           onDraft={(next) => {
             setDrafts((current) => ({ ...current, [field.slug]: next }));
@@ -485,15 +401,6 @@ export function PortalRequestFormPage() {
   );
 }
 
-/** The fixed basics' labels, said once: the form draws them and the
- * refusal names them, and two spellings would be two fields. */
-const BASIC_LABELS = {
-  title: defineMessage({ id: "portal.form.title", defaultMessage: "Title" }),
-  description: defineMessage({ id: "portal.form.description", defaultMessage: "Description" }),
-  attachments: defineMessage({ id: "portal.form.attachments", defaultMessage: "Attachments" }),
-  urgency: defineMessage({ id: "portal.form.urgency", defaultMessage: "Urgency" }),
-} as const;
-
 /** Entity Fields use ENT-010's list; person Fields still have no Portal choices. */
 function AttachedField({
   field,
@@ -517,6 +424,7 @@ function AttachedField({
   onDraft: (draft: CustomFieldDraft) => void;
 }>) {
   const controlId = `request-field-${field.slug}`;
+  const intl = useIntl();
   return (
     <Field
       htmlFor={controlId}
@@ -525,7 +433,19 @@ function AttachedField({
       description={field.description}
       unanswered={unanswered}
     >
-      {field.builtInKey === "counterparties" ? (
+      {field.builtInKey === "title" ? (
+        <Input
+          id={controlId}
+          value={typeof draft === "string" ? draft : ""}
+          aria-required={field.isRequired}
+          aria-invalid={unanswered || undefined}
+          placeholder={intl.formatMessage({
+            id: "portal.form.summaryHint",
+            defaultMessage: "Enter a descriptive title for your request",
+          })}
+          onChange={(event) => onDraft(event.target.value)}
+        />
+      ) : field.builtInKey === "counterparties" ? (
         <IntakeCounterpartiesInput
           required={field.isRequired}
           id={controlId}

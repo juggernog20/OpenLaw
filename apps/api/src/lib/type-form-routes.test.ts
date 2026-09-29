@@ -78,15 +78,16 @@ it("draws pinned Rows first and seeds built-ins on new types", async () => {
     "contract_type",
   ]);
   expect(form.filter((n) => n.kind === "row" && n.rowRef === "value")).toHaveLength(1);
-  // Description and, on a Contract type, Counterparties start On intake
-  // form; every other built-in starts as a Record Row. Neither is Required,
-  // so a create that names the parties afterwards still goes through.
+  // Title is required; Description and Counterparties start as optional intake Rows.
   const intake = form.filter((n) => n.kind === "row" && n.onIntakeForm);
   expect(intake.map((n) => n.kind === "row" && n.rowRef)).toEqual([
+    "title",
     "description",
     "counterparties",
   ]);
-  expect(intake.every((n) => n.kind === "row" && !n.isRequired)).toBe(true);
+  expect(intake.every((n) => n.kind === "row" && n.isRequired === (n.rowRef === "title"))).toBe(
+    true,
+  );
 });
 
 it("round-trips nested Branches and audits one whole replacement", async () => {

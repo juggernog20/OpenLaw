@@ -424,7 +424,7 @@ export const guideTools: readonly ToolDefinition[] = [
             destinationTypeId: intake.typeId,
             nodes: flatten(intake.form),
             fields: intake.fields,
-            basics: ["title", "department", "urgency", "attachments"],
+            basics: ["attachments"],
             ...choices,
           });
         } catch (error) {

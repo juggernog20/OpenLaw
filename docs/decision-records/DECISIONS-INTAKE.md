@@ -344,7 +344,7 @@ M22 made `matter` a complete target rather than a configuration value waiting fo
 
 ### Amendment (2026-09-21, DD-028) — the Request form is the destination type's Intake rows
 
-The Decision above defined the Portal form as basics plus `request_type_fields`. DD-028 moves the form onto the destination type: the Portal form is the pinned basics (Title, Department, Urgency at the top, Attachments last) plus the Intake Rows of the destination type's Form, Branches included. `request_type_fields` and `form_field_order` are retired after migration; the 2026-09-19 companion-attach addendum below is retired with them, because there is no longer a second list to keep in step. The destination must name a module and may name a type; a module-only destination lands on that module's Default type. The M19/7 strand state and the M20/11 required rule (`user` may never be required on a Portal form) carry over to the Form: a `user` Row may be On intake form, and Required for creation is refused on it while it is, in the same house style. An optional `user` question stays allowed, as today. Q6 in the Consequences above (conditional form logic) is now taken by DD-028's Branches.
+The Decision above defined the Portal form as basics plus `request_type_fields`. DD-028 moves the form onto the destination type: the Portal form uses the destination type’s Intake Rows, Branches included. Amended 2026-09-29 after UX review: Title is the pinned required Intake Row; Department and Priority are shown only as configured, with no separate Portal basics. Preview and submission use the same Row order, visibility and required settings. Attachments remain an optional upload control at the end. `request_type_fields` and `form_field_order` are retired after migration; the 2026-09-19 companion-attach addendum below is retired with them, because there is no longer a second list to keep in step. The destination must name a module and may name a type; a module-only destination lands on that module's Default type. The M19/7 strand state and the M20/11 required rule (`user` may never be required on a Portal form) carry over to the Form: a `user` Row may be On intake form, and Required for creation is refused on it while it is, in the same house style. An optional `user` question stays allowed, as today. Q6 in the Consequences above (conditional form logic) is now taken by DD-028's Branches.
 
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
@@ -848,9 +848,13 @@ The notice is the `request.conversion_draft_finished` event in group 4 of the ca
 
 ## INT-010 — Department is required and fixed during intake
 
-- **Status:** Accepted
+- **Status:** Amended 2026-09-29 by the INT-002 destination-Form amendment above.
 - **Date:** 2026-09-15
 - **Decision:** Every new Request requires a live Department selected in its form. The Request overview displays that submitted value without an edit control. Conversion retains it in the original Request and copies it to the resulting Matter or Contract, where normal record permissions permit later changes. Existing Requests with no Department remain readable and convertible. This amends INT-002's required basics and supersedes the Request-edit portion of SET-010's 2026-09-13 amendment.
+
+### Amendment (2026-09-29) — Department follows the destination Form
+
+The INT-002 amendment above supersedes the universal Department requirement. A visible Department Row is required only when its Form marks it Required for creation. A Request may have a null Department when that Row is absent, hidden, or optional and unanswered; conversion preserves that null value. Administrators must enable and require the Row where their intake process needs a Department. The submitted value remains fixed on the Request.
 
 ### INT-002 addendum (2026-09-19) — the form editor offers to attach a field to the default destination type in the same act
 

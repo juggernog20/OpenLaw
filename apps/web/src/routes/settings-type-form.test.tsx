@@ -415,7 +415,7 @@ it("removes a populated Branch without detaching its children", async () => {
   expect(read().some((n) => n.kind === "branch")).toBe(false);
 });
 
-it("keeps successful preview options and enforces Department when Entities fail", async () => {
+it("keeps successful preview options and blocks completion when Entities fail", async () => {
   const { user } = setupForm("contract", false, undefined, "administrator", ({ url }) => {
     if (url.pathname === "/api/v1/portal/entities") return problem(503, "Unavailable");
     if (url.pathname === "/api/v1/departments/options")
@@ -427,7 +427,7 @@ it("keeps successful preview options and enforces Department when Entities fail"
   expect(await dialog.findByText(/Some Portal options could not be loaded/)).toBeInTheDocument();
   await user.type(dialog.getByLabelText(/Title/), "A test");
   await user.click(dialog.getByRole("button", { name: "Submit request" }));
-  expect(dialog.getByText("Department is required.")).toBeInTheDocument();
+  expect(dialog.queryByLabelText(/^Department/)).not.toBeInTheDocument();
   expect(dialog.queryByText("Preview complete. No Request was sent")).not.toBeInTheDocument();
 });
 
@@ -536,4 +536,57 @@ it("loads later Entity condition options and stops on a repeated registry cursor
   expect(await screen.findByRole("option", { name: "Later entity" })).toBeInTheDocument();
   expect(screen.getByRole("option", { name: "First entity" })).toBeInTheDocument();
   expect(reads).toBe(4);
+});
+
+it("previews Department once in Form order and follows its conditional rows", async () => {
+  const { user } = setupForm(
+    "contract",
+    false,
+    (form) => {
+      const rows = form.filter((node): node is FormRow => node.kind === "row");
+      const take = (key: string) => ({
+        ...rows.find((row) => row.rowRef === key)!,
+        onIntakeForm: true,
+      });
+      return [
+        ...form.filter((node) => ["title", "contract_type"].includes(node.id)),
+        take("priority"),
+        take("owning_department"),
+        {
+          kind: "branch",
+          id: "department-notes",
+          match: "all",
+          conditions: [{ rowRef: "owning_department", operator: "equals", value: "d1" }],
+          children: [{ ...take("description"), isRequired: true }],
+        },
+        ...form.filter(
+          (node) =>
+            !["title", "contract_type", "priority", "owning_department", "description"].includes(
+              node.id,
+            ),
+        ),
+      ];
+    },
+    "administrator",
+    ({ url }) =>
+      url.pathname === "/api/v1/departments/options"
+        ? json(200, { departments: [{ id: "d1", displayName: "Finance" }] })
+        : undefined,
+  );
+  await user.click(await screen.findByRole("button", { name: "Preview intake form" }));
+  const dialog = within(screen.getByRole("dialog", { name: "Preview intake form" }));
+  await user.type(dialog.getByLabelText(/^Title/), "Configured preview");
+  const department = dialog.getByRole("combobox", { name: /^Department/ });
+  expect(dialog.getAllByRole("combobox", { name: /^Department/ })).toHaveLength(1);
+  expect(
+    dialog.getByLabelText(/^Priority/).compareDocumentPosition(department) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(dialog.queryByLabelText(/^Description/)).not.toBeInTheDocument();
+  await user.selectOptions(department, "d1");
+  await user.click(dialog.getByRole("button", { name: "Submit request" }));
+  expect(dialog.getByLabelText(/^Description/)).toHaveAttribute("aria-invalid", "true");
+  await user.selectOptions(department, "");
+  await user.click(dialog.getByRole("button", { name: "Submit request" }));
+  expect(dialog.getByText("Preview complete. No Request was sent")).toBeVisible();
 });
