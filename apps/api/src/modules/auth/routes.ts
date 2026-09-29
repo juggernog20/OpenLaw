@@ -225,7 +225,11 @@ const UNREACHABLE_DISCOVERY_CODES = new Set(["discovery_timeout", "discovery_une
  */
 function relaySsoRegistrationError(error: unknown, issuer: string): never {
   if (isAPIError(error) && UNREACHABLE_DISCOVERY_CODES.has(error.body?.code ?? "")) {
-    const discoveryUrl = `${issuer.replace(/\/+$/, "")}/.well-known/openid-configuration`;
+    // A loop, not /\/+$/: that regex runs in quadratic time on a long run
+    // of slashes, and the issuer is request input (CodeQL js/polynomial-redos).
+    let end = issuer.length;
+    while (end > 0 && issuer[end - 1] === "/") end -= 1;
+    const discoveryUrl = `${issuer.slice(0, end)}/.well-known/openid-configuration`;
     throw httpError(
       502,
       `OpenLaw could not reach the identity provider's discovery URL, ${discoveryUrl}. ` +
