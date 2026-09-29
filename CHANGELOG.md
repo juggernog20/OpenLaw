@@ -37,7 +37,7 @@ This file records the notable changes in each OpenLaw release. The format follow
 - Start blank lists every Status it keeps. The MCP OAuth note names both kinds of Client. Two-factor enrollment has text for an account with no password. (#1213)
 - Adding an identity provider whose issuer does not answer names the discovery URL that failed. (#1213)
 - The welcome wizard refuses a localhost or private DocuSign webhook URL, which DocuSign cannot reach. (#1213)
-- Business Portal intake and its preview follow the destination Form's field order, required settings and conditions. Department appears once, and fields turned off for intake stay off the Portal form. (#1225)
+- Business Portal intake and its preview follow the destination Form's Row order, required settings and conditions. Department appears once, and Rows that are not On intake form stay off the Portal form. (#1225)
 - The Counterparties list closes after a pick, so it no longer covers the next field. (#1223)
 - Set parent and the other Contract and Matter link pickers find a record typed as printed, such as C-92. (#1223)
 - Needed by shows its date like the other term dates, such as Oct 1, 2026. (#1223)
