@@ -63,6 +63,11 @@ describe("trustableEndpointOrigins", () => {
     ).toEqual(["https://auth.lan", "http://127.0.0.1:8080"]);
   });
 
+  it("adds nothing when the issuer's host does not resolve", async () => {
+    const document = { userinfo_endpoint: "http://10.0.0.9/userinfo" };
+    expect(await trustableEndpointOrigins("https://gone.example", document, resolve)).toEqual([]);
+  });
+
   it("adds nothing for same-origin, relative or non-http endpoints", async () => {
     const document = entraDocument({
       userinfo_endpoint: "/oidc/userinfo",
@@ -115,26 +120,50 @@ describe("withTrustedIdpOrigins", () => {
 });
 
 describe("storedProviderOrigins", () => {
-  it("trusts the issuer and every stored endpoint's origin", () => {
-    const oidcConfig = JSON.stringify({
-      clientId: "openlaw",
-      authorizationEndpoint: "https://login.microsoftonline.com/t/oauth2/v2.0/authorize",
+  const config = (endpoints: Record<string, string>) =>
+    JSON.stringify({ clientId: "openlaw", ...endpoints });
+
+  it("trusts only the issuer of a public IdP, leaving its endpoints to the plugin's own checks", async () => {
+    const oidcConfig = config({
       tokenEndpoint: "https://login.microsoftonline.com/t/oauth2/v2.0/token",
       userInfoEndpoint: "https://graph.microsoft.com/oidc/userinfo",
     });
-    expect(storedProviderOrigins({ issuer: ENTRA_ISSUER, oidcConfig })).toEqual([
+    expect(await storedProviderOrigins({ issuer: ENTRA_ISSUER, oidcConfig }, resolve)).toEqual([
       "https://login.microsoftonline.com",
-      "https://graph.microsoft.com",
     ]);
   });
 
-  it("keeps the issuer when the config cannot be read, and nothing for a bad issuer", () => {
-    expect(storedProviderOrigins({ issuer: ENTRA_ISSUER, oidcConfig: "{not json" })).toEqual([
-      "https://login.microsoftonline.com",
+  it("trusts every stored endpoint origin of a private IdP", async () => {
+    const oidcConfig = config({
+      authorizationEndpoint: "https://keycloak.lan/realms/org/auth",
+      tokenEndpoint: "https://auth.lan/token",
+      userInfoEndpoint: "http://127.0.0.1:8080/userinfo",
+    });
+    expect(
+      await storedProviderOrigins(
+        { issuer: "https://keycloak.lan/realms/org", oidcConfig },
+        resolve,
+      ),
+    ).toEqual(["https://keycloak.lan", "https://auth.lan", "http://127.0.0.1:8080"]);
+  });
+
+  it("keeps the issuer when the config cannot be read, and nothing for a bad issuer", async () => {
+    const issuer = "https://keycloak.lan/realms/org";
+    expect(await storedProviderOrigins({ issuer, oidcConfig: "{not json" }, resolve)).toEqual([
+      "https://keycloak.lan",
     ]);
-    expect(storedProviderOrigins({ issuer: ENTRA_ISSUER, oidcConfig: null })).toEqual([
-      "https://login.microsoftonline.com",
+    expect(await storedProviderOrigins({ issuer, oidcConfig: null }, resolve)).toEqual([
+      "https://keycloak.lan",
     ]);
-    expect(storedProviderOrigins({ issuer: "not a url", oidcConfig: null })).toEqual([]);
+    expect(await storedProviderOrigins({ issuer: "not a url", oidcConfig: null }, resolve)).toEqual(
+      [],
+    );
+  });
+
+  it("trusts only the issuer when its host does not resolve", async () => {
+    const oidcConfig = config({ userInfoEndpoint: "http://10.0.0.9/userinfo" });
+    expect(
+      await storedProviderOrigins({ issuer: "https://gone.example", oidcConfig }, resolve),
+    ).toEqual(["https://gone.example"]);
   });
 });

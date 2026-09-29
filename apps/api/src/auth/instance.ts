@@ -214,10 +214,10 @@ export function createAuth(
     ...(config.disableRateLimit ? { rateLimit: { enabled: false } } : {}),
     database: authAdapter(db),
     // Registered providers stay trusted after registration: the issuer's
-    // origin and the origins of the endpoints discovery stored (#1229).
-    // The plugin checks them again when it re-runs discovery for a row
-    // with missing endpoints, and before it fetches a private endpoint
-    // at sign-in. The table is only read on SSO paths, to keep the extra
+    // origin, and for a private IdP the origins of its stored endpoints
+    // (#1229, see idp-origins.ts). The plugin checks them again when it
+    // re-runs discovery for a row with missing endpoints, and before it
+    // fetches a private endpoint at sign-in. The table is only read on SSO paths, to keep the extra
     // query off every other auth request. Registration-time trust is
     // separate (see `withTrustedIdpOrigins`): the row does not exist yet.
     trustedOrigins: async (request) => {
@@ -226,7 +226,7 @@ export function createAuth(
       const rows = await db
         .select({ issuer: ssoProviders.issuer, oidcConfig: ssoProviders.oidcConfig })
         .from(ssoProviders);
-      return rows.flatMap(storedProviderOrigins);
+      return (await Promise.all(rows.map((row) => storedProviderOrigins(row)))).flat();
     },
     account: {
       // The OIDC tokens better-auth stores are encrypted before they

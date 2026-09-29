@@ -17,7 +17,13 @@
  * trusted only when the issuer is private too: the Administrator has
  * already pointed OpenLaw at an internal IdP, and its endpoints share
  * that decision. A public IdP cannot steer the server into the
- * install's own network through its discovery document.
+ * install's own network through its discovery document. An issuer whose
+ * host does not resolve gains no extra origins at all.
+ *
+ * After registration, a public IdP's endpoints are not trusted again.
+ * The plugin fetches a public endpoint without trust, and then its own
+ * DNS check runs on every fetch. Only a private IdP's endpoints keep
+ * their trust, because the plugin refuses a private endpoint otherwise.
  */
 
 import net from "node:net";
@@ -61,18 +67,24 @@ function httpOrigin(value: unknown): string | null {
 }
 
 /**
- * Whether every address the origin's host has is public. A host that
- * does not resolve counts as private, so it gains no trust.
+ * Where an origin's host is. "public" means every address it resolves
+ * to is public. "private" means at least one is not. "unresolved" means
+ * the name gave no answer.
  */
-async function isPublicOrigin(origin: string, resolve: Resolver): Promise<boolean> {
+async function originReach(
+  origin: string,
+  resolve: Resolver,
+): Promise<"public" | "private" | "unresolved"> {
   const hostname = new URL(origin).hostname.replace(/^\[|\]$/g, "");
-  if (net.isIP(hostname) !== 0) return isPublicAddress(hostname);
+  if (net.isIP(hostname) !== 0) return isPublicAddress(hostname) ? "public" : "private";
+  let answers;
   try {
-    const answers = await resolve(hostname);
-    return answers.length > 0 && answers.every((answer) => isPublicAddress(answer.address));
+    answers = await resolve(hostname);
   } catch {
-    return false;
+    return "unresolved";
   }
+  if (answers.length === 0) return "unresolved";
+  return answers.every((answer) => isPublicAddress(answer.address)) ? "public" : "private";
 }
 
 /**
@@ -94,9 +106,13 @@ export async function trustableEndpointOrigins(
     if (origin && origin !== issuerOrigin) declared.add(origin);
   }
   if (declared.size === 0) return [];
-  if (!(await isPublicOrigin(issuerOrigin, resolve))) return [...declared];
+  const issuerReach = await originReach(issuerOrigin, resolve);
+  if (issuerReach === "unresolved") return [];
+  if (issuerReach === "private") return [...declared];
   const trusted: string[] = [];
-  for (const origin of declared) if (await isPublicOrigin(origin, resolve)) trusted.push(origin);
+  for (const origin of declared) {
+    if ((await originReach(origin, resolve)) === "public") trusted.push(origin);
+  }
   return trusted;
 }
 
@@ -159,18 +175,19 @@ export async function withTrustedIdpOrigins<T>(
 }
 
 /**
- * The origins a registered provider row trusts: its issuer's, and those
- * of the endpoints discovery stored for it. Registration accepted each
- * endpoint under the rule at the top of this file. A malformed issuer or
- * an unreadable config trusts nothing beyond what still parses.
+ * The origins a registered provider row trusts. Its issuer's origin is
+ * always trusted. The origins of its stored endpoints are trusted only
+ * when the issuer is private (see the top of this file). A malformed
+ * issuer or an unreadable config trusts nothing beyond what still parses.
  */
-export function storedProviderOrigins(row: {
-  issuer: string;
-  oidcConfig: string | null;
-}): string[] {
-  const origins = new Set<string>();
+export async function storedProviderOrigins(
+  row: { issuer: string; oidcConfig: string | null },
+  resolve: Resolver = systemResolver,
+): Promise<string[]> {
   const issuerOrigin = httpOrigin(row.issuer);
-  if (issuerOrigin) origins.add(issuerOrigin);
+  if (!issuerOrigin) return [];
+  const origins = new Set<string>([issuerOrigin]);
+  if ((await originReach(issuerOrigin, resolve)) !== "private") return [...origins];
   let config: unknown = null;
   try {
     config = row.oidcConfig ? JSON.parse(row.oidcConfig) : null;
