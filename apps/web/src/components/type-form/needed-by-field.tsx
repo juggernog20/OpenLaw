@@ -27,8 +27,15 @@ export function NeededByField({
     setDraft(date ?? "");
   }
   async function commit(next: string) {
-    if (status === "saving" || next === (date ?? "")) return;
+    if (status === "saving") return;
     setDraft(next);
+    // Back to the saved date after a refusal: nothing to write, and the
+    // refusal no longer describes what the picker shows.
+    if (next === (date ?? "")) {
+      setStatus("idle");
+      setError(undefined);
+      return;
+    }
     setStatus("saving");
     const refusal = await onCommit(next);
     setError(refusal);
