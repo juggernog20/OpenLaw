@@ -11,6 +11,7 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ### Fixed
 
+- Business Portal intake and its preview follow the destination Form's field order, required settings, and conditions. Department appears once, and fields turned off for intake stay off the Portal form.
 - `pnpm dev:hot --seed`, `--fresh` and `--isolated` seed again. The seed failed with 403 `INVALID_ORIGIN` since 0.1.0. (#1223)
 - The Counterparties list closes after a pick, so it no longer covers the next field. (#1223)
 - Set parent and the other Contract and Matter link pickers find a record typed as printed, such as C-92. (#1223)
