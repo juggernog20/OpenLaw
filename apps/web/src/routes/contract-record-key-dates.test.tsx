@@ -415,6 +415,28 @@ describe("the record's Key dates section (CTR-009)", () => {
     );
   });
 
+  it("says once, under the table, when the derived dates remind the viewer", async () => {
+    const api = recordApi(UNION);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/me/notification-preferences" && call.method === "GET"
+          ? json(200, { reminderOffsetDays: [30, 0], organizationReminderOffsetDays: [7, 1, 0] })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/key-dates");
+
+    const card = await section();
+    // The viewer's own list wins over the organization's (NOT-004).
+    expect(
+      await card.findByText(/follow your lead times: 30 days before and on the day\./),
+    ).toBeInTheDocument();
+    expect(card.getByRole("link", { name: "Change lead times" })).toHaveAttribute(
+      "href",
+      "/settings/notifications",
+    );
+  });
+
   it("draws no Due column and no distance label, and keeps the seam's row order", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(UNION).handler });
     renderAt("/contracts/42/key-dates");

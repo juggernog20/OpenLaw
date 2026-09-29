@@ -44,7 +44,8 @@
  */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router";
 import { KeyDateReminderFields, type KeyDateReminderDraft } from "../key-date-reminder-fields";
 import { useRecord } from "../record-context";
 import {
@@ -64,6 +65,7 @@ import {
   type ContractDeadline,
   type KeyDateInput,
 } from "../../lib/key-dates";
+import { api } from "../../lib/api";
 import { formatShortDate } from "../../lib/format";
 import { TEXTAREA_CLASS } from "../../lib/form-controls";
 import { StatusNote, type FieldStatus } from "../status-note";
@@ -146,6 +148,7 @@ export function KeyDatesCard({
   const [detail, setDetail] = useState<string | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const busy = status === "saving";
+  const leadTimes = useMyLeadTimes(deadlines.some((row) => row.source !== "key_date"));
 
   const counts = {
     upcoming: deadlines.filter((row) => row.daysAway >= 0).length,
@@ -299,6 +302,39 @@ export function KeyDatesCard({
               ))}
             </tbody>
           </table>
+          {/* DES-042 clause 13, amended 2026-09-29: the derived rows have
+              no Actions, so the card says once that they remind anyway. */}
+          {leadTimes !== null && leadTimes.length > 0 && (
+            <p className="border-t border-border-default px-4 py-2 text-sm text-muted">
+              <FormattedMessage
+                id="keyDates.derivedReminders"
+                defaultMessage="Reminders for the expiry and the notice deadline follow your lead times: {leadTimes}. <link>Change lead times</link>"
+                values={{
+                  leadTimes: intl.formatList(
+                    leadTimes.map((days) =>
+                      intl.formatMessage(
+                        {
+                          id: "keyDates.derivedReminders.offset",
+                          defaultMessage:
+                            "{days, plural, =0 {on the day} one {# day before} other {# days before}}",
+                        },
+                        { days },
+                      ),
+                    ),
+                    { type: "conjunction" },
+                  ),
+                  link: (chunks: ReactNode) => (
+                    <Link
+                      to="/settings/notifications"
+                      className="text-link hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                    >
+                      {chunks}
+                    </Link>
+                  ),
+                }}
+              />
+            </p>
+          )}
         </div>
       )}
       {editing && (
@@ -321,6 +357,31 @@ export function KeyDatesCard({
       )}
     </section>
   );
+}
+
+/**
+ * The viewer's reminder lead times: their own list, or the organization's
+ * where they use it (NOT-004 addendum 2026-09-24). Read only while the
+ * card shows a derived date, and null until then or when the read fails,
+ * which leaves the note out rather than guessing at a schedule.
+ */
+function useMyLeadTimes(wanted: boolean): number[] | null {
+  const [leadTimes, setLeadTimes] = useState<number[] | null>(null);
+  useEffect(() => {
+    if (!wanted) return;
+    let live = true;
+    void api
+      .GET("/api/v1/me/notification-preferences")
+      .then(({ data }) => {
+        if (live && data)
+          setLeadTimes(data.reminderOffsetDays ?? data.organizationReminderOffsetDays);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [wanted]);
+  return wanted ? leadTimes : null;
 }
 
 /**
