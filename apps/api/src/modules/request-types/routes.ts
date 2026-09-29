@@ -130,7 +130,7 @@ export const requestTypesRoutes = taxonomyRoutes({
             currentTypeId !== null && currentModule !== null
               ? await targetTypeName(tx, currentModule, currentTypeId)
               : null,
-          to: typeId !== null && module !== null ? await targetTypeName(tx, module, typeId) : null,
+          to: typeId !== null ? await targetTypeName(tx, module, typeId) : null,
         };
       }
 

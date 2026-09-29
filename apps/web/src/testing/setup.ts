@@ -29,6 +29,7 @@ window.matchMedia ??= ((query: string) => ({
 // mount. Nothing here is laid out, so an observer that never fires is
 // the honest stand-in.
 globalThis.ResizeObserver ??= class {
+  constructor(readonly callback: ResizeObserverCallback) {}
   observe() {}
   unobserve() {}
   disconnect() {}

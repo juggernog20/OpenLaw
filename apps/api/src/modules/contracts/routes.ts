@@ -357,8 +357,9 @@ export const contractsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw httpError(400, "That field is not awaiting confirmation.");
       }
 
-      const remaining = { ...flags };
-      for (const slug of slugs) delete remaining[slug];
+      const remaining = Object.fromEntries(
+        Object.entries(flags ?? {}).filter(([slug]) => !slugs.includes(slug)),
+      );
       await tx
         .update(contracts)
         .set({

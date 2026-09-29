@@ -20,7 +20,7 @@ function isDocumentHref(href: string): boolean {
 }
 
 export function commentBodyParts(body: string): CommentBodyPart[] {
-  const pattern = /\[@((?:\\[^\n]|[^\]\\\n])+)\]\(([^\s)]+)\)/g;
+  const pattern = /\[@((?:\\[^\n]|[^[\]\\\n]){1,1000})\]\(([^\s()[\]]{1,1000})\)/g;
   const parts: CommentBodyPart[] = [];
   let at = 0;
   for (const match of body.matchAll(pattern)) {
