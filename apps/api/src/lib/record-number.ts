@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/**
+ * Reads the record number out of a link picker's typed term, so the
+ * Contract and Matter pickers agree on what "C-92" and "92" mean.
+ */
+
 /** The largest number a Postgres `integer` column holds. */
 const MAX_RECORD_NUMBER = 2_147_483_647;
 

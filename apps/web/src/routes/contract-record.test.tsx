@@ -2229,7 +2229,7 @@ describe("the /contracts/:number record page", () => {
     ).toBeInTheDocument();
   });
 
-  it("commits an existing counterparty by id, so the typeahead never duplicates it", async () => {
+  it("commits an existing counterparty by id, then closes the list and keeps the focus for the next party", async () => {
     const api = recordApi(contractRow());
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");

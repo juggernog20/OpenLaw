@@ -437,6 +437,43 @@ describe("the record's Key dates section (CTR-009)", () => {
     );
   });
 
+  it("falls back to the organization's lead times when the viewer has none", async () => {
+    const api = recordApi(UNION);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/me/notification-preferences" && call.method === "GET"
+          ? json(200, { reminderOffsetDays: null, organizationReminderOffsetDays: [7, 1, 0] })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/key-dates");
+
+    const card = await section();
+    expect(
+      await card.findByText(
+        /follow your lead times: 7 days before, 1 day before, and on the day\./,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves the lead times note out when the preferences cannot be read", async () => {
+    const api = recordApi(UNION);
+    let asked = false;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/me/notification-preferences") return api.handler(call);
+        asked = true;
+        return problem(500, "Something went wrong.");
+      },
+    });
+    renderAt("/contracts/42/key-dates");
+
+    const card = await section();
+    await waitFor(() => expect(asked).toBe(true));
+    expect(card.queryByRole("link", { name: "Change lead times" })).not.toBeInTheDocument();
+  });
+
   it("draws no Due column and no distance label, and keeps the seam's row order", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi(UNION).handler });
     renderAt("/contracts/42/key-dates");
