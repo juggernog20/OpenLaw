@@ -737,7 +737,7 @@ Recorded as working defaults without a grill (all convention, no open design con
 - **Monorepo** — pnpm workspaces + Turborepo: `apps/api`, `apps/web` (SPA incl. portal routes), `apps/worker`, `packages/` (shared types, OpenAPI client, config).
 - **CI/release** — GitHub Actions: lint + typecheck + test on PR; release = semver tag → ghcr images + compose.yml + .env.example artifacts (TECH-005). Conventional commits; CHANGELOG generated.
 - **Testing** — confirms TECH-001's deferred default: **Vitest** (unit), **React Testing Library** (component), **Playwright** (E2E incl. the portal magic-link flow); API integration tests against a real Postgres container (testcontainers-class).
-- **Observability** — structured JSON logs (pino) with request IDs; `/healthz` (liveness) + `/readyz` (DB/queue checks); metrics/OpenTelemetry deferred until someone asks.
+- **Observability** — structured JSON logs (pino) with request IDs; `/healthz` (liveness) + `/readyz` (DB/queue checks); ~~metrics/OpenTelemetry deferred until someone asks~~ _superseded in part 2026-09-29 by **TECH-036**: in-process metrics on the System status page. OpenTelemetry is still not built._
 - **Telemetry** — **none in v1.** No phone-home of any kind — the right default for a self-hosted legal tool; any future opt-in usage stats would be a separate, explicit decision.
 - **File storage** — confirms DOC-009: storage adapter with **local-filesystem driver default** (a Compose volume) and **S3-compatible driver**; `file_ref` = driver-prefixed key.
 - **Search** — confirms DOC-009: **Postgres FTS** (tsvector columns + GIN; ~~indexing jobs on pg-boss~~ _superseded 2026-08-27 by the M25/2 addendum below: stored generated columns, no indexing job_); dedicated engine only if relevance/scale ever demands it.
@@ -2053,6 +2053,40 @@ API key requests and OAuth consent share `selectableToolsets`. It keeps only
 ceiling Toolsets with a Tool the account type may run. Consent also intersects
 this set with the Client's requested scopes. Guide needs no selection.
 
+## TECH-036: In-process metrics on the System status page
+
+- **Status:** Accepted
+- **Date:** 2026-09-29
+- **Supersedes:** the "metrics deferred" half of TECH-014's Observability bullet
+
+### Context
+
+TECH-014 deferred metrics and OpenTelemetry "until someone asks". An Administrator now asks for a Status and Performance view in Settings → Advanced. The view must answer "is the app slow, and where" without a new service to run, and it must not slow the app it measures. DD-002 sizes an install at a 2 to 10 person legal team, so the load is small. TECH-014's no-telemetry rule still holds: nothing leaves the install.
+
+### Decision
+
+**Each process counts in memory.** The API counts requests, server errors (5xx) and response times. A request adds one to a counter and one to a response-time bucket. Nothing is written per request. The count covers `/api/` and `/mcp` only. Static files and health probes are left out, and so is an event stream, because its duration is how long a tab stayed open. Response times are bucket counts with fixed bounds from 5 ms to 10 s, not percentiles, because bucket counts add up across minutes and processes and a percentile of percentiles does not. The API and the worker both report the 99th percentile event loop delay, CPU as a share of one core, and resident and heap memory, all from Node's built-ins.
+
+**One snapshot a minute, on the heartbeat loop.** `startRuntimeHeartbeat` writes one `runtime_metrics` row per process per minute on the same promise chain as the heartbeat, so one process never has two writes in flight. The write rate follows the number of processes, not the request rate.
+
+**Rows clean themselves up.** Every snapshot also deletes `runtime_metrics` rows and stale `runtime_status` rows older than 24 hours. Before this record, stale heartbeat rows were deleted only when a process started. The cleanup runs in every process and not as a pg-boss schedule, so the tables stay bounded when the worker is down.
+
+**Everything else is read when the page opens.** `GET /api/v1/system-status` sums the snapshots into three windows per role: the last 5 minutes, the last hour and the last 24 hours. Percentiles are estimated from the summed buckets by interpolation inside the bucket, as Prometheus does. The same call reads the database size and connections from PostgreSQL, and job counts from `pgboss.job`. Those reads cost nothing while nobody has the page open. The page reads again every 30 seconds while the tab is visible.
+
+**What the page shows.** The process table gains CPU and Memory from each process's latest snapshot. Three cards follow it: API performance, Worker performance, and Database and queue. Each performance card is a table of measures by window. A window with no snapshots shows **No data**. The page draws no charts and sets no thresholds or warnings for these numbers.
+
+### Alternatives considered
+
+- **One row per request.** Rejected. It turns every read into a write, and it is the one design here that would cost real performance.
+- **OpenTelemetry with a collector.** Rejected for now. Auto-instrumentation wraps every HTTP, SQL and fetch call, and a self-hosted install would have to run and secure a collector. A deployer who wants it can still add it in front of the app. This record does not close that door.
+- **A Prometheus `/metrics` endpoint.** Deferred. It needs a scraper the install does not have, and it would be a second public surface to secure.
+- **Percentiles stored per minute.** Rejected, because they cannot be combined across minutes or processes.
+- **A pg-boss cleanup schedule.** Rejected, because cleanup would stop when the worker stops.
+
+### Consequences
+
+Migration 0184 adds `runtime_metrics`. A process that runs for 24 hours keeps 1,440 rows, so a standard install with one API and one worker holds about 2,880. The response-time bucket bounds are part of the stored data. A change to them must wait for the 24-hour retention to clear the old rows, or the page will mix two meanings for one bucket for up to a day. The `pgboss.job` count scans the queue table when the page loads. That is fine at DD-002's scale; an install with a very large job history should see it as the first query to index. Charts, thresholds and a longer history are open follow-ups, each a decision of its own.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -2092,6 +2126,7 @@ this set with the Client's requested scopes. Guide needs no selection.
 | TECH-033 | API mutations under /api/v1 must come from the install's own origin           | Accepted; `/mcp` and the well-known paths exempted by the 2026-09-23 addendum   |
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
+| TECH-036 | In-process metrics on the System status page                                  | Accepted; supersedes TECH-014's metrics deferral                                |
 
 ### TECH-007 / TECH-013 addendum, 2026-09-26, #1172. Sender View and shared checks
 
