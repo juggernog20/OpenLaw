@@ -10,6 +10,14 @@ import { requireRole } from "../../auth/guards.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { createStorageFromEnv } from "../../lib/storage/config.js";
 import {
+  metricRoles,
+  performanceWindows,
+  readDatabaseStats,
+  readLatestSnapshots,
+  readPerformance,
+  readQueueStats,
+} from "./performance.js";
+import {
   digest,
   effectiveEnvironment,
   endpointHostChanges,
@@ -47,6 +55,7 @@ const State = z.object({
     }),
   ),
 });
+const nullableNumber = z.number().nullable();
 const Status = z.object({
   database: z.literal("available"),
   storageDriver: z.string(),
@@ -58,8 +67,39 @@ const Status = z.object({
       heartbeatAt: z.string(),
       online: z.boolean(),
       current: z.boolean(),
+      // TECH-036: from the process's latest snapshot, null before its first.
+      cpuPercent: nullableNumber,
+      rssBytes: nullableNumber,
     }),
   ),
+  performance: z.array(
+    z.object({
+      role: z.enum(metricRoles),
+      window: z.enum(performanceWindows),
+      processes: z.number(),
+      requests: nullableNumber,
+      serverErrors: nullableNumber,
+      latencyP50Ms: nullableNumber,
+      latencyP95Ms: nullableNumber,
+      eventLoopP99Ms: nullableNumber,
+      cpuPercent: nullableNumber,
+      peakRssBytes: nullableNumber,
+    }),
+  ),
+  postgres: z.object({
+    sizeBytes: z.number(),
+    connections: z.number(),
+    maxConnections: z.number(),
+  }),
+  queue: z
+    .object({
+      waiting: z.number(),
+      running: z.number(),
+      completedLastDay: z.number(),
+      failedLastDay: z.number(),
+      oldestWaitingSeconds: nullableNumber,
+    })
+    .nullable(),
 });
 export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginAsyncZod {
   return async (app) => {
@@ -291,6 +331,12 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
           .where(gt(runtimeStatus.heartbeatAt, new Date(Date.now() - 86_400_000)))
           .orderBy(desc(runtimeStatus.heartbeatAt))
           .limit(100);
+        const [latest, performance, postgres, queue] = await Promise.all([
+          readLatestSnapshots(app.db),
+          readPerformance(app.db),
+          readDatabaseStats(app.db),
+          readQueueStats(app.db),
+        ]);
         const visible = processes.filter(
           (row, index) =>
             row.heartbeatAt.getTime() > Date.now() - 60_000 ||
@@ -306,7 +352,12 @@ export function advancedSettingsRoutes(runtime: AdvancedRuntime): FastifyPluginA
             heartbeatAt: row.heartbeatAt.toISOString(),
             online: row.heartbeatAt.getTime() > Date.now() - 60_000,
             current: row.configDigest === digest(desired),
+            cpuPercent: latest.get(row.id)?.cpuPercent ?? null,
+            rssBytes: latest.get(row.id)?.rssBytes ?? null,
           })),
+          performance,
+          postgres,
+          queue,
         };
       },
     );

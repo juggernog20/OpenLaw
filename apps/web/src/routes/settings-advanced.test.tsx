@@ -2,7 +2,10 @@
 import { describe, expect, it } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { paths } from "@openlaw/api-client";
 import { json, problem, renderAt, stubApi } from "../testing/helpers";
+type StatusResponse =
+  paths["/api/v1/system-status"]["get"]["responses"]["200"]["content"]["application/json"];
 const ADMIN = {
   id: "u1",
   email: "admin@example.com",
@@ -123,30 +126,130 @@ describe("Advanced settings", () => {
     expect(key).toHaveValue("new-test-credential");
     expect(calls).toContain("PUT");
   });
+  const status = (extra: Partial<StatusResponse> = {}) =>
+    ({
+      database: "available" as const,
+      storageDriver: "local",
+      documentEngine: "http://doc-engine:8080",
+      processes: [
+        {
+          role: "api",
+          startedAt: "2026-09-17T00:00:00Z",
+          heartbeatAt: "2026-09-17T00:00:00Z",
+          online: true,
+          current: false,
+          cpuPercent: null,
+          rssBytes: null,
+        },
+      ],
+      performance: [],
+      postgres: { sizeBytes: 12_500_000, connections: 7, maxConnections: 100 },
+      queue: null,
+      ...extra,
+    }) satisfies StatusResponse;
   it("shows a missing worker and pending configuration without claiming everything is healthy", async () => {
     stubApi({
       signedIn: ADMIN,
       extra: (call) =>
-        call.url.pathname === "/api/v1/system-status"
-          ? json(200, {
-              database: "available",
-              storageDriver: "local",
-              documentEngine: "http://doc-engine:8080",
-              processes: [
-                {
-                  role: "api",
-                  startedAt: "2026-09-17T00:00:00Z",
-                  heartbeatAt: "2026-09-17T00:00:00Z",
-                  online: true,
-                  current: false,
-                },
-              ],
-            })
-          : undefined,
+        call.url.pathname === "/api/v1/system-status" ? json(200, status()) : undefined,
     });
     renderAt("/settings/system-status");
     expect(await screen.findByText(/heartbeat is missing/)).toBeInTheDocument();
     expect(screen.getByText("Restart required")).toBeInTheDocument();
+    expect(screen.getByText(/job queue has not started/)).toBeInTheDocument();
+  });
+  it("shows performance by window, and No data where a window has no snapshots", async () => {
+    const api = {
+      role: "api",
+      processes: 1,
+      requests: 200,
+      serverErrors: 3,
+      latencyP50Ms: 42,
+      latencyP95Ms: 1250,
+      eventLoopP99Ms: 12.5,
+      cpuPercent: 8,
+      peakRssBytes: 150_000_000,
+    } as const;
+    const empty = {
+      processes: 0,
+      requests: null,
+      serverErrors: null,
+      latencyP50Ms: null,
+      latencyP95Ms: null,
+      eventLoopP99Ms: null,
+      cpuPercent: null,
+      peakRssBytes: null,
+    };
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/system-status"
+          ? json(
+              200,
+              status({
+                // A longer window holds every snapshot of a shorter one,
+                // as readPerformance sums them. The worker never reported.
+                performance: [
+                  { ...api, window: "5m" },
+                  { ...api, window: "1h", requests: 500 },
+                  { ...api, window: "24h", requests: 500 },
+                  { ...empty, role: "worker", window: "5m" },
+                  { ...empty, role: "worker", window: "1h" },
+                  { ...empty, role: "worker", window: "24h" },
+                ],
+                queue: {
+                  waiting: 4,
+                  running: 1,
+                  completedLastDay: 1200,
+                  failedLastDay: 2,
+                  oldestWaitingSeconds: 90,
+                },
+              }),
+            )
+          : undefined,
+    });
+    renderAt("/settings/system-status");
+    const apiCard = await screen.findByRole("region", { name: "API performance" });
+    const requests = within(apiCard).getByRole("row", { name: /^Requests/ });
+    expect(
+      within(requests)
+        .getAllByRole("cell")
+        .map((cell) => cell.textContent),
+    ).toEqual(["200", "500", "500"]);
+    expect(within(apiCard).getAllByText("3 (1.5%)")).toHaveLength(1);
+    const workerCard = screen.getByRole("region", { name: "Worker performance" });
+    expect(
+      within(workerCard)
+        .getAllByRole("cell")
+        .map((cell) => cell.textContent),
+    ).toEqual(new Array(9).fill("No data"));
+    expect(within(apiCard).getAllByText("1.3 sec")).toHaveLength(3);
+    expect(within(apiCard).getAllByText("150 MB")).toHaveLength(3);
+    expect(screen.getByText("7 of 100")).toBeInTheDocument();
+    expect(screen.getByText("1.5 min")).toBeInTheDocument();
+    expect(screen.getByText("1,200")).toBeInTheDocument();
+  });
+  it("says nothing is waiting when the queue is empty", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/system-status"
+          ? json(
+              200,
+              status({
+                queue: {
+                  waiting: 0,
+                  running: 0,
+                  completedLastDay: 0,
+                  failedLastDay: 0,
+                  oldestWaitingSeconds: null,
+                },
+              }),
+            )
+          : undefined,
+    });
+    renderAt("/settings/system-status");
+    expect(await screen.findByText("Nothing waiting")).toBeInTheDocument();
   });
   it.each(["instance", "uploads", "storage", "document-processing", "system-status", "mcp-limits"])(
     "keeps %s restricted to administrators",

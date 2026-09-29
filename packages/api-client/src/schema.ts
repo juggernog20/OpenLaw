@@ -10197,7 +10197,35 @@ export interface operations {
               heartbeatAt: string;
               online: boolean;
               current: boolean;
+              cpuPercent: number | null;
+              rssBytes: number | null;
             }[];
+            performance: {
+              /** @enum {string} */
+              role: "api" | "worker";
+              /** @enum {string} */
+              window: "5m" | "1h" | "24h";
+              processes: number;
+              requests: number | null;
+              serverErrors: number | null;
+              latencyP50Ms: number | null;
+              latencyP95Ms: number | null;
+              eventLoopP99Ms: number | null;
+              cpuPercent: number | null;
+              peakRssBytes: number | null;
+            }[];
+            postgres: {
+              sizeBytes: number;
+              connections: number;
+              maxConnections: number;
+            };
+            queue: {
+              waiting: number;
+              running: number;
+              completedLastDay: number;
+              failedLastDay: number;
+              oldestWaitingSeconds: number | null;
+            } | null;
           };
         };
       };

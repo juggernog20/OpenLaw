@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { useRef, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { redirect, useLoaderData, useRevalidator } from "react-router";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { api } from "../lib/api";
+import { formatCount, formatDuration, formatFileSize, formatPercent } from "../lib/format";
 import { problem } from "../lib/problem";
 import { requireUser } from "../lib/session";
 import { PageTitle } from "../components/page-title";
@@ -421,11 +422,271 @@ export async function settingsSystemStatusLoader() {
   if (!data) throw new Error("System status could not be read.");
   return data;
 }
+type SystemStatus = Exclude<Awaited<ReturnType<typeof settingsSystemStatusLoader>>, Response>;
+type PerformanceRow = SystemStatus["performance"][number];
+const windows = ["5m", "1h", "24h"] as const;
+const windowLabels = defineMessages({
+  "5m": { id: "settings.advanced.window.5m", defaultMessage: "Last 5 minutes" },
+  "1h": { id: "settings.advanced.window.1h", defaultMessage: "Last hour" },
+  "24h": { id: "settings.advanced.window.24h", defaultMessage: "Last 24 hours" },
+});
+const measureLabels = defineMessages({
+  requests: { id: "settings.advanced.measure.requests", defaultMessage: "Requests" },
+  serverErrors: { id: "settings.advanced.measure.serverErrors", defaultMessage: "Server errors" },
+  latencyP50Ms: {
+    id: "settings.advanced.measure.latencyP50",
+    defaultMessage: "Median response time",
+  },
+  latencyP95Ms: {
+    id: "settings.advanced.measure.latencyP95",
+    defaultMessage: "95th percentile response time",
+  },
+  eventLoopP99Ms: {
+    id: "settings.advanced.measure.eventLoop",
+    defaultMessage: "Event loop delay, 99th percentile",
+  },
+  cpuPercent: { id: "settings.advanced.measure.cpu", defaultMessage: "Average CPU" },
+  peakRssBytes: { id: "settings.advanced.measure.memory", defaultMessage: "Peak memory" },
+});
+type Measure = keyof typeof measureLabels;
+const apiMeasures: readonly Measure[] = [
+  "requests",
+  "serverErrors",
+  "latencyP50Ms",
+  "latencyP95Ms",
+  "eventLoopP99Ms",
+  "cpuPercent",
+  "peakRssBytes",
+];
+const workerMeasures: readonly Measure[] = ["eventLoopP99Ms", "cpuPercent", "peakRssBytes"];
+/** How often the page reads the status again while it is visible (TECH-036). */
+const STATUS_REFRESH_MS = 30_000;
+
+function NoData() {
+  return <FormattedMessage id="settings.advanced.noData" defaultMessage="No data" />;
+}
+
+function measureValue(row: PerformanceRow | undefined, measure: Measure): ReactNode {
+  if (!row || row.processes === 0) return <NoData />;
+  const value = row[measure];
+  if (value === null) return <NoData />;
+  switch (measure) {
+    case "requests":
+      return formatCount(value);
+    case "serverErrors":
+      return row.requests ? (
+        <FormattedMessage
+          id="settings.advanced.serverErrorShare"
+          defaultMessage="{count} ({share})"
+          values={{ count: formatCount(value), share: formatPercent(value / row.requests) }}
+        />
+      ) : (
+        formatCount(value)
+      );
+    case "cpuPercent":
+      return formatPercent(value / 100);
+    case "peakRssBytes":
+      return formatFileSize(value);
+    default:
+      return formatDuration(value);
+  }
+}
+
+function StatusTable({
+  label,
+  columns,
+  children,
+}: Readonly<{ label: ReactNode; columns: readonly ReactNode[]; children: ReactNode }>) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-start text-sm">
+        <thead className="border-b border-border-default bg-control text-xs text-muted">
+          <tr>
+            <th scope="col" className="h-9 px-4 text-start">
+              {label}
+            </th>
+            {columns.map((column, index) => (
+              <th key={index} scope="col" className="h-9 px-4 text-end">
+                {column}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function StatusRow({ label, cells }: Readonly<{ label: ReactNode; cells: readonly ReactNode[] }>) {
+  return (
+    <tr className="border-b border-border-muted last:border-b-0">
+      <th scope="row" className="px-4 py-3 text-start font-normal">
+        {label}
+      </th>
+      {cells.map((cell, index) => (
+        <td key={index} className="px-4 py-3 text-end tabular-nums">
+          {cell}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+function PerformanceCard({
+  title,
+  role,
+  measures,
+  rows,
+}: Readonly<{
+  title: string;
+  role: PerformanceRow["role"];
+  measures: readonly Measure[];
+  rows: SystemStatus["performance"];
+}>) {
+  const intl = useIntl();
+  const byWindow = windows.map((window) =>
+    rows.find((row) => row.role === role && row.window === window),
+  );
+  return (
+    <SettingsCard title={title} flush region>
+      <StatusTable
+        label={<FormattedMessage id="settings.advanced.measure" defaultMessage="Measure" />}
+        columns={windows.map((window) => intl.formatMessage(windowLabels[window]))}
+      >
+        {measures.map((measure) => (
+          <StatusRow
+            key={measure}
+            label={intl.formatMessage(measureLabels[measure])}
+            cells={byWindow.map((row) => measureValue(row, measure))}
+          />
+        ))}
+      </StatusTable>
+    </SettingsCard>
+  );
+}
+
+function DatabaseQueueCard({ state }: Readonly<{ state: SystemStatus }>) {
+  const intl = useIntl();
+  const { postgres, queue } = state;
+  const rows: [ReactNode, ReactNode][] = [
+    [
+      <FormattedMessage
+        key="size"
+        id="settings.advanced.databaseSize"
+        defaultMessage="Database size"
+      />,
+      formatFileSize(postgres.sizeBytes),
+    ],
+    [
+      <FormattedMessage
+        key="connections"
+        id="settings.advanced.connections"
+        defaultMessage="Database connections"
+      />,
+      <FormattedMessage
+        key="connections-value"
+        id="settings.advanced.connectionsValue"
+        defaultMessage="{used} of {max}"
+        values={{
+          used: formatCount(postgres.connections),
+          max: formatCount(postgres.maxConnections),
+        }}
+      />,
+    ],
+  ];
+  if (queue)
+    rows.push(
+      [
+        <FormattedMessage
+          key="waiting"
+          id="settings.advanced.jobsWaiting"
+          defaultMessage="Jobs waiting"
+        />,
+        formatCount(queue.waiting),
+      ],
+      [
+        <FormattedMessage
+          key="oldest"
+          id="settings.advanced.oldestWaiting"
+          defaultMessage="Longest wait"
+        />,
+        queue.oldestWaitingSeconds === null ? (
+          <FormattedMessage
+            id="settings.advanced.nothingWaiting"
+            defaultMessage="Nothing waiting"
+          />
+        ) : (
+          formatDuration(queue.oldestWaitingSeconds * 1000)
+        ),
+      ],
+      [
+        <FormattedMessage
+          key="running"
+          id="settings.advanced.jobsRunning"
+          defaultMessage="Jobs running"
+        />,
+        formatCount(queue.running),
+      ],
+      [
+        <FormattedMessage
+          key="completed"
+          id="settings.advanced.jobsCompleted"
+          defaultMessage="Jobs completed in the last 24 hours"
+        />,
+        formatCount(queue.completedLastDay),
+      ],
+      [
+        <FormattedMessage
+          key="failed"
+          id="settings.advanced.jobsFailed"
+          defaultMessage="Jobs failed in the last 24 hours"
+        />,
+        formatCount(queue.failedLastDay),
+      ],
+    );
+  return (
+    <SettingsCard
+      title={intl.formatMessage({
+        id: "settings.advanced.databaseQueue",
+        defaultMessage: "Database and queue",
+      })}
+      flush
+    >
+      <StatusTable
+        label={<FormattedMessage id="settings.advanced.measure" defaultMessage="Measure" />}
+        columns={[
+          <FormattedMessage key="value" id="settings.advanced.value" defaultMessage="Value" />,
+        ]}
+      >
+        {rows.map(([label, value], index) => (
+          <StatusRow key={index} label={label} cells={[value]} />
+        ))}
+      </StatusTable>
+      {!queue && (
+        <p className="px-4 py-3 text-sm text-muted">
+          <FormattedMessage
+            id="settings.advanced.queueMissing"
+            defaultMessage="The job queue has not started yet. Start the worker to see job counts."
+          />
+        </p>
+      )}
+    </SettingsCard>
+  );
+}
+
 export function SettingsSystemStatusPage() {
   const intl = useIntl();
   const state = useLoaderData<typeof settingsSystemStatusLoader>();
   const revalidator = useRevalidator();
   const title = intl.formatMessage(advancedTitles.status);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible" && revalidator.state === "idle")
+        void revalidator.revalidate();
+    }, STATUS_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [revalidator]);
   return (
     <>
       <PageTitle title={title} />
@@ -464,6 +725,12 @@ export function SettingsSystemStatusPage() {
             defaultMessage="Use Test connection in Document storage or Document processing to check service access. Process status is based on heartbeats received within the last minute."
           />
         </p>
+        <p className="text-sm text-muted">
+          <FormattedMessage
+            id="settings.advanced.snapshots"
+            defaultMessage="Each API and worker process records its performance once a minute. Records older than 24 hours are deleted. This page refreshes every 30 seconds."
+          />
+        </p>
         {!["api", "worker"].every((role) =>
           state.processes.some((item) => item.role === role && item.online),
         ) && (
@@ -489,6 +756,12 @@ export function SettingsSystemStatusPage() {
                     id="settings.advanced.configuration"
                     defaultMessage="Configuration"
                   />
+                </th>
+                <th className="p-2">
+                  <FormattedMessage id="settings.advanced.processCpu" defaultMessage="CPU" />
+                </th>
+                <th className="p-2">
+                  <FormattedMessage id="settings.advanced.processMemory" defaultMessage="Memory" />
                 </th>
                 <th className="p-2">
                   <FormattedMessage id="settings.advanced.heartbeat" defaultMessage="Last seen" />
@@ -528,6 +801,12 @@ export function SettingsSystemStatusPage() {
                       />
                     )}
                   </td>
+                  <td className="p-2 tabular-nums">
+                    {row.cpuPercent === null ? <NoData /> : formatPercent(row.cpuPercent / 100)}
+                  </td>
+                  <td className="p-2 tabular-nums">
+                    {row.rssBytes === null ? <NoData /> : formatFileSize(row.rssBytes)}
+                  </td>
                   <td className="p-2">{intl.formatTime(row.heartbeatAt)}</td>
                 </tr>
               ))}
@@ -535,6 +814,25 @@ export function SettingsSystemStatusPage() {
           </table>
         </div>
       </SettingsCard>
+      <PerformanceCard
+        title={intl.formatMessage({
+          id: "settings.advanced.apiPerformance",
+          defaultMessage: "API performance",
+        })}
+        role="api"
+        measures={apiMeasures}
+        rows={state.performance}
+      />
+      <PerformanceCard
+        title={intl.formatMessage({
+          id: "settings.advanced.workerPerformance",
+          defaultMessage: "Worker performance",
+        })}
+        role="worker"
+        measures={workerMeasures}
+        rows={state.performance}
+      />
+      <DatabaseQueueCard state={state} />
     </>
   );
 }

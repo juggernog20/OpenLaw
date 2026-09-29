@@ -54,6 +54,7 @@ import type { AiDriverFactory } from "../lib/ai/resolver.js";
 import { createNotifier, type Notifier } from "../lib/notifications/notifier.js";
 import { createPostgresEventHub } from "../lib/event-hub.js";
 import { startPipeline, type Pipeline } from "../pipeline/pg-boss.js";
+import type { RuntimeMetrics } from "../lib/runtime-metrics.js";
 import type { PipelineLogger } from "../pipeline/logger.js";
 
 /** Shared by every test app so session cookies verify across instances. */
@@ -363,6 +364,8 @@ export interface HarnessOptions {
   morningRoundTrigger?: boolean;
   /** Shortened only by the SSE suite; production sends every 15 seconds. */
   eventHeartbeatMs?: number;
+  /** TECH-036 request counters. Only the System status suite passes them. */
+  metrics?: RuntimeMetrics;
   /** Uses the deterministic fake unless a provider integration suite supplies a real factory. */
   aiDriverFactory?: AiDriverFactory;
 }
@@ -533,6 +536,7 @@ export async function startHarness(options: HarnessOptions = {}): Promise<TestHa
       eventHub,
       maxUploadBytes: options.maxUploadBytes,
       morningRoundTrigger: options.morningRoundTrigger,
+      metrics: options.metrics,
     });
     await app.ready();
     const runningPipeline = pipeline;

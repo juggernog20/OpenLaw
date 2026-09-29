@@ -36,7 +36,12 @@
  * yet finds no work and waits, which is the right answer.
  */
 
-import { reasonOf, resolveAdvancedSettings, startRuntimeHeartbeat } from "@openlaw/api/pipeline";
+import {
+  createRuntimeMetrics,
+  reasonOf,
+  resolveAdvancedSettings,
+  startRuntimeHeartbeat,
+} from "@openlaw/api/pipeline";
 
 import { createDb, readSecretKeys, useSecretKeys } from "@openlaw/db";
 import {
@@ -186,7 +191,12 @@ const pipeline = await startPipeline({
   process.exit(1);
 });
 
-const stopHeartbeat = await startRuntimeHeartbeat(db, "worker", runtimeEnv);
+const stopHeartbeat = await startRuntimeHeartbeat(
+  db,
+  "worker",
+  runtimeEnv,
+  createRuntimeMetrics({ servesRequests: false }),
+);
 log.info({}, "OpenLaw worker started");
 
 /** How long a shutdown waits for the sweep to notice it was stopped. */

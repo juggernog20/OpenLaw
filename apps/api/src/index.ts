@@ -44,6 +44,7 @@ import { createConsoleLogger } from "./pipeline/logger.js";
 import { createSigningResolver } from "./lib/signing/resolver.js";
 import { createAiResolver } from "./lib/ai/resolver.js";
 import { maxUploadBytes } from "./lib/uploads.js";
+import { createRuntimeMetrics } from "./lib/runtime-metrics.js";
 import { loggerOptions } from "./logging.js";
 import { startPipeline } from "./pipeline/pg-boss.js";
 
@@ -336,6 +337,7 @@ await resolveVapid().catch((error: unknown) => {
   );
 });
 
+const metrics = createRuntimeMetrics({ servesRequests: true });
 const app = await buildApp(
   {
     // Development-only until the complete DocuSign flow is released.
@@ -368,6 +370,7 @@ const app = await buildApp(
     maxUploadBytes: uploadCeiling,
     morningRoundTrigger,
     webDist: webDistPresent ? webDist : undefined,
+    metrics,
   },
   // TECH-029: the request line carries the path and never the query
   // string, and an error line never carries a query's bind parameters.
@@ -398,7 +401,7 @@ const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
 
 try {
-  const stopHeartbeat = await startRuntimeHeartbeat(db, "api", runtimeEnv);
+  const stopHeartbeat = await startRuntimeHeartbeat(db, "api", runtimeEnv, metrics);
   app.addHook("onClose", stopHeartbeat);
   await app.listen({ port, host });
 } catch (err) {

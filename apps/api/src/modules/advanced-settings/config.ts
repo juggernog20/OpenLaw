@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { createHash, randomUUID } from "node:crypto";
 import { isIPv4, isIPv6 } from "node:net";
-import { orgSettings, runtimeStatus, eq, lt, sql, type Db } from "@openlaw/db";
+import { orgSettings, runtimeMetrics, runtimeStatus, eq, lt, sql, type Db } from "@openlaw/db";
 import { z } from "zod";
+import type { RuntimeMetrics } from "../../lib/runtime-metrics.js";
 import { readStorageConfig } from "../../lib/storage/config.js";
 import {
   readDocEngineConfig,
@@ -279,10 +280,28 @@ export function preserveStorageLocations(before: Environment, after: Environment
       );
   }
 }
+/** How long heartbeat and metrics rows are kept (TECH-036). */
+export const RUNTIME_RETENTION_MS = 86_400_000;
+/** How often a process writes a metrics snapshot (TECH-036). */
+export const METRICS_SNAPSHOT_MS = 60_000;
+
+/**
+ * Deletes heartbeat rows from processes that stopped without a clean
+ * shutdown, and metrics rows, once they pass the retention window. Every
+ * process runs it on each snapshot, so both tables stay bounded without a
+ * scheduled job and without depending on the worker being up.
+ */
+export async function pruneRuntimeRows(db: Db, now = new Date()): Promise<void> {
+  const cutoff = new Date(now.getTime() - RUNTIME_RETENTION_MS);
+  await db.delete(runtimeStatus).where(lt(runtimeStatus.heartbeatAt, cutoff));
+  await db.delete(runtimeMetrics).where(lt(runtimeMetrics.recordedAt, cutoff));
+}
+
 export async function startRuntimeHeartbeat(
   db: Db,
   role: "api" | "worker",
   env: Environment,
+  metrics?: RuntimeMetrics,
 ): Promise<() => Promise<void>> {
   const id = randomUUID();
   const startedAt = new Date();
@@ -293,17 +312,29 @@ export async function startRuntimeHeartbeat(
       .values({ id, role, configDigest: digest(env), startedAt, heartbeatAt })
       .onConflictDoUpdate({ target: runtimeStatus.id, set: { heartbeatAt } });
   };
-  await db
-    .delete(runtimeStatus)
-    .where(lt(runtimeStatus.heartbeatAt, new Date(Date.now() - 86_400_000)));
+  const record = async () => {
+    if (metrics)
+      await db
+        .insert(runtimeMetrics)
+        .values({ processId: id, role, recordedAt: new Date(), ...metrics.snapshot() });
+    await pruneRuntimeRows(db);
+  };
+  await pruneRuntimeRows(db);
   await beat();
+  // Both loops share one chain, so a slow database never has two writes
+  // from this process in flight, and shutdown waits for the last one.
   let pending = Promise.resolve();
   const timer = setInterval(() => {
     pending = pending.then(beat).catch(() => {});
   }, 15_000).unref();
+  const snapshots = setInterval(() => {
+    pending = pending.then(record).catch(() => {});
+  }, METRICS_SNAPSHOT_MS).unref();
   return async () => {
     clearInterval(timer);
+    clearInterval(snapshots);
     await pending;
+    metrics?.stop();
     await db.delete(runtimeStatus).where(eq(runtimeStatus.id, id));
   };
 }

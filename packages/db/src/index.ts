@@ -74,6 +74,7 @@ import * as orgSchema from "./schema/org.js";
 import * as requestAttachmentsSchema from "./schema/request-attachments.js";
 import * as requestTypesSchema from "./schema/request-types.js";
 import * as requestsSchema from "./schema/requests.js";
+import * as runtimeMetricsSchema from "./schema/runtime-metrics.js";
 import * as runtimeStatusSchema from "./schema/runtime-status.js";
 import * as signingConnectorsSchema from "./schema/signing-connectors.js";
 import { resealStoredSecrets, type SecretsRewrap } from "./rewrap.js";
@@ -138,6 +139,7 @@ export * from "./schema/org.js";
 export * from "./schema/request-attachments.js";
 export * from "./schema/request-types.js";
 export * from "./schema/requests.js";
+export * from "./schema/runtime-metrics.js";
 export * from "./schema/runtime-status.js";
 export * from "./schema/signing-connectors.js";
 export * from "./migration-journal.js";
@@ -220,6 +222,7 @@ export const schema = {
   ...requestAttachmentsSchema,
   ...requestTypesSchema,
   ...requestsSchema,
+  ...runtimeMetricsSchema,
   ...runtimeStatusSchema,
   ...signingConnectorsSchema,
 };

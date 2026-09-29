@@ -16,6 +16,7 @@ import {
   formatCount,
   formatCurrency,
   formatDeadline,
+  formatDuration,
   formatFileSize,
   formatFullDate,
   formatLongDateTime,
@@ -177,6 +178,17 @@ describe("formatFileSize", () => {
     expect(formatFileSize(1500, enUS)).toBe("1.5 kB");
     expect(formatFileSize(2_250_000_000, enUS)).toBe("2.3 GB");
     expect(formatFileSize(1500, deDE)).toBe("1,5 kB");
+  });
+});
+
+describe("formatDuration", () => {
+  it("picks the largest unit that keeps the number at 1 or more", () => {
+    expect(formatDuration(75, enUS)).toBe("75 ms");
+    expect(formatDuration(97.54, enUS)).toBe("97.5 ms");
+    expect(formatDuration(1250, enUS)).toBe("1.3 sec");
+    expect(formatDuration(180_000, enUS)).toBe("3 min");
+    expect(formatDuration(9_000_000, enUS)).toBe("2.5 hr");
+    expect(formatDuration(1250, deDE)).toBe("1,3 Sek.");
   });
 });
 
