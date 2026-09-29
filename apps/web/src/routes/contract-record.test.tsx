@@ -2264,8 +2264,13 @@ describe("the /contracts/:number record page", () => {
     expect(screen.getByText("Helix Labs GmbH")).toBeInTheDocument();
     // The first party on a contract is its primary.
     expect(screen.getByText("Primary")).toBeInTheDocument();
-    // The input clears itself, ready for the next party.
+    // The input clears itself, ready for the next party, and the list
+    // closes so it does not cover the fields below.
     expect(picker).toHaveValue("");
+    expect(picker).toHaveFocus();
+    expect(picker).toHaveAttribute("aria-expanded", "false");
+    await user.type(picker, "Orion");
+    expect(picker).toHaveAttribute("aria-expanded", "true");
   });
 
   it("creates an unknown name inline, and withholds the offer for a name it found", async () => {
