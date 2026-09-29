@@ -10,7 +10,6 @@ import type { Db } from "@openlaw/db";
 import {
   and,
   count,
-  departments,
   desc,
   eq,
   gte,
@@ -114,6 +113,9 @@ export async function submitRequest(
     const intake = await readIntakeForm(tx, requestType.id, { lock: true });
     const attached = intake.fields;
     const rawFields = { ...(body.customFields ?? {}) };
+    // Title is a pinned Form row, stored in the Request's native column.
+    rawFields.title = body.title;
+
     // Description is a Row of the destination Form (DD-028.3). Off the
     // form, a top-level description still lands on the Request column.
     const collectsDescription = attached.some((field) => field.slug === "description");
@@ -195,7 +197,6 @@ export async function submitRequest(
         ? customFields.description
         : (body.description?.trim() ?? "");
     assertAnswered([
-      { name: "Title", answered: title !== "" },
       ...visibleFields
         .filter((field) => field.isRequired)
         .map((field) => ({
@@ -207,23 +208,26 @@ export async function submitRequest(
     // Description already has a native Request column for older intake clients.
     if (body.description !== undefined && body.customFields?.description === undefined)
       delete customFields.description;
-    const department = body.departmentId
-      ? await lockedDepartment(tx, body.departmentId).catch((error: unknown) => {
-          if (!(error instanceof HttpError) || error.statusCode !== 400) throw error;
-          throw invalidIntakeRows(error.message, "Department");
-        })
-      : null;
-    if (!department) {
-      const [available] = await tx
-        .select({ id: departments.id })
-        .from(departments)
-        .where(isNull(departments.archivedAt))
-        .limit(1);
-      if (available)
-        throw new RequestFormError("Choose a Department.", [
-          { name: "Department", reason: "missing" },
-        ]);
-    }
+    delete customFields.title;
+    const departmentField = visibleFields.find((field) =>
+      ["department", "owning_department"].includes(field.builtInKey ?? ""),
+    );
+    const selectedDepartment = departmentField
+      ? customFields[departmentField.slug]
+      : attached.some((field) =>
+            ["department", "owning_department"].includes(field.builtInKey ?? ""),
+          )
+        ? null
+        : body.departmentId;
+    const department =
+      typeof selectedDepartment === "string" && selectedDepartment
+        ? await lockedDepartment(tx, selectedDepartment).catch((error: unknown) => {
+            if (!(error instanceof HttpError) || error.statusCode !== 400) throw error;
+            throw invalidIntakeRows(error.message, "Department");
+          })
+        : null;
+    const urgency =
+      SEVERITY_LEVELS.find((level) => level === customFields.priority) ?? body.urgency;
     const [row] = await tx
       .insert(requests)
       .values({
@@ -235,7 +239,7 @@ export async function submitRequest(
         departmentId: department?.id ?? null,
         title,
         description,
-        urgency: body.urgency,
+        urgency,
         customFields,
         intakeCounterparties,
       })

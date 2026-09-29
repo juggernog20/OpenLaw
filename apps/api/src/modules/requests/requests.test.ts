@@ -452,15 +452,16 @@ describe("the form definition a requester reads", () => {
     const form = res.json();
     expect(form.requestType.displayName).toBe("Contract review");
     expect(form.fields.map((field: { displayName: string }) => field.displayName)).toEqual([
+      "Title",
       "Description",
       "Counterparty name",
       "Deal desk region",
       "Paper side",
     ]);
-    expect(form.fields[1].isRequired).toBe(true);
-    expect(form.fields[2].isRequired).toBe(false);
+    expect(form.fields[2].isRequired).toBe(true);
+    expect(form.fields[3].isRequired).toBe(false);
     // A select is not a control without its options.
-    expect(form.fields[3].options).toEqual(["Ours", "Theirs"]);
+    expect(form.fields[4].options).toEqual(["Ours", "Theirs"]);
     expect(form.intakeLinks.map((row: { label: string }) => row.label)).toEqual([
       "When does a contract need legal review?",
     ]);
@@ -815,11 +816,13 @@ describe("the two field types that name a row", () => {
   });
 });
 
-it("requires a Department and rejects changes after submission", async () => {
-  for (const departmentId of [undefined, null, ""]) {
+it("accepts a missing Department when the Form does not collect it and rejects changes after submission", async () => {
+  for (const departmentId of [undefined, null]) {
     const response = await submit(completeBody({ departmentId }));
-    expect(response.statusCode, response.body).toBe(400);
+    expect(response.statusCode, response.body).toBe(201);
+    expect(response.json().request.departmentId).toBeNull();
   }
+  expect((await submit(completeBody({ departmentId: "" }))).statusCode).toBe(400);
   const created = await submit(completeBody());
   expect(created.statusCode, created.body).toBe(201);
   const changed = await harness.app.inject({

@@ -37,7 +37,7 @@ Check the Portal's request-type card for this duration as general guidance befor
 
 ## Read and preview the Intake form
 
-The **Intake form** card is read-only. It lists **Title**, **Department**, and **Urgency** first, the destination type's Intake Rows in order, and **Attachments** last. Each Row says **Required** or **Optional**. Branch headers describe the conditions for their children. The card shows those children so you can inspect the whole configuration before answering anything.
+The **Intake form** card is read-only. It lists the destination type’s Intake Rows in their configured order, with **Attachments** last. Each Row says **Required** or **Optional**. Branch headers describe the conditions for their children. The card shows those children so you can inspect the whole configuration before answering anything.
 
 1. Select the eye button, **Preview intake form**.
 2. Check the Request type's display name and description in the preview.
@@ -53,7 +53,7 @@ The **Intake form** card is read-only. It lists **Title**, **Department**, and *
 
 The Request type has no separate attach menu, Required checkbox, or Row order. Edits to the destination Form affect every Request type that reads it. A User Row on intake cannot be required because the Portal has no staff directory picker. Entity Rows use the Portal-listed Entities.
 
-Title, Department, and Urgency are fixed basics. Attachments are optional and fixed last. Description is an ordinary built-in Row on the destination Form. Department uses the shared list managed under **Settings → Organization → Departments**.
+The portal and preview use the destination type’s Form. **Title** is a pinned, required Intake Row. **Department**, **Priority**, **Description**, and other Rows appear only when **On intake form** is enabled, in the configured order and subject to their Branch conditions. Their required marks follow **Required for creation**. Department uses the shared list managed under **Settings → Organization → Departments**; its presence is not itself a requirement to collect a Department. The selected Request type determines the destination Type. Attachments remain an optional upload control at the end.
 
 ## Collect built-in Contract Rows
 

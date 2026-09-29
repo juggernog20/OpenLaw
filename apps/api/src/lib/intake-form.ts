@@ -20,6 +20,7 @@ import { selectAttachedFields, type AttachedCustomField } from "./custom-fields.
 import { httpError } from "./problem.js";
 
 const labels: Record<string, string> = {
+  title: "Title",
   description: "Description",
   entity: "Our entity",
   counterparties: "Counterparties",

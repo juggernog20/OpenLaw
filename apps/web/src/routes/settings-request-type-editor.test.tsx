@@ -174,7 +174,7 @@ it("edits Request type facts and uses the saved wording in its preview", async (
 });
 
 describe("the Intake form card", () => {
-  it("lists fixed basics and Intake Rows in order with nested Branch headers and no editing controls", async () => {
+  it("lists configured Intake Rows in order with nested Branch headers and no editing controls", async () => {
     const calls = newCalls();
     openEditor(editorApi(calls));
     const card = await screen.findByRole("region", { name: "Intake form" });
@@ -185,9 +185,9 @@ describe("the Intake form card", () => {
         .map((item) => item.textContent),
     ).toEqual([
       "TitleTextRequired",
-      "DepartmentSingle selectRequired",
-      "UrgencySingle selectRequired",
       "DescriptionLong textOptional",
+      "DepartmentSingle selectOptional",
+      "PrioritySingle selectOptional",
       "Term typeSingle selectOptional",
       expect.stringContaining("Show when all of: Term type is Fixed"),
       "Expiry dateDateRequired",
@@ -226,7 +226,7 @@ describe("the Intake form card", () => {
     );
   });
 
-  it("refreshes after a type or module change and retains the basics for a Form with no other Intake Rows", async () => {
+  it("refreshes after a type or module change and retains only Title and Attachments for a Form with no other Intake Rows", async () => {
     const calls = newCalls();
     openEditor(editorApi(calls));
     const user = userEvent.setup();
@@ -247,7 +247,7 @@ describe("the Intake form card", () => {
       expect(screen.getByRole("button", { name: "Preview intake form" })).toBeEnabled(),
     );
     const card = screen.getByRole("region", { name: "Intake form" });
-    expect(within(card).getAllByRole("listitem")).toHaveLength(4);
+    expect(within(card).getAllByRole("listitem")).toHaveLength(2);
     expect(calls.patches).toEqual([
       { targetModule: "contract", targetTypeId: "ct-nda" },
       { targetModule: "matter", targetTypeId: null },

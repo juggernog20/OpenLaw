@@ -102,7 +102,7 @@ export async function readMyRequest(db: Db, user: AuthenticatedUser, number: num
     readIntakeForm(db, row.typeId, { includeArchived: true }),
     row.status === "converted" ? [] : selectAttachments(db, row.id),
   ]);
-  const readableFields = attached.fields;
+  const readableFields = attached.fields.filter((field) => field.builtInKey !== "title");
   return {
     redirectTo,
     recordArchived,
@@ -145,7 +145,7 @@ export async function readRequest(db: Db, user: AuthenticatedUser, number: numbe
           .orderBy(asc(activityLog.createdAt), asc(activityLog.id))
           .limit(1)
       : [];
-  const readableFields = attached.fields;
+  const readableFields = attached.fields.filter((field) => field.builtInKey !== "title");
   return {
     conversion: conversion ? { at: conversion.at.toISOString(), by: conversion.by } : null,
     request: toStaffRequest(row),

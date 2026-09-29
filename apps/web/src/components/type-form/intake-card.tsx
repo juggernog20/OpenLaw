@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import { Eye } from "lucide-react";
-import type { Form, FormNode, FormRow } from "@openlaw/shared";
+import { formForTouchpoint, type Form, type FormRow } from "@openlaw/shared";
 import { api } from "../../lib/api";
 import type { ApiField } from "../../lib/field-catalog";
 import { SettingsCard } from "../settings-card";
@@ -14,24 +14,6 @@ import { branchName, fieldTypeName, flatten, rowName } from "./model";
 import { useFormText } from "./messages";
 import { IntakePreview } from "./preview";
 import { referenceOptions } from "./reference-options";
-
-const BASICS = [
-  "title",
-  "contract_type",
-  "matter_type",
-  "department",
-  "owning_department",
-  "priority",
-];
-
-function intakeRows(form: Form): Form {
-  return form.flatMap<FormNode>((node) => {
-    if (node.kind === "row")
-      return node.onIntakeForm && !BASICS.includes(node.rowRef) ? [node] : [];
-    const children = intakeRows(node.children);
-    return children.length ? [{ ...node, children }] : [];
-  });
-}
 
 export function IntakeFormCard({
   module,
@@ -96,38 +78,23 @@ export function IntakeFormCard({
     };
   }, [module, typeId, attempt]);
 
-  function fixedRow(key: "Title" | "Department" | "Urgency" | "Attachments") {
-    const attachments = key === "Attachments";
+  function attachmentsRow() {
     return (
-      <li
-        key={key}
-        className="flex min-h-13 items-center justify-between gap-3 border-b border-border-muted px-4 py-2"
-      >
+      <li className="flex min-h-13 items-center justify-between gap-3 border-b border-border-muted px-4 py-2">
         <div className="min-w-0">
-          <p className="text-base">{t(key)}</p>
+          <p className="text-base">{t("Attachments")}</p>
           <p className="text-sm text-muted">
-            {attachments ? (
-              <FormattedMessage
-                id="settings.requestTypeEditor.basicAttachmentsType"
-                defaultMessage="Files"
-              />
-            ) : (
-              fieldTypeName(key === "Title" ? "text" : "single_select", t)
-            )}
+            <FormattedMessage
+              id="settings.requestTypeEditor.basicAttachmentsType"
+              defaultMessage="Files"
+            />
           </p>
         </div>
         <span className="text-sm text-muted">
-          {attachments ? (
-            <FormattedMessage
-              id="settings.requestTypeEditor.optionalFact"
-              defaultMessage="Optional"
-            />
-          ) : (
-            <FormattedMessage
-              id="settings.requestTypeEditor.requiredFact"
-              defaultMessage="Required"
-            />
-          )}
+          <FormattedMessage
+            id="settings.requestTypeEditor.optionalFact"
+            defaultMessage="Optional"
+          />
         </span>
       </li>
     );
@@ -226,11 +193,8 @@ export function IntakeFormCard({
         </div>
       ) : form ? (
         <ul>
-          {fixedRow("Title")}
-          {fixedRow("Department")}
-          {fixedRow("Urgency")}
-          {rows(intakeRows(form))}
-          {fixedRow("Attachments")}
+          {rows(formForTouchpoint(form, "intake"))}
+          {attachmentsRow()}
         </ul>
       ) : (
         <p role="status" className="p-4 text-sm text-muted">

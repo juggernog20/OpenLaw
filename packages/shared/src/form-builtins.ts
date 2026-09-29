@@ -69,7 +69,7 @@ export function pinnedFormRows(module: FormModule): FormRow[] {
     id: key,
     rowRef: key,
     fieldType: index === 0 ? "text" : "single_select",
-    onIntakeForm: false,
+    onIntakeForm: key === BUILTIN_KEYS.title,
     isRequired: true,
     visibleOnPortal: true,
   }));

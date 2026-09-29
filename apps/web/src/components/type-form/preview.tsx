@@ -6,7 +6,7 @@ import { useFormText } from "./messages";
 import { useEffect, useState, type ComponentProps } from "react";
 import {
   evaluateForm,
-  formRowsForTouchpoint,
+  formForTouchpoint,
   type Form,
   type FormAnswers,
   type FormRow,
@@ -113,17 +113,7 @@ export function IntakePreview({
       active = false;
     };
   }, [module, typeId, isDefault, suppliedRequestType]);
-  const visible = formRowsForTouchpoint(evaluateForm(form, answers).visibleRows, "intake").filter(
-    (r) =>
-      ![
-        "title",
-        "contract_type",
-        "matter_type",
-        "department",
-        "owning_department",
-        "priority",
-      ].includes(r.rowRef),
-  );
+  const visible = evaluateForm(formForTouchpoint(form, "intake"), answers).visibleRows;
   const answered = (ref: string) => {
     const v = answers[ref];
     return (
@@ -188,8 +178,7 @@ export function IntakePreview({
             setSubmitted(true);
             setComplete(
               departmentsReady &&
-                answered("title") &&
-                (!departments.length || answered("department")) &&
+                !loadError &&
                 visible.every((r) => !r.isRequired || answered(r.rowRef)),
             );
           }}
@@ -222,48 +211,6 @@ export function IntakePreview({
               {t("Some Portal options could not be loaded. Reopen the preview to retry.")}
             </p>
           )}
-          <Field
-            htmlFor="preview-title"
-            label={t("Title")}
-            required
-            unanswered={submitted && !answered("title")}
-          >
-            <Input
-              id="preview-title"
-              value={String(answers.title ?? "")}
-              onChange={(e) => answer("title", e.target.value)}
-            />
-          </Field>
-          <Field
-            htmlFor="preview-department"
-            label={t("Department")}
-            required={departments.length > 0}
-            unanswered={submitted && departments.length > 0 && !answered("department")}
-          >
-            <DepartmentPicker
-              id="preview-department"
-              value={typeof answers.department === "string" ? answers.department : null}
-              options={departments}
-              onChange={(value) => {
-                answer("department", value);
-                answer("owning_department", value);
-              }}
-            />
-          </Field>
-          <Field htmlFor="preview-priority" label={t("Urgency")}>
-            <select
-              id="preview-priority"
-              className={CONTROL_CLASS}
-              value={String(answers.priority ?? "medium")}
-              onChange={(e) => answer("priority", e.target.value)}
-            >
-              {(["Low", "Medium", "High", "Critical"] as const).map((v) => (
-                <option key={v} value={v.toLowerCase()}>
-                  {t(v)}
-                </option>
-              ))}
-            </select>
-          </Field>
           <p aria-live="polite" className="sr-only">
             {t("{count} questions shown: {questions}", {
               count: visible.length,
@@ -300,6 +247,17 @@ export function IntakePreview({
                         ),
                       );
                     }}
+                  />
+                ) : ["department", "owning_department"].includes(row.rowRef) ? (
+                  <DepartmentPicker
+                    id={id}
+                    value={
+                      typeof answers[row.rowRef] === "string" ? String(answers[row.rowRef]) : null
+                    }
+                    options={departments}
+                    required={row.isRequired}
+                    invalid={submitted && row.isRequired && !answered(row.rowRef)}
+                    onChange={(value) => answer(row.rowRef, value)}
                   />
                 ) : row.rowRef === "region" ? (
                   <select
