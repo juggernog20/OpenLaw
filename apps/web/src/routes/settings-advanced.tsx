@@ -443,7 +443,7 @@ const measureLabels = defineMessages({
   },
   eventLoopP99Ms: {
     id: "settings.advanced.measure.eventLoop",
-    defaultMessage: "Worst event loop delay",
+    defaultMessage: "Event loop delay, 99th percentile",
   },
   cpuPercent: { id: "settings.advanced.measure.cpu", defaultMessage: "Average CPU" },
   peakRssBytes: { id: "settings.advanced.measure.memory", defaultMessage: "Peak memory" },

@@ -9555,7 +9555,7 @@
     "defaultMessage": "Average CPU"
   },
   "settings.advanced.measure.eventLoop": {
-    "defaultMessage": "Worst event loop delay"
+    "defaultMessage": "Event loop delay, 99th percentile"
   },
   "settings.advanced.measure.latencyP50": {
     "defaultMessage": "Median response time"
