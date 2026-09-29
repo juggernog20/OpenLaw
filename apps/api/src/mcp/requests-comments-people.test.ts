@@ -3,6 +3,9 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import {
   apiKeyRequests,
+  contractTypes,
+  contractTypeBuiltinRows,
+  departments,
   fields,
   matterTypes,
   matterTypeBuiltinRows,
@@ -454,4 +457,47 @@ it("answers a builtin Department Row from the one department answer", async () =
       "validation_error",
     ),
   ).toContain("Department");
+});
+
+it("maps the legacy Department answer to a Contract Row and preserves an explicit answer", async () => {
+  const [type] = await h.db
+    .insert(contractTypes)
+    .values({ slug: "mcp-department", displayName: "MCP department", displayOrder: 98 })
+    .returning();
+  await h.db.insert(contractTypeBuiltinRows).values({
+    typeId: type!.id,
+    builtinKey: "owning_department",
+    displayOrder: 0,
+    isRequired: true,
+    onIntakeForm: true,
+  });
+  const [requestType] = await h.db
+    .insert(requestTypes)
+    .values({
+      slug: "mcp-contract-department",
+      displayName: "MCP Contract department",
+      targetModule: "contract",
+      targetContractTypeId: type!.id,
+      displayOrder: 97,
+    })
+    .returning();
+  const input = { ...submission(), requestTypeId: requestType!.id };
+  const born = (await call(business, "request_submit", input)).request;
+  expect(born.customFields).toEqual({ owning_department: departmentId });
+  const [stored] = await h.db.select().from(requests).where(eq(requests.id, born.id));
+  expect(stored?.departmentId).toBe(departmentId);
+
+  const [other] = await h.db
+    .insert(departments)
+    .values({ slug: "explicit-mcp", displayName: "Explicit MCP department", displayOrder: 99 })
+    .returning();
+  const explicit = (
+    await call(business, "request_submit", {
+      ...input,
+      answers: { ...input.answers, owning_department: other!.id },
+    })
+  ).request;
+  expect(explicit.customFields).toEqual({ owning_department: other!.id });
+  const [explicitStored] = await h.db.select().from(requests).where(eq(requests.id, explicit.id));
+  expect(explicitStored?.departmentId).toBe(other!.id);
 });

@@ -50,23 +50,26 @@ const parseAnswers = creationAnswerParser({
   schema: SubmitRequestBody.omit({ requestTypeId: true }),
 });
 const assignInput = AssignRequestBody.extend(numberInput.shape);
-/** Department is parsed into the native column; copy it into a Matter's
- * department Row so Form validation and conversion use the same answer. */
+/** Copy the legacy Department answer into the destination's Department Row
+ * unless the caller answered that Row explicitly. */
 async function withDepartmentRow(
   db: Db,
   requestTypeId: string,
   body: ReturnType<typeof parseAnswers>,
 ) {
-  if (!body.departmentId || body.customFields?.department !== undefined) return body;
+  if (!body.departmentId) return body;
   try {
     const { fields } = await readIntakeForm(db, requestTypeId);
-    if (!fields.some((field) => field.builtInKey === "department")) return body;
+    const key = fields.find((field) =>
+      ["department", "owning_department"].includes(field.builtInKey ?? ""),
+    )?.slug;
+    if (!key || body.customFields?.[key] !== undefined) return body;
+    return { ...body, customFields: { ...body.customFields, [key]: body.departmentId } };
   } catch (error) {
     // The service names the refusal for a missing or archived type.
     if (error instanceof HttpError) return body;
     throw error;
   }
-  return { ...body, customFields: { ...body.customFields, department: body.departmentId } };
 }
 const detailOutput = z.object({
   request: z.union([StaffRequestSchema, MyRequestSchema]),

@@ -848,9 +848,13 @@ The notice is the `request.conversion_draft_finished` event in group 4 of the ca
 
 ## INT-010 — Department is required and fixed during intake
 
-- **Status:** Accepted
+- **Status:** Amended 2026-09-29 by the INT-002 destination-Form amendment above.
 - **Date:** 2026-09-15
 - **Decision:** Every new Request requires a live Department selected in its form. The Request overview displays that submitted value without an edit control. Conversion retains it in the original Request and copies it to the resulting Matter or Contract, where normal record permissions permit later changes. Existing Requests with no Department remain readable and convertible. This amends INT-002's required basics and supersedes the Request-edit portion of SET-010's 2026-09-13 amendment.
+
+### Amendment (2026-09-29) — Department follows the destination Form
+
+The INT-002 amendment above supersedes the universal Department requirement. A visible Department Row is required only when its Form marks it Required for creation. A Request may have a null Department when that Row is absent, hidden, or optional and unanswered; conversion preserves that null value. Administrators must enable and require the Row where their intake process needs a Department. The submitted value remains fixed on the Request.
 
 ### INT-002 addendum (2026-09-19) — the form editor offers to attach a field to the default destination type in the same act
 

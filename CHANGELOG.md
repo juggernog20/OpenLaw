@@ -4,6 +4,10 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+### Upgrading
+
+- To collect Department or Priority from Business Users, enable **On intake form** for those Rows in each destination Contract or Matter Form. Existing Forms may have these Rows off. Department is required only when its visible Row is marked **Required for creation**. (#1225)
+
 ### Changed
 
 - A new Contract type asks for Counterparties on Create contract. The Row starts On intake form and is not Required. Contract types that already exist keep their Forms. (#1223)
