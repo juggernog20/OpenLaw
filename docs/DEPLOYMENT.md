@@ -68,11 +68,11 @@ To pin a version, edit the `image:` lines in `compose.yml`. The app and the work
 ```yaml
 services:
   app:
-    image: ghcr.io/juggernog20/openlaw:0.1.0
+    image: ghcr.io/juggernog20/openlaw:0.2.0
   worker:
-    image: ghcr.io/juggernog20/openlaw:0.1.0
+    image: ghcr.io/juggernog20/openlaw:0.2.0
   doc-engine:
-    image: ghcr.io/juggernog20/openlaw-doc-engine:0.1.0
+    image: ghcr.io/juggernog20/openlaw-doc-engine:0.2.0
 ```
 
 Then fetch and start that version:

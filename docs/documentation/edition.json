@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "documentation-development",
   "channel": "development",
-  "supportedAppVersion": "0.1.0",
+  "supportedAppVersion": "0.2.0",
   "supportedAppCommit": "ad345da5842c22b7d1012bf9f5d7d12dfdb4e496",
   "publicationTarget": "development-app",
   "compatibilityReview": {
