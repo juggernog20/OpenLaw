@@ -50,13 +50,8 @@ const parseAnswers = creationAnswerParser({
   schema: SubmitRequestBody.omit({ requestTypeId: true }),
 });
 const assignInput = AssignRequestBody.extend(numberInput.shape);
-/**
- * The Form Tool lists Department as a basic, and a Matter-bound Form may
- * carry the builtin department Row as well. The agent keys one answer;
- * the Portal fills both the Request column and the Row from its own two
- * controls, so the Tool fills both from the one answer. The service
- * re-reads the Form under its lock; this read only shapes the answer.
- */
+/** Department is parsed into the native column; copy it into a Matter's
+ * department Row so Form validation and conversion use the same answer. */
 async function withDepartmentRow(
   db: Db,
   requestTypeId: string,
@@ -151,7 +146,7 @@ export const requestTools: readonly ToolDefinition[] = [
     name: "openlaw_request_submit",
     title: "Submit a Request",
     description:
-      "Business Users submit through the Request type Form. Read openlaw_form_get with kind request first and ask the person for missing answers. Supply requestTypeId and answers keyed by Form rowRef or Field slug. Basics are title, department (Department id; it also answers a Department Row on the Form) and urgency (low, medium, high, critical). Counterparties take a list of {counterpartyId} or {name}. Uses Portal Required, Branch, live-reference and quota validation. Attachments are uploaded through the Portal separately. Each call creates a new Request.",
+      "Business Users submit through the Request type Form. Read openlaw_form_get with kind request first and ask the person for missing answers. Supply requestTypeId and answers keyed by Form rowRef or Field slug. Title is required. Collect Department and Priority only when the Form includes them. Department Rows take a Department id; Priority takes low, medium, high, or critical. Counterparties take a list of {counterpartyId} or {name}. Uses Portal Required, Branch, live-reference and quota validation. Attachments are uploaded through the Portal separately. Each call creates a new Request.",
     inputSchema: submitInput,
     outputSchema: z.object({ request: RequestSchema }),
     run: async (input, { db, user, notifier }) =>

@@ -236,7 +236,10 @@ it("reads live configured vocabulary for Legal and projects Fields for a Busines
 });
 it("reads the Request Intake Form as a Business User, preserving Branches and choices", async () => {
   const result = await call(business, "openlaw_form_get", { kind: "request", typeId: requestId });
-  expect(result.basics).toEqual(["title", "department", "urgency", "attachments"]);
+  expect(result.basics).toEqual(["attachments"]);
+  expect(result.nodes).toContainEqual(
+    expect.objectContaining({ rowRef: "title", isRequired: true }),
+  );
   expect(result.nodes).toContainEqual(
     expect.objectContaining({
       kind: "branch",

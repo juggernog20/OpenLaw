@@ -8210,9 +8210,6 @@
   "portal.form.missingRequired": {
     "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
   },
-  "portal.form.noDepartments": {
-    "defaultMessage": "No Departments are configured. You can submit without one; an Administrator can add Departments in Settings."
-  },
   "portal.form.numberInvalid": {
     "defaultMessage": "{fieldName}: enter this as a number."
   },
@@ -8230,9 +8227,6 @@
   },
   "portal.form.summaryHint": {
     "defaultMessage": "Enter a descriptive title for your request"
-  },
-  "portal.form.title": {
-    "defaultMessage": "Title"
   },
   "portal.form.urgency": {
     "defaultMessage": "Urgency"
