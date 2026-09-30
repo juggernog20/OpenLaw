@@ -30,7 +30,9 @@ pnpm test
 - Open your pull request against `dev`. Never target `main`. `main` receives releases only.
 - Keep one topic per pull request.
 - Fill in the pull request template. It asks for the change, the validation you ran, and the documentation impact.
-- Merge one long-lived branch into another with a merge commit, not a squash. A squash leaves the source branch's commits unmerged, so the next merge between the same two branches conflicts.
+- Pull requests land by squash merge ([TECH-037](docs/decision-records/DECISIONS-TECH-STACK.md#tech-037-pull-requests-land-by-squash-merge-and-published-history-is-not-rewritten)). The pull request title becomes the commit subject, and the body becomes the commit message. Write the title as a short imperative subject.
+- To bring `dev` into your branch, merge it or rebase on it. Both work, because the squash flattens your branch.
+- A squash-merged branch is finished. Its own commits are not in `dev`, so more work on it conflicts. Start the next change on a new branch off `dev`.
 
 ## Checks
 

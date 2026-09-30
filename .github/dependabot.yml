@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 version: 2
 
+# Version updates target dev, the trunk. main moves only by fast-forward from
+# dev (TECH-037). Security updates ignore target-branch and still open against
+# main, the default branch. Retarget those to dev before they merge.
 updates:
   - package-ecosystem: npm
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -25,6 +29,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: dev
     schedule:
       interval: weekly
     groups:
