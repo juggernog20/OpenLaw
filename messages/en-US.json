@@ -4937,6 +4937,9 @@
   "documents.versionTypeLabel": {
     "defaultMessage": "Type of version {number} of {title}"
   },
+  "docusignConsent.blocked": {
+    "defaultMessage": "The browser blocked the consent window. Allow pop-ups for this site, then select Grant consent again."
+  },
   "docusignConsent.grant": {
     "defaultMessage": "Grant consent"
   },

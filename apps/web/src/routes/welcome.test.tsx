@@ -1393,7 +1393,8 @@ describe("welcome wizard DocuSign consent step (#1236)", () => {
     const opened: URL[] = [];
     vi.spyOn(window, "open").mockImplementation((url) => {
       opened.push(new URL(String(url)));
-      return null;
+      // A window, not null: null is what a popup blocker answers.
+      return {} as Window;
     });
     return opened;
   }

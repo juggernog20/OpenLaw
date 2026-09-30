@@ -518,7 +518,8 @@ describe("the consent step (#1236)", () => {
     const opened: URL[] = [];
     vi.spyOn(window, "open").mockImplementation((url) => {
       opened.push(new URL(String(url)));
-      return null;
+      // A window, not null: null is what a popup blocker answers.
+      return {} as Window;
     });
     return opened;
   }
@@ -632,6 +633,22 @@ describe("the consent step (#1236)", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(calls.tests).toBe(0);
+  });
+
+  it("says so when the browser blocks the popup", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "open").mockImplementation(() => null);
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Grant consent" }));
+
+    expect(
+      await screen.findByText(
+        "The browser blocked the consent window. Allow pop-ups for this site, then select Grant consent again.",
+      ),
+    ).toBeVisible();
   });
 
   it("shows DocuSign's refusal rather than swallowing it", async () => {

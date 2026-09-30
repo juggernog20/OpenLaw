@@ -147,21 +147,36 @@ export function useDocusignConsent(onGranted: () => void) {
     return () => channel.close();
   }, [intl]);
 
-  const grant = useCallback((environment: DocusignEnvironment, integrationKey: string) => {
-    const state = newState();
-    issued.current.add(state);
-    setConsentError(null);
-    window.open(
-      docusignConsentUrl({
-        environment,
-        integrationKey,
-        redirectUri: consentRedirectUri(),
-        state,
-      }),
-      "openlaw-docusign-consent",
-      "popup,width=520,height=720",
-    );
-  }, []);
+  const grant = useCallback(
+    (environment: DocusignEnvironment, integrationKey: string) => {
+      const state = newState();
+      issued.current.add(state);
+      setConsentError(null);
+      const popup = window.open(
+        docusignConsentUrl({
+          environment,
+          integrationKey,
+          redirectUri: consentRedirectUri(),
+          state,
+        }),
+        "openlaw-docusign-consent",
+        "popup,width=520,height=720",
+      );
+      // A popup blocker answers null. Nothing opened, so no answer
+      // will come, and the form must say so rather than sit silent.
+      if (popup === null) {
+        issued.current.delete(state);
+        setConsentError(
+          intl.formatMessage({
+            id: "docusignConsent.blocked",
+            defaultMessage:
+              "The browser blocked the consent window. Allow pop-ups for this site, then select Grant consent again.",
+          }),
+        );
+      }
+    },
+    [intl],
+  );
 
   return { grant, consentError };
 }
