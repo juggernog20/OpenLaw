@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/**
+ * ENT-012's fixed register vocabulary, with localized labels and descriptions
+ * shared by the Entity type editor and the Ownership controls.
+ */
+
 import { defineMessages } from "react-intl";
 
 export const REGISTER_KINDS = ["shares", "partnership", "trust", "none"] as const;

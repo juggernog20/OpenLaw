@@ -45,9 +45,11 @@ export const entities = pgTable(
     entityTypeId: text("entity_type_id")
       .notNull()
       .references(() => entityTypes.id),
-    /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
+    /** NULL inherits the type's register kind; a value overrides it (ENT-012). */
     registerKind: text("register_kind", { enum: REGISTER_KINDS }),
+    /** NULL means no head office; only set while the effective kind is none. */
     headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),
+    /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
     jurisdiction: text("jurisdiction"),
     formedOn: date("formed_on"),
     registrationNumber: text("registration_number"),

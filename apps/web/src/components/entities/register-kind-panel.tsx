@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { useState } from "react";
+
+/**
+ * ENT-012's Ownership controls: register kind and source, the empty-register
+ * change dialog, and head-office selection for Entities that keep no register.
+ */
+
+import { useId, useState } from "react";
 import { Link, useRevalidator } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
@@ -26,6 +32,7 @@ export function RegisterKindPanel({
   onSaved: (entity: EntityRecordRow) => void;
 }) {
   const intl = useIntl();
+  const lockReasonId = useId();
   const revalidator = useRevalidator();
   const [dialog, setDialog] = useState<"kind" | "head" | null>(null);
   const [kind, setKind] = useState<RegisterKind>(entity.registerKind);
@@ -91,14 +98,14 @@ export function RegisterKindPanel({
           <Button
             variant="secondary"
             disabled={frozen || entity.registerKindLocked}
-            aria-describedby={entity.registerKindLocked ? "register-kind-lock" : undefined}
+            aria-describedby={entity.registerKindLocked ? lockReasonId : undefined}
             onClick={() => open("kind")}
           >
             <FormattedMessage id="entities.registerKind.change" defaultMessage="Change register" />
           </Button>
         </span>
         {entity.registerKindLocked ? (
-          <span id="register-kind-lock" className="sr-only">
+          <span id={lockReasonId} className="sr-only">
             {reason}
           </span>
         ) : null}

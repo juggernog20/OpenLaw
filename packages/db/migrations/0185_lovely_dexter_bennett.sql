@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: AGPL-3.0-only
 ALTER TABLE "entities" ADD COLUMN "register_kind" text;--> statement-breakpoint
 ALTER TABLE "entities" ADD COLUMN "head_office_entity_id" text;--> statement-breakpoint
 ALTER TABLE "entity_types" ADD COLUMN "register_kind" text DEFAULT 'shares' NOT NULL;--> statement-breakpoint

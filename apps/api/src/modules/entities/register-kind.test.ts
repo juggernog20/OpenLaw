@@ -273,7 +273,7 @@ it("serializes a type change against creation of share data", async () => {
   ).json().entityType;
   types.concurrent = type.id;
   const id = await create("concurrent");
-  const results = await Promise.all([
+  const [typeChange, shareClass] = await Promise.all([
     h.app.inject({
       method: "PATCH",
       url: `/api/v1/entity-types/${type.id}`,
@@ -287,8 +287,15 @@ it("serializes a type change against creation of share data", async () => {
       payload: { name: "Ordinary" },
     }),
   ]);
-  expect(results.filter((r) => r.statusCode === 409)).toHaveLength(1);
-  expect(results.filter((r) => r.statusCode === 200 || r.statusCode === 201)).toHaveLength(1);
+  const entity = await read(id);
+  if (typeChange.statusCode === 200) {
+    expect(shareClass.statusCode).toBe(409);
+    expect(entity.registerKind).toBe("trust");
+  } else {
+    expect(typeChange.statusCode).toBe(409);
+    expect(shareClass.statusCode).toBe(201);
+    expect(entity.registerKind).toBe("shares");
+  }
 });
 
 it("keeps the kind locked after the last Share class is archived", async () => {
