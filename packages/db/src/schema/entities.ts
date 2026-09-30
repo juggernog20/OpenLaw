@@ -15,6 +15,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -26,7 +27,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import type { CustomFieldValue } from "./fields.js";
-import { entityTypes } from "./entity-types.js";
+import { entityTypes, REGISTER_KINDS } from "./entity-types.js";
 import { searchVector, uuidPk } from "./helpers.js";
 
 /** The fixed ENT-001 status enum. Code branches on it (pickers filter
@@ -45,6 +46,8 @@ export const entities = pgTable(
       .notNull()
       .references(() => entityTypes.id),
     /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
+    registerKind: text("register_kind", { enum: REGISTER_KINDS }),
+    headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),
     jurisdiction: text("jurisdiction"),
     formedOn: date("formed_on"),
     registrationNumber: text("registration_number"),
@@ -95,6 +98,12 @@ export const entities = pgTable(
       "entities_status_check",
       sql`${table.status} in ('active', 'dormant', 'dissolved', 'divested')`,
     ),
+    check(
+      "entities_register_kind_check",
+      sql`${table.registerKind} in ('shares', 'partnership', 'trust', 'none')`,
+    ),
+    check("entities_head_office_not_self", sql`${table.headOfficeEntityId} <> ${table.id}`),
+    index("entities_head_office_idx").on(table.headOfficeEntityId),
     check("entities_custom_fields_object", sql`jsonb_typeof(${table.customFields}) = 'object'`),
   ],
 );

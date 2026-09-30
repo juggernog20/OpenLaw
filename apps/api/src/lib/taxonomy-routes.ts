@@ -101,6 +101,7 @@ export interface TaxonomyExtrasPatchInput<TPatch extends z.ZodRawShape = z.ZodRa
   /** The PATCH route's transaction — the extras' own reads and writes
    * commit or roll back with the machinery's. */
   tx: Transaction;
+  actorId: string;
   /** The row, read `for update`: nothing else may write it until this
    * transaction ends, so a refusal here is a refusal on live values. */
   row: TaxonomyRow;
@@ -201,6 +202,8 @@ interface TaxonomyRoutesBase<
    * fallback, never the name an Administrator happened to type.
    */
   protectedSlug?: string;
+  /** Acquire a mount's graph lock before locking a type row. */
+  lockMutation?: (tx: Transaction) => Promise<void>;
   /**
    * More than one locked row, decided per row. Document types lock
    * every row that carries a system kind (DOC-015). Archive and hard
@@ -376,6 +379,7 @@ export function taxonomyRoutes<
 
     /** Locks and returns one row, or 404s — every :id mutation starts here. */
     async function lockedType(tx: Transaction, id: string): Promise<TaxonomyRow> {
+      await config.lockMutation?.(tx);
       const [row] = await tx
         .select()
         .from(table)
@@ -596,6 +600,7 @@ export function taxonomyRoutes<
           const extra = await config.extras?.applyPatch?.({
             tx,
             row: target,
+            actorId: request.user.id,
             body: body as TaxonomyExtrasPatchInput<TPatch>["body"],
           });
           // A mount may write its own columns and no others. Reaching

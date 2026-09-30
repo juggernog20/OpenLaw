@@ -23,6 +23,7 @@ import {
   type EntityCustomFieldRefs,
   type EntityField,
   type EntityRow,
+  type EntityRecordRow,
   type EntityStatus,
 } from "../lib/entities";
 import { useFieldCommit, type FieldStatus, type TextField } from "../lib/field-commit";
@@ -36,6 +37,8 @@ import { EntityFieldsCard } from "../components/entities/entity-fields-card";
 import { EntityGrantsDialog } from "../components/entities/entity-grants-dialog";
 import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
+import { RegisterKindPanel } from "../components/entities/register-kind-panel";
+import { OwnershipCard } from "../components/entities/ownership-card";
 import { ShareRegisterTab } from "../components/entities/share-register-tab";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
@@ -98,7 +101,6 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     obligations,
     obligationOptions,
     counts,
-    register,
   ] = await Promise.all([
     api.GET("/api/v1/entities/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/entities/types"),
@@ -110,12 +112,13 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     api.GET("/api/v1/entities/{id}/obligations", { params: { path: { id } } }),
     api.GET("/api/v1/entities/obligation-options"),
     api.GET("/api/v1/entities/{id}/linked-record-counts", { params: { path: { id } } }),
-    params.tab === "ownership"
-      ? api.GET("/api/v1/entities/{id}/share-register", {
+  ]);
+  const register =
+    params.tab === "ownership" && record.data?.entity.registerKind === "shares"
+      ? await api.GET("/api/v1/entities/{id}/share-register", {
           params: { path: { id }, query: registerQuery(request) },
         })
-      : Promise.resolve(undefined),
-  ]);
+      : undefined;
   // An id nobody holds and an Entity this viewer cannot open are the
   // same 404 (DD-014). Both draw a page that says so; every other
   // failure still throws to the error boundary.
@@ -130,7 +133,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     !holdings.data ||
     !obligations.data ||
     !obligationOptions.data ||
-    (params.tab === "ownership" && !register?.data)
+    (params.tab === "ownership" && record.data.entity.registerKind === "shares" && !register?.data)
   ) {
     throw new Error("The entity could not be read.");
   }
@@ -227,7 +230,7 @@ export function EntityRecordPage() {
 function EntityRecord() {
   const loaded = useLoaderData() as EntityRecordData;
   const intl = useIntl();
-  const [saved, setSaved] = useState<EntityRow>(loaded.entity);
+  const [saved, setSaved] = useState<EntityRecordRow>(loaded.entity);
   const [attachedFields, setAttachedFields] = useState<EntityField[]>(loaded.fields);
   const [form, setForm] = useState(loaded.form);
   const [refs, setRefs] = useState<EntityCustomFieldRefs>(loaded.customFieldRefs);
@@ -257,6 +260,7 @@ function EntityRecord() {
   const [seededFrom, setSeededFrom] = useState(loaded);
   if (seededFrom !== loaded) {
     setSeededFrom(loaded);
+    setSaved(loaded.entity);
     setPaper(loaded.documents);
     setPaperCursor(loaded.documentCursor);
     setFolders(loaded.folders);
@@ -391,7 +395,7 @@ function EntityRecord() {
       setArchiveError((await problem(result)).detail);
       return;
     }
-    setSaved(result.data.entity);
+    setSaved((current) => ({ ...current, ...result.data.entity }));
     setDrafts(textDrafts(result.data.entity));
     setFormedOn(result.data.entity.formedOn ?? "");
     setArchiveStatus("idle");
@@ -747,13 +751,15 @@ function EntityRecord() {
                     </p>
                   </div>
                 </section>
-                <ShareCapitalCard
-                  entity={saved}
-                  frozen={frozen}
-                  status={commits.status}
-                  error={commits.error}
-                  onCommit={(key, patch) => commit(key, patch)}
-                />
+                {saved.registerKind === "shares" ? (
+                  <ShareCapitalCard
+                    entity={saved}
+                    frozen={frozen}
+                    status={commits.status}
+                    error={commits.error}
+                    onCommit={(key, patch) => commit(key, patch)}
+                  />
+                ) : null}
                 <EntityFieldsCard
                   entity={saved}
                   fields={
@@ -787,14 +793,50 @@ function EntityRecord() {
                   frozen={frozen}
                 />
               </>
-            ) : loaded.tab === "ownership" && loaded.register ? (
-              <ShareRegisterTab
-                entity={saved}
-                register={loaded.register}
-                holdings={loaded.holdings}
-                candidates={loaded.entities}
-                frozen={frozen}
-              />
+            ) : loaded.tab === "ownership" ? (
+              <>
+                <RegisterKindPanel entity={saved} candidates={loaded.entities} onSaved={setSaved} />
+                {saved.registerKind === "shares" && loaded.register ? (
+                  <ShareRegisterTab
+                    entity={saved}
+                    register={loaded.register}
+                    holdings={loaded.holdings}
+                    candidates={loaded.entities}
+                    frozen={frozen}
+                  />
+                ) : (
+                  <>
+                    {saved.registerKind === "partnership" || saved.registerKind === "trust" ? (
+                      <section className="rounded-card border border-border-default bg-raised p-4 text-muted">
+                        {saved.registerKind === "partnership" ? (
+                          <FormattedMessage
+                            id="entities.registerKind.emptyPartnership"
+                            defaultMessage="No partnership entries recorded."
+                          />
+                        ) : (
+                          <FormattedMessage
+                            id="entities.registerKind.emptyTrust"
+                            defaultMessage="No trust entries recorded."
+                          />
+                        )}
+                      </section>
+                    ) : null}
+                    <OwnershipCard
+                      entity={saved}
+                      candidates={loaded.entities}
+                      initial={loaded.holdings}
+                      frozen={frozen}
+                      showOwners={false}
+                      ownedTitle={
+                        <FormattedMessage
+                          id="entities.register.owned"
+                          defaultMessage="Holdings in other Entities"
+                        />
+                      }
+                    />
+                  </>
+                )}
+              </>
             ) : loaded.tab === "obligations" ? (
               <ObligationsPanel
                 userId={loaded.user.id}

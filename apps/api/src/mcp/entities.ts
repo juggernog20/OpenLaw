@@ -71,7 +71,7 @@ export const entityTools: readonly ToolDefinition[] = [
       officers: z.array(recordOutput),
       documents: z.array(recordOutput),
       obligations: z.array(recordOutput),
-      shareRegister: recordOutput,
+      shareRegister: recordOutput.nullable(),
       nextCursor: z.string().nullable(),
     }),
     run: async (input, { db, user }) =>
@@ -82,7 +82,9 @@ export const entityTools: readonly ToolDefinition[] = [
           listEntityOfficers(db, user, args.id),
           listEntityDocuments(db, user, args.id, { cursor: args.cursor }),
           listEntityObligations(db, user, args.id),
-          getEntityShareRegister(db, user, args.id),
+          detail.entity.registerKind === "shares"
+            ? getEntityShareRegister(db, user, args.id)
+            : null,
         ]);
         const page = boundedPage(paper.documents, args.limit, (d) => d.id, paper.nextCursor);
         return bounded({
@@ -90,11 +92,13 @@ export const entityTools: readonly ToolDefinition[] = [
           officers: officers.officers,
           documents: page.items,
           obligations: obligations.obligations,
-          shareRegister: {
-            asOf: register.asOf,
-            totals: register.totals,
-            reconciliation: register.reconciliation,
-          },
+          shareRegister: register
+            ? {
+                asOf: register.asOf,
+                totals: register.totals,
+                reconciliation: register.reconciliation,
+              }
+            : null,
           nextCursor: page.nextCursor,
         });
       }),

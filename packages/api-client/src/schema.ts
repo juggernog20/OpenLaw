@@ -35504,6 +35504,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             }[];
           };
         };
@@ -35550,6 +35552,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
@@ -35592,6 +35596,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
@@ -35650,6 +35656,8 @@ export interface operations {
         "application/json": {
           displayName?: string;
           description?: string | null;
+          /** @enum {string} */
+          registerKind?: "shares" | "partnership" | "trust" | "none";
         };
       };
     };
@@ -35670,6 +35678,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
@@ -35716,6 +35726,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             }[];
           };
         };
@@ -35764,6 +35776,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
@@ -35806,6 +35820,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
@@ -39042,6 +39058,15 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
+              /** @enum {string} */
+              typeRegisterKind: "shares" | "partnership" | "trust" | "none";
+              /** @enum {string} */
+              registerKindSource: "type" | "entity";
+              registerKindLocked: boolean;
+              registerKindLockReason: string | null;
+              headOfficeEntityId: string | null;
             };
             fields: {
               builtInKey?: string | null;
@@ -39118,6 +39143,8 @@ export interface operations {
         "application/json": {
           legalName?: string;
           entityTypeId?: string;
+          registerKind?: ("shares" | "partnership" | "trust" | "none") | null;
+          headOfficeEntityId?: string | null;
           jurisdiction?: string | null;
           formedOn?: string | null;
           registrationNumber?: string | null;
@@ -39175,6 +39202,15 @@ export interface operations {
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
+              /** @enum {string} */
+              typeRegisterKind: "shares" | "partnership" | "trust" | "none";
+              /** @enum {string} */
+              registerKindSource: "type" | "entity";
+              registerKindLocked: boolean;
+              registerKindLockReason: string | null;
+              headOfficeEntityId: string | null;
             };
             fields: {
               builtInKey?: string | null;

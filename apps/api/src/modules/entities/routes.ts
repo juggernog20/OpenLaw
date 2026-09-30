@@ -34,6 +34,7 @@ import {
   isNull,
   sql,
   ENTITY_STATUSES,
+  REGISTER_KINDS,
   officerRoles,
   users,
   type Entity,
@@ -62,6 +63,11 @@ import { entityHoldingRoutes } from "./holding-routes.js";
 import { entityShareRegisterRoutes } from "./share-register-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
 import { entityGrantRoutes } from "./grant-routes.js";
+import {
+  entityRegisterState,
+  lockEntityRegisters,
+  registerKindPatch,
+} from "../../lib/entity-register-kind.js";
 import { EntityListQuery, listEntities, getEntity, toRow, primaryOwnerIds } from "./service.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
@@ -136,7 +142,14 @@ const PersonOptionSchema = z.object({
 const EntityRecordEnvelope = z.object({
   form: z.array(FormNodeSchema).optional(),
   canManageAccess: z.boolean().optional(),
-  entity: EntityRowSchema,
+  entity: EntityRowSchema.extend({
+    registerKind: z.enum(REGISTER_KINDS),
+    typeRegisterKind: z.enum(REGISTER_KINDS),
+    registerKindSource: z.enum(["type", "entity"]),
+    registerKindLocked: z.boolean(),
+    registerKindLockReason: z.string().nullable(),
+    headOfficeEntityId: z.string().nullable(),
+  }),
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
 });
@@ -471,6 +484,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           legalName: LegalNameSchema.optional(),
           entityTypeId: z.string().optional(),
+          registerKind: z.enum(REGISTER_KINDS).nullable().optional(),
+          headOfficeEntityId: z.string().min(1).max(64).nullable().optional(),
           jurisdiction: CardTextSchema.nullable().optional(),
           formedOn: z.iso.date().nullable().optional(),
           registrationNumber: CardTextSchema.nullable().optional(),
@@ -495,6 +510,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const { row, entityTypeName, attached } = await app.db.transaction(async (tx) => {
+        await lockEntityRegisters(tx);
         const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!target) throw httpError(404, NO_ENTITY);
         if (target.archivedAt) {
@@ -502,11 +518,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
 
         const [currentType] = await tx
-          .select({ displayName: entityTypes.displayName })
+          .select({ displayName: entityTypes.displayName, registerKind: entityTypes.registerKind })
           .from(entityTypes)
           .where(eq(entityTypes.id, target.entityTypeId))
           .limit(1);
         let typeName = currentType!.displayName;
+        let typeKind = currentType!.registerKind;
 
         const patch: Partial<Entity> = {};
         if (body.portalListed !== undefined) {
@@ -556,6 +573,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
               id: entityTypes.id,
               displayName: entityTypes.displayName,
               archivedAt: entityTypes.archivedAt,
+              registerKind: entityTypes.registerKind,
             })
             .from(entityTypes)
             .where(eq(entityTypes.id, body.entityTypeId))
@@ -567,7 +585,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           patch.entityTypeId = entityType.id;
           changed.entityType = { from: typeName, to: entityType.displayName };
           typeName = entityType.displayName;
+          typeKind = entityType.registerKind;
         }
+
+        const registerChange = await registerKindPatch(tx, request.user, target, typeKind, body);
+        Object.assign(patch, registerChange.patch);
+        Object.assign(changed, registerChange.changed);
 
         // Free-text card scalars: blank normalizes to NULL, same as
         // registration; null clears deliberately.
@@ -716,7 +739,11 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       });
       return {
         form: await readTypeForm(app.db, "entity", row.entityTypeId),
-        entity: toRow(row, entityTypeName),
+        entity: {
+          ...toRow(row, entityTypeName),
+          ...(await entityRegisterState(app.db, row)),
+          headOfficeEntityId: row.headOfficeEntityId,
+        },
         fields: attached,
         customFieldRefs: await resolveStaffRefs(
           app.db,

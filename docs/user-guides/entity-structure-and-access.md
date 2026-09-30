@@ -6,9 +6,26 @@ Maintain share-capital facts and the share register, inspect the ownership chart
 
 Legal Team Members and Administrators can maintain reachable, live Entities. A Confidential Entity requires a Grant for every person, including Administrators. A person with a Grant on an Entity can change its Confidential flag and Grants. An Administrator can also change them while the Entity is not Confidential. The person who adds an Entity receives a Grant for it. Business Users do not have Entity access. A Holding, a share register entry, an Officer user link, or a linked Contract does not grant access to the Entity.
 
+## Choose the register and head office
+
+Open **Ownership**. The line above the first card names the register and says whether
+it comes from the Entity type or was set on this Entity. Select **Change register**,
+choose **Share register**, **Partnership register**, **Trust register**, or **None**,
+then **Save**. Choosing the type's own kind returns the Entity to the type's setting.
+
+The choice locks while a register holds data, including a Share class without entries.
+The disabled control explains why. Changing the Entity type cannot bypass this lock.
+Partnership and trust registers currently show an empty state; entry controls arrive
+with those registers.
+
+For **None**, Ownership shows **Head office**. Select **Change head office**, choose a
+live Entity from the registry, and **Save**. **Clear head office** removes the link.
+The Entity cannot name itself or create a loop through other head offices. Changing
+to another register kind clears the head office.
+
 ## Maintain share capital
 
-1. Open the Entity's **Overview** and find **Share capital**.
+1. Open the Entity's **Overview** and find **Share capital**. This card appears only for **Share register**.
 2. Enter **Authorized shares** and **Issued shares** as needed. Each accepts a whole number of zero or more; leave a value blank when it is unknown.
 3. To record a par value, choose **Currency** first. **Par value** stays unavailable until a Currency is chosen. Then enter the amount in that currency, with no more decimal places than the currency uses.
 4. Move focus away or press Enter to save each value. Check its saved result. Press Escape to abandon an unsaved edit.

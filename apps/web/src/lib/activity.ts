@@ -392,6 +392,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} " +
         "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
         "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
         "linkedUser {Linked user} " +
@@ -430,6 +431,7 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
  * `linkedUser` already carries names; it is here so a row written
  * before that was true still reads through the same lookup. */
 const REFERENCE_KEYS = new Set([
+  "headOfficeEntityId",
   "assigneeId",
   "targetContractTypeId",
   "matterId",
@@ -466,6 +468,24 @@ function changeValue(
         id: "activity.aiConnector.answerStyle",
         defaultMessage:
           "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}",
+      },
+      { value: String(value) },
+    );
+  if (key === "registerKind")
+    return intl.formatMessage(
+      {
+        id: "activity.registerKind.value",
+        defaultMessage:
+          "{value, select, shares {Share register} partnership {Partnership register} trust {Trust register} none {None} other {{value}}}",
+      },
+      { value: String(value) },
+    );
+  if (key === "registerKindSource")
+    return intl.formatMessage(
+      {
+        id: "activity.registerKind.source",
+        defaultMessage:
+          "{value, select, type {From the type} entity {Set on this Entity} other {{value}}}",
       },
       { value: String(value) },
     );

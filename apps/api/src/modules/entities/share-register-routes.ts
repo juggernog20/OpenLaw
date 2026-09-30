@@ -46,6 +46,8 @@ import {
   type ReplayEntry,
 } from "../../lib/share-register.js";
 
+import { assertRegisterKind } from "../../lib/entity-register-kind.js";
+
 const requireMember = requireRole("administrator", "legal_team_member");
 const IdParams = z.object({ id: z.string().min(1).max(64) });
 const ClassParams = IdParams.extend({ classId: z.string().min(1).max(64) });
@@ -984,6 +986,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const entity = await reachedEntity(app.db, request.user, request.params.id);
       if (!entity) throw httpError(404, NO_ENTITY);
+      await assertRegisterKind(app.db, entity, "shares");
       const register = await readRegister(
         app.db,
         request.user,
@@ -1117,6 +1120,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         await assertClassNameFree(tx, entity.id, request.body.name);
         const [count] = await tx
@@ -1168,6 +1172,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const current = (await readClasses(tx, entity.id)).find(
           (row) => row.id === request.params.classId,
@@ -1236,6 +1241,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const current = (await readClasses(tx, entity.id)).find(
           (row) => row.id === request.params.classId,
@@ -1280,6 +1286,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const resolved = await resolveEntry(tx, request.user, entity, request.body);
         const entryNo = await nextEntryNo(tx, entity.id);
@@ -1323,6 +1330,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const [current] = await tx
           .select()
@@ -1414,6 +1422,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const [current] = await tx
           .select()
@@ -1455,5 +1464,6 @@ export async function getEntityShareRegister(
 ) {
   const entity = await reachedEntity(db, user, id);
   if (!entity) throw httpError(404, NO_ENTITY);
+  await assertRegisterKind(db, entity, "shares");
   return readRegister(db, user, entity, asOf);
 }
