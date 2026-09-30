@@ -21,7 +21,7 @@ interface DocumentResponse {
 test("preserves preparation through source, archive and connector changes", async ({ page }) => {
   test.skip(
     process.env.SIGNING_PREPARATION_ENABLED !== "true",
-    "Preparation is off until final cutover.",
+    "The E2E overlay pins direct send.",
   );
   const returnPage = await page.request.get("/signing/return");
   expect(returnPage.headers()["cache-control"]).toBe("no-store");
@@ -202,7 +202,7 @@ test("files a real provider outcome while the connector and Contract refuse new 
 }) => {
   test.skip(
     process.env.SIGNING_PREPARATION_ENABLED !== "true",
-    "Preparation is off until final cutover.",
+    "The E2E overlay pins direct send.",
   );
   const returnPage = await page.request.get("/signing/return");
   expect(returnPage.headers()["cache-control"]).toBe("no-store");

@@ -183,13 +183,48 @@ describe("signing host configuration", () => {
 });
 
 describe("preparation rollout", () => {
-  it("keeps ordinary deployments and an unqualified switch off", () => {
-    expect(readSigningPreparationEnabled({})).toBe(false);
-    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "true" })).toBe(false);
-    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_LIVE_LAB: "true" })).toBe(false);
+  // Preparation is the default (#1237). The connector still decides
+  // whether anything can be sent at all; this switch decides only which
+  // interface a configured connector gets.
+  it("turns preparation on when the deployment says nothing", () => {
+    expect(readSigningPreparationEnabled({})).toBe(true);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "" })).toBe(true);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "  " })).toBe(true);
   });
 
-  it("enables a declared stand-in without enabling live acceptance", () => {
+  it("turns preparation on against real DocuSign with no lab declaration", () => {
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "true" })).toBe(true);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: " TRUE " })).toBe(true);
+  });
+
+  it("goes back to direct send only when told so in words", () => {
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "false" })).toBe(false);
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: " False " })).toBe(false);
+    expect(
+      readSigningPreparationEnabled({
+        ...DECLARED,
+        DOCUSIGN_BASE_URL: "http://stand-in.invalid",
+        SIGNING_PREPARATION_ENABLED: "false",
+      }),
+    ).toBe(false);
+  });
+
+  it("stops the boot on a value it would have to guess at", () => {
+    for (const value of ["1", "0", "yes", "no", "on", "off", "ture"]) {
+      expect(() => readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: value })).toThrow(
+        SigningHostConfigError,
+      );
+    }
+    // The message names the variable and what it accepts, never the value.
+    expect(() => readSigningPreparationEnabled({ SIGNING_PREPARATION_ENABLED: "sekrit" })).toThrow(
+      /^SIGNING_PREPARATION_ENABLED must be "true", "false" or unset\.$/,
+    );
+  });
+
+  it("keeps preparation on for a declared stand-in", () => {
+    expect(
+      readSigningPreparationEnabled({ ...DECLARED, DOCUSIGN_BASE_URL: "http://stand-in.invalid" }),
+    ).toBe(true);
     expect(
       readSigningPreparationEnabled({
         ...DECLARED,
@@ -199,7 +234,8 @@ describe("preparation rollout", () => {
     ).toBe(true);
   });
 
-  it("requires both explicit switches for real provider acceptance", () => {
+  it("still refuses a live lab that names a stand-in or turns preparation off", () => {
+    expect(readSigningPreparationEnabled({ SIGNING_PREPARATION_LIVE_LAB: "true" })).toBe(true);
     expect(
       readSigningPreparationEnabled({
         SIGNING_PREPARATION_ENABLED: "true",
@@ -210,9 +246,14 @@ describe("preparation rollout", () => {
       readSigningPreparationEnabled({
         ...DECLARED,
         DOCUSIGN_BASE_URL: "http://stand-in.invalid",
-        SIGNING_PREPARATION_ENABLED: "true",
         SIGNING_PREPARATION_LIVE_LAB: "true",
       }),
     ).toThrow("cannot use a signing stand-in");
+    expect(() =>
+      readSigningPreparationEnabled({
+        SIGNING_PREPARATION_ENABLED: "false",
+        SIGNING_PREPARATION_LIVE_LAB: "true",
+      }),
+    ).toThrow("cannot turn preparation off");
   });
 });

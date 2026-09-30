@@ -5596,6 +5596,9 @@ Registering the redirect URI on the DocuSign app stays a manual, one-time step. 
 
 ### DES-036 addendum, 2026-09-26, #1178. Preparation acceptance interface
 
+_(2026-10-01, #1237: **the first sentence and "they do not announce production
+rollout" are superseded** by the #1237 addendum below.)_
+
 The normal Signatures tab retains Send for signature and Send envelope until live
 acceptance passes. An opted-in lab offers Prepare Envelope, then Continue to
 DocuSign in the same tab. Drafts show Not sent and Prepared by, and offer Resume
@@ -5605,3 +5608,12 @@ imply send. These amendments supersede the sent-only row model for preparation
 labs; they do not announce production rollout. Narrow-screen, keyboard and return
 focus checks must name the tested build and distinguish local browser evidence
 from the native provider editor still awaiting live verification.
+
+### DES-036 addendum, 2026-10-01, #1237. Preparation is the default interface
+
+The Signatures tab draws the preparation interface by default: Send for signature
+opens Prepare Envelope, and its confirm is Continue to DocuSign. The Send envelope
+dialog appears only on an install whose operator set
+`SIGNING_PREPARATION_ENABLED=false`. Nothing else about either interface changes.
+The trigger label stays Send for signature in both, so the header control does not
+move when an operator flips the switch.

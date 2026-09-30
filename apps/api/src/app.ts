@@ -196,7 +196,9 @@ export interface AppDeps {
    * keeps CTR-013's zero-config manual hand-off working.
    */
   resolveSigningProvider: SigningResolver;
-  /** Development-only until the complete preparation flow is released. */
+  /** Whether a configured connector gets Continue to DocuSign rather than
+   * immediate Send envelope. On unless the deployment turns it off
+   * (#1237); `readSigningPreparationEnabled` reads it at boot. */
   signingPreparationEnabled?: boolean;
   /** The enabled AI connector, read live before each probe or analysis run. */
   resolveAiProvider: AiResolver;
@@ -330,7 +332,7 @@ export async function buildApp(deps: AppDeps, opts: FastifyServerOptions = {}) {
   app.decorate("docEngine", deps.docEngine);
   app.decorate("fillEngine", deps.fillEngine);
   app.decorate("jobs", deps.jobs);
-  app.decorate("signingPreparationEnabled", deps.signingPreparationEnabled ?? false);
+  app.decorate("signingPreparationEnabled", deps.signingPreparationEnabled ?? true);
   app.decorate("resolveSigningProvider", deps.resolveSigningProvider);
   app.decorate("resolveAiProvider", deps.resolveAiProvider);
   app.decorate("notifier", deps.notifier);

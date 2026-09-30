@@ -2158,6 +2158,9 @@ return secret is written to Activity or persistent browser storage.
 
 ### TECH-013 / TECH-018 addendum, 2026-09-26, #1178. Real acceptance lab
 
+_(2026-10-01, #1237: **the off-by-default gate and the rule that retires it only
+after live acceptance are superseded** by the #1237 addendum below.)_
+
 The preparation gate stays off for ordinary deployments. A disposable documentation
 lab explicitly sets both SIGNING_PREPARATION_ENABLED and
 SIGNING_PREPARATION_LIVE_LAB to true. The live declaration refuses any configured
@@ -2171,6 +2174,29 @@ from guide content hashes and are recorded separately. This opt-in remains until
 live restrictions in #1178 pass; retiring the gate before that would violate CTR-013.
 Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
 prove provider account controls, actual session expiry or signed real Connect.
+
+### TECH-013 / TECH-018 addendum, 2026-10-01, #1237. The preparation switch defaults on
+
+`readSigningPreparationEnabled` in `apps/api/src/lib/signing/config.ts` reads
+`SIGNING_PREPARATION_ENABLED` at API boot. Unset, empty or `true` turns preparation
+on. `false` turns it off. Both are case-insensitive. Any other value stops the boot
+with a message that names the variable and not the value, as `SIGNING_STANDIN`
+does: a `0` read as on would be a direct send its operator believed they had kept.
+The worker does not read the switch.
+
+The old condition needed a declared stand-in or `SIGNING_PREPARATION_LIVE_LAB=true`
+beside the switch, so no production install could turn preparation on. That
+condition is gone. `SIGNING_PREPARATION_LIVE_LAB=true` now turns nothing on. It
+stays as the lab's declaration that it talks to the real provider. The boot refuses
+it beside a stand-in, as before, and beside `SIGNING_PREPARATION_ENABLED=false`.
+
+The dev/E2E overlay keeps `SIGNING_PREPARATION_ENABLED=false` as its default,
+because the M15 and M30 journeys drive Send envelope. The preparation journeys
+still run on an isolated stack with the switch set to true. The DOC-029 lab
+helper's `off` option now writes `SIGNING_PREPARATION_ENABLED=false`, so an
+ordinary lab keeps the interface its guides were verified against. Its `live`
+option is unchanged. Host development through `dev-hot.sh` reads `.env` and gets
+the default.
 
 ### TECH-008 addendum, 2026-09-27. Several identity providers, routed by email domain
 

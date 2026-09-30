@@ -114,6 +114,7 @@ Deployment configuration uses environment variables in `.env`; [`.env.example`](
 | `APP_CPUS` / `APP_MEM_LIMIT` / `APP_PIDS_LIMIT`                      | no       | Compose only. Ceilings on the app container: CPUs, memory and processes. Defaults to `2`, `1g` and `256`, which fit a 4 CPU, 8 GB VM with room for Postgres. Raise them for a larger team.                                                                                                                                                                                                                  |
 | `WORKER_CPUS` / `WORKER_MEM_LIMIT` / `WORKER_PIDS_LIMIT`             | no       | Compose only. The same ceilings on each worker container. Defaults to `2`, `1g` and `256`.                                                                                                                                                                                                                                                                                                                  |
 | `DOC_ENGINE_CPUS` / `DOC_ENGINE_MEM_LIMIT` / `DOC_ENGINE_PIDS_LIMIT` | no       | Compose only. The same ceilings on the doc engine. Defaults to `2`, `4g` and `512`. Keep `DOC_ENGINE_MEM_LIMIT` above `DOC_ENGINE_TMPFS_SIZE`, because the tmpfs counts against it.                                                                                                                                                                                                                         |
+| `SIGNING_PREPARATION_ENABLED`                                        | no       | How a configured DocuSign connector sends (CTR-013, #1237). Unset or `true` = **Continue to DocuSign**: OpenLaw saves an unsent Envelope and opens DocuSign's editor, and the preparer sends from there. `false` = the older interface, where **Send envelope** sends at once. Any other value stops the boot. Read by the app at start; see [DocuSign sending interface](#docusign-sending-interface).     |
 | `PORT`                                                               | no       | The published host port (the container always listens on 3000 internally).                                                                                                                                                                                                                                                                                                                                  |
 | `APP_BIND`                                                           | no       | Compose only. The host address the app port is published on. Defaults to `127.0.0.1` — see [The app port and `APP_BIND`](#the-app-port-and-app_bind).                                                                                                                                                                                                                                                       |
 | `OPENLAW_PLAIN_HTTP_HOSTS`                                           | no       | Comma-separated hosts an Administrator may save with a plain `http://` address under Settings → Advanced. Localhost and private network addresses are always allowed; every other host must use `https://`.                                                                                                                                                                                                 |
@@ -731,14 +732,31 @@ original idempotency record. An empty search, a missing ID, an elapsed lookup
 window or an unavailable account is not that evidence. Keep unresolved operations
 reserved until their outcome is known.
 
+## DocuSign sending interface
+
+Preparation is the default (#1237). With the connector configured and turned on,
+**Send for signature** opens the **Prepare Envelope** dialog, and **Continue to
+DocuSign** saves an unsent Envelope and opens DocuSign's editor in the same tab.
+The preparer places the fields and sends from DocuSign. You set nothing for this.
+
+To go back to the older interface, set `SIGNING_PREPARATION_ENABLED=false` in
+`.env` and restart the app. **Send envelope** then sends at once from OpenLaw with
+the `/sig/` anchor. Drafts saved before the change keep their rows, but OpenLaw
+offers no **Resume in DocuSign** for them until you set the variable back.
+Reconciliation still follows them. The direct-send API and manual hand-off stay
+available with either value. A value other than `true` or `false` stops the boot.
+
+The native editor restrictions are not yet verified live. Read the release status
+below before you rely on them.
+
 ## DocuSign preparation acceptance
 
-Release status for #1178: blocked pending a real developer-account walkthrough.
-The production default remains off. The explicit legacy direct-send API and
-manual hand-off remain available. The existing development gate cannot be retired
-until the essential native editor restrictions pass live. Production entitlement
-remains account-specific. Real signed Connect delivery and recovery are tracked
-separately in [#888](https://github.com/juggernog20/OpenLaw/issues/888).
+Release status for #1178: the real developer-account walkthrough is still
+outstanding. Preparation is on by default since #1237, ahead of that walkthrough.
+The explicit legacy direct-send API and manual hand-off remain available.
+Production entitlement remains account-specific. Real signed Connect delivery and
+recovery are tracked separately in
+[#888](https://github.com/juggernog20/OpenLaw/issues/888).
 
 Use the DOC-029 disposable lab helper from a committed revision. These example
 ports and /24 subnets must be unused on the machine. Do not edit a generated
@@ -753,11 +771,13 @@ node scripts/documentation/lab.mjs seed signing-live
 ```
 
 The live option sets `SIGNING_PREPARATION_ENABLED=true` and
-`SIGNING_PREPARATION_LIVE_LAB=true` on the lab API only. The latter is an explicit
-acceptance opt-in, not a production recommendation. It refuses a signing stand-in.
-Neither `DOCUSIGN_BASE_URL` nor `SIGNING_STANDIN` is set. Without both preparation
-switches, real deployments keep the old interface. No provider secret comes from
-the lab helper or its shell environment.
+`SIGNING_PREPARATION_LIVE_LAB=true` on the lab API only. Since #1237 the second
+variable turns nothing on. It declares that the lab talks to the real provider, so
+the app refuses to start if the lab also names a signing stand-in or sets
+`SIGNING_PREPARATION_ENABLED=false`. Neither `DOCUSIGN_BASE_URL` nor
+`SIGNING_STANDIN` is set. The helper's default `off` option sets
+`SIGNING_PREPARATION_ENABLED=false`, so an ordinary lab keeps direct send. No
+provider secret comes from the lab helper or its shell environment.
 
 Ask the account owner to open the seeded lab, then **Settings → Organization →
 Integrations → E-signature → DocuSign**. Have them choose **Demo** and **Polling**,
@@ -787,8 +807,9 @@ conditional Signature-to-Active rule. Do not claim that all Signers must have
 signature fields unless the actual provider enforces it.
 
 If credentials or controlled inboxes are unavailable, mark the live scenarios
-`blocked` and keep the default off. If any native editor route permits a prohibited
-recipient, Document, page, Subject, visibility or template change, stop rollout.
+`blocked` and report the release blocker. If any native editor route permits a
+prohibited recipient, Document, page, Subject, visibility or template change, stop
+rollout: tell operators to set `SIGNING_PREPARATION_ENABLED=false`.
 Record the failed route and the required provider permission or product design
 change before another acceptance run. Reserved API flags are not evidence of
 native enforcement. Do not alter the parent specification to erase a failed check.
