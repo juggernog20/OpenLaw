@@ -234,9 +234,8 @@ test.describe.serial("M36 deployer journey", () => {
       const holdings = main(page).getByRole("region", { name: "Holdings in other Entities" });
       await expect(holdings.getByRole("link", { name: ISSUER_NAME })).toBeVisible();
       await expect(holdings.getByRole("link", { name: "From register" })).toBeVisible();
-      const percent = holdings.getByLabel(`${ISSUER_NAME} ownership percent`);
-      await expect(percent).toHaveValue("73.68");
-      await expect(percent).toBeDisabled();
+      await expect(holdings.getByLabel(`${ISSUER_NAME} ownership percent`)).toHaveText("73.68%");
+      await expect(holdings.getByRole("spinbutton")).toHaveCount(0);
     } finally {
       await cleanup();
     }

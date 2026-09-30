@@ -19,6 +19,10 @@ const CreatedEntity = z.object({
 });
 const CreatedOfficer = z.object({ officer: z.object({ id: z.string() }) });
 const CreatedObligation = z.object({ obligation: z.object({ id: z.string() }) });
+const ShareClasses = z.object({
+  classes: z.array(z.object({ id: z.string(), name: z.string() })),
+});
+const RegisterEntries = z.object({ entries: z.array(z.object({ id: z.string() })) });
 
 type CreatedEntity = z.infer<typeof CreatedEntity>["entity"];
 
@@ -69,14 +73,13 @@ test.describe.serial("M27 deployer journey", () => {
     let subsidiary: CreatedEntity | undefined;
     let officerId: string | undefined;
     let obligationId: string | undefined;
-    let holdingCreated = false;
+    let entryId: string | undefined;
 
     const cleanup = async () => {
       const failures: unknown[] = [];
       const settle = async (step: () => Promise<void>) =>
         step().catch((error: unknown) => failures.push(error));
       const subsidiaryId = subsidiary?.id;
-      const parentId = parent?.id;
       if (obligationId && subsidiaryId) {
         await settle(() =>
           deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/obligations/${obligationId}`),
@@ -87,9 +90,9 @@ test.describe.serial("M27 deployer journey", () => {
           deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/officers/${officerId}`),
         );
       }
-      if (holdingCreated && subsidiaryId && parentId) {
+      if (entryId && subsidiaryId) {
         await settle(() =>
-          deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/holdings/${parentId}`),
+          deleteChild(page.request, `/api/v1/entities/${subsidiaryId}/share-entries/${entryId}`),
         );
       }
       for (const entity of [subsidiary, parent].filter(
@@ -108,23 +111,37 @@ test.describe.serial("M27 deployer journey", () => {
       subsidiary = await registerEntity(page, SUBSIDIARY_NAME, "England & Wales");
       const subsidiaryId = subsidiary.id;
 
-      await page.goto(`/entities/${subsidiaryId}/ownership`);
-      await main(page).getByRole("button", { name: "Add Holding" }).click();
-      const holding = page.getByRole("dialog", { name: "Add Holding" });
-      await holding.getByRole("combobox", { name: "Entity" }).fill(PARENT_NAME);
-      await holding.getByRole("option", { name: PARENT_NAME, exact: true }).click();
-      await holding.getByLabel("Ownership percent").fill("100");
-      const holdingResponse = page.waitForResponse(
-        (response) =>
-          response.url().endsWith(`/api/v1/entities/${subsidiaryId}/holdings`) &&
-          response.request().method() === "POST",
-      );
-      await holding.getByRole("button", { name: "Add", exact: true }).click();
-      const held = await holdingResponse;
-      expect(held.status(), await held.text()).toBe(201);
-      holdingCreated = true;
-      await expect(main(page).getByRole("link", { name: PARENT_NAME, exact: true })).toBeVisible();
-      await expect(main(page).getByLabel(`${PARENT_NAME} ownership percent`)).toHaveValue("100");
+      // A Holding comes only from a share register (ENT-012). The register's
+      // own screens are journey 58; here the subsidiary allots every share
+      // to the parent through the API, and the parent's tab shows the result.
+      const parentId = parent.id;
+      const shareClass = await page.request.post(`/api/v1/entities/${subsidiaryId}/share-classes`, {
+        data: { name: "Ordinary" },
+      });
+      expect(shareClass.status(), await shareClass.text()).toBe(201);
+      const shareClassId = ShareClasses.parse(await shareClass.json()).classes.find(
+        (row) => row.name === "Ordinary",
+      )?.id;
+      expect(shareClassId).toBeDefined();
+      const allotted = await page.request.post(`/api/v1/entities/${subsidiaryId}/share-entries`, {
+        data: {
+          kind: "allotment",
+          effectiveOn: "2026-08-01",
+          shareClassId,
+          quantity: 100,
+          to: { kind: "entity", entityId: parentId },
+        },
+      });
+      expect(allotted.status(), await allotted.text()).toBe(201);
+      entryId = RegisterEntries.parse(await allotted.json()).entries[0]?.id;
+
+      await page.goto(`/entities/${parentId}/ownership`);
+      const holdings = main(page).getByRole("region", { name: "Holdings in other Entities" });
+      await expect(
+        holdings.getByRole("link", { name: SUBSIDIARY_NAME, exact: true }),
+      ).toBeVisible();
+      await expect(holdings.getByLabel(`${SUBSIDIARY_NAME} ownership percent`)).toHaveText("100%");
+      await expect(main(page).getByRole("button", { name: "Add Holding" })).toHaveCount(0);
 
       await page.goto(`/entities/${subsidiaryId}`);
       const officers = main(page).getByRole("region", { name: "Directors & Officers" });

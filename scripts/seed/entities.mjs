@@ -19,6 +19,9 @@ import { customFields } from "./custom-fields.mjs";
 import { memberPlus } from "./people.mjs";
 import { daysFromToday } from "./time.mjs";
 
+/** What the one share class on a seeded register is called, by Entity Type. */
+const SHARE_CLASS_NAMES = { corporation: "Ordinary shares", llc: "Membership units" };
+
 /** The folders every Entity files its paper into (DOC-006). */
 const ENTITY_FOLDERS = ["Formation", "Board", "Filings"];
 
@@ -179,18 +182,21 @@ export async function seedEntities(admin, context, log) {
     });
   });
 
-  // Ownership. Recorded on the owned company, naming its owner, which is
-  // the direction the group chart is read in.
+  // Ownership. A Holding comes only from a share register (ENT-012), so
+  // each owned company gets one share class and one allotment of all its
+  // shares to its owner, dated the day it was formed.
   let holdings = 0;
   for (const entity of created.values()) {
-    const owner = entity.definition.owner;
-    if (!owner) continue;
-    const parent = created.get(owner.of);
+    const parent = created.get(entity.definition.owner);
     if (!parent) continue;
-    await admin.post(`/api/v1/entities/${entity.id}/holdings`, {
-      direction: "owner",
-      relatedEntityId: parent.id,
-      ownershipPercent: owner.percent,
+    const name = SHARE_CLASS_NAMES[entity.definition.type] ?? "Ownership interest";
+    const { body } = await admin.post(`/api/v1/entities/${entity.id}/share-classes`, { name });
+    await admin.post(`/api/v1/entities/${entity.id}/share-entries`, {
+      kind: "allotment",
+      effectiveOn: entity.definition.formedOn,
+      shareClassId: body.classes.find((row) => row.name === name).id,
+      quantity: 1000,
+      to: { kind: "entity", entityId: parent.id },
     });
     holdings += 1;
   }
