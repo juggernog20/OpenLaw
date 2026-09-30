@@ -78190,6 +78190,10 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "registerKind": {
+                            "type": "string",
+                            "enum": ["shares", "partnership", "trust", "none"]
                           }
                         },
                         "required": [
@@ -78200,7 +78204,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "registerKind"
                         ],
                         "additionalProperties": false
                       }
@@ -78293,6 +78298,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78303,7 +78312,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -78389,6 +78399,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78399,7 +78413,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -78448,6 +78463,10 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "registerKind": {
+                    "type": "string",
+                    "enum": ["shares", "partnership", "trust", "none"]
                   }
                 },
                 "additionalProperties": false
@@ -78512,6 +78531,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78522,7 +78545,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -78650,6 +78674,10 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "registerKind": {
+                            "type": "string",
+                            "enum": ["shares", "partnership", "trust", "none"]
                           }
                         },
                         "required": [
@@ -78660,7 +78688,8 @@
                           "displayOrder",
                           "isSystemDefault",
                           "archivedAt",
-                          "inUseCount"
+                          "inUseCount",
+                          "registerKind"
                         ],
                         "additionalProperties": false
                       }
@@ -78762,6 +78791,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78772,7 +78805,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -78858,6 +78892,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78868,7 +78906,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -87882,6 +87921,27 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
+                        },
+                        "typeRegisterKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
+                        },
+                        "registerKindSource": {
+                          "type": "string",
+                          "enum": ["type", "entity"]
+                        },
+                        "registerKindLocked": {
+                          "type": "boolean"
+                        },
+                        "registerKindLockReason": {
+                          "type": ["string", "null"]
+                        },
+                        "headOfficeEntityId": {
+                          "type": ["string", "null"]
                         }
                       },
                       "required": [
@@ -87905,7 +87965,13 @@
                         "portalListed",
                         "archivedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "registerKind",
+                        "typeRegisterKind",
+                        "registerKindSource",
+                        "registerKindLocked",
+                        "registerKindLockReason",
+                        "headOfficeEntityId"
                       ],
                       "additionalProperties": false
                     },
@@ -88096,6 +88162,29 @@
                   },
                   "entityTypeId": {
                     "type": "string"
+                  },
+                  "registerKind": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": ["shares", "partnership", "trust", "none"]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "headOfficeEntityId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   },
                   "jurisdiction": {
                     "anyOf": [
@@ -88415,6 +88504,27 @@
                           "type": "string",
                           "format": "date-time",
                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
+                        },
+                        "typeRegisterKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
+                        },
+                        "registerKindSource": {
+                          "type": "string",
+                          "enum": ["type", "entity"]
+                        },
+                        "registerKindLocked": {
+                          "type": "boolean"
+                        },
+                        "registerKindLockReason": {
+                          "type": ["string", "null"]
+                        },
+                        "headOfficeEntityId": {
+                          "type": ["string", "null"]
                         }
                       },
                       "required": [
@@ -88438,7 +88548,13 @@
                         "portalListed",
                         "archivedAt",
                         "createdAt",
-                        "updatedAt"
+                        "updatedAt",
+                        "registerKind",
+                        "typeRegisterKind",
+                        "registerKindSource",
+                        "registerKindLocked",
+                        "registerKindLockReason",
+                        "headOfficeEntityId"
                       ],
                       "additionalProperties": false
                     },

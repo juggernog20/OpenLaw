@@ -556,7 +556,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.taxonomies"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "matter-templates",
@@ -751,7 +751,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.capital", "entities.chart", "entities.links", "entities.access"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "archive-and-delete-documents",

@@ -158,7 +158,7 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
       currentVersion: { id: string };
     }[];
     entities: { id: string; name?: string }[];
-    entity: { id: string };
+    entity: { id: string; registerKind: string };
     officers: unknown[];
     obligations: unknown[];
     shareRegister: unknown;
@@ -466,4 +466,15 @@ it("accepts the maximum Unicode upload metadata in its signed URL", async () => 
   const response = await put(upload, "Unicode metadata");
   expect(response.statusCode, response.body).toBe(201);
   expect(response.json().document.versions[0].note).toBe("界".repeat(2000));
+});
+
+it("reads a non-shares Entity through MCP with its kind and no share register", async () => {
+  const [type] = await h.db.select().from(entityTypes).where(eq(entityTypes.slug, "partnership"));
+  const [entity] = await h.db
+    .insert(entities)
+    .values({ legalName: "MCP Partnership", entityTypeId: type!.id })
+    .returning();
+  const detail = await call(legal, "entity_get", { id: entity!.id });
+  expect(detail.entity.registerKind).toBe("partnership");
+  expect(detail.shareRegister).toBeNull();
 });

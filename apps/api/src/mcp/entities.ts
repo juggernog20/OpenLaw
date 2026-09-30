@@ -64,14 +64,14 @@ export const entityTools: readonly ToolDefinition[] = [
     name: "openlaw_entity_get",
     title: "Read an Entity",
     description:
-      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and share register summary. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
+      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and register. entity.registerKind names the register the Entity keeps (shares, partnership, trust or none); shareRegister is a summary when the kind is shares and null otherwise. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
     inputSchema: getInput,
     outputSchema: z.object({
       entity: recordOutput,
       officers: z.array(recordOutput),
       documents: z.array(recordOutput),
       obligations: z.array(recordOutput),
-      shareRegister: recordOutput,
+      shareRegister: recordOutput.nullable(),
       nextCursor: z.string().nullable(),
     }),
     run: async (input, { db, user }) =>
@@ -82,7 +82,9 @@ export const entityTools: readonly ToolDefinition[] = [
           listEntityOfficers(db, user, args.id),
           listEntityDocuments(db, user, args.id, { cursor: args.cursor }),
           listEntityObligations(db, user, args.id),
-          getEntityShareRegister(db, user, args.id),
+          detail.entity.registerKind === "shares"
+            ? getEntityShareRegister(db, user, args.id)
+            : null,
         ]);
         const page = boundedPage(paper.documents, args.limit, (d) => d.id, paper.nextCursor);
         return bounded({
@@ -90,11 +92,13 @@ export const entityTools: readonly ToolDefinition[] = [
           officers: officers.officers,
           documents: page.items,
           obligations: obligations.obligations,
-          shareRegister: {
-            asOf: register.asOf,
-            totals: register.totals,
-            reconciliation: register.reconciliation,
-          },
+          shareRegister: register
+            ? {
+                asOf: register.asOf,
+                totals: register.totals,
+                reconciliation: register.reconciliation,
+              }
+            : null,
           nextCursor: page.nextCursor,
         });
       }),

@@ -17,11 +17,26 @@
  * timestamp = archived (SET-003).
  */
 
-import { pgTable, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, text, pgTable, uniqueIndex } from "drizzle-orm/pg-core";
 import { taxonomyColumns } from "./helpers.js";
 
-export const entityTypes = pgTable("entity_types", taxonomyColumns(), (table) => [
-  uniqueIndex("entity_types_slug_unique").on(table.slug),
-]);
+export const REGISTER_KINDS = ["shares", "partnership", "trust", "none"] as const;
+export type RegisterKind = (typeof REGISTER_KINDS)[number];
+
+export const entityTypes = pgTable(
+  "entity_types",
+  {
+    ...taxonomyColumns(),
+    registerKind: text("register_kind", { enum: REGISTER_KINDS }).notNull().default("shares"),
+  },
+  (table) => [
+    check(
+      "entity_types_register_kind_check",
+      sql`${table.registerKind} in ('shares', 'partnership', 'trust', 'none')`,
+    ),
+    uniqueIndex("entity_types_slug_unique").on(table.slug),
+  ],
+);
 
 export type EntityType = typeof entityTypes.$inferSelect;

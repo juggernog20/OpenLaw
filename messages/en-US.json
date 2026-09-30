@@ -495,7 +495,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -676,6 +676,12 @@
   },
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
+  },
+  "activity.registerKind.source": {
+    "defaultMessage": "{value, select, type {From the type} entity {Set on this Entity} other {{value}}}"
+  },
+  "activity.registerKind.value": {
+    "defaultMessage": "{value, select, shares {Share register} partnership {Partnership register} trust {Trust register} none {None} other {{value}}}"
   },
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
@@ -5273,6 +5279,24 @@
   "entities.grants.title": {
     "defaultMessage": "Confidential access"
   },
+  "entities.headOffice.change": {
+    "defaultMessage": "Change head office"
+  },
+  "entities.headOffice.clear": {
+    "defaultMessage": "Clear head office"
+  },
+  "entities.headOffice.empty": {
+    "defaultMessage": "This branch has no head office recorded."
+  },
+  "entities.headOffice.noOffice": {
+    "defaultMessage": "No head office"
+  },
+  "entities.headOffice.title": {
+    "defaultMessage": "Head office"
+  },
+  "entities.headOffice.unavailable": {
+    "defaultMessage": "Head office unavailable"
+  },
   "entities.linked.contracts": {
     "defaultMessage": "Contracts"
   },
@@ -6007,6 +6031,54 @@
   },
   "entities.register.wholeNumber": {
     "defaultMessage": "Enter a whole number of zero or more."
+  },
+  "entities.registerKind.change": {
+    "defaultMessage": "Change register"
+  },
+  "entities.registerKind.emptyPartnership": {
+    "defaultMessage": "No partnership entries recorded."
+  },
+  "entities.registerKind.emptyTrust": {
+    "defaultMessage": "No trust entries recorded."
+  },
+  "entities.registerKind.field": {
+    "defaultMessage": "Register"
+  },
+  "entities.registerKind.fromEntity": {
+    "defaultMessage": "{kind} · set on this Entity"
+  },
+  "entities.registerKind.fromType": {
+    "defaultMessage": "{kind} · from the type {type}"
+  },
+  "entities.registerKind.lockReason": {
+    "defaultMessage": "The register kind cannot change while a register holds data."
+  },
+  "entities.registerKind.none": {
+    "defaultMessage": "None"
+  },
+  "entities.registerKind.noneHelp": {
+    "defaultMessage": "No register. Record a head office for a branch."
+  },
+  "entities.registerKind.partnership": {
+    "defaultMessage": "Partnership register"
+  },
+  "entities.registerKind.partnershipHelp": {
+    "defaultMessage": "Partners, their capacity and capital."
+  },
+  "entities.registerKind.saveError": {
+    "defaultMessage": "The Entity could not be updated."
+  },
+  "entities.registerKind.shares": {
+    "defaultMessage": "Share register"
+  },
+  "entities.registerKind.sharesHelp": {
+    "defaultMessage": "Share classes, holders and dated movements of shares."
+  },
+  "entities.registerKind.trust": {
+    "defaultMessage": "Trust register"
+  },
+  "entities.registerKind.trustHelp": {
+    "defaultMessage": "Trust parties, their roles and the trust fund."
   },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
@@ -10927,6 +10999,9 @@
   },
   "settings.entityTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
+  },
+  "settings.entityTypeEditor.registerError": {
+    "defaultMessage": "The register could not be changed."
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"

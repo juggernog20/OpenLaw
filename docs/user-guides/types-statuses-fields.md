@@ -89,6 +89,22 @@ To ask more than one question, select **Add another condition**. The first time,
 
 Rows under a false Branch are not collected or required. Changing an answer can hide later Rows without erasing held answers. On a saved record, a Row with a value remains visible even when its Branch no longer holds, subject to Portal visibility and access rules.
 
+## Choose an Entity type's register
+
+In **Entities Settings**, open a type and use **Register** on **Details**. Choose
+**Share register**, **Partnership register**, **Trust register**, or **None**. The
+selection saves immediately. Corporation, LLC, Other, and new types start with
+Share register. Partnership starts with Partnership register; Branch starts with None.
+
+An Entity inherits this setting unless Legal set its own register kind. A change
+that would switch an Entity with register data is refused. The inline error names
+how many Entities hold data. Archiving a type and reassigning its Entities preserves
+the old register kind on any moved Entity that holds data. Empty Entities follow
+the replacement type. Upgrades also preserve existing share registers.
+
+See [Entity structure and access](entity-structure-and-access.md#choose-the-register-and-head-office)
+for the Entity's override and head office controls.
+
 ## Maintain Officer roles
 
 Open **Entities**, **Director & Officer roles**. Use **Add role**, the row's **Rename** control, and its reorder handle. When archiving an in-use role, select its replacement and confirm **Archive role**. Usage and reassignment include resigned Officer entries as well as current appointments. **Other** cannot be archived. Restoring a role makes it selectable again without reversing the reassignment.

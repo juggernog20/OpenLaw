@@ -2,8 +2,17 @@
 
 /** The Entity type editor, with identity and the DD-028 Form on routed sections. */
 
+import { useState } from "react";
+import {
+  REGISTER_KINDS,
+  registerKindLabels,
+  registerKindDescriptions,
+  type RegisterKind,
+} from "../lib/register-kind";
+import { CONTROL_CLASS } from "../lib/form-controls";
+import { Label } from "../components/ui/label";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { defineMessages } from "react-intl";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 
 import { TypeEditorSections, TypeEditorTabs } from "../components/type-editor-sections";
 import { TypeFormBuilder } from "../components/type-form/builder";
@@ -51,6 +60,67 @@ const EDITOR_API: TypeEditorIdentityApi = {
   },
 };
 
+function RegisterSelect({
+  id,
+  initial,
+  disabled,
+}: {
+  id: string;
+  initial: RegisterKind;
+  disabled: boolean;
+}) {
+  const intl = useIntl();
+  const [kind, setKind] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function save(registerKind: RegisterKind) {
+    setBusy(true);
+    setError(null);
+    const result = await api
+      .PATCH("/api/v1/entity-types/{id}", { params: { path: { id } }, body: { registerKind } })
+      .catch(() => undefined);
+    setBusy(false);
+    if (result?.data) setKind(result.data.entityType.registerKind);
+    else
+      setError(
+        (await problem(result)).detail ??
+          intl.formatMessage({
+            id: "settings.entityTypeEditor.registerError",
+            defaultMessage: "The register could not be changed.",
+          }),
+      );
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor="type-register">
+        <FormattedMessage id="entities.registerKind.field" defaultMessage="Register" />
+      </Label>
+      <select
+        id="type-register"
+        value={kind}
+        disabled={disabled || busy}
+        className={CONTROL_CLASS}
+        onChange={(e) => void save(e.target.value as RegisterKind)}
+        aria-describedby="type-register-help"
+      >
+        {REGISTER_KINDS.map((k) => (
+          <option key={k} value={k}>
+            {intl.formatMessage(registerKindLabels[k])}
+          </option>
+        ))}
+      </select>
+      <p id="type-register-help" className="text-muted">
+        {intl.formatMessage(registerKindDescriptions[kind])}
+      </p>
+      {error ? (
+        <p role="alert" className="text-status-danger-fg">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function SettingsEntityTypeEditorPage() {
   const { entityType, form, catalog } = useLoaderData<typeof settingsEntityTypeEditorLoader>();
   return (
@@ -60,6 +130,14 @@ export function SettingsEntityTypeEditorPage() {
       backPath="/settings/entities/types"
       api={EDITOR_API}
       messages={MESSAGES}
+      identityExtra={
+        <RegisterSelect
+          key={entityType.id}
+          id={entityType.id}
+          initial={entityType.registerKind}
+          disabled={entityType.archivedAt !== null}
+        />
+      }
       sectionContent={
         <TypeEditorSections
           module="entity"

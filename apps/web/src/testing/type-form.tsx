@@ -102,6 +102,7 @@ export function setupForm(
           [`${module}Type`]: {
             id: "t1",
             slug: "test",
+            registerKind: "shares",
             displayName: "Test type",
             description: null,
             archivedAt: null,

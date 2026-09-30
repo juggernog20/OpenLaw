@@ -1881,3 +1881,26 @@ it.each(["contract", "matter"])(
     }
   },
 );
+
+it("narrates an Entity's register kind, its source and head office", () => {
+  const entry: NarratableEntry = {
+    action: "entity.updated",
+    actor: ACTOR,
+    payload: {
+      legalName: "Branch",
+      changed: {
+        registerKind: { from: "shares", to: "none" },
+        registerKindSource: { from: "type", to: "entity" },
+        headOfficeEntityId: { from: "old", to: "new" },
+      },
+    },
+  };
+  expect(
+    narrateActivity(intl, entry, { referenceNames: { old: "Old office", new: "New office" } })
+      .changes,
+  ).toEqual([
+    { label: "Register kind", from: "Share register", to: "None" },
+    { label: "Register kind source", from: "From the type", to: "Set on this Entity" },
+    { label: "Head office", from: "Old office", to: "New office" },
+  ]);
+});

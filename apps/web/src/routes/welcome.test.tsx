@@ -1881,7 +1881,7 @@ const REVIEW_RESPONSES = {
   },
   "/api/v1/contract-types": { contractTypes: [TYPE_ROW] },
   "/api/v1/contract-statuses": { contractStatuses: [{ ...TYPE_ROW, stage: "draft" }] },
-  "/api/v1/entity-types": { entityTypes: [TYPE_ROW] },
+  "/api/v1/entity-types": { entityTypes: [{ ...TYPE_ROW, registerKind: "shares" }] },
   "/api/v1/officer-roles": { officerRoles: [TYPE_ROW] },
   "/api/v1/knowledge/types": { knowledgeTypes: [TYPE_ROW] },
   "/api/v1/request-types": {

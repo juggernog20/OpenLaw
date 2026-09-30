@@ -13,7 +13,8 @@
  * serializes against concurrent registrations and re-types.
  */
 
-import { count, entities, eq, inArray, type Executor } from "@openlaw/db";
+import { count, entities, entityTypes, eq, inArray, type Executor } from "@openlaw/db";
+import { entityRegisterState } from "../../lib/entity-register-kind.js";
 import { recordActivity } from "../../lib/activity.js";
 import type { TaxonomyUsage } from "../../lib/taxonomy-routes.js";
 
@@ -28,11 +29,38 @@ export const entityTypeUsage: TaxonomyUsage = {
   },
 
   async reassign(tx, { from, to, actorId }) {
-    const moved = await tx
-      .update(entities)
-      .set({ entityTypeId: to.id })
-      .where(eq(entities.entityTypeId, from.id))
-      .returning({ id: entities.id, legalName: entities.legalName });
+    const [destination] = await tx.select().from(entityTypes).where(eq(entityTypes.id, to.id));
+    const moved = await tx.select().from(entities).where(eq(entities.entityTypeId, from.id));
+    for (const entity of moved) {
+      const state = await entityRegisterState(tx, entity);
+      const next = entity.registerKind ?? destination!.registerKind;
+      const pin = state.registerKindLocked && next !== state.registerKind;
+      const kind = pin ? state.registerKind : next;
+      const headOffice = kind === "none" ? entity.headOfficeEntityId : null;
+      await tx
+        .update(entities)
+        .set({
+          entityTypeId: to.id,
+          registerKind: pin ? state.registerKind : entity.registerKind,
+          headOfficeEntityId: headOffice,
+        })
+        .where(eq(entities.id, entity.id));
+      const changed: Record<string, { from: unknown; to: unknown }> = {};
+      if (pin) changed.registerKindSource = { from: "type", to: "entity" };
+      if (kind !== state.registerKind)
+        changed.registerKind = { from: state.registerKind, to: kind };
+      if (headOffice !== entity.headOfficeEntityId)
+        changed.headOfficeEntityId = { from: entity.headOfficeEntityId, to: headOffice };
+      if (Object.keys(changed).length)
+        await recordActivity(tx, {
+          entityType: "entity",
+          entityId: entity.id,
+          actorId,
+          action: "entity.updated",
+          visibility: "legal_only",
+          payload: { legalName: entity.legalName, changed },
+        });
+    }
     // Per-entity feed rows (DD-017): the M9 record feed must explain
     // why the type changed. Legal Only, like every registry action
     // (ENT-004); the admin-side story is the system-level
