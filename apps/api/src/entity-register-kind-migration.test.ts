@@ -14,7 +14,7 @@ afterAll(async () => container?.stop());
 it("pins a partnership-typed Entity with share entries on upgrade and still opens its register", async () => {
   const db = await freshDb(container, "register_kind_upgrade");
   try {
-    await migrateThrough(db, "0184_runtime-metrics", migrationEntries());
+    await migrateThrough(db, "0185_holdings-register-only", migrationEntries());
     await db.execute(sql`insert into entities (id, legal_name, entity_type_id)
       select 'existing-partnership', 'Existing Partnership', id from entity_types where slug = 'partnership'`);
     await db.execute(sql`insert into entity_share_classes (id, entity_id, name)

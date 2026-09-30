@@ -1,6 +1,6 @@
 {
-  "id": "78573cb8-02e2-4997-884b-88458d00f36a",
-  "prevId": "a00e3214-7599-40bf-b19a-9c7b0c5bc6ab",
+  "id": "142f59dd-238a-4be4-89c7-eb26b6770b47",
+  "prevId": "78573cb8-02e2-4997-884b-88458d00f36a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -8125,6 +8125,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "register_kind": {
+          "name": "register_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "head_office_entity_id": {
+          "name": "head_office_entity_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "jurisdiction": {
           "name": "jurisdiction",
           "type": "text",
@@ -8280,6 +8292,21 @@
           "concurrently": false,
           "method": "gin",
           "with": {}
+        },
+        "entities_head_office_idx": {
+          "name": "entities_head_office_idx",
+          "columns": [
+            {
+              "expression": "head_office_entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -8288,6 +8315,15 @@
           "tableFrom": "entities",
           "tableTo": "entity_types",
           "columnsFrom": ["entity_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "entities_head_office_entity_id_entities_id_fk": {
+          "name": "entities_head_office_entity_id_entities_id_fk",
+          "tableFrom": "entities",
+          "tableTo": "entities",
+          "columnsFrom": ["head_office_entity_id"],
           "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -8300,6 +8336,14 @@
         "entities_status_check": {
           "name": "entities_status_check",
           "value": "\"entities\".\"status\" in ('active', 'dormant', 'dissolved', 'divested')"
+        },
+        "entities_register_kind_check": {
+          "name": "entities_register_kind_check",
+          "value": "\"entities\".\"register_kind\" in ('shares', 'partnership', 'trust', 'none')"
+        },
+        "entities_head_office_not_self": {
+          "name": "entities_head_office_not_self",
+          "value": "\"entities\".\"head_office_entity_id\" <> \"entities\".\"id\""
         },
         "entities_custom_fields_object": {
           "name": "entities_custom_fields_object",
@@ -9885,6 +9929,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "register_kind": {
+          "name": "register_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'shares'"
         }
       },
       "indexes": {
@@ -9908,7 +9959,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "entity_types_register_kind_check": {
+          "name": "entity_types_register_kind_check",
+          "value": "\"entity_types\".\"register_kind\" in ('shares', 'partnership', 'trust', 'none')"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.fields": {

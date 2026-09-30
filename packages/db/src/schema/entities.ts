@@ -45,7 +45,7 @@ export const entities = pgTable(
     entityTypeId: text("entity_type_id")
       .notNull()
       .references(() => entityTypes.id),
-    /** NULL inherits the type's register kind; a value overrides it (ENT-012). */
+    /** NULL inherits the type's register kind; a value overrides it (ENT-013). */
     registerKind: text("register_kind", { enum: REGISTER_KINDS }),
     /** NULL means no head office; only set while the effective kind is none. */
     headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),

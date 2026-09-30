@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * ENT-012's Ownership controls: register kind and source, the empty-register
+ * ENT-013's Ownership controls: register kind and source, the empty-register
  * change dialog, and head-office selection for Entities that keep no register.
  */
 

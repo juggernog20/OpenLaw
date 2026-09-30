@@ -105,7 +105,7 @@ function entityRecordApi(call: StubCall): Response | undefined {
     return json(200, { entities: [entity] });
   }
   if (call.url.pathname === "/api/v1/entities/e1/holdings") {
-    return json(200, { owners: [], owned: [], warnings: [] });
+    return json(200, { owners: [], owned: [] });
   }
   return undefined;
 }

@@ -84,16 +84,16 @@ The line under **Register as of** compares the register's issued total today wit
 
 ### How the register writes Holdings
 
-After each entry change, OpenLaw rewrites this Entity's owner Holdings from today's register. Each Holder's percentage is its outstanding shares across every class over the Entity's outstanding shares, to two decimals. These Holdings appear on the ownership chart like any other Holding. On an owner Entity's **Holdings in other Entities** card, they show **From register**. You cannot edit them as Holdings; record a register entry instead. Each entry change also appears in the History of this Entity and of each Entity Holder it names.
+After each entry change, OpenLaw rewrites this Entity's owner Holdings from today's register. Each Holder's percentage is its outstanding shares across every class over the Entity's outstanding shares, to two decimals. The register is the only source of Holdings. They appear on the ownership chart and on each owner Entity's **Holdings in other Entities** card, where they show **From register**. You cannot edit them as Holdings; record a register entry instead. Each entry change also appears in the History of this Entity and of each Entity Holder it names.
 
 ## Read the ownership chart
 
-1. Open **Entities** and select **Chart**. Create or correct Holdings through the Entity's [Ownership tab](entity-records.md#add-or-correct-a-holding) or its [share register](#keep-the-share-register).
+1. Open **Entities** and select **Chart**. Create or correct Holdings through the owned Entity's [share register](#keep-the-share-register).
 2. Read the connected Entities and percentages. The chart uses one primary owner to arrange each Entity and draws that Holding as a solid line. Other Holdings remain visible as dashed secondary connections. An Entity with no Holdings appears in a separate row.
 3. Drag to pan or use the mouse wheel to zoom. With the chart focused, use arrow keys to pan, plus or minus to zoom, and zero to fit the chart. **Fit to window** also resets the view.
 4. Click an Entity once, or focus it and press Space, to highlight its ownership chain. Select **Clear highlight** or press Escape to remove the highlight. Double-click an Entity, or focus it and press Enter, to open it. A **Confidential Entity** box is an Entity you cannot reach. It shows no name and does not open.
 
-The chart shows recorded Holdings between registered Entities and their individual owners, including Holdings written from a share register. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission. A warning about ownership totals over 100% means the entries need review; it does not mean they failed to save.
+The chart shows the Holdings that share registers write, between registered Entities and their individual owners. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission.
 
 ## Read linked Contracts and Matters
 

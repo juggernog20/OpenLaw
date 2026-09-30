@@ -457,9 +457,9 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered in the order it was saved, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive */
+    /** The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered furthest first, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive */
     get: operations["getReminderOffsets"];
-    /** Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding, removing, and rearranging are all the same write and each of them applies the moment it is made (SET-003). The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row */
+    /** Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding and removing are the same write and each of them applies the moment it is made (SET-003). The route stores the list furthest first, so the order of the request does not count. The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row */
     put: operations["setReminderOffsets"];
     post?: never;
     delete?: never;
@@ -6682,27 +6682,11 @@ export interface paths {
     };
     get: operations["listEntityHoldings"];
     put?: never;
-    post: operations["createEntityHolding"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  "/api/v1/entities/{id}/holdings/{relatedEntityId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["deleteEntityHolding"];
-    options?: never;
-    head?: never;
-    patch: operations["updateEntityHolding"];
     trace?: never;
   };
   "/api/v1/entities/{id}/share-register/export": {
@@ -36931,8 +36915,6 @@ export interface operations {
               ownerEntityId: string;
               ownedEntityId: string;
               ownershipPercent: number;
-              /** @enum {string} */
-              source: "manual" | "register";
             }[];
           };
         };
@@ -36994,8 +36976,6 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
-              /** @enum {string} */
-              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
@@ -37029,220 +37009,10 @@ export interface operations {
                     restricted: true;
                   };
               ownershipPercent: number;
-              /** @enum {string} */
-              source: "manual" | "register";
               /** Format: date-time */
               createdAt: string;
               /** Format: date-time */
               updatedAt: string;
-            }[];
-            warnings: {
-              /** @enum {string} */
-              code: "ownership-over-100";
-              ownedEntityId: string;
-              legalName: string;
-              totalPercent: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  createEntityHolding: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json":
-          | {
-              /** @enum {string} */
-              direction: "owner" | "owned";
-              relatedEntityId: string;
-              ownershipPercent: number;
-            }
-          | {
-              /** @enum {string} */
-              direction: "owner";
-              individualName: string;
-              ownershipPercent: number;
-            };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            holding: {
-              owner:
-                | {
-                    /** @enum {boolean} */
-                    restricted: false;
-                    id: string;
-                    legalName: string;
-                    /** @enum {string} */
-                    kind?: "individual";
-                  }
-                | {
-                    /** @enum {boolean} */
-                    restricted: true;
-                  };
-              owned:
-                | {
-                    /** @enum {boolean} */
-                    restricted: false;
-                    id: string;
-                    legalName: string;
-                    /** @enum {string} */
-                    kind?: "individual";
-                  }
-                | {
-                    /** @enum {boolean} */
-                    restricted: true;
-                  };
-              ownershipPercent: number;
-              /** @enum {string} */
-              source: "manual" | "register";
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            };
-            warnings: {
-              /** @enum {string} */
-              code: "ownership-over-100";
-              ownedEntityId: string;
-              legalName: string;
-              totalPercent: number;
-            }[];
-          };
-        };
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  deleteEntityHolding: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        relatedEntityId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Default Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Problem details (RFC 9457) */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/problem+json": components["schemas"]["Problem"];
-        };
-      };
-    };
-  };
-  updateEntityHolding: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-        relatedEntityId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          ownershipPercent: number;
-        };
-      };
-    };
-    responses: {
-      /** @description Default Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            holding: {
-              owner:
-                | {
-                    /** @enum {boolean} */
-                    restricted: false;
-                    id: string;
-                    legalName: string;
-                    /** @enum {string} */
-                    kind?: "individual";
-                  }
-                | {
-                    /** @enum {boolean} */
-                    restricted: true;
-                  };
-              owned:
-                | {
-                    /** @enum {boolean} */
-                    restricted: false;
-                    id: string;
-                    legalName: string;
-                    /** @enum {string} */
-                    kind?: "individual";
-                  }
-                | {
-                    /** @enum {boolean} */
-                    restricted: true;
-                  };
-              ownershipPercent: number;
-              /** @enum {string} */
-              source: "manual" | "register";
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            };
-            warnings: {
-              /** @enum {string} */
-              code: "ownership-over-100";
-              ownedEntityId: string;
-              legalName: string;
-              totalPercent: number;
             }[];
           };
         };

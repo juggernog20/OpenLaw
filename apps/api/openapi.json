@@ -2929,7 +2929,7 @@
     "/api/v1/org/reminder-offsets": {
       "get": {
         "operationId": "getReminderOffsets",
-        "summary": "The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered in the order it was saved, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive",
+        "summary": "The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered furthest first, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive",
         "tags": ["org"],
         "responses": {
           "200": {
@@ -2968,7 +2968,7 @@
       },
       "put": {
         "operationId": "setReminderOffsets",
-        "summary": "Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding, removing, and rearranging are all the same write and each of them applies the moment it is made (SET-003). The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row",
+        "summary": "Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding and removing are the same write and each of them applies the moment it is made (SET-003). The route stores the list furthest first, so the order of the request does not count. The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row",
         "tags": ["org"],
         "requestBody": {
           "required": true,
@@ -81623,18 +81623,9 @@
                           },
                           "ownershipPercent": {
                             "type": "number"
-                          },
-                          "source": {
-                            "type": "string",
-                            "enum": ["manual", "register"]
                           }
                         },
-                        "required": [
-                          "ownerEntityId",
-                          "ownedEntityId",
-                          "ownershipPercent",
-                          "source"
-                        ],
+                        "required": ["ownerEntityId", "ownedEntityId", "ownershipPercent"],
                         "additionalProperties": false
                       }
                     }
@@ -81762,10 +81753,6 @@
                           "ownershipPercent": {
                             "type": "number"
                           },
-                          "source": {
-                            "type": "string",
-                            "enum": ["manual", "register"]
-                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -81781,7 +81768,6 @@
                           "owner",
                           "owned",
                           "ownershipPercent",
-                          "source",
                           "createdAt",
                           "updatedAt"
                         ],
@@ -81868,10 +81854,6 @@
                           "ownershipPercent": {
                             "type": "number"
                           },
-                          "source": {
-                            "type": "string",
-                            "enum": ["manual", "register"]
-                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time",
@@ -81887,503 +81869,18 @@
                           "owner",
                           "owned",
                           "ownershipPercent",
-                          "source",
                           "createdAt",
                           "updatedAt"
                         ],
                         "additionalProperties": false
                       }
-                    },
-                    "warnings": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "code": {
-                            "type": "string",
-                            "enum": ["ownership-over-100"]
-                          },
-                          "ownedEntityId": {
-                            "type": "string"
-                          },
-                          "legalName": {
-                            "type": "string"
-                          },
-                          "totalPercent": {
-                            "type": "number"
-                          }
-                        },
-                        "required": ["code", "ownedEntityId", "legalName", "totalPercent"],
-                        "additionalProperties": false
-                      }
                     }
                   },
-                  "required": ["owners", "owned", "warnings"],
+                  "required": ["owners", "owned"],
                   "additionalProperties": false
                 }
               }
             }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "operationId": "createEntityHolding",
-        "tags": ["entities"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "direction": {
-                        "type": "string",
-                        "enum": ["owner", "owned"]
-                      },
-                      "relatedEntityId": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 64
-                      },
-                      "ownershipPercent": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 100
-                      }
-                    },
-                    "required": ["direction", "relatedEntityId", "ownershipPercent"],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "direction": {
-                        "type": "string",
-                        "enum": ["owner"]
-                      },
-                      "individualName": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 200
-                      },
-                      "ownershipPercent": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 100
-                      }
-                    },
-                    "required": ["direction", "individualName", "ownershipPercent"],
-                    "additionalProperties": false
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "holding": {
-                      "type": "object",
-                      "properties": {
-                        "owner": {
-                          "oneOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [false]
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "legalName": {
-                                  "type": "string"
-                                },
-                                "kind": {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                }
-                              },
-                              "required": ["restricted", "id", "legalName"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [true]
-                                }
-                              },
-                              "required": ["restricted"],
-                              "additionalProperties": false
-                            }
-                          ]
-                        },
-                        "owned": {
-                          "oneOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [false]
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "legalName": {
-                                  "type": "string"
-                                },
-                                "kind": {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                }
-                              },
-                              "required": ["restricted", "id", "legalName"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [true]
-                                }
-                              },
-                              "required": ["restricted"],
-                              "additionalProperties": false
-                            }
-                          ]
-                        },
-                        "ownershipPercent": {
-                          "type": "number"
-                        },
-                        "source": {
-                          "type": "string",
-                          "enum": ["manual", "register"]
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        }
-                      },
-                      "required": [
-                        "owner",
-                        "owned",
-                        "ownershipPercent",
-                        "source",
-                        "createdAt",
-                        "updatedAt"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "warnings": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "code": {
-                            "type": "string",
-                            "enum": ["ownership-over-100"]
-                          },
-                          "ownedEntityId": {
-                            "type": "string"
-                          },
-                          "legalName": {
-                            "type": "string"
-                          },
-                          "totalPercent": {
-                            "type": "number"
-                          }
-                        },
-                        "required": ["code", "ownedEntityId", "legalName", "totalPercent"],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["holding", "warnings"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/entities/{id}/holdings/{relatedEntityId}": {
-      "patch": {
-        "operationId": "updateEntityHolding",
-        "tags": ["entities"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "ownershipPercent": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 100
-                  }
-                },
-                "required": ["ownershipPercent"],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "in": "path",
-            "name": "relatedEntityId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Default Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "holding": {
-                      "type": "object",
-                      "properties": {
-                        "owner": {
-                          "oneOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [false]
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "legalName": {
-                                  "type": "string"
-                                },
-                                "kind": {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                }
-                              },
-                              "required": ["restricted", "id", "legalName"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [true]
-                                }
-                              },
-                              "required": ["restricted"],
-                              "additionalProperties": false
-                            }
-                          ]
-                        },
-                        "owned": {
-                          "oneOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [false]
-                                },
-                                "id": {
-                                  "type": "string"
-                                },
-                                "legalName": {
-                                  "type": "string"
-                                },
-                                "kind": {
-                                  "type": "string",
-                                  "enum": ["individual"]
-                                }
-                              },
-                              "required": ["restricted", "id", "legalName"],
-                              "additionalProperties": false
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "restricted": {
-                                  "type": "boolean",
-                                  "enum": [true]
-                                }
-                              },
-                              "required": ["restricted"],
-                              "additionalProperties": false
-                            }
-                          ]
-                        },
-                        "ownershipPercent": {
-                          "type": "number"
-                        },
-                        "source": {
-                          "type": "string",
-                          "enum": ["manual", "register"]
-                        },
-                        "createdAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        }
-                      },
-                      "required": [
-                        "owner",
-                        "owned",
-                        "ownershipPercent",
-                        "source",
-                        "createdAt",
-                        "updatedAt"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "warnings": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "code": {
-                            "type": "string",
-                            "enum": ["ownership-over-100"]
-                          },
-                          "ownedEntityId": {
-                            "type": "string"
-                          },
-                          "legalName": {
-                            "type": "string"
-                          },
-                          "totalPercent": {
-                            "type": "number"
-                          }
-                        },
-                        "required": ["code", "ownedEntityId", "legalName", "totalPercent"],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["holding", "warnings"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Problem details (RFC 9457)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "operationId": "deleteEntityHolding",
-        "tags": ["entities"],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "in": "path",
-            "name": "id",
-            "required": true
-          },
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "in": "path",
-            "name": "relatedEntityId",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Default Response"
           },
           "default": {
             "description": "Problem details (RFC 9457)",

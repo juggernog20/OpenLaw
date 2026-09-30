@@ -390,40 +390,6 @@ describe("the Entity Ownership tab as a share register", () => {
     await waitFor(() => expect(within(entries).getAllByRole("row").slice(1)).toHaveLength(3));
   });
 
-  it("keeps projected owners out of the declared-owner list", async () => {
-    const projected = (name: string, id: string, source: "register" | "manual") => ({
-      owner: { restricted: false, id, legalName: name, kind: "individual" },
-      owned: { restricted: false, id: "e1", legalName: "Calloway Capital Partners Ltd" },
-      ownershipPercent: 10,
-      source,
-      createdAt: "2026-08-01T00:00:00.000Z",
-      updatedAt: "2026-08-01T00:00:00.000Z",
-    });
-    const api = registerApi();
-    stubApi({
-      signedIn: MEMBER,
-      extra: (call) => {
-        if (call.url.pathname === "/api/v1/entities/e1/holdings" && call.method === "GET") {
-          return json(200, {
-            owners: [
-              projected("Devon Calloway", "individual:p1", "register"),
-              projected("Old Founder", "individual:p2", "manual"),
-            ],
-            owned: [],
-            warnings: [],
-          });
-        }
-        return api.handler(call);
-      },
-    });
-    renderAt("/entities/e1/ownership");
-    const declared = (
-      await screen.findByRole("heading", { name: "Declared owners not in the register" })
-    ).closest("section")!;
-    expect(within(declared).getByText("Old Founder")).toBeInTheDocument();
-    expect(within(declared).queryByText("Devon Calloway")).not.toBeInTheDocument();
-  });
-
   it("opens on the empty state, with Record entry waiting on a share class", async () => {
     stubApi({ signedIn: MEMBER, extra: registerApi({ empty: true }).handler });
     renderAt("/entities/e1/ownership");
@@ -435,7 +401,8 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(screen.getByRole("button", { name: "New share class" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Record entry" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add Holding" })).toBeInTheDocument();
+    expect(screen.getByText(/A Holding appears here when the share register/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add Holding" })).not.toBeInTheDocument();
   });
 
   it("keeps a holder the viewer cannot see when an entry is edited", async () => {

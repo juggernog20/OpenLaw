@@ -110,7 +110,6 @@ describe("the Entity Ownership tab", () => {
                 updatedAt: "2026-08-01T00:00:00.000Z",
               },
             ],
-            warnings: [],
           });
         }
         return undefined;
@@ -121,99 +120,52 @@ describe("the Entity Ownership tab", () => {
     expect(screen.queryByRole("link", { name: /Restricted Entity/ })).not.toBeInTheDocument();
   });
 
-  it("shows both directions, edits and removes inline, adds through the combobox, and warns", async () => {
-    const originalOwner = holding("parent", "current", 60);
-    const originalChild = holding("current", "child", 100);
-    let owners = [originalOwner];
-    let owned = [originalChild];
-    let warnings: Array<Record<string, unknown>> = [];
-    const writes: Array<{ method: string; path: string; body: unknown }> = [];
+  it("lists Holdings in other Entities read-only, with no way to type a Holding", async () => {
     stubApi({
       signedIn: MEMBER,
       extra: (call) => {
         const record = recordReads(call);
         if (record) return record;
         if (call.url.pathname === "/api/v1/entities/current/holdings" && call.method === "GET") {
-          return json(200, { owners, owned, warnings });
-        }
-        if (
-          call.url.pathname === "/api/v1/entities/current/holdings/parent" &&
-          call.method === "PATCH"
-        ) {
-          writes.push({ method: call.method, path: call.url.pathname, body: call.body });
-          owners = [{ ...originalOwner, ...(call.body as object) }];
-          return json(200, { holding: owners[0], warnings: [] });
-        }
-        if (
-          call.url.pathname === "/api/v1/entities/current/holdings/child" &&
-          call.method === "DELETE"
-        ) {
-          writes.push({ method: call.method, path: call.url.pathname, body: call.body });
-          owned = [];
-          return new Response(null, { status: 204 });
-        }
-        if (call.url.pathname === "/api/v1/entities/current/holdings" && call.method === "POST") {
-          writes.push({ method: call.method, path: call.url.pathname, body: call.body });
-          const created = holding("other", "current", 50);
-          owners = [...owners, created];
-          warnings = [
-            {
-              code: "ownership-over-100",
-              ownedEntityId: "current",
-              legalName: "UK Subsidiary",
-              totalPercent: 110,
-            },
-          ];
-          return json(201, { holding: created, warnings });
+          return json(200, {
+            owners: [holding("parent", "current", 60)],
+            owned: [holding("current", "child", 75.5)],
+          });
         }
         return undefined;
       },
     });
     renderAt("/entities/current/ownership");
-    const user = userEvent.setup();
 
-    // ENT-011: the register owns the owners side; hand-typed Holdings that
-    // predate it list as declared owners, and the owned side keeps its card.
+    // ENT-012: the register is the one source of a Holding. The owners
+    // side is the Register of members; the owned side only reads.
+    const owned = (
+      await screen.findByRole("heading", { name: "Holdings in other Entities" })
+    ).closest("section")!;
+    expect(within(owned).getByRole("link", { name: "UAE Subsidiary" })).toHaveAttribute(
+      "href",
+      "/entities/child",
+    );
+    expect(within(owned).getByRole("link", { name: "From register" })).toHaveAttribute(
+      "href",
+      "/entities/child/ownership",
+    );
+    expect(within(owned).getByLabelText("UAE Subsidiary ownership percent")).toHaveTextContent(
+      "75.5%",
+    );
+    expect(within(owned).queryByRole("spinbutton")).not.toBeInTheDocument();
+    expect(within(owned).queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add Holding" })).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("heading", { name: "Declared owners not in the register" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
-    expect(screen.getAllByText("Delaware Parent")).toHaveLength(2);
-    expect(screen.getByText("UAE Subsidiary")).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "Declared owners not in the register" }),
+    ).not.toBeInTheDocument();
 
+    // The record's sub-bar still names the majority owner from the projection.
     const subbar = screen.getByRole("region", { name: "UK Subsidiary" });
     expect(within(subbar).getByRole("link", { name: "Delaware Parent" })).toHaveAttribute(
       "href",
       "/entities/parent",
     );
-
-    const percent = screen.getByLabelText("Delaware Parent ownership percent");
-    await user.clear(percent);
-    await user.type(percent, "55");
-    await user.tab();
-    await waitFor(() => expect(writes[0]?.body).toEqual({ ownershipPercent: 55 }));
-
-    await user.click(screen.getByRole("button", { name: "Remove UAE Subsidiary" }));
-    await waitFor(() => expect(writes[1]?.method).toBe("DELETE"));
-    expect(screen.queryByText("UAE Subsidiary")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Add Holding" }));
-    const picker = screen.getByRole("combobox", { name: "Entity" });
-    expect(picker).toHaveAttribute("aria-controls");
-    expect(picker).toHaveAttribute("aria-expanded", "false");
-    await user.type(picker, "Other");
-    expect(picker).toHaveAttribute("aria-expanded", "true");
-    await user.keyboard("{ArrowDown}{Enter}");
-    await user.clear(screen.getByLabelText("Ownership percent"));
-    await user.type(screen.getByLabelText("Ownership percent"), "50");
-    await user.click(screen.getByRole("button", { name: "Add" }));
-
-    expect(await screen.findByText("Ownership totals 110% for UK Subsidiary.")).toBeInTheDocument();
-    expect(writes[2]?.body).toEqual({
-      direction: "owner",
-      relatedEntityId: "other",
-      ownershipPercent: 50,
-    });
   });
 });
 
@@ -367,65 +319,6 @@ function node(row: ReturnType<typeof entity>) {
     status: row.status,
   };
 }
-
-it("adds an individual by name without requiring an Entity lookup and edits their percentage", async () => {
-  const writes: StubCall[] = [];
-  const person = {
-    ...holding("parent", "current", 25),
-    owner: {
-      restricted: false,
-      kind: "individual",
-      id: "individual:person",
-      legalName: "Alex Morgan",
-    },
-  };
-  stubApi({
-    signedIn: MEMBER,
-    extra: (call) => {
-      const base = recordReads(call);
-      if (base) return base;
-      if (call.url.pathname === "/api/v1/entities/current/holdings") {
-        if (call.method === "GET") return json(200, { owners: [], owned: [], warnings: [] });
-        writes.push(call);
-        return json(201, { holding: person, warnings: [] });
-      }
-      if (
-        decodeURIComponent(call.url.pathname) ===
-        "/api/v1/entities/current/holdings/individual:person"
-      ) {
-        writes.push(call);
-        return json(200, { holding: { ...person, ownershipPercent: 30 }, warnings: [] });
-      }
-      return undefined;
-    },
-  });
-  renderAt("/entities/current/ownership");
-  const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Add Holding" }));
-  const dialog = await screen.findByRole("dialog", { name: "Add Holding" });
-  expect(within(dialog).getByRole("combobox", { name: "Entity" })).toBeVisible();
-  await user.click(within(dialog).getByRole("radio", { name: "Individual" }));
-  expect(within(dialog).queryByRole("combobox", { name: "Entity" })).not.toBeInTheDocument();
-  expect(within(dialog).queryByLabelText("Relationship")).not.toBeInTheDocument();
-  await user.type(within(dialog).getByLabelText("Full name"), "Alex Morgan");
-  const percent = within(dialog).getByLabelText("Ownership percent");
-  await user.clear(percent);
-  await user.type(percent, "25");
-  await user.click(within(dialog).getByRole("button", { name: "Add" }));
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(writes[0]?.body).toEqual({
-    direction: "owner",
-    individualName: "Alex Morgan",
-    ownershipPercent: 25,
-  });
-  expect(screen.getByText("Alex Morgan")).toBeVisible();
-  expect(screen.queryByRole("link", { name: "Alex Morgan" })).not.toBeInTheDocument();
-  const savedPercent = screen.getByRole("spinbutton", { name: "Alex Morgan ownership percent" });
-  await user.clear(savedPercent);
-  await user.type(savedPercent, "30");
-  await user.tab();
-  await waitFor(() => expect(writes[1]?.body).toEqual({ ownershipPercent: 30 }));
-});
 
 it("labels an individual in the chart and opens their Holding instead of a nonexistent Entity", async () => {
   const chart = {

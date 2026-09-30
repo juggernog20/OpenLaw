@@ -110,7 +110,7 @@ One of _our own_ corporate entities — a subsidiary, holding company, or branch
 _Avoid_: company, organisation, party, counterparty, subsidiary
 
 **Holding**:
-A directional ownership fact recording the percentage one owner holds of an Entity. The owner is another Entity or an individual, recorded by name only, with no Entity or user account. Holdings form the ownership graph; they do not make either party a child record. Where an Entity keeps a share register, its owner Holdings are projected from it, marked From register and read-only [ENT-003, ENT-011, DES-088].
+A directional ownership fact recording the percentage one owner holds of an Entity. The owner is another Entity or an individual, recorded by name only, with no Entity or user account. Holdings form the ownership graph; they do not make either party a child record. Every Holding is projected from the owned Entity's share register, marked From register and read-only. No Holding is typed by hand [ENT-003, ENT-011, ENT-012, DES-088].
 _Avoid_: parent link, ownership relation, shareholding record
 
 **Share class**:
@@ -130,35 +130,35 @@ A numbered share certificate for one Holder and Share class, with its quantity a
 _Avoid_: share cert, stock certificate
 
 **Register kind**:
-Which ownership register an Entity keeps: `shares`, `partnership`, `trust` or `none`. A fixed enum on the Entity type, overridable per Entity; the effective kind cannot change while the Entity's registers hold data [ENT-012].
+Which ownership register an Entity keeps: `shares`, `partnership`, `trust` or `none`. A fixed enum on the Entity type, overridable per Entity; the effective kind cannot change while the Entity's registers hold data [ENT-013].
 _Avoid_: ownership type, register type, ledger mode
 
 **Head office**:
-The Entity a `none`-kind Entity, a branch or representative office, belongs to. A branch is not owned by its head office; the chart hangs it under the head office with no percentage [ENT-012].
+The Entity a `none`-kind Entity, a branch or representative office, belongs to. A branch is not owned by its head office; the chart hangs it under the head office with no percentage [ENT-013].
 _Avoid_: parent, owner, head entity
 
 **Partner**:
-A party on an Entity's partnership register: an Entity from the registry or a named individual, with a capacity of general or limited and a status of admitted, assignee or ceased. A Partner exists because a Partnership entry names it [ENT-013].
+A party on an Entity's partnership register: an Entity from the registry or a named individual, with a capacity of general or limited and a status of admitted, assignee or ceased. A Partner exists because a Partnership entry names it [ENT-014].
 _Avoid_: member, LP, GP, investor, holder
 
 **Partnership entry**:
-One dated change on an Entity's partnership register: an admission, commitment, contribution, return, transfer, capacity change or withdrawal, with its party or parties, capacity, units, stated percent, amount and reference. The Register of partners is a replay of entries to a date [ENT-013].
+One dated change on an Entity's partnership register: an admission, commitment, contribution, return, transfer, capacity change or withdrawal, with its party or parties, capacity, units, stated percent, amount and reference. The Register of partners is a replay of entries to a date [ENT-014].
 _Avoid_: capital event, transaction, ledger line
 
 **Ownership basis**:
-The rule a partnership-kind Entity names for projecting its Register of partners into Holdings: unreturned capital, units, the stated percent, or equal shares among admitted Partners [ENT-013].
+The rule a partnership-kind Entity names for projecting its Register of partners into Holdings: unreturned capital, units, the stated percent, or equal shares among admitted Partners [ENT-014].
 _Avoid_: profit share, allocation, split
 
 **Trust party**:
-A party on an Entity's trust register: an Entity from the registry, a named individual, or a described class of beneficiaries. A Trust party exists because a Role entry names it [ENT-014].
+A party on an Entity's trust register: an Entity from the registry, a named individual, or a described class of beneficiaries. A Trust party exists because a Role entry names it [ENT-015].
 _Avoid_: member, holder, stakeholder
 
 **Role**:
-What a Trust party holds on the trust register: settlor, trustee, protector, enforcer, beneficiary, or other with a label. One party may hold several Roles; a class may hold beneficiary only [ENT-014].
+What a Trust party holds on the trust register: settlor, trustee, protector, enforcer, beneficiary, or other with a label. One party may hold several Roles; a class may hold beneficiary only [ENT-015].
 _Avoid_: position, title, capacity
 
 **Role entry**:
-One dated change on an Entity's trust register: an appointment or cessation of a Role, or a settlement into or distribution out of the trust fund. The Register of trust parties is a replay of entries to a date; a settlement opens the settlor Role for its party [ENT-014].
+One dated change on an Entity's trust register: an appointment or cessation of a Role, or a settlement into or distribution out of the trust fund. The Register of trust parties is a replay of entries to a date; a settlement opens the settlor Role for its party [ENT-015].
 _Avoid_: trust event, transaction
 
 **Registration**:

@@ -38,7 +38,7 @@ import { EntityGrantsDialog } from "../components/entities/entity-grants-dialog"
 import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
 import { RegisterKindPanel } from "../components/entities/register-kind-panel";
-import { OwnershipCard } from "../components/entities/ownership-card";
+import { OwnedHoldingsCard } from "../components/entities/owned-holdings-card";
 import { ShareRegisterTab } from "../components/entities/share-register-tab";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
@@ -821,19 +821,7 @@ function EntityRecord() {
                         )}
                       </section>
                     ) : null}
-                    <OwnershipCard
-                      entity={saved}
-                      candidates={loaded.entities}
-                      initial={loaded.holdings}
-                      frozen={frozen}
-                      showOwners={false}
-                      ownedTitle={
-                        <FormattedMessage
-                          id="entities.register.owned"
-                          defaultMessage="Holdings in other Entities"
-                        />
-                      }
-                    />
+                    <OwnedHoldingsCard rows={loaded.holdings.owned} />
                   </>
                 )}
               </>

@@ -68,9 +68,9 @@ const chart: EntityChart = {
     node("other"),
   ],
   edges: [
-    { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 80, source: "manual" },
-    { ownerEntityId: "parent", ownedEntityId: "sibling", ownershipPercent: 100, source: "manual" },
-    { ownerEntityId: "child", ownedEntityId: "secret", ownershipPercent: 100, source: "manual" },
+    { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 80 },
+    { ownerEntityId: "parent", ownedEntityId: "sibling", ownershipPercent: 100 },
+    { ownerEntityId: "child", ownedEntityId: "secret", ownershipPercent: 100 },
   ],
 };
 const records = new Map(
@@ -175,8 +175,8 @@ describe("custom chart exports", () => {
     const joint: EntityChart = {
       nodes: [node("parent"), node("other"), node("child", "parent")],
       edges: [
-        { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 60, source: "manual" },
-        { ownerEntityId: "other", ownedEntityId: "child", ownershipPercent: 40, source: "manual" },
+        { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 60 },
+        { ownerEntityId: "other", ownedEntityId: "child", ownershipPercent: 40 },
       ],
     };
     const output = createChartExportModel({
@@ -309,7 +309,6 @@ it("exports individual owner names without fetching a fictitious Entity record",
         ownerEntityId: "individual:alex",
         ownedEntityId: "company",
         ownershipPercent: 100,
-        source: "manual",
       },
     ],
   };

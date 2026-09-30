@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * ENT-012's effective register kind, data lock, and head-office guards.
+ * ENT-013's effective register kind, data lock, and head-office guards.
  * Mutations take a transaction-scoped advisory lock shared with ENT-011's
  * share-register writes before locking type or Entity rows.
  */
