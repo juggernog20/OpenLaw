@@ -554,7 +554,10 @@ export function taxonomyRoutes<
             if (!source) throw httpError(404, `No ${noun} exists with this id.`);
             if (source.archivedAt)
               throw httpError(409, `Restore this ${noun} before duplicating it.`);
-            const displayName = `${source.displayName} (copy)`;
+            // The copy must still pass DisplayNameSchema on a later rename,
+            // so a long source name gives up room for the suffix.
+            const suffix = " (copy)";
+            const displayName = source.displayName.slice(0, 100 - suffix.length).trimEnd() + suffix;
             const { slug, displayOrder } = nextIdentity(existing, displayName);
             const form = await readTypeForm(tx, duplicateModule, source.id);
             const [created] = await tx

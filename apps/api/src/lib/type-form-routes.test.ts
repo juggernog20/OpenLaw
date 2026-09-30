@@ -487,6 +487,36 @@ it.each(["contract", "matter"] as const)(
 );
 
 it.each(["contract", "matter", "entity"] as const)(
+  "keeps a duplicated %s name inside the display-name limit",
+  async (module) => {
+    const id = await createType(module);
+    const longName = "N".repeat(100);
+    const renamed = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${module}-types/${id}`,
+      cookies,
+      payload: { displayName: longName },
+    });
+    expect(renamed.statusCode, renamed.body).toBe(200);
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    const copy = res.json()[`${module}Type`];
+    expect(copy.displayName).toBe(`${"N".repeat(93)} (copy)`);
+    const resaved = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${module}-types/${copy.id}`,
+      cookies,
+      payload: { displayName: copy.displayName },
+    });
+    expect(resaved.statusCode, resaved.body).toBe(200);
+  },
+);
+
+it.each(["contract", "matter", "entity"] as const)(
   "refuses an archived %s source and requires an Administrator",
   async (module) => {
     const id = await createType(module);
