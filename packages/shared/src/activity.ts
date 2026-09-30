@@ -597,6 +597,33 @@ type EntityPayloads = {
     toName: string | null;
     effectiveOn: string;
   };
+  "entity_trust_entry.created": {
+    legalName: string;
+    trustId: string;
+    trustName: string;
+    entryNo: number;
+    kind: string;
+    effectiveOn: string;
+    changed: ChangedFields;
+  };
+  "entity_trust_entry.updated": {
+    legalName: string;
+    trustId: string;
+    trustName: string;
+    entryNo: number;
+    kind: string;
+    effectiveOn: string;
+    changed: ChangedFields;
+  };
+  "entity_trust_entry.deleted": {
+    legalName: string;
+    trustId: string;
+    trustName: string;
+    entryNo: number;
+    kind: string;
+    effectiveOn: string;
+    changed: ChangedFields;
+  };
   "entity_obligation.created": {
     legalName: string;
     obligationId: string;

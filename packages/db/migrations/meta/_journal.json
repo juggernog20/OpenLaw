@@ -1310,6 +1310,13 @@
       "when": 1790805371023,
       "tag": "0186_register-kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 187,
+      "version": "7",
+      "when": 1790806761757,
+      "tag": "0187_ancient_thunderbolt",
+      "breakpoints": true
     }
   ]
 }

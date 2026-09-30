@@ -6785,6 +6785,70 @@ export interface paths {
     patch: operations["updateEntityShareEntry"];
     trace?: never;
   };
+  "/api/v1/entities/{id}/trust-register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityTrustRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/trust-register/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["exportEntityTrustRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/trust-entries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createEntityTrustEntry"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/trust-entries/{entryId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityTrustEntry"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityTrustEntry"];
+    trace?: never;
+  };
   "/api/v1/entities/{id}/officers": {
     parameters: {
       query?: never;
@@ -38082,6 +38146,565 @@ export interface operations {
               className: string;
               issued: number;
               authorized: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  getEntityTrustRegister: {
+    parameters: {
+      query?: {
+        asOf?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            parties: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            partiesToday: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "appointment" | "cessation" | "settlement" | "distribution";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              role:
+                ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
+              roleLabel: string | null;
+              interest: string | null;
+              amount: number | null;
+              currency: string | null;
+              property: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            fund: {
+              currency: string;
+              settled: number;
+              distributed: number;
+              balance: number;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "fund-negative";
+              currency: string;
+              balance: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportEntityTrustRegister: {
+    parameters: {
+      query: {
+        kind: "parties" | "entries";
+        asOf?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityTrustEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "appointment" | "cessation" | "settlement" | "distribution";
+          /** Format: date */
+          effectiveOn: string;
+          party:
+            | {
+                /** @enum {string} */
+                kind: "party";
+                partyId: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "entity";
+                entityId: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "individual";
+                name: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "class";
+                description: string;
+              };
+          role?:
+            ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
+          roleLabel?: string | null;
+          interest?: string | null;
+          amount?: number | null;
+          currency?: string | null;
+          property?: string | null;
+          reference?: string | null;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            parties: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            partiesToday: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "appointment" | "cessation" | "settlement" | "distribution";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              role:
+                ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
+              roleLabel: string | null;
+              interest: string | null;
+              amount: number | null;
+              currency: string | null;
+              property: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            fund: {
+              currency: string;
+              settled: number;
+              distributed: number;
+              balance: number;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "fund-negative";
+              currency: string;
+              balance: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityTrustEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityTrustEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "appointment" | "cessation" | "settlement" | "distribution";
+          /** Format: date */
+          effectiveOn: string;
+          party:
+            | {
+                /** @enum {string} */
+                kind: "party";
+                partyId: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "entity";
+                entityId: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "individual";
+                name: string;
+              }
+            | {
+                /** @enum {string} */
+                kind: "class";
+                description: string;
+              };
+          role?:
+            ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
+          roleLabel?: string | null;
+          interest?: string | null;
+          amount?: number | null;
+          currency?: string | null;
+          property?: string | null;
+          reference?: string | null;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            parties: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            partiesToday: {
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+              interest: string | null;
+              /** Format: date */
+              since: string;
+              until: string | null;
+              open: boolean;
+              openToday: boolean;
+            }[];
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind: "appointment" | "cessation" | "settlement" | "distribution";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              role:
+                ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
+              roleLabel: string | null;
+              interest: string | null;
+              amount: number | null;
+              currency: string | null;
+              property: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            fund: {
+              currency: string;
+              settled: number;
+              distributed: number;
+              balance: number;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "fund-negative";
+              currency: string;
+              balance: number;
             }[];
           };
         };
