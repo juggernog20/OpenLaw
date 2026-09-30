@@ -3827,6 +3827,55 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       className: named(intl, payload, "className"),
     }),
   },
+  "entity_trust_entry.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.created",
+      defaultMessage: "{actor} recorded entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+  },
+  "entity_trust_entry.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.updated",
+      defaultMessage: "{actor} changed entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_trust_entry.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.deleted",
+      defaultMessage: "{actor} removed entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+  },
   "entity_obligation.created": {
     icon: CalendarPlus,
     message: defineMessage({

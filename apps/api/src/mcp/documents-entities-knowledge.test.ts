@@ -162,6 +162,7 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
     officers: unknown[];
     obligations: unknown[];
     shareRegister: unknown;
+    trustRegister: unknown;
     results: { id: string }[];
     knowledgeItem: { body: string };
     text: { text: string };
@@ -477,4 +478,44 @@ it("reads a non-shares Entity through MCP with its kind and no share register", 
   const detail = await call(legal, "entity_get", { id: entity!.id });
   expect(detail.entity.registerKind).toBe("partnership");
   expect(detail.shareRegister).toBeNull();
+});
+
+it("reads the trust register summary through MCP and redacts an unreached Entity party", async () => {
+  const [type] = await h.db.select().from(entityTypes).limit(1);
+  const [trust, party] = await h.db
+    .insert(entities)
+    .values([
+      { legalName: "MCP Family Trust", entityTypeId: type!.id, registerKind: "trust" as const },
+      { legalName: "MCP Secret Settlor", entityTypeId: type!.id },
+    ])
+    .returning();
+  const settled = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${trust!.id}/trust-entries`,
+    cookies,
+    payload: {
+      kind: "settlement",
+      effectiveOn: "2024-01-01",
+      party: { kind: "entity", entityId: party!.id },
+      amount: 10000,
+      currency: "USD",
+    },
+  });
+  expect(settled.statusCode, settled.body).toBe(201);
+  await h.db.update(entities).set({ isConfidential: true }).where(eq(entities.id, party!.id));
+  const detail = await call(legal, "entity_get", { id: trust!.id });
+  expect(detail.entity.registerKind).toBe("trust");
+  expect(detail.shareRegister).toBeNull();
+  expect(detail.trustRegister).toMatchObject({
+    parties: [
+      expect.objectContaining({
+        role: "settlor",
+        party: { restricted: true, id: expect.any(String) },
+      }),
+    ],
+    fund: [{ currency: "USD", settled: 10000, distributed: 0, balance: 10000 }],
+    warnings: [],
+  });
+  expect(JSON.stringify(detail)).not.toContain("MCP Secret Settlor");
+  await refused(business, "entity_get", { id: trust!.id }, "tool_outside_grant");
 });

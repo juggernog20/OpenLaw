@@ -60,6 +60,7 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
 import { entityHoldingRoutes } from "./holding-routes.js";
+import { entityTrustRegisterRoutes } from "./trust-register-routes.js";
 import { entityShareRegisterRoutes } from "./share-register-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
 import { entityGrantRoutes } from "./grant-routes.js";
@@ -165,6 +166,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityGrantRoutes);
   await app.register(entityHoldingRoutes);
   await app.register(entityShareRegisterRoutes);
+  await app.register(entityTrustRegisterRoutes);
   await app.register(entityRecordChildRoutes);
 
   app.get(

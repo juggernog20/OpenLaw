@@ -4,6 +4,7 @@ import { listEntities, getEntity, EntityListQuery } from "../modules/entities/se
 import { listPortalEntities } from "../lib/portal-entities.js";
 import { listEntityOfficers } from "../modules/entities/record-routes.js";
 import { listEntityObligations } from "../modules/entities/obligation-routes.js";
+import { getEntityTrustRegister } from "../modules/entities/trust-register-routes.js";
 import { getEntityShareRegister } from "../modules/entities/share-register-routes.js";
 import { listEntityDocuments } from "../modules/documents/service.js";
 import { bounded, boundedPage, pageInput, serviceResult } from "./results.js";
@@ -64,7 +65,7 @@ export const entityTools: readonly ToolDefinition[] = [
     name: "openlaw_entity_get",
     title: "Read an Entity",
     description:
-      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and register. entity.registerKind names the register the Entity keeps (shares, partnership, trust or none); shareRegister is a summary when the kind is shares and null otherwise. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
+      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and register. entity.registerKind names the register the Entity keeps (shares, partnership, trust or none); shareRegister is a summary when the kind is shares; trustRegister carries current roles and the fund when the kind is trust. Each is null for other kinds. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
     inputSchema: getInput,
     outputSchema: z.object({
       entity: recordOutput,
@@ -72,19 +73,21 @@ export const entityTools: readonly ToolDefinition[] = [
       documents: z.array(recordOutput),
       obligations: z.array(recordOutput),
       shareRegister: recordOutput.nullable(),
+      trustRegister: recordOutput.nullable(),
       nextCursor: z.string().nullable(),
     }),
     run: async (input, { db, user }) =>
       serviceResult(async () => {
         const args = getInput.parse(input);
         const detail = await getEntity(db, user, args.id);
-        const [officers, paper, obligations, register] = await Promise.all([
+        const [officers, paper, obligations, register, trust] = await Promise.all([
           listEntityOfficers(db, user, args.id),
           listEntityDocuments(db, user, args.id, { cursor: args.cursor }),
           listEntityObligations(db, user, args.id),
           detail.entity.registerKind === "shares"
             ? getEntityShareRegister(db, user, args.id)
             : null,
+          detail.entity.registerKind === "trust" ? getEntityTrustRegister(db, user, args.id) : null,
         ]);
         const page = boundedPage(paper.documents, args.limit, (d) => d.id, paper.nextCursor);
         return bounded({
@@ -97,6 +100,14 @@ export const entityTools: readonly ToolDefinition[] = [
                 asOf: register.asOf,
                 totals: register.totals,
                 reconciliation: register.reconciliation,
+              }
+            : null,
+          trustRegister: trust
+            ? {
+                asOf: trust.asOf,
+                parties: trust.partiesToday,
+                fund: trust.fund,
+                warnings: trust.warnings,
               }
             : null,
           nextCursor: page.nextCursor,

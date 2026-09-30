@@ -27,8 +27,8 @@ type Payload = Record<string, unknown>;
 
 /** What one entry names on its far side, and which keys carry it. */
 interface FarReference {
-  kind: "contract" | "matter" | "entity";
-  /** The number of a Contract or Matter, or the legal name of an Entity. */
+  kind: "contract" | "matter" | "entity" | "entityId";
+  /** The number of a Contract or Matter, or the legal name or id of an Entity. */
   identity: number | string;
   /** The payload keys that name the far record. */
   keys: readonly string[];
@@ -74,6 +74,12 @@ function farReferenceOf(action: string, payload: Payload): FarReference | null {
     case "matter.parent_removed":
       return isNumber(payload.parentNumber)
         ? { kind: "matter", identity: payload.parentNumber, keys: PARENT_KEYS }
+        : null;
+    case "entity_trust_entry.created":
+    case "entity_trust_entry.updated":
+    case "entity_trust_entry.deleted":
+      return isString(payload.trustId)
+        ? { kind: "entityId", identity: payload.trustId, keys: ["trustId", "trustName", "changed"] }
         : null;
     case "entity_holding.created":
     case "entity_holding.updated":
@@ -127,8 +133,9 @@ export async function redactUnreachedReferences<T extends { action: string; payl
   const contractNumbers = identitiesOf("contract", isNumber);
   const matterNumbers = identitiesOf("matter", isNumber);
   const entityNames = identitiesOf("entity", isString);
+  const entityIds = identitiesOf("entityId", isString);
 
-  const [reachedContracts, reachedMatters, reachedEntities] = await Promise.all([
+  const [reachedContracts, reachedMatters, reachedEntities, reachedEntityIds] = await Promise.all([
     contractNumbers.length === 0
       ? []
       : db
@@ -147,11 +154,18 @@ export async function redactUnreachedReferences<T extends { action: string; payl
           .select({ legalName: entities.legalName })
           .from(entities)
           .where(and(inArray(entities.legalName, entityNames), entityReachScope(db, user))),
+    entityIds.length === 0
+      ? []
+      : db
+          .select({ id: entities.id })
+          .from(entities)
+          .where(and(inArray(entities.id, entityIds), entityReachScope(db, user))),
   ]);
   const reached: Record<FarReference["kind"], Set<number | string>> = {
     contract: new Set(reachedContracts.map((row) => row.number)),
     matter: new Set(reachedMatters.map((row) => row.number)),
     entity: new Set(reachedEntities.map((row) => row.legalName)),
+    entityId: new Set(reachedEntityIds.map((row) => row.id)),
   };
 
   return entries.map((entry, index) => {

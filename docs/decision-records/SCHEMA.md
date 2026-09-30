@@ -1663,3 +1663,29 @@ Claude Code. Microsoft 365 Copilot starts without a client id.
 `allowed_client_links` maps plugin client ids to the Allowed Client. A published
 ChatGPT identity can own many connection ids. `org_settings` adds
 `mcp_dynamic_client_registration_enabled`, false by default.
+
+### The trust register (ENT-015, M45/2)
+
+Migration `0187_ancient_thunderbolt` adds `entity_register_parties`, shared with the
+forthcoming partnership register, `entity_register_entry_counters` keyed by Entity
+and register, and `entity_trust_entries`. Parties carry exactly one registry Entity,
+individual name, or class description. Each entry references its party through the
+composite `(entity_id, id)` key. The counter survives deletion of every entry.
+
+Role entries carry a role (and a label for `other`); settlements and distributions
+carry either positive minor-unit money with a currency or property text. CHECKs
+bound the stored numbers and text and enforce those shapes. Replay enforces the
+class-beneficiary rule and role history, derives settlors, and computes the fund
+per currency without valuing property. An aggregate beyond the safe integer range
+is refused; a negative fund warns and commits. No trust write projects Holdings.
+
+`GET /entities/:id/trust-register?asOf=` returns role intervals begun by the date
+with `since`, `until`, `open` and `openToday`, current open roles in `partiesToday`,
+every entry with an `applied` flag, and dated fund totals and warnings. Creates use
+`POST /entities/:id/trust-entries`; full entry replacements and deletion use
+`PATCH` and `DELETE /entities/:id/trust-entries/:entryId`. A party input names an
+existing register party by `partyId`, a registry Entity by `entityId`, an individual
+by `name`, or a class by `description`; names never merge distinct individuals.
+Every write validates the full future history in its transaction and prunes
+unreferenced parties. CSV exports share the read's restricted-party projection.
+The MCP Entity summary carries current roles, fund totals and warnings for trusts.
