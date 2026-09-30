@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-015: record or edit a role entry, preserving the party on restricted reads. */
+
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
@@ -87,6 +90,15 @@ export function TrustEntryDialog({
         intl.formatMessage({
           id: "entities.trust.entry.partyRequired",
           defaultMessage: "Choose a party and fill in its details.",
+        }),
+      );
+      return;
+    }
+    if (!roleEntry && form === "money" && !currency) {
+      setError(
+        intl.formatMessage({
+          id: "entities.trust.entry.currencyRequired",
+          defaultMessage: "Choose a currency for the amount.",
         }),
       );
       return;

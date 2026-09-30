@@ -6140,6 +6140,9 @@
   "entities.trust.entry.amountPrecision": {
     "defaultMessage": "Enter a positive amount with up to {digits} decimal places."
   },
+  "entities.trust.entry.currencyRequired": {
+    "defaultMessage": "Choose a currency for the amount."
+  },
   "entities.trust.entry.partyRequired": {
     "defaultMessage": "Choose a party and fill in its details."
   },

@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-015 response types and the localized vocabulary for the trust register. */
+
 import type { paths } from "@openlaw/api-client";
 import { defineMessages, type IntlShape } from "react-intl";
 

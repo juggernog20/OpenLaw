@@ -28,7 +28,7 @@ test("Trust register tab and entry dialogs are axe clean in Light and Dark", asy
     const body = (await response.json()) as { user: Record<string, unknown> };
     await route.fulfill({ response, json: { ...body, user: { ...body.user, theme } } });
   });
-  const scan = async (state: string, include = '[data-testid="trust-register"]') => {
+  const scan = async (state: string, include = '[aria-label="Trust register"]') => {
     expect(
       await reportAxeViolations(page, testInfo, `trust-register-${theme}-${state}`, { include }),
     ).toEqual([]);

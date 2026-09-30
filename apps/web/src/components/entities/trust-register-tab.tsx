@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** DES-095: dated trust parties, the fund ledger, entries and owned Holdings. */
+
 import { useId, useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -224,7 +227,13 @@ export function TrustRegisterTab({
     </Button>
   );
   return (
-    <div className="flex flex-col gap-4" data-testid="trust-register">
+    <section
+      className="flex flex-col gap-4"
+      aria-label={intl.formatMessage({
+        id: "entities.registerKind.trust",
+        defaultMessage: "Trust register",
+      })}
+    >
       {empty ? (
         <section className="flex flex-col items-center gap-3 rounded-card border border-border-default bg-raised px-6 py-14 text-center">
           <h2 className="text-md font-semibold">
@@ -325,7 +334,7 @@ export function TrustRegisterTab({
               </ExportLink>
             </header>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[800px] text-sm">
+              <table className="w-full min-w-200 text-sm">
                 <thead>
                   <tr className="text-xs text-muted">
                     <Header>
@@ -487,7 +496,7 @@ export function TrustRegisterTab({
             </div>
             {shown.length ? (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px] text-sm">
+                <table className="w-full min-w-250 text-sm">
                   <thead>
                     <tr className="text-xs text-muted">
                       <Header>
@@ -643,6 +652,6 @@ export function TrustRegisterTab({
           onConfirm={() => remove(removing)}
         />
       ) : null}
-    </div>
+    </section>
   );
 }

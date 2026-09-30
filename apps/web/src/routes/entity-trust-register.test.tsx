@@ -375,6 +375,11 @@ describe("the trust Ownership tab", () => {
         await user.selectOptions(within(dialog).getByLabelText(/^Entity/), "e2");
       else await user.type(within(dialog).getByLabelText(/^Full name/), "New Settlor");
       await user.type(within(dialog).getByLabelText(/^Amount/), "1200.251");
+      await user.click(within(dialog).getByRole("button", { name: "Enter in register" }));
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+        "Choose a currency for the amount.",
+      );
+      expect(api.writes).toHaveLength(0);
       await user.selectOptions(within(dialog).getByLabelText(/^Currency/), "USD");
       await user.click(within(dialog).getByRole("button", { name: "Enter in register" }));
       expect(await within(dialog).findByRole("alert")).toHaveTextContent("up to 2 decimal places");
