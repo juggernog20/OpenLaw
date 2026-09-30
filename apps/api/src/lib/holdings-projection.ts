@@ -5,11 +5,9 @@
  *
  * After every entry write on an issuer, its owner Holdings are rewritten
  * from today's holders: each holder's outstanding shares across every
- * class over the issuer's outstanding shares, to two decimals. Rows
- * written here carry `source = register` and refuse the hand-typed
- * routes. A manual row for an owner the register now names is replaced,
- * and each change is one `entity_holding.*` Activity entry, so the
- * projection reads like the hand-typed writes it stands in for.
+ * class over the issuer's outstanding shares, to two decimals. This is
+ * the only writer of a Holding (ENT-012). Each change is one
+ * `entity_holding.*` Activity entry.
  *
  * Runs inside the register write's transaction, under the Holdings
  * advisory lock, so the ownership graph the cycle check reads is the
@@ -98,7 +96,6 @@ export async function projectRegisterHoldings(
       ownerEntityId: entityHoldings.ownerEntityId,
       ownerName: entities.legalName,
       ownershipPercent: entityHoldings.ownershipPercent,
-      source: entityHoldings.source,
     })
     .from(entityHoldings)
     .innerJoin(entities, eq(entityHoldings.ownerEntityId, entities.id))
@@ -112,35 +109,29 @@ export async function projectRegisterHoldings(
     const next = wantedByEntity.get(row.ownerEntityId);
     if (next) {
       const from = Number(row.ownershipPercent);
-      if (from !== next.percent || row.source !== "register") {
+      if (from !== next.percent) {
         await tx
           .update(entityHoldings)
-          .set({
-            ownershipPercent: String(next.percent),
-            source: "register",
-            updatedAt: new Date(),
-          })
+          .set({ ownershipPercent: String(next.percent), updatedAt: new Date() })
           .where(
             and(
               eq(entityHoldings.ownerEntityId, row.ownerEntityId),
               eq(entityHoldings.ownedEntityId, issuer.id),
             ),
           );
-        if (from !== next.percent) {
-          await recordHoldingActivity(tx, {
-            action: "entity_holding.updated",
-            actorId,
-            ownerId: row.ownerEntityId,
-            ownerName: row.ownerName,
-            ownedId: issuer.id,
-            ownedName: issuer.legalName,
-            from,
-            to: next.percent,
-          });
-        }
+        await recordHoldingActivity(tx, {
+          action: "entity_holding.updated",
+          actorId,
+          ownerId: row.ownerEntityId,
+          ownerName: row.ownerName,
+          ownedId: issuer.id,
+          ownedName: issuer.legalName,
+          from,
+          to: next.percent,
+        });
       }
       wantedByEntity.delete(row.ownerEntityId);
-    } else if (row.source === "register") {
+    } else {
       await tx
         .delete(entityHoldings)
         .where(
@@ -165,7 +156,6 @@ export async function projectRegisterHoldings(
       ownerEntityId,
       ownedEntityId: issuer.id,
       ownershipPercent: String(next.percent),
-      source: "register",
     });
     await recordHoldingActivity(tx, {
       action: "entity_holding.created",
@@ -184,7 +174,6 @@ export async function projectRegisterHoldings(
       id: individualHoldings.id,
       name: individualHoldings.name,
       ownershipPercent: individualHoldings.ownershipPercent,
-      source: individualHoldings.source,
       shareholderId: individualHoldings.shareholderId,
     })
     .from(individualHoldings)
@@ -193,7 +182,6 @@ export async function projectRegisterHoldings(
     [...wanted.values()].filter((row) => !row.holderEntityId).map((row) => [row.holderId, row]),
   );
   for (const row of individuals) {
-    if (row.source !== "register" || !row.shareholderId) continue;
     const next = wantedByHolder.get(row.shareholderId);
     if (next) {
       const from = Number(row.ownershipPercent);
@@ -240,13 +228,12 @@ export async function projectRegisterHoldings(
           ownedEntityId: issuer.id,
           name: next.name,
           ownershipPercent: String(next.percent),
-          source: "register" as const,
           shareholderId: next.holderId,
         })),
       )
       .returning({ id: individualHoldings.id, shareholderId: individualHoldings.shareholderId });
     for (const row of rows) {
-      const next = wantedByHolder.get(row.shareholderId!)!;
+      const next = wantedByHolder.get(row.shareholderId)!;
       await recordHoldingActivity(tx, {
         action: "entity_holding.created",
         actorId,
@@ -260,7 +247,3 @@ export async function projectRegisterHoldings(
     }
   }
 }
-
-/** Refused by the hand-typed routes: the register, not a percent field, is the place to change it. */
-export const DERIVED_HOLDING =
-  "This Holding is derived from the share register. Record an entry there instead.";
