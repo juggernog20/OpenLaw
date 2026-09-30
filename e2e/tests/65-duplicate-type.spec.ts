@@ -82,15 +82,27 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     });
     await attempt(async () => {
       if (!requestTypeId) return;
-      const listed = await page.request.get("/api/v1/request-types");
-      expect(listed.status()).toBe(200);
-      const replacement = z
-        .object({ requestTypes: z.array(z.object({ id: z.string(), slug: z.string() })) })
-        .parse(await listed.json())
-        .requestTypes.find((type) => type.slug === "nda_request");
-      expect(replacement).toBeDefined();
+      let replacementId: string | undefined;
+      if (requestNumber !== undefined) {
+        const listed = await page.request.get("/api/v1/request-types");
+        expect(listed.status()).toBe(200);
+        replacementId = z
+          .object({ requestTypes: z.array(z.object({ id: z.string() })) })
+          .parse(await listed.json())
+          .requestTypes.find((type) => type.id !== requestTypeId)?.id;
+        // Retained Requests need a live type even on a Start blank install.
+        if (!replacementId) {
+          const created = await page.request.post("/api/v1/request-types", {
+            data: { displayName: "E2E retained Requests" },
+          });
+          expect(created.status(), await created.text()).toBe(201);
+          replacementId = z
+            .object({ requestType: z.object({ id: z.string() }) })
+            .parse(await created.json()).requestType.id;
+        }
+      }
       const archived = await page.request.post(`/api/v1/request-types/${requestTypeId}/archive`, {
-        data: { reassignToId: replacement!.id },
+        data: replacementId ? { reassignToId: replacementId } : {},
       });
       expect(archived.status(), await archived.text()).toBe(200);
     });
@@ -242,7 +254,7 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     await expect(page.getByRole("button", { name: /^Duplicate / }).last()).toHaveAccessibleName(
       `Duplicate ${sourceName} (copy)`,
     );
-    await page.getByRole("link", { name: `Edit ${sourceName} (copy)`, exact: true }).click();
+    await page.getByRole("button", { name: `Edit ${sourceName} (copy)`, exact: true }).click();
     await page.getByRole("link", { name: "Form", exact: true }).click();
     await expect(branch.getByRole("group", { name: "Governing law", exact: true })).toBeVisible();
     expect(await formControls(page)).toEqual(sourceForm);
@@ -259,7 +271,13 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     const approverGroup = page.getByLabel("Approver group", { exact: true });
     await expect(approverGroup).toBeEnabled();
     await expect(approverGroup).toHaveValue("");
-    await expect(approverGroup.locator("option:checked")).toHaveText("No default group");
+    await expect(
+      approverGroup.getByRole("option", {
+        name: "No default group",
+        exact: true,
+        selected: true,
+      }),
+    ).toHaveText("No default group");
     await page.getByRole("link", { name: "Details", exact: true }).click();
     await page.getByLabel("Display name", { exact: true }).fill(renamed);
     await saveChange(page, `/api/v1/contract-types/${copyId}`, "PATCH", () =>
@@ -353,7 +371,7 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     await expect(
       page.getByRole("heading", { name: "Add and maintain types", exact: true }),
     ).toBeVisible();
-    const duplicateGuide = page.locator("p").filter({ hasText: "select Duplicate beside Archive" });
+    const duplicateGuide = page.getByText("select Duplicate beside Archive", { exact: false });
     await expect(duplicateGuide).toContainText('" (copy)"');
     await expect(duplicateGuide).toContainText("Rows, switches, and Branches");
     await expect(duplicateGuide).toContainText(
@@ -369,9 +387,10 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
 });
 
 async function formControls(page: Page) {
-  return page
-    .getByRole("region", { name: "Form", exact: true })
-    .locator('[role="group"], [role="switch"]')
+  const form = page.getByRole("region", { name: "Form", exact: true });
+  return form
+    .getByRole("group")
+    .or(form.getByRole("switch"))
     .evaluateAll((elements) =>
       elements.map((element) => ({
         role: element.getAttribute("role"),
