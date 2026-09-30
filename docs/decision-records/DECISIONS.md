@@ -1395,7 +1395,7 @@ The browser acceptance journey is `e2e/tests/61-m39-type-form.spec.ts`. It build
 - Identity. Display name is the source name plus " (copy)", the slug is derived by the ordinary create rule, the description is copied, the row appends to the display order. `is_system_default` is false, `is_default` is false, and the row is live. Duplicating the Default type gives a plain type.
 - Form. A full copy of the source Form: every Row with its switches, every Branch with its condition group, and the same order and nesting. Field Rows attach the same catalog Fields. Built-in Rows copy their switch values. An Entity Form copies its Rows, Required values and Branches.
 - Nothing else copies. Contract type default people (CTR-026) and the default approver group (CTR-012) stay on the source. Request types keep their destination. Records keep their type. Auto-Docs keep their target type. Matter templates keep their type.
-- The action lives in the row menu of the types list, beside Archive, and opens the new type's editor so the next step is the rename. An archived type cannot be duplicated; restore it first.
+- The action is an icon button in the row's trailing actions on the types list, beside Archive, and opens the new type's editor so the next step is the rename. An archived type cannot be duplicated; restore it first.
 
 **Alternatives considered.**
 
@@ -1403,7 +1403,7 @@ The browser acceptance journey is `e2e/tests/61-m39-type-form.spec.ts`. It build
 - One bulk endpoint that sets a Row across many types, with a Rows-by-types grid on the Fields page. Deferred. It is the right shape if the per-type edit pain returns, and it can be added without touching duplicate.
 - A shared Form section that many types link to. Rejected for the reason inheritance from the Default type was rejected above.
 
-**Consequences.** One route per module, `POST /{module}-types/{id}/duplicate`, on the taxonomy factory, reading the source Form with the same code as `GET /{module}-types/{id}/form` and writing it with the same code as the `PUT`. No schema change. An `*.duplicated` activity entry. The three type settings guides gain a line.
+**Consequences.** One route per module, `POST /{module}-types/{id}/duplicate`, on the taxonomy factory, reading the source Form with the same code as `GET /{module}-types/{id}/form` and writing it with the same code as the `PUT`. No schema change. A `<module>_type.duplicated` activity entry. The types guide gains a paragraph.
 
 ### Rationale
 
