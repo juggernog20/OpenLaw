@@ -5463,6 +5463,40 @@ The close journey builds the renewals question with a Governing law condition an
 
 The build reviews left these follow-ups open: entering a leading minus clears a number input; a results-page notice covers dropped Fields but not removed standard properties; the active saved-search identity ends when the dialog closes, so reopening then choosing Save search starts Save as. The possible alternative of ANDing Show flags regardless of Match any is a product call under DOC-009. This record describes the current behavior and does not adopt those changes.
 
+## DES-095: The Ownership tab draws the register the Entity's kind names (extends DES-088; amends DES-032 for the type editor)
+
+- **Status:** Accepted. Built to this record and to DES-088's anatomy; the `designs/entities.pen` frames follow when the mocks are next touched.
+- **Date:** 2026-09-30
+- **Source:** ENT-012 to ENT-014, `ENTITY-REGISTERS-RESEARCH.md`
+
+### Context
+
+DES-088 draws one Ownership tab: a share register read as of a date. ENT-012 gives each Entity a register kind, and ENT-013 and ENT-014 add a partnership register and a trust register. The three registers share one reading order, because a person who has learned the share register should recognise the other two. Only the words and the columns change. A `none` Entity has nothing to replay and needs one card that says so.
+
+### Decision
+
+**The kind line.** Every Ownership tab opens with one muted line above the first card: the register in use and where it came from, "Share register · from the type Corporation" or "Trust register · set on this Entity", and a secondary Change register button. The button opens a DES-017 dialog with the four kinds as a radio list, each with a one-line description, and a note that the choice locks once the register holds an entry. The button is disabled, with that note as its tooltip, when any register holds data. Choosing the kind the type already names clears the override, so the line reads "from the type" again.
+
+**Partnership register.** DES-088's order, with these words. "Register as of" and its timeline are unchanged. In place of the reconciliation line, one DES-005 note states the ownership basis: "Ownership by unreturned capital · AED" with a secondary Change basis control that opens a four-option radio dialog, and the `stated-total` warning when the typed percentages do not sum to 100. "Register of partners" replaces "Register of members": Partner (the DES-018 avatar, the name, and the muted "Entity · jurisdiction" or "Individual" line), Capacity as a DES-005 pill (General assigned, Limited neutral, Assignee muted), Units, Committed, Contributed, Returned, Unreturned, % by the basis, Partner since, and Change to today when historic. A totals row closes the table on the section-header surface. The meta line reads "N partners · derived from N register entries". "Register of partnership entries" replaces the allotments card: #, Date, Entry as a pill (admission info, commitment neutral, contribution assigned, return severe, transfer neutral, capacity change info, withdrawal danger), From, To, Capacity, Units, %, Amount in the mono face with the currency, Consideration, Reference. The filter bar carries Entry, Partner and Effective date. Record entry is one dialog whose fields change with the kind, on the C10 spec, in the order kind, date, party or from and to, capacity, units, percent, amount, form, consideration, reference, note. "Holdings in other Entities" closes the tab, unchanged.
+
+**Trust register.** The same order. In place of the reconciliation line, one note states the trust fund: "Settled 1,200,000 AED · Distributed 300,000 AED · Fund 900,000 AED", one sentence per currency, with the `fund-negative` warning when distributions exceed settlements. "Register of trust parties" groups rows by role in the fixed order Settlors, Trustees, Protectors, Enforcers, Beneficiaries, Other, each group with a section-header row. Columns: Party (avatar, name, and the muted "Entity · jurisdiction", "Individual" or "Class" line; a class shows its description as the name), Role detail (the interest text, or the label for Other), Since, Until when historic, Reference, and Change to today when historic. The meta line reads "N parties · N roles · derived from N register entries". "Register of trust entries": #, Date, Entry as a pill (appointment info, cessation danger, settlement assigned, distribution severe), Party, Role, Amount or property, Reference. The filter bar carries Entry, Role, Party and Effective date. Record entry is one dialog, fields by kind, in the order kind, date, party, role and label, interest, amount or property, reference, note. The party picker offers Entity, Individual and, for the beneficiary role, Class with a description field. "Holdings in other Entities" closes the tab. The Add Holding control on the owners side is absent on a trust; the tab says in one sentence that a trust has no percentage owners and points to the register.
+
+**No register.** A `none` Entity shows the kind line and one DES-005 card, "Head office", with the head office Entity as a DES-018 row and a Change control that opens the registry picker, or an empty state that says the branch has no head office recorded. "Holdings in other Entities" still closes the tab.
+
+**Empty states.** A partnership or trust register with no entry shows the kind line, the empty state with Record entry, and the Holdings card, without the timeline or the note, as DES-088 does for an empty share register.
+
+**The type editor.** The Entities Settings type editor gains a Register field under the type's name and description: a select with Share register, Partnership register, Trust register and None, each with its one-line description. A refused change shows the API's problem detail inline, naming how many Entities hold data under the current register.
+
+**The chart.** Role edges are dashed in the muted foreground with the role as a small label at the mid-point and no percentage; individual and class parties are terminal nodes in the individual style, a class with a dotted border. Branch edges are solid in the muted foreground with the label "Branch" and no percentage. The legend gains both. The export dialog carries them in the PNG and SVG.
+
+### Rationale
+
+One anatomy, three vocabularies. The date scrubber, the derived-register card, the entries card with the filter bar and the owned card are the parts DES-088 already tested, and the research found nothing in the law that a different layout would serve better. The kind line is the one new element; it answers "why am I looking at trustees" before the person reads a column.
+
+### Consequences
+
+`share-register-tab.tsx` keeps its shape; the partnership and trust tabs are siblings that reuse its timeline, its filter bar mount and its card order. The Record entry dialogs are kind-switched forms, as the share entry dialog already is. The ownership chart gains two edge styles and two node styles. No new tokens or primitives.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                                                             |
@@ -5561,6 +5595,7 @@ The build reviews left these follow-ups open: entering a leading minus clears a 
 | DES-092 | The MCP screens, the consent page, and the pinned "Your approvals" group                                                                                             | Accepted; drawn as `designs/mcp.pen` MC1 to MC6 before the record                                                                                  |
 | DES-093 | A2 · Console+ is the shared HTML email layout                                                                                                                        | Accepted; amends DES-051; briefing anatomy recorded in NOT-006                                                                                     |
 | DES-094 | Advanced search dialog, question chips, and saved and recent searches                                                                                                | Accepted                                                                                                                                           |
+| DES-095 | The Ownership tab draws the register the Entity's kind names (extends DES-088; amends DES-032 for the type editor)                                                   | Accepted                                                                                                                                           |
 
 ### DES-036 addendum, 2026-09-26, #1178. Preparation acceptance interface
 

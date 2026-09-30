@@ -129,6 +129,38 @@ _Avoid_: shareholder record, member, investor, owner
 A numbered share certificate for one Holder and Share class, with its quantity and distinctive numbers, issued by one Register entry and cancelled by at most one [ENT-011].
 _Avoid_: share cert, stock certificate
 
+**Register kind**:
+Which ownership register an Entity keeps: `shares`, `partnership`, `trust` or `none`. A fixed enum on the Entity type, overridable per Entity; the effective kind cannot change while the Entity's registers hold data [ENT-012].
+_Avoid_: ownership type, register type, ledger mode
+
+**Head office**:
+The Entity a `none`-kind Entity, a branch or representative office, belongs to. A branch is not owned by its head office; the chart hangs it under the head office with no percentage [ENT-012].
+_Avoid_: parent, owner, head entity
+
+**Partner**:
+A party on an Entity's partnership register: an Entity from the registry or a named individual, with a capacity of general or limited and a status of admitted, assignee or ceased. A Partner exists because a Partnership entry names it [ENT-013].
+_Avoid_: member, LP, GP, investor, holder
+
+**Partnership entry**:
+One dated change on an Entity's partnership register: an admission, commitment, contribution, return, transfer, capacity change or withdrawal, with its party or parties, capacity, units, stated percent, amount and reference. The Register of partners is a replay of entries to a date [ENT-013].
+_Avoid_: capital event, transaction, ledger line
+
+**Ownership basis**:
+The rule a partnership-kind Entity names for projecting its Register of partners into Holdings: unreturned capital, units, the stated percent, or equal shares among admitted Partners [ENT-013].
+_Avoid_: profit share, allocation, split
+
+**Trust party**:
+A party on an Entity's trust register: an Entity from the registry, a named individual, or a described class of beneficiaries. A Trust party exists because a Role entry names it [ENT-014].
+_Avoid_: member, holder, stakeholder
+
+**Role**:
+What a Trust party holds on the trust register: settlor, trustee, protector, enforcer, beneficiary, or other with a label. One party may hold several Roles; a class may hold beneficiary only [ENT-014].
+_Avoid_: position, title, capacity
+
+**Role entry**:
+One dated change on an Entity's trust register: an appointment or cessation of a Role, or a settlement into or distribution out of the trust fund. The Register of trust parties is a replay of entries to a date; a settlement opens the settlor Role for its party [ENT-014].
+_Avoid_: trust event, transaction
+
 **Registration**:
 One jurisdiction where an Entity is registered or qualified to do business, with its own registration number, registered agent, and active, lapsed, or withdrawn status. Formation jurisdiction stays on the Entity [ENT-002].
 _Avoid_: formation, licence, incorporation
