@@ -341,7 +341,7 @@ await resolveVapid().catch((error: unknown) => {
 const metrics = createRuntimeMetrics({ servesRequests: true });
 const app = await buildApp(
   {
-    // Development-only until the complete DocuSign flow is released.
+    // On unless SIGNING_PREPARATION_ENABLED=false (#1237); read above.
     signingPreparationEnabled,
     db,
     config: {
