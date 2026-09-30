@@ -5,10 +5,11 @@
  * NOT-004), at the HTTP seam.
  *
  * The pane behind these routes edits one global list of lead times,
- * applied to every tracked date. Adding, removing, and rearranging are
- * all the same write — the whole list, sent at the moment the change is
- * made (SET-003) — so this suite asserts the list the routes keep, the
- * role gate in front of them, and the audit entry each write leaves.
+ * applied to every tracked date. Adding and removing are the same
+ * write — the whole list, sent at the moment the change is made
+ * (SET-003) — so this suite asserts the list the routes keep, the role
+ * gate in front of them, and the audit entry each write leaves. The
+ * routes keep the list furthest first (NOT-004 addendum, 2026-09-30).
  *
  * **The last block is the one that matters.** A settings pane that
  * changed a stored number and nothing else would be a pane nobody could
@@ -120,9 +121,11 @@ describe("GET /org/reminder-offsets", () => {
     expect((await getOffsets(adminCookies)).json()).toEqual({ offsets: [7, 1, 0] });
   });
 
-  it("answers the saved order, not a sorted one", async () => {
-    await setOffsets([0, 1, 30]);
-    expect((await getOffsets(adminCookies)).json()).toEqual({ offsets: [0, 1, 30] });
+  it("answers furthest first, whatever order the column holds", async () => {
+    // A list saved before 2026-09-30 kept the order an Administrator
+    // dragged it into. The read sorts it, so no migration is needed.
+    await harness.db.update(orgSettings).set({ reminderOffsetDays: [0, 30, 1] });
+    expect((await getOffsets(adminCookies)).json()).toEqual({ offsets: [30, 1, 0] });
   });
 
   it("drops a stored value no round could fire on", async () => {
@@ -156,13 +159,17 @@ describe("PUT /org/reminder-offsets", () => {
     expect(await setOffsets([30, 7, 0])).toEqual([30, 7, 0]);
   });
 
-  it("keeps a rearranged list in the order it was sent", async () => {
+  it("stores the list furthest first, whatever order it was sent in", async () => {
     await setOffsets([30, 7, 0]);
-    expect(await setOffsets([0, 30, 7])).toEqual([0, 30, 7]);
-    expect((await getOffsets(adminCookies)).json()).toEqual({ offsets: [0, 30, 7] });
+    expect(await setOffsets([0, 45, 7])).toEqual([45, 7, 0]);
+    expect((await getOffsets(adminCookies)).json()).toEqual({ offsets: [45, 7, 0] });
+    const [row] = await harness.db
+      .select({ stored: orgSettings.reminderOffsetDays })
+      .from(orgSettings);
+    expect(row!.stored).toEqual([45, 7, 0]);
   });
 
-  it("collapses a duplicate to its first position", async () => {
+  it("collapses a duplicate to one lead time", async () => {
     expect(await setOffsets([7, 1, 7, 0])).toEqual([7, 1, 0]);
   });
 
@@ -212,14 +219,11 @@ describe("the DD-017 audit trail", () => {
     expect(rows[0]!.actorId).not.toBeNull();
   });
 
-  it("narrates a rearrangement, because the stored order is the saved one", async () => {
+  it("does not narrate the same lead times sent in another order", async () => {
     await setOffsets([60, 14, 1]);
     const before = (await settingsRows()).length;
-    await setOffsets([1, 14, 60]);
-
-    const rows = (await settingsRows()).slice(before);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.payload).toMatchObject({ old: [60, 14, 1], new: [1, 14, 60] });
+    expect(await setOffsets([1, 14, 60])).toEqual([60, 14, 1]);
+    expect(await settingsRows()).toHaveLength(before);
   });
 
   it("does not narrate a save that changes nothing", async () => {
