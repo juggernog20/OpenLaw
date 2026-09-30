@@ -13,6 +13,10 @@ This file records the notable changes in each OpenLaw release. The format follow
 - Add Holding and the Declared owners not in the register card are gone from the Entity Ownership tab. The share register is the only source of a Holding. Holdings in other Entities is a read-only list, and each row links to the register that wrote it. (#1240)
 - The API no longer accepts `POST`, `PATCH` or `DELETE` on `/api/v1/entities/{id}/holdings`. The Holdings response no longer carries `source` or `warnings`, and a chart edge no longer carries `source`. (#1240)
 
+### Security
+
+- brace-expansion moves to 2.1.6 and 5.0.11 or later for GHSA-qhr7-859c-m2p7, a denial of service through nested brace groups. Only development tooling and the API test suite used the old versions. (#1240)
+
 ## 0.3.0 - 2026-09-29
 
 ### Upgrading
