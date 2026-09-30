@@ -1,5 +1,5 @@
 {
-  "id": "a5552868-4547-4765-9f0f-1029d6d777b7",
+  "id": "78573cb8-02e2-4997-884b-88458d00f36a",
   "prevId": "a00e3214-7599-40bf-b19a-9c7b0c5bc6ab",
   "version": "7",
   "dialect": "postgresql",
@@ -10114,6 +10114,7 @@
             }
           ],
           "isUnique": true,
+          "where": "\"individual_holdings\".\"shareholder_id\" is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}

@@ -89,8 +89,8 @@ const classes = new Map<string, string>();
 
 /**
  * Allots `quantity` shares of `owned` to a holder, on one Ordinary class
- * per Entity. Percentages in these tests are the allotted shares over
- * 100, so each register is filled to 100 shares.
+ * per Entity. A holder's percentage is its allotted shares over the
+ * register's total, so a test fills each register to a round number.
  */
 async function allot(
   owned: { id: string },

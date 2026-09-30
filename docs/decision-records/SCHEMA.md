@@ -1645,7 +1645,7 @@ Migration 0159 removes this earlier design after 0157 moved its questions to bui
 
 ### The share register (ENT-011)
 
-The five `entity_share_*` tables above. The Register of members is not a table: the API replays an Entity's entries to a date, ordered by `effective_on` then `entry_no`, and answers balances per Holder per class, treasury per class, issued and outstanding per class, votes, live certificates and member-since dates. Every write replays the register with the change applied and refuses negative balances, non-live certificate cancellations and ownership cycles. `entity_holdings.source` and `individual_holdings.source` (`manual|register`) plus `individual_holdings.shareholder_id` mark the rows the register projects; those rows refuse PATCH and DELETE.
+The five `entity_share_*` tables above. The Register of members is not a table: the API replays an Entity's entries to a date, ordered by `effective_on` then `entry_no`, and answers balances per Holder per class, treasury per class, issued and outstanding per class, votes, live certificates and member-since dates. Every write replays the register with the change applied and refuses negative balances, non-live certificate cancellations and ownership cycles. Every Holding is a projection of a register (ENT-012): `entity_holdings` rows for Entity holders, `individual_holdings` rows for named holders, each carrying the required, unique `individual_holdings.shareholder_id` it follows.
 
 ### `individual_holdings`
 

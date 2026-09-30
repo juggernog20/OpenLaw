@@ -35,6 +35,10 @@ export const individualHoldings = pgTable(
       sql`${table.ownershipPercent} >= 0 and ${table.ownershipPercent} <= 100`,
     ),
     check("individual_holdings_name_length", sql`length(trim(${table.name})) between 1 and 200`),
-    uniqueIndex("individual_holdings_shareholder_idx").on(table.shareholderId),
+    // The predicate is redundant since 0185 made the column required, and
+    // kept so the upgrade does not rebuild the index under an exclusive lock.
+    uniqueIndex("individual_holdings_shareholder_idx")
+      .on(table.shareholderId)
+      .where(sql`${table.shareholderId} is not null`),
   ],
 );
