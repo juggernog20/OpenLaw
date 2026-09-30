@@ -188,6 +188,19 @@ export const SIGNING_NOT_CONFIGURED_PROBLEM_TYPE = "urn:openlaw:problem:signing-
 export const ENVELOPE_LIVE_PROBLEM_TYPE = "urn:openlaw:problem:envelope-live";
 
 /**
+ * The connection test's two credential refusals (#1236). The pane draws
+ * the Grant consent button on both, and leads with it on the first.
+ *
+ * Consent required: the provider knows the integration and the user, but
+ * the user has not consented to the integration yet. Credentials
+ * refused: every other refusal of the stored credentials, such as a
+ * wrong integration key, user ID or RSA key.
+ */
+export const SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE = "urn:openlaw:problem:signing-consent-required";
+export const SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE =
+  "urn:openlaw:problem:signing-credentials-refused";
+
+/**
  * A comment attachment has already been filed onto the record
  * (CMT-011). Where the filer reaches the destination Document
  * (DD-014), the refusal carries its Document and Version ids as problem

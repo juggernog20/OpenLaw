@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 import { describeSigningContract } from "../../testing/signing-contract.js";
 import {
   SigningConfigError,
+  SigningConsentRequiredError,
   EnvelopeEditConflictError,
   EnvelopeAccessError,
   EnvelopeNotFoundError,
@@ -408,6 +409,8 @@ interface StubOptions {
   /** What userinfo names as the account's base_uri. Default: the stub itself. */
   baseUri?: string;
   tokenForbidden?: boolean;
+  /** Answer the token exchange with 400 and this OAuth error code. */
+  tokenError?: string;
   /** Answer the token exchange with a redirect to this path. */
   redirectTokenTo?: string;
   /** Send the executed copy's headers and one chunk, then never finish. */
@@ -446,6 +449,10 @@ async function startStub(options: StubOptions = {}): Promise<Stub> {
       if (path === "/oauth/token" && request.method === "POST") {
         if (options.tokenForbidden) {
           sendJson(response, 403, { error: "forbidden" });
+          return;
+        }
+        if (options.tokenError) {
+          sendJson(response, 400, { error: options.tokenError });
           return;
         }
         if (options.redirectTokenTo) {
@@ -873,6 +880,45 @@ it("requests envelope-scoped Tagger with documented restrictions and ordinary fi
       },
       taggerSettings: { paletteSections: "default" },
     },
+  });
+});
+
+describe("the grant refusals (#1236)", () => {
+  async function refusal(code: string): Promise<unknown> {
+    const stub = await startStub({ tokenError: code });
+    try {
+      const provider = createDocuSignProvider(
+        {
+          environment: "demo",
+          integrationKey: INTEGRATION_KEY,
+          apiUserId: API_USER_ID,
+          privateKey: KEYS.privateKey,
+          webhookSecret: WEBHOOK_SECRET,
+        },
+        { hosts: { auth: stub.origin, api: stub.origin } },
+      );
+      return await provider.testConnection().then(
+        () => null,
+        (error: unknown) => error,
+      );
+    } finally {
+      await stub.close();
+    }
+  }
+
+  it("tells a missing consent apart, and says how to fix it", async () => {
+    const error = await refusal("consent_required");
+    expect(error).toBeInstanceOf(SigningConsentRequiredError);
+    expect(error).toBeInstanceOf(SigningConfigError);
+    expect((error as Error).message).toContain("has not given consent");
+  });
+
+  it("reads any other grant refusal as wrong credentials, without the consent remedy", async () => {
+    const error = await refusal("invalid_grant");
+    expect(error).toBeInstanceOf(SigningConfigError);
+    expect(error).not.toBeInstanceOf(SigningConsentRequiredError);
+    expect((error as Error).message).toContain("Check the integration key, the user ID");
+    expect((error as Error).message).not.toContain("DocuSign console");
   });
 });
 

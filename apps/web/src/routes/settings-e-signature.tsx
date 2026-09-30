@@ -12,6 +12,11 @@
  * or Webhook. Webhook mode adds the public callback URL and requires
  * a Connect secret.
  *
+ * The consent step (#1236) sits beside the user ID: the redirect URI to
+ * register on the DocuSign app, and a Grant consent button that opens
+ * DocuSign's consent page. A connection test that DocuSign refuses on
+ * credentials offers the same button.
+ *
  * The API's 403 is the real refusal behind the loader's SET-002 bounce.
  */
 
@@ -26,6 +31,10 @@ import {
 import { redirect, useLoaderData } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
 import type { paths } from "@openlaw/api-client";
+import {
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { api } from "../lib/api";
 import { formatShortDate } from "../lib/format";
 import { problem } from "../lib/problem";
@@ -34,6 +43,11 @@ import { cn } from "../lib/utils";
 import { PageTitle } from "../components/page-title";
 import { SettingsCard } from "../components/settings-card";
 import { IntegrationsSettingsTabs } from "../components/integrations-settings-tabs";
+import {
+  ConsentRedirectField,
+  GrantConsentButton,
+  useDocusignConsent,
+} from "../components/docusign-consent";
 import { StatusNote, type FieldStatus } from "../components/status-note";
 import { Button } from "../components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../components/ui/dialog";
@@ -127,6 +141,11 @@ export function SettingsESignaturePage() {
     lifecycle: undefined,
   });
   const [account, setAccount] = useState<string | null>(null);
+  /** The named type of the last failed test, so the pane knows when to
+   * offer the consent step without reading the sentence. */
+  const [testProblemType, setTestProblemType] = useState<string | undefined>(undefined);
+  /** Consent came back before there was a saved connector to test. */
+  const [consentBeforeSave, setConsentBeforeSave] = useState(false);
   /** Whether the remove confirmation is open. Removing takes both
    * secrets with it, so it is never one click. */
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -205,13 +224,17 @@ export function SettingsESignaturePage() {
     testing.current = true;
     note("test", "saving");
     setAccount(null);
+    setTestProblemType(undefined);
+    setConsentBeforeSave(false);
     try {
       const result = await api.POST("/api/v1/signing-connectors/{provider}/test", {
         params: { path: { provider: PROVIDER } },
       });
       const { data } = result;
       if (!data) {
-        note("test", "error", (await problem(result)).detail);
+        const refusal = await problem(result);
+        setTestProblemType(refusal.type);
+        note("test", "error", refusal.detail);
         return;
       }
       setAccount(data.accountName);
@@ -222,6 +245,23 @@ export function SettingsESignaturePage() {
       testing.current = false;
     }
   }
+
+  // A granted consent re-runs the test with no further input. The test
+  // reads the stored connector, so it runs only when the consent went to
+  // the stored environment and key. Before the first save, or with an
+  // unsaved key in the form, the pane says to save first instead.
+  const { grant, consentError } = useDocusignConsent(() => {
+    const consentedToStored =
+      connector.configured &&
+      environment === connector.environment &&
+      integrationKey.trim() === (connector.integrationKey ?? "");
+    if (consentedToStored) void testConnection();
+    else setConsentBeforeSave(true);
+  });
+  const consentOffered =
+    status.test === "error" &&
+    (testProblemType === SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE ||
+      testProblemType === SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE);
 
   /**
    * Turns the connector off, or back on.
@@ -446,19 +486,41 @@ export function SettingsESignaturePage() {
               <>
                 <FormattedMessage
                   id="settings.eSignature.userId.hint"
-                  defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+                  defaultMessage="The DocuSign user that sends envelopes. This user must give consent to the integration once. Select Grant consent, sign in to DocuSign as this user, and accept."
                 />
               </>
             }
           >
-            <Input
-              id="ds-user-id"
-              className="w-80"
-              required
-              value={apiUserId}
-              onChange={(event) => setApiUserId(event.target.value)}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                id="ds-user-id"
+                className="w-80"
+                required
+                value={apiUserId}
+                onChange={(event) => setApiUserId(event.target.value)}
+              />
+              <GrantConsentButton
+                environment={environment}
+                integrationKey={integrationKey}
+                onGrant={grant}
+              />
+            </div>
           </FormField>
+          <ConsentRedirectField id="ds-consent-redirect" />
+          {(consentError !== null || consentBeforeSave) && (
+            <p role="status" className="text-sm">
+              {consentError !== null ? (
+                <span className="text-status-danger-fg">{consentError}</span>
+              ) : (
+                <span className="text-status-success-fg">
+                  <FormattedMessage
+                    id="settings.eSignature.consentBeforeSave"
+                    defaultMessage="Consent granted. Save the connector, then test the connection."
+                  />
+                </span>
+              )}
+            </p>
+          )}
           <FormField
             id="ds-private-key"
             label={
@@ -580,7 +642,7 @@ export function SettingsESignaturePage() {
             </Button>
             <StatusNote status={status.connector} detail={detail.connector} />
           </div>
-          <p aria-live="polite" className="text-sm">
+          <div aria-live="polite" className="flex flex-wrap items-center gap-2 text-sm">
             {status.test === "saving" && (
               <span className="text-muted">
                 <FormattedMessage
@@ -608,7 +670,14 @@ export function SettingsESignaturePage() {
                 )}
               </span>
             )}
-          </p>
+            {consentOffered && (
+              <GrantConsentButton
+                environment={environment}
+                integrationKey={integrationKey}
+                onGrant={grant}
+              />
+            )}
+          </div>
         </form>
 
         {connector.updateMode === "webhook" && (
