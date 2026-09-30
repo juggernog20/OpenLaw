@@ -57,6 +57,7 @@ const MESSAGES = defineMessages({
     id: "settings.contractTypes.locked",
     defaultMessage: "{name} is system-protected and can't be archived",
   },
+  duplicate: { id: "settings.contractTypes.duplicate", defaultMessage: "Duplicate {name}" },
   archive: { id: "settings.contractTypes.archive", defaultMessage: "Archive {name}" },
   restore: { id: "settings.contractTypes.restore", defaultMessage: "Restore {name}" },
   reorder: {
@@ -129,6 +130,12 @@ const PANE_API: TaxonomyPaneApi = {
         params: { path: { id } },
         body: reassignToId ? { reassignToId } : {},
       })
+      .catch(() => undefined);
+    return { data: result?.data?.contractType, ...(await problem(result)) };
+  },
+  async duplicate(id) {
+    const result = await api
+      .POST("/api/v1/contract-types/{id}/duplicate", { params: { path: { id } } })
       .catch(() => undefined);
     return { data: result?.data?.contractType, ...(await problem(result)) };
   },

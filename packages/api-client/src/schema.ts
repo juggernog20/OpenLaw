@@ -2377,6 +2377,23 @@ export interface paths {
     patch: operations["updateContractType"];
     trace?: never;
   };
+  "/api/v1/contract-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live contract type's identity and Form */
+    post: operations["duplicateContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/order": {
     parameters: {
       query?: never;
@@ -2660,6 +2677,23 @@ export interface paths {
     head?: never;
     /** Rename a matter type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
     patch: operations["updateMatterType"];
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live matter type's identity and Form */
+    post: operations["duplicateMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/matter-types/order": {
@@ -6371,6 +6405,23 @@ export interface paths {
     head?: never;
     /** Rename an entity type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
     patch: operations["updateEntityType"];
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live entity type's identity and Form */
+    post: operations["duplicateEntityType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/entity-types/order": {
@@ -15547,6 +15598,49 @@ export interface operations {
       };
     };
   };
+  duplicateContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              isDefault: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   reorderContractTypes: {
     parameters: {
       query?: never;
@@ -16517,6 +16611,49 @@ export interface operations {
     responses: {
       /** @description Default Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              isDefault: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  duplicateMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };
@@ -35656,6 +35793,48 @@ export interface operations {
     responses: {
       /** @description Default Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entityType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  duplicateEntityType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };

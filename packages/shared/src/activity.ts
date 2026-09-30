@@ -79,6 +79,7 @@ export type TypeFieldActionPrefix =
  * viewer narrates it with the same helper every other edit uses.
  */
 type TaxonomyPayloads = {
+  duplicated: { slug: string; displayName: string; sourceSlug: string; sourceDisplayName: string };
   created: { slug: string; displayName: string };
   renamed: { slug: string; from: string; to: string };
   updated: { slug: string; changed: ChangedFields };
@@ -1464,15 +1465,15 @@ export type ActivityPayloadMap = OAuthGrantPayloads &
   UserPayloads &
   OrgSettingsPayloads &
   SettingsPayloads &
-  Prefixed<"department", TaxonomyPayloads> &
-  Prefixed<"region", TaxonomyPayloads> &
+  Prefixed<"department", Omit<TaxonomyPayloads, "duplicated">> &
+  Prefixed<"region", Omit<TaxonomyPayloads, "duplicated">> &
   Prefixed<"contract_type", TaxonomyPayloads> &
   Prefixed<"matter_type", TaxonomyPayloads> &
   Prefixed<"entity_type", TaxonomyPayloads> &
-  Prefixed<"officer_role", TaxonomyPayloads> &
-  Prefixed<"request_type", TaxonomyPayloads> &
-  Prefixed<"knowledge_type", TaxonomyPayloads> &
-  Prefixed<"document_type", TaxonomyPayloads> &
+  Prefixed<"officer_role", Omit<TaxonomyPayloads, "duplicated">> &
+  Prefixed<"request_type", Omit<TaxonomyPayloads, "duplicated">> &
+  Prefixed<"knowledge_type", Omit<TaxonomyPayloads, "duplicated">> &
+  Prefixed<"document_type", Omit<TaxonomyPayloads, "duplicated">> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &

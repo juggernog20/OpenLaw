@@ -58,6 +58,7 @@ const MESSAGES = defineMessages({
     id: "settings.entityTypes.locked",
     defaultMessage: "{name} is system-protected and can't be archived",
   },
+  duplicate: { id: "settings.entityTypes.duplicate", defaultMessage: "Duplicate {name}" },
   archive: { id: "settings.entityTypes.archive", defaultMessage: "Archive {name}" },
   restore: { id: "settings.entityTypes.restore", defaultMessage: "Restore {name}" },
   reorder: {
@@ -130,6 +131,12 @@ const PANE_API: TaxonomyPaneApi = {
         params: { path: { id } },
         body: reassignToId ? { reassignToId } : {},
       })
+      .catch(() => undefined);
+    return { data: result?.data?.entityType, ...(await problem(result)) };
+  },
+  async duplicate(id) {
+    const result = await api
+      .POST("/api/v1/entity-types/{id}/duplicate", { params: { path: { id } } })
       .catch(() => undefined);
     return { data: result?.data?.entityType, ...(await problem(result)) };
   },

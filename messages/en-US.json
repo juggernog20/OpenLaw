@@ -779,6 +779,9 @@
   "activity.taxonomy.deleted": {
     "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
+  "activity.taxonomy.duplicated": {
+    "defaultMessage": "{actor} duplicated the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} other {type}} {sourceName} as {name}"
+  },
   "activity.taxonomy.renamed": {
     "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
@@ -10556,6 +10559,9 @@
   "settings.contractTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
+  "settings.contractTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
+  },
   "settings.contractTypes.edit": {
     "defaultMessage": "Edit {name}"
   },
@@ -11014,6 +11020,9 @@
   },
   "settings.entityTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
   },
   "settings.entityTypes.edit": {
     "defaultMessage": "Edit {name}"
@@ -11752,6 +11761,9 @@
   },
   "settings.matterTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.matterTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
   },
   "settings.matterTypes.edit": {
     "defaultMessage": "Edit {name}"
