@@ -98,7 +98,6 @@ export type CalendarObligation =
 export type EntityHoldings =
   paths["/api/v1/entities/{id}/holdings"]["get"]["responses"]["200"]["content"]["application/json"];
 export type EntityHolding = EntityHoldings["owners"][number];
-export type EntityHoldingWarning = EntityHoldings["warnings"][number];
 export type EntityChart =
   paths["/api/v1/entities/chart"]["get"]["responses"]["200"]["content"]["application/json"];
 export type EntityGrantEnvelope =

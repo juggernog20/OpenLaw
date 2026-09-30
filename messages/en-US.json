@@ -5372,24 +5372,6 @@
   "entities.list.value.none": {
     "defaultMessage": "—"
   },
-  "entities.ownership.addFailed": {
-    "defaultMessage": "The Holding could not be added."
-  },
-  "entities.ownership.addHolding": {
-    "defaultMessage": "Add Holding"
-  },
-  "entities.ownership.dialogTitle": {
-    "defaultMessage": "Add Holding"
-  },
-  "entities.ownership.directionOwned": {
-    "defaultMessage": "This Entity owns"
-  },
-  "entities.ownership.directionOwner": {
-    "defaultMessage": "Owns this Entity"
-  },
-  "entities.ownership.entityLabel": {
-    "defaultMessage": "Entity"
-  },
   "entities.ownership.fromRegister": {
     "defaultMessage": "From register"
   },
@@ -5402,50 +5384,11 @@
   "entities.ownership.individual": {
     "defaultMessage": "Individual"
   },
-  "entities.ownership.matches": {
-    "defaultMessage": "Entity matches"
-  },
-  "entities.ownership.nameRequired": {
-    "defaultMessage": "Enter the individual's name."
-  },
-  "entities.ownership.noOwners": {
-    "defaultMessage": "No owners recorded."
-  },
   "entities.ownership.noneOwned": {
-    "defaultMessage": "This Entity owns no other Entities."
-  },
-  "entities.ownership.overTotal": {
-    "defaultMessage": "Ownership totals {total}% for {name}."
-  },
-  "entities.ownership.owned": {
-    "defaultMessage": "Owned Entities"
-  },
-  "entities.ownership.ownerType": {
-    "defaultMessage": "Owner type"
-  },
-  "entities.ownership.owners": {
-    "defaultMessage": "Owners"
-  },
-  "entities.ownership.percentLabel": {
-    "defaultMessage": "Ownership percent"
-  },
-  "entities.ownership.pickEntity": {
-    "defaultMessage": "Pick an Entity."
-  },
-  "entities.ownership.relationship": {
-    "defaultMessage": "Relationship"
-  },
-  "entities.ownership.remove": {
-    "defaultMessage": "Remove {name}"
-  },
-  "entities.ownership.removeError": {
-    "defaultMessage": "The Holding could not be removed."
+    "defaultMessage": "This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity."
   },
   "entities.ownership.rowPercent": {
     "defaultMessage": "{name} ownership percent"
-  },
-  "entities.ownership.updateError": {
-    "defaultMessage": "The Holding could not be updated."
   },
   "entities.portalListed": {
     "defaultMessage": "Portal-listed"
@@ -5797,9 +5740,6 @@
   },
   "entities.register.classes.votesInvalid": {
     "defaultMessage": "Votes per share must be zero or more."
-  },
-  "entities.register.declaredOwners": {
-    "defaultMessage": "Declared owners not in the register"
   },
   "entities.register.empty": {
     "defaultMessage": "No share register yet"
