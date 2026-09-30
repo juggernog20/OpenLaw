@@ -3,7 +3,7 @@
 import { saveFieldRow } from "../testing/form-fixtures.js";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { activityLog, contractTypes, entityTypeFields, eq, fields, sql, users } from "@openlaw/db";
-import type { FormNode, FormRow, FormModule } from "@openlaw/shared";
+import { formForTouchpoint, type FormNode, type FormRow, type FormModule } from "@openlaw/shared";
 import { startHarness, signInCookies, TEST_ADMIN, type TestHarness } from "../testing/harness.js";
 
 import { projectCustomFields, selectAttachedFields } from "./custom-fields.js";
@@ -360,5 +360,411 @@ it.each(["contract", "matter", "entity", "request"])(
       });
       expect(response.statusCode, response.body).toBe(404);
     }
+  },
+);
+
+it.each(["contract", "matter", "entity"] as const)(
+  "duplicates the %s identity and full visible Form at the end of the list",
+  async (module) => {
+    const id = await createType(module);
+    const base = await read(id, module);
+    const first = {
+      ...(await field(module)),
+      isRequired: true,
+      ...(module === "entity" ? {} : { onIntakeForm: true }),
+    };
+    const second = { ...(await field(module)), visibleOnPortal: false };
+    const hidden = await field(module);
+    const form: FormNode[] = [
+      ...base.slice(0, 2),
+      first,
+      {
+        kind: "branch",
+        id: "copy-outer",
+        match: "all",
+        conditions: [{ rowRef: first.rowRef, operator: "is_set", value: null }],
+        children: [
+          ...base
+            .slice(2)
+            .reverse()
+            .map((node) =>
+              node.kind === "row" ? { ...node, onIntakeForm: false, isRequired: true } : node,
+            ),
+          {
+            kind: "branch",
+            id: "copy-inner",
+            match: "any",
+            conditions: [
+              { rowRef: first.rowRef, operator: "equals", value: "yes" },
+              { rowRef: first.rowRef, operator: "equals", value: "maybe" },
+            ],
+            children: [second, hidden],
+          },
+        ],
+      },
+    ];
+    const saved = await put(id, form, module);
+    expect(saved.statusCode, saved.body).toBe(200);
+    await h.db.update(fields).set({ archivedAt: new Date() }).where(eq(fields.id, hidden.id));
+    const renamed = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${module}-types/${id}`,
+      cookies,
+      payload: { displayName: "Copy source", description: "Keep this description" },
+    });
+    const source = renamed.json()[`${module}Type`];
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    const copy = res.json()[`${module}Type`];
+    expect(copy).toMatchObject({
+      displayName: "Copy source (copy)",
+      description: source.description,
+      isSystemDefault: false,
+      archivedAt: null,
+      inUseCount: 0,
+    });
+    expect(copy.id).not.toBe(id);
+    expect(copy.slug).toBe("copy_source_copy");
+    if (module === "entity") expect(copy).not.toHaveProperty("isDefault");
+    else expect(copy.isDefault).toBe(false);
+    expect(await read(copy.id, module)).toEqual(await read(id, module));
+    await h.db.update(fields).set({ archivedAt: null }).where(eq(fields.id, hidden.id));
+    expect(JSON.stringify(await read(copy.id, module))).not.toContain(hidden.rowRef);
+    const again = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(again.statusCode, again.body).toBe(201);
+    expect(again.json()[`${module}Type`].slug).toBe("copy_source_copy_2");
+    const list = await h.app.inject({ method: "GET", url: `/api/v1/${module}-types`, cookies });
+    const listedTypes = list.json()[`${module}Types`] as { id: string }[];
+    expect(listedTypes.slice(-2).map((t) => t.id)).toEqual([
+      copy.id,
+      again.json()[`${module}Type`].id,
+    ]);
+    const entries = await h.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, `${module}_type.duplicated`));
+    expect(
+      entries.find((entry) => (entry.payload as { slug: string }).slug === copy.slug),
+    ).toMatchObject({
+      visibility: "admin_only",
+      payload: {
+        slug: copy.slug,
+        displayName: copy.displayName,
+        sourceSlug: source.slug,
+        sourceDisplayName: source.displayName,
+      },
+    });
+  },
+);
+
+it.each(["contract", "matter"] as const)(
+  "duplicates the %s Default as a plain type",
+  async (module) => {
+    const list = await h.app.inject({ method: "GET", url: `/api/v1/${module}-types`, cookies });
+    const source = list.json()[`${module}Types`].find((t: { isDefault: boolean }) => t.isDefault);
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${source.id}/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    const copy = res.json()[`${module}Type`];
+    expect(copy).toMatchObject({ isDefault: false, isSystemDefault: false });
+    expect(await read(copy.id, module)).toEqual(await read(source.id, module));
+    const after = await h.app.inject({ method: "GET", url: `/api/v1/${module}-types`, cookies });
+    expect(
+      after.json()[`${module}Types`].filter((t: { isDefault: boolean }) => t.isDefault),
+    ).toEqual([source]);
+  },
+);
+
+it.each(["contract", "matter", "entity"] as const)(
+  "keeps a duplicated %s name inside the display-name limit",
+  async (module) => {
+    const id = await createType(module);
+    const longName = "N".repeat(100);
+    const renamed = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${module}-types/${id}`,
+      cookies,
+      payload: { displayName: longName },
+    });
+    expect(renamed.statusCode, renamed.body).toBe(200);
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    const copy = res.json()[`${module}Type`];
+    expect(copy.displayName).toBe(`${"N".repeat(93)} (copy)`);
+    const resaved = await h.app.inject({
+      method: "PATCH",
+      url: `/api/v1/${module}-types/${copy.id}`,
+      cookies,
+      payload: { displayName: copy.displayName },
+    });
+    expect(resaved.statusCode, resaved.body).toBe(200);
+  },
+);
+
+it.each(["contract", "matter", "entity"] as const)(
+  "refuses an archived %s source and requires an Administrator",
+  async (module) => {
+    const id = await createType(module);
+    const url = `/api/v1/${module}-types/${id}/duplicate`;
+    expect((await h.app.inject({ method: "POST", url })).statusCode).toBe(401);
+    const memberCookies = await signInCookies(
+      h.app,
+      "form-member@example.test",
+      "correct-horse-battery",
+    );
+    expect((await h.app.inject({ method: "POST", url, cookies: memberCookies })).statusCode).toBe(
+      403,
+    );
+    expect(
+      (
+        await h.app.inject({
+          method: "POST",
+          url: `/api/v1/${module}-types/${id}/archive`,
+          cookies,
+          payload: {},
+        })
+      ).statusCode,
+    ).toBe(200);
+    const res = await h.app.inject({ method: "POST", url, cookies });
+    expect(res.statusCode, res.body).toBe(409);
+    expect(res.json().detail).toMatch(/restore/i);
+    expect(
+      (
+        await h.app.inject({
+          method: "POST",
+          url: `/api/v1/${module}-types/missing/duplicate`,
+          cookies,
+        })
+      ).statusCode,
+    ).toBe(404);
+  },
+);
+
+it("does not copy Contract type default people or the default approver group", async () => {
+  const id = await createType();
+  const [admin] = await h.db.select().from(users).where(eq(users.email, TEST_ADMIN.email));
+  const person = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/contract-types/${id}/people`,
+    cookies,
+    payload: { userId: admin!.id },
+  });
+  expect(person.statusCode, person.body).toBe(201);
+  const group = await h.app.inject({
+    method: "POST",
+    url: "/api/v1/approver-groups",
+    cookies,
+    payload: { name: "Copy source approvers" },
+  });
+  expect(group.statusCode, group.body).toBe(201);
+  const groupId = group.json().approverGroup.id;
+  expect(
+    (
+      await h.app.inject({
+        method: "PUT",
+        url: `/api/v1/contract-types/${id}/approval-default`,
+        cookies,
+        payload: { groupId },
+      })
+    ).statusCode,
+  ).toBe(200);
+  const res = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/contract-types/${id}/duplicate`,
+    cookies,
+  });
+  expect(res.statusCode, res.body).toBe(201);
+  const copyId = res.json().contractType.id;
+  for (const [suffix, expected] of [
+    ["people", { people: [] }],
+    ["approval-default", { groupId: null }],
+  ] as const) {
+    const read = await h.app.inject({
+      method: "GET",
+      url: `/api/v1/contract-types/${copyId}/${suffix}`,
+      cookies,
+    });
+    expect(read.statusCode, read.body).toBe(200);
+    expect(read.json()).toEqual(expected);
+  }
+});
+
+it.each(["contract", "matter", "entity"] as const)(
+  "serves a duplicated %s Form immediately to its consumers without moving records or destinations",
+  async (module) => {
+    const id = await createType(module);
+    const first = {
+      ...(await field(module)),
+      ...(module === "entity" ? {} : { onIntakeForm: true }),
+    };
+    const child = {
+      ...(await field(module)),
+      ...(module === "entity" ? {} : { onIntakeForm: true }),
+    };
+    const form: FormNode[] = [
+      ...(await read(id, module)),
+      first,
+      {
+        kind: "branch",
+        id: "consumer-branch",
+        match: "all",
+        conditions: [{ rowRef: first.rowRef, operator: "is_set", value: null }],
+        children: [child],
+      },
+    ];
+    expect((await put(id, form, module)).statusCode).toBe(200);
+    const plural = module === "entity" ? "entities" : `${module}s`;
+    const createRecord = (typeId: string) =>
+      h.app.inject({
+        method: "POST",
+        url: `/api/v1/${plural}`,
+        cookies,
+        payload: {
+          [module === "entity" ? "legalName" : "title"]: "Copied Form consumer",
+          [`${module}TypeId`]: typeId,
+        },
+      });
+    const originalRecord = await createRecord(id);
+    expect(originalRecord.statusCode, originalRecord.body).toBe(201);
+    let requestType: { id: string; slug: string } | undefined;
+    if (module !== "entity") {
+      const created = await h.app.inject({
+        method: "POST",
+        url: "/api/v1/request-types",
+        cookies,
+        payload: { displayName: `Consumer ${module}` },
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      requestType = created.json().requestType;
+      const targeted = await h.app.inject({
+        method: "PATCH",
+        url: `/api/v1/request-types/${requestType!.id}`,
+        cookies,
+        payload: { targetModule: module, targetTypeId: id },
+      });
+      expect(targeted.statusCode, targeted.body).toBe(200);
+    }
+    const duplicated = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(duplicated.statusCode, duplicated.body).toBe(201);
+    const copy = duplicated.json()[`${module}Type`];
+    expect(copy.inUseCount).toBe(0);
+    const options = await h.app.inject({
+      method: "GET",
+      url: `/api/v1/${plural}/${module === "entity" ? "types" : "options"}`,
+      cookies,
+    });
+    expect(options.statusCode, options.body).toBe(200);
+    const option = options.json()[`${module}Types`].find((t: { id: string }) => t.id === copy.id);
+    expect(option.form).toEqual(form);
+    expect(option.creationForm).toEqual(formForTouchpoint(form, "creation"));
+    const record = await createRecord(copy.id);
+    expect(record.statusCode, record.body).toBe(201);
+    for (const [response, typeId] of [
+      [originalRecord, id],
+      [record, copy.id],
+    ] as const) {
+      const row = response.json()[module];
+      const read = await h.app.inject({
+        method: "GET",
+        url: `/api/v1/${plural}/${module === "entity" ? row.id : row.number}`,
+        cookies,
+      });
+      expect(read.statusCode, read.body).toBe(200);
+      expect(read.json()[module][`${module}TypeId`]).toBe(typeId);
+      expect(read.json().form).toEqual(form);
+    }
+    if (requestType) {
+      const read = await h.app.inject({
+        method: "GET",
+        url: `/api/v1/request-types/${requestType.id}`,
+        cookies,
+      });
+      expect(read.json().requestType.targetTypeId).toBe(id);
+      const retargeted = await h.app.inject({
+        method: "PATCH",
+        url: `/api/v1/request-types/${requestType.id}`,
+        cookies,
+        payload: { targetTypeId: copy.id },
+      });
+      expect(retargeted.statusCode, retargeted.body).toBe(200);
+      const portal = await h.app.inject({
+        method: "GET",
+        url: `/api/v1/portal/request-types/${requestType.slug}`,
+        cookies,
+      });
+      expect(portal.statusCode, portal.body).toBe(200);
+      expect(portal.json().form).toEqual(formForTouchpoint(form, "intake"));
+    }
+  },
+);
+
+it.each(["contract", "matter", "entity"] as const)(
+  "allocates distinct identities for concurrent %s copies",
+  async (module) => {
+    const id = await createType(module);
+    const responses = await Promise.all(
+      Array.from({ length: 3 }, () =>
+        h.app.inject({ method: "POST", url: `/api/v1/${module}-types/${id}/duplicate`, cookies }),
+      ),
+    );
+    for (const response of responses) expect(response.statusCode, response.body).toBe(201);
+    const copies = responses.map((response) => response.json()[`${module}Type`]);
+    expect(new Set(copies.map((copy) => copy.slug)).size).toBe(3);
+    expect(new Set(copies.map((copy) => copy.displayOrder)).size).toBe(3);
+  },
+);
+
+it("rolls back the identity when the Form write fails", async () => {
+  const id = await createType();
+  const before = await h.app.inject({ method: "GET", url: "/api/v1/contract-types", cookies });
+  const beforeActivity = await h.db.select().from(activityLog);
+  await h.db.execute(sql`create function refuse_copy_row() returns trigger language plpgsql as $$
+    begin raise exception 'Simulated Form write failure'; end $$`);
+  await h.db.execute(sql`create trigger refuse_copy_row before insert on contract_type_builtin_rows
+    for each row execute function refuse_copy_row()`);
+  try {
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/contract-types/${id}/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode).toBe(500);
+    const after = await h.app.inject({ method: "GET", url: "/api/v1/contract-types", cookies });
+    expect(after.json()).toEqual(before.json());
+    expect(await h.db.select().from(activityLog)).toEqual(beforeActivity);
+  } finally {
+    await h.db.execute(sql`drop trigger refuse_copy_row on contract_type_builtin_rows`);
+    await h.db.execute(sql`drop function refuse_copy_row()`);
+  }
+});
+
+it.each(["request", "document", "knowledge"])(
+  "does not mount duplicate on %s types",
+  async (module) => {
+    const res = await h.app.inject({
+      method: "POST",
+      url: `/api/v1/${module}-types/any/duplicate`,
+      cookies,
+    });
+    expect(res.statusCode).toBe(404);
   },
 );

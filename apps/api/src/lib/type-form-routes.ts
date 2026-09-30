@@ -195,12 +195,85 @@ export async function readTypeForm(
   return [...pins, ...children(null)];
 }
 
+/** Replaces a type's stored Form inside the caller's transaction and owning type lock. */
+export async function writeTypeForm(
+  tx: Transaction,
+  module: FormModule,
+  typeId: string,
+  form: Form,
+) {
+  const { branches, builtins, joins } = tables[module];
+  const definitions = FORM_BUILTINS[module];
+  const pins = pinnedFormRows(module);
+  // Archived Fields are absent from GET. Preserve their attachments for restore.
+  const hidden = await tx
+    .select({ join: joins })
+    .from(joins)
+    .innerJoin(fields, eq(joins.fieldId, fields.id))
+    .where(and(eq(joins.typeId, typeId), isNotNull(fields.archivedAt)))
+    .orderBy(asc(joins.displayOrder), asc(joins.fieldId))
+    .for("share", { of: fields });
+  const branchLevels: (typeof branches.$inferInsert)[][] = [];
+  const builtinValues: (typeof contractTypeBuiltinRows.$inferInsert)[] = [];
+  const joinValues: (typeof contractTypeFields.$inferInsert)[] = [];
+  const lastOrder = new Map<string | null, number>();
+  function collect(nodes: Form, parent: string | null, depth: number) {
+    lastOrder.set(parent, nodes.length);
+    for (const [order, node] of nodes.entries()) {
+      if (node.kind === "branch") {
+        (branchLevels[depth] ??= []).push({
+          typeId,
+          id: node.id,
+          parentBranchId: parent,
+          displayOrder: order + 1,
+          match: node.match,
+          conditions: [...node.conditions],
+        });
+        collect(node.children, node.id, depth + 1);
+      } else if (pins.some((p) => p.rowRef === node.rowRef)) continue;
+      else if (builtins && Object.hasOwn(definitions, node.rowRef)) {
+        builtinValues.push({
+          typeId,
+          builtinKey: node.rowRef,
+          displayOrder: order + 1,
+          branchId: parent,
+          isRequired: node.isRequired,
+          onIntakeForm: node.onIntakeForm ?? false,
+        });
+      } else {
+        joinValues.push({
+          typeId,
+          fieldId: node.id,
+          displayOrder: order + 1,
+          branchId: parent,
+          isRequired: node.isRequired,
+          visibleOnPortal: node.visibleOnPortal,
+          ...(module === "entity" ? {} : { onIntakeForm: node.onIntakeForm ?? false }),
+        });
+      }
+    }
+  }
+  collect(form, null, 0);
+  for (const { join } of hidden) {
+    const branchId = lastOrder.has(join.branchId) ? join.branchId : null;
+    const displayOrder = lastOrder.get(branchId)! + 1;
+    lastOrder.set(branchId, displayOrder);
+    joinValues.push({ ...join, branchId, displayOrder });
+  }
+  await tx.delete(joins).where(eq(joins.typeId, typeId));
+  if (builtins) await tx.delete(builtins).where(eq(builtins.typeId, typeId));
+  await tx.delete(branches).where(eq(branches.typeId, typeId));
+  // Each batch's parent Branches already exist before its children are inserted.
+  for (const level of branchLevels) if (level?.length) await tx.insert(branches).values(level);
+  if (builtins && builtinValues.length) await tx.insert(builtins).values(builtinValues);
+  if (joinValues.length) await tx.insert(joins).values(joinValues);
+}
+
 /** The shared attachment factory mounts this only for record types. */
 export function typeFormRoutes(
   config: TypeFieldRoutesConfig,
   module: FormModule,
 ): FastifyPluginAsyncZod {
-  const { branches, builtins, joins } = tables[module];
   const { typesTable } = config;
   const definitions: Readonly<Record<string, FormRowType>> = FORM_BUILTINS[module];
   const pins = pinnedFormRows(module);
@@ -381,71 +454,9 @@ export function typeFormRoutes(
           const type = await lock(tx, request.params.id, true);
           const form = request.body.form;
           const rule = config.scopeRule;
-          const catalog = await validate(tx, form, rule);
+          await validate(tx, form, rule);
           const before = await readTypeForm(tx, module, type.id);
-          // Archived Fields are absent from GET. Preserve their attachments for restore.
-          const hidden = await tx
-            .select({ join: joins })
-            .from(joins)
-            .innerJoin(fields, eq(joins.fieldId, fields.id))
-            .where(and(eq(joins.typeId, type.id), isNotNull(fields.archivedAt)))
-            .orderBy(asc(joins.displayOrder), asc(joins.fieldId))
-            .for("share", { of: fields });
-          const branchLevels: (typeof branches.$inferInsert)[][] = [];
-          const builtinValues: (typeof contractTypeBuiltinRows.$inferInsert)[] = [];
-          const joinValues: (typeof contractTypeFields.$inferInsert)[] = [];
-          const lastOrder = new Map<string | null, number>();
-          function collect(nodes: Form, parent: string | null, depth: number) {
-            lastOrder.set(parent, nodes.length);
-            for (const [order, node] of nodes.entries()) {
-              if (node.kind === "branch") {
-                (branchLevels[depth] ??= []).push({
-                  typeId: type.id,
-                  id: node.id,
-                  parentBranchId: parent,
-                  displayOrder: order + 1,
-                  match: node.match,
-                  conditions: [...node.conditions],
-                });
-                collect(node.children, node.id, depth + 1);
-              } else if (pins.some((p) => p.rowRef === node.rowRef)) continue;
-              else if (builtins && Object.hasOwn(definitions, node.rowRef)) {
-                builtinValues.push({
-                  typeId: type.id,
-                  builtinKey: node.rowRef,
-                  displayOrder: order + 1,
-                  branchId: parent,
-                  isRequired: node.isRequired,
-                  onIntakeForm: node.onIntakeForm ?? false,
-                });
-              } else {
-                joinValues.push({
-                  typeId: type.id,
-                  fieldId: catalog.get(node.id)!.id,
-                  displayOrder: order + 1,
-                  branchId: parent,
-                  isRequired: node.isRequired,
-                  visibleOnPortal: node.visibleOnPortal,
-                  ...(module === "entity" ? {} : { onIntakeForm: node.onIntakeForm ?? false }),
-                });
-              }
-            }
-          }
-          collect(form, null, 0);
-          for (const { join } of hidden) {
-            const branchId = lastOrder.has(join.branchId) ? join.branchId : null;
-            const displayOrder = lastOrder.get(branchId)! + 1;
-            lastOrder.set(branchId, displayOrder);
-            joinValues.push({ ...join, branchId, displayOrder });
-          }
-          await tx.delete(joins).where(eq(joins.typeId, type.id));
-          if (builtins) await tx.delete(builtins).where(eq(builtins.typeId, type.id));
-          await tx.delete(branches).where(eq(branches.typeId, type.id));
-          // Each batch's parent Branches already exist before its children are inserted.
-          for (const level of branchLevels)
-            if (level?.length) await tx.insert(branches).values(level);
-          if (builtins && builtinValues.length) await tx.insert(builtins).values(builtinValues);
-          if (joinValues.length) await tx.insert(joins).values(joinValues);
+          await writeTypeForm(tx, module, type.id, form);
           const result = await readTypeForm(tx, module, type.id);
           await recordActivity(tx, {
             entityType: "system",
