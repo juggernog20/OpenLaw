@@ -12272,9 +12272,6 @@
   "settings.reminders.lastOne": {
     "defaultMessage": "{label} is the only lead time and can't be removed"
   },
-  "settings.reminders.moved": {
-    "defaultMessage": "{label} moved to position {position} of {total}."
-  },
   "settings.reminders.offset": {
     "defaultMessage": "{days, plural, =0 {On the day} one {# day before} other {# days before}}"
   },
@@ -12283,9 +12280,6 @@
   },
   "settings.reminders.remove": {
     "defaultMessage": "Remove {label}"
-  },
-  "settings.reminders.reorder": {
-    "defaultMessage": "Reorder {label}, position {position} of {total}. Use the arrow keys to move it."
   },
   "settings.reminders.title": {
     "defaultMessage": "Reminder lead times"

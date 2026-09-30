@@ -9,12 +9,16 @@
  *
  * **A row is a value, not a named thing.** Nothing points at "7 days
  * before", so it is removed rather than archived and there is no name to
- * rename: the list is edited by adding, removing, and rearranging.
+ * rename: the list is edited by adding and removing.
  *
- * **Every one of those three is the same write** — the whole list, sent
- * the moment the change is made (SET-003 immediate apply). The morning
- * round reads the column live, so a save applies to the next round with
- * nothing else touched.
+ * **Both are the same write** — the whole list, sent the moment the
+ * change is made (SET-003 immediate apply). The morning round reads the
+ * column live, so a save applies to the next round with nothing else
+ * touched.
+ *
+ * **The list reads furthest first and has no grip** (DES-052 amendment,
+ * 2026-09-30). The round ignores order, so a drag would change nothing
+ * about the schedule. The Personal pane's list reads the same way.
  *
  * **The list can never be emptied.** No lead times means no reminders,
  * and silence is chosen per event group on the Personal pane rather than
@@ -96,7 +100,6 @@ export function SettingsRemindersPage() {
   const [draft, setDraft] = useState("");
   const [addStatus, setAddStatus] = useState<FieldStatus>("idle");
   const [addError, setAddError] = useState<string | undefined>(undefined);
-  const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
 
   /**
@@ -104,10 +107,9 @@ export function SettingsRemindersPage() {
    *
    * Every write here sends the **whole** list, so two of them at once
    * would let the slower reply land last and undo the faster one. One at
-   * a time is the DES-020 rule the grip already follows — `moveBy`
-   * refuses to move a row while the order is saving — and this ref
-   * extends it to the add and the remove. A ref rather than the state,
-   * because a second press can arrive before React has re-rendered.
+   * a time is the DES-020 rule a grip follows, and this ref applies it to
+   * the add and the remove. A ref rather than the state, because a second
+   * press can arrive before React has re-rendered.
    */
   const saving = useRef(false);
 
@@ -136,8 +138,8 @@ export function SettingsRemindersPage() {
         setDetail((await problem(result)).detail);
         return false;
       }
-      // The server's own list, not the sent one: it collapses duplicates,
-      // and the pane must draw what the round will fire on.
+      // The server's own list, not the sent one: it collapses duplicates
+      // and sorts, and the pane must draw what the round will fire on.
       setOffsets(data.offsets);
       setStatus("saved");
       return true;
@@ -163,8 +165,8 @@ export function SettingsRemindersPage() {
     setAdding(false);
   }
 
-  /** Adds the drafted lead time, keeping the list's own order: a new one
-   * joins at the end, where the Add row drew it. */
+  /** Adds the drafted lead time. The draft row sits at the end of the
+   * list; the saved lead time joins at its place, furthest first. */
   async function add() {
     const typed = draft.trim();
     if (typed === "") {
@@ -213,7 +215,7 @@ export function SettingsRemindersPage() {
     }
     setAddStatus("saving");
     setAddError(undefined);
-    if (await save([...offsets, days])) {
+    if (await save([...offsets, days].sort((left, right) => right - left))) {
       closeAdd();
       setDraft("");
       setAddStatus("saved");
@@ -236,26 +238,6 @@ export function SettingsRemindersPage() {
   async function remove(id: string) {
     if (await save(offsets.filter((days) => String(days) !== id))) {
       listRef.current?.focus();
-    }
-  }
-
-  /** One validated move from the grip (arrow key or drop): commit the
-   * whole list in its new order and announce where the row landed. */
-  async function move(fromIndex: number, toIndex: number) {
-    const moved = offsets[fromIndex]!;
-    const next = [...offsets];
-    next.splice(fromIndex, 1);
-    next.splice(toIndex, 0, moved);
-    if (await save(next)) {
-      setAnnouncement(
-        intl.formatMessage(
-          {
-            id: "settings.reminders.moved",
-            defaultMessage: "{label} moved to position {position} of {total}.",
-          },
-          { label: offsetLabel(intl, moved), position: toIndex + 1, total: next.length },
-        ),
-      );
     }
   }
 
@@ -341,6 +323,7 @@ export function SettingsRemindersPage() {
           // controls stand down while one is in the air.
           rowStatus={{}}
           rowError={{}}
+          listStatus={{ status, detail }}
           busy={status === "saving"}
           removeLabel={(row) =>
             intl.formatMessage(
@@ -361,21 +344,6 @@ export function SettingsRemindersPage() {
                   { label: row.displayName },
                 )
           }
-          reorder={{
-            status,
-            detail,
-            gripLabel: (row, position, total) =>
-              intl.formatMessage(
-                {
-                  id: "settings.reminders.reorder",
-                  defaultMessage:
-                    "Reorder {label}, position {position} of {total}. " +
-                    "Use the arrow keys to move it.",
-                },
-                { label: row.displayName, position, total },
-              ),
-            onMove: (fromIndex, toIndex) => void move(fromIndex, toIndex),
-          }}
           adding={adding}
           addRow={
             <InlineAddForm
@@ -414,7 +382,6 @@ export function SettingsRemindersPage() {
               </span>
             </InlineAddForm>
           }
-          announcement={announcement}
         />
       </div>
     </>
