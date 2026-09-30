@@ -15,7 +15,7 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ### Security
 
-- brace-expansion moves to 2.1.6 and 5.0.11 or later for GHSA-qhr7-859c-m2p7, a denial of service through nested brace groups. Only development tooling and the API test suite used the old versions. (#1240)
+- brace-expansion moves to 2.1.6 and 5.0.11 or later for GHSA-qhr7-859c-m2p7 and GHSA-6j4f-fj2g-mc7p, a denial of service through nested brace groups. Only development tooling and the API test suite used the old versions. (#1238, #1240)
 
 ## 0.3.0 - 2026-09-29
 

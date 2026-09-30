@@ -3,7 +3,7 @@
 /**
  * Organization · Notifications (#322) at the route seam: the rail gains
  * its section, the pane draws the NOT-004 lead times in the DES-052
- * value-list anatomy, and adding, removing, and rearranging each save
+ * value-list anatomy, furthest first, and adding and removing each save
  * the moment they are made (SET-003).
  *
  * Nothing here asserts what the round then fires on. That belongs to
@@ -36,7 +36,7 @@ const SEEDED = [7, 1, 0];
 /**
  * Answers the pane's read and captures its writes, the way the real
  * endpoint does. Every save sends the whole list and gets the stored
- * one back.
+ * one back, furthest first.
  */
 function captureOffsetWrites(writes: number[][], failWith?: Response) {
   let offsets = [...SEEDED];
@@ -46,7 +46,7 @@ function captureOffsetWrites(writes: number[][], failWith?: Response) {
       const body = call.body as { offsets: number[] };
       writes.push(body.offsets);
       if (failWith) return failWith;
-      offsets = [...new Set(body.offsets)];
+      offsets = [...new Set(body.offsets)].sort((left, right) => right - left);
     }
     return json(200, { offsets });
   };
@@ -79,7 +79,7 @@ describe("Organization · Notifications (#322)", () => {
     );
   });
 
-  it("draws the seeded list in the saved order, day-of in words", async () => {
+  it("draws the seeded list furthest first, day-of in words", async () => {
     stubApi({ signedIn: ADMIN, extra: captureOffsetWrites([]) });
     renderAt("/settings/reminders");
 
@@ -111,9 +111,10 @@ describe("Organization · Notifications (#322)", () => {
     await user.type(screen.getByLabelText("days before the date"), "30");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(writes).toEqual([[7, 1, 0, 30]]));
+    // The new lead time joins at its place in the ladder, not at the end.
+    await waitFor(() => expect(writes).toEqual([[30, 7, 1, 0]]));
     expect(await screen.findByText("Saved")).toBeVisible();
-    expect(drawnRows()).toEqual(["7 days before", "1 day before", "On the day", "30 days before"]);
+    expect(drawnRows()).toEqual(["30 days before", "7 days before", "1 day before", "On the day"]);
   });
 
   it("refuses a lead time already on the list without sending anything", async () => {
@@ -181,39 +182,16 @@ describe("Organization · Notifications (#322)", () => {
     ).toBeVisible();
   });
 
-  it("reorders from the keyboard, one position per arrow press", async () => {
-    const user = userEvent.setup();
-    const writes: number[][] = [];
-    stubApi({ signedIn: ADMIN, extra: captureOffsetWrites(writes) });
+  it("offers no reorder handle, because the round ignores order", async () => {
+    stubApi({ signedIn: ADMIN, extra: captureOffsetWrites([]) });
     renderAt("/settings/reminders");
 
-    const grip = await screen.findByRole("button", {
-      name: /^Reorder 7 days before, position 1 of 3/,
-    });
-    grip.focus();
-    await user.keyboard("{ArrowDown}");
-
-    await waitFor(() => expect(writes).toEqual([[1, 7, 0]]));
-    expect(drawnRows()).toEqual(["1 day before", "7 days before", "On the day"]);
-    // The move is announced, because the order itself is silent to a
-    // reader (WCAG 4.1.3).
-    expect(await screen.findByText("7 days before moved to position 2 of 3.")).toBeInTheDocument();
-  });
-
-  it("will not move the first row above itself", async () => {
-    const user = userEvent.setup();
-    const writes: number[][] = [];
-    stubApi({ signedIn: ADMIN, extra: captureOffsetWrites(writes) });
-    renderAt("/settings/reminders");
-
-    const grip = await screen.findByRole("button", {
-      name: /^Reorder 7 days before, position 1 of 3/,
-    });
-    grip.focus();
-    await user.keyboard("{ArrowUp}");
-
-    expect(writes).toEqual([]);
-    expect(drawnRows()).toEqual(["7 days before", "1 day before", "On the day"]);
+    await screen.findByRole("button", { name: "Remove 7 days before" });
+    expect(screen.queryByRole("button", { name: /^Reorder/ })).not.toBeInTheDocument();
+    // A drag needs a draggable row. No row is one.
+    for (const row of within(leadTimeList()).getAllByRole("listitem")) {
+      expect(row).not.toHaveAttribute("draggable", "true");
+    }
   });
 
   it("puts the list back when a save is refused", async () => {

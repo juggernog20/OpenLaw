@@ -76,36 +76,26 @@ export function isUsableOffset(value: unknown): value is number {
 }
 
 /**
- * The offsets in a stored list, **in the order they were saved**.
+ * The offsets in a stored list of whatever shape, furthest first.
  *
- * This is what the pane draws and what the pane writes back, so the
- * order an Administrator arranged survives a reload (NOT-004 M18/7).
- * Deduplicated, because two copies of `7` would otherwise be one date
- * fired at twice and the dedup identity would collapse them anyway; the
- * first copy keeps the position.
+ * The round fires on this list, the organization's pane draws it, and
+ * the pane's route stores it (NOT-004 addendum, 2026-09-30). Furthest
+ * first is the order a person reads a lead-time ladder in. The order
+ * changes nothing about the schedule: each offset names one day and the
+ * comparison is equality.
+ *
+ * Deduplicated, because two copies of `7` are one lead time.
  */
-export function savedOffsets(stored: unknown): number[] {
+export function usableOffsets(stored: unknown): number[] {
   if (!Array.isArray(stored)) return [...SEEDED_REMINDER_OFFSETS];
   const usable = [...new Set(stored.filter(isUsableOffset))];
   // An empty list is a real answer only if somebody chose it; an empty
   // *usable* list means nothing in the column could be read, and falling
   // back is what keeps a corrupt row from silencing every reminder. The
   // pane cannot save an empty list, so the two cases never collide.
-  return usable.length > 0 ? usable : [...SEEDED_REMINDER_OFFSETS];
-}
-
-/**
- * The offsets a round should fire on, from a stored list of whatever
- * shape.
- *
- * The saved list, ordered furthest-first — the order a person reads a
- * lead-time ladder in, and the order the round's own log lists. The
- * order is presentation either way: each offset names one day and the
- * comparison is equality, so no arrangement of the list can change which
- * day fires.
- */
-export function usableOffsets(stored: unknown): number[] {
-  return savedOffsets(stored).sort((left, right) => right - left);
+  return usable.length > 0
+    ? usable.sort((left, right) => right - left)
+    : [...SEEDED_REMINDER_OFFSETS];
 }
 
 /**

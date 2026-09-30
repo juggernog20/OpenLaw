@@ -19,7 +19,7 @@ import { recordActivity } from "../../lib/activity.js";
 import {
   MAX_REMINDER_OFFSET_DAYS,
   MAX_REMINDER_OFFSETS,
-  savedOffsets,
+  usableOffsets,
 } from "../../lib/notifications/offsets.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
@@ -67,7 +67,7 @@ const NotificationSettingsSchema = z.object({ commentWordsInEmail: z.boolean() }
 /**
  * What both offset routes answer.
  *
- * Bounded to the range `savedOffsets` can actually return, so the
+ * Bounded to the range `usableOffsets` can actually return, so the
  * emitted contract says what a caller will get rather than advertising
  * every safe integer — a generated client typed wider than the answer is
  * a client that compiles against cases the API cannot produce.
@@ -259,8 +259,8 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         summary:
           "The install's reminder lead times in days (NOT-004): one " +
           "list, applied to every tracked date — key dates, notice " +
-          "deadlines, and expiries alike. Answered in the order it was " +
-          "saved, which is the order the pane draws. A stored value the " +
+          "deadlines, and expiries alike. Answered furthest first, " +
+          "which is the order the pane draws. A stored value the " +
           "round could not fire on is dropped rather than answered, so " +
           "the pane can never draw a lead time that will not arrive",
         tags: ["org"],
@@ -278,9 +278,10 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "setReminderOffsets",
         summary:
           "Replace the reminder lead times (NOT-004). The whole list " +
-          "goes in one request, because adding, removing, and " +
-          "rearranging are all the same write and each of them applies " +
-          "the moment it is made (SET-003). The morning round reads the " +
+          "goes in one request, because adding and removing are the " +
+          "same write and each of them applies the moment it is made " +
+          "(SET-003). The route stores the list furthest first, so the " +
+          "order of the request does not count. The morning round reads the " +
           "column live, so the next round uses the new list with " +
           "nothing else touched. The list can never be emptied: no " +
           "lead times means no reminders, and silence has to be chosen " +
@@ -297,9 +298,9 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => {
-      // Duplicates collapse to their first position: two copies of `7`
-      // are one lead time, and the round would dedup them anyway.
-      const offsets = [...new Set(request.body.offsets)];
+      // Two copies of `7` are one lead time. The list is stored furthest
+      // first, because the round ignores order and the pane draws this one.
+      const offsets = [...new Set(request.body.offsets)].sort((left, right) => right - left);
       const stored = await app.db.transaction(async (tx) => {
         const [current] = await tx
           .select({ id: orgSettings.id, offsets: orgSettings.reminderOffsetDays })
@@ -307,9 +308,9 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
           .limit(1)
           .for("update");
         if (!current) throw httpError(500, "org_settings has no row to update.");
-        const before = savedOffsets(current.offsets);
-        // Order counts as change: the stored list is the canonical one,
-        // and rearranging it is a save like any other.
+        const before = usableOffsets(current.offsets);
+        // Both lists are sorted, so the same lead times sent in another
+        // order are no change and leave no audit entry.
         if (JSON.stringify(before) === JSON.stringify(offsets)) return before;
         const [row] = await tx
           .update(orgSettings)
@@ -325,9 +326,9 @@ export const orgRoutes: FastifyPluginAsyncZod = async (app) => {
           // The old list is the one the round was firing on, not the raw
           // column: an unreadable value was never a lead time, so
           // narrating it as one lost would be a false record.
-          payload: { field: "reminderOffsetDays", old: before, new: savedOffsets(row.offsets) },
+          payload: { field: "reminderOffsetDays", old: before, new: usableOffsets(row.offsets) },
         });
-        return savedOffsets(row.offsets);
+        return usableOffsets(row.offsets);
       });
       return { offsets: stored };
     },
@@ -364,7 +365,7 @@ export async function readReminderOffsets(db: Db) {
     .from(orgSettings)
     .limit(1);
   if (!row) throw httpError(500, "org_settings has no row to read.");
-  return { offsets: savedOffsets(row.offsets) };
+  return { offsets: usableOffsets(row.offsets) };
 }
 
 export async function readOrgBranding(db: Db) {

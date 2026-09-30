@@ -457,9 +457,9 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered in the order it was saved, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive */
+    /** The install's reminder lead times in days (NOT-004): one list, applied to every tracked date — key dates, notice deadlines, and expiries alike. Answered furthest first, which is the order the pane draws. A stored value the round could not fire on is dropped rather than answered, so the pane can never draw a lead time that will not arrive */
     get: operations["getReminderOffsets"];
-    /** Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding, removing, and rearranging are all the same write and each of them applies the moment it is made (SET-003). The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row */
+    /** Replace the reminder lead times (NOT-004). The whole list goes in one request, because adding and removing are the same write and each of them applies the moment it is made (SET-003). The route stores the list furthest first, so the order of the request does not count. The morning round reads the column live, so the next round uses the new list with nothing else touched. The list can never be emptied: no lead times means no reminders, and silence has to be chosen per event group rather than fall out of an empty settings row */
     put: operations["setReminderOffsets"];
     post?: never;
     delete?: never;

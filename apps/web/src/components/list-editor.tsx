@@ -23,12 +23,14 @@
  *
  * **The value-list variant (DES-052).** A pane whose rows are values
  * rather than named things — the NOT-004 reminder lead times — keeps the
- * card, the row geometry, the grip, and the inline add, and drops the
- * two parts that only mean something for a taxonomy: the row is not
+ * card, the row geometry, and the inline add, and drops the two parts
+ * that only mean something for a taxonomy: the row is not
  * renamed in place, and it is **removed** rather than archived, because
  * nothing points at a value and there is no history to keep. Such a pane
  * passes `removeLabel`/`onRemove` in place of the archive pair and no
- * rename pair at all.
+ * rename pair at all. It passes `reorder` only when its order means
+ * something: the deflection links do, the lead times read furthest first
+ * and do not (DES-052 amendment, 2026-09-30).
  */
 
 import { useRef, useState, type DragEvent, type ReactNode, type RefObject } from "react";
@@ -131,6 +133,10 @@ export interface ListEditorProps<Row extends ListEditorRow> {
   adding?: boolean;
   /** Live-region text for keyboard reorder announcements (WCAG 4.1.3). */
   announcement?: string;
+  /** The save note for a list that saves whole and has no grip
+   * (DES-052 point 5). It sits beside the count, where `reorder`'s note
+   * sits on a list that has one. */
+  listStatus?: { status: FieldStatus; detail?: string };
   /** A save that covers the whole list is in the air (DES-052): the Add
    * CTA and the trailing actions stand down until it lands, so a press
    * the pane would refuse cannot be made in the first place. */
@@ -176,6 +182,7 @@ export function ListEditor<Row extends ListEditorRow>({
   addRow,
   adding = false,
   announcement = "",
+  listStatus,
   busy = false,
   listRef,
 }: Readonly<ListEditorProps<Row>>) {
@@ -348,6 +355,7 @@ export function ListEditor<Row extends ListEditorRow>({
             )}
             <span className="text-sm whitespace-nowrap text-muted">{count}</span>
             {reorder && <StatusNote status={reorder.status} detail={reorder.detail} />}
+            {listStatus && <StatusNote status={listStatus.status} detail={listStatus.detail} />}
             {onAdd && (
               <Button
                 size="sm"
