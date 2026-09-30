@@ -282,6 +282,7 @@ describe("trust register", () => {
     const made = await entry(other.id, appointment({ kind: "individual", name: "Other" }));
     for (const payload of [
       appointment({ kind: "party", partyId: made.json().entries[0].party.id }),
+      appointment({ kind: "entity", entityId: trust.id }),
       appointment({ kind: "individual", name: "A" }, { role: "other" }),
       appointment({ kind: "individual", name: "A" }, { roleLabel: "Wrong" }),
       appointment({ kind: "individual", name: "A" }, { amount: 10, currency: "USD" }),
@@ -451,13 +452,15 @@ describe("trust register", () => {
     );
     expect(formula.statusCode).toBe(201);
     const csv = await get(trust.id, "/export?kind=entries");
+    expect(csv.body.startsWith("﻿")).toBe(true);
     expect(csv.body).toContain(`"'=HYPERLINK(""x"")"`);
     expect(csv.body).toContain(`"'@SUM(A1)"`);
+    // Header plus one entry, each ending in CRLF and nothing between them.
+    expect(csv.body.split("\r\n")).toHaveLength(3);
+    expect(csv.body.endsWith("\r\n")).toBe(true);
     expect(
-      (await get(trust.id, "/export?kind=parties&asOf=2023-01-01")).body
-        .split("\r\n")
-        .filter(Boolean),
-    ).toHaveLength(1);
+      (await get(trust.id, "/export?kind=parties&asOf=2023-01-01")).body.split("\r\n"),
+    ).toEqual([expect.stringContaining('"Party"'), ""]);
   });
 
   it("serializes concurrent appointments and preserves the database checks", async () => {

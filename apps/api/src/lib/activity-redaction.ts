@@ -28,7 +28,7 @@ type Payload = Record<string, unknown>;
 /** What one entry names on its far side, and which keys carry it. */
 interface FarReference {
   kind: "contract" | "matter" | "entity" | "entityId";
-  /** The number of a Contract or Matter, or the legal name of an Entity. */
+  /** The number of a Contract or Matter, or the legal name or id of an Entity. */
   identity: number | string;
   /** The payload keys that name the far record. */
   keys: readonly string[];

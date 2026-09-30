@@ -251,6 +251,8 @@ async function resolveParty(
     return party;
   }
   if (input.kind === "entity") {
+    if (input.entityId === entityId)
+      throw httpError(400, "A trust cannot be a party on its own register.");
     const related = await reachedEntity(tx, user, input.entityId, { lock: true });
     if (!related || related.archivedAt)
       throw httpError(400, "Pick a live Entity from the registry.");
@@ -436,7 +438,7 @@ export const entityTrustRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
           "content-disposition",
           `attachment; filename="trust ${request.query.kind} ${register.asOf}.csv"`,
         )
-        .send(rows.join("\r\n") + "\r\n");
+        .send("﻿" + rows.join(""));
     },
   );
   app.post(
