@@ -32,8 +32,8 @@ const chart: EntityChart = {
     { id: "secret", restricted: true, primaryOwnerId: "Child" },
   ],
   edges: [
-    { ownerEntityId: "Parent", ownedEntityId: "Child", ownershipPercent: 100, source: "manual" },
-    { ownerEntityId: "Child", ownedEntityId: "secret", ownershipPercent: 100, source: "manual" },
+    { ownerEntityId: "Parent", ownedEntityId: "Child", ownershipPercent: 100 },
+    { ownerEntityId: "Child", ownedEntityId: "secret", ownershipPercent: 100 },
   ],
 };
 function details(id: string) {

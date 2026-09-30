@@ -586,11 +586,25 @@ test.describe("accessibility floor", () => {
           z.object({ entity: z.object({ id: z.string() }) }).parse(await created.json()).entity.id,
         );
       }
-      const held = await page.request.post(`/api/v1/entities/${createdIds[0]}/holdings`, {
+      // A Holding comes only from a share register (ENT-012): the
+      // subsidiary allots every share to the parent.
+      const shareClass = await page.request.post(
+        `/api/v1/entities/${createdIds[1]}/share-classes`,
+        { data: { name: "Ordinary" } },
+      );
+      expect(shareClass.status(), await shareClass.text()).toBe(201);
+      const shareClassId = z
+        .object({ classes: z.array(z.object({ id: z.string(), name: z.string() })) })
+        .parse(await shareClass.json())
+        .classes.find((row) => row.name === "Ordinary")?.id;
+      expect(shareClassId).toBeDefined();
+      const held = await page.request.post(`/api/v1/entities/${createdIds[1]}/share-entries`, {
         data: {
-          direction: "owned",
-          relatedEntityId: createdIds[1],
-          ownershipPercent: 100,
+          kind: "allotment",
+          effectiveOn: "2026-08-01",
+          shareClassId,
+          quantity: 100,
+          to: { kind: "entity", entityId: createdIds[0] },
         },
       });
       expect(held.status(), await held.text()).toBe(201);
@@ -618,7 +632,7 @@ test.describe("accessibility floor", () => {
 
       const recordTabs = [
         ["", "Registry"],
-        ["ownership", "Owners"],
+        ["ownership", "Register of members"],
         ["obligations", "Obligations"],
         ["documents", "Documents"],
         ["contracts", "Contracts"],

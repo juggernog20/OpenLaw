@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** M27/5's ownership graph and chart at the HTTP seam. */
+/**
+ * M27/5's ownership graph and chart at the HTTP seam. A Holding is
+ * projected from the owned Entity's share register (ENT-012), so every
+ * fixture here is an allotment; the register's own rules are in
+ * `share-register.test.ts`.
+ */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, eq, inArray, users } from "@openlaw/db";
+import { eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -80,32 +85,67 @@ async function newEntity(
   return response.json().entity as { id: string; legalName: string };
 }
 
-function createHolding(
-  entityId: string,
-  direction: "owner" | "owned",
-  relatedEntityId: string,
-  ownershipPercent: number,
+const classes = new Map<string, string>();
+
+/**
+ * Allots `quantity` shares of `owned` to a holder, on one Ordinary class
+ * per Entity. A holder's percentage is its allotted shares over the
+ * register's total, so a test fills each register to a round number.
+ */
+async function allot(
+  owned: { id: string },
+  holder: { id: string } | string,
+  quantity: number,
+  cookies = memberCookies,
 ) {
-  return harness.app.inject({
+  let shareClassId = classes.get(owned.id);
+  if (!shareClassId) {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${owned.id}/share-classes`,
+      cookies,
+      payload: { name: "Ordinary" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    shareClassId = (created.json().classes as { id: string; name: string }[]).find(
+      (row) => row.name === "Ordinary",
+    )!.id;
+    classes.set(owned.id, shareClassId);
+  }
+  const response = await harness.app.inject({
     method: "POST",
-    url: `/api/v1/entities/${entityId}/holdings`,
-    cookies: memberCookies,
-    payload: { direction, relatedEntityId, ownershipPercent },
+    url: `/api/v1/entities/${owned.id}/share-entries`,
+    cookies,
+    payload: {
+      kind: "allotment",
+      effectiveOn: "2024-01-01",
+      shareClassId,
+      quantity,
+      to:
+        typeof holder === "string"
+          ? { kind: "individual", name: holder }
+          : { kind: "entity", entityId: holder.id },
+    },
   });
+  expect(response.statusCode, response.body).toBe(201);
+}
+
+async function seal(entityId: string) {
+  const sealed = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/entities/${entityId}`,
+    cookies: adminCookies,
+    payload: { isConfidential: true },
+  });
+  expect(sealed.statusCode, sealed.body).toBe(200);
 }
 
 describe("Entity Holdings", () => {
   it("keeps topology while rendering an unreachable side as restricted and nameless", async () => {
     const parent = await newEntity("Visible Chart Parent");
     const secret = await newEntity("Invisible Acquisition Vehicle", null, "active", adminCookies);
-    expect((await createHolding(parent.id, "owned", secret.id, 100)).statusCode).toBe(201);
-    const sealed = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/entities/${secret.id}`,
-      cookies: adminCookies,
-      payload: { isConfidential: true },
-    });
-    expect(sealed.statusCode, sealed.body).toBe(200);
+    await allot(secret, parent, 100, adminCookies);
+    await seal(secret.id);
 
     const holdings = await harness.app.inject({
       method: "GET",
@@ -137,18 +177,10 @@ describe("Entity Holdings", () => {
     const parent = await newEntity("Visible Twin Parent");
     const first = await newEntity("Walled Twin First", null, "active", adminCookies);
     const second = await newEntity("Walled Twin Second", null, "active", adminCookies);
-    expect((await createHolding(parent.id, "owned", first.id, 60)).statusCode).toBe(201);
-    expect((await createHolding(parent.id, "owned", second.id, 40)).statusCode).toBe(201);
-    expect((await createHolding(first.id, "owned", second.id, 50)).statusCode).toBe(201);
-    for (const id of [first.id, second.id]) {
-      const sealed = await harness.app.inject({
-        method: "PATCH",
-        url: `/api/v1/entities/${id}`,
-        cookies: adminCookies,
-        payload: { isConfidential: true },
-      });
-      expect(sealed.statusCode, sealed.body).toBe(200);
-    }
+    await allot(first, parent, 100, adminCookies);
+    await allot(second, parent, 50, adminCookies);
+    await allot(second, first, 50, adminCookies);
+    for (const id of [first.id, second.id]) await seal(id);
     const chart = await harness.app.inject({
       method: "GET",
       url: "/api/v1/entities/chart",
@@ -165,51 +197,13 @@ describe("Entity Holdings", () => {
     expect(edges.some((edge) => edge.ownerEntityId === first.id)).toBe(false);
   });
 
-  it("names a walled Entity on a refused loop only as Restricted Entity", async () => {
-    const top = await newEntity("Loop Visible Top");
-    const middle = await newEntity("Loop Walled Middle", null, "active", adminCookies);
-    const bottom = await newEntity("Loop Visible Bottom");
-    expect((await createHolding(top.id, "owned", middle.id, 100)).statusCode).toBe(201);
-    expect((await createHolding(middle.id, "owned", bottom.id, 100)).statusCode).toBe(201);
-    const sealed = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/entities/${middle.id}`,
-      cookies: adminCookies,
-      payload: { isConfidential: true },
-    });
-    expect(sealed.statusCode, sealed.body).toBe(200);
-
-    const response = await createHolding(bottom.id, "owned", top.id, 100);
-    expect(response.statusCode, response.body).toBe(409);
-    expect(response.json().type).toBe("urn:openlaw:problem:entity-holding-cycle");
-    expect(response.body).not.toContain("Loop Walled Middle");
-    expect(response.json().detail).toContain(
-      "Loop Visible Bottom → Loop Visible Top → Restricted Entity → Loop Visible Bottom",
-    );
-  });
-
-  it("creates from either side and reads the same row in both directions", async () => {
+  it("reads the same projected row from the owner and from the owned Entity", async () => {
     const parent = await newEntity("Holdings Delaware Parent", "Delaware");
     const uk = await newEntity("Holdings UK Subsidiary", "England & Wales");
     const uae = await newEntity("Holdings UAE Subsidiary", "Dubai");
-
-    const fromOwnedSide = await createHolding(uk.id, "owner", parent.id, 100);
-    expect(fromOwnedSide.statusCode, fromOwnedSide.body).toBe(201);
-    const firstRow = fromOwnedSide.json().holding;
-    expect(firstRow).toMatchObject({
-      owner: { id: parent.id, legalName: parent.legalName },
-      owned: { id: uk.id, legalName: uk.legalName },
-      ownershipPercent: 100,
-    });
-    expect(fromOwnedSide.json().warnings).toEqual([]);
-
-    const fromOwnerSide = await createHolding(parent.id, "owned", uae.id, 75.5);
-    expect(fromOwnerSide.statusCode, fromOwnerSide.body).toBe(201);
-    expect(fromOwnerSide.json().holding).toMatchObject({
-      owner: { id: parent.id, legalName: parent.legalName },
-      owned: { id: uae.id, legalName: uae.legalName },
-      ownershipPercent: 75.5,
-    });
+    await allot(uk, parent, 100);
+    await allot(uae, parent, 151);
+    await allot(uae, "Minority Holder", 49);
 
     const parentRead = await harness.app.inject({
       method: "GET",
@@ -223,146 +217,64 @@ describe("Entity Holdings", () => {
     });
     expect(parentRead.statusCode, parentRead.body).toBe(200);
     expect(parentRead.json().owners).toEqual([]);
-    expect(parentRead.json().owned).toEqual(
-      expect.arrayContaining([firstRow, fromOwnerSide.json().holding]),
-    );
+    expect(parentRead.json().owned).toEqual([
+      expect.objectContaining({
+        owner: { restricted: false, id: parent.id, legalName: parent.legalName },
+        owned: { restricted: false, id: uae.id, legalName: uae.legalName },
+        ownershipPercent: 75.5,
+      }),
+      expect.objectContaining({
+        owner: { restricted: false, id: parent.id, legalName: parent.legalName },
+        owned: { restricted: false, id: uk.id, legalName: uk.legalName },
+        ownershipPercent: 100,
+      }),
+    ]);
     expect(ukRead.statusCode, ukRead.body).toBe(200);
-    expect(ukRead.json().owners).toEqual([firstRow]);
+    expect(ukRead.json().owners).toEqual([parentRead.json().owned[1]]);
     expect(ukRead.json().owned).toEqual([]);
   });
 
-  it("updates, deletes, and records each action on both affected Entities", async () => {
-    const owner = await newEntity("Holding Activity Owner");
-    const owned = await newEntity("Holding Activity Owned");
-    const created = await createHolding(owner.id, "owned", owned.id, 25);
-    expect(created.statusCode, created.body).toBe(201);
-
-    const updated = await harness.app.inject({
-      method: "PATCH",
-      url: `/api/v1/entities/${owner.id}/holdings/${owned.id}`,
-      cookies: memberCookies,
-      payload: { ownershipPercent: 40 },
-    });
-    expect(updated.statusCode, updated.body).toBe(200);
-    expect(updated.json().holding).toMatchObject({
-      owner: { id: owner.id },
-      owned: { id: owned.id },
-      ownershipPercent: 40,
-    });
-
-    const removed = await harness.app.inject({
-      method: "DELETE",
-      url: `/api/v1/entities/${owned.id}/holdings/${owner.id}`,
-      cookies: memberCookies,
-    });
-    expect(removed.statusCode, removed.body).toBe(204);
-
-    const actions = await harness.db
-      .select({ action: activityLog.action, entityId: activityLog.entityId })
-      .from(activityLog)
-      .where(
-        and(
-          inArray(activityLog.entityId, [owner.id, owned.id]),
-          inArray(activityLog.action, [
-            "entity_holding.created",
-            "entity_holding.updated",
-            "entity_holding.deleted",
-          ]),
-        ),
-      );
-    expect(actions).toHaveLength(6);
-    for (const entityId of [owner.id, owned.id]) {
-      expect(actions.filter((row) => row.entityId === entityId).map((row) => row.action)).toEqual(
-        expect.arrayContaining([
-          "entity_holding.created",
-          "entity_holding.updated",
-          "entity_holding.deleted",
-        ]),
-      );
-    }
-  });
-
-  it("refuses a self-holding as a clean 400", async () => {
-    const entity = await newEntity("Self Holding Refused");
-    const response = await createHolding(entity.id, "owned", entity.id, 100);
-    expect(response.statusCode, response.body).toBe(400);
-    expect(response.headers["content-type"]).toContain("application/problem+json");
-    expect(response.json().detail).toContain("cannot own itself");
-  });
-
-  it("refuses a three-hop cycle in the write transaction and names the loop", async () => {
-    const alpha = await newEntity("Cycle Alpha");
-    const beta = await newEntity("Cycle Beta");
-    const gamma = await newEntity("Cycle Gamma");
-    expect((await createHolding(alpha.id, "owned", beta.id, 100)).statusCode).toBe(201);
-    expect((await createHolding(beta.id, "owned", gamma.id, 100)).statusCode).toBe(201);
-
-    const response = await createHolding(gamma.id, "owned", alpha.id, 100);
-    expect(response.statusCode, response.body).toBe(409);
-    expect(response.json().type).toBe("urn:openlaw:problem:entity-holding-cycle");
-    expect(response.json().detail).toContain(
-      "Cycle Gamma → Cycle Alpha → Cycle Beta → Cycle Gamma",
-    );
-  });
-
-  it("returns an over-100 warning without refusing the write", async () => {
-    const first = await newEntity("Warning First Owner");
-    const second = await newEntity("Warning Second Owner");
-    const owned = await newEntity("Warning Owned Entity");
-    expect((await createHolding(first.id, "owned", owned.id, 70)).statusCode).toBe(201);
-    const response = await createHolding(owned.id, "owner", second.id, 40);
-    expect(response.statusCode, response.body).toBe(201);
-    expect(response.json().warnings).toEqual([
-      {
-        code: "ownership-over-100",
-        ownedEntityId: owned.id,
-        legalName: owned.legalName,
-        totalPercent: 110,
-      },
-    ]);
-    const read = await harness.app.inject({
-      method: "GET",
-      url: `/api/v1/entities/${owned.id}/holdings`,
-      cookies: memberCookies,
-    });
-    expect(read.statusCode, read.body).toBe(200);
-    expect(read.json().warnings).toEqual(response.json().warnings);
-  });
-
-  it("keeps every Holdings route at the Member+ floor", async () => {
-    const attempts = [
-      harness.app.inject({ method: "GET", url: "/api/v1/entities/none/holdings" }),
+  it("has no route that writes a Holding by hand", async () => {
+    const owner = await newEntity("Typed Holding Owner");
+    const owned = await newEntity("Typed Holding Owned");
+    const attempts = await Promise.all([
       harness.app.inject({
         method: "POST",
-        url: "/api/v1/entities/none/holdings",
-        cookies: contributorCookies,
-        payload: { direction: "owned", relatedEntityId: "other", ownershipPercent: 10 },
+        url: `/api/v1/entities/${owner.id}/holdings`,
+        cookies: memberCookies,
+        payload: { direction: "owned", relatedEntityId: owned.id, ownershipPercent: 100 },
       }),
       harness.app.inject({
         method: "PATCH",
-        url: "/api/v1/entities/none/holdings/other",
-        cookies: contributorCookies,
+        url: `/api/v1/entities/${owner.id}/holdings/${owned.id}`,
+        cookies: memberCookies,
         payload: { ownershipPercent: 10 },
       }),
       harness.app.inject({
         method: "DELETE",
-        url: "/api/v1/entities/none/holdings/other",
+        url: `/api/v1/entities/${owner.id}/holdings/${owned.id}`,
+        cookies: memberCookies,
+      }),
+    ]);
+    for (const refused of attempts) expect(refused.statusCode, refused.body).toBe(404);
+    const read = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/entities/${owner.id}/holdings`,
+      cookies: memberCookies,
+    });
+    expect(read.json()).toEqual({ owners: [], owned: [] });
+  });
+
+  it("keeps both Holdings routes at the Member+ floor", async () => {
+    for (const url of ["/api/v1/entities/none/holdings", "/api/v1/entities/chart"]) {
+      const anonymous = await harness.app.inject({ method: "GET", url });
+      expect(anonymous.statusCode, anonymous.body).toBe(401);
+      const contributor = await harness.app.inject({
+        method: "GET",
+        url,
         cookies: contributorCookies,
-      }),
-      harness.app.inject({
-        method: "PATCH",
-        url: "/api/v1/entities/none/holdings/other",
-        payload: { ownershipPercent: 10 },
-      }),
-      harness.app.inject({ method: "DELETE", url: "/api/v1/entities/none/holdings/other" }),
-    ];
-    const [anonymousRead, post, patch, remove, anonymousPatch, anonymousDelete] =
-      await Promise.all(attempts);
-    for (const refused of [anonymousRead, anonymousPatch, anonymousDelete]) {
-      expect(refused!.statusCode, refused!.body).toBe(401);
-    }
-    for (const refused of [post, patch, remove]) {
-      expect(refused!.statusCode, refused!.body).toBe(403);
+      });
+      expect(contributor.statusCode, contributor.body).toBe(403);
     }
   });
 });
@@ -378,10 +290,10 @@ describe("GET /entities/chart", () => {
     const unconnected = await newEntity("Chart Unconnected");
     const archived = await newEntity("Chart Archived Reachable");
 
-    expect((await createHolding(high.id, "owned", majorityChild.id, 70)).statusCode).toBe(201);
-    expect((await createHolding(low.id, "owned", majorityChild.id, 30)).statusCode).toBe(201);
-    expect((await createHolding(tieZulu.id, "owned", tieChild.id, 50)).statusCode).toBe(201);
-    expect((await createHolding(tieAlpha.id, "owned", tieChild.id, 50)).statusCode).toBe(201);
+    await allot(majorityChild, high, 70);
+    await allot(majorityChild, low, 30);
+    await allot(tieChild, tieZulu, 50);
+    await allot(tieChild, tieAlpha, 50);
     const archivedResponse = await harness.app.inject({
       method: "POST",
       url: `/api/v1/entities/${archived.id}/archive`,
@@ -416,18 +328,8 @@ describe("GET /entities/chart", () => {
     );
     expect(chart.edges).toEqual(
       expect.arrayContaining([
-        {
-          ownerEntityId: high.id,
-          ownedEntityId: majorityChild.id,
-          ownershipPercent: 70,
-          source: "manual",
-        },
-        {
-          ownerEntityId: low.id,
-          ownedEntityId: majorityChild.id,
-          ownershipPercent: 30,
-          source: "manual",
-        },
+        { ownerEntityId: high.id, ownedEntityId: majorityChild.id, ownershipPercent: 70 },
+        { ownerEntityId: low.id, ownedEntityId: majorityChild.id, ownershipPercent: 30 },
       ]),
     );
   });
@@ -437,8 +339,10 @@ it("uses the largest Holding as the primary owner even below fifty percent", asy
   const largest = await newEntity("Minority largest owner");
   const other = await newEntity("Minority other owner");
   const child = await newEntity("Minority owned Entity");
-  expect((await createHolding(largest.id, "owned", child.id, 30)).statusCode).toBe(201);
-  expect((await createHolding(other.id, "owned", child.id, 20)).statusCode).toBe(201);
+  await allot(child, largest, 30);
+  await allot(child, other, 20);
+  await allot(child, "First Minority Person", 25);
+  await allot(child, "Second Minority Person", 25);
   const response = await harness.app.inject({
     method: "GET",
     url: "/api/v1/entities/chart",
@@ -450,26 +354,21 @@ it("uses the largest Holding as the primary owner even below fifty percent", asy
   );
 });
 
-it("records individual owners, includes them in totals and the chart, and supports update/removal", async () => {
+it("lists a register's individual holders as owners and draws them on the chart", async () => {
   const company = await newEntity("Individual-owned company");
   const corporateOwner = await newEntity("Corporate co-owner");
-  expect((await createHolding(company.id, "owner", corporateOwner.id, 60)).statusCode).toBe(201);
-  const created = await harness.app.inject({
-    method: "POST",
-    url: `/api/v1/entities/${company.id}/holdings`,
-    cookies: memberCookies,
-    payload: { direction: "owner", individualName: "  Alex Morgan  ", ownershipPercent: 50 },
-  });
-  expect(created.statusCode, created.body).toBe(201);
-  const owner = created.json().holding.owner;
-  expect(owner).toMatchObject({ kind: "individual", legalName: "Alex Morgan", restricted: false });
-  expect(created.json().warnings).toEqual([expect.objectContaining({ totalPercent: 110 })]);
+  await allot(company, corporateOwner, 60);
+  await allot(company, "Alex Morgan", 40);
   const read = await harness.app.inject({
     method: "GET",
     url: `/api/v1/entities/${company.id}/holdings`,
     cookies: memberCookies,
   });
-  expect(read.json().owners).toContainEqual(expect.objectContaining({ owner }));
+  expect(read.statusCode, read.body).toBe(200);
+  const person = (
+    read.json().owners as { owner: { id: string; kind?: string; legalName: string } }[]
+  ).find((row) => row.owner.kind === "individual")!.owner;
+  expect(person).toMatchObject({ kind: "individual", legalName: "Alex Morgan", restricted: false });
   const chart = await harness.app.inject({
     method: "GET",
     url: "/api/v1/entities/chart",
@@ -477,94 +376,29 @@ it("records individual owners, includes them in totals and the chart, and suppor
   });
   expect(chart.json().nodes).toContainEqual(
     expect.objectContaining({
-      id: owner.id,
+      id: person.id,
       kind: "individual",
       legalName: "Alex Morgan",
       status: null,
     }),
   );
   expect(chart.json().edges).toContainEqual({
-    ownerEntityId: owner.id,
+    ownerEntityId: person.id,
     ownedEntityId: company.id,
-    ownershipPercent: 50,
-    source: "manual",
+    ownershipPercent: 40,
   });
-  const url = `/api/v1/entities/${company.id}/holdings/${encodeURIComponent(owner.id)}`;
-  const update = await harness.app.inject({
-    method: "PATCH",
-    url,
-    cookies: memberCookies,
-    payload: { ownershipPercent: 40 },
-  });
-  expect(update.statusCode, update.body).toBe(200);
-  expect(update.json().warnings).toEqual([]);
-  expect(update.json().holding.ownershipPercent).toBe(40);
-  const removed = await harness.app.inject({ method: "DELETE", url, cookies: memberCookies });
-  expect(removed.statusCode).toBe(204);
-  const events = await harness.db
-    .select()
-    .from(activityLog)
-    .where(
-      and(
-        eq(activityLog.entityId, company.id),
-        inArray(activityLog.action, [
-          "entity_holding.created",
-          "entity_holding.updated",
-          "entity_holding.deleted",
-        ]),
-      ),
-    );
-  expect(
-    events.filter((event) => (event.payload as { ownerName?: string }).ownerName === "Alex Morgan"),
-  ).toHaveLength(3);
-  // An individual owner is no Entity, so the feed's far-Entity
-  // redaction must leave its name and percentage in place.
-  const feed = await harness.app.inject({
-    method: "GET",
-    url: `/api/v1/activity?entityType=entity&entityId=${company.id}`,
-    cookies: memberCookies,
-  });
-  expect(feed.statusCode, feed.body).toBe(200);
-  const individualEntries = (
-    feed.json().entries as { action: string; payload: Record<string, unknown> }[]
-  ).filter((row) => row.action.startsWith("entity_holding.") && row.payload.ownerIndividual);
-  expect(individualEntries.map((row) => row.payload)).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({ ownerName: "Alex Morgan", ownershipPercent: 50 }),
-      expect.objectContaining({ ownerName: "Alex Morgan", from: 50, to: 40 }),
-      expect.objectContaining({ ownerName: "Alex Morgan", ownershipPercent: 40 }),
-    ]),
-  );
-  expect(individualEntries).toHaveLength(3);
-  const after = await harness.app.inject({
-    method: "GET",
-    url: "/api/v1/entities/chart",
-    cookies: memberCookies,
-  });
-  expect(after.body).not.toContain(owner.id);
 });
 
-it("protects individual names behind the owned Entity's access and archival rules", async () => {
+it("protects individual names behind the owned Entity's access", async () => {
   const company = await newEntity("Private person holding", null, "active", adminCookies);
-  const url = `/api/v1/entities/${company.id}/holdings`;
-  const create = await harness.app.inject({
-    method: "POST",
-    url,
-    cookies: adminCookies,
-    payload: { direction: "owner", individualName: "Private Person", ownershipPercent: 100 },
+  await allot(company, "Private Person", 100, adminCookies);
+  const before = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/entities/${company.id}/holdings`,
+    cookies: memberCookies,
   });
-  expect(create.statusCode, create.body).toBe(201);
-  const personId = create.json().holding.owner.id;
-  expect(
-    (
-      await harness.app.inject({
-        method: "PATCH",
-        url: `/api/v1/entities/${company.id}`,
-        cookies: adminCookies,
-        payload: { isConfidential: true },
-      })
-    ).statusCode,
-  ).toBe(200);
+  const personId = before.json().owners[0].owner.id as string;
+  await seal(company.id);
   const chart = await harness.app.inject({
     method: "GET",
     url: "/api/v1/entities/chart",
@@ -572,68 +406,10 @@ it("protects individual names behind the owned Entity's access and archival rule
   });
   expect(chart.body).not.toContain("Private Person");
   expect(chart.body).not.toContain(personId);
-  for (const method of ["GET", "POST", "PATCH", "DELETE"] as const) {
-    const res = await harness.app.inject({
-      method,
-      url: method === "PATCH" || method === "DELETE" ? `${url}/${personId}` : url,
-      cookies: memberCookies,
-      ...(method === "POST"
-        ? { payload: { direction: "owner", individualName: "Intruder", ownershipPercent: 1 } }
-        : method === "PATCH"
-          ? { payload: { ownershipPercent: 1 } }
-          : {}),
-    });
-    expect(res.statusCode, res.body).toBe(404);
-  }
-  expect(
-    (
-      await harness.app.inject({
-        method: "POST",
-        url: `/api/v1/entities/${company.id}/archive`,
-        cookies: adminCookies,
-        payload: {},
-      })
-    ).statusCode,
-  ).toBe(200);
-  expect(
-    (
-      await harness.app.inject({
-        method: "PATCH",
-        url: `${url}/${personId}`,
-        cookies: adminCookies,
-        payload: { ownershipPercent: 10 },
-      })
-    ).statusCode,
-  ).toBe(409);
-});
-
-it("rejects invalid individual holdings and Business User writes", async () => {
-  const company = await newEntity("Individual validation");
-  const url = `/api/v1/entities/${company.id}/holdings`;
-  for (const payload of [
-    { direction: "owner", individualName: "  ", ownershipPercent: 10 },
-    { direction: "owned", individualName: "Person", ownershipPercent: 10 },
-    { direction: "owner", individualName: "Person", ownershipPercent: 101 },
-    { direction: "owner", individualName: "Person", ownershipPercent: -1 },
-    {
-      direction: "owner",
-      individualName: "Person",
-      relatedEntityId: company.id,
-      ownershipPercent: 10,
-    },
-  ])
-    expect(
-      (await harness.app.inject({ method: "POST", url, cookies: memberCookies, payload }))
-        .statusCode,
-    ).toBe(400);
-  expect(
-    (
-      await harness.app.inject({
-        method: "POST",
-        url,
-        cookies: contributorCookies,
-        payload: { direction: "owner", individualName: "Person", ownershipPercent: 10 },
-      })
-    ).statusCode,
-  ).toBe(403);
+  const walled = await harness.app.inject({
+    method: "GET",
+    url: `/api/v1/entities/${company.id}/holdings`,
+    cookies: memberCookies,
+  });
+  expect(walled.statusCode, walled.body).toBe(404);
 });

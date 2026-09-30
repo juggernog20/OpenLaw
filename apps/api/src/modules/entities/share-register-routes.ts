@@ -570,7 +570,7 @@ async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: st
   const owners = await tx
     .select({ ownerEntityId: entityHoldings.ownerEntityId })
     .from(entityHoldings)
-    .where(and(eq(entityHoldings.ownedEntityId, issuerId), eq(entityHoldings.source, "register")));
+    .where(eq(entityHoldings.ownedEntityId, issuerId));
   for (const owner of owners) {
     await assertNoRegisterCycle(tx, user, owner.ownerEntityId, issuerId);
   }
