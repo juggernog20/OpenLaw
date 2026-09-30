@@ -4,7 +4,7 @@ Keep the corporate facts and supporting Documents on the Entity they describe. H
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. Both Entities in a new Holding must be reachable and live. An Officer role must be available; only an Administrator adds one, in [types, Statuses, and Fields](types-statuses-fields.md). See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
+Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. OpenLaw writes Holdings from share registers, so you record an owner in the owned Entity's register. An Officer role must be available; only an Administrator adds one, in [types, Statuses, and Fields](types-statuses-fields.md). See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
 
 ## Record Officers and resignations
 
@@ -26,22 +26,20 @@ A resignation date cannot precede the appointment date. The remove control delet
 
 The Entity's **Formation jurisdiction** remains separate. A Registration describes another registration or qualification and does not change where the Entity was formed. Removing a Registration detaches its linked Obligations; it does not delete those Obligations. Use [Entity obligations](entity-obligations.md) to maintain their dates and filings.
 
-## Add or correct a Holding
+## Read an Entity's Holdings
 
-A Holding records the percentage one owner holds of an Entity. The owner is another Entity or a named individual. If the Entity keeps a share register, OpenLaw writes its owner Holdings from the register entries. Record those owners in the [share register](entity-structure-and-access.md#keep-the-share-register). Use **Add Holding** for an Entity without a register and for the Entities this Entity owns.
+A Holding records the percentage one owner holds of an Entity. The owner is another Entity or a named individual. OpenLaw writes every Holding from a share register. You cannot add, edit, or remove a Holding by hand. To record an owner of an Entity, record an entry in that Entity's [share register](entity-structure-and-access.md#keep-the-share-register).
 
-1. Open the Entity's **Ownership** tab. Select **Add Holding** below **Holdings in other Entities**.
-2. Keep **Owner type** set to **Entity**, then choose **Relationship**: **Owns this Entity** when the selected Entity is the owner, or **This Entity owns** when it is the owned Entity.
-3. Find and select the other **Entity**, enter **Ownership percent**, and select **Add**. **Ownership percent** starts at 100.
-4. To record a person who owns this Entity, choose **Individual** instead, enter their **Full name** and **Ownership percent**, and select **Add**. No Entity record or OpenLaw account is required. Names are recorded on each Holding; matching names are not automatically treated as the same person.
-5. Check the result. An Entity this Entity owns appears under **Holdings in other Entities**. An owner of this Entity appears under **Declared owners not in the register**. That card appears only when such an owner exists. Correct a percentage in its row and move focus away to save.
-6. To remove a Holding, use the remove control in its row. Its label names the other party, for example **Remove Helix Holdings Ltd**. Neither Entity is deleted. To correct an individual name, remove that Holding and add it again with the correct name.
+1. Open the Entity's **Ownership** tab.
+2. To see who owns this Entity, read **Register of members**. Each Holder on the register is an owner.
+3. To see what this Entity owns, read **Holdings in other Entities**. Each row shows the owned Entity and the percentage this Entity holds. An Entity you cannot reach shows as **Restricted Entity**.
+4. To change a row, select **From register**. OpenLaw opens the share register of the owned Entity. Record or correct an entry there.
 
-A row marked **From register** comes from a share register. Its percentage and remove controls are unavailable. Select **From register** to open the register that produced it, and record an entry there to change it. When a register entry names an owner Entity that already has a hand-typed Holding, the register's Holding replaces it at that entry. A hand-typed individual stays beside the register's Holding, even when the names match. Remove the hand-typed row so that the person is not counted twice.
+When this Entity owns no other Entities, the card reads **This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity.**
 
-OpenLaw still accepts a hand-typed owner on an Entity that keeps a share register. It lists that owner under **Declared owners not in the register**. Prefer a register entry, so that the register stays the one record of that Entity's owners.
+An Entity with no share register has no owners in OpenLaw and stands alone on the ownership chart. To connect it, open its **Ownership** tab, add a share class, and record an allotment to its owner. For an Entity without shares, such as a branch or a limited liability company, name the class after the interest the owner holds, for example **Membership units**.
 
-Each Holding accepts a percentage from 0 to 100. A total over 100% across owners produces a warning, such as **Ownership totals 120% for Helix Research Ltd.**, but still saves. Check and correct the recorded percentages. An Entity cannot own itself, duplicate the same directional Holding, or create an ownership loop. Holdings do not grant access or make one Entity a child record. Use the [ownership chart](entity-structure-and-access.md#read-the-ownership-chart) to read the structure.
+Holdings do not grant access or make one Entity a child record. An Entity cannot hold its own shares, and the register refuses an entry that would create an ownership loop. Use the [ownership chart](entity-structure-and-access.md#read-the-ownership-chart) to read the structure.
 
 ## Keep the Entity's Documents
 

@@ -721,7 +721,7 @@ export function stubApi(state: ApiState) {
       return json(200, { officers: [] });
     }
     if (/^\/api\/v1\/entities\/[^/]+\/holdings$/.test(call.url.pathname) && call.method === "GET") {
-      return json(200, { owners: [], owned: [], warnings: [] });
+      return json(200, { owners: [], owned: [] });
     }
     if (
       /^\/api\/v1\/entities\/[^/]+\/share-register$/.test(call.url.pathname) &&

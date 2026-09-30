@@ -1271,7 +1271,6 @@ async function verify(fingerprint) {
   const holdings = await get(`/api/v1/entities/${fingerprint.entity.id}/holdings`);
   same(holdings.owners, [], "pre-M27 Entity owners");
   same(holdings.owned, [], "pre-M27 Entity owned Entities");
-  same(holdings.warnings, [], "pre-M27 Entity Holding warnings");
   const obligations = (await get(`/api/v1/entities/${fingerprint.entity.id}/obligations`))
     .obligations;
   const obligation = obligations.find((row) => row.id === fingerprint.home.obligation.id);

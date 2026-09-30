@@ -1296,6 +1296,13 @@
       "when": 1790675627707,
       "tag": "0184_runtime-metrics",
       "breakpoints": true
+    },
+    {
+      "idx": 185,
+      "version": "7",
+      "when": 1790798114937,
+      "tag": "0185_holdings-register-only",
+      "breakpoints": true
     }
   ]
 }

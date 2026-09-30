@@ -30,7 +30,7 @@
     "better-auth": "~1.7.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.48.0",
+    "lucide-react": "^1.49.0",
     "pdfjs-dist": "^6.3.289",
     "pdfmake": "^0.3.11",
     "pptxgenjs": "^4.0.1",
