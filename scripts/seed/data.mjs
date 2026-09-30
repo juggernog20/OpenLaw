@@ -126,8 +126,8 @@ export const BUSINESS_USERS = [
 
 /**
  * Our own corporate entities (DD-008). `type` names one of the seeded
- * Entity Types; `owner` is the parent in the ownership graph, and the
- * percentage is the Holding the seed records between the two.
+ * Entity Types; `owner` is the parent in the ownership graph. The seed
+ * allots every share of the Entity to it, so the Holding is 100%.
  */
 export const ENTITIES = [
   {
@@ -151,7 +151,7 @@ export const ENTITIES = [
     registeredAgent: "Amstel Corporate Services B.V.",
     registeredAddress: "Gustav Mahlerlaan 10, 1082 PP Amsterdam, Netherlands",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software Ltd",
@@ -162,7 +162,7 @@ export const ENTITIES = [
     registeredAgent: "Pinnacle Company Secretaries Limited",
     registeredAddress: "70 Wilson Street, London EC2A 2DB, United Kingdom",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software GmbH",
@@ -173,7 +173,7 @@ export const ENTITIES = [
     registeredAgent: "Kanzlei Beckmann Partner mbB",
     registeredAddress: "Maximilianstrasse 35, 80539 Munich, Germany",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software SAS",
@@ -184,7 +184,7 @@ export const ENTITIES = [
     registeredAgent: "Cabinet Lefevre Associes",
     registeredAddress: "12 rue de la Paix, 75002 Paris, France",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Ireland Limited",
@@ -195,7 +195,7 @@ export const ENTITIES = [
     registeredAgent: "Liffey Corporate Services Limited",
     registeredAddress: "25 Merrion Square, Dublin 2, D02 XR54, Ireland",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Nordics AB",
@@ -206,7 +206,7 @@ export const ENTITIES = [
     registeredAgent: "Nordbolag Foretagstjanster AB",
     registeredAddress: "Sveavagen 44, 111 34 Stockholm, Sweden",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Espana, S.L.",
@@ -217,7 +217,7 @@ export const ENTITIES = [
     registeredAgent: "Gestoria Ibanez S.L.",
     registeredAddress: "Calle de Serrano 41, 28001 Madrid, Spain",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Italia S.r.l.",
@@ -228,7 +228,7 @@ export const ENTITIES = [
     registeredAgent: "Studio Ferrari e Associati",
     registeredAddress: "Via Monte Napoleone 8, 20121 Milan, Italy",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Poland sp. z o.o.",
@@ -239,7 +239,7 @@ export const ENTITIES = [
     registeredAgent: "Kancelaria Nowak i Wspolnicy",
     registeredAddress: "ulica Krolewska 18, 00-103 Warsaw, Poland",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Denmark ApS",
@@ -250,7 +250,7 @@ export const ENTITIES = [
     registeredAgent: "Kobenhavn Selskabsservice ApS",
     registeredAddress: "Bredgade 30, 1260 Copenhagen K, Denmark",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Switzerland AG",
@@ -261,7 +261,7 @@ export const ENTITIES = [
     registeredAgent: "Zuger Treuhand AG",
     registeredAddress: "Baarerstrasse 78, 6300 Zug, Switzerland",
     status: "active",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Portugal, Unipessoal Lda",
@@ -272,7 +272,7 @@ export const ENTITIES = [
     registeredAgent: "Atlantico Servicos Societarios Lda",
     registeredAddress: "Avenida da Liberdade 110, 1250-146 Lisbon, Portugal",
     status: "dissolved",
-    owner: { of: "Helix Software Holdings B.V.", percent: 100 },
+    owner: "Helix Software Holdings B.V.",
   },
   {
     legalName: "Helix Software Canada ULC",
@@ -283,7 +283,7 @@ export const ENTITIES = [
     registeredAgent: "Pacific Registry Agents Inc.",
     registeredAddress: "666 Burrard Street, Vancouver, BC V6C 2X8, Canada",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software Mexico, S. de R.L. de C.V.",
@@ -294,7 +294,7 @@ export const ENTITIES = [
     registeredAgent: "Corporativo Legal Reforma S.C.",
     registeredAddress: "Paseo de la Reforma 296, 06600 Mexico City, Mexico",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software do Brasil Ltda",
@@ -305,7 +305,7 @@ export const ENTITIES = [
     registeredAgent: "Almeida Servicos Societarios Ltda",
     registeredAddress: "Avenida Paulista 1374, Sao Paulo, SP 01310-100, Brazil",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software Pty Ltd",
@@ -316,7 +316,7 @@ export const ENTITIES = [
     registeredAgent: "Harbourside Corporate Pty Ltd",
     registeredAddress: "Level 12, 20 Bond Street, Sydney NSW 2000, Australia",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software New Zealand Limited",
@@ -327,7 +327,7 @@ export const ENTITIES = [
     registeredAgent: "Kauri Corporate Services Limited",
     registeredAddress: "88 Shortland Street, Auckland 1010, New Zealand",
     status: "active",
-    owner: { of: "Helix Software Pty Ltd", percent: 100 },
+    owner: "Helix Software Pty Ltd",
   },
   {
     legalName: "Helix Software Singapore Pte. Ltd.",
@@ -338,7 +338,7 @@ export const ENTITIES = [
     registeredAgent: "Raffles Corporate Advisers Pte. Ltd.",
     registeredAddress: "10 Marina Boulevard, Singapore 018983",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software India Private Limited",
@@ -349,7 +349,7 @@ export const ENTITIES = [
     registeredAgent: "Vidhi Corporate Advisors LLP",
     registeredAddress: "Prestige Tower, 100 Feet Road, Bengaluru 560038, India",
     status: "active",
-    owner: { of: "Helix Software Singapore Pte. Ltd.", percent: 100 },
+    owner: "Helix Software Singapore Pte. Ltd.",
   },
   {
     legalName: "Helix Software K.K.",
@@ -360,7 +360,7 @@ export const ENTITIES = [
     registeredAgent: "Marunouchi Shoji Jimusho",
     registeredAddress: "2-4-1 Marunouchi, Chiyoda-ku, Tokyo 100-0005, Japan",
     status: "active",
-    owner: { of: "Helix Software Singapore Pte. Ltd.", percent: 100 },
+    owner: "Helix Software Singapore Pte. Ltd.",
   },
   {
     legalName: "Helix Software Korea Yuhan Hoesa",
@@ -371,7 +371,7 @@ export const ENTITIES = [
     registeredAgent: "Sejong Corporate Services",
     registeredAddress: "521 Teheran-ro, Gangnam-gu, Seoul 06168, South Korea",
     status: "active",
-    owner: { of: "Helix Software Singapore Pte. Ltd.", percent: 100 },
+    owner: "Helix Software Singapore Pte. Ltd.",
   },
   {
     legalName: "Helix Software Israel Ltd",
@@ -382,7 +382,7 @@ export const ENTITIES = [
     registeredAgent: "Herzliya Corporate Services Ltd",
     registeredAddress: "94 Yigal Alon Street, Tel Aviv 6789155, Israel",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software FZ-LLC",
@@ -393,7 +393,7 @@ export const ENTITIES = [
     registeredAgent: "Dubai Silicon Oasis Authority",
     registeredAddress: "DSO Headquarters Building, Dubai, United Arab Emirates",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software South Africa (Pty) Ltd",
@@ -404,7 +404,7 @@ export const ENTITIES = [
     registeredAgent: "Sandton Company Secretaries (Pty) Ltd",
     registeredAddress: "135 West Street, Sandton 2196, South Africa",
     status: "dormant",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Analytics, Inc.",
@@ -415,7 +415,7 @@ export const ENTITIES = [
     registeredAgent: "Corporate Trust Center",
     registeredAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
     status: "active",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
     note: "Acquired 2021; the analytics product line.",
   },
   {
@@ -427,7 +427,7 @@ export const ENTITIES = [
     registeredAgent: "Corporate Trust Center",
     registeredAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
     status: "active",
-    owner: { of: "Helix Analytics, Inc.", percent: 100 },
+    owner: "Helix Analytics, Inc.",
   },
   {
     legalName: "Nimbus Metrics, Inc.",
@@ -438,7 +438,7 @@ export const ENTITIES = [
     registeredAgent: "Corporate Trust Center",
     registeredAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
     status: "dormant",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
     note: "Acquired 2023; being wound down into Helix Analytics.",
   },
   {
@@ -450,7 +450,7 @@ export const ENTITIES = [
     registeredAgent: "Corporate Trust Center",
     registeredAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
     status: "dormant",
-    owner: { of: "Helix Software Group, Inc.", percent: 100 },
+    owner: "Helix Software Group, Inc.",
   },
   {
     legalName: "Helix Software Foundation",

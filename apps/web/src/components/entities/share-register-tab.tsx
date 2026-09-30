@@ -32,7 +32,7 @@ import { RestrictedRecordCell } from "../restricted-record-cell";
 import { RecordFilterBar, type RecordFilter } from "../table/record-filter-bar";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
-import { OwnershipCard } from "./ownership-card";
+import { OwnedHoldingsCard } from "./owned-holdings-card";
 import { ShareClassesDialog } from "./share-classes-dialog";
 import { ShareEntryDialog } from "./share-entry-dialog";
 
@@ -162,26 +162,6 @@ export function ShareRegisterTab({
     },
   ];
   const shown = filterEntries(register.entries, filters);
-  // A hand-typed owner the register now names would list twice. Match
-  // Entity owners by id only: two individuals sharing a name are not one person.
-  const registeredEntityIds = new Set(
-    knownHolders(register).flatMap((holder) => (holder.entityId ? [holder.entityId] : [])),
-  );
-  const declaredHoldings = {
-    ...holdings,
-    // Rows the register projected are the register's; only hand-typed
-    // owners it does not name are "declared". Individuals are matched by
-    // the projection's holder id, never by name, so a manual individual
-    // row stays listed even when a holder shares the name.
-    owners: holdings.owners.filter(
-      (row) =>
-        row.source !== "register" &&
-        (row.owner.restricted ||
-          row.owner.kind === "individual" ||
-          !registeredEntityIds.has(row.owner.id)),
-    ),
-  };
-
   return (
     <div className="flex flex-col gap-4">
       {/* An empty register has no dates to scrub and nothing to reconcile. */}
@@ -293,26 +273,7 @@ export function ShareRegisterTab({
           </section>
         </>
       )}
-      <OwnershipCard
-        entity={entity}
-        candidates={candidates}
-        initial={declaredHoldings}
-        frozen={frozen}
-        showOwners={false}
-        showOwned
-        ownersTitle={
-          <FormattedMessage
-            id="entities.register.declaredOwners"
-            defaultMessage="Declared owners not in the register"
-          />
-        }
-        ownedTitle={
-          <FormattedMessage
-            id="entities.register.ownedTitle"
-            defaultMessage="Holdings in other Entities"
-          />
-        }
-      />
+      <OwnedHoldingsCard rows={holdings.owned} />
       {classesOpen ? (
         <ShareClassesDialog
           entityId={entity.id}
