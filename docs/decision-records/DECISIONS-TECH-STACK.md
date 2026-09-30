@@ -2087,6 +2087,45 @@ TECH-014 deferred metrics and OpenTelemetry "until someone asks". An Administrat
 
 Migration 0184 adds `runtime_metrics`. A process that runs for 24 hours keeps 1,440 rows, so a standard install with one API and one worker holds about 2,880. The response-time bucket bounds are part of the stored data. A change to them must wait for the 24-hour retention to clear the old rows, or the page will mix two meanings for one bucket for up to a day. The `pgboss.job` count scans the queue table when the page loads. That is fine at DD-002's scale; an install with a very large job history should see it as the first query to index. Charts, thresholds and a longer history are open follow-ups, each a decision of its own.
 
+## TECH-037: Pull requests land by squash merge, and published history is not rewritten
+
+- **Status:** Accepted
+- **Date:** 2026-09-30
+- **Supersedes:** the merge-commit rule in `CONTRIBUTING.md`, section Branches and pull requests
+
+### Context
+
+Up to v0.3.0, every pull request landed with a merge commit. At v0.3.0, `dev` held 2,692 commits, and 775 of them were merge commits. Most of those merge commits came from task PRs into an omnibus branch and from syncs of `dev` into a feature branch. They record how a change was put together, not what changed. `git log --first-parent dev` hides them, but `git log`, `git blame` and the GitHub history view do not.
+
+Nothing on the host stopped a force push to `dev` or `main`. The history was stable by habit only.
+
+### Decision
+
+**Every pull request lands by squash merge.** The host allows squash merges only. Merge commits and rebase merges are turned off. The squash commit takes the PR title as its subject and the PR body as its message, and GitHub adds `(#N)` to the subject. The host deletes the head branch when the PR merges.
+
+**A squash-merged branch is finished.** The base holds one new commit, not the branch's own commits. More work on the old branch conflicts with its own squash on the next PR. The next change starts on a new branch. A branch cut from a branch that has since been squash-merged moves across with `git rebase --onto <new base> <old parent tip>`.
+
+**The omnibus flow squashes twice.** Task PRs squash into the feature branch. The feature branch PR squashes into `dev`. `dev` gets one commit for each milestone, and the omnibus PR body lists the task PRs.
+
+**`main` moves by fast-forward only.** No pull request merges into `main`. A release pushes a green `dev` commit to `main` with a plain `git push`, as it did before this record. Dependabot version updates target `dev`. Dependabot security updates always target the default branch, which is `main`, so each one is retargeted to `dev` before it merges.
+
+**Published history is not rewritten.** The history before this record stays as it is. Tags v0.1.0 to v0.3.0, the release images, the PR links and every clone point at those commits. A repository ruleset blocks force pushes and deletion on `dev` and `main`. A second ruleset blocks moving or deleting a `v*` tag. Neither ruleset has a bypass, so they bind administrators too.
+
+### Alternatives considered
+
+- **Keep merge commits.** Rejected. It keeps the noise described above, and every tool except `--first-parent` shows it.
+- **Rebase merge.** Rejected. It keeps every work-in-progress commit of the branch, and it gives each one a new SHA, so the branch and `dev` share no commits either.
+- **Rewrite the old history into squash commits.** Rejected. The tags and the published images point at the old commits.
+- **Make `dev` the default branch.** Not decided here. It would send Dependabot security updates and new PRs to `dev`, and `Closes #N` would close issues. It also changes the repository landing page and the CodeQL default branch. It needs a decision of its own.
+
+### Consequences
+
+`git branch --merged` no longer finds finished branches. The proof that a branch is finished is a merged PR whose head commit equals the branch tip. The merge, collect and implement-all skills use that proof.
+
+The release inputs script reads PR numbers from `(#N)` subjects and from the older `Merge pull request #N` subjects. Task PR numbers are not in the history of `dev`. The omnibus PR body lists them, and GitHub keeps each PR's own commits under `refs/pull/N/head` after the head branch is deleted.
+
+When a PR lands on `main` by mistake, `main` is no longer an ancestor of `dev`, and the next fast-forward fails. A squash merge cannot repair that. Only a real merge commit of `main` into `dev` can, so an administrator must turn merge commits on for that one pull request. The version-up preflight stops on this state.
+
 ## Index of decisions
 
 | #        | Decision                                                                      | Status                                                                          |
@@ -2127,6 +2166,7 @@ Migration 0184 adds `runtime_metrics`. A process that runs for 24 hours keeps 1,
 | TECH-034 | Web Push with VAPID and a service worker without offline caching              | Accepted; the public-address guard on delivery added by the 2026-09-20 addendum |
 | TECH-035 | The MCP server and its authentication stack                                   | Accepted; T27, M41 and M42 addenda #1132, #1134, #1135, #1138, #1166            |
 | TECH-036 | In-process metrics on the System status page                                  | Accepted; supersedes TECH-014's metrics deferral                                |
+| TECH-037 | Pull requests land by squash merge; published history is not rewritten        | Accepted; supersedes the merge-commit rule in CONTRIBUTING.md                   |
 
 ### TECH-007 / TECH-013 addendum, 2026-09-26, #1172. Sender View and shared checks
 
