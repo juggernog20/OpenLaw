@@ -724,6 +724,22 @@ export function stubApi(state: ApiState) {
       return json(200, { owners: [], owned: [] });
     }
     if (
+      /^\/api\/v1\/entities\/[^/]+\/trust-register$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      const today = new Date().toISOString().slice(0, 10);
+      return json(200, {
+        asOf: call.url.searchParams.get("asOf") ?? today,
+        today,
+        parties: [],
+        partiesToday: [],
+        entries: [],
+        fund: [],
+        dates: [],
+        warnings: [],
+      });
+    }
+    if (
       /^\/api\/v1\/entities\/[^/]+\/share-register$/.test(call.url.pathname) &&
       call.method === "GET"
     ) {

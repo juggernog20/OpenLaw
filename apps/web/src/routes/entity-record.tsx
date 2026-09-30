@@ -39,6 +39,7 @@ import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
 import { RegisterKindPanel } from "../components/entities/register-kind-panel";
 import { OwnedHoldingsCard } from "../components/entities/owned-holdings-card";
+import { TrustRegisterTab } from "../components/entities/trust-register-tab";
 import { ShareRegisterTab } from "../components/entities/share-register-tab";
 import { RegistrationsCard } from "../components/entities/registrations-card";
 import { ShareCapitalCard, type CapitalKey } from "../components/entities/share-capital-card";
@@ -119,6 +120,12 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
           params: { path: { id }, query: registerQuery(request) },
         })
       : undefined;
+  const trustRegister =
+    params.tab === "ownership" && record.data?.entity.registerKind === "trust"
+      ? await api.GET("/api/v1/entities/{id}/trust-register", {
+          params: { path: { id }, query: registerQuery(request) },
+        })
+      : undefined;
   // An id nobody holds and an Entity this viewer cannot open are the
   // same 404 (DD-014). Both draw a page that says so; every other
   // failure still throws to the error boundary.
@@ -133,7 +140,12 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     !holdings.data ||
     !obligations.data ||
     !obligationOptions.data ||
-    (params.tab === "ownership" && record.data.entity.registerKind === "shares" && !register?.data)
+    (params.tab === "ownership" &&
+      record.data.entity.registerKind === "shares" &&
+      !register?.data) ||
+    (params.tab === "ownership" &&
+      record.data.entity.registerKind === "trust" &&
+      !trustRegister?.data)
   ) {
     throw new Error("The entity could not be read.");
   }
@@ -169,6 +181,7 @@ export async function entityRecordLoader({ params, request }: LoaderFunctionArgs
     entities: registry.data.entities,
     holdings: holdings.data,
     register: register?.data ?? null,
+    trustRegister: trustRegister?.data ?? null,
     obligations: obligations.data.obligations,
     obligationOptions: obligationOptions.data,
     documents: paper.documents,
@@ -804,21 +817,22 @@ function EntityRecord() {
                     candidates={loaded.entities}
                     frozen={frozen}
                   />
+                ) : saved.registerKind === "trust" && loaded.trustRegister ? (
+                  <TrustRegisterTab
+                    entity={saved}
+                    register={loaded.trustRegister}
+                    holdings={loaded.holdings}
+                    candidates={loaded.entities}
+                    frozen={frozen}
+                  />
                 ) : (
                   <>
-                    {saved.registerKind === "partnership" || saved.registerKind === "trust" ? (
+                    {saved.registerKind === "partnership" ? (
                       <section className="rounded-card border border-border-default bg-raised p-4 text-muted">
-                        {saved.registerKind === "partnership" ? (
-                          <FormattedMessage
-                            id="entities.registerKind.emptyPartnership"
-                            defaultMessage="No partnership entries recorded."
-                          />
-                        ) : (
-                          <FormattedMessage
-                            id="entities.registerKind.emptyTrust"
-                            defaultMessage="No trust entries recorded."
-                          />
-                        )}
+                        <FormattedMessage
+                          id="entities.registerKind.emptyPartnership"
+                          defaultMessage="No partnership entries recorded."
+                        />
                       </section>
                     ) : null}
                     <OwnedHoldingsCard rows={loaded.holdings.owned} />

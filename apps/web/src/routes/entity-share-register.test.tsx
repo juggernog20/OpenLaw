@@ -493,7 +493,9 @@ describe("the Ownership register kind", () => {
     await user.click(screen.getByRole("radio", { name: /Trust register/ }));
     await user.click(screen.getByRole("button", { name: "Save" }));
     expect(await screen.findByText("Trust register · set on this Entity")).toBeInTheDocument();
-    expect(screen.getByText("No trust entries recorded.")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "No trust register yet" }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Change register" }));
     await user.click(screen.getByRole("radio", { name: /Share register/ }));
     await user.click(screen.getByRole("button", { name: "Save" }));
