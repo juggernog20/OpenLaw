@@ -510,7 +510,17 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const { row, entityTypeName, attached } = await app.db.transaction(async (tx) => {
-        await lockEntityRegisters(tx);
+        // Only a body that can move the register kind or the head office
+        // joins the register writes' critical section. An inline field
+        // commit changes neither and must not queue behind every share
+        // register write on the instance.
+        if (
+          body.registerKind !== undefined ||
+          body.headOfficeEntityId !== undefined ||
+          body.entityTypeId !== undefined
+        ) {
+          await lockEntityRegisters(tx);
+        }
         const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!target) throw httpError(404, NO_ENTITY);
         if (target.archivedAt) {

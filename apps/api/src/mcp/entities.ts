@@ -64,7 +64,7 @@ export const entityTools: readonly ToolDefinition[] = [
     name: "openlaw_entity_get",
     title: "Read an Entity",
     description:
-      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and share register summary. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
+      "Read one reached Entity with its current Officers, statutory Documents, compliance Obligations and register. entity.registerKind names the register the Entity keeps (shares, partnership, trust or none); shareRegister is a summary when the kind is shares and null otherwise. Legal Users only. Continue the Documents with nextCursor or openlaw_documents_list. limit bounds the Documents page.",
     inputSchema: getInput,
     outputSchema: z.object({
       entity: recordOutput,
