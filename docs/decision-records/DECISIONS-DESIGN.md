@@ -5042,6 +5042,12 @@ Supersedes the M27 Ownership frame in `designs/entities.pen` (Owners and Owned w
 
 `share-register-tab.tsx` draws the five sections in the recorded order. The timeline places one tick per entry date proportionally between the first date and today, labels a tick only when it sits at least 7% of the rail from the last label, and marks the chosen date with the accent tick; prev and next step between ticks, the date button is the DES-048 picker, and Reset to today is a secondary button that is disabled on today. `?asOf=` drives the register, the dimming and the reconciliation line. The Register of members shows one row per holder per class, treasury per class, and a total row per class carrying the class terms; there is no Add holder control. The entries card mounts `RecordFilterBar` with Class, Entry, Holder and Effective date, state in the tab's search params, filtering the loaded entries on the client. Record entry and Share classes are the DES-017 dialogs; a refused write shows the API's problem detail inside the dialog. Export register and Export are same-origin download links to the CSV routes. The Holdings card marks a projected row "From register", disables its controls, and links to the register. Hand-typed owner Holdings that predate a register, and that the register does not name, list as "Declared owners not in the register" in the same card; projected rows never list there. An Entity with no share class and no entry shows only the empty state and the Holdings card, without the timeline or the reconciliation line.
 
+### ENT-012 addendum (2026-09-30): Holdings in other Entities only reads
+
+ENT-012 makes the share register the only source of a Holding. This supersedes the "unchanged in shape, with disabled controls" clause above and the declared-owners sentence of the built addendum.
+
+The card keeps its DES-005 shape and its title. Each row is the owned Entity's name as a link, the "From register" pill, and the percentage as end-aligned text with up to two decimals. The pill links to the owned Entity's Ownership tab and keeps its hint. The row has no number input and no remove button. A Restricted Entity row is MTR-015's cell, as before. The tab has no Add Holding button, no "Declared owners not in the register" card and no over-100% alert. The empty card reads "This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity."
+
 ## DES-089: Device notifications on the preferences pane, addendum to DES-050
 
 - **Status:** Accepted

@@ -4,6 +4,15 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+### Upgrading
+
+- The app applies one database migration when it starts. It deletes every Holding that a person typed with Add Holding. Holdings that a share register wrote stay. Before you upgrade, open each Entity whose owners you typed, add a share class on its Ownership tab, and record an allotment to each owner. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)).
+
+### Removed
+
+- Add Holding and the Declared owners not in the register card are gone from the Entity Ownership tab. The share register is the only source of a Holding. Holdings in other Entities is a read-only list, and each row links to the register that wrote it.
+- The API no longer accepts `POST`, `PATCH` or `DELETE` on `/api/v1/entities/{id}/holdings`. The Holdings response no longer carries `source` or `warnings`, and a chart edge no longer carries `source`.
+
 ## 0.3.0 - 2026-09-29
 
 ### Upgrading
