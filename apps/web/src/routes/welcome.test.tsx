@@ -1405,7 +1405,7 @@ describe("welcome wizard DocuSign consent step (#1236)", () => {
   }
 
   /** A saved connector whose test answers `test`, counting the calls. */
-  function savedConnector(test: () => Response) {
+  function savedConnector(test: () => Response | Promise<Response>) {
     const calls: SigningCalls = { saves: [], completed: 0 };
     const counter = { tests: 0 };
     stubApi({
@@ -1511,6 +1511,50 @@ describe("welcome wizard DocuSign consent step (#1236)", () => {
       await screen.findByText("Connected to Calloway Demo as signer@example.com."),
     ).toBeInTheDocument();
     expect(counter.tests).toBe(2);
+  });
+
+  it("re-tests after a consent that arrives while another test is still out", async () => {
+    const opened = spyPopup();
+    const unconsented = () =>
+      problem(
+        502,
+        "The connection test failed. The DocuSign user has not given consent to this integration.",
+        SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+      );
+    let release: (response: Response) => void = () => {};
+    const { counter } = savedConnector(() => {
+      if (counter.tests === 1) return unconsented();
+      if (counter.tests === 2) {
+        return new Promise<Response>((resolve) => {
+          release = resolve;
+        });
+      }
+      return json(200, {
+        connected: true,
+        accountName: "Calloway Demo",
+        accountId: "demo-account",
+        userEmail: "signer@example.com",
+      });
+    });
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Test DocuSign connection" }));
+    const alert = (await screen.findByText(/has not given consent/)).closest<HTMLElement>(
+      '[role="alert"]',
+    )!;
+    await user.click(within(alert).getByRole("button", { name: "Grant consent" }));
+    // A second test goes out and hangs, and the consent lands while it does.
+    await user.click(screen.getByRole("button", { name: "Test DocuSign connection" }));
+    await waitFor(() => expect(counter.tests).toBe(2));
+    answer(opened[0]!, { outcome: "granted" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    release(unconsented());
+
+    expect(
+      await screen.findByText("Connected to Calloway Demo as signer@example.com."),
+    ).toBeInTheDocument();
+    expect(counter.tests).toBe(3);
   });
 
   it("offers Grant consent when DocuSign refuses the credentials, not on an outage", async () => {

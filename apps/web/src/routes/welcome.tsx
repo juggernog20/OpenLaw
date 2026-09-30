@@ -733,11 +733,33 @@ export function WelcomePage() {
   /** Consent came back before there was a saved connector to test. */
   const [consentBeforeSave, setConsentBeforeSave] = useState(false);
   // The consent step (#1236). A granted consent re-runs the test with
-  // no further input, once there is a saved connector to test.
+  // no further input, once there is a saved connector to test. The
+  // popup can answer while another request holds `busy`, and
+  // `applyESignature` returns early then, so the re-test waits in a ref
+  // and the effect below runs it once `busy` clears.
+  const retestAfterConsent = useRef(false);
   const { grant: grantConsent, consentError } = useDocusignConsent(() => {
-    if (signingConnector.configured) void applyESignature(true);
-    else setConsentBeforeSave(true);
+    if (!signingConnector.configured) {
+      setConsentBeforeSave(true);
+      return;
+    }
+    if (busy) {
+      retestAfterConsent.current = true;
+      return;
+    }
+    void applyESignature(true);
   });
+  // The latest `applyESignature`, so the effect below can wait on
+  // `busy` alone rather than rerun on every render.
+  const latestApplyESignature = useRef(applyESignature);
+  useEffect(() => {
+    latestApplyESignature.current = applyESignature;
+  });
+  useEffect(() => {
+    if (busy || !retestAfterConsent.current) return;
+    retestAfterConsent.current = false;
+    void latestApplyESignature.current(true);
+  }, [busy]);
   // The form's values while it is open, the stored ones while it is not.
   const consentEnvironment = signingFormOpen ? signingEnvironment : signingConnector.environment;
   const consentIntegrationKey = signingFormOpen

@@ -246,11 +246,16 @@ export function SettingsESignaturePage() {
     }
   }
 
-  // A granted consent re-runs the test with no further input. Before
-  // the first save there is nothing stored to test, so the pane says
-  // what to do next instead.
+  // A granted consent re-runs the test with no further input. The test
+  // reads the stored connector, so it runs only when the consent went to
+  // the stored environment and key. Before the first save, or with an
+  // unsaved key in the form, the pane says to save first instead.
   const { grant, consentError } = useDocusignConsent(() => {
-    if (connector.configured) void testConnection();
+    const consentedToStored =
+      connector.configured &&
+      environment === connector.environment &&
+      integrationKey.trim() === (connector.integrationKey ?? "");
+    if (consentedToStored) void testConnection();
     else setConsentBeforeSave(true);
   });
   const consentOffered =

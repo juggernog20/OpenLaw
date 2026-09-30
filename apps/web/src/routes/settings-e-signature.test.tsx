@@ -601,6 +601,24 @@ describe("the consent step (#1236)", () => {
     expect(calls.tests).toBe(1);
   });
 
+  it("asks for a save instead of testing the stored key when the form holds another", async () => {
+    const user = userEvent.setup();
+    const opened = spyPopup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.type(await screen.findByLabelText("Integration key"), "-unsaved");
+    await user.click(screen.getByRole("button", { name: "Grant consent" }));
+    answer(opened[0]!, { outcome: "granted" });
+
+    expect(
+      await screen.findByText("Consent granted. Save the connector, then test the connection."),
+    ).toBeVisible();
+    expect(calls.tests).toBe(0);
+  });
+
   it("ignores an answer for a consent this pane did not ask for", async () => {
     const user = userEvent.setup();
     spyPopup();
