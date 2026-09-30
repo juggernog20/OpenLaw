@@ -556,7 +556,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["settings.taxonomies"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "matter-templates",
