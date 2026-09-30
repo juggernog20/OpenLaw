@@ -79,7 +79,6 @@ export type TypeFieldActionPrefix =
  * viewer narrates it with the same helper every other edit uses.
  */
 type TaxonomyPayloads = {
-  duplicated: { slug: string; displayName: string; sourceSlug: string; sourceDisplayName: string };
   created: { slug: string; displayName: string };
   renamed: { slug: string; from: string; to: string };
   updated: { slug: string; changed: ChangedFields };
@@ -94,6 +93,15 @@ type TaxonomyPayloads = {
   };
   restored: { slug: string; displayName: string };
   deleted: { slug: string; displayName: string };
+};
+
+/**
+ * The three lists that own a Form (Contract, Matter and Entity types) also
+ * copy a live type with its Form (DD-028 amendment). The payload names the
+ * source and the copy.
+ */
+type RecordTypePayloads = TaxonomyPayloads & {
+  duplicated: { slug: string; displayName: string; sourceSlug: string; sourceDisplayName: string };
 };
 
 /** The four verbs an attached-field catalog writes. */
@@ -1465,15 +1473,15 @@ export type ActivityPayloadMap = OAuthGrantPayloads &
   UserPayloads &
   OrgSettingsPayloads &
   SettingsPayloads &
-  Prefixed<"department", Omit<TaxonomyPayloads, "duplicated">> &
-  Prefixed<"region", Omit<TaxonomyPayloads, "duplicated">> &
-  Prefixed<"contract_type", TaxonomyPayloads> &
-  Prefixed<"matter_type", TaxonomyPayloads> &
-  Prefixed<"entity_type", TaxonomyPayloads> &
-  Prefixed<"officer_role", Omit<TaxonomyPayloads, "duplicated">> &
-  Prefixed<"request_type", Omit<TaxonomyPayloads, "duplicated">> &
-  Prefixed<"knowledge_type", Omit<TaxonomyPayloads, "duplicated">> &
-  Prefixed<"document_type", Omit<TaxonomyPayloads, "duplicated">> &
+  Prefixed<"department", TaxonomyPayloads> &
+  Prefixed<"region", TaxonomyPayloads> &
+  Prefixed<"contract_type", RecordTypePayloads> &
+  Prefixed<"matter_type", RecordTypePayloads> &
+  Prefixed<"entity_type", RecordTypePayloads> &
+  Prefixed<"officer_role", TaxonomyPayloads> &
+  Prefixed<"request_type", TaxonomyPayloads> &
+  Prefixed<"knowledge_type", TaxonomyPayloads> &
+  Prefixed<"document_type", TaxonomyPayloads> &
   Prefixed<"contract_type_field", TypeFieldPayloads> &
   Prefixed<"entity_type_field", TypeFieldPayloads> &
   Prefixed<"matter_type_field", TypeFieldPayloads> &
