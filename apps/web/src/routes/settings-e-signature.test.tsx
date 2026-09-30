@@ -11,9 +11,13 @@
  * stubs only shape what this pane must react to.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const ADMIN = {
@@ -494,5 +498,257 @@ describe("the E-signature pane (#245)", () => {
     await user.click(screen.getByRole("button", { name: "Save connector" }));
 
     expect(await screen.findByText("Paste the DocuSign Connect HMAC secret.")).toBeVisible();
+  });
+});
+
+/**
+ * The consent step (#1236). DocuSign's side is out of reach here, so
+ * the popup is a spy on `window.open`, and the callback page's answer is
+ * posted on the same channel the real page uses.
+ */
+describe("the consent step (#1236)", () => {
+  const CONSENT_PATH = "/settings/integrations/e-signature/docusign-consent";
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** Spies on the popup and hands back the URLs it was opened with. */
+  function spyPopup() {
+    const opened: URL[] = [];
+    vi.spyOn(window, "open").mockImplementation((url) => {
+      opened.push(new URL(String(url)));
+      return null;
+    });
+    return opened;
+  }
+
+  /** Posts what the callback page would, for the popup's own `state`. */
+  function answer(popup: URL, result: Record<string, unknown>) {
+    const channel = new BroadcastChannel("openlaw:docusign-consent");
+    channel.postMessage({ state: popup.searchParams.get("state"), ...result });
+    channel.close();
+  }
+
+  it("shows the redirect URI to register, read-only, with a copy button", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    const field = await screen.findByLabelText("Consent redirect URI");
+    expect(field).toHaveValue(new URL(CONSENT_PATH, window.location.origin).toString());
+    expect(field).toHaveAttribute("readonly");
+    expect(within(field.parentElement!).getByRole("button", { name: "Copy" })).toBeVisible();
+  });
+
+  it("opens DocuSign's consent URL for the environment and the typed integration key", async () => {
+    const user = userEvent.setup();
+    const opened = spyPopup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    const key = await screen.findByLabelText("Integration key");
+    await user.clear(key);
+    await user.type(key, "typed-key");
+    await user.click(screen.getByRole("button", { name: "Grant consent" }));
+
+    await user.selectOptions(screen.getByLabelText("Environment"), "production");
+    await user.click(screen.getByRole("button", { name: "Grant consent" }));
+
+    expect(opened).toHaveLength(2);
+    const [demo, production] = opened;
+    expect(demo!.origin).toBe("https://account-d.docusign.com");
+    expect(production!.origin).toBe("https://account.docusign.com");
+    for (const url of opened) {
+      expect(url.pathname).toBe("/oauth/auth");
+      expect(url.searchParams.get("response_type")).toBe("code");
+      expect(url.searchParams.get("scope")).toBe("signature impersonation");
+      expect(url.search).toContain("scope=signature%20impersonation");
+      expect(url.searchParams.get("client_id")).toBe("typed-key");
+      expect(url.searchParams.get("redirect_uri")).toBe(
+        new URL(CONSENT_PATH, window.location.origin).toString(),
+      );
+      expect(url.searchParams.get("state")).toMatch(/^[0-9a-f]{32}$/);
+    }
+  });
+
+  it("keeps Grant consent disabled until there is an integration key", async () => {
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({ connector: unconfigured() }, newCalls()) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    const grant = await screen.findByRole("button", { name: "Grant consent" });
+    expect(grant).toBeDisabled();
+    await user.type(screen.getByLabelText("Integration key"), "a-key");
+    expect(grant).toBeEnabled();
+  });
+
+  it("re-runs the connection test once DocuSign grants consent", async () => {
+    const user = userEvent.setup();
+    const opened = spyPopup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Grant consent" }));
+    answer(opened[0]!, { outcome: "granted" });
+
+    expect(await screen.findByText("Connected to Acme Inc.")).toBeVisible();
+    expect(calls.tests).toBe(1);
+  });
+
+  it("ignores an answer for a consent this pane did not ask for", async () => {
+    const user = userEvent.setup();
+    spyPopup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Grant consent" }));
+    answer(new URL("https://x.invalid/?state=somebody-else"), { outcome: "granted" });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls.tests).toBe(0);
+  });
+
+  it("shows DocuSign's refusal rather than swallowing it", async () => {
+    const user = userEvent.setup();
+    const opened = spyPopup();
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: connectorApi({}, calls) });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Grant consent" }));
+    answer(opened[0]!, {
+      outcome: "refused",
+      error: "access_denied",
+      description: "The user did not consent.",
+    });
+
+    expect(
+      await screen.findByText("DocuSign did not grant consent: The user did not consent."),
+    ).toBeVisible();
+    expect(calls.tests).toBe(0);
+  });
+
+  it("offers Grant consent in the message when DocuSign wants consent", async () => {
+    const user = userEvent.setup();
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi(
+        {
+          test: () =>
+            problem(
+              502,
+              "The connection test failed. The DocuSign user has not given consent to this integration.",
+              SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+            ),
+        },
+        newCalls(),
+      ),
+    });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    expect(await screen.findAllByRole("button", { name: "Grant consent" })).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+
+    expect(await screen.findByText(/has not given consent/)).toBeVisible();
+    expect(screen.getAllByRole("button", { name: "Grant consent" })).toHaveLength(2);
+  });
+
+  it("offers Grant consent when DocuSign refuses the credentials, but not on an outage", async () => {
+    const user = userEvent.setup();
+    let answerWith = () =>
+      problem(
+        502,
+        "The connection test failed. DocuSign refused the connector's credentials.",
+        SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+      );
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi({ test: () => answerWith() }, newCalls()),
+    });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Test connection" }));
+    expect(await screen.findByText(/refused the connector's credentials/)).toBeVisible();
+    expect(screen.getAllByRole("button", { name: "Grant consent" })).toHaveLength(2);
+
+    answerWith = () =>
+      problem(502, "The connection test failed. The provider could not be reached.");
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+    expect(await screen.findByText(/could not be reached/)).toBeVisible();
+    expect(screen.getAllByRole("button", { name: "Grant consent" })).toHaveLength(1);
+  });
+});
+
+/** The page DocuSign's consent popup returns to (#1236). */
+describe("the consent callback page (#1236)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** Listens on the callback page's channel for one answer. */
+  function listen() {
+    const channel = new BroadcastChannel("openlaw:docusign-consent");
+    const received: unknown[] = [];
+    channel.onmessage = (event: MessageEvent<unknown>) => received.push(event.data);
+    return { received, close: () => channel.close() };
+  }
+
+  it("reports a granted consent, drops the code, and closes the popup", async () => {
+    const close = vi.spyOn(window, "close").mockImplementation(() => {});
+    const channel = listen();
+    stubApi({});
+    const { router } = renderAt(
+      "/settings/integrations/e-signature/docusign-consent?code=secret-code&state=s1",
+    );
+
+    try {
+      expect(await screen.findByRole("heading", { name: "Consent granted" })).toBeVisible();
+      await waitFor(() => expect(channel.received).toEqual([{ state: "s1", outcome: "granted" }]));
+      expect(close).toHaveBeenCalled();
+      await waitFor(() => expect(router.state.location.search).toBe(""));
+      expect(JSON.stringify(channel.received)).not.toContain("secret-code");
+    } finally {
+      channel.close();
+    }
+  });
+
+  it("shows DocuSign's error, reports it, and stays open", async () => {
+    const close = vi.spyOn(window, "close").mockImplementation(() => {});
+    const channel = listen();
+    stubApi({});
+    renderAt(
+      "/settings/integrations/e-signature/docusign-consent?error=access_denied&error_description=The%20user%20did%20not%20consent.&state=s2",
+    );
+
+    try {
+      expect(
+        await screen.findByRole("heading", { name: "DocuSign did not grant consent" }),
+      ).toBeVisible();
+      expect(screen.getByRole("alert")).toHaveTextContent("The user did not consent.");
+      await waitFor(() =>
+        expect(channel.received).toEqual([
+          {
+            state: "s2",
+            outcome: "refused",
+            error: "access_denied",
+            description: "The user did not consent.",
+          },
+        ]),
+      );
+      expect(close).not.toHaveBeenCalled();
+    } finally {
+      channel.close();
+    }
   });
 });

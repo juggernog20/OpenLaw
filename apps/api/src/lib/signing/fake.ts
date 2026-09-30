@@ -32,6 +32,7 @@ import {
   EnvelopeNotFoundError,
   EnvelopeEditConflictError,
   SigningConfigError,
+  SigningConsentRequiredError,
   SigningRefusedError,
   SigningUnavailableError,
   WebhookSignatureError,
@@ -55,6 +56,10 @@ export const FAKE_SIGNATURE_HEADER = "x-docusign-signature-1";
  * the credentials. Anything else is refused, so "test connection fails"
  * is a scriptable outcome and not an outage. */
 export const FAKE_VALID_INTEGRATION_KEY = "openlaw-fake-integration-key";
+
+/** An integration key the fake knows but whose user has not consented
+ * to it, so "grant consent first" is a scriptable outcome too (#1236). */
+export const FAKE_UNCONSENTED_INTEGRATION_KEY = "openlaw-fake-unconsented-integration-key";
 
 /** What a successful connection test answers. Fixed, so a suite states
  * the account name it expects rather than reading one back. */
@@ -128,6 +133,12 @@ export class FakeSigningProvider implements SigningProvider {
   async testConnection(): Promise<ConnectionCheck> {
     await Promise.resolve();
     this.requireReachable();
+    if (this.integrationKey === FAKE_UNCONSENTED_INTEGRATION_KEY) {
+      throw new SigningConsentRequiredError(
+        "The provider user has not given consent to this integration. " +
+          "Grant consent, then test the connection again.",
+      );
+    }
     if (this.integrationKey !== FAKE_VALID_INTEGRATION_KEY) {
       throw new SigningConfigError(
         "The provider refused the connector's credentials. Check the integration key, " +

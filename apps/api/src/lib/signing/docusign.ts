@@ -38,6 +38,7 @@ import {
   EnvelopeAccessError,
   EnvelopeEditConflictError,
   SigningConfigError,
+  SigningConsentRequiredError,
   SigningNotSubmittedError,
   SigningRefusedError,
   SigningTimeoutError,
@@ -336,6 +337,20 @@ interface AccountInfo {
   userEmail: string;
 }
 
+/**
+ * The OAuth `error` code of a refused grant, read off the refusal body
+ * that `request` keeps as the cause. Undefined when the body is not the
+ * OAuth error shape.
+ */
+function oauthErrorCode(cause: unknown): string | undefined {
+  if (typeof cause !== "string") return undefined;
+  try {
+    return readString(readObject(JSON.parse(cause)) ?? {}, "error")?.toLowerCase();
+  } catch {
+    return undefined;
+  }
+}
+
 /** Turns a fetch failure into the right side of the transient split. */
 function relayFetchError(error: unknown): never {
   if (error instanceof Error && error.name === "TimeoutError") {
@@ -623,13 +638,21 @@ class DocuSignProvider implements SigningProvider {
     } catch (error) {
       // The grant endpoint refuses bad credentials with 400
       // `invalid_grant` and an unconsented integration with 400
-      // `consent_required` — both are the connector being wrong, not
+      // `consent_required`. Both are the connector being wrong, not
       // one request being wrong, so they answer as a configuration
-      // fault whatever the status code says.
-      if (error instanceof SigningRefusedError) {
+      // fault whatever the status code says. The two remedies differ,
+      // so the missing consent gets its own error (#1236).
+      if (error instanceof SigningRefusedError || error instanceof SigningConfigError) {
+        if (oauthErrorCode(error.cause) === "consent_required") {
+          throw new SigningConsentRequiredError(
+            "The DocuSign user has not given consent to this integration. " +
+              "Grant consent, then test the connection again.",
+            { cause: error },
+          );
+        }
         throw new SigningConfigError(
           "DocuSign refused the connector's credentials. Check the integration key, the user ID, " +
-            "and the RSA key, and grant consent to the integration once from the DocuSign console.",
+            "and the RSA key.",
           { cause: error },
         );
       }

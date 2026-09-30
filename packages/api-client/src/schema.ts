@@ -11585,6 +11585,32 @@ export interface operations {
           };
         };
       };
+      /** @description The connection test failed. A credential refusal names its type, so the pane can offer the consent step (#1236); a provider outage names none. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-consent-required"
+              | "urn:openlaw:problem:signing-credentials-refused"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {

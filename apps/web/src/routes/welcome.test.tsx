@@ -10,10 +10,14 @@
  * the AI connector through the AI analysis pane's (#699).
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { paths } from "@openlaw/api-client";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import {
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 import { clearSetupDrafts, readSetupDraft } from "../lib/setup-drafts";
 
@@ -1368,6 +1372,193 @@ function aiWizardExtra(calls: AiCalls, save?: () => Response) {
     return undefined;
   };
 }
+
+/**
+ * The consent step on the onboarding E-signature step (#1236). The
+ * popup is a spy on `window.open`, and the callback page's answer is
+ * posted on the channel the real page uses.
+ */
+describe("welcome wizard DocuSign consent step (#1236)", () => {
+  const REDIRECT_URI = () =>
+    new URL(
+      "/settings/integrations/e-signature/docusign-consent",
+      window.location.origin,
+    ).toString();
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function spyPopup() {
+    const opened: URL[] = [];
+    vi.spyOn(window, "open").mockImplementation((url) => {
+      opened.push(new URL(String(url)));
+      return null;
+    });
+    return opened;
+  }
+
+  function answer(popup: URL, result: Record<string, unknown>) {
+    const channel = new BroadcastChannel("openlaw:docusign-consent");
+    channel.postMessage({ state: popup.searchParams.get("state"), ...result });
+    channel.close();
+  }
+
+  /** A saved connector whose test answers `test`, counting the calls. */
+  function savedConnector(test: () => Response) {
+    const calls: SigningCalls = { saves: [], completed: 0 };
+    const counter = { tests: 0 };
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      signingConnector: {
+        environment: "production",
+        integrationKey: "saved-key",
+        apiUserId: "saved-user",
+      },
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/signing-connectors/docusign/test") {
+          counter.tests += 1;
+          return test();
+        }
+        return signingWizardExtra(calls)(call);
+      },
+    });
+    return { calls, counter };
+  }
+
+  it("shows the redirect URI to register, with a copy button, on the empty form", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra({ saves: [], completed: 0 }),
+    });
+    renderAt("/welcome?step=e-signature");
+
+    const field = await screen.findByLabelText("Consent redirect URI");
+    expect(field).toHaveValue(REDIRECT_URI());
+    expect(field).toHaveAttribute("readonly");
+    expect(within(field.parentElement!).getByRole("button", { name: "Copy" })).toBeVisible();
+  });
+
+  it("shows the redirect URI beside a configured connector too", async () => {
+    savedConnector(() => json(500, {}));
+    renderAt("/welcome?step=e-signature");
+
+    expect(await screen.findByLabelText("Consent redirect URI")).toHaveValue(REDIRECT_URI());
+  });
+
+  it("opens DocuSign's consent URL with the typed integration key and environment", async () => {
+    const opened = spyPopup();
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra({ saves: [], completed: 0 }),
+    });
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+
+    const grant = await screen.findByRole("button", { name: "Grant consent" });
+    expect(grant).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("Environment"), "production");
+    await user.type(screen.getByLabelText("Integration key"), "typed-key");
+    await user.click(grant);
+
+    expect(opened).toHaveLength(1);
+    const url = opened[0]!;
+    expect(url.origin).toBe("https://account.docusign.com");
+    expect(url.pathname).toBe("/oauth/auth");
+    expect(url.searchParams.get("client_id")).toBe("typed-key");
+    expect(url.searchParams.get("scope")).toBe("signature impersonation");
+    expect(url.searchParams.get("response_type")).toBe("code");
+    expect(url.searchParams.get("redirect_uri")).toBe(REDIRECT_URI());
+  });
+
+  it("offers Grant consent in the failure message and re-tests once consent is granted", async () => {
+    const opened = spyPopup();
+    let consented = false;
+    const { counter } = savedConnector(() =>
+      consented
+        ? json(200, {
+            connected: true,
+            accountName: "Calloway Demo",
+            accountId: "demo-account",
+            userEmail: "signer@example.com",
+          })
+        : problem(
+            502,
+            "The connection test failed. The DocuSign user has not given consent to this integration.",
+            SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+          ),
+    );
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Test DocuSign connection" }));
+    const alert = (await screen.findByText(/has not given consent/)).closest<HTMLElement>(
+      '[role="alert"]',
+    )!;
+    await user.click(within(alert).getByRole("button", { name: "Grant consent" }));
+
+    // The stored connector's own key and environment, since the form
+    // is closed on a configured connector.
+    expect(opened[0]!.origin).toBe("https://account.docusign.com");
+    expect(opened[0]!.searchParams.get("client_id")).toBe("saved-key");
+
+    consented = true;
+    answer(opened[0]!, { outcome: "granted" });
+    expect(
+      await screen.findByText("Connected to Calloway Demo as signer@example.com."),
+    ).toBeInTheDocument();
+    expect(counter.tests).toBe(2);
+  });
+
+  it("offers Grant consent when DocuSign refuses the credentials, not on an outage", async () => {
+    let refusal = () =>
+      problem(
+        502,
+        "The connection test failed. DocuSign refused the connector's credentials.",
+        SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+      );
+    savedConnector(() => refusal());
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Test DocuSign connection" }));
+    const refused = (
+      await screen.findByText(/refused the connector's credentials/)
+    ).closest<HTMLElement>('[role="alert"]')!;
+    expect(within(refused).getByRole("button", { name: "Grant consent" })).toBeEnabled();
+
+    refusal = () => problem(502, "The connection test failed. The provider could not be reached.");
+    await user.click(screen.getByRole("button", { name: "Test DocuSign connection" }));
+    const alert = await screen.findByText(/could not be reached/);
+    expect(within(alert).queryByRole("button", { name: "Grant consent" })).not.toBeInTheDocument();
+  });
+
+  it("shows DocuSign's refusal rather than swallowing it", async () => {
+    const opened = spyPopup();
+    stubApi({
+      signedIn: ADMIN,
+      onboarding: { completed: false },
+      extra: signingWizardExtra({ saves: [], completed: 0 }),
+    });
+    renderAt("/welcome?step=e-signature");
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Integration key"), "typed-key");
+    await user.click(screen.getByRole("button", { name: "Grant consent" }));
+    answer(opened[0]!, {
+      outcome: "refused",
+      error: "access_denied",
+      description: "The user did not consent.",
+    });
+
+    expect(
+      await screen.findByText("DocuSign did not grant consent: The user did not consent."),
+    ).toBeInTheDocument();
+  });
+});
 
 describe("welcome wizard AI analysis step (#699)", () => {
   it("offers Groq with its prefilled model and saves without a Base URL", async () => {

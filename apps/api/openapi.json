@@ -7507,6 +7507,60 @@
               }
             }
           },
+          "502": {
+            "description": "The connection test failed. A credential refusal names its type, so the pane can offer the consent step (#1236); a provider outage names none.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "urn:openlaw:problem:signing-consent-required",
+                        "urn:openlaw:problem:signing-credentials-refused",
+                        "about:blank"
+                      ],
+                      "description": "Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it."
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["path", "message"],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": ["type", "title", "status"],
+                  "additionalProperties": false,
+                  "description": "The connection test failed. A credential refusal names its type, so the pane can offer the consent step (#1236); a provider outage names none."
+                }
+              }
+            }
+          },
           "default": {
             "description": "Problem details (RFC 9457)",
             "content": {
