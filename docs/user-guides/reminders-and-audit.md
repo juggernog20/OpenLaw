@@ -7,10 +7,10 @@ Set the organization's default reminder lead times, choose whether comment email
 1. Open your profile menu and select **Settings**.
 2. Under **Organization**, select **Notifications**. Check that the page is **Reminder lead times**; **Personal**, **Notifications** changes only your preferences.
 3. Select **Add lead time**, enter a whole number of days before the date, and select **Save**. Select **Cancel** to discard the draft. Zero means **On the day**.
-4. Use a row's **Remove** control to remove an unwanted lead time. Drag its reorder handle, or focus the handle and use the arrow keys, to change the list's display order.
+4. Use a row's **Remove** control to remove an unwanted lead time.
 5. Wait for each save, then reload and confirm the final list.
 
-The list accepts distinct whole numbers from 0 to 730, holds at most 20 entries, and must keep at least one. Reordering does not change which dates qualify. Changes save immediately and affect later reminder checks.
+The list accepts distinct whole numbers from 0 to 730, holds at most 20 entries, and must keep at least one. The list always shows the furthest lead time first. Changes save immediately and affect later reminder checks.
 
 This list is the organization's default. A staff member can replace it with their own list under **Personal**, **Notifications**, **Reminder lead times** by turning off **Use the organization's default lead times**. Their list then applies to their own reminders only, and a change to the default no longer reaches them. Business Users cannot set their own list. See [Set your own reminder lead times](notifications.md#set-your-own-reminder-lead-times).
 

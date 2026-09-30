@@ -110,7 +110,7 @@ One of _our own_ corporate entities — a subsidiary, holding company, or branch
 _Avoid_: company, organisation, party, counterparty, subsidiary
 
 **Holding**:
-A directional ownership fact recording the percentage one owner holds of an Entity. The owner is another Entity or an individual, recorded by name only, with no Entity or user account. Holdings form the ownership graph; they do not make either party a child record. Where an Entity keeps a share register, its owner Holdings are projected from it, marked From register and read-only [ENT-003, ENT-011, DES-088].
+A directional ownership fact recording the percentage one owner holds of an Entity. The owner is another Entity or an individual, recorded by name only, with no Entity or user account. Holdings form the ownership graph; they do not make either party a child record. Every Holding is projected from the owned Entity's share register, marked From register and read-only. No Holding is typed by hand [ENT-003, ENT-011, ENT-012, DES-088].
 _Avoid_: parent link, ownership relation, shareholding record
 
 **Share class**:

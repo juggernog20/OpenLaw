@@ -2,8 +2,8 @@
 
 /**
  * The Activity a Holding write appends (ENT-003): one entry on each
- * Entity of the link. Shared by the hand-typed Holdings routes and the
- * ENT-011 projection that rewrites Holdings from a share register.
+ * Entity of the link. The ENT-011 projection, which rewrites Holdings
+ * from a share register, is the only caller (ENT-012).
  */
 import type { Transaction } from "@openlaw/db";
 import { recordActivity } from "./activity.js";
