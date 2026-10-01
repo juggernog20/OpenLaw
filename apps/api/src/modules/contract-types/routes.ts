@@ -18,6 +18,7 @@ import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
 import { contractTypeUsage } from "../contracts/type-usage.js";
 
 export const contractTypesRoutes = taxonomyRoutes({
+  duplicateFormModule: "contract",
   formModule: "contract",
   table: contractTypes,
   path: "contract-types",

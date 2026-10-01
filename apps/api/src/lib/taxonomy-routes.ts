@@ -31,7 +31,7 @@
  */
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
-import { seedTypeForm } from "./type-form-routes.js";
+import { readTypeForm, seedTypeForm, writeTypeForm } from "./type-form-routes.js";
 import type { FormModule } from "@openlaw/shared";
 import { z } from "zod";
 import {
@@ -171,6 +171,8 @@ interface TaxonomyRoutesBase<
   TContext = undefined,
 > {
   formModule?: FormModule;
+  /** Enables duplication without adding Default identity or seeding built-in Rows. */
+  duplicateFormModule?: FormModule;
   table: TaxonomyTable;
   /** URL segment under /api/v1, e.g. `contract-types`. */
   path: string;
@@ -474,6 +476,19 @@ export function taxonomyRoutes<
       },
     );
 
+    async function lockIdentities(tx: Transaction) {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
+      // Archived types retain their slugs and display orders.
+      return tx.select().from(table).where(scoped()).orderBy(asc(table.id)).for("update");
+    }
+
+    function nextIdentity(existing: TaxonomyRow[], displayName: string) {
+      return {
+        slug: freeSlug(displayName, "type", new Set(existing.map((row) => row.slug))),
+        displayOrder: existing.reduce((top, row) => Math.max(top, row.displayOrder), 0) + 1,
+      };
+    }
+
     app.post(
       `/${path}`,
       {
@@ -491,27 +506,13 @@ export function taxonomyRoutes<
       async (request, reply) => {
         const displayName = request.body.displayName.trim();
         const row = await app.db.transaction(async (tx) => {
-          if (config.uniqueNames) {
-            await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
-            const names = await tx.select({ name: table.displayName }).from(table).where(scoped());
-            if (names.some((row) => row.name.toLowerCase() === displayName.toLowerCase()))
-              throw httpError(409, `A ${noun} with this name already exists.`);
-          }
-          // Slug and order derive from the full row set — archived rows
-          // still hold their slugs (restore brings them back) and their
-          // display orders, so both scans include them.
-          const existing = await tx
-            .select({ slug: table.slug, displayOrder: table.displayOrder })
-            .from(table)
-            .where(scoped())
-            .for("update");
-          const slug = freeSlug(
-            displayName,
-            "type",
-            new Set(existing.map((candidate) => candidate.slug)),
-          );
-          const displayOrder =
-            existing.reduce((top, candidate) => Math.max(top, candidate.displayOrder), 0) + 1;
+          const existing = await lockIdentities(tx);
+          if (
+            config.uniqueNames &&
+            existing.some((row) => row.displayName.toLowerCase() === displayName.toLowerCase())
+          )
+            throw httpError(409, `A ${noun} with this name already exists.`);
+          const { slug, displayOrder } = nextIdentity(existing, displayName);
 
           const [created] = await tx
             .insert(table)
@@ -535,6 +536,65 @@ export function taxonomyRoutes<
         return reply.status(201).send({ [config.keySingular]: await rowJson(row) });
       },
     );
+
+    const duplicateModule = config.duplicateFormModule;
+    if (duplicateModule) {
+      app.post(
+        `/${path}/:id/duplicate`,
+        {
+          preHandler: requireRole("administrator"),
+          schema: {
+            operationId: `duplicate${config.idSingular}`,
+            summary: `Duplicate a live ${noun}'s identity and Form`,
+            tags: [config.tag],
+            params: z.object({ id: z.string() }),
+            response: { 201: RowEnvelope, default: problemResponse },
+          },
+        },
+        async (request, reply) => {
+          const row = await app.db.transaction(async (tx) => {
+            const existing = await lockIdentities(tx);
+            const source = existing.find((row) => row.id === request.params.id);
+            if (!source) throw httpError(404, `No ${noun} exists with this id.`);
+            if (source.archivedAt)
+              throw httpError(409, `Restore this ${noun} before duplicating it.`);
+            // The copy must still pass DisplayNameSchema on a later rename,
+            // so a long source name gives up room for the suffix.
+            const suffix = " (copy)";
+            const displayName = source.displayName.slice(0, 100 - suffix.length).trimEnd() + suffix;
+            const { slug, displayOrder } = nextIdentity(existing, displayName);
+            const form = await readTypeForm(tx, duplicateModule, source.id);
+            const [created] = await tx
+              .insert(table)
+              .values({
+                slug,
+                displayName,
+                description: source.description,
+                displayOrder,
+                isSystemDefault: false,
+                ...(config.formModule ? { isDefault: false } : {}),
+                ...(scope ? { [scope.key]: scope.value } : {}),
+              })
+              .returning();
+            await writeTypeForm(tx, duplicateModule, created!.id, form);
+            await recordActivity(tx, {
+              entityType: "system",
+              actorId: request.user.id,
+              action: `${duplicateModule}_type.duplicated`,
+              visibility: "admin_only",
+              payload: {
+                slug,
+                displayName,
+                sourceSlug: source.slug,
+                sourceDisplayName: source.displayName,
+              },
+            });
+            return created!;
+          });
+          return reply.status(201).send({ [config.keySingular]: await rowJson(row) });
+        },
+      );
+    }
 
     app.patch(
       `/${path}/:id`,

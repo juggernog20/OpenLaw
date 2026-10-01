@@ -25,12 +25,17 @@ import {
   type Db,
   type SigningConnector,
 } from "@openlaw/db";
-import { LIVE_ENVELOPE_STATUSES } from "@openlaw/shared";
+import {
+  LIVE_ENVELOPE_STATUSES,
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+} from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
-import { httpError, problemResponse } from "../../lib/problem.js";
+import { httpError, problemResponse, problemTypeResponse } from "../../lib/problem.js";
 import {
   SigningConfigError,
+  SigningConsentRequiredError,
   SigningTimeoutError,
   SigningUnavailableError,
 } from "../../lib/signing/provider.js";
@@ -443,6 +448,11 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
             accountId: z.string(),
             userEmail: z.string(),
           }),
+          502: problemTypeResponse(
+            "The connection test failed. A credential refusal names its type, so the pane " +
+              "can offer the consent step (#1236); a provider outage names none.",
+            [SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE, SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE],
+          ),
           default: problemResponse,
         },
       },
@@ -468,8 +478,20 @@ export const signingConnectorRoutes: FastifyPluginAsyncZod = async (app) => {
         // request. The detail is the plain-language reason the pane
         // shows verbatim — and it is ours, never the provider's own
         // response text, which can quote back what it was just handed.
+        // The two credential refusals carry a type, because the pane
+        // offers the consent step on them and must not have to read
+        // the sentence to know when (#1236).
+        if (error instanceof SigningConsentRequiredError) {
+          throw httpError(502, `The connection test failed. ${error.message}`, {
+            expose: true,
+            type: SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+          });
+        }
         if (error instanceof SigningConfigError) {
-          throw httpError(502, `The connection test failed. ${error.message}`, { expose: true });
+          throw httpError(502, `The connection test failed. ${error.message}`, {
+            expose: true,
+            type: SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+          });
         }
         if (error instanceof SigningTimeoutError) {
           throw httpError(

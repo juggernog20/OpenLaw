@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DES-095 party display shared by trust and partnership registers, including restricted reads. */
+/** DES-096 party display shared by trust and partnership registers, including restricted reads. */
 import { FormattedMessage } from "react-intl";
 import type { EntityRow } from "../../lib/entities";
 import type { TrustParty } from "../../lib/trust-register";

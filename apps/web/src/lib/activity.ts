@@ -1161,6 +1161,11 @@ interface Arm {
  * short and invisible.
  */
 const TAXONOMY = {
+  duplicated: defineMessage({
+    id: "activity.taxonomy.duplicated",
+    defaultMessage:
+      "{actor} duplicated the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} other {type}} {sourceName} as {name}",
+  }),
   created: defineMessage({
     id: "activity.taxonomy.created",
     defaultMessage:
@@ -1245,6 +1250,14 @@ function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
 ): Record<`${Kind}.${Verb}`, Arm> {
   const values = taxonomyValues(kind);
   const arms: Record<keyof typeof TAXONOMY, Arm> = {
+    duplicated: {
+      icon,
+      message: TAXONOMY.duplicated,
+      values: (intl, payload) => ({
+        ...values(intl, payload),
+        sourceName: text(payload, "sourceDisplayName") ?? text(payload, "sourceSlug") ?? "",
+      }),
+    },
     created: { icon, message: TAXONOMY.created, values },
     renamed: {
       icon,
@@ -3168,9 +3181,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
   },
 
   // ---- The settings taxonomies and the field catalog ----
-  ...taxonomyArms("contract_type", Tag, TAXONOMY_VERBS),
-  ...taxonomyArms("matter_type", Tag, TAXONOMY_VERBS),
-  ...taxonomyArms("entity_type", Tag, TAXONOMY_VERBS),
+  ...taxonomyArms("contract_type", Tag, [...TAXONOMY_VERBS, "duplicated"]),
+  ...taxonomyArms("matter_type", Tag, [...TAXONOMY_VERBS, "duplicated"]),
+  ...taxonomyArms("entity_type", Tag, [...TAXONOMY_VERBS, "duplicated"]),
   ...taxonomyArms("officer_role", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("department", Tag, TAXONOMY_VERBS),
   ...taxonomyArms("region", Tag, TAXONOMY_VERBS),

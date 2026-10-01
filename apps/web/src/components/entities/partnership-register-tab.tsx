@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DES-095: partners and capital read as of a date, followed by entries and owned Holdings. */
+/** DES-096: partners and capital read as of a date, followed by entries and owned Holdings. */
 
 import { useId, useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";

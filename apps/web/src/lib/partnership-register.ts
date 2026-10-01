@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** ENT-014 response types and DES-095 vocabulary for the partnership register. */
+/** ENT-014 response types and DES-096 vocabulary for the partnership register. */
 
 import type { paths } from "@openlaw/api-client";
 import { defineMessages } from "react-intl";

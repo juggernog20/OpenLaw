@@ -23,7 +23,7 @@
 import { useRef, useState, type ReactNode, type SubmitEvent as FormSubmitEvent } from "react";
 import { useNavigate } from "react-router";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
-import { History, Pencil, TriangleAlert } from "lucide-react";
+import { Copy, History, Pencil, TriangleAlert } from "lucide-react";
 import { problem, type ProblemResult } from "../lib/problem";
 import { field } from "../lib/forms";
 import { InlineAddForm } from "./inline-add-form";
@@ -62,6 +62,7 @@ export interface TaxonomyPaneApi<Row extends TaxonomyPaneRow = TaxonomyPaneRow> 
   rename(id: string, displayName: string): Promise<ProblemResult<Row>>;
   reorder?(ids: string[]): Promise<ProblemResult<Row[]>>;
   archive(id: string, reassignToId?: string): Promise<ProblemResult<Row>>;
+  duplicate?(id: string): Promise<ProblemResult<Row>>;
   restore(id: string): Promise<ProblemResult<Row>>;
 }
 
@@ -82,6 +83,7 @@ export interface TaxonomyPaneMessages {
    * records do not exist yet, and which therefore has nothing but a
    * zero to print, omits it and draws no caption at all. */
   inUse?: MessageDescriptor;
+  duplicate?: MessageDescriptor;
   archive: MessageDescriptor;
   restore: MessageDescriptor;
   reorder?: MessageDescriptor;
@@ -345,6 +347,7 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
   const [announcement, setAnnouncement] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
   const createInFlight = useRef(false);
+  const duplicateInFlight = useRef(new Set<string>());
 
   const compareRows = api.reorder
     ? byDisplayOrder
@@ -454,6 +457,26 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
     }
   }
 
+  async function duplicate(row: Row) {
+    if (!api.duplicate || !editor || duplicateInFlight.current.has(row.id)) return;
+    duplicateInFlight.current.add(row.id);
+    noteRow(row.id, "saving");
+    try {
+      const { data, detail } = await api
+        .duplicate(row.id)
+        .catch(async () => ({ data: undefined, ...(await problem(undefined)) }));
+      if (data) {
+        setRows((current) => [...current, data]);
+        noteRow(row.id, "saved");
+        await navigate(editor.path(data));
+      } else {
+        noteRow(row.id, "error", detail);
+      }
+    } finally {
+      duplicateInFlight.current.delete(row.id);
+    }
+  }
+
   async function restore(row: Row) {
     noteRow(row.id, "saving");
     const { data, detail } = await api
@@ -550,6 +573,20 @@ export function TaxonomyTypesPane<Row extends TaxonomyPaneRow = TaxonomyPaneRow>
                         onClick={() => void navigate(editor.path(row))}
                       >
                         <Pencil size={16} aria-hidden="true" className="text-muted" />
+                      </Button>
+                    )}
+                    {api.duplicate && editor && messages.duplicate && !row.archivedAt && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="px-1.5"
+                        aria-label={intl.formatMessage(messages.duplicate, {
+                          name: row.displayName,
+                        })}
+                        disabled={rowStatus[row.id] === "saving"}
+                        onClick={() => void duplicate(row)}
+                      >
+                        <Copy size={16} aria-hidden="true" className="text-muted" />
                       </Button>
                     )}
                   </>

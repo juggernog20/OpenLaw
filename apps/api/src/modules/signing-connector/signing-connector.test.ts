@@ -41,7 +41,14 @@ import {
   type TestHarness,
 } from "../../testing/harness.js";
 import { SigningTimeoutError, SigningUnavailableError } from "../../lib/signing/provider.js";
-import { FAKE_VALID_INTEGRATION_KEY } from "../../lib/signing/fake.js";
+import {
+  FAKE_UNCONSENTED_INTEGRATION_KEY,
+  FAKE_VALID_INTEGRATION_KEY,
+} from "../../lib/signing/fake.js";
+import {
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
+} from "@openlaw/shared";
 
 let harness: TestHarness;
 let adminCookies: Record<string, string>;
@@ -436,8 +443,24 @@ describe("the connection test", () => {
     expect(res.statusCode).toBe(502);
     expect(res.headers["content-type"]).toContain("application/problem+json");
     expect(res.json().detail).toContain("The connection test failed.");
+    expect(res.json().type).toBe(SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE);
     expect(res.body).not.toContain(RSA_KEY);
     expect(res.body).not.toContain(HMAC_SECRET);
+  });
+
+  it("names a missing consent apart from refused credentials (#1236)", async () => {
+    await clearConnector();
+    expect(
+      (await save({ ...CONNECTOR, integrationKey: FAKE_UNCONSENTED_INTEGRATION_KEY })).statusCode,
+    ).toBe(200);
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `${URL_BASE}/test`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode).toBe(502);
+    expect(res.json().type).toBe(SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE);
+    expect(res.json().detail).toContain("has not given consent");
   });
 });
 

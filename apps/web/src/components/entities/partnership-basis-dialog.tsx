@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** DES-095: choose the ENT-014 basis used by the register and its projected Holdings. */
+/** DES-096: choose the ENT-014 basis used by the register and its projected Holdings. */
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";

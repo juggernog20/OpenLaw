@@ -223,7 +223,7 @@ const section = (name: string | RegExp) =>
   screen.getByRole("heading", { name }).closest("section")!;
 
 describe("the trust Ownership tab", () => {
-  it("loads the register and renders the DES-095 order, grouped roles, fund and exports", async () => {
+  it("loads the register and renders the DES-096 order, grouped roles, fund and exports", async () => {
     const api = registerApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/entities/e1/ownership?asOf=2022-01-01");

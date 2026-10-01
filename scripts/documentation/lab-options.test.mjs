@@ -3,8 +3,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { acceptanceConfiguration } from "./lab-options.mjs";
 
-test("ordinary labs keep preparation disabled and Docker allocates their networks", () => {
-  assert.deepEqual(acceptanceConfiguration({}), { environment: {}, networks: {} });
+test("ordinary labs keep direct send and Docker allocates their networks", () => {
+  // Preparation is on by default (#1237), so "off" has to say so.
+  assert.deepEqual(acceptanceConfiguration({}), {
+    environment: { SIGNING_PREPARATION_ENABLED: "false" },
+    networks: {},
+  });
 });
 
 test("live acceptance uses real provider hosts and explicit independent subnets", () => {

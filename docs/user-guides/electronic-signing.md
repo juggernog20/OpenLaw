@@ -6,9 +6,25 @@ Send a Document Version of the primary Document, follow its Envelope, and check 
 
 Sign in as a Legal Team Member or Administrator with access to an unarchived Contract and its primary Document. An Administrator must have [configured and enabled the Signing connector](configure-signing.md). Check the intended Document Version, the Signers' distinct email addresses, and any [unresolved approvals](contract-approvals.md). Signers do not need OpenLaw accounts. Everyone is asked at once and can sign in any order.
 
-The default interface still offers **Send for signature**. The preparation interface, **Prepare Envelope** followed by **Continue to DocuSign**, is available only in an explicitly enabled acceptance lab. Its native editor restrictions have not yet passed the live account checks. The instructions below distinguish these interfaces. [Manual hand-off](manual-signing.md) remains available without a connector.
+The default interface prepares the Envelope in DocuSign: **Send for signature** opens **Prepare Envelope**, and **Continue to DocuSign** opens DocuSign's editor, where you place the fields and send. An operator can switch the install back to the older interface, where **Send envelope** sends at once from OpenLaw. The dialog shows which one your install uses. [Manual hand-off](manual-signing.md) remains available without a connector.
 
-## Send with the default interface
+## Prepare and send in DocuSign
+
+The connector needs a non-administrator DocuSign integration user. Account entitlements and editor controls depend on your DocuSign account.
+
+1. Open **Signatures**, then select **Send for signature**. The **Prepare Envelope** dialog opens.
+2. Choose **Version** and enter the Signers and **Subject**. Check these before continuing. A preparation retains this Version, Document chain, Signers and Subject.
+3. Select **Continue to DocuSign**. OpenLaw saves an unsent preparation, then opens DocuSign in the same tab. If the editor cannot open, the preparation stays saved.
+4. In DocuSign, select each Signer and place their signature, initials, date and text fields. Check every page, assignment and required-field setting before sending. New preparations do not use `/sig/` anchors.
+5. Use the provider's save and close control to keep the draft, or send only after checking the paper and fields. Return to the Contract's **Signatures** tab and read the Envelope state.
+
+The integration requests restrictions on recipients, Documents, pages, Subject, visibility and templates. Their enforcement through every native editor route has not yet passed the live account checks. If a restricted change is possible, do not send. Report it to your operator. OpenLaw does not promise that DocuSign will refuse sending without expected fields, or that every Signer must have a signature field. Send Later availability is also account-specific and unverified.
+
+Preparing, launching and returning do not move the Contract Stage. A browser return is not proof of sending. **Prepared by** names the OpenLaw preparer; it does not identify who later clicked Send under the shared provider identity.
+
+## Send immediately with the older interface
+
+Your install uses this interface only when the operator has turned preparation off. The dialog is titled **Send for signature** and its button reads **Send envelope**.
 
 1. Open **Signatures**, then select **Send for signature**.
 2. Choose **Version**. Check the filename and Document Version number. Only the primary Document goes out; supporting Documents and attachments are not included.
@@ -19,20 +35,6 @@ The default interface still offers **Send for signature**. The preparation inter
 This interface sends immediately. It uses the legacy `/sig/` signature anchor for every Signer. All Signers share those marks; this interface cannot assign distinct positions. The earlier live check covered one Signer and one visible anchor. Multiple Signers, hidden anchors and paper without anchors have not been verified live. Do not rely on this interface to ensure that each Signer has a distinct required signature field.
 
 A confirmed direct send moves the Contract forward to its first configured live Signature Status, normally **Out for signature**. A Contract already at Signature, Active, or Ended keeps its Status. If the send moves the Contract beyond Approval while approvals remain Pending or Rejected, **Move past approval** opens first; see [Request and give approval](contract-approvals.md). An uncertain result can recover later. Check the existing Envelope before trying another send.
-
-## Prepare in the acceptance lab
-
-Use fictional paper and two controlled Signer inboxes. The lab requires a non-administrator DocuSign integration user. Production account entitlements and editor controls still need their own verification.
-
-1. Open **Signatures**, then select **Prepare Envelope**.
-2. Choose **Version** and enter the Signers and **Subject**. Check these before continuing. A preparation retains this Version, Document chain, Signers and Subject.
-3. Select **Continue to DocuSign**. OpenLaw saves an unsent preparation, then opens DocuSign in the same tab. If the editor cannot open, the preparation stays saved.
-4. In DocuSign, select each Signer and place their signature, initials, date and text fields. Check every page, assignment and required-field setting before sending. New preparations do not use `/sig/` anchors.
-5. Use the provider's save and close control to keep the draft, or send only after checking the paper and fields. Return to the Contract's **Signatures** tab and read the Envelope state.
-
-The integration requests restrictions on recipients, Documents, pages, Subject, visibility and templates. Their enforcement through every native editor route is unverified. If a restricted change is possible, stop the lab send and report it. OpenLaw does not promise that DocuSign will refuse sending without expected fields, or that every Signer must have a signature field. Send Later availability is also account-specific and unverified.
-
-Preparing, launching and returning do not move the Contract Stage. A browser return is not proof of sending. **Prepared by** names the OpenLaw preparer; it does not identify who later clicked Send under the shared provider identity.
 
 ## Save, Resume and discard a preparation
 

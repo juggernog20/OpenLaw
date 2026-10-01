@@ -171,12 +171,46 @@ export function createDocuSignDriverFactory(baseUrl?: string): SigningDriverFact
   return (config) => createDocuSignProvider(config, { hosts: { auth: baseUrl, api: baseUrl } });
 }
 
-/** Keeps rollout off while allowing an explicitly declared live acceptance lab. */
+/** The switch that decides which sending interface a connector gets. */
+export const SIGNING_PREPARATION_VARIABLE = "SIGNING_PREPARATION_ENABLED";
+
+/**
+ * Whether Continue to DocuSign is the interface a configured connector
+ * gets (#1237).
+ *
+ * On unless the deployment says otherwise. The stored connector still
+ * decides whether anything can be sent at all; this answers only how.
+ * `SIGNING_PREPARATION_ENABLED=false` is the one way back to immediate
+ * Send envelope. The direct-send API and manual hand-off stay available
+ * either way.
+ *
+ * Empty is unset, as it is for every other Compose variable. Anything
+ * other than `true` or `false`, case-insensitively, stops the boot, for
+ * {@link readStandInFlag}'s reason: a `0` or an `off` that we read as
+ * "on" would be a direct send its operator believed they had kept.
+ *
+ * `SIGNING_PREPARATION_LIVE_LAB=true` no longer turns anything on. It
+ * stays as the acceptance lab's declaration that it talks to the real
+ * provider, so it still refuses a stand-in, and it refuses a lab that
+ * turns preparation off.
+ */
 export function readSigningPreparationEnabled(env: SigningHostEnvironment): boolean {
   const baseUrl = readDocuSignBaseUrl(env);
-  const liveLab = env.SIGNING_PREPARATION_LIVE_LAB === "true";
-  if (liveLab && baseUrl) {
-    throw new SigningHostConfigError("A live preparation lab cannot use a signing stand-in.");
+  const value = env[SIGNING_PREPARATION_VARIABLE]?.trim().toLowerCase();
+  let enabled: boolean;
+  if (!value || value === "true") enabled = true;
+  else if (value === "false") enabled = false;
+  else
+    throw new SigningHostConfigError(
+      `${SIGNING_PREPARATION_VARIABLE} must be "true", "false" or unset.`,
+    );
+  if (env.SIGNING_PREPARATION_LIVE_LAB === "true") {
+    if (baseUrl)
+      throw new SigningHostConfigError("A live preparation lab cannot use a signing stand-in.");
+    if (!enabled)
+      throw new SigningHostConfigError(
+        `A live preparation lab cannot turn preparation off with ${SIGNING_PREPARATION_VARIABLE}=false.`,
+      );
   }
-  return env.SIGNING_PREPARATION_ENABLED === "true" && (Boolean(baseUrl) || liveLab);
+  return enabled;
 }

@@ -95,6 +95,15 @@ type TaxonomyPayloads = {
   deleted: { slug: string; displayName: string };
 };
 
+/**
+ * The three lists that own a Form (Contract, Matter and Entity types) also
+ * copy a live type with its Form (DD-028 amendment). The payload names the
+ * source and the copy.
+ */
+type RecordTypePayloads = TaxonomyPayloads & {
+  duplicated: { slug: string; displayName: string; sourceSlug: string; sourceDisplayName: string };
+};
+
 /** The four verbs an attached-field catalog writes. */
 type TypeFieldPayloads = {
   attached: { typeSlug: string; fieldSlug: string; isRequired: boolean };
@@ -1520,9 +1529,9 @@ export type ActivityPayloadMap = OAuthGrantPayloads &
   SettingsPayloads &
   Prefixed<"department", TaxonomyPayloads> &
   Prefixed<"region", TaxonomyPayloads> &
-  Prefixed<"contract_type", TaxonomyPayloads> &
-  Prefixed<"matter_type", TaxonomyPayloads> &
-  Prefixed<"entity_type", TaxonomyPayloads> &
+  Prefixed<"contract_type", RecordTypePayloads> &
+  Prefixed<"matter_type", RecordTypePayloads> &
+  Prefixed<"entity_type", RecordTypePayloads> &
   Prefixed<"officer_role", TaxonomyPayloads> &
   Prefixed<"request_type", TaxonomyPayloads> &
   Prefixed<"knowledge_type", TaxonomyPayloads> &

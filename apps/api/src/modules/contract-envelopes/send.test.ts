@@ -1497,7 +1497,7 @@ describe("preparation refusals and reservations", () => {
     expect((await signingState(as(MEMBER), contract.number)).envelopes).toEqual([]);
   });
 
-  it("keeps preparation off until enabled and requires the Signing connector", async () => {
+  it("refuses preparation an operator turned off and requires the Signing connector", async () => {
     const { prepare } = await ready();
     harness.app.signingPreparationEnabled = false;
     try {

@@ -199,9 +199,10 @@ const resolveSigningProvider = createSigningResolver(
   db,
   createDocuSignDriverFactory(docusignBaseUrl),
 );
-// Off on every ordinary install. An explicit live acceptance lab sets both
-// switches (TECH-018 addendum, #1178); a lab that also names a stand-in is a
-// configuration fault and stops the boot with the message, not a stack trace.
+// On unless the deployment sets SIGNING_PREPARATION_ENABLED=false (#1237).
+// A value other than true or false, or a live lab that names a stand-in or
+// turns preparation off, is a configuration fault. It stops the boot with
+// the message, not a stack trace.
 const signingPreparationEnabled = (function readPreparationGate() {
   try {
     return readSigningPreparationEnabled(process.env);
@@ -340,7 +341,7 @@ await resolveVapid().catch((error: unknown) => {
 const metrics = createRuntimeMetrics({ servesRequests: true });
 const app = await buildApp(
   {
-    // Development-only until the complete DocuSign flow is released.
+    // On unless SIGNING_PREPARATION_ENABLED=false (#1237); read above.
     signingPreparationEnabled,
     db,
     config: {
