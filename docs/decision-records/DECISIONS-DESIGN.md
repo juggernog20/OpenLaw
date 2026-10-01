@@ -5481,6 +5481,25 @@ The close journey builds the renewals question with a Governing law condition an
 
 The build reviews left these follow-ups open: entering a leading minus clears a number input; a results-page notice covers dropped Fields but not removed standard properties; the active saved-search identity ends when the dialog closes, so reopening then choosing Save search starts Save as. The possible alternative of ANDing Show flags regardless of Match any is a product call under DOC-009. This record describes the current behavior and does not adopt those changes.
 
+## DES-095: The DocuSign consent step on the E-signature pane and the onboarding step (extends DES-054, SET-007)
+
+- **Status:** Accepted
+- **Date:** 2026-10-01
+- **Context:** [#1236](https://github.com/juggernog20/OpenLaw/issues/1236). JWT grant needs the DocuSign API user to consent to the integration once. The pane told the Administrator to do that "from the DocuSign console", but the console has no consent button. The only way is to open an OAuth URL by hand, and DocuSign refuses that URL until the app has a registered redirect URI. A correctly configured connector failed its connection test, and nothing said why.
+
+### Decision
+
+1. **The consent redirect URI is on screen.** The E-signature pane and the onboarding E-signature step show a read-only **Consent redirect URI** field with a **Copy** button, the same shape as the Webhook URL field. Its help text says to add the address once under Redirect URIs on the DocuSign app. The address is `/settings/integrations/e-signature/docusign-consent` on the origin the browser is on, not the API's base URL. The redirect is a browser navigation, and the callback page must be on the same origin as the form that opened it.
+2. **Grant consent sits beside the User ID field.** It is a secondary small button. It is disabled until there is an integration key. It opens DocuSign's consent URL in a popup, built from the **Environment** (`account-d.docusign.com` for Demo, `account.docusign.com` for Production), the **Integration key** as typed in the form, the fixed scope `signature impersonation`, the redirect URI above, and a random `state`. On the onboarding step with a configured connector and the form closed, it uses the stored environment and key.
+3. **The callback page is bare.** It is outside the settings shell and needs no session. It drops the authorization `code` unread and removes the query from the address bar. It announces the result to the opener on a same-origin BroadcastChannel, because DocuSign's pages can cut the popup's `window.opener`. The opener ignores any result whose `state` it did not issue. A granted consent closes the popup; if the browser does not close it, the page says "Consent granted". A refusal stays open and shows DocuSign's own `error_description`.
+4. **A granted consent re-runs the connection test** with no further input. With no saved connector yet, there is nothing to test, so the form says to save and test instead. A refusal shows in the form as "DocuSign did not grant consent: {reason}". A popup the browser blocks shows as "The browser blocked the consent window. Allow pop-ups for this site, then select Grant consent again.", because nothing opened and no answer will come.
+5. **The connection-test failure offers Grant consent.** When the test fails because DocuSign wants consent or refuses the stored credentials, the pane puts Grant consent beside the failure text, and the onboarding step puts it inside the step's error alert. An outage or a timeout offers no button. The TECH-013 addendum of 2026-10-01 (#1236) records how the API tells these failures apart.
+6. **The wording follows the flow.** The User ID help text now reads "The DocuSign user that sends envelopes. This user must give consent to the integration once. Select Grant consent, sign in to DocuSign as this user, and accept." The missing-consent failure reads "The DocuSign user has not given consent to this integration. Grant consent, then test the connection again." The credentials failure no longer mentions consent or the DocuSign console.
+
+### Consequences
+
+Registering the redirect URI on the DocuSign app stays a manual, one-time step. DocuSign has no API for it. An install reached on more than one origin must register the redirect URI for each origin the Administrator uses. `docs/user-guides/configure-signing.md` still describes the hand-built consent URL. That path still works, and the guide can point at the button when it is next re-verified.
+
 ## Index of decisions
 
 | #       | Decision                                                                                                                                                             | Status                                                                                                                                             |
@@ -5579,8 +5598,12 @@ The build reviews left these follow-ups open: entering a leading minus clears a 
 | DES-092 | The MCP screens, the consent page, and the pinned "Your approvals" group                                                                                             | Accepted; drawn as `designs/mcp.pen` MC1 to MC6 before the record                                                                                  |
 | DES-093 | A2 · Console+ is the shared HTML email layout                                                                                                                        | Accepted; amends DES-051; briefing anatomy recorded in NOT-006                                                                                     |
 | DES-094 | Advanced search dialog, question chips, and saved and recent searches                                                                                                | Accepted                                                                                                                                           |
+| DES-095 | The DocuSign consent step on the E-signature pane and the onboarding step                                                                                            | Accepted                                                                                                                                           |
 
 ### DES-036 addendum, 2026-09-26, #1178. Preparation acceptance interface
+
+_(2026-10-01, #1237: **the first sentence and "they do not announce production
+rollout" are superseded** by the #1237 addendum below.)_
 
 The normal Signatures tab retains Send for signature and Send envelope until live
 acceptance passes. An opted-in lab offers Prepare Envelope, then Continue to
@@ -5591,3 +5614,12 @@ imply send. These amendments supersede the sent-only row model for preparation
 labs; they do not announce production rollout. Narrow-screen, keyboard and return
 focus checks must name the tested build and distinguish local browser evidence
 from the native provider editor still awaiting live verification.
+
+### DES-036 addendum, 2026-10-01, #1237. Preparation is the default interface
+
+The Signatures tab draws the preparation interface by default: Send for signature
+opens Prepare Envelope, and its confirm is Continue to DocuSign. The Send envelope
+dialog appears only on an install whose operator set
+`SIGNING_PREPARATION_ENABLED=false`. Nothing else about either interface changes.
+The trigger label stays Send for signature in both, so the header control does not
+move when an operator flips the switch.

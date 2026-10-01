@@ -41,6 +41,8 @@ import { Fragment, type ReactNode } from "react";
 import { useParams, type RouteObject } from "react-router";
 import { ConsentPage, consentLoader } from "./routes/consent";
 import { SigningReturnPage, signingReturnLoader } from "./routes/signing-return";
+import { DocusignConsentPage } from "./routes/docusign-consent";
+import { DOCUSIGN_CONSENT_PATH } from "./components/docusign-consent";
 import { AuthLayout } from "./routes/auth-layout";
 import { ContractRecordPage, contractRecordLoader } from "./routes/contract-record";
 import { ContractsPage, contractsLoader } from "./routes/contracts";
@@ -217,6 +219,14 @@ export const routes: RouteObject[] = [
     path: "/signing/return",
     loader: signingReturnLoader,
     element: <SigningReturnPage />,
+    errorElement: <RouteErrorPage />,
+  },
+  {
+    // DocuSign's consent popup returns here (#1236). Outside the
+    // settings shell, because it draws inside a small popup and needs
+    // no session.
+    path: DOCUSIGN_CONSENT_PATH,
+    element: <DocusignConsentPage />,
     errorElement: <RouteErrorPage />,
   },
   {

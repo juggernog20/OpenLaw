@@ -29,7 +29,9 @@ export function acceptanceConfiguration(config) {
     environment:
       mode === "live"
         ? { SIGNING_PREPARATION_ENABLED: "true", SIGNING_PREPARATION_LIVE_LAB: "true" }
-        : {},
+        : // Preparation is the app's default (#1237). An "off" lab keeps the
+          // direct-send interface its guides were verified against.
+          { SIGNING_PREPARATION_ENABLED: "false" },
     networks,
   };
 }

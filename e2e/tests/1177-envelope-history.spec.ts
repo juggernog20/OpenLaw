@@ -21,7 +21,10 @@ interface HistoryEntry {
 test("shows distinct preparation history, provider attribution and erased Signers beside direct-send history", async ({
   page,
 }) => {
-  test.skip(process.env.SIGNING_PREPARATION_ENABLED !== "true", "Preparation remains gated.");
+  test.skip(
+    process.env.SIGNING_PREPARATION_ENABLED !== "true",
+    "The E2E overlay pins direct send.",
+  );
   await ensureAdminExists(page.request);
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);
   const integrationKey = "preparation-e2e-integration";

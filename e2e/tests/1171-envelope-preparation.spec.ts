@@ -10,7 +10,7 @@ test("selects an exact Version and Signers in Signatures and retains an unsent d
 }) => {
   test.skip(
     process.env.SIGNING_PREPARATION_ENABLED !== "true",
-    "Preparation is off until final cutover.",
+    "The E2E overlay pins direct send.",
   );
   await ensureAdminExists(page.request);
   await signInAs(page, ADMIN.email, ADMIN.password, ADMIN.displayName);

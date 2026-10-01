@@ -69,8 +69,9 @@ entries below.
 
 Two follow-ups sit outside the milestone checkmarks. DocuSign preparation and resume
 ([#1170](https://github.com/juggernog20/OpenLaw/issues/1170)) merged in
-[#1197](https://github.com/juggernog20/OpenLaw/pull/1197); its live verification and default rollout
-stay open in [#1178](https://github.com/juggernog20/OpenLaw/issues/1178). The DOC-030 guide
+[#1197](https://github.com/juggernog20/OpenLaw/pull/1197). It became the default interface in
+[#1237](https://github.com/juggernog20/OpenLaw/issues/1237); its live verification stays open in
+[#1178](https://github.com/juggernog20/OpenLaw/issues/1178). The DOC-030 guide
 re-verification ([#1157](https://github.com/juggernog20/OpenLaw/issues/1157)) merged in
 [#1196](https://github.com/juggernog20/OpenLaw/pull/1196).
 

@@ -5279,7 +5279,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override. */
+    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. On by default; an install with SIGNING_PREPARATION_ENABLED=false answers 404 (#1237). Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override. */
     post: operations["prepareContractEnvelope"];
     delete?: never;
     options?: never;
@@ -11617,6 +11617,32 @@ export interface operations {
             accountName: string;
             accountId: string;
             userEmail: string;
+          };
+        };
+      };
+      /** @description The connection test failed. A credential refusal names its type, so the pane can offer the consent step (#1236); a provider outage names none. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-consent-required"
+              | "urn:openlaw:problem:signing-credentials-refused"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
           };
         };
       };

@@ -54,6 +54,8 @@ import {
   isCatalogRow,
   LOGO_BYTE_LIMIT,
   LOGO_TYPES,
+  SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+  SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE,
   START_BLANK_LIST_KEYS,
   type StartBlankList,
 } from "@openlaw/shared";
@@ -71,6 +73,11 @@ import {
   writeSetupDraft,
 } from "../lib/setup-drafts";
 import { AuthenticationOptionsFields } from "../components/authentication-options";
+import {
+  ConsentRedirectField,
+  GrantConsentButton,
+  useDocusignConsent,
+} from "../components/docusign-consent";
 import { PageTitle } from "../components/page-title";
 import { SkipLink } from "../components/skip-link";
 import { TimezonePicker } from "../components/timezone-picker";
@@ -719,6 +726,45 @@ export function WelcomePage() {
     userEmail: string;
   } | null>(null);
   const [testingSigning, setTestingSigning] = useState(false);
+  /** The named type of the last failed connection test (#1236). */
+  const [signingTestProblemType, setSigningTestProblemType] = useState<string | undefined>(
+    undefined,
+  );
+  /** Consent came back before there was a saved connector to test. */
+  const [consentBeforeSave, setConsentBeforeSave] = useState(false);
+  // The consent step (#1236). A granted consent re-runs the test with
+  // no further input, once there is a saved connector to test. The
+  // popup can answer while another request holds `busy`, and
+  // `applyESignature` returns early then, so the re-test waits in a ref
+  // and the effect below runs it once `busy` clears.
+  const retestAfterConsent = useRef(false);
+  const { grant: grantConsent, consentError } = useDocusignConsent(() => {
+    if (!signingConnector.configured) {
+      setConsentBeforeSave(true);
+      return;
+    }
+    if (busy) {
+      retestAfterConsent.current = true;
+      return;
+    }
+    void applyESignature(true);
+  });
+  // The latest `applyESignature`, so the effect below can wait on
+  // `busy` alone rather than rerun on every render.
+  const latestApplyESignature = useRef(applyESignature);
+  useEffect(() => {
+    latestApplyESignature.current = applyESignature;
+  });
+  useEffect(() => {
+    if (busy || !retestAfterConsent.current) return;
+    retestAfterConsent.current = false;
+    void latestApplyESignature.current(true);
+  }, [busy]);
+  // The form's values while it is open, the stored ones while it is not.
+  const consentEnvironment = signingFormOpen ? signingEnvironment : signingConnector.environment;
+  const consentIntegrationKey = signingFormOpen
+    ? integrationKey
+    : (signingConnector.integrationKey ?? "");
 
   // AI analysis step (#699): the AI connector, through the PUT the AI
   // analysis pane already uses. SET-008 keeps AI analysis out of
@@ -1291,6 +1337,9 @@ export function WelcomePage() {
    */
   async function applyESignature(test = false) {
     if (busy) return;
+    // A step error set below is never a refused test, so the consent
+    // button in the message goes with the old answer.
+    setSigningTestProblemType(undefined);
     const key = integrationKey.trim();
     const userId = apiUserId.trim();
     const untouched =
@@ -1366,6 +1415,7 @@ export function WelcomePage() {
     setBusy(true);
     setTestingSigning(test);
     setSigningTestResult(null);
+    setConsentBeforeSave(false);
     setError(null);
     try {
       if (needsSave) {
@@ -1407,8 +1457,10 @@ export function WelcomePage() {
         if (result.data) {
           setSigningTestResult(result.data);
         } else {
+          const refusal = await readProblem(result);
+          setSigningTestProblemType(refusal.type);
           setError(
-            (await readProblem(result)).detail ??
+            refusal.detail ??
               intl.formatMessage({
                 id: "settings.eSignature.testFailed",
                 defaultMessage: "The connection test failed. Check the credentials and try again.",
@@ -1582,7 +1634,25 @@ export function WelcomePage() {
               )}
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {error && <Alert variant="danger">{error}</Alert>}
+              {error && (
+                <Alert variant="danger">
+                  {error}
+                  {/* A test DocuSign refused on credentials offers the
+                      consent step in the message itself (#1236). */}
+                  {step === "e-signature" &&
+                    (signingTestProblemType === SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE ||
+                      signingTestProblemType === SIGNING_CREDENTIALS_REFUSED_PROBLEM_TYPE) && (
+                      <div className="mt-2">
+                        <GrantConsentButton
+                          environment={consentEnvironment}
+                          integrationKey={consentIntegrationKey}
+                          onGrant={grantConsent}
+                          disabled={busy}
+                        />
+                      </div>
+                    )}
+                </Alert>
+              )}
 
               {/* Each step is its own region, named by the card's
                   heading, so a screen reader reaches the step's fields
@@ -2353,6 +2423,7 @@ export function WelcomePage() {
                             />
                           )}
                         </Alert>
+                        <ConsentRedirectField id="welcome-ds-consent-redirect" />
                       </>
                     )}
 
@@ -2417,7 +2488,7 @@ export function WelcomePage() {
                               <>
                                 <FormattedMessage
                                   id="settings.eSignature.userId.hint"
-                                  defaultMessage="The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+                                  defaultMessage="The DocuSign user that sends envelopes. This user must give consent to the integration once. Select Grant consent, sign in to DocuSign as this user, and accept."
                                 />
                               </>
                             }
@@ -2427,13 +2498,21 @@ export function WelcomePage() {
                               defaultMessage="User ID"
                             />
                           </Label>
-                          <Input
-                            id="welcome-ds-user-id"
-                            autoComplete="off"
-                            value={apiUserId}
-                            onChange={(event) => setApiUserId(event.target.value)}
-                          />
+                          <div className="flex min-w-0 items-center gap-2">
+                            <Input
+                              id="welcome-ds-user-id"
+                              autoComplete="off"
+                              value={apiUserId}
+                              onChange={(event) => setApiUserId(event.target.value)}
+                            />
+                            <GrantConsentButton
+                              environment={consentEnvironment}
+                              integrationKey={consentIntegrationKey}
+                              onGrant={grantConsent}
+                            />
+                          </div>
                         </div>
+                        <ConsentRedirectField id="welcome-ds-consent-redirect" />
                         <div className="flex flex-col gap-1.5">
                           <Label
                             htmlFor="welcome-ds-private-key"
@@ -2553,6 +2632,17 @@ export function WelcomePage() {
                                 account: signingTestResult.accountName,
                                 email: signingTestResult.userEmail,
                               }}
+                            />
+                          </span>
+                        )}
+                        {consentError !== null && (
+                          <span className="text-status-danger-fg">{consentError}</span>
+                        )}
+                        {consentError === null && consentBeforeSave && (
+                          <span className="text-status-success-fg">
+                            <FormattedMessage
+                              id="welcome.eSignature.consentBeforeSave"
+                              defaultMessage="Consent granted. Select Test DocuSign connection to save and test these credentials."
                             />
                           </span>
                         )}
