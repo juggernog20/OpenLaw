@@ -13,6 +13,10 @@ import {
   entityHoldings,
   individualHoldings,
   entityTypes,
+  entityRegisterParties,
+  entityTrustEntries,
+  TRUST_ROLES,
+  inArray,
   ENTITY_STATUSES,
   eq,
   or,
@@ -22,6 +26,9 @@ import {
 import { requireRole } from "../../auth/guards.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
+
+import { replayTrustRegister } from "../../lib/trust-register.js";
+import { todayIsoDate } from "../../lib/share-register.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const IdParams = z.object({ id: z.string().min(1).max(64) });
@@ -47,7 +54,19 @@ const HoldingEnvelope = z.object({
   owned: z.array(HoldingSchema),
 });
 
-const ChartNodeSchema = z.discriminatedUnion("restricted", [
+const ChartNodeSchema = z.union([
+  z.object({
+    restricted: z.literal(false),
+    id: z.string(),
+    legalName: z.string(),
+    kind: z.literal("party"),
+    partyKind: z.enum(["individual", "class"]),
+    trustEntityId: z.string(),
+    type: z.string(),
+    jurisdiction: z.string().nullable(),
+    status: z.enum(ENTITY_STATUSES).nullable(),
+    primaryOwnerId: z.string().nullable(),
+  }),
   z.object({
     restricted: z.literal(false),
     id: z.string(),
@@ -68,6 +87,17 @@ const ChartEdgeSchema = z.object({
   ownerEntityId: z.string(),
   ownedEntityId: z.string(),
   ownershipPercent: z.number(),
+});
+
+const RoleEdgeSchema = z.object({
+  partyNodeId: z.string(),
+  trustEntityId: z.string(),
+  role: z.enum(TRUST_ROLES),
+  roleLabel: z.string().nullable(),
+});
+const BranchEdgeSchema = z.object({
+  headOfficeEntityId: z.string(),
+  branchEntityId: z.string(),
 });
 
 const ownerEntities = alias(entities, "holding_owner_entities");
@@ -152,7 +182,12 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "getEntityChart",
         tags: ["entities"],
         response: {
-          200: z.object({ nodes: z.array(ChartNodeSchema), edges: z.array(ChartEdgeSchema) }),
+          200: z.object({
+            nodes: z.array(ChartNodeSchema),
+            edges: z.array(ChartEdgeSchema),
+            roleEdges: z.array(RoleEdgeSchema),
+            branchEdges: z.array(BranchEdgeSchema),
+          }),
           default: problemResponse,
         },
       },
@@ -165,6 +200,8 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           type: entityTypes.displayName,
           jurisdiction: entities.jurisdiction,
           status: entities.status,
+          registerKind: sql<string>`coalesce(${entities.registerKind}, ${entityTypes.registerKind})`,
+          headOfficeEntityId: entities.headOfficeEntityId,
         })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
@@ -201,7 +238,77 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           included.add(row.ownedId);
         }
       }
-      const nodes = [...allNodes, ...individualNodes].filter((node) => included.has(node.id));
+      const branchEdges = allNodes
+        .filter(
+          (node) => visible.has(node.id) && node.registerKind === "none" && node.headOfficeEntityId,
+        )
+        .map((node) => ({ headOfficeEntityId: node.headOfficeEntityId!, branchEntityId: node.id }));
+      for (const edge of branchEdges) included.add(edge.headOfficeEntityId);
+      const trustIds = allNodes
+        .filter((node) => visible.has(node.id) && node.registerKind === "trust")
+        .map((node) => node.id);
+      const roleEdges: z.infer<typeof RoleEdgeSchema>[] = [];
+      const partyNodes: z.infer<typeof ChartNodeSchema>[] = [];
+      if (trustIds.length) {
+        const parties = await app.db
+          .select()
+          .from(entityRegisterParties)
+          .where(inArray(entityRegisterParties.entityId, trustIds));
+        const entries = await app.db
+          .select()
+          .from(entityTrustEntries)
+          .where(inArray(entityTrustEntries.entityId, trustIds));
+        const today = todayIsoDate();
+        for (const trustEntityId of trustIds) {
+          const trustParties = parties.filter((party) => party.entityId === trustEntityId);
+          const replay = replayTrustRegister(
+            {
+              parties: trustParties,
+              entries: entries.filter((entry) => entry.entityId === trustEntityId),
+            },
+            today,
+          );
+          const openRoles = replay.roles.filter((role) => role.open);
+          for (const party of trustParties) {
+            const roles = openRoles.filter((role) => role.partyId === party.id);
+            if (!roles.length) continue;
+            const partyNodeId =
+              party.kind === "entity" ? party.partyEntityId! : `party:${party.id}`;
+            if (party.kind === "entity") included.add(partyNodeId);
+            else
+              partyNodes.push({
+                restricted: false,
+                id: partyNodeId,
+                kind: "party",
+                partyKind: party.kind,
+                trustEntityId,
+                legalName: party.name ?? party.description!,
+                type: party.kind === "class" ? "Class" : "Individual",
+                jurisdiction: null,
+                status: null,
+                primaryOwnerId: null,
+              });
+            roleEdges.push(
+              ...roles.map(({ role, roleLabel }) => ({
+                partyNodeId,
+                trustEntityId,
+                role,
+                roleLabel,
+              })),
+            );
+          }
+        }
+      }
+      const nodes = [
+        ...allNodes.map(({ id, legalName, type, jurisdiction, status }) => ({
+          id,
+          legalName,
+          type,
+          jurisdiction,
+          status,
+        })),
+        ...individualNodes,
+      ].filter((node) => included.has(node.id));
       // An edge is drawn only when the viewer reaches one of its ends. A
       // link between two walled Entities is topology the viewer may not
       // learn, even when each end touches something they can see.
@@ -218,25 +325,33 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         byOwned.set(row.ownedId, held);
       }
       return {
-        nodes: nodes.map((node) => {
-          const owners = byOwned.get(node.id) ?? [];
-          owners.sort(
-            (a, b) =>
-              Number(b.ownershipPercent) - Number(a.ownershipPercent) ||
-              (ownerName.get(a.ownerId) ?? "").localeCompare(
-                ownerName.get(b.ownerId) ?? "",
-                undefined,
-                {
-                  sensitivity: "base",
-                },
-              ) ||
-              a.ownerId.localeCompare(b.ownerId),
-          );
-          const primaryOwnerId = owners[0]?.ownerId ?? null;
-          return visible.has(node.id)
-            ? { restricted: false as const, ...node, primaryOwnerId }
-            : { restricted: true as const, id: node.id, primaryOwnerId };
-        }),
+        nodes: [
+          ...nodes.map((node) => {
+            const owners = byOwned.get(node.id) ?? [];
+            owners.sort(
+              (a, b) =>
+                Number(b.ownershipPercent) - Number(a.ownershipPercent) ||
+                (ownerName.get(a.ownerId) ?? "").localeCompare(
+                  ownerName.get(b.ownerId) ?? "",
+                  undefined,
+                  {
+                    sensitivity: "base",
+                  },
+                ) ||
+                a.ownerId.localeCompare(b.ownerId),
+            );
+            const primaryOwnerId =
+              owners[0]?.ownerId ??
+              branchEdges.find((edge) => edge.branchEntityId === node.id)?.headOfficeEntityId ??
+              null;
+            return visible.has(node.id)
+              ? { restricted: false as const, ...node, primaryOwnerId }
+              : { restricted: true as const, id: node.id, primaryOwnerId };
+          }),
+          ...partyNodes,
+        ],
+        roleEdges,
+        branchEdges,
         edges: projected.map((row) => ({
           ownerEntityId: row.ownerId,
           ownedEntityId: row.ownedId,

@@ -413,3 +413,193 @@ it("protects individual names behind the owned Entity's access", async () => {
   });
   expect(walled.statusCode, walled.body).toBe(404);
 });
+
+async function configure(id: string, payload: Record<string, unknown>, cookies = memberCookies) {
+  const response = await harness.app.inject({
+    method: "PATCH",
+    url: `/api/v1/entities/${id}`,
+    cookies,
+    payload,
+  });
+  expect(response.statusCode, response.body).toBe(200);
+}
+async function appoint(
+  id: string,
+  party: Record<string, unknown>,
+  role = "beneficiary",
+  cookies = memberCookies,
+  extra = {},
+) {
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${id}/trust-entries`,
+    cookies,
+    payload: { kind: "appointment", effectiveOn: "2024-01-01", party, role, ...extra },
+  });
+  expect(response.statusCode, response.body).toBe(201);
+}
+async function readChart(cookies = memberCookies) {
+  const response = await harness.app.inject({
+    method: "GET",
+    url: "/api/v1/entities/chart",
+    cookies,
+  });
+  expect(response.statusCode, response.body).toBe(200);
+  return response;
+}
+
+it("draws today's trust roles and distinct terminal parties without owner Holdings", async () => {
+  const trust = await newEntity("Chart Trust");
+  await configure(trust.id, { registerKind: "trust" });
+  const company = await newEntity("Chart Trustee");
+  await appoint(trust.id, { kind: "entity", entityId: company.id }, "trustee");
+  for (const role of ["settlor", "protector", "enforcer", "beneficiary"])
+    await appoint(trust.id, { kind: "individual", name: "Same Name" }, role);
+  await appoint(trust.id, { kind: "class", description: "Future descendants" });
+  await appoint(trust.id, { kind: "individual", name: "Adviser" }, "other", memberCookies, {
+    roleLabel: "Investment adviser",
+  });
+  await appoint(
+    trust.id,
+    { kind: "individual", name: "Future trustee" },
+    "trustee",
+    memberCookies,
+    { effectiveOn: "9999-01-01" },
+  );
+  const response = await readChart();
+  const chart = response.json();
+  const roles = chart.roleEdges.filter(
+    (edge: { trustEntityId: string }) => edge.trustEntityId === trust.id,
+  );
+  expect(roles).toHaveLength(7);
+  expect(roles).toContainEqual({
+    partyNodeId: company.id,
+    trustEntityId: trust.id,
+    role: "trustee",
+    roleLabel: null,
+  });
+  expect(roles).toContainEqual(
+    expect.objectContaining({ role: "other", roleLabel: "Investment adviser" }),
+  );
+  expect(roles.every((edge: object) => !("ownershipPercent" in edge))).toBe(true);
+  expect(
+    chart.nodes.filter((node: { legalName?: string }) => node.legalName === "Same Name"),
+  ).toHaveLength(4);
+  expect(chart.nodes).toContainEqual(
+    expect.objectContaining({
+      kind: "party",
+      partyKind: "class",
+      legalName: "Future descendants",
+      trustEntityId: trust.id,
+      primaryOwnerId: null,
+    }),
+  );
+  expect(response.body).not.toContain("Future trustee");
+  expect(chart.nodes).toContainEqual(
+    expect.objectContaining({ id: trust.id, primaryOwnerId: null }),
+  );
+  expect(
+    chart.edges.some((edge: { ownedEntityId: string }) => edge.ownedEntityId === trust.id),
+  ).toBe(false);
+});
+
+it("places a branch under its head office without a percentage", async () => {
+  const head = await newEntity("Chart Head Office");
+  const branch = await newEntity("Chart Branch");
+  await configure(branch.id, { registerKind: "none", headOfficeEntityId: head.id });
+  const chart = (await readChart()).json();
+  expect(chart.branchEdges).toContainEqual({
+    headOfficeEntityId: head.id,
+    branchEntityId: branch.id,
+  });
+  expect(chart.nodes).toContainEqual(
+    expect.objectContaining({ id: branch.id, primaryOwnerId: head.id }),
+  );
+  expect(
+    chart.edges.some((edge: { ownedEntityId: string }) => edge.ownedEntityId === branch.id),
+  ).toBe(false);
+});
+
+it("requires reach to the trust or branch under DD-014, including for administrators", async () => {
+  const head = await newEntity("Secret head office", null, "active", adminCookies);
+  const trustee = await newEntity("Secret trustee", null, "active", adminCookies);
+  const trust = await newEntity("Reached trust");
+  const branch = await newEntity("Reached branch");
+  await configure(trust.id, { registerKind: "trust" });
+  await appoint(trust.id, { kind: "entity", entityId: trustee.id }, "trustee");
+  await appoint(trust.id, { kind: "individual", name: "Trust private name" });
+  await configure(branch.id, { registerKind: "none", headOfficeEntityId: head.id });
+  await seal(head.id);
+  await seal(trustee.id);
+  const reached = (await readChart()).json();
+  for (const id of [head.id, trustee.id])
+    expect(reached.nodes).toContainEqual({ restricted: true, id, primaryOwnerId: null });
+  await configure(trust.id, { isConfidential: true });
+  await configure(branch.id, { isConfidential: true });
+  const excluded = await readChart(adminCookies);
+  expect(excluded.body).not.toContain("Trust private name");
+  expect(
+    excluded
+      .json()
+      .roleEdges.some((edge: { trustEntityId: string }) => edge.trustEntityId === trust.id),
+  ).toBe(false);
+  expect(
+    excluded
+      .json()
+      .branchEdges.some((edge: { branchEntityId: string }) => edge.branchEntityId === branch.id),
+  ).toBe(false);
+  expect(
+    excluded
+      .json()
+      .nodes.some((node: { id: string }) => node.id === trust.id || node.id === branch.id),
+  ).toBe(false);
+});
+
+it("replays settlements and cessations for the chart and ignores roles in the Holding cycle check", async () => {
+  const trust = await newEntity("Role replay trust");
+  const trustee = await newEntity("Role replay trustee");
+  await configure(trust.id, { registerKind: "trust" });
+  await appoint(trust.id, { kind: "entity", entityId: trustee.id }, "trustee");
+  await allot(trustee, trust, 100);
+  const settlement = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${trust.id}/trust-entries`,
+    cookies: memberCookies,
+    payload: {
+      kind: "settlement",
+      effectiveOn: "2024-01-01",
+      party: { kind: "individual", name: "Settlor by settlement" },
+      amount: 10000,
+      currency: "USD",
+    },
+  });
+  expect(settlement.statusCode, settlement.body).toBe(201);
+  const before = (await readChart()).json();
+  expect(before.roleEdges).toContainEqual(
+    expect.objectContaining({ trustEntityId: trust.id, role: "settlor" }),
+  );
+  const cessation = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${trust.id}/trust-entries`,
+    cookies: memberCookies,
+    payload: {
+      kind: "cessation",
+      effectiveOn: "2024-02-01",
+      party: { kind: "entity", entityId: trustee.id },
+      role: "trustee",
+    },
+  });
+  expect(cessation.statusCode, cessation.body).toBe(201);
+  const after = (await readChart()).json();
+  expect(
+    after.roleEdges.some(
+      (edge: { trustEntityId: string; role: string }) =>
+        edge.trustEntityId === trust.id && edge.role === "trustee",
+    ),
+  ).toBe(false);
+  expect(after.edges).toContainEqual({
+    ownerEntityId: trust.id,
+    ownedEntityId: trustee.id,
+    ownershipPercent: 100,
+  });
+});

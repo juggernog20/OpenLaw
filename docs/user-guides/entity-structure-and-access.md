@@ -89,11 +89,17 @@ After each entry change, OpenLaw rewrites this Entity's owner Holdings from toda
 ## Read the ownership chart
 
 1. Open **Entities** and select **Chart**. Create or correct Holdings through the owned Entity's [share register](#keep-the-share-register).
-2. Read the connected Entities and percentages. The chart uses one primary owner to arrange each Entity and draws that Holding as a solid line. Other Holdings remain visible as dashed secondary connections. An Entity with no Holdings appears in a separate row.
+2. Read the connected Entities and percentages. The chart uses one primary owner to arrange each Entity and draws that Holding as a solid line. Other Holdings remain visible as dashed secondary connections. A branch with no owner Holdings sits below its head office. Other Entities with no Holdings appear in a separate row.
 3. Drag to pan or use the mouse wheel to zoom. With the chart focused, use arrow keys to pan, plus or minus to zoom, and zero to fit the chart. **Fit to window** also resets the view.
 4. Click an Entity once, or focus it and press Space, to highlight its ownership chain. Select **Clear highlight** or press Escape to remove the highlight. Double-click an Entity, or focus it and press Enter, to open it. A **Confidential Entity** box is an Entity you cannot reach. It shows no name and does not open.
 
 The chart shows the Holdings that share registers write, between registered Entities and their individual owners. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission.
+
+Trust parties connect to the trust with short dashed lines labelled with their current roles, without percentages. Named individuals and classes are terminal cards; a class has a dotted border. Opening either card takes you to the trust's **Ownership** tab. A head office connects to its branch with a solid line labelled **Branch**, also without a percentage. The legend identifies both relationships. Roles do not change the ownership chain.
+
+You must be able to reach the trust to see its roles and parties, and the branch to see its head-office connection. Reaching only an Entity party or the head office does not reveal an inaccessible trust or branch. An inaccessible Entity party or head office on a visible connection remains a **Confidential Entity** box.
+
+Select **Export chart**, choose the structure and Entity information to include, and select PDF, PowerPoint, PNG or SVG. Role and Branch labels remain when ownership percentages are turned off. Exports include the role and branch connections and dotted class borders.
 
 ## Read linked Contracts and Matters
 

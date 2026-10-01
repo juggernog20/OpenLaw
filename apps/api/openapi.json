@@ -78916,6 +78916,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78926,7 +78930,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }
@@ -81890,7 +81895,66 @@
                     "nodes": {
                       "type": "array",
                       "items": {
-                        "oneOf": [
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "restricted": {
+                                "type": "boolean",
+                                "enum": [false]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "legalName": {
+                                "type": "string"
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": ["party"]
+                              },
+                              "partyKind": {
+                                "type": "string",
+                                "enum": ["individual", "class"]
+                              },
+                              "trustEntityId": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "jurisdiction": {
+                                "type": ["string", "null"]
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": ["active", "dormant", "dissolved", "divested"]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "primaryOwnerId": {
+                                "type": ["string", "null"]
+                              }
+                            },
+                            "required": [
+                              "restricted",
+                              "id",
+                              "legalName",
+                              "kind",
+                              "partyKind",
+                              "trustEntityId",
+                              "type",
+                              "jurisdiction",
+                              "status",
+                              "primaryOwnerId"
+                            ],
+                            "additionalProperties": false
+                          },
                           {
                             "type": "object",
                             "properties": {
@@ -81978,9 +82042,55 @@
                         "required": ["ownerEntityId", "ownedEntityId", "ownershipPercent"],
                         "additionalProperties": false
                       }
+                    },
+                    "roleEdges": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "partyNodeId": {
+                            "type": "string"
+                          },
+                          "trustEntityId": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "settlor",
+                              "trustee",
+                              "protector",
+                              "enforcer",
+                              "beneficiary",
+                              "other"
+                            ]
+                          },
+                          "roleLabel": {
+                            "type": ["string", "null"]
+                          }
+                        },
+                        "required": ["partyNodeId", "trustEntityId", "role", "roleLabel"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "branchEdges": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "headOfficeEntityId": {
+                            "type": "string"
+                          },
+                          "branchEntityId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["headOfficeEntityId", "branchEntityId"],
+                        "additionalProperties": false
+                      }
                     }
                   },
-                  "required": ["nodes", "edges"],
+                  "required": ["nodes", "edges", "roleEdges", "branchEdges"],
                   "additionalProperties": false
                 }
               }

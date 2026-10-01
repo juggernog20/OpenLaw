@@ -5,6 +5,8 @@ import { matchesEntityName, searchEntityChart } from "./entity-search";
 import type { EntityChart } from "./entities";
 
 const chart: EntityChart = {
+  roleEdges: [],
+  branchEdges: [],
   nodes: [
     {
       id: "parent",
@@ -59,7 +61,12 @@ describe("entity search", () => {
   });
 
   it("never matches restricted identifiers and restores the complete chart when cleared", () => {
-    expect(searchEntityChart(chart, "restricted-acme")).toEqual({ nodes: [], edges: [] });
+    expect(searchEntityChart(chart, "restricted-acme")).toEqual({
+      nodes: [],
+      edges: [],
+      roleEdges: [],
+      branchEdges: [],
+    });
     expect(searchEntityChart(chart, "")).toBe(chart);
   });
 });
