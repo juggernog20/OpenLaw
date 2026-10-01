@@ -153,6 +153,14 @@ export interface TaxonomyExtras<
    * all) — the mount fails when it is built. */
   patchSchema?: TPatch;
   /**
+   * The mount's own columns a duplicate carries over from its source.
+   * The machinery copies the description and nothing else of its own;
+   * a column it does not know, such as the Entity type's register kind
+   * (ENT-013), would otherwise fall back to the table default on the
+   * copy.
+   */
+  duplicateColumns?: (source: TaxonomyRow) => Record<string, unknown>;
+  /**
    * Runs inside the PATCH transaction, under the row's `for update`
    * lock, before the write — the same place the SET-003 archive guard
    * reads its count. It validates what the body asked for against the
@@ -574,6 +582,7 @@ export function taxonomyRoutes<
                 isSystemDefault: false,
                 ...(config.formModule ? { isDefault: false } : {}),
                 ...(scope ? { [scope.key]: scope.value } : {}),
+                ...(config.extras?.duplicateColumns?.(source) ?? {}),
               })
               .returning();
             await writeTypeForm(tx, duplicateModule, created!.id, form);

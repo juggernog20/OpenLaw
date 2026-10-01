@@ -39,6 +39,7 @@ export const entityTypesRoutes = taxonomyRoutes({
     rowSchema: { registerKind: z.enum(REGISTER_KINDS) },
     projectRow: (row) => ({ registerKind: (row as EntityType).registerKind }),
     patchSchema: { registerKind: z.enum(REGISTER_KINDS).optional() },
+    duplicateColumns: (source) => ({ registerKind: (source as EntityType).registerKind }),
     async applyPatch({ tx, row, body, actorId }) {
       if (body.registerKind === undefined) return {};
       const result = await changeTypeRegisterKind(tx, row.id, body.registerKind);
