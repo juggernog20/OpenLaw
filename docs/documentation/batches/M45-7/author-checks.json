@@ -1,0 +1,70 @@
+{
+  "issue": 1250,
+  "appCommit": "b57671c5eb562897471076620f9e66d60c8a415e",
+  "environment": "openlaw-1250, Compose built images, http://localhost:3250",
+  "author": "Codex implementation agent",
+  "reviewerKind": "agent",
+  "independentWalkthrough": "not-run; the task requires solo implementation and a later review",
+  "capturedAt": "2026-10-01T04:42:33Z",
+  "role": "administrator",
+  "theme": "light",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "source": "e2e/tests/66-m45-registers.spec.ts",
+  "scenarios": [
+    {
+      "method": "automated-test",
+      "name": "Trust from empty through refused and accepted distribution",
+      "result": "pass"
+    },
+    {
+      "method": "automated-test",
+      "name": "Partnership admission through basis change, Holding and chart",
+      "result": "pass"
+    }
+  ],
+  "articles": [
+    {
+      "id": "entity-records",
+      "contentSha256": "5b549859952f29739c4ad311a99fea0359f4492174a8e714250f8efffa789d0a"
+    },
+    {
+      "id": "entity-structure-and-access",
+      "contentSha256": "2e67d778ce14f7cce630d116cb00d9c6dfc706642360ba96b94811324ac79c57"
+    },
+    {
+      "id": "reference",
+      "contentSha256": "53da0d20aa8ed4ed59b529349e4529d67eaeed40cacfc4f458b0b739d861a14e"
+    }
+  ],
+  "captures": [
+    {
+      "file": "docs/user-guides/assets/m45-trust-register.png",
+      "purpose": "Role groups and the per-currency fund",
+      "sha256": "722a26cadeee4e98db25a7173e36eb9faec3144a6f400100acef87aeb3552c53"
+    },
+    {
+      "file": "docs/user-guides/assets/m45-partnership-register.png",
+      "purpose": "Ownership basis, capital columns and projected percentages",
+      "sha256": "32161d8d8c8df0d7850604dbfdde4e10f0cac5ceefb0d0d20ece9645c753bb2f"
+    },
+    {
+      "file": "docs/documentation/batches/M45-7/m45-trust-distribution-refused.png",
+      "purpose": "Distribution refused before the Beneficiary appointment",
+      "sha256": "cbb5e4b9ec00042edaaaef8a41459c508082daa40a3b541c8122b37de8da6b10"
+    },
+    {
+      "file": "docs/documentation/batches/M45-7/m45-partnership-chart.png",
+      "purpose": "Chart after the basis change",
+      "sha256": "6ee7c5b1b8814c608c4675fe821a99fbb688a8845c34ffb89a03a20e8e00b3b9"
+    }
+  ],
+  "limitations": [
+    "Author automation is supporting evidence, not an independent guide walkthrough.",
+    "Local chart capture includes earlier isolated test records.",
+    "The historical DOC-032 evidence is retained unchanged.",
+    "Strict docs:check fails on the base branch because its application compatibility review is stale. Development compilation renders all 62 articles."
+  ]
+}

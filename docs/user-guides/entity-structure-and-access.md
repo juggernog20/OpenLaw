@@ -1,6 +1,6 @@
 # Manage Entity structure and access
 
-Maintain share-capital facts and the share register, inspect the ownership chart and linked work, and control access to Confidential Entities.
+Maintain share-capital facts and the ownership registers, inspect the ownership chart and linked work, and control access to Confidential Entities.
 
 ## Before you start
 
@@ -15,8 +15,12 @@ then **Save**. Choosing the type's own kind returns the Entity to the type's set
 
 The choice locks while a register holds data, including a Share class without entries.
 The disabled control explains why. Changing the Entity type cannot bypass this lock.
-Partnership and trust registers currently show an empty state; entry controls arrive
-with those registers.
+An Administrator sets the type's **Register** in **Settings → Entities → Types**.
+Corporation, LLC and Other start with Share register; Partnership starts with
+Partnership register; Branch starts with None. A refused type change names how many
+Entities have register data. On upgrade, an existing share register stays visible
+even under a partnership or branch type because OpenLaw pins Share register on that
+Entity.
 
 For **None**, Ownership shows **Head office**. Select **Change head office**, choose a
 live Entity from the registry, and **Save**. **Clear head office** removes the link.
@@ -84,16 +88,149 @@ The line under **Register as of** compares the register's issued total today wit
 
 ### How the register writes Holdings
 
-After each entry change, OpenLaw rewrites this Entity's owner Holdings from today's register. Each Holder's percentage is its outstanding shares across every class over the Entity's outstanding shares, to two decimals. The register is the only source of Holdings. They appear on the ownership chart and on each owner Entity's **Holdings in other Entities** card, where they show **From register**. You cannot edit them as Holdings; record a register entry instead. Each entry change also appears in the History of this Entity and of each Entity Holder it names.
+After each entry change, OpenLaw rewrites this Entity's owner Holdings from today's register. Each Holder's percentage is its outstanding shares across every class over the Entity's outstanding shares, to two decimals. The share register is the source of this Entity's owner Holdings. They appear on the ownership chart and on each owner Entity's **Holdings in other Entities** card, where they show **From register**. You cannot edit them as Holdings; record a register entry instead. Each entry change also appears in the History of this Entity and of each Entity Holder it names.
+
+## Keep the partnership register
+
+A Partner is an Entity from the registry or a named individual. Partnership entries
+record admissions, commitments, contributions, returns, transfers, capacity changes
+and withdrawals. OpenLaw derives the Register of partners from those entries. You
+cannot add a Partner by hand.
+
+### Admit a Partner and record capital
+
+1. Open **Ownership** on an Entity that keeps a **Partnership register**. An empty
+   register shows **No partnership register yet**. Select **Record entry**.
+2. Choose **Admission** in **Entry** and set **Effective date**. Choose **Entity** in
+   **Partner** and select the Entity, or choose **Individual** and enter **Full name**.
+3. Choose **Capacity**, **General** or **Limited**. Enter **Units** and **Stated percent**
+   if the agreement uses them. Select **Enter in register**.
+4. To record money, select **Record entry**, choose **Commitment**, **Contribution** or
+   **Return**, and select the existing Partner. Set **Effective date**,
+   **Amount** and **Currency**. A Contribution can also state its **Form of contribution**.
+5. Add **Reference** and **Note** when useful. Select **Enter in register** and check
+   the Partner's row and totals.
+
+Committed is what the Partner promised. Contributed is what they paid in. Returned
+is capital paid back. Unreturned includes capital moved by transfers. The first
+money entry sets the register's one currency. OpenLaw refuses money in another
+currency or an entry that would take units, stated percent or capital below zero
+on any date. The refusal stays in the dialog and does not save the entry.
+
+### Transfer an interest or end a Partner's standing
+
+For **Transfer**, choose **From** and **To**, then enter the units, stated percent
+or capital amount to move. Choose **Transferee status**. **Admitted** needs a capacity;
+**Assignee** records the economic interest without admitting the recipient as a
+Partner. **Consideration** can describe what was exchanged.
+
+Use **Capacity change** to change an existing Partner between General and Limited.
+Use **Withdrawal** to end their standing. OpenLaw refuses a withdrawal while that
+Partner still holds units, a stated percent or unreturned capital. Transfer or
+return those balances first. The ceased Partner remains in the history.
+
+### Choose the Ownership basis
+
+Select **Change basis**, choose a basis, then **Save**. You can change it while the
+register has entries. Each entry change and basis change rewrites today's Holdings
+and the ownership chart.
+
+| Basis              | Percentage used for Holdings                                                                       |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| Unreturned capital | Each party's unreturned capital divided by the total, including assignees.                         |
+| Units              | Each party's units divided by the total units.                                                     |
+| Stated percent     | The percent recorded in the entries. A total other than 100 warns but does not refuse the entries. |
+| Equal shares       | An equal share for each admitted Partner. Assignees receive no share under this basis.             |
+
+![The partnership register shows General and Limited Partners, capital columns and percentages under the Units basis.](assets/m45-partnership-register.png)
+
+### Read and correct the partnership register
+
+Use **Register as of**, **Previous entry date**, **Next entry date** and **Reset to
+today** as on the share register. Each row shows capacity, status, units, committed,
+contributed, returned, unreturned, percentage under the basis and Partner since.
+Totals close the table. The historic view adds **Change to today**; later entries
+remain visible but dimmed. The selected date changes the register read, not today's
+Holdings on the chart.
+
+In **Register of partnership entries**, select **Filter** to narrow by **Entry**,
+**Partner** or **Effective date**. Use **Edit entry 1** to correct an entry and **Save**.
+Use **Remove entry 1**, then **Remove**, only for an entry made in error. Each change
+replays the whole register, so a correction can be refused if a later entry would
+be invalid. Removed entry numbers are never reused.
+
+**Export register** downloads the Partners at the chosen date as CSV. **Export** on
+the entries card downloads all entries, regardless of filters. On an owner Entity,
+**Holdings in other Entities** shows **From register** and links back to the
+partnership. You cannot edit a Holding there.
+
+## Keep the trust register
+
+A Trust party is an Entity, a named individual or a described class of beneficiaries.
+A Role is Settlor, Trustee, Protector, Enforcer, Beneficiary, or Other with a label.
+One party can hold several Roles. A class can hold only Beneficiary. Role entries
+record appointments, cessations, settlements and distributions. Nobody owns a trust
+in this register; it writes no owner Holdings or ownership percentages.
+
+### Record Roles
+
+1. Open **Ownership** on an Entity that keeps a **Trust register**. An empty register
+   shows **No trust register yet**. Select **Record entry**.
+2. Choose **Appointment** in **Entry** and set **Effective date**. Choose a **Role**.
+   **Other** also needs a **Role label**.
+3. Choose an existing **Party**, **Entity** with a registry selection, or **Individual**
+   with a **Full name**. For Beneficiary, **Class** lets you enter a **Description**, such
+   as "Children and remoter issue of Helena Marsh".
+4. Use **Interest or powers** to describe a beneficiary's interest or powers held.
+   Add **Reference** and **Note** when useful, then **Enter in register**.
+5. To end a Role, record **Cessation** with that party, Role, effective date and reference.
+   A cessation keeps the history with an Until date. OpenLaw refuses a duplicate
+   appointment or a cessation of a Role the party does not hold on that date.
+
+### Record the trust fund
+
+For **Settlement**, choose the contributing Party, effective date and **Form**.
+**Money** needs **Amount** and **Currency**; **Property** needs its description.
+The settlement opens the Settlor Role if the party does not already hold it.
+
+For **Distribution**, choose the recipient and fill the same money or property
+fields. The recipient must hold Beneficiary on that date. If the dialog refuses
+it, check the date and the Role history. Record the appointment only if it reflects
+the facts, then record the distribution again. A refused entry changes neither
+the register nor its fund.
+
+The fund line shows settled, distributed and balance separately for each currency.
+Property descriptions do not become money values. Distributions above settlements
+produce a warning rather than a refusal. The fund is a ledger, not a valuation.
+
+![The trust register groups Helena Marsh under Settlor and Beneficiary and a class under Beneficiary, with 1,000 USD settled, 250 USD distributed and a 750 USD fund.](assets/m45-trust-register.png)
+
+### Read and correct the trust register
+
+**Register of trust parties** groups Roles in this order: Settlor, Trustee,
+Protector, Enforcer, Beneficiary, Other. Read each party's detail, Since, Until
+where shown, and Reference. Use the date controls to read the register at a date;
+the historic view shows **Change to today** and dims later entries.
+
+In **Register of trust entries**, **Filter** offers **Entry**, **Role**, **Party** and
+**Effective date**. Edit or remove an entry through its row controls. Every correction
+replays the Role history, so removing an appointment can be refused when a later
+distribution depends on it. **Export register** downloads the parties at the chosen
+date as CSV. **Export** on the entries card downloads every entry, regardless of
+filters.
+
+A restricted Entity party appears as **Restricted Entity**. A register entry grants
+no access. Each write appears in the Entity's Activity and in the Activity of each
+Entity party it names. Restore an archived Entity before changing its register.
 
 ## Read the ownership chart
 
-1. Open **Entities** and select **Chart**. Create or correct Holdings through the owned Entity's [share register](#keep-the-share-register).
+1. Open **Entities** and select **Chart**. Create or correct Holdings through the owned Entity's [share register](#keep-the-share-register) or [partnership register](#keep-the-partnership-register).
 2. Read the connected Entities and percentages. The chart uses one primary owner to arrange each Entity and draws that Holding as a solid line. Other Holdings remain visible as dashed secondary connections. A branch with no owner Holdings sits below its head office. Other Entities with no Holdings appear in a separate row.
 3. Drag to pan or use the mouse wheel to zoom. With the chart focused, use arrow keys to pan, plus or minus to zoom, and zero to fit the chart. **Fit to window** also resets the view.
 4. Click an Entity once, or focus it and press Space, to highlight its ownership chain. Select **Clear highlight** or press Escape to remove the highlight. Double-click an Entity, or focus it and press Enter, to open it. A **Confidential Entity** box is an Entity you cannot reach. It shows no name and does not open.
 
-The chart shows the Holdings that share registers write, between registered Entities and their individual owners. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission.
+The chart shows the Holdings that share and partnership registers write, between registered Entities and their individual owners. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission.
 
 Trust parties connect to the trust with short dashed lines labelled with their current roles, without percentages. Named individuals and classes are terminal cards; a class has a dotted border. Opening either card takes you to the trust's **Ownership** tab. A head office connects to its branch with a solid line labelled **Branch**, also without a percentage. The legend identifies both relationships. Roles do not change the ownership chain.
 

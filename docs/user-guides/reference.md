@@ -4,22 +4,51 @@ Use this reference alongside the procedure for your role. Labels and limits can 
 
 ## Work and people
 
-| Term                         | Meaning                                                                                                                                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Request                      | Work a Business User submits through the Portal for Legal to triage.                                                                                                                                                                   |
-| Contract                     | A workspace for legal work whose deliverable is a signed document.                                                                                                                                                                     |
-| Matter                       | A container for legal effort such as advice, disputes, or investigations.                                                                                                                                                              |
-| Entity                       | One of your own corporate entities, such as a subsidiary or branch.                                                                                                                                                                    |
-| Counterparty                 | An external organization on the other side of a Contract or Matter.                                                                                                                                                                    |
-| Holding                      | A directional ownership percentage in an Entity, held by another Entity or by a named Individual. It does not grant access. Every Holding comes from the owned Entity's share register, shows **From register**, and cannot be edited. |
-| Registration                 | An Entity's registration or qualification in a jurisdiction, separate from its formation jurisdiction.                                                                                                                                 |
-| Officer                      | A named person with a role and appointment on an Entity; an OpenLaw account is optional.                                                                                                                                               |
-| Knowledge Item               | Curated organizational guidance that can own Documents. Product Help explains OpenLaw itself.                                                                                                                                          |
-| Legal Owner / Matter Manager | The accountable person on a Contract / Matter respectively.                                                                                                                                                                            |
-| Requester                    | The Business User who submitted that Request.                                                                                                                                                                                          |
-| Signer                       | A named person asked to sign an Envelope; they do not need an OpenLaw account.                                                                                                                                                         |
+| Term                         | Meaning                                                                                                                                                                                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request                      | Work a Business User submits through the Portal for Legal to triage.                                                                                                                                                                                  |
+| Contract                     | A workspace for legal work whose deliverable is a signed document.                                                                                                                                                                                    |
+| Matter                       | A container for legal effort such as advice, disputes, or investigations.                                                                                                                                                                             |
+| Entity                       | One of your own corporate entities, such as a subsidiary or branch.                                                                                                                                                                                   |
+| Counterparty                 | An external organization on the other side of a Contract or Matter.                                                                                                                                                                                   |
+| Holding                      | A directional ownership percentage in an Entity, held by another Entity or by a named Individual. It does not grant access. Every Holding comes from the owned Entity's share or partnership register, shows **From register**, and cannot be edited. |
+| Registration                 | An Entity's registration or qualification in a jurisdiction, separate from its formation jurisdiction.                                                                                                                                                |
+| Officer                      | A named person with a role and appointment on an Entity; an OpenLaw account is optional.                                                                                                                                                              |
+| Knowledge Item               | Curated organizational guidance that can own Documents. Product Help explains OpenLaw itself.                                                                                                                                                         |
+| Legal Owner / Matter Manager | The accountable person on a Contract / Matter respectively.                                                                                                                                                                                           |
+| Requester                    | The Business User who submitted that Request.                                                                                                                                                                                                         |
+| Signer                       | A named person asked to sign an Envelope; they do not need an OpenLaw account.                                                                                                                                                                        |
 
 See [Entities and Counterparties](entities-and-counterparties.md), [Entity records](entity-records.md), and [Knowledge authoring](create-knowledge.md).
+
+## Entity registers and Activity actions
+
+| Term              | Meaning                                                                                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Register kind     | Share register, Partnership register, Trust register or None. The Entity type sets it; an Entity can override it while its registers are empty. |
+| Head office       | The Entity a branch belongs to, connected on the chart without a percentage.                                                                    |
+| Partner           | An Entity or individual derived from Partnership entries, with a capacity and standing in the register.                                         |
+| Partnership entry | A dated admission, commitment, contribution, return, transfer, capacity change or withdrawal.                                                   |
+| Ownership basis   | Unreturned capital, Units, Stated percent or Equal shares, used to project partnership Holdings.                                                |
+| Trust party       | An Entity, individual or class of beneficiaries derived from Role entries.                                                                      |
+| Role              | Settlor, Trustee, Protector, Enforcer, Beneficiary or Other with a label.                                                                       |
+| Role entry        | A dated appointment, cessation, settlement or distribution in the trust register.                                                               |
+
+The Entity's Activity and Administrator audit log use these actions. An entry
+write also appears on each Entity party it names.
+
+| Action                             | Recorded change                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| `entity_partnership_entry.created` | A Partnership entry was recorded.                                               |
+| `entity_partnership_entry.updated` | A Partnership entry was corrected.                                              |
+| `entity_partnership_entry.deleted` | A Partnership entry was removed.                                                |
+| `entity_trust_entry.created`       | A Role entry was recorded.                                                      |
+| `entity_trust_entry.updated`       | A Role entry was corrected.                                                     |
+| `entity_trust_entry.deleted`       | A Role entry was removed.                                                       |
+| `entity.updated`                   | Includes changes to Register kind, its source, Head office and Ownership basis. |
+
+See [Entity structure and access](entity-structure-and-access.md) for the entry
+controls, refusals, date reads and exports.
 
 ## Workflow and dates
 

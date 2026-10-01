@@ -478,7 +478,7 @@
       "destinations": ["staff-help", "formal"],
       "priority": "P1",
       "contexts": ["entities.holdings", "entities.officers", "entities.registrations"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "create-knowledge",
@@ -712,7 +712,7 @@
       "destinations": ["staff-help", "portal-help", "formal"],
       "priority": "P1",
       "contexts": ["reference"],
-      "status": "verified"
+      "status": "review"
     },
     {
       "id": "versions-and-support",

@@ -246,6 +246,16 @@ The "Entities without a register keep manual Holdings" clause is superseded by E
 - **Alternatives considered** — Kind on the type only, with two types for LLC (breaks existing partnership-typed Entities that already hold share entries); kind on the Entity only (the type is the carrier of policy, DD-028); automatic re-pinning on a type change instead of refusing (silent side effects on other people's Entities); a head office as a 100 percent Holding (a branch is the head office, not owned by it).
 - **Consequences** — Migration adds `entity_types.register_kind`, `entities.register_kind`, `entities.head_office_entity_id` and the upgrade pins. The type editor gains a Register select. The entity record loader reads the register the kind names. ENT-011's routes gain the kind guard. FUTURE-FEATURES gains rows for LLC interests, foundations, member registers, the share register's statutory columns and the other research items, with the research note as origin. ENT-014 and ENT-015 define the two new registers; DES-096 records the screens.
 
+### Built addendum (2026-10-01, M45/1 and M45/7)
+
+[#1244](https://github.com/juggernog20/OpenLaw/issues/1244) shipped in
+[#1253](https://github.com/juggernog20/OpenLaw/pull/1253). The Entity and type controls,
+register guards, head office, Share capital gate and MCP read use the effective kind.
+Migration 0186 pins shares on existing Entities with share data when their type now
+names another register. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250)
+adds the upgrade fixture for an old partnership-typed Entity with shares and the
+register-kind and head-office guide.
+
 ## ENT-014 — The partnership register: partners with capacity, capital and units; an ownership basis projects Holdings
 
 - **Status** — Accepted
@@ -256,6 +266,16 @@ The "Entities without a register keep manual Holdings" clause is superseded by E
 - **Alternatives considered** — Stored balances (two sources of truth); a percentage derived from capital by default (wrong for half the statutes); capital calls, distributions and profits interests now (fund administration depth, deferred to FUTURE-FEATURES); classes of interest and series (deferred); mixed currencies with conversion (a valuation the register cannot own).
 - **Consequences** — Migration adds `entity_register_parties`, `entity_partnership_entries`, `entity_register_entry_counters`, `entities.partnership_basis` and `individual_holdings.register_party_id`, and relaxes `individual_holdings.shareholder_id` to the one-of-two CHECK. `lib/partnership-register.ts` is the pure replay. The Ownership tab for `partnership` Entities draws DES-096's partnership register. FUTURE-FEATURES gains rows for capital calls and distributions, classes of interest and series, profits interests, and LLC interests as a vocabulary preset on this engine.
 
+### Built addendum (2026-10-01, M45/4, M45/5 and M45/7)
+
+[#1247](https://github.com/juggernog20/OpenLaw/issues/1247) shipped the partnership
+API, replay and projection in [#1261](https://github.com/juggernog20/OpenLaw/pull/1261).
+[#1248](https://github.com/juggernog20/OpenLaw/issues/1248) shipped the Ownership tab
+in [#1262](https://github.com/juggernog20/OpenLaw/pull/1262). Migration 0188 adds
+Partnership entries, Ownership basis and the individual Holding's register-party
+reference. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250) adds the guide,
+upgrade fixture and admission-to-chart journey in `66-m45-registers.spec.ts`.
+
 ## ENT-015 — The trust register: parties hold dated roles; settlements and distributions are a ledger beside them; no percentage ownership
 
 - **Status** — Accepted
@@ -265,6 +285,19 @@ The "Entities without a register keep manual Holdings" clause is superseded by E
 - **Rationale** — A dated role ledger replayed to a date is what every regime read asks a trustee to be able to produce, and it is the same discipline ENT-011 uses. Deriving the settlor from a settlement removes a step the law treats as one fact. Projecting nothing from a trust keeps the ownership chart honest: role lines say who holds what role, and only share and partnership registers say who owns what.
 - **Alternatives considered** — Beneficiaries with a percentage (Diligent does this; the statutes say the number does not exist for a discretionary beneficiary); roles as a configurable list (the chart and a future beneficial-owner derivation branch on the category, so the category is fixed and `other` carries a label); a separate foundation kind now (deferred; founder, council, guardian and qualified recipient map onto these roles as a preset); the trustee as the Holder on a company's register (the chart would then draw the trustee, not the structure).
 - **Consequences** — Migration adds `entity_trust_entries`. `lib/trust-register.ts` is the pure replay. The Ownership tab for `trust` Entities draws DES-096's trust register. The chart gains role edges (ENT-003 amendment below). FUTURE-FEATURES gains rows for foundations, the beneficial-owner derivation from role holders, letters of wishes as Documents linked to entries, and identity details on parties.
+
+### Built addendum (2026-10-01, M45/2, M45/3, M45/6 and M45/7)
+
+[#1245](https://github.com/juggernog20/OpenLaw/issues/1245) shipped trust Roles, entries
+and fund replay in [#1258](https://github.com/juggernog20/OpenLaw/pull/1258).
+[#1246](https://github.com/juggernog20/OpenLaw/issues/1246) shipped the grouped
+Ownership tab in [#1259](https://github.com/juggernog20/OpenLaw/pull/1259). Migration
+0187 adds register parties, entry counters and trust entries.
+[#1249](https://github.com/juggernog20/OpenLaw/issues/1249) shipped role and branch
+lines in the chart and exports in [#1263](https://github.com/juggernog20/OpenLaw/pull/1263).
+[#1250](https://github.com/juggernog20/OpenLaw/issues/1250) adds the guide, upgrade
+fixture and the empty-to-grouped-register journey with a distribution refused before
+appointment and accepted after it in `66-m45-registers.spec.ts`.
 
 ### ENT-003 amendment (2026-09-30, ENT-013 to ENT-015) — role edges and branch edges on the chart
 
