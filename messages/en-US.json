@@ -431,6 +431,15 @@
   "activity.entityOfficer.updated": {
     "defaultMessage": "{actor} changed officer {officer} on {name}"
   },
+  "activity.entityPartnershipEntry.created": {
+    "defaultMessage": "{actor} recorded entry {entryNo} on the {name} partnership register"
+  },
+  "activity.entityPartnershipEntry.deleted": {
+    "defaultMessage": "{actor} removed entry {entryNo} on the {name} partnership register"
+  },
+  "activity.entityPartnershipEntry.updated": {
+    "defaultMessage": "{actor} changed entry {entryNo} on the {name} partnership register"
+  },
   "activity.entityRegistration.created": {
     "defaultMessage": "{actor} added the {jurisdiction} registration to {name}"
   },
@@ -464,6 +473,15 @@
   "activity.entityShareEntry.updated": {
     "defaultMessage": "{actor} changed entry {entryNo} on the {name} register"
   },
+  "activity.entityTrustEntry.created": {
+    "defaultMessage": "{actor} recorded entry {entryNo} on the {name} trust register"
+  },
+  "activity.entityTrustEntry.deleted": {
+    "defaultMessage": "{actor} removed entry {entryNo} on the {name} trust register"
+  },
+  "activity.entityTrustEntry.updated": {
+    "defaultMessage": "{actor} changed entry {entryNo} on the {name} trust register"
+  },
   "activity.envelope.confirmed": {
     "defaultMessage": "This contract's envelope status was confirmed by the provider"
   },
@@ -495,7 +513,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} effectiveOn {Effective date} capacity {Capacity} transfereeStatus {Transferee status} units {Units} statedPercent {Stated percent} amount {Amount (minor units)} currency {Currency} formOfContribution {Form of contribution} consideration {Consideration} reference {Reference} partnershipBasis {Ownership basis} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -677,6 +695,12 @@
   "activity.orgSettings.updated": {
     "defaultMessage": "{actor} changed the organization settings"
   },
+  "activity.registerKind.source": {
+    "defaultMessage": "{value, select, type {From the type} entity {Set on this Entity} other {{value}}}"
+  },
+  "activity.registerKind.value": {
+    "defaultMessage": "{value, select, shares {Share register} partnership {Partnership register} trust {Trust register} none {None} other {{value}}}"
+  },
   "activity.reminderOffset": {
     "defaultMessage": "{days, plural, =0 {day of} one {# day} other {# days}}"
   },
@@ -712,6 +736,9 @@
   },
   "activity.request.unnamedRecord": {
     "defaultMessage": "a request"
+  },
+  "activity.restrictedEntity": {
+    "defaultMessage": "Restricted Entity"
   },
   "activity.settings.catalogCleared": {
     "defaultMessage": "{actor} chose Start blank and removed {removed, plural, one {# seeded row} other {# seeded rows}} from {list, select, matter_type {matter types} matter_status {matter statuses} contract_type {contract types} contract_status {contract statuses} entity_type {entity types} officer_role {officer roles} knowledge_type {knowledge types} request_type {request types} other {a seeded list}}"
@@ -5051,6 +5078,12 @@
   "entities.chart.actualSize": {
     "defaultMessage": "Reset zoom to 100%"
   },
+  "entities.chart.branch": {
+    "defaultMessage": "Branch"
+  },
+  "entities.chart.class": {
+    "defaultMessage": "Class"
+  },
   "entities.chart.clearHighlight": {
     "defaultMessage": "Clear highlight"
   },
@@ -5058,7 +5091,7 @@
     "defaultMessage": "Confidential Entity"
   },
   "entities.chart.description": {
-    "defaultMessage": "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines."
+    "defaultMessage": "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines. Trust roles use short dashed lines; branches use solid lines labelled Branch."
   },
   "entities.chart.export.actualSizePreview": {
     "defaultMessage": "Preview at actual size"
@@ -5141,8 +5174,14 @@
   "entities.chart.export.format.pdf": {
     "defaultMessage": "PDF (.pdf)"
   },
+  "entities.chart.export.format.png": {
+    "defaultMessage": "PNG (.png)"
+  },
   "entities.chart.export.format.pptx": {
     "defaultMessage": "PowerPoint (.pptx)"
+  },
+  "entities.chart.export.format.svg": {
+    "defaultMessage": "SVG (.svg)"
   },
   "entities.chart.export.legalName": {
     "defaultMessage": "Legal name (always included)"
@@ -5186,6 +5225,9 @@
   "entities.chart.label": {
     "defaultMessage": "Entity ownership chart"
   },
+  "entities.chart.legend": {
+    "defaultMessage": "Chart legend"
+  },
   "entities.chart.navigationHint": {
     "defaultMessage": "Drag to move · Scroll to zoom · Single click to highlight entity · Double click to open entity"
   },
@@ -5197,6 +5239,15 @@
   },
   "entities.chart.overview": {
     "defaultMessage": "Chart overview — select an area to move there"
+  },
+  "entities.chart.primary": {
+    "defaultMessage": "Primary Holding"
+  },
+  "entities.chart.role": {
+    "defaultMessage": "Trust role"
+  },
+  "entities.chart.secondary": {
+    "defaultMessage": "Other Holding"
   },
   "entities.chart.title": {
     "defaultMessage": "Entity ownership chart"
@@ -5308,6 +5359,24 @@
   },
   "entities.grants.title": {
     "defaultMessage": "Confidential access"
+  },
+  "entities.headOffice.change": {
+    "defaultMessage": "Change head office"
+  },
+  "entities.headOffice.clear": {
+    "defaultMessage": "Clear head office"
+  },
+  "entities.headOffice.empty": {
+    "defaultMessage": "This branch has no head office recorded."
+  },
+  "entities.headOffice.noOffice": {
+    "defaultMessage": "No head office"
+  },
+  "entities.headOffice.title": {
+    "defaultMessage": "Head office"
+  },
+  "entities.headOffice.unavailable": {
+    "defaultMessage": "Head office unavailable"
   },
   "entities.linked.contracts": {
     "defaultMessage": "Contracts"
@@ -5421,10 +5490,166 @@
     "defaultMessage": "Individual"
   },
   "entities.ownership.noneOwned": {
-    "defaultMessage": "This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity."
+    "defaultMessage": "This Entity owns no other Entities. A Holding appears here when the share register or partnership register of another Entity names this Entity."
   },
   "entities.ownership.rowPercent": {
     "defaultMessage": "{name} ownership percent"
+  },
+  "entities.partnership.admitted": {
+    "defaultMessage": "Admitted"
+  },
+  "entities.partnership.basis.capital": {
+    "defaultMessage": "Unreturned capital"
+  },
+  "entities.partnership.basis.equal": {
+    "defaultMessage": "Equal shares"
+  },
+  "entities.partnership.basis.error": {
+    "defaultMessage": "The ownership basis could not be changed."
+  },
+  "entities.partnership.basis.hint": {
+    "defaultMessage": "The ownership basis sets each Partner's percentage in the register and the ownership chart."
+  },
+  "entities.partnership.basis.stated": {
+    "defaultMessage": "Stated percent"
+  },
+  "entities.partnership.basis.units": {
+    "defaultMessage": "Units"
+  },
+  "entities.partnership.basisCurrency": {
+    "defaultMessage": "{basis} · {currency}"
+  },
+  "entities.partnership.capacity": {
+    "defaultMessage": "Capacity"
+  },
+  "entities.partnership.capacity.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "entities.partnership.capacity.general": {
+    "defaultMessage": "General"
+  },
+  "entities.partnership.capacity.limited": {
+    "defaultMessage": "Limited"
+  },
+  "entities.partnership.capitalIncrease": {
+    "defaultMessage": "+{amount}"
+  },
+  "entities.partnership.changeBasis": {
+    "defaultMessage": "Change basis"
+  },
+  "entities.partnership.committed": {
+    "defaultMessage": "Committed"
+  },
+  "entities.partnership.consideration": {
+    "defaultMessage": "Consideration"
+  },
+  "entities.partnership.contributed": {
+    "defaultMessage": "Contributed"
+  },
+  "entities.partnership.empty": {
+    "defaultMessage": "No partnership register yet"
+  },
+  "entities.partnership.emptyHint": {
+    "defaultMessage": "Record the first entry. Partners come from the entries."
+  },
+  "entities.partnership.entries": {
+    "defaultMessage": "Register of partnership entries"
+  },
+  "entities.partnership.entry.balances": {
+    "defaultMessage": "Enter whole non-negative units and a stated percent from 0 to 100 with up to 2 decimal places."
+  },
+  "entities.partnership.entry.required": {
+    "defaultMessage": "Complete the effective date and the Partner details for this entry."
+  },
+  "entities.partnership.entry.transferRequired": {
+    "defaultMessage": "Enter units, a stated percent or unreturned capital to transfer."
+  },
+  "entities.partnership.form": {
+    "defaultMessage": "Form of contribution"
+  },
+  "entities.partnership.kind.admission": {
+    "defaultMessage": "Admission"
+  },
+  "entities.partnership.kind.capacityChange": {
+    "defaultMessage": "Capacity change"
+  },
+  "entities.partnership.kind.commitment": {
+    "defaultMessage": "Commitment"
+  },
+  "entities.partnership.kind.contribution": {
+    "defaultMessage": "Contribution"
+  },
+  "entities.partnership.kind.return": {
+    "defaultMessage": "Return"
+  },
+  "entities.partnership.kind.transfer": {
+    "defaultMessage": "Transfer"
+  },
+  "entities.partnership.kind.withdrawal": {
+    "defaultMessage": "Withdrawal"
+  },
+  "entities.partnership.meta": {
+    "defaultMessage": "{partners, plural, one {# partner} other {# partners}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
+  },
+  "entities.partnership.noPartners": {
+    "defaultMessage": "No partners at this date."
+  },
+  "entities.partnership.note.capital": {
+    "defaultMessage": "Ownership by unreturned capital"
+  },
+  "entities.partnership.note.equal": {
+    "defaultMessage": "Ownership by equal shares"
+  },
+  "entities.partnership.note.stated": {
+    "defaultMessage": "Ownership by stated percent"
+  },
+  "entities.partnership.note.units": {
+    "defaultMessage": "Ownership by units"
+  },
+  "entities.partnership.partner": {
+    "defaultMessage": "Partner"
+  },
+  "entities.partnership.partners": {
+    "defaultMessage": "Register of partners"
+  },
+  "entities.partnership.partnersAt": {
+    "defaultMessage": "Register of partners at {date}"
+  },
+  "entities.partnership.percent": {
+    "defaultMessage": "%"
+  },
+  "entities.partnership.percentChange": {
+    "defaultMessage": "{change} pp"
+  },
+  "entities.partnership.pickPartner": {
+    "defaultMessage": "Choose a Partner…"
+  },
+  "entities.partnership.returned": {
+    "defaultMessage": "Returned"
+  },
+  "entities.partnership.since": {
+    "defaultMessage": "Partner since"
+  },
+  "entities.partnership.statedTotal": {
+    "defaultMessage": "Today's stated percentages total {total}, not 100%. Check the entries."
+  },
+  "entities.partnership.status.ceased": {
+    "defaultMessage": "Ceased"
+  },
+  "entities.partnership.total": {
+    "defaultMessage": "Total"
+  },
+  "entities.partnership.transfereeStatus": {
+    "defaultMessage": "Transferee status"
+  },
+  "entities.partnership.unchangedStatus": {
+    "defaultMessage": "No change · already a Partner"
+  },
+  "entities.partnership.units": {
+    "defaultMessage": "Units"
+  },
+  "entities.partnership.unreturned": {
+    "defaultMessage": "Unreturned"
   },
   "entities.portalListed": {
     "defaultMessage": "Portal-listed"
@@ -6044,6 +6269,48 @@
   "entities.register.wholeNumber": {
     "defaultMessage": "Enter a whole number of zero or more."
   },
+  "entities.registerKind.change": {
+    "defaultMessage": "Change register"
+  },
+  "entities.registerKind.field": {
+    "defaultMessage": "Register"
+  },
+  "entities.registerKind.fromEntity": {
+    "defaultMessage": "{kind} · set on this Entity"
+  },
+  "entities.registerKind.fromType": {
+    "defaultMessage": "{kind} · from the type {type}"
+  },
+  "entities.registerKind.lockReason": {
+    "defaultMessage": "The register kind cannot change while a register holds data."
+  },
+  "entities.registerKind.none": {
+    "defaultMessage": "None"
+  },
+  "entities.registerKind.noneHelp": {
+    "defaultMessage": "No register. Record a head office for a branch."
+  },
+  "entities.registerKind.partnership": {
+    "defaultMessage": "Partnership register"
+  },
+  "entities.registerKind.partnershipHelp": {
+    "defaultMessage": "Partners, their capacity and capital."
+  },
+  "entities.registerKind.saveError": {
+    "defaultMessage": "The Entity could not be updated."
+  },
+  "entities.registerKind.shares": {
+    "defaultMessage": "Share register"
+  },
+  "entities.registerKind.sharesHelp": {
+    "defaultMessage": "Share classes, holders and dated movements of shares."
+  },
+  "entities.registerKind.trust": {
+    "defaultMessage": "Trust register"
+  },
+  "entities.registerKind.trustHelp": {
+    "defaultMessage": "Trust parties, their roles and the trust fund."
+  },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
   },
@@ -6061,6 +6328,168 @@
   },
   "entities.title": {
     "defaultMessage": "Entities"
+  },
+  "entities.trust.amount": {
+    "defaultMessage": "Amount"
+  },
+  "entities.trust.amountOrProperty": {
+    "defaultMessage": "Amount or property"
+  },
+  "entities.trust.appointed": {
+    "defaultMessage": "Appointed"
+  },
+  "entities.trust.ceased": {
+    "defaultMessage": "Ceased"
+  },
+  "entities.trust.class": {
+    "defaultMessage": "Class"
+  },
+  "entities.trust.description": {
+    "defaultMessage": "Description"
+  },
+  "entities.trust.empty": {
+    "defaultMessage": "No trust register yet"
+  },
+  "entities.trust.emptyHint": {
+    "defaultMessage": "Record the first entry. Trust parties come from the entries."
+  },
+  "entities.trust.entityJurisdiction": {
+    "defaultMessage": "Entity · {jurisdiction}"
+  },
+  "entities.trust.entries": {
+    "defaultMessage": "Register of trust entries"
+  },
+  "entities.trust.entry.amountPrecision": {
+    "defaultMessage": "Enter a positive amount with up to {digits} decimal places."
+  },
+  "entities.trust.entry.currencyRequired": {
+    "defaultMessage": "Choose a currency for the amount."
+  },
+  "entities.trust.entry.partyRequired": {
+    "defaultMessage": "Choose a party and fill in its details."
+  },
+  "entities.trust.entry.required": {
+    "defaultMessage": "Complete the effective date and the required fields for this entry."
+  },
+  "entities.trust.entry.saveError": {
+    "defaultMessage": "The entry could not be saved."
+  },
+  "entities.trust.form": {
+    "defaultMessage": "Form"
+  },
+  "entities.trust.fund": {
+    "defaultMessage": "Settled {settled} {currency} · Distributed {distributed} {currency} · Fund {balance} {currency}"
+  },
+  "entities.trust.fundNegative": {
+    "defaultMessage": "Distributions exceed settlements in {currency}. The fund is a ledger, not a valuation."
+  },
+  "entities.trust.group.beneficiary": {
+    "defaultMessage": "Beneficiaries"
+  },
+  "entities.trust.group.enforcer": {
+    "defaultMessage": "Enforcers"
+  },
+  "entities.trust.group.other": {
+    "defaultMessage": "Other"
+  },
+  "entities.trust.group.protector": {
+    "defaultMessage": "Protectors"
+  },
+  "entities.trust.group.settlor": {
+    "defaultMessage": "Settlors"
+  },
+  "entities.trust.group.trustee": {
+    "defaultMessage": "Trustees"
+  },
+  "entities.trust.interest": {
+    "defaultMessage": "Interest or powers"
+  },
+  "entities.trust.kind.appointment": {
+    "defaultMessage": "Appointment"
+  },
+  "entities.trust.kind.cessation": {
+    "defaultMessage": "Cessation"
+  },
+  "entities.trust.kind.distribution": {
+    "defaultMessage": "Distribution"
+  },
+  "entities.trust.kind.settlement": {
+    "defaultMessage": "Settlement"
+  },
+  "entities.trust.meta": {
+    "defaultMessage": "{parties, plural, one {# party} other {# parties}} · {roles, plural, one {# role} other {# roles}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
+  },
+  "entities.trust.money": {
+    "defaultMessage": "Money"
+  },
+  "entities.trust.moneyValue": {
+    "defaultMessage": "{amount} {currency}"
+  },
+  "entities.trust.noMoney": {
+    "defaultMessage": "No money settlements or distributions recorded at this date."
+  },
+  "entities.trust.noParties": {
+    "defaultMessage": "No trust parties at this date."
+  },
+  "entities.trust.number": {
+    "defaultMessage": "#"
+  },
+  "entities.trust.parties": {
+    "defaultMessage": "Register of trust parties"
+  },
+  "entities.trust.partiesAt": {
+    "defaultMessage": "Register of trust parties at {date}"
+  },
+  "entities.trust.party": {
+    "defaultMessage": "Party"
+  },
+  "entities.trust.pickEntity": {
+    "defaultMessage": "Choose an Entity…"
+  },
+  "entities.trust.pickParty": {
+    "defaultMessage": "Choose a party…"
+  },
+  "entities.trust.property": {
+    "defaultMessage": "Property"
+  },
+  "entities.trust.reappointed": {
+    "defaultMessage": "Reappointed {date}"
+  },
+  "entities.trust.reference": {
+    "defaultMessage": "Reference"
+  },
+  "entities.trust.role": {
+    "defaultMessage": "Role"
+  },
+  "entities.trust.role.beneficiary": {
+    "defaultMessage": "Beneficiary"
+  },
+  "entities.trust.role.enforcer": {
+    "defaultMessage": "Enforcer"
+  },
+  "entities.trust.role.other": {
+    "defaultMessage": "Other"
+  },
+  "entities.trust.role.protector": {
+    "defaultMessage": "Protector"
+  },
+  "entities.trust.role.settlor": {
+    "defaultMessage": "Settlor"
+  },
+  "entities.trust.role.trustee": {
+    "defaultMessage": "Trustee"
+  },
+  "entities.trust.roleDetail": {
+    "defaultMessage": "Role detail"
+  },
+  "entities.trust.roleLabel": {
+    "defaultMessage": "Role label"
+  },
+  "entities.trust.since": {
+    "defaultMessage": "Since"
+  },
+  "entities.trust.until": {
+    "defaultMessage": "Until"
   },
   "entities.view.calendar": {
     "defaultMessage": "Calendar"
@@ -10969,6 +11398,9 @@
   },
   "settings.entityTypeEditor.inUse": {
     "defaultMessage": "{count, plural, one {# entity uses this type.} other {# entities use this type.}}"
+  },
+  "settings.entityTypeEditor.registerError": {
+    "defaultMessage": "The register could not be changed."
   },
   "settings.entityTypes.add": {
     "defaultMessage": "Add type"

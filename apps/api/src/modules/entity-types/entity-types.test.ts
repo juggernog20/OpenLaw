@@ -733,3 +733,31 @@ describe("the DD-017 audit trail", () => {
     expect(await auditRows()).toHaveLength(before);
   });
 });
+
+describe("duplicating a type (ENT-013)", () => {
+  it("copies the register kind onto the copy, not the table default", async () => {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/entity-types",
+      cookies: adminCookies,
+      payload: { displayName: "Family trust" },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const source: TypeRow = created.json().entityType;
+    const set = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entity-types/${source.id}`,
+      cookies: adminCookies,
+      payload: { registerKind: "trust" },
+    });
+    expect(set.statusCode, set.body).toBe(200);
+    const res = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entity-types/${source.id}/duplicate`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    expect(res.json().entityType.displayName).toBe("Family trust (copy)");
+    expect(res.json().entityType.registerKind).toBe("trust");
+  });
+});

@@ -6,9 +6,12 @@ import { statusLabel } from "../../lib/entities";
 import { formatFullDate, toMajorUnits } from "../../lib/format";
 import {
   entityChartIncomingOwners,
+  entityChartRelationships,
   entityStructureChain,
   layoutEntityChart,
 } from "./entity-chart-layout";
+
+import { chartMessages, relationshipLabel } from "./entity-chart-labels";
 
 const FIELD_MESSAGES = defineMessages({
   type: { id: "entities.chart.export.field.type", defaultMessage: "Entity type" },
@@ -36,6 +39,8 @@ const FIELD_MESSAGES = defineMessages({
   parValue: { id: "entities.chart.export.field.parValue", defaultMessage: "Par value" },
   officers: { id: "entities.record.officers.title", defaultMessage: "Directors & Officers" },
 });
+export const EXPORT_FORMATS = ["pdf", "pptx", "svg", "png"] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export const DEFAULT_EXPORT_FIELDS = ["type", "jurisdiction", "status"];
 export interface ExportField {
   id: string;
@@ -60,8 +65,10 @@ export interface ExportCard {
   width: number;
   height: number;
   restricted: boolean;
+  border: "solid" | "dotted";
 }
 export interface ExportEdge {
+  kind: "holding" | "role" | "branch";
   points: Array<{ x: number; y: number }>;
   secondary: boolean;
 }
@@ -77,9 +84,23 @@ export interface ChartExportModel {
 export function scopeExportChart(chart: EntityChart, entityId: string): EntityChart {
   if (!entityId) return chart;
   if (!chart.nodes.some((node) => node.id === entityId && !node.restricted))
-    return { nodes: [], edges: [] };
-  const included = entityStructureChain(chart, entityId);
+    return { nodes: [], edges: [], roleEdges: [], branchEdges: [] };
+  const selected = chart.nodes.find((node) => node.id === entityId);
+  const included = entityStructureChain(
+    chart,
+    selected && !selected.restricted && selected.kind === "party"
+      ? selected.trustEntityId
+      : entityId,
+  );
+  for (const edge of chart.roleEdges ?? [])
+    if (included.has(edge.trustEntityId)) included.add(edge.partyNodeId);
   return {
+    roleEdges: (chart.roleEdges ?? []).filter(
+      (edge) => included.has(edge.trustEntityId) && included.has(edge.partyNodeId),
+    ),
+    branchEdges: (chart.branchEdges ?? []).filter(
+      (edge) => included.has(edge.headOfficeEntityId) && included.has(edge.branchEntityId),
+    ),
     nodes: chart.nodes.filter((node) => included.has(node.id)),
     edges: chart.edges.filter(
       (edge) => included.has(edge.ownerEntityId) && included.has(edge.ownedEntityId),
@@ -234,17 +255,16 @@ export function createChartExportModel({
   let nodeHeight = 90;
   for (const node of chart.nodes) {
     if (node.restricted) continue;
-    if (node.kind === "individual") {
+    if (node.kind === "individual" || node.kind === "party") {
       const lines = wrapExportText(node.legalName, textWidth, 14, true, measure).map((text) => ({
         text,
         size: 14,
         bold: true,
       }));
       lines.push({
-        text: intl.formatMessage({
-          id: "entities.ownership.individual",
-          defaultMessage: "Individual",
-        }),
+        text: intl.formatMessage(
+          chartMessages[node.kind === "party" ? node.partyKind : "individual"],
+        ),
         size: 11,
         bold: false,
       });
@@ -310,6 +330,7 @@ export function createChartExportModel({
     const y2 = owned.y + headerHeight;
     const middle = (y1 + y2) / 2;
     model.edges.push({
+      kind: "holding",
       points: [
         { x: x1, y: y1 },
         { x: x1, y: middle },
@@ -328,6 +349,21 @@ export function createChartExportModel({
         width: 80,
       });
   }
+  for (const edge of entityChartRelationships(chart, positions, nodeWidth, nodeHeight)) {
+    model.edges.push({
+      kind: edge.kind,
+      secondary: false,
+      points: edge.points.map((point) => ({ x: point.x, y: point.y + headerHeight })),
+    });
+    model.texts.push({
+      text: relationshipLabel(intl, edge),
+      x: edge.labelX,
+      y: edge.labelY + headerHeight - 10,
+      size: 10,
+      color: "555555",
+      width: nodeWidth,
+    });
+  }
   for (const node of layout.nodes) {
     const y = node.y + headerHeight;
     model.cards.push({
@@ -337,6 +373,10 @@ export function createChartExportModel({
       width: nodeWidth,
       height: nodeHeight,
       restricted: node.restricted,
+      border:
+        !node.restricted && node.kind === "party" && node.partyKind === "class"
+          ? "dotted"
+          : "solid",
     });
     if (node.restricted) {
       const text = intl.formatMessage({

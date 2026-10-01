@@ -392,6 +392,10 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "effectiveOn {Effective date} capacity {Capacity} transfereeStatus {Transferee status} " +
+        "units {Units} statedPercent {Stated percent} amount {Amount (minor units)} currency {Currency} " +
+        "formOfContribution {Form of contribution} consideration {Consideration} reference {Reference} " +
+        "partnershipBasis {Ownership basis} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} " +
         "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
         "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
         "linkedUser {Linked user} " +
@@ -430,6 +434,7 @@ const CIVIL_DATE = /^\d{4}-\d{2}-\d{2}$/;
  * `linkedUser` already carries names; it is here so a row written
  * before that was true still reads through the same lookup. */
 const REFERENCE_KEYS = new Set([
+  "headOfficeEntityId",
   "assigneeId",
   "targetContractTypeId",
   "matterId",
@@ -466,6 +471,24 @@ function changeValue(
         id: "activity.aiConnector.answerStyle",
         defaultMessage:
           "{value, select, few_words {Few word summary} sentence {1-2 sentence summary} full_clause {Full clause text} other {{value}}}",
+      },
+      { value: String(value) },
+    );
+  if (key === "registerKind")
+    return intl.formatMessage(
+      {
+        id: "activity.registerKind.value",
+        defaultMessage:
+          "{value, select, shares {Share register} partnership {Partnership register} trust {Trust register} none {None} other {{value}}}",
+      },
+      { value: String(value) },
+    );
+  if (key === "registerKindSource")
+    return intl.formatMessage(
+      {
+        id: "activity.registerKind.source",
+        defaultMessage:
+          "{value, select, type {From the type} entity {Set on this Entity} other {{value}}}",
       },
       { value: String(value) },
     );
@@ -590,10 +613,12 @@ function changesFrom(
   intl: IntlShape,
   payload: Payload,
   context: NarrationContext,
+  excludedKeys: readonly string[] = [],
 ): NarratedChange[] {
   const changed = payload.changed;
   if (typeof changed !== "object" || changed === null || Array.isArray(changed)) return [];
   return Object.entries(changed as Record<string, unknown>).flatMap(([key, pair]) => {
+    if (excludedKeys.includes(key)) return [];
     if (typeof pair !== "object" || pair === null) return [];
     const { from, to } = pair as { from?: unknown; to?: unknown };
     return [
@@ -3818,6 +3843,106 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       kind: entryKind(intl, payload),
       quantity: numbered(intl, payload, "quantity"),
       className: named(intl, payload, "className"),
+    }),
+  },
+  "entity_trust_entry.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.created",
+      defaultMessage: "{actor} recorded entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+  },
+  "entity_trust_entry.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.updated",
+      defaultMessage: "{actor} changed entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+    changes: changesFrom,
+  },
+  "entity_trust_entry.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityTrustEntry.deleted",
+      defaultMessage: "{actor} removed entry {entryNo} on the {name} trust register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "trustName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+  },
+  "entity_partnership_entry.created": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityPartnershipEntry.created",
+      defaultMessage: "{actor} recorded entry {entryNo} on the {name} partnership register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "partnershipName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+  },
+  "entity_partnership_entry.updated": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityPartnershipEntry.updated",
+      defaultMessage: "{actor} changed entry {entryNo} on the {name} partnership register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "partnershipName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
+    }),
+    // Keep party identity in the audit payload without rendering opaque ids.
+    changes: (intl, payload, context) =>
+      changesFrom(intl, payload, context, ["partyId", "fromPartyId", "toPartyId"]),
+  },
+  "entity_partnership_entry.deleted": {
+    icon: Network,
+    message: defineMessage({
+      id: "activity.entityPartnershipEntry.deleted",
+      defaultMessage: "{actor} removed entry {entryNo} on the {name} partnership register",
+    }),
+    values: (intl, payload) => ({
+      name:
+        text(payload, "partnershipName") ??
+        intl.formatMessage({
+          id: "activity.restrictedEntity",
+          defaultMessage: "Restricted Entity",
+        }),
+      entryNo: numbered(intl, payload, "entryNo"),
     }),
   },
   "entity_obligation.created": {

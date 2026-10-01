@@ -271,7 +271,7 @@ jobs:
       # One copy of the script drives both versions — see its own note on
       # why the seed may only use API surface the baseline already has.
       - name: Keep the fidelity script across the checkout
-        run: cp e2e/scripts/upgrade-fidelity.mjs e2e/scripts/upgrade-mcp.mjs "$RUNNER_TEMP/"
+        run: cp e2e/scripts/upgrade-fidelity.mjs e2e/scripts/upgrade-mcp.mjs e2e/scripts/upgrade-registers.mjs "$RUNNER_TEMP/"
 
       - name: Pick the baseline and check it out
         id: baseline

@@ -27,6 +27,12 @@ function entity(overrides: Record<string, unknown> = {}) {
     legalName: "Calloway Capital Partners Ltd",
     entityTypeId: "t-corp",
     entityTypeName: "Corporation",
+    registerKind: "shares",
+    typeRegisterKind: "shares",
+    registerKindSource: "type",
+    registerKindLocked: false,
+    registerKindLockReason: null,
+    headOfficeEntityId: null,
     jurisdiction: "Cayman Islands",
     formedOn: null,
     registrationNumber: null,
@@ -217,12 +223,28 @@ function registerAt(asOf: string) {
   };
 }
 
-function registerApi(options: { empty?: boolean; refuse?: string } = {}) {
+function registerApi(
+  options: { empty?: boolean; refuse?: string; entity?: Record<string, unknown> } = {},
+) {
+  let current = entity(options.entity);
   const writes: StubCall[] = [];
   const handler = (call: StubCall) => {
+    if (call.url.pathname === "/api/v1/entities/e1" && call.method === "PATCH") {
+      writes.push(call);
+      if (options.refuse) return problem(409, options.refuse);
+      current = { ...current, ...(call.body as object) };
+      if ("registerKind" in (call.body as object))
+        current.registerKindSource =
+          current.registerKind === current.typeRegisterKind ? "type" : "entity";
+      return json(200, {
+        entity: current,
+        fields: [],
+        customFieldRefs: { users: [], entities: [] },
+      });
+    }
     if (call.url.pathname === "/api/v1/entities/e1" && call.method === "GET") {
       return json(200, {
-        entity: entity(),
+        entity: current,
         fields: [],
         customFieldRefs: { users: [], entities: [] },
       });
@@ -236,6 +258,8 @@ function registerApi(options: { empty?: boolean; refuse?: string } = {}) {
       return json(200, { entities: [entity(), entity({ id: "e2", legalName: WFO.name })] });
     }
     if (call.url.pathname === "/api/v1/entities/e1/share-register" && call.method === "GET") {
+      if (current.registerKind !== "shares")
+        return problem(409, "This Entity does not keep a share register.");
       if (options.empty) return undefined; // the shared stub answers an empty register
       return json(200, registerAt(call.url.searchParams.get("asOf") ?? TODAY));
     }
@@ -449,4 +473,96 @@ describe("the Entity Ownership tab as a share register", () => {
       shareClassId: "c-ord",
     });
   });
+});
+
+describe("the Ownership register kind", () => {
+  it("names the kind and its source above the register", async () => {
+    stubApi({ signedIn: MEMBER, extra: registerApi().handler });
+    renderAt("/entities/e1/ownership");
+    expect(
+      await screen.findByText("Share register · from the type Corporation"),
+    ).toBeInTheDocument();
+  });
+  it("changes the register through a four-kind dialog and returns to the type", async () => {
+    const api = registerApi({ empty: true });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1/ownership");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Change register" }));
+    expect(screen.getAllByRole("radio")).toHaveLength(4);
+    await user.click(screen.getByRole("radio", { name: /Trust register/ }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByText("Trust register · set on this Entity")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "No trust register yet" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Change register" }));
+    await user.click(screen.getByRole("radio", { name: /Share register/ }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(api.writes.at(-1)?.body).toEqual({ registerKind: "shares" }));
+    expect(
+      await screen.findByText("Share register · from the type Corporation"),
+    ).toBeInTheDocument();
+  });
+  it("disables Change register with the reason when any register holds data", async () => {
+    const reason = "The register kind cannot change while a register holds data.";
+    stubApi({
+      signedIn: MEMBER,
+      extra: registerApi({ entity: { registerKindLocked: true, registerKindLockReason: reason } })
+        .handler,
+    });
+    renderAt("/entities/e1/ownership");
+    const button = await screen.findByRole("button", { name: "Change register" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(reason);
+  });
+  it("picks and clears a head office without offering itself", async () => {
+    const api = registerApi({ entity: { registerKind: "none", typeRegisterKind: "none" } });
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1/ownership");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("heading", { name: "Head office" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Change head office" }));
+    const picker = screen.getByRole("combobox", { name: "Head office" });
+    expect(
+      within(picker).queryByRole("option", { name: "Calloway Capital Partners Ltd" }),
+    ).not.toBeInTheDocument();
+    await user.selectOptions(picker, "e2");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(await screen.findByRole("link", { name: WFO.name })).toHaveAttribute(
+      "href",
+      "/entities/e2",
+    );
+    await user.click(screen.getByRole("button", { name: "Clear head office" }));
+    await waitFor(() => expect(api.writes.at(-1)?.body).toEqual({ headOfficeEntityId: null }));
+  });
+  it("hides Share capital for partnership Entities", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: registerApi({ entity: { registerKind: "partnership" } }).handler,
+    });
+    renderAt("/entities/e1");
+    await screen.findByRole("heading", { name: "Registry" });
+    expect(screen.queryByRole("heading", { name: "Share capital" })).not.toBeInTheDocument();
+  });
+});
+
+it("keeps a refused register change in its dialog", async () => {
+  stubApi({
+    signedIn: MEMBER,
+    extra: registerApi({
+      empty: true,
+      refuse: "The register kind cannot change while a register holds data.",
+    }).handler,
+  });
+  renderAt("/entities/e1/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Change register" }));
+  await user.click(screen.getByRole("radio", { name: /Trust register/ }));
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The register kind cannot change while a register holds data.",
+  );
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByText("Share register · from the type Corporation")).toBeInTheDocument();
 });

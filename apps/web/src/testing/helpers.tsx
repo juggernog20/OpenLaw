@@ -724,6 +724,49 @@ export function stubApi(state: ApiState) {
       return json(200, { owners: [], owned: [] });
     }
     if (
+      /^\/api\/v1\/entities\/[^/]+\/partnership-register$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      const today = new Date().toISOString().slice(0, 10);
+      const totals = {
+        units: 0,
+        statedPercent: 0,
+        committed: 0,
+        contributed: 0,
+        returned: 0,
+        unreturned: 0,
+      };
+      return json(200, {
+        asOf: call.url.searchParams.get("asOf") ?? today,
+        today,
+        basis: "capital",
+        currency: null,
+        partners: [],
+        partnersToday: [],
+        totals,
+        totalsToday: totals,
+        entries: [],
+        dates: [],
+        warnings: [],
+      });
+    }
+    if (
+      /^\/api\/v1\/entities\/[^/]+\/trust-register$/.test(call.url.pathname) &&
+      call.method === "GET"
+    ) {
+      const today = new Date().toISOString().slice(0, 10);
+      return json(200, {
+        asOf: call.url.searchParams.get("asOf") ?? today,
+        today,
+        parties: [],
+        partiesToday: [],
+        entries: [],
+        fund: [],
+        dates: [],
+        warnings: [],
+      });
+    }
+    if (
       /^\/api\/v1\/entities\/[^/]+\/share-register$/.test(call.url.pathname) &&
       call.method === "GET"
     ) {

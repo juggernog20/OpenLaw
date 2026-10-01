@@ -15,6 +15,7 @@
 
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -26,13 +27,16 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import type { CustomFieldValue } from "./fields.js";
-import { entityTypes } from "./entity-types.js";
+import { entityTypes, REGISTER_KINDS } from "./entity-types.js";
 import { searchVector, uuidPk } from "./helpers.js";
 
 /** The fixed ENT-001 status enum. Code branches on it (pickers filter
  * to `active`, list pills color by it), so it is not admin-configurable. */
 export const ENTITY_STATUSES = ["active", "dormant", "dissolved", "divested"] as const;
 export type EntityStatus = (typeof ENTITY_STATUSES)[number];
+
+export const PARTNERSHIP_BASES = ["capital", "units", "stated", "equal"] as const;
+export type PartnershipBasis = (typeof PARTNERSHIP_BASES)[number];
 
 export const entities = pgTable(
   "entities",
@@ -44,6 +48,14 @@ export const entities = pgTable(
     entityTypeId: text("entity_type_id")
       .notNull()
       .references(() => entityTypes.id),
+    /** NULL inherits the type's register kind; a value overrides it (ENT-013). */
+    registerKind: text("register_kind", { enum: REGISTER_KINDS }),
+    /** Used when the effective register kind is partnership; retained for other kinds. */
+    partnershipBasis: text("partnership_basis", { enum: PARTNERSHIP_BASES })
+      .notNull()
+      .default("capital"),
+    /** NULL means no head office; only set while the effective kind is none. */
+    headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),
     /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
     jurisdiction: text("jurisdiction"),
     formedOn: date("formed_on"),
@@ -95,6 +107,16 @@ export const entities = pgTable(
       "entities_status_check",
       sql`${table.status} in ('active', 'dormant', 'dissolved', 'divested')`,
     ),
+    check(
+      "entities_register_kind_check",
+      sql`${table.registerKind} in ('shares', 'partnership', 'trust', 'none')`,
+    ),
+    check(
+      "entities_partnership_basis",
+      sql`${table.partnershipBasis} in ('capital', 'units', 'stated', 'equal')`,
+    ),
+    check("entities_head_office_not_self", sql`${table.headOfficeEntityId} <> ${table.id}`),
+    index("entities_head_office_idx").on(table.headOfficeEntityId),
     check("entities_custom_fields_object", sql`jsonb_typeof(${table.customFields}) = 'object'`),
   ],
 );

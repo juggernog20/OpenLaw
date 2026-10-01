@@ -13,7 +13,6 @@ import {
   and,
   asc,
   entities,
-  entityHoldings,
   entityShareCertificates,
   entityShareClasses,
   entityShareEntries,
@@ -27,7 +26,7 @@ import {
   type Executor,
   type Transaction,
 } from "@openlaw/db";
-import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE, type ChangedFields } from "@openlaw/shared";
+import { type ChangedFields } from "@openlaw/shared";
 import type { Db } from "@openlaw/db";
 import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
@@ -35,7 +34,7 @@ import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
 import { csvRow } from "../../lib/csv.js";
 import { projectRegisterHoldings } from "../../lib/holdings-projection.js";
-import { ownershipPath } from "../../lib/ownership-path.js";
+import { assertProjectionAcyclic } from "../../lib/ownership-cycle.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import {
   END_OF_TIME,
@@ -45,6 +44,8 @@ import {
   type ReplayCertificate,
   type ReplayEntry,
 } from "../../lib/share-register.js";
+
+import { assertRegisterKind } from "../../lib/entity-register-kind.js";
 
 const requireMember = requireRole("administrator", "legal_team_member");
 const IdParams = z.object({ id: z.string().min(1).max(64) });
@@ -527,55 +528,6 @@ async function pruneHolders(tx: Transaction, entityId: string) {
   `);
 }
 
-/**
- * A holder Entity owning the issuer is an ownership edge, and the
- * projection has already written it to `entity_holdings` when this runs. The issuer
- * owning that holder, through Holdings or through other registers, would
- * close a loop. The loop may pass through an Entity the writer cannot
- * reach; that link still names it only as Restricted Entity (ENT-004).
- */
-async function assertNoRegisterCycle(
-  tx: Transaction,
-  user: User,
-  holderEntityId: string,
-  issuerId: string,
-) {
-  const holdings = await tx
-    .select({
-      ownerEntityId: entityHoldings.ownerEntityId,
-      ownedEntityId: entityHoldings.ownedEntityId,
-    })
-    .from(entityHoldings);
-  const path = ownershipPath(holdings, issuerId, holderEntityId);
-  if (!path) return;
-  const loopIds = [holderEntityId, ...path];
-  const names = await tx
-    .select({ id: entities.id, legalName: entities.legalName })
-    .from(entities)
-    .where(and(inArray(entities.id, [...new Set(loopIds)]), entityReachScope(tx, user)));
-  const byId = new Map(names.map((row) => [row.id, row.legalName]));
-  const loop = loopIds.map((id) => byId.get(id) ?? "Restricted Entity").join(" → ");
-  throw httpError(409, `This entry would create an ownership loop: ${loop}.`, {
-    type: ENTITY_HOLDING_CYCLE_PROBLEM_TYPE,
-  });
-}
-
-/**
- * Every Entity owner the projection wrote for this issuer, checked for a
- * loop. An update or delete can restore an earlier holder, not only add
- * the entry's own `to`, so the check covers them all; runs inside the
- * write's transaction so a loop rolls the projection back with it.
- */
-async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: string) {
-  const owners = await tx
-    .select({ ownerEntityId: entityHoldings.ownerEntityId })
-    .from(entityHoldings)
-    .where(eq(entityHoldings.ownedEntityId, issuerId));
-  for (const owner of owners) {
-    await assertNoRegisterCycle(tx, user, owner.ownerEntityId, issuerId);
-  }
-}
-
 async function resolveHolder(
   tx: Transaction,
   user: User,
@@ -984,6 +936,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const entity = await reachedEntity(app.db, request.user, request.params.id);
       if (!entity) throw httpError(404, NO_ENTITY);
+      await assertRegisterKind(app.db, entity, "shares");
       const register = await readRegister(
         app.db,
         request.user,
@@ -1117,6 +1070,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         await assertClassNameFree(tx, entity.id, request.body.name);
         const [count] = await tx
@@ -1168,6 +1122,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const current = (await readClasses(tx, entity.id)).find(
           (row) => row.id === request.params.classId,
@@ -1236,6 +1191,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const current = (await readClasses(tx, entity.id)).find(
           (row) => row.id === request.params.classId,
@@ -1280,6 +1236,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const resolved = await resolveEntry(tx, request.user, entity, request.body);
         const entryNo = await nextEntryNo(tx, entity.id);
@@ -1323,6 +1280,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const [current] = await tx
           .select()
@@ -1414,6 +1372,7 @@ export const entityShareRegisterRoutes: FastifyPluginAsyncZod = async (app) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${ADVISORY_LOCK.entityShareRegister})`);
         const entity = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!entity) throw httpError(404, NO_ENTITY);
+        await assertRegisterKind(tx, entity, "shares");
         assertEditable(entity);
         const [current] = await tx
           .select()
@@ -1455,5 +1414,6 @@ export async function getEntityShareRegister(
 ) {
   const entity = await reachedEntity(db, user, id);
   if (!entity) throw httpError(404, NO_ENTITY);
+  await assertRegisterKind(db, entity, "shares");
   return readRegister(db, user, entity, asOf);
 }

@@ -219,6 +219,21 @@ export async function configureTaxonomy(admin, log) {
     log("  contract type Framework agreement archived into MSA");
   }
 
+  // A family trust type, which the shipped seeds do not include. Its
+  // register kind is what makes the Ownership tab draw roles rather than
+  // shares (ENT-013).
+  const entityTypes = await index(admin, "/api/v1/entity-types", "entityTypes");
+  const trust = await ensure(
+    admin,
+    "/api/v1/entity-types",
+    { displayName: "Trust" },
+    entityTypes,
+    "entityTypes",
+  );
+  if (trust && trust.registerKind !== "trust") {
+    await admin.patch(`/api/v1/entity-types/${trust.id}`, { registerKind: "trust" });
+  }
+
   log("taxonomy extended");
   return {
     contractTypes: await index(admin, "/api/v1/contract-types", "contractTypes"),

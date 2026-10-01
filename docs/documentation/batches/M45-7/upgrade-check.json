@@ -1,0 +1,24 @@
+{
+  "method": "container-operation",
+  "result": "pass",
+  "checkedAt": "2026-10-01T04:54:17.888785+00:00",
+  "environment": "openlaw-1250-upgrade",
+  "baselineCommit": "1d00fb612ff95a4e31de67d56b526f0000462d8c",
+  "baselineImage": "sha256:9804769f53f64239d1bbbfd0a757bde95ae2a6e7dc19131600eb5b5a7648db35",
+  "candidateCommit": "b57671c5eb562897471076620f9e66d60c8a415e",
+  "candidateImage": "sha256:c59edb1a750c153364d0b5f8068787b5ba5f082e23f59c6f8537efa988532b5b",
+  "fixtureSource": "e2e/scripts/upgrade-registers.mjs",
+  "steps": [
+    "Built the canonical pre-M45 image from git archive 1d00fb61.",
+    "Created an isolated Compose stack and Administrator.",
+    "Called seedRegisters; asserted supported was false and saved its fingerprint outside the containers.",
+    "Recreated app and worker with the candidate image, retaining the Postgres volume.",
+    "Waited for readyz and signed in with the same Administrator.",
+    "Called verifyRegisters with the retained fingerprint."
+  ],
+  "actual": "Migrated pin, new tables, Roles, capital, fund, Holdings and counters passed.",
+  "limitations": [
+    "This local image swap exercises the register fixture only. CI runs the complete upgrade-fidelity fixture suite.",
+    "An earlier different-branch lab image was refused by the migration-journal guard before register verification; no journal repair was attempted."
+  ]
+}

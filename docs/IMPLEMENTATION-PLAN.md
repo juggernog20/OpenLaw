@@ -796,6 +796,21 @@ leaves a coherent product; none of them is optional in the sense that we intend 
     DD-014 and ENT-004 apply unchanged
   - _Issues:_ #1081–#1100, eleven sub-tasks under [#1068](https://github.com/juggernog20/OpenLaw/issues/1068)
 
+- [ ] **M45 — Register kind per Entity type**
+      _Demo:_ Record a trust from empty to grouped Roles, see a distribution refused
+      before the recipient is a Beneficiary and accepted after appointment, then admit
+      Partners and change the Ownership basis to see the projected Holding on the chart.
+      _Built on the feature branch:_ [#1243](https://github.com/juggernog20/OpenLaw/issues/1243),
+      tasks #1244–#1250, PRs #1253, #1258, #1259, #1261, #1262, #1263 and [#1264](https://github.com/juggernog20/OpenLaw/pull/1264). The two browser
+      journeys are in [`66-m45-registers.spec.ts`](../e2e/tests/66-m45-registers.spec.ts).
+      The milestone remains unchecked until the omnibus lands on `dev`.
+  - Register kind on types and Entities, data guards, upgrade pin and Head office
+  - Partnership entries, Ownership basis and projected Holdings
+  - Trust Roles, settlements, distributions and the fund per currency
+  - Role and branch chart lines, including exports and restricted Entity handling
+  - User guides, screenshots, Activity reference and upgrade fixtures for both registers
+  - _Decisions:_ ENT-013, ENT-014, ENT-015, DES-096, ENT-003 and ENT-011 amendments
+
 - [ ] **M34 — Release**
       _Demo:_ A stranger with a clean Linux VM has OpenLaw running in under an hour, from the README alone.
   - Semver tag to ghcr images plus `compose.yml` and `.env.example` artifacts; generated CHANGELOG

@@ -42,6 +42,8 @@ import { resolveStaffRefs } from "../requests/projection.js";
 import { NO_PERMISSION, type AuthenticatedUser } from "../../auth/guards.js";
 import type { Db } from "@openlaw/db";
 
+import { entityRegisterState } from "../../lib/entity-register-kind.js";
+
 const PAGE_SIZE = 50;
 const CursorSchema = z.string().min(1).max(64);
 export const EntityListQuery = z.object({
@@ -235,7 +237,12 @@ export async function getEntity(db: Db, user: AuthenticatedUser, id: string) {
   const attached = await selectAttachedFields(db, entityTypeFields, row.entity.entityTypeId);
   return {
     form: await readTypeForm(db, "entity", row.entity.entityTypeId),
-    entity: toRow(row.entity, row.entityTypeName),
+    entity: {
+      ...toRow(row.entity, row.entityTypeName),
+      ...(await entityRegisterState(db, row.entity)),
+      partnershipBasis: row.entity.partnershipBasis,
+      headOfficeEntityId: row.entity.headOfficeEntityId,
+    },
     canManageAccess: await canManageEntityAccess(db, user, row.entity),
     fields: attached,
     customFieldRefs: await resolveStaffRefs(db, attached, row.entity.customFields ?? {}, user),

@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-003's ownership-cycle guard, shared by register projections. Loop names
+ * follow Entity reach: an inaccessible Entity is named only as Restricted Entity.
+ */
+
+import { and, entities, entityHoldings, inArray, type Transaction } from "@openlaw/db";
+import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE } from "@openlaw/shared";
+import type { AuthenticatedUser as User } from "../auth/guards.js";
+import { entityReachScope } from "./entity-access.js";
+import { ownershipPath } from "./ownership-path.js";
+import { httpError } from "./problem.js";
+
+type HoldingEdge = { ownerEntityId: string; ownedEntityId: string };
+
+function loadHoldingEdges(tx: Transaction): Promise<HoldingEdge[]> {
+  return tx
+    .select({
+      ownerEntityId: entityHoldings.ownerEntityId,
+      ownedEntityId: entityHoldings.ownedEntityId,
+    })
+    .from(entityHoldings);
+}
+
+/** Pass `edges` to reuse one read of `entity_holdings` across several checks. */
+export async function assertNoRegisterCycle(
+  tx: Transaction,
+  user: User,
+  holderEntityId: string,
+  issuerId: string,
+  edges?: readonly HoldingEdge[],
+) {
+  const holdings = edges ?? (await loadHoldingEdges(tx));
+  const path = ownershipPath(holdings, issuerId, holderEntityId);
+  if (!path) return;
+  const loopIds = [holderEntityId, ...path];
+  const names = await tx
+    .select({ id: entities.id, legalName: entities.legalName })
+    .from(entities)
+    .where(and(inArray(entities.id, [...new Set(loopIds)]), entityReachScope(tx, user)));
+  const byId = new Map(names.map((row) => [row.id, row.legalName]));
+  const loop = loopIds.map((id) => byId.get(id) ?? "Restricted Entity").join(" → ");
+  throw httpError(409, `This entry would create an ownership loop: ${loop}.`, {
+    type: ENTITY_HOLDING_CYCLE_PROBLEM_TYPE,
+  });
+}
+
+/**
+ * Every Entity owner the projection wrote for this issuer, checked for a
+ * loop. An update or delete can restore an earlier holder, not only add
+ * the entry's own `to`, so the check covers them all; runs inside the
+ * write's transaction so a loop rolls the projection back with it.
+ */
+export async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: string) {
+  const edges = await loadHoldingEdges(tx);
+  const owners = new Set(
+    edges.filter((edge) => edge.ownedEntityId === issuerId).map((edge) => edge.ownerEntityId),
+  );
+  for (const ownerEntityId of owners) {
+    await assertNoRegisterCycle(tx, user, ownerEntityId, issuerId, edges);
+  }
+}

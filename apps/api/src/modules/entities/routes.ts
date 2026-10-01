@@ -27,6 +27,7 @@ import {
   and,
   asc,
   entities,
+  PARTNERSHIP_BASES,
   entityGrants,
   entityTypeFields,
   entityTypes,
@@ -34,6 +35,7 @@ import {
   isNull,
   sql,
   ENTITY_STATUSES,
+  REGISTER_KINDS,
   officerRoles,
   users,
   type Entity,
@@ -59,9 +61,17 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
 import { entityHoldingRoutes } from "./holding-routes.js";
+import { entityPartnershipRegisterRoutes } from "./partnership-register-routes.js";
+import { projectPartnershipHoldings } from "../../lib/partnership-projection.js";
+import { entityTrustRegisterRoutes } from "./trust-register-routes.js";
 import { entityShareRegisterRoutes } from "./share-register-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
 import { entityGrantRoutes } from "./grant-routes.js";
+import {
+  entityRegisterState,
+  lockEntityRegisters,
+  registerKindPatch,
+} from "../../lib/entity-register-kind.js";
 import { EntityListQuery, listEntities, getEntity, toRow, primaryOwnerIds } from "./service.js";
 
 /** ENT-004's access floor: the whole registry is Member+. */
@@ -136,7 +146,15 @@ const PersonOptionSchema = z.object({
 const EntityRecordEnvelope = z.object({
   form: z.array(FormNodeSchema).optional(),
   canManageAccess: z.boolean().optional(),
-  entity: EntityRowSchema,
+  entity: EntityRowSchema.extend({
+    registerKind: z.enum(REGISTER_KINDS),
+    typeRegisterKind: z.enum(REGISTER_KINDS),
+    registerKindSource: z.enum(["type", "entity"]),
+    registerKindLocked: z.boolean(),
+    registerKindLockReason: z.string().nullable(),
+    partnershipBasis: z.enum(PARTNERSHIP_BASES),
+    headOfficeEntityId: z.string().nullable(),
+  }),
   fields: z.array(AttachedCustomFieldSchema),
   customFieldRefs: StaffRequestCustomFieldRefsSchema,
 });
@@ -152,6 +170,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityGrantRoutes);
   await app.register(entityHoldingRoutes);
   await app.register(entityShareRegisterRoutes);
+  await app.register(entityTrustRegisterRoutes);
+  await app.register(entityPartnershipRegisterRoutes);
   await app.register(entityRecordChildRoutes);
 
   app.get(
@@ -471,6 +491,9 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           legalName: LegalNameSchema.optional(),
           entityTypeId: z.string().optional(),
+          partnershipBasis: z.enum(PARTNERSHIP_BASES).optional(),
+          registerKind: z.enum(REGISTER_KINDS).nullable().optional(),
+          headOfficeEntityId: z.string().min(1).max(64).nullable().optional(),
           jurisdiction: CardTextSchema.nullable().optional(),
           formedOn: z.iso.date().nullable().optional(),
           registrationNumber: CardTextSchema.nullable().optional(),
@@ -495,6 +518,18 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const { row, entityTypeName, attached } = await app.db.transaction(async (tx) => {
+        // Only a body that can move the register kind or the head office
+        // joins the register writes' critical section. An inline field
+        // commit changes neither and must not queue behind every share
+        // register write on the instance.
+        if (
+          body.partnershipBasis !== undefined ||
+          body.registerKind !== undefined ||
+          body.headOfficeEntityId !== undefined ||
+          body.entityTypeId !== undefined
+        ) {
+          await lockEntityRegisters(tx);
+        }
         const target = await reachedEntity(tx, request.user, request.params.id, { lock: true });
         if (!target) throw httpError(404, NO_ENTITY);
         if (target.archivedAt) {
@@ -502,11 +537,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         }
 
         const [currentType] = await tx
-          .select({ displayName: entityTypes.displayName })
+          .select({ displayName: entityTypes.displayName, registerKind: entityTypes.registerKind })
           .from(entityTypes)
           .where(eq(entityTypes.id, target.entityTypeId))
           .limit(1);
         let typeName = currentType!.displayName;
+        let typeKind = currentType!.registerKind;
 
         const patch: Partial<Entity> = {};
         if (body.portalListed !== undefined) {
@@ -556,6 +592,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
               id: entityTypes.id,
               displayName: entityTypes.displayName,
               archivedAt: entityTypes.archivedAt,
+              registerKind: entityTypes.registerKind,
             })
             .from(entityTypes)
             .where(eq(entityTypes.id, body.entityTypeId))
@@ -567,6 +604,23 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           patch.entityTypeId = entityType.id;
           changed.entityType = { from: typeName, to: entityType.displayName };
           typeName = entityType.displayName;
+          typeKind = entityType.registerKind;
+        }
+
+        const registerChange = await registerKindPatch(tx, request.user, target, typeKind, body);
+        Object.assign(patch, registerChange.patch);
+        Object.assign(changed, registerChange.changed);
+        if (body.partnershipBasis !== undefined) {
+          if (
+            ((registerChange.patch.registerKind === undefined
+              ? target.registerKind
+              : registerChange.patch.registerKind) ?? typeKind) !== "partnership"
+          )
+            throw httpError(409, "Only a partnership register has an ownership basis.");
+          if (body.partnershipBasis !== target.partnershipBasis) {
+            patch.partnershipBasis = body.partnershipBasis;
+            changed.partnershipBasis = { from: target.partnershipBasis, to: body.partnershipBasis };
+          }
         }
 
         // Free-text card scalars: blank normalizes to NULL, same as
@@ -669,6 +723,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           .set(patch)
           .where(eq(entities.id, target.id))
           .returning();
+        if (patch.partnershipBasis !== undefined)
+          await projectPartnershipHoldings(tx, request.user, updated!);
         const legalNameNow = updated!.legalName;
         if (patch.portalListed !== undefined) {
           await recordActivity(tx, {
@@ -716,7 +772,12 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
       });
       return {
         form: await readTypeForm(app.db, "entity", row.entityTypeId),
-        entity: toRow(row, entityTypeName),
+        entity: {
+          ...toRow(row, entityTypeName),
+          ...(await entityRegisterState(app.db, row)),
+          partnershipBasis: row.partnershipBasis,
+          headOfficeEntityId: row.headOfficeEntityId,
+        },
         fields: attached,
         customFieldRefs: await resolveStaffRefs(
           app.db,

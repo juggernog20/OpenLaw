@@ -158,10 +158,12 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
       currentVersion: { id: string };
     }[];
     entities: { id: string; name?: string }[];
-    entity: { id: string };
+    entity: { id: string; registerKind: string };
     officers: unknown[];
     obligations: unknown[];
     shareRegister: unknown;
+    trustRegister: unknown;
+    partnershipRegister: unknown;
     results: { id: string }[];
     knowledgeItem: { body: string };
     text: { text: string };
@@ -466,4 +468,103 @@ it("accepts the maximum Unicode upload metadata in its signed URL", async () => 
   const response = await put(upload, "Unicode metadata");
   expect(response.statusCode, response.body).toBe(201);
   expect(response.json().document.versions[0].note).toBe("界".repeat(2000));
+});
+
+it("reads a non-shares Entity through MCP with its kind and no share register", async () => {
+  const [type] = await h.db.select().from(entityTypes).where(eq(entityTypes.slug, "partnership"));
+  const [entity] = await h.db
+    .insert(entities)
+    .values({ legalName: "MCP Partnership", entityTypeId: type!.id })
+    .returning();
+  const detail = await call(legal, "entity_get", { id: entity!.id });
+  expect(detail.entity.registerKind).toBe("partnership");
+  expect(detail.shareRegister).toBeNull();
+});
+
+it("reads the trust register summary through MCP and redacts an unreached Entity party", async () => {
+  const [type] = await h.db.select().from(entityTypes).limit(1);
+  const [trust, party] = await h.db
+    .insert(entities)
+    .values([
+      { legalName: "MCP Family Trust", entityTypeId: type!.id, registerKind: "trust" as const },
+      { legalName: "MCP Secret Settlor", entityTypeId: type!.id },
+    ])
+    .returning();
+  const settled = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${trust!.id}/trust-entries`,
+    cookies,
+    payload: {
+      kind: "settlement",
+      effectiveOn: "2024-01-01",
+      party: { kind: "entity", entityId: party!.id },
+      amount: 10000,
+      currency: "USD",
+    },
+  });
+  expect(settled.statusCode, settled.body).toBe(201);
+  await h.db.update(entities).set({ isConfidential: true }).where(eq(entities.id, party!.id));
+  const detail = await call(legal, "entity_get", { id: trust!.id });
+  expect(detail.entity.registerKind).toBe("trust");
+  expect(detail.shareRegister).toBeNull();
+  expect(detail.trustRegister).toMatchObject({
+    parties: [
+      expect.objectContaining({
+        role: "settlor",
+        party: { restricted: true, id: expect.any(String) },
+      }),
+    ],
+    fund: [{ currency: "USD", settled: 10000, distributed: 0, balance: 10000 }],
+    warnings: [],
+  });
+  expect(JSON.stringify(detail)).not.toContain("MCP Secret Settlor");
+  await refused(business, "entity_get", { id: trust!.id }, "tool_outside_grant");
+});
+
+it("reads the partnership register summary through MCP with restricted parties", async () => {
+  const [type] = await h.db.select().from(entityTypes).limit(1);
+  const [partnership, party] = await h.db
+    .insert(entities)
+    .values([
+      {
+        legalName: "MCP Partnership",
+        entityTypeId: type!.id,
+        registerKind: "partnership" as const,
+        partnershipBasis: "equal" as const,
+      },
+      { legalName: "MCP Secret Partner", entityTypeId: type!.id },
+    ])
+    .returning();
+  const made = await h.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${partnership!.id}/partnership-entries`,
+    cookies,
+    payload: {
+      kind: "admission",
+      effectiveOn: "2024-01-01",
+      capacity: "general",
+      party: { kind: "entity", entityId: party!.id },
+    },
+  });
+  expect(made.statusCode, made.body).toBe(201);
+  await h.db.update(entities).set({ isConfidential: true }).where(eq(entities.id, party!.id));
+  const detail = await call(legal, "entity_get", { id: partnership!.id });
+  expect(detail.shareRegister).toBeNull();
+  expect(detail.trustRegister).toBeNull();
+  expect(detail.partnershipRegister).toMatchObject({
+    basis: "equal",
+    currency: null,
+    partners: [
+      expect.objectContaining({
+        capacity: "general",
+        status: "admitted",
+        percent: 100,
+        party: { restricted: true, id: expect.any(String) },
+      }),
+    ],
+    totals: { unreturned: 0 },
+    warnings: [],
+  });
+  expect(JSON.stringify(detail)).not.toContain("MCP Secret Partner");
+  await refused(business, "entity_get", { id: partnership!.id }, "tool_outside_grant");
 });

@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * Holdings projected from a share register (ENT-011, amending ENT-003).
- *
- * After every entry write on an issuer, its owner Holdings are rewritten
- * from today's holders: each holder's outstanding shares across every
- * class over the issuer's outstanding shares, to two decimals. This is
- * the only writer of a Holding (ENT-012). Each change is one
- * `entity_holding.*` Activity entry.
- *
- * Runs inside the register write's transaction, under the Holdings
- * advisory lock, so the ownership graph the cycle check reads is the
- * one it commits.
+/** Share replay and the shared Holdings writer for share and partnership registers.
+ * Callers hold the Holdings advisory lock before locking Entity rows.
  */
 import {
   and,
@@ -90,6 +80,19 @@ export async function projectRegisterHoldings(
     });
   }
 
+  await rewriteRegisterHoldings(tx, actorId, issuer, wanted);
+}
+
+export async function rewriteRegisterHoldings(
+  tx: Transaction,
+  actorId: string,
+  issuer: { id: string; legalName: string },
+  wanted: Map<
+    string,
+    { holderEntityId: string | null; name: string; percent: number; holderId: string }
+  >,
+  identity: "shareholderId" | "registerPartyId" = "shareholderId",
+) {
   // Entity holders → entity_holdings(owner = holder, owned = issuer).
   const current = await tx
     .select({
@@ -174,7 +177,7 @@ export async function projectRegisterHoldings(
       id: individualHoldings.id,
       name: individualHoldings.name,
       ownershipPercent: individualHoldings.ownershipPercent,
-      shareholderId: individualHoldings.shareholderId,
+      holderId: individualHoldings[identity],
     })
     .from(individualHoldings)
     .where(eq(individualHoldings.ownedEntityId, issuer.id));
@@ -182,7 +185,7 @@ export async function projectRegisterHoldings(
     [...wanted.values()].filter((row) => !row.holderEntityId).map((row) => [row.holderId, row]),
   );
   for (const row of individuals) {
-    const next = wantedByHolder.get(row.shareholderId);
+    const next = wantedByHolder.get(row.holderId ?? "");
     if (next) {
       const from = Number(row.ownershipPercent);
       if (from !== next.percent || row.name !== next.name) {
@@ -204,7 +207,7 @@ export async function projectRegisterHoldings(
           });
         }
       }
-      wantedByHolder.delete(row.shareholderId);
+      wantedByHolder.delete(row.holderId ?? "");
     } else {
       await tx.delete(individualHoldings).where(eq(individualHoldings.id, row.id));
       await recordHoldingActivity(tx, {
@@ -228,12 +231,12 @@ export async function projectRegisterHoldings(
           ownedEntityId: issuer.id,
           name: next.name,
           ownershipPercent: String(next.percent),
-          shareholderId: next.holderId,
+          [identity]: next.holderId,
         })),
       )
-      .returning({ id: individualHoldings.id, shareholderId: individualHoldings.shareholderId });
+      .returning({ id: individualHoldings.id, holderId: individualHoldings[identity] });
     for (const row of rows) {
-      const next = wantedByHolder.get(row.shareholderId)!;
+      const next = wantedByHolder.get(row.holderId ?? "")!;
       await recordHoldingActivity(tx, {
         action: "entity_holding.created",
         actorId,

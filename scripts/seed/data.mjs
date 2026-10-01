@@ -463,6 +463,48 @@ export const ENTITIES = [
     status: "active",
     note: "The open-source foundation; no member interest is held.",
   },
+  // A fund vehicle the group manages with an outside limited partner. Its
+  // Ownership tab is the partnership register (ENT-014): the owner is the
+  // general partner, and the percentages come from unreturned capital.
+  {
+    legalName: "Helix Growth Partners LP",
+    type: "partnership",
+    jurisdiction: "Delaware, United States",
+    formedOn: "2019-05-02",
+    registrationNumber: "DE-7261190",
+    registeredAgent: "Corporate Trust Center",
+    registeredAddress: "1209 Orange Street, Wilmington, DE 19801, United States",
+    status: "active",
+    owner: "Helix Software Group, Inc.",
+    partnership: {
+      ownerUnits: 100,
+      ownerContribution: 600000000,
+      partners: [{ name: "Priya Raman", capacity: "limited", units: 900, contribution: 400000000 }],
+    },
+  },
+  // The founder's family trust. It has no owner in the percentage sense;
+  // its Ownership tab is the trust register (ENT-015), and it holds a
+  // stake in the group parent, so the chart draws it as a Holder.
+  {
+    legalName: "Helix Founders Trust",
+    type: "trust",
+    jurisdiction: "Jersey",
+    formedOn: "2015-09-30",
+    registrationNumber: "JFSC-TR-40311",
+    registeredAgent: "Kestrel Trustees (Jersey) Limited",
+    registeredAddress: "22 Hill Street, St Helier, Jersey JE2 4UA",
+    status: "active",
+    trust: {
+      settlor: "Amara Lindqvist",
+      settled: 500000000,
+      trustees: ["Rhea Castellanos", "Tobias Nkemelu"],
+      protector: "Imogen Hale",
+      beneficiaries: [{ name: "Elin Lindqvist", interest: "Income for life" }],
+      classDescription: "The children and remoter issue of the Settlor",
+      distribution: { to: "Elin Lindqvist", amount: 12000000, on: "2026-03-31" },
+      holds: { entity: "Helix Software Group, Inc.", shares: 21840000, settlorShares: 40560000 },
+    },
+  },
 ];
 
 /** The people recorded against Entities as Officers (ENT-001). */

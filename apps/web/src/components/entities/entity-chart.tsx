@@ -12,12 +12,15 @@ import {
   CHART_NODE_HEIGHT,
   CHART_NODE_WIDTH,
   entityChartIncomingOwners,
+  entityChartRelationships,
   entityStructureChain,
   layoutEntityChart,
 } from "./entity-chart-layout";
 
 import { fitChart, MAX_CHART_ZOOM, zoomChart, type ChartView } from "./entity-chart-viewport";
 import { EntityChartExport } from "./entity-chart-export-dialog";
+
+import { chartMessages, relationshipLabel } from "./entity-chart-labels";
 
 export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
   const intl = useIntl();
@@ -30,6 +33,17 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
         : null,
     [chart, selectedId],
   );
+  const highlighted = useMemo(() => {
+    if (!chain) return null;
+    const ids = new Set(chain);
+    for (const edge of chart.roleEdges ?? []) {
+      if (chain.has(edge.trustEntityId) || edge.partyNodeId === selectedId) {
+        ids.add(edge.trustEntityId);
+        ids.add(edge.partyNodeId);
+      }
+    }
+    return ids;
+  }, [chart, chain, selectedId]);
   const instructionsId = useId();
   // Two mounted charts must not share title and description ids, or
   // `aria-labelledby` on the second resolves to the first chart's nodes.
@@ -192,6 +206,48 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
         </div>
       </div>
       <div
+        role="group"
+        aria-label={intl.formatMessage({
+          id: "entities.chart.legend",
+          defaultMessage: "Chart legend",
+        })}
+        className="flex flex-wrap gap-4 text-xs text-muted"
+      >
+        {(["primary", "secondary", "role", "branch", "individual", "class"] as const).map(
+          (kind) => (
+            <span key={kind} className="flex items-center gap-1">
+              <svg width="24" height="16" aria-hidden="true">
+                {kind === "class" || kind === "individual" ? (
+                  <rect
+                    x="2"
+                    y="2"
+                    width="20"
+                    height="12"
+                    rx="3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeDasharray={kind === "class" ? "2 4" : undefined}
+                  />
+                ) : (
+                  <line
+                    x1="0"
+                    y1="8"
+                    x2="24"
+                    y2="8"
+                    stroke="currentColor"
+                    strokeWidth={kind === "primary" ? 2 : 1.5}
+                    strokeDasharray={
+                      kind === "role" ? "3 4" : kind === "secondary" ? "7 6" : undefined
+                    }
+                  />
+                )}
+              </svg>
+              {intl.formatMessage(chartMessages[kind])}
+            </span>
+          ),
+        )}
+      </div>
+      <div
         ref={regionRef}
         role="region"
         aria-label={intl.formatMessage({
@@ -254,7 +310,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
             {intl.formatMessage({
               id: "entities.chart.description",
               defaultMessage:
-                "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines.",
+                "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines. Trust roles use short dashed lines; branches use solid lines labelled Branch.",
             })}
           </desc>
           <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
@@ -295,12 +351,35 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                 </g>
               );
             })}
+            {entityChartRelationships(chart, positions).map((edge, index) => (
+              <g
+                key={`relationship:${index}`}
+                aria-hidden="true"
+                opacity={
+                  highlighted && (!highlighted.has(edge.fromId) || !highlighted.has(edge.toId))
+                    ? 0.15
+                    : 1
+                }
+              >
+                <polyline
+                  points={edge.points.map((point) => `${point.x},${point.y}`).join(" ")}
+                  fill="none"
+                  stroke="var(--color-muted)"
+                  strokeWidth={1.5}
+                  strokeDasharray={edge.kind === "role" ? "3 4" : undefined}
+                  data-edge-kind={edge.kind}
+                />
+                <text x={edge.labelX} y={edge.labelY} className="fill-muted text-xs">
+                  {relationshipLabel(intl, edge)}
+                </text>
+              </g>
+            ))}
             {layout.nodes.map((node) => (
               <g
                 key={node.id}
                 data-unconnected={node.unconnected ? "true" : undefined}
-                data-highlighted={chain ? String(chain.has(node.id)) : undefined}
-                opacity={chain && !chain.has(node.id) ? 0.25 : 1}
+                data-highlighted={highlighted ? String(highlighted.has(node.id)) : undefined}
+                opacity={highlighted && !highlighted.has(node.id) ? 0.25 : 1}
                 className="transition-opacity duration-150 motion-reduce:transition-none"
                 data-restricted={node.restricted ? "true" : undefined}
                 aria-label={
@@ -339,9 +418,11 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                 ) : (
                   <Link
                     to={
-                      node.kind === "individual"
-                        ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
-                        : `/entities/${node.id}`
+                      node.kind === "party"
+                        ? `/entities/${node.trustEntityId}/ownership`
+                        : node.kind === "individual"
+                          ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
+                          : `/entities/${node.id}`
                     }
                     aria-current={selectedId === node.id ? "true" : undefined}
                     onClick={(event) => {
@@ -360,9 +441,11 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                       event.preventDefault();
                       void navigate(
-                        node.kind === "individual"
-                          ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
-                          : `/entities/${node.id}`,
+                        node.kind === "party"
+                          ? `/entities/${node.trustEntityId}/ownership`
+                          : node.kind === "individual"
+                            ? `/entities/${chart.edges.find((edge) => edge.ownerEntityId === node.id)?.ownedEntityId}/ownership`
+                            : `/entities/${node.id}`,
                       );
                     }}
                     onKeyDown={(event) => {
@@ -408,6 +491,9 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                           : "fill-canvas stroke-border-default group-hover:stroke-link group-focus-visible:stroke-link"
                       }
                       strokeWidth={selectedId === node.id ? 3 : 2}
+                      strokeDasharray={
+                        node.kind === "party" && node.partyKind === "class" ? "2 4" : undefined
+                      }
                     />
                     <title>{node.legalName}</title>
                     <foreignObject
@@ -418,7 +504,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                       className="pointer-events-none"
                     >
                       <div className="flex h-full flex-col gap-0.5">
-                        {node.kind === "individual" && (
+                        {(node.kind === "individual" || node.kind === "party") && (
                           <span
                             aria-hidden="true"
                             className="mb-1.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-raised text-muted"
@@ -429,8 +515,12 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
                         <p className="line-clamp-2 text-sm font-semibold leading-5 text-primary">
                           {node.legalName}
                         </p>
-                        <p className="truncate text-xs text-muted">{node.type}</p>
-                        {node.kind !== "individual" && (
+                        <p className="truncate text-xs text-muted">
+                          {node.kind === "party"
+                            ? intl.formatMessage(chartMessages[node.partyKind])
+                            : node.type}
+                        </p>
+                        {node.kind !== "individual" && node.kind !== "party" && (
                           <p className="truncate text-xs text-muted">
                             {node.jurisdiction ??
                               intl.formatMessage({

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { stubApi, renderAt, json, problem } from "../testing/helpers";
 import { setupForm } from "../testing/type-form";
 
 describe("the entity type editor", () => {
@@ -42,4 +44,52 @@ describe("the entity type editor", () => {
       await screen.findByRole("menuitem", { name: /Business justification/ }),
     ).toBeInTheDocument();
   });
+});
+
+it("saves the type's Register through the taxonomy extras", async () => {
+  const { user, patches } = setupForm("entity");
+  await user.click(await screen.findByRole("link", { name: "Details" }));
+  const select = await screen.findByRole("combobox", { name: "Register" });
+  await user.selectOptions(select, "partnership");
+  await waitFor(() => expect(patches).toContainEqual({ registerKind: "partnership" }));
+  expect(select).toHaveValue("partnership");
+});
+
+it("shows the refused Entity count inline and keeps the saved Register", async () => {
+  stubApi({
+    signedIn: {
+      id: "admin",
+      email: "admin@example.com",
+      displayName: "Admin",
+      role: "administrator",
+    },
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/entity-types/t1")
+        return call.method === "PATCH"
+          ? problem(
+              409,
+              "2 Entities hold register data. Their effective register kind cannot change.",
+            )
+          : json(200, {
+              entityType: {
+                id: "t1",
+                slug: "test",
+                displayName: "Test",
+                description: null,
+                archivedAt: null,
+                inUseCount: 2,
+                registerKind: "shares",
+              },
+            });
+      if (call.url.pathname === "/api/v1/entity-types/t1/form") return json(200, { form: [] });
+      if (call.url.pathname === "/api/v1/fields") return json(200, { fields: [] });
+      return undefined;
+    },
+  });
+  renderAt("/settings/entities/types/t1");
+  const user = userEvent.setup();
+  const select = await screen.findByRole("combobox", { name: "Register" });
+  await user.selectOptions(select, "none");
+  expect(await screen.findByRole("alert")).toHaveTextContent("2 Entities hold register data.");
+  expect(select).toHaveValue("shares");
 });

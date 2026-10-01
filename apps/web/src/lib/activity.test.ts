@@ -645,6 +645,60 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     toName: "Nadia Counsel",
     effectiveOn: "2026-09-18",
   },
+  "entity_trust_entry.created": {
+    legalName: "Family Trust",
+    trustId: "trust-id",
+    trustName: "Family Trust",
+    entryNo: 1,
+    kind: "appointment",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
+  "entity_trust_entry.updated": {
+    legalName: "Family Trust",
+    trustId: "trust-id",
+    trustName: "Family Trust",
+    entryNo: 1,
+    kind: "appointment",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
+  "entity_trust_entry.deleted": {
+    legalName: "Family Trust",
+    trustId: "trust-id",
+    trustName: "Family Trust",
+    entryNo: 1,
+    kind: "appointment",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
+  "entity_partnership_entry.created": {
+    legalName: "Helix Ventures LP",
+    partnershipId: "partnership-id",
+    partnershipName: "Helix Ventures LP",
+    entryNo: 1,
+    kind: "admission",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
+  "entity_partnership_entry.updated": {
+    legalName: "Helix Ventures LP",
+    partnershipId: "partnership-id",
+    partnershipName: "Helix Ventures LP",
+    entryNo: 1,
+    kind: "admission",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
+  "entity_partnership_entry.deleted": {
+    legalName: "Helix Ventures LP",
+    partnershipId: "partnership-id",
+    partnershipName: "Helix Ventures LP",
+    entryNo: 1,
+    kind: "admission",
+    effectiveOn: "2024-01-01",
+    changed: {},
+  },
   "entity_obligation.created": {
     legalName: "Helix Labs GmbH",
     obligationId: "obligation-1",
@@ -1906,3 +1960,61 @@ it.each(["contract", "matter"])(
     }
   },
 );
+
+it("narrates an Entity's register kind, its source and head office", () => {
+  const entry: NarratableEntry = {
+    action: "entity.updated",
+    actor: ACTOR,
+    payload: {
+      legalName: "Branch",
+      changed: {
+        registerKind: { from: "shares", to: "none" },
+        registerKindSource: { from: "type", to: "entity" },
+        headOfficeEntityId: { from: "old", to: "new" },
+      },
+    },
+  };
+  expect(
+    narrateActivity(intl, entry, { referenceNames: { old: "Old office", new: "New office" } })
+      .changes,
+  ).toEqual([
+    { label: "Register kind", from: "Share register", to: "None" },
+    { label: "Register kind source", from: "From the type", to: "Set on this Entity" },
+    { label: "Head office", from: "Old office", to: "New office" },
+  ]);
+});
+
+it("labels partnership corrections and keeps opaque party identities out of narration", () => {
+  const result = narrate("entity_partnership_entry.updated", {
+    partnershipName: "Example LP",
+    entryNo: 1,
+    changed: {
+      effectiveOn: { from: "2024-01-01", to: "2024-02-01" },
+      capacity: { from: "general", to: "limited" },
+      transfereeStatus: { from: "assignee", to: "admitted" },
+      units: { from: 1, to: 2 },
+      statedPercent: { from: "10.00", to: "20.00" },
+      amount: { from: 100, to: 200 },
+      currency: { from: "USD", to: "EUR" },
+      formOfContribution: { from: null, to: "Cash" },
+      consideration: { from: null, to: "Agreed price" },
+      reference: { from: null, to: "Deed" },
+      partyId: { from: "old-party-id", to: "new-party-id" },
+      fromPartyId: { from: "old-party-id", to: "new-party-id" },
+      toPartyId: { from: "old-party-id", to: "new-party-id" },
+    },
+  });
+  expect(result.changes.map((change) => change.label)).toEqual([
+    "Effective date",
+    "Capacity",
+    "Transferee status",
+    "Units",
+    "Stated percent",
+    "Amount (minor units)",
+    "Currency",
+    "Form of contribution",
+    "Consideration",
+    "Reference",
+  ]);
+  expect(JSON.stringify(result.changes)).not.toContain("party-id");
+});

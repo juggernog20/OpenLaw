@@ -315,12 +315,12 @@ export function ShareRegisterTab({
  * the projected Holdings, and retires its number for good, so the dialog
  * names the entry and says so. A refusal prints inside the dialog.
  */
-function RemoveEntryDialog({
+export function RemoveEntryDialog({
   entry,
   onClose,
   onConfirm,
 }: Readonly<{
-  entry: RegisterEntry;
+  entry: Pick<RegisterEntry, "entryNo">;
   onClose: () => void;
   onConfirm: () => Promise<string | null>;
 }>) {
@@ -385,10 +385,13 @@ function RemoveEntryDialog({
 }
 
 /** DES-088's Register as of: prev, the date, next, Reset to today, and the timeline. */
-function RegisterAsOf({
+export function RegisterAsOf({
   register,
   onChange,
-}: Readonly<{ register: ShareRegister; onChange: (next: string | null) => void }>) {
+}: Readonly<{
+  register: Pick<ShareRegister, "dates" | "today" | "asOf">;
+  onChange: (next: string | null) => void;
+}>) {
   const intl = useIntl();
   const asOfHeading = useId();
   const ticks = [...new Set([...register.dates, register.today])].sort();

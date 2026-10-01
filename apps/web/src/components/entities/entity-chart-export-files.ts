@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
-import type { ChartExportModel, MeasureText } from "./entity-chart-export-model";
+import type { ChartExportModel, ExportFormat, MeasureText } from "./entity-chart-export-model";
 
 /** Load the same font used in the PDF before measuring the export preview. */
 export async function loadExportMeasure(): Promise<MeasureText> {
@@ -52,7 +52,11 @@ export async function createChartPdf(model: ChartExportModel): Promise<Blob> {
           points: edge.points.map((point) => ({ x: point.x * scale, y: point.y * scale })),
           lineColor: "#999999",
           lineWidth: scale,
-          ...(edge.secondary ? { dash: { length: 5 * scale, space: 4 * scale } } : {}),
+          ...(edge.kind === "role"
+            ? { dash: { length: 3 * scale, space: 4 * scale } }
+            : edge.secondary
+              ? { dash: { length: 7 * scale, space: 6 * scale } }
+              : {}),
         })),
         ...model.cards.map((card) => ({
           type: "rect" as const,
@@ -63,6 +67,7 @@ export async function createChartPdf(model: ChartExportModel): Promise<Blob> {
           r: 6 * scale,
           color: card.restricted ? "#EEEAE4" : "#FFFFFF",
           lineColor: "#C9C4BC",
+          ...(card.border === "dotted" ? { dash: { length: 2 * scale, space: 4 * scale } } : {}),
           lineWidth: scale,
         })),
       ],
@@ -109,7 +114,11 @@ export async function createChartPowerPoint(model: ChartExportModel): Promise<Bl
         y: inch(Math.min(from.y, to.y)),
         w: inch(Math.abs(to.x - from.x)),
         h: inch(Math.abs(to.y - from.y)),
-        line: { color: "999999", width: scale, dashType: edge.secondary ? "dash" : "solid" },
+        line: {
+          color: "999999",
+          width: scale,
+          dashType: edge.kind === "role" ? "sysDash" : edge.secondary ? "dash" : "solid",
+        },
       });
     }
   }
@@ -120,7 +129,11 @@ export async function createChartPowerPoint(model: ChartExportModel): Promise<Bl
       w: inch(card.width),
       h: inch(card.height),
       rectRadius: inch(6),
-      line: { color: "C9C4BC", width: scale },
+      line: {
+        color: "C9C4BC",
+        width: scale,
+        dashType: card.border === "dotted" ? "sysDot" : "solid",
+      },
       fill: { color: card.restricted ? "EEEAE4" : "FFFFFF" },
     });
   }
@@ -145,7 +158,7 @@ export async function createChartPowerPoint(model: ChartExportModel): Promise<Bl
   return result;
 }
 
-export function downloadChart(blob: Blob, title: string, format: "pdf" | "pptx") {
+export function downloadChart(blob: Blob, title: string, format: ExportFormat) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -159,4 +172,74 @@ export function downloadChart(blob: Blob, title: string, format: "pdf" | "pptx")
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** Base64 TrueType data for the two "OpenLaw Chart" weights the measure uses. */
+export interface ChartSvgFonts {
+  regular: string;
+  medium: string;
+}
+
+/** The SVG embeds the measured Roboto faces, so card text fits as it was laid out. */
+export function chartSvgMarkup(model: ChartExportModel, fonts?: ChartSvgFonts): string {
+  const serializer = new XMLSerializer();
+  const escape = (text: string) => serializer.serializeToString(document.createTextNode(text));
+  const edges = model.edges
+    .map(
+      (edge) =>
+        `<polyline data-edge-kind="${edge.kind}" points="${edge.points.map((point) => `${point.x},${point.y}`).join(" ")}" fill="none" stroke="#777777" stroke-width="1.5"${edge.kind === "role" ? ' stroke-dasharray="3 4"' : edge.secondary ? ' stroke-dasharray="7 6"' : ""}/>`,
+    )
+    .join("");
+  const cards = model.cards
+    .map(
+      (card) =>
+        `<rect x="${card.x}" y="${card.y}" width="${card.width}" height="${card.height}" rx="6" fill="${card.restricted ? "#EEEAE4" : "#FFFFFF"}" stroke="#C9C4BC"${card.border === "dotted" ? ' stroke-dasharray="2 4"' : ""}/>`,
+    )
+    .join("");
+  const texts = model.texts
+    .map(
+      (line) =>
+        `<text x="${line.x}" y="${line.y + line.size}" font-size="${line.size}" font-weight="${line.bold ? 700 : 400}" fill="#${line.color}">${escape(line.text)}</text>`,
+    )
+    .join("");
+  const style = fonts
+    ? `<style>@font-face{font-family:"OpenLaw Chart";font-weight:400;src:url(data:font/ttf;base64,${fonts.regular}) format("truetype")}@font-face{font-family:"OpenLaw Chart";font-weight:700;src:url(data:font/ttf;base64,${fonts.medium}) format("truetype")}</style>`
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${model.width}" height="${model.height}" viewBox="0 0 ${model.width} ${model.height}" font-family="'OpenLaw Chart', Arial, sans-serif"><title>${escape(model.title)}</title>${style}<rect width="100%" height="100%" fill="white"/>${edges}${cards}${texts}</svg>`;
+}
+
+export async function createChartSvg(model: ChartExportModel): Promise<Blob> {
+  const { default: vfs } = await import("pdfmake/build/vfs_fonts");
+  const regular = vfs["Roboto-Regular.ttf"];
+  const medium = vfs["Roboto-Medium.ttf"];
+  if (!regular || !medium) throw new Error("The chart font is unavailable.");
+  return new Blob([chartSvgMarkup(model, { regular, medium })], { type: "image/svg+xml" });
+}
+
+export async function createChartPng(model: ChartExportModel): Promise<Blob> {
+  const url = URL.createObjectURL(await createChartSvg(model));
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(
+      2,
+      16384 / Math.max(model.width, model.height),
+      Math.sqrt(32_000_000 / (model.width * model.height)),
+    );
+    canvas.width = Math.ceil(model.width * scale);
+    canvas.height = Math.ceil(model.height * scale);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Image export is unavailable.");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("The image could not be created."))),
+        "image/png",
+      ),
+    );
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

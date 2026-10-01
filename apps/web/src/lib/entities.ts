@@ -14,8 +14,19 @@ import { api } from "./api";
 /** One row of the entities API, aliased to the generated client schema
  * so a contract change surfaces as a compile error here, not as a
  * runtime surprise in a route. */
-export type EntityRow =
+export type EntityRecordRow =
   paths["/api/v1/entities/{id}"]["get"]["responses"]["200"]["content"]["application/json"]["entity"];
+
+export type EntityRow = Omit<
+  EntityRecordRow,
+  | "registerKind"
+  | "typeRegisterKind"
+  | "registerKindSource"
+  | "registerKindLocked"
+  | "registerKindLockReason"
+  | "headOfficeEntityId"
+  | "partnershipBasis"
+>;
 
 /** One row of M27/9's managed registry, including its derived next
  * open Obligation. */

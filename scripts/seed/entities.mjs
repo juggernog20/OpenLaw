@@ -182,13 +182,26 @@ export async function seedEntities(admin, context, log) {
     });
   });
 
-  // Ownership. A Holding comes only from a share register (ENT-012), so
-  // each owned company gets one share class and one allotment of all its
-  // shares to its owner, dated the day it was formed.
+  // Ownership. A Holding comes only from a register (ENT-012), and which
+  // register depends on the Entity's kind (ENT-013): a company gets one
+  // share class and one allotment of all its shares to its owner, a
+  // partnership admits its owner as general partner beside an outside
+  // limited partner, and a branch names its head office instead.
   let holdings = 0;
+  let branches = 0;
   for (const entity of created.values()) {
     const parent = created.get(entity.definition.owner);
     if (!parent) continue;
+    if (entity.definition.type === "branch") {
+      await admin.patch(`/api/v1/entities/${entity.id}`, { headOfficeEntityId: parent.id });
+      branches += 1;
+      continue;
+    }
+    if (entity.definition.partnership) {
+      await seedPartnership(admin, entity, parent);
+      holdings += 1;
+      continue;
+    }
     const name = SHARE_CLASS_NAMES[entity.definition.type] ?? "Ownership interest";
     const { body } = await admin.post(`/api/v1/entities/${entity.id}/share-classes`, { name });
     await admin.post(`/api/v1/entities/${entity.id}/share-entries`, {
@@ -200,7 +213,12 @@ export async function seedEntities(admin, context, log) {
     });
     holdings += 1;
   }
-  log(`${holdings} holdings recorded`);
+  for (const entity of created.values()) {
+    if (!entity.definition.trust) continue;
+    await seedTrust(admin, entity, created);
+    holdings += 1;
+  }
+  log(`${holdings} holdings recorded, ${branches} branches placed under a head office`);
 
   let registrations = 0;
   let officers = 0;
@@ -326,4 +344,118 @@ export async function seedEntities(admin, context, log) {
   }
 
   return created;
+}
+
+/** Admits the owner as general partner and the outside partners as limited, then funds each (ENT-014). */
+async function seedPartnership(admin, entity, parent) {
+  const { ownerUnits, ownerContribution, partners } = entity.definition.partnership;
+  const base = `/api/v1/entities/${entity.id}`;
+  const on = entity.definition.formedOn;
+  await admin.post(`${base}/partnership-entries`, {
+    kind: "admission",
+    effectiveOn: on,
+    party: { kind: "entity", entityId: parent.id },
+    capacity: "general",
+    units: ownerUnits,
+  });
+  for (const partner of partners) {
+    await admin.post(`${base}/partnership-entries`, {
+      kind: "admission",
+      effectiveOn: on,
+      party: { kind: "individual", name: partner.name },
+      capacity: partner.capacity,
+      units: partner.units,
+    });
+  }
+  // Names never merge into an existing party, so the money entries name
+  // the parties the admissions created.
+  const { body } = await admin.get(`${base}/partnership-register`);
+  const partyId = (name) => body.partnersToday.find((row) => row.party.name === name).party.id;
+  await admin.post(`${base}/partnership-entries`, {
+    kind: "contribution",
+    effectiveOn: on,
+    party: { kind: "party", partyId: partyId(parent.definition.legalName) },
+    amount: ownerContribution,
+    currency: "USD",
+  });
+  for (const partner of partners) {
+    await admin.post(`${base}/partnership-entries`, {
+      kind: "contribution",
+      effectiveOn: on,
+      party: { kind: "party", partyId: partyId(partner.name) },
+      amount: partner.contribution,
+      currency: "USD",
+    });
+  }
+}
+
+/** Settles the trust, appoints its roles, pays one distribution, and gives it its stake (ENT-015). */
+async function seedTrust(admin, entity, created) {
+  const trust = entity.definition.trust;
+  const base = `/api/v1/entities/${entity.id}`;
+  const on = entity.definition.formedOn;
+  const entry = (payload) =>
+    admin.post(`${base}/trust-entries`, { effectiveOn: on, reference: "Trust deed", ...payload });
+  // A settlement opens the settlor role by itself.
+  await entry({
+    kind: "settlement",
+    party: { kind: "individual", name: trust.settlor },
+    amount: trust.settled,
+    currency: "USD",
+  });
+  for (const name of trust.trustees) {
+    await entry({ kind: "appointment", party: { kind: "individual", name }, role: "trustee" });
+  }
+  await entry({
+    kind: "appointment",
+    party: { kind: "individual", name: trust.protector },
+    role: "protector",
+    interest: "Consent to the addition or exclusion of a beneficiary",
+  });
+  for (const beneficiary of trust.beneficiaries) {
+    await entry({
+      kind: "appointment",
+      party: { kind: "individual", name: beneficiary.name },
+      role: "beneficiary",
+      interest: beneficiary.interest,
+    });
+  }
+  await entry({
+    kind: "appointment",
+    party: { kind: "class", description: trust.classDescription },
+    role: "beneficiary",
+    interest: "Discretionary",
+  });
+  const { body } = await admin.get(`${base}/trust-register`);
+  const beneficiary = body.partiesToday.find(
+    (row) => row.role === "beneficiary" && row.party.name === trust.distribution.to,
+  );
+  await admin.post(`${base}/trust-entries`, {
+    kind: "distribution",
+    effectiveOn: trust.distribution.on,
+    party: { kind: "party", partyId: beneficiary.party.id },
+    amount: trust.distribution.amount,
+    currency: "USD",
+    reference: "Trustee resolution 2026-03",
+  });
+  // The stake: the trust and the settlor hold the group parent between them.
+  const held = created.get(trust.holds.entity);
+  const { body: classes } = await admin.post(`/api/v1/entities/${held.id}/share-classes`, {
+    name: SHARE_CLASS_NAMES[held.definition.type] ?? "Ownership interest",
+  });
+  const shareClassId = classes.classes[0].id;
+  await admin.post(`/api/v1/entities/${held.id}/share-entries`, {
+    kind: "allotment",
+    effectiveOn: held.definition.formedOn,
+    shareClassId,
+    quantity: trust.holds.settlorShares,
+    to: { kind: "individual", name: trust.settlor },
+  });
+  await admin.post(`/api/v1/entities/${held.id}/share-entries`, {
+    kind: "allotment",
+    effectiveOn: on,
+    shareClassId,
+    quantity: trust.holds.shares,
+    to: { kind: "entity", entityId: entity.id },
+  });
 }

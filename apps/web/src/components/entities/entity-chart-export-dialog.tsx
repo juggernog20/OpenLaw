@@ -12,15 +12,19 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
   createChartExportModel,
   DEFAULT_EXPORT_FIELDS,
+  EXPORT_FORMATS,
   exportFields,
   scopeExportChart,
   type ChartExportModel,
+  type ExportFormat,
   type ExportRecords,
   type ExportRecord,
   type MeasureText,
 } from "./entity-chart-export-model";
 import {
   createChartPdf,
+  createChartSvg,
+  createChartPng,
   createChartPowerPoint,
   downloadChart,
   loadExportMeasure,
@@ -30,7 +34,9 @@ export async function readExportRecords(
   chart: EntityChart,
   signal: AbortSignal,
 ): Promise<ExportRecords> {
-  const pending = chart.nodes.filter((node) => !node.restricted && node.kind !== "individual");
+  const pending = chart.nodes.filter(
+    (node) => !node.restricted && node.kind !== "individual" && node.kind !== "party",
+  );
   const records = new Map<string, ExportRecord>();
   let next = 0;
   await Promise.all(
@@ -89,7 +95,7 @@ function ExportDialog({
   const [rootId, setRootId] = useState(selectedId ?? "");
   const [selectedFields, setSelectedFields] = useState(new Set(DEFAULT_EXPORT_FIELDS));
   const [percentages, setPercentages] = useState(true);
-  const [format, setFormat] = useState<"pdf" | "pptx">("pdf");
+  const [format, setFormat] = useState<ExportFormat>("pdf");
   const [loaded, setLoaded] = useState<{
     chart: EntityChart;
     records: ExportRecords;
@@ -152,7 +158,13 @@ function ExportDialog({
     setExportError(false);
     try {
       const blob =
-        format === "pdf" ? await createChartPdf(model) : await createChartPowerPoint(model);
+        format === "pdf"
+          ? await createChartPdf(model)
+          : format === "pptx"
+            ? await createChartPowerPoint(model)
+            : format === "svg"
+              ? await createChartSvg(model)
+              : await createChartPng(model);
       downloadChart(blob, model.title, format);
       onClose();
     } catch {
@@ -291,8 +303,23 @@ function ExportDialog({
               <select
                 className={CONTROL_CLASS}
                 value={format}
-                onChange={(event) => setFormat(event.target.value as "pdf" | "pptx")}
+                onChange={(event) => {
+                  const next = EXPORT_FORMATS.find((value) => value === event.target.value);
+                  if (next) setFormat(next);
+                }}
               >
+                <option value="png">
+                  {intl.formatMessage({
+                    id: "entities.chart.export.format.png",
+                    defaultMessage: "PNG (.png)",
+                  })}
+                </option>
+                <option value="svg">
+                  {intl.formatMessage({
+                    id: "entities.chart.export.format.svg",
+                    defaultMessage: "SVG (.svg)",
+                  })}
+                </option>
                 <option value="pdf">
                   {intl.formatMessage({
                     id: "entities.chart.export.format.pdf",
@@ -436,7 +463,7 @@ function ExportPreview({
           points={edge.points.map((point) => `${point.x},${point.y}`).join(" ")}
           fill="none"
           stroke="#999999"
-          strokeDasharray={edge.secondary ? "5 4" : undefined}
+          strokeDasharray={edge.kind === "role" ? "3 4" : edge.secondary ? "7 6" : undefined}
         />
       ))}
       {model.cards.map((card) => (
@@ -449,6 +476,7 @@ function ExportPreview({
           rx={6}
           fill={card.restricted ? "#EEEAE4" : "#FFFFFF"}
           stroke="#C9C4BC"
+          strokeDasharray={card.border === "dotted" ? "2 4" : undefined}
         />
       ))}
       {model.texts.map((line, index) => (
