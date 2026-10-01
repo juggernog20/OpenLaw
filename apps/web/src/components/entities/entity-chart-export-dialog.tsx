@@ -12,9 +12,11 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import {
   createChartExportModel,
   DEFAULT_EXPORT_FIELDS,
+  EXPORT_FORMATS,
   exportFields,
   scopeExportChart,
   type ChartExportModel,
+  type ExportFormat,
   type ExportRecords,
   type ExportRecord,
   type MeasureText,
@@ -93,7 +95,7 @@ function ExportDialog({
   const [rootId, setRootId] = useState(selectedId ?? "");
   const [selectedFields, setSelectedFields] = useState(new Set(DEFAULT_EXPORT_FIELDS));
   const [percentages, setPercentages] = useState(true);
-  const [format, setFormat] = useState<"pdf" | "pptx" | "svg" | "png">("pdf");
+  const [format, setFormat] = useState<ExportFormat>("pdf");
   const [loaded, setLoaded] = useState<{
     chart: EntityChart;
     records: ExportRecords;
@@ -161,7 +163,7 @@ function ExportDialog({
           : format === "pptx"
             ? await createChartPowerPoint(model)
             : format === "svg"
-              ? createChartSvg(model)
+              ? await createChartSvg(model)
               : await createChartPng(model);
       downloadChart(blob, model.title, format);
       onClose();
@@ -301,9 +303,10 @@ function ExportDialog({
               <select
                 className={CONTROL_CLASS}
                 value={format}
-                onChange={(event) =>
-                  setFormat(event.target.value as "pdf" | "pptx" | "svg" | "png")
-                }
+                onChange={(event) => {
+                  const next = EXPORT_FORMATS.find((value) => value === event.target.value);
+                  if (next) setFormat(next);
+                }}
               >
                 <option value="png">
                   {intl.formatMessage({

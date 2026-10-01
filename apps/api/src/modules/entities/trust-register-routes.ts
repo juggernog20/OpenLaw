@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-015's trust register API. Each write runs in one transaction: it takes the
+ * Holdings advisory lock, locks the Entity row, replays the full history through
+ * `END_OF_TIME`, then prunes the parties no entry names.
+ */
+
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
@@ -9,6 +15,7 @@ import {
   entityRegisterEntryCounters,
   entityTrustEntries,
   eq,
+  notExists,
   sql,
   REGISTER_PARTY_KINDS,
   TRUST_ENTRY_KINDS,
@@ -21,7 +28,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { csvRow } from "../../lib/csv.js";
-import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { NO_ENTITY, reachedEntity, reachedEntityIds } from "../../lib/entity-access.js";
 import { assertRegisterKind, lockEntityRegisters } from "../../lib/entity-register-kind.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { END_OF_TIME, todayIsoDate } from "../../lib/share-register.js";
@@ -153,12 +160,15 @@ const readEntries = (db: Executor, entityId: string) =>
     .orderBy(asc(entityTrustEntries.effectiveOn), asc(entityTrustEntries.entryNo));
 type Entry = Awaited<ReturnType<typeof readEntries>>[number];
 async function readRegister(db: Executor, user: AuthenticatedUser, entityId: string, asOf: string) {
-  const [parties, entries, reached] = await Promise.all([
+  const [parties, entries] = await Promise.all([
     readParties(db, entityId),
     readEntries(db, entityId),
-    db.select({ id: entities.id }).from(entities).where(entityReachScope(db, user)),
   ]);
-  const visible = new Set(reached.map((row) => row.id));
+  const visible = await reachedEntityIds(
+    db,
+    user,
+    parties.map((p) => p.partyEntityId),
+  );
   const refs = new Map(
     parties.map((p) => [
       p.id,
@@ -293,8 +303,22 @@ async function validateAndPrune(tx: Transaction, entityId: string) {
   ]);
   const replay = replayTrustRegister({ parties, entries }, END_OF_TIME);
   if (replay.violation) throw httpError(409, replay.violation.detail);
-  await tx.execute(sql`delete from ${entityRegisterParties} where ${entityRegisterParties.entityId} = ${entityId}
-    and not exists (select 1 from ${entityTrustEntries} where ${entityTrustEntries.entityId} = ${entityId} and ${entityTrustEntries.partyId} = ${entityRegisterParties.id})`);
+  await tx.delete(entityRegisterParties).where(
+    and(
+      eq(entityRegisterParties.entityId, entityId),
+      notExists(
+        tx
+          .select({ id: entityTrustEntries.id })
+          .from(entityTrustEntries)
+          .where(
+            and(
+              eq(entityTrustEntries.entityId, entityId),
+              eq(entityTrustEntries.partyId, entityRegisterParties.id),
+            ),
+          ),
+      ),
+    ),
+  );
 }
 async function activity(
   tx: Transaction,

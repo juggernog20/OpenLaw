@@ -81,6 +81,21 @@ export async function reachedEntity(
   return row ?? null;
 }
 
+/** The ids among `ids` the user reaches. Nulls are skipped; no ids means no query. */
+export async function reachedEntityIds(
+  db: Executor,
+  user: AuthenticatedUser,
+  ids: Iterable<string | null>,
+): Promise<Set<string>> {
+  const wanted = [...new Set([...ids].filter((id): id is string => id !== null))];
+  if (wanted.length === 0) return new Set();
+  const rows = await db
+    .select({ id: entities.id })
+    .from(entities)
+    .where(and(inArray(entities.id, wanted), entityReachScope(db, user)));
+  return new Set(rows.map((row) => row.id));
+}
+
 export interface EntityAudience {
   entityType: "entity";
   entityId: string;

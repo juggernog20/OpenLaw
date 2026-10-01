@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
-import type { ChartExportModel, MeasureText } from "./entity-chart-export-model";
+import type { ChartExportModel, ExportFormat, MeasureText } from "./entity-chart-export-model";
 
 /** Load the same font used in the PDF before measuring the export preview. */
 export async function loadExportMeasure(): Promise<MeasureText> {
@@ -158,7 +158,7 @@ export async function createChartPowerPoint(model: ChartExportModel): Promise<Bl
   return result;
 }
 
-export function downloadChart(blob: Blob, title: string, format: "pdf" | "pptx" | "svg" | "png") {
+export function downloadChart(blob: Blob, title: string, format: ExportFormat) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -174,7 +174,14 @@ export function downloadChart(blob: Blob, title: string, format: "pdf" | "pptx" 
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-export function chartSvgMarkup(model: ChartExportModel): string {
+/** Base64 TrueType data for the two "OpenLaw Chart" weights the measure uses. */
+export interface ChartSvgFonts {
+  regular: string;
+  medium: string;
+}
+
+/** The SVG embeds the measured Roboto faces, so card text fits as it was laid out. */
+export function chartSvgMarkup(model: ChartExportModel, fonts?: ChartSvgFonts): string {
   const serializer = new XMLSerializer();
   const escape = (text: string) => serializer.serializeToString(document.createTextNode(text));
   const edges = model.edges
@@ -195,15 +202,22 @@ export function chartSvgMarkup(model: ChartExportModel): string {
         `<text x="${line.x}" y="${line.y + line.size}" font-size="${line.size}" font-weight="${line.bold ? 700 : 400}" fill="#${line.color}">${escape(line.text)}</text>`,
     )
     .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${model.width}" height="${model.height}" viewBox="0 0 ${model.width} ${model.height}" font-family="Arial, sans-serif"><title>${escape(model.title)}</title><rect width="100%" height="100%" fill="white"/>${edges}${cards}${texts}</svg>`;
+  const style = fonts
+    ? `<style>@font-face{font-family:"OpenLaw Chart";font-weight:400;src:url(data:font/ttf;base64,${fonts.regular}) format("truetype")}@font-face{font-family:"OpenLaw Chart";font-weight:700;src:url(data:font/ttf;base64,${fonts.medium}) format("truetype")}</style>`
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${model.width}" height="${model.height}" viewBox="0 0 ${model.width} ${model.height}" font-family="'OpenLaw Chart', Arial, sans-serif"><title>${escape(model.title)}</title>${style}<rect width="100%" height="100%" fill="white"/>${edges}${cards}${texts}</svg>`;
 }
 
-export function createChartSvg(model: ChartExportModel): Blob {
-  return new Blob([chartSvgMarkup(model)], { type: "image/svg+xml" });
+export async function createChartSvg(model: ChartExportModel): Promise<Blob> {
+  const { default: vfs } = await import("pdfmake/build/vfs_fonts");
+  const regular = vfs["Roboto-Regular.ttf"];
+  const medium = vfs["Roboto-Medium.ttf"];
+  if (!regular || !medium) throw new Error("The chart font is unavailable.");
+  return new Blob([chartSvgMarkup(model, { regular, medium })], { type: "image/svg+xml" });
 }
 
 export async function createChartPng(model: ChartExportModel): Promise<Blob> {
-  const url = URL.createObjectURL(createChartSvg(model));
+  const url = URL.createObjectURL(await createChartSvg(model));
   try {
     const image = new Image();
     image.src = url;

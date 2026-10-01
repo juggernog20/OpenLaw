@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { sql } from "drizzle-orm";
-import { check, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  check,
+  foreignKey,
+  index,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { entities } from "./entities.js";
 import { entityShareholders } from "./entity-share-register.js";
 import { entityRegisterParties } from "./entity-trust-register.js";
@@ -18,10 +27,8 @@ export const individualHoldings = pgTable(
       .references(() => entities.id),
     name: text("name").notNull(),
     ownershipPercent: numeric("ownership_percent", { precision: 5, scale: 2 }).notNull(),
-    /** The register holder this row is projected from. */
-    registerPartyId: text("register_party_id").references(() => entityRegisterParties.id, {
-      onDelete: "cascade",
-    }),
+    /** The register holder this row is projected from. The party belongs to the owned Entity. */
+    registerPartyId: text("register_party_id"),
     shareholderId: text("shareholder_id").references(() => entityShareholders.id, {
       onDelete: "cascade",
     }),
@@ -33,6 +40,11 @@ export const individualHoldings = pgTable(
   },
   (table) => [
     index("individual_holdings_owned_idx").on(table.ownedEntityId),
+    foreignKey({
+      name: "individual_holdings_register_party_fk",
+      columns: [table.ownedEntityId, table.registerPartyId],
+      foreignColumns: [entityRegisterParties.entityId, entityRegisterParties.id],
+    }).onDelete("cascade"),
     check(
       "individual_holdings_percent_range",
       sql`${table.ownershipPercent} >= 0 and ${table.ownershipPercent} <= 100`,

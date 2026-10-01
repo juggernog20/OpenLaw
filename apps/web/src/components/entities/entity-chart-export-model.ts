@@ -39,6 +39,8 @@ const FIELD_MESSAGES = defineMessages({
   parValue: { id: "entities.chart.export.field.parValue", defaultMessage: "Par value" },
   officers: { id: "entities.record.officers.title", defaultMessage: "Directors & Officers" },
 });
+export const EXPORT_FORMATS = ["pdf", "pptx", "svg", "png"] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export const DEFAULT_EXPORT_FIELDS = ["type", "jurisdiction", "status"];
 export interface ExportField {
   id: string;

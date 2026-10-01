@@ -30,7 +30,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { csvRow } from "../../lib/csv.js";
-import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { NO_ENTITY, reachedEntity, reachedEntityIds } from "../../lib/entity-access.js";
 import { assertRegisterKind, lockEntityRegisters } from "../../lib/entity-register-kind.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { END_OF_TIME, todayIsoDate } from "../../lib/share-register.js";
@@ -178,12 +178,15 @@ const readEntries = (db: Executor, entityId: string) =>
     .orderBy(asc(entityPartnershipEntries.effectiveOn), asc(entityPartnershipEntries.entryNo));
 type Entry = Awaited<ReturnType<typeof readEntries>>[number];
 async function readRegister(db: Executor, user: AuthenticatedUser, entityId: string, asOf: string) {
-  const [parties, entries, reached] = await Promise.all([
+  const [parties, entries] = await Promise.all([
     readParties(db, entityId),
     readEntries(db, entityId),
-    db.select({ id: entities.id }).from(entities).where(entityReachScope(db, user)),
   ]);
-  const visible = new Set(reached.map((row) => row.id));
+  const visible = await reachedEntityIds(
+    db,
+    user,
+    parties.map((p) => p.partyEntityId),
+  );
   const refs = new Map(
     parties.map((p) => [
       p.id,
