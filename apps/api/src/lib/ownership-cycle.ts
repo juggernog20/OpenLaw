@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-003's ownership-cycle guard, shared by register projections. Loop names
+ * follow Entity reach: an inaccessible Entity is named only as Restricted Entity.
+ */
+
 import { and, entities, entityHoldings, eq, inArray, type Transaction } from "@openlaw/db";
 import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE } from "@openlaw/shared";
 import type { AuthenticatedUser as User } from "../auth/guards.js";

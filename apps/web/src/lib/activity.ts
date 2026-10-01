@@ -392,6 +392,9 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "jurisdiction {Jurisdiction} formedOn {Formed on} " +
         "registrationNumber {Registration number} taxId {Tax ID} " +
         "registeredAgent {Registered agent} registeredAddress {Registered address} " +
+        "effectiveOn {Effective date} capacity {Capacity} transfereeStatus {Transferee status} " +
+        "units {Units} statedPercent {Stated percent} amount {Amount (minor units)} currency {Currency} " +
+        "formOfContribution {Form of contribution} consideration {Consideration} reference {Reference} " +
         "partnershipBasis {Ownership basis} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} " +
         "sharesAuthorized {Authorized shares} sharesIssued {Issued shares} " +
         "parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} " +
@@ -610,10 +613,12 @@ function changesFrom(
   intl: IntlShape,
   payload: Payload,
   context: NarrationContext,
+  excludedKeys: readonly string[] = [],
 ): NarratedChange[] {
   const changed = payload.changed;
   if (typeof changed !== "object" || changed === null || Array.isArray(changed)) return [];
   return Object.entries(changed as Record<string, unknown>).flatMap(([key, pair]) => {
+    if (excludedKeys.includes(key)) return [];
     if (typeof pair !== "object" || pair === null) return [];
     const { from, to } = pair as { from?: unknown; to?: unknown };
     return [
@@ -3907,7 +3912,9 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
         }),
       entryNo: numbered(intl, payload, "entryNo"),
     }),
-    changes: changesFrom,
+    // Keep party identity in the audit payload without rendering opaque ids.
+    changes: (intl, payload, context) =>
+      changesFrom(intl, payload, context, ["partyId", "fromPartyId", "toPartyId"]),
   },
   "entity_partnership_entry.deleted": {
     icon: Network,

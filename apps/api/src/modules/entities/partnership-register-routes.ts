@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-014's partnership register API. Writes take the Holdings lock, validate
+ * the full history, project today's Holdings, then prune parties in one transaction.
+ */
+
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   and,
   asc,
   entities,
+  PARTNERSHIP_BASES,
   entityRegisterParties,
   entityRegisterEntryCounters,
   entityPartnershipEntries,
+  entityTrustEntries,
+  notExists,
+  or,
   eq,
   sql,
   REGISTER_PARTY_KINDS,
@@ -112,7 +121,7 @@ const PartnerRow = Totals.extend({
 const Envelope = z.object({
   asOf: z.iso.date(),
   today: z.iso.date(),
-  basis: z.enum(["capital", "units", "stated", "equal"]),
+  basis: z.enum(PARTNERSHIP_BASES),
   currency: z.string().nullable(),
   partners: z.array(PartnerRow),
   partnersToday: z.array(PartnerRow),
@@ -310,7 +319,7 @@ function values(body: EntryInput, parties: Awaited<ReturnType<typeof resolveEntr
     capacity: body.capacity ?? null,
     transfereeStatus: body.transfereeStatus ?? null,
     units: body.units ?? null,
-    statedPercent: body.statedPercent == null ? null : String(body.statedPercent),
+    statedPercent: body.statedPercent == null ? null : body.statedPercent.toFixed(2),
     amount: body.amount ?? null,
     currency: body.currency ?? null,
     formOfContribution: body.formOfContribution ?? null,
@@ -342,9 +351,37 @@ async function validateAndProject(
     for (const party of namedParties(candidate, parties))
       if (party.partyEntityId) await assertNoRegisterCycle(tx, user, party.partyEntityId, entityId);
   }
-  await tx.execute(sql`delete from ${entityRegisterParties} where ${entityRegisterParties.entityId}=${entityId}
-    and not exists (select 1 from ${entityPartnershipEntries} e where e.entity_id=${entityId} and ${entityRegisterParties.id} in (e.party_id,e.from_party_id,e.to_party_id))
-    and not exists (select 1 from entity_trust_entries e where e.entity_id=${entityId} and e.party_id=${entityRegisterParties.id})`);
+  await tx.delete(entityRegisterParties).where(
+    and(
+      eq(entityRegisterParties.entityId, entityId),
+      notExists(
+        tx
+          .select({ id: entityPartnershipEntries.id })
+          .from(entityPartnershipEntries)
+          .where(
+            and(
+              eq(entityPartnershipEntries.entityId, entityId),
+              or(
+                eq(entityPartnershipEntries.partyId, entityRegisterParties.id),
+                eq(entityPartnershipEntries.fromPartyId, entityRegisterParties.id),
+                eq(entityPartnershipEntries.toPartyId, entityRegisterParties.id),
+              ),
+            ),
+          ),
+      ),
+      notExists(
+        tx
+          .select({ id: entityTrustEntries.id })
+          .from(entityTrustEntries)
+          .where(
+            and(
+              eq(entityTrustEntries.entityId, entityId),
+              eq(entityTrustEntries.partyId, entityRegisterParties.id),
+            ),
+          ),
+      ),
+    ),
+  );
 }
 const namedParties = (entry: Entry, parties: Party[]) =>
   parties.filter((p) => [entry.partyId, entry.fromPartyId, entry.toPartyId].includes(p.id));

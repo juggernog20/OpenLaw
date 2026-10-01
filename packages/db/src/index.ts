@@ -248,6 +248,7 @@ export {
   lte,
   gt,
   ne,
+  notExists,
   or,
   sql,
 } from "drizzle-orm";

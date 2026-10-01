@@ -801,3 +801,35 @@ it("allows a basis change after an earlier owner ceased and the ownership direct
   const changed = await setBasis(a.id, "units");
   expect(changed.statusCode, changed.body).toBe(200);
 });
+
+it("does not audit a percentage change when only the note changed", async () => {
+  const p = await newEntity("Canonical percent", { registerKind: "partnership" });
+  const made = await entry(
+    p.id,
+    admission({ kind: "individual", name: "Ada" }, { statedPercent: 10 }),
+  );
+  const first = made.json().entries[0];
+  const changed = await patch(
+    p.id,
+    first.id,
+    admission(
+      { kind: "party", partyId: first.party.id },
+      { statedPercent: 10, note: "Correction" },
+    ),
+  );
+  expect(changed.statusCode, changed.body).toBe(200);
+  const logs = await harness.db
+    .select()
+    .from(activityLog)
+    .where(
+      and(
+        eq(activityLog.entityId, p.id),
+        eq(activityLog.action, "entity_partnership_entry.updated"),
+      ),
+    );
+  expect(logs).toHaveLength(1);
+  expect(logs[0]!.payload).toMatchObject({ changed: { note: { from: null, to: "Correction" } } });
+  expect((logs[0]!.payload as { changed: Record<string, unknown> }).changed).not.toHaveProperty(
+    "statedPercent",
+  );
+});

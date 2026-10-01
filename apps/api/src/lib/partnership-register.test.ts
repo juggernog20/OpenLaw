@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { PARTNERSHIP_BASES, type PartnershipBasis } from "@openlaw/db";
 import { describe, expect, it } from "vitest";
 import { replayPartnershipRegister, type PartnershipEntry } from "./partnership-register.js";
 const parties = [
@@ -40,7 +41,7 @@ const transfer = (n: number, patch = {}) =>
   });
 const replay = (
   entries: PartnershipEntry[],
-  basis: "capital" | "units" | "stated" | "equal" = "capital",
+  basis: PartnershipBasis = "capital",
   asOf = "9999-12-31",
 ) => replayPartnershipRegister({ parties, entries }, asOf, basis);
 describe("partnership replay", () => {
@@ -75,30 +76,25 @@ describe("partnership replay", () => {
     expect(replay(entries, "capital", "2023-12-31").partners).toEqual([]);
     expect(entries).toEqual(before);
   });
-  it.each(["capital", "units", "stated", "equal"] as const)(
-    "includes an assignee by %s basis",
-    (basis) => {
-      const result = replay(
-        [
-          entry(1, { units: 4, statedPercent: "100" }),
-          money(2, "contribution", 100),
-          transfer(3, { units: 1, statedPercent: "25", amount: 25, currency: "USD" }),
-        ],
-        basis,
-      );
-      expect(result.violation).toBeNull();
-      expect(result.partners.map((p) => p.percent)).toEqual(
-        basis === "equal" ? [100, 0] : [75, 25],
-      );
-      expect(result.totals.unreturned).toBe(100);
-      expect(result.partners[1]).toMatchObject({
-        status: "assignee",
-        capacity: null,
-        since: null,
-        unreturned: 25,
-      });
-    },
-  );
+  it.each(PARTNERSHIP_BASES)("includes an assignee by %s basis", (basis) => {
+    const result = replay(
+      [
+        entry(1, { units: 4, statedPercent: "100" }),
+        money(2, "contribution", 100),
+        transfer(3, { units: 1, statedPercent: "25", amount: 25, currency: "USD" }),
+      ],
+      basis,
+    );
+    expect(result.violation).toBeNull();
+    expect(result.partners.map((p) => p.percent)).toEqual(basis === "equal" ? [100, 0] : [75, 25]);
+    expect(result.totals.unreturned).toBe(100);
+    expect(result.partners[1]).toMatchObject({
+      status: "assignee",
+      capacity: null,
+      since: null,
+      unreturned: 25,
+    });
+  });
   it("admits assignees, changes capacity, withdraws and readmits without erasing money history", () => {
     const entries = [
       entry(1, { units: 1 }),

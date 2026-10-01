@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-014 entry rows. CHECKs constrain each kind's parties, capacity and balances,
+ * pair amounts with currencies, and restrict contribution and transfer text.
+ */
+
 import { sql } from "drizzle-orm";
 import {
   bigint,
@@ -17,8 +22,6 @@ import { users } from "./auth.js";
 import { entities } from "./entities.js";
 import { entityRegisterParties } from "./entity-trust-register.js";
 import { uuidPk } from "./helpers.js";
-export const PARTNERSHIP_BASES = ["capital", "units", "stated", "equal"] as const;
-export type PartnershipBasis = (typeof PARTNERSHIP_BASES)[number];
 export const PARTNERSHIP_CAPACITIES = ["general", "limited"] as const;
 export type PartnershipCapacity = (typeof PARTNERSHIP_CAPACITIES)[number];
 export const PARTNERSHIP_ENTRY_KINDS = [

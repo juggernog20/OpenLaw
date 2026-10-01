@@ -35,6 +35,9 @@ import { searchVector, uuidPk } from "./helpers.js";
 export const ENTITY_STATUSES = ["active", "dormant", "dissolved", "divested"] as const;
 export type EntityStatus = (typeof ENTITY_STATUSES)[number];
 
+export const PARTNERSHIP_BASES = ["capital", "units", "stated", "equal"] as const;
+export type PartnershipBasis = (typeof PARTNERSHIP_BASES)[number];
+
 export const entities = pgTable(
   "entities",
   {
@@ -47,10 +50,11 @@ export const entities = pgTable(
       .references(() => entityTypes.id),
     /** NULL inherits the type's register kind; a value overrides it (ENT-013). */
     registerKind: text("register_kind", { enum: REGISTER_KINDS }),
-    /** NULL means no head office; only set while the effective kind is none. */
-    partnershipBasis: text("partnership_basis", { enum: ["capital", "units", "stated", "equal"] })
+    /** Used when the effective register kind is partnership; retained for other kinds. */
+    partnershipBasis: text("partnership_basis", { enum: PARTNERSHIP_BASES })
       .notNull()
       .default("capital"),
+    /** NULL means no head office; only set while the effective kind is none. */
     headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),
     /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
     jurisdiction: text("jurisdiction"),

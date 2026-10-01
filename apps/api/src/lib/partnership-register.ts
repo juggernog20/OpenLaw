@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-014 replay, ordered by effective date then entry number. Stated percentages
+ * use exact hundredths; unreturned capital includes net assignments alongside payments.
+ */
+
 import type { PartnershipBasis, PartnershipCapacity, PartnershipEntryKind } from "@openlaw/db";
 
 export interface PartnershipEntry {

@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-014 projects today's partners by the Entity's ownership basis. Individual
+ * Holdings are matched by registerPartyId, regardless of their displayed names.
+ */
+
 import {
   entities,
   entityPartnershipEntries,
