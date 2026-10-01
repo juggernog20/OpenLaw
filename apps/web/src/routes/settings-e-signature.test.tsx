@@ -82,7 +82,7 @@ function connectorApi(
   state: {
     connector?: ReturnType<typeof connector>;
     /** What POST …/test answers; a Response means the refusal path. */
-    test?: Response | (() => Response);
+    test?: Response | (() => Response | Promise<Response>);
   },
   calls: ConnectorCalls,
 ) {
@@ -600,6 +600,53 @@ describe("the consent step (#1236)", () => {
 
     expect(await screen.findByText("Connected to Acme Inc.")).toBeVisible();
     expect(calls.tests).toBe(1);
+  });
+
+  it("re-tests after a consent that arrives while another test is still out", async () => {
+    const user = userEvent.setup();
+    const opened = spyPopup();
+    const calls = newCalls();
+    const unconsented = () =>
+      problem(
+        502,
+        "The connection test failed. The DocuSign user has not given consent to this integration.",
+        SIGNING_CONSENT_REQUIRED_PROBLEM_TYPE,
+      );
+    let release: (response: Response) => void = () => {};
+    stubApi({
+      signedIn: ADMIN,
+      extra: connectorApi(
+        {
+          test: () => {
+            if (calls.tests === 1) {
+              return new Promise<Response>((resolve) => {
+                release = resolve;
+              });
+            }
+            return json(200, {
+              connected: true,
+              accountName: "Acme Inc",
+              accountId: "acct-1",
+              userEmail: "integration@acme.example",
+            });
+          },
+        },
+        calls,
+      ),
+    });
+    renderAt("/settings/integrations/e-signature");
+
+    await openDocusign(user);
+    await user.click(await screen.findByRole("button", { name: "Grant consent" }));
+    // A test goes out and hangs, and the consent lands while it does.
+    await user.click(screen.getByRole("button", { name: "Test connection" }));
+    await waitFor(() => expect(calls.tests).toBe(1));
+    answer(opened[0]!, { outcome: "granted" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    release(unconsented());
+
+    expect(await screen.findByText("Connected to Acme Inc.")).toBeVisible();
+    expect(calls.tests).toBe(2);
   });
 
   it("asks for a save instead of testing the stored key when the form holds another", async () => {

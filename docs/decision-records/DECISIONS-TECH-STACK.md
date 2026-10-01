@@ -2175,6 +2175,29 @@ live restrictions in #1178 pass; retiring the gate before that would violate CTR
 Polling, returns and Resume retain the shared provider-read allowance. A stub cannot
 prove provider account controls, actual session expiry or signed real Connect.
 
+### TECH-013 addendum, 2026-10-01, #1236. The connection test names the refusal
+
+DocuSign's grant endpoint refuses a JWT assertion with 400 `consent_required` when
+the API user has not consented to the integration, and with 400 `invalid_grant` when
+the integration key, user ID or RSA key is wrong. The two need different fixes, so
+the driver tells them apart. It reads the OAuth `error` from the refusal body. On
+`consent_required` it throws `SigningConsentRequiredError`, a subclass of
+`SigningConfigError`, so every existing handler still catches it. Every other
+refusal stays a `SigningConfigError` whose message names the credentials and no
+longer mentions consent. A body that is not JSON falls back to the credentials
+message.
+
+`POST /signing-connectors/:provider/test` turns these into two problem types on its
+502 answer, declared in `packages/shared` and in the OpenAPI document:
+
+- `urn:openlaw:problem:signing-consent-required` for `SigningConsentRequiredError`.
+- `urn:openlaw:problem:signing-credentials-refused` for any other `SigningConfigError`.
+
+An outage or a timeout names no type, so the client offers no consent step for it.
+The consent itself is a browser flow and never reaches the API: the callback page
+discards the authorization `code`, because the JWT grant does not use it. DES-095
+records the screens.
+
 ### TECH-013 / TECH-018 addendum, 2026-10-01, #1237. The preparation switch defaults on
 
 `readSigningPreparationEnabled` in `apps/api/src/lib/signing/config.ts` reads

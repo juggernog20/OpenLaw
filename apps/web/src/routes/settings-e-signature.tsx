@@ -219,6 +219,10 @@ export function SettingsESignaturePage() {
     }
   }
 
+  // A consent that lands while a test is still out waits here, since
+  // that test started before the consent and its answer is stale.
+  const retestAfterConsent = useRef(false);
+
   async function testConnection(): Promise<void> {
     if (testing.current) return;
     testing.current = true;
@@ -243,6 +247,10 @@ export function SettingsESignaturePage() {
       note("test", "error");
     } finally {
       testing.current = false;
+      if (retestAfterConsent.current) {
+        retestAfterConsent.current = false;
+        void testConnection();
+      }
     }
   }
 
@@ -255,8 +263,9 @@ export function SettingsESignaturePage() {
       connector.configured &&
       environment === connector.environment &&
       integrationKey.trim() === (connector.integrationKey ?? "");
-    if (consentedToStored) void testConnection();
-    else setConsentBeforeSave(true);
+    if (!consentedToStored) setConsentBeforeSave(true);
+    else if (testing.current) retestAfterConsent.current = true;
+    else void testConnection();
   });
   const consentOffered =
     status.test === "error" &&
