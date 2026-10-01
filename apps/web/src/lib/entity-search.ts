@@ -13,9 +13,21 @@ export function searchEntityChart(chart: EntityChart, query: string): EntityChar
   const included = new Set<string>();
   for (const node of chart.nodes) {
     if (node.restricted || !matchesEntityName(node.legalName, query)) continue;
-    for (const id of entityStructureChain(chart, node.id)) included.add(id);
+    for (const id of entityStructureChain(
+      chart,
+      node.kind === "party" ? node.trustEntityId : node.id,
+    ))
+      included.add(id);
   }
+  for (const edge of chart.roleEdges ?? [])
+    if (included.has(edge.trustEntityId)) included.add(edge.partyNodeId);
   return {
+    roleEdges: (chart.roleEdges ?? []).filter(
+      (edge) => included.has(edge.trustEntityId) && included.has(edge.partyNodeId),
+    ),
+    branchEdges: (chart.branchEdges ?? []).filter(
+      (edge) => included.has(edge.headOfficeEntityId) && included.has(edge.branchEntityId),
+    ),
     nodes: chart.nodes.filter((node) => included.has(node.id)),
     edges: chart.edges.filter(
       (edge) => included.has(edge.ownerEntityId) && included.has(edge.ownedEntityId),

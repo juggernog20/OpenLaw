@@ -7,11 +7,19 @@ import { IntlProvider } from "react-intl";
 import { json, stubApi } from "../../testing/helpers";
 import type { EntityChart } from "../../lib/entities";
 import { EntityChartExport } from "./entity-chart-export-dialog";
-import { createChartPdf, createChartPowerPoint, downloadChart } from "./entity-chart-export-files";
+import {
+  createChartPdf,
+  createChartPowerPoint,
+  createChartSvg,
+  createChartPng,
+  downloadChart,
+} from "./entity-chart-export-files";
 
 vi.mock("./entity-chart-export-files", () => ({
   loadExportMeasure: vi.fn(async () => (text: string, size: number) => text.length * size * 0.6),
   createChartPdf: vi.fn(async () => new Blob(["pdf"], { type: "application/pdf" })),
+  createChartSvg: vi.fn(() => new Blob(["svg"], { type: "image/svg+xml" })),
+  createChartPng: vi.fn(async () => new Blob(["png"], { type: "image/png" })),
   createChartPowerPoint: vi.fn(async () => new Blob(["pptx"])),
   downloadChart: vi.fn(),
 }));
@@ -25,6 +33,8 @@ const node = (id: string) => ({
   primaryOwnerId: null,
 });
 const chart: EntityChart = {
+  roleEdges: [],
+  branchEdges: [],
   nodes: [
     node("Parent"),
     { ...node("Child"), primaryOwnerId: "Parent" },
@@ -140,3 +150,69 @@ describe("chart export dialog", () => {
     );
   });
 });
+
+it.each(["svg", "png"] as const)(
+  "exports %s with trust parties without reading them as Entities",
+  async (format) => {
+    const reads: string[] = [];
+    stubApi({
+      extra: (call) => {
+        reads.push(call.url.pathname);
+        return call.url.pathname.endsWith("/officers")
+          ? json(200, { officers: [] })
+          : json(200, details(call.url.pathname.split("/").at(-1)!));
+      },
+    });
+    const data: EntityChart = {
+      ...chart,
+      nodes: [
+        ...chart.nodes,
+        {
+          id: "party:class",
+          restricted: false,
+          kind: "party",
+          partyKind: "class",
+          trustEntityId: "Parent",
+          legalName: "Descendants",
+          type: "Class",
+          jurisdiction: null,
+          status: null,
+          primaryOwnerId: null,
+        },
+      ],
+      roleEdges: [
+        {
+          partyNodeId: "party:class",
+          trustEntityId: "Parent",
+          role: "beneficiary",
+          roleLabel: null,
+        },
+      ],
+      branchEdges: [{ headOfficeEntityId: "Parent", branchEntityId: "Other" }],
+    };
+    render(
+      <IntlProvider locale="en-US" messages={{}}>
+        <EntityChartExport chart={data} selectedId={null} />
+      </IntlProvider>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Export chart" }));
+    await screen.findByRole("img", { name: "Export preview" });
+    await user.selectOptions(screen.getByRole("combobox", { name: "File format" }), format);
+    await user.click(screen.getByRole("button", { name: "Download chart" }));
+    await waitFor(() =>
+      expect(downloadChart).toHaveBeenCalledWith(
+        expect.any(Blob),
+        "Entity structure chart",
+        format,
+      ),
+    );
+    const writer = format === "svg" ? createChartSvg : createChartPng;
+    const output = vi.mocked(writer).mock.calls[0]![0];
+    expect(output.edges.map((edge) => edge.kind)).toEqual(
+      expect.arrayContaining(["role", "branch"]),
+    );
+    expect(output.cards.find((card) => card.id === "party:class")?.border).toBe("dotted");
+    expect(reads.some((path) => path.includes("party:"))).toBe(false);
+  },
+);

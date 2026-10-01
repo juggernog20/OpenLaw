@@ -347,5 +347,83 @@ it("labels an individual in the chart and opens their Holding instead of a nonex
     "href",
     "/entities/current/ownership",
   );
-  expect(screen.getByText("Individual")).toBeVisible();
+  expect(
+    within(screen.getByRole("region", { name: "Entity ownership chart" })).getByText("Individual"),
+  ).toBeVisible();
+});
+
+it("renders trust roles, branch lines, terminal parties and the DES-095 legend", async () => {
+  const chart = {
+    nodes: [
+      { ...node(rows.parent), primaryOwnerId: null },
+      { ...node(rows.child), primaryOwnerId: "parent" },
+      { ...node(rows.current), primaryOwnerId: null },
+      { ...node(rows.other), primaryOwnerId: "parent" },
+      {
+        id: "party:person",
+        restricted: false,
+        kind: "party",
+        partyKind: "individual",
+        trustEntityId: "current",
+        legalName: "Avery Trustee",
+        type: "Individual",
+        jurisdiction: null,
+        status: null,
+        primaryOwnerId: null,
+      },
+      {
+        id: "party:class",
+        restricted: false,
+        kind: "party",
+        partyKind: "class",
+        trustEntityId: "current",
+        legalName: "Settlor descendants",
+        type: "Class",
+        jurisdiction: null,
+        status: null,
+        primaryOwnerId: null,
+      },
+    ],
+    edges: [{ ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 100 }],
+    roleEdges: [
+      { partyNodeId: "party:person", trustEntityId: "current", role: "trustee", roleLabel: null },
+      {
+        partyNodeId: "party:class",
+        trustEntityId: "current",
+        role: "beneficiary",
+        roleLabel: null,
+      },
+    ],
+    branchEdges: [{ headOfficeEntityId: "parent", branchEntityId: "other" }],
+  };
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/entities/chart" ? json(200, chart) : recordReads(call),
+  });
+  renderAt("/entities?view=chart");
+  const region = await screen.findByRole("region", { name: "Entity ownership chart" });
+  const roles = region.querySelectorAll('[data-edge-kind="role"]');
+  expect(roles).toHaveLength(2);
+  for (const edge of roles) {
+    expect(edge).toHaveAttribute("stroke-dasharray", "3 4");
+    expect(edge.parentElement?.textContent).not.toContain("%");
+  }
+  expect(region.querySelector('[data-edge-kind="branch"]')).not.toHaveAttribute("stroke-dasharray");
+  expect(within(region).getByText("Branch")).toBeInTheDocument();
+  expect(within(region).getByText("Trustee")).toBeInTheDocument();
+  const party = within(region).getByRole("link", { name: "Open Settlor descendants" });
+  expect(party).toHaveAttribute("href", "/entities/current/ownership");
+  expect(party.querySelector("rect")).toHaveAttribute("stroke-dasharray", "2 4");
+  expect(
+    within(region)
+      .getAllByRole("link")
+      .slice(-2)
+      .map((link) => link.getAttribute("href")),
+  ).toEqual(["/entities/current/ownership", "/entities/current/ownership"]);
+  const legend = screen.getByLabelText("Chart legend");
+  for (const text of ["Trust role", "Branch", "Individual", "Class"])
+    expect(within(legend).getByText(text)).toBeInTheDocument();
+  await userEvent.setup().click(within(region).getByRole("link", { name: "Open UK Subsidiary" }));
+  expect(party.parentElement).toHaveAttribute("data-highlighted", "true");
 });

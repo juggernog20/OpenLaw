@@ -37025,6 +37025,21 @@ export interface operations {
                   restricted: false;
                   id: string;
                   legalName: string;
+                  /** @enum {string} */
+                  kind: "party";
+                  /** @enum {string} */
+                  partyKind: "individual" | "class";
+                  trustEntityId: string;
+                  type: string;
+                  jurisdiction: string | null;
+                  status: ("active" | "dormant" | "dissolved" | "divested") | null;
+                  primaryOwnerId: string | null;
+                }
+              | {
+                  /** @enum {boolean} */
+                  restricted: false;
+                  id: string;
+                  legalName: string;
                   type: string;
                   jurisdiction: string | null;
                   status: ("active" | "dormant" | "dissolved" | "divested") | null;
@@ -37043,6 +37058,17 @@ export interface operations {
               ownerEntityId: string;
               ownedEntityId: string;
               ownershipPercent: number;
+            }[];
+            roleEdges: {
+              partyNodeId: string;
+              trustEntityId: string;
+              /** @enum {string} */
+              role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
+              roleLabel: string | null;
+            }[];
+            branchEdges: {
+              headOfficeEntityId: string;
+              branchEntityId: string;
             }[];
           };
         };

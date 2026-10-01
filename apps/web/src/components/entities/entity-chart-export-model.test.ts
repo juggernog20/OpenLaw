@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+import { chartSvgMarkup } from "./entity-chart-export-files";
 import type { ExportRecord } from "./entity-chart-export-model";
 import { createIntl, createIntlCache } from "react-intl";
 import { describe, expect, it } from "vitest";
@@ -61,6 +62,8 @@ const node = (id: string, primaryOwnerId: string | null = null) => ({
   primaryOwnerId,
 });
 const chart: EntityChart = {
+  roleEdges: [],
+  branchEdges: [],
   nodes: [
     node("parent"),
     node("child", "parent"),
@@ -174,6 +177,8 @@ describe("custom chart exports", () => {
 
   it("keeps separate ownership labels on distinct entry points for a jointly owned entity", () => {
     const joint: EntityChart = {
+      roleEdges: [],
+      branchEdges: [],
       nodes: [node("parent"), node("other"), node("child", "parent")],
       edges: [
         { ownerEntityId: "parent", ownedEntityId: "child", ownershipPercent: 60 },
@@ -294,6 +299,8 @@ describe("custom chart exports", () => {
 
 it("exports individual owner names without fetching a fictitious Entity record", () => {
   const data: EntityChart = {
+    roleEdges: [],
+    branchEdges: [],
     nodes: [
       {
         ...node("individual:alex"),
@@ -325,4 +332,59 @@ it("exports individual owner names without fetching a fictitious Entity record",
   expect(model.texts.map((line) => line.text)).toContain("Alex Morgan");
   expect(model.texts.map((line) => line.text)).toContain("Individual");
   expect(model.edges).toHaveLength(1);
+});
+
+it("exports role and branch edges without percentages and terminal class cards without record reads", () => {
+  const data: EntityChart = {
+    nodes: [
+      node("trust"),
+      node("branch", "trust"),
+      {
+        id: "party:class",
+        restricted: false,
+        kind: "party",
+        partyKind: "class",
+        trustEntityId: "trust",
+        legalName: "Descendants & family",
+        type: "Class",
+        jurisdiction: null,
+        status: null,
+        primaryOwnerId: null,
+      },
+    ],
+    edges: [],
+    roleEdges: [
+      { partyNodeId: "party:class", trustEntityId: "trust", role: "beneficiary", roleLabel: null },
+    ],
+    branchEdges: [{ headOfficeEntityId: "trust", branchEntityId: "branch" }],
+  };
+  const scoped = scopeExportChart(data, "branch");
+  expect(scoped.nodes).toEqual(data.nodes);
+  expect(scoped.roleEdges).toEqual(data.roleEdges);
+  expect(scoped.branchEdges).toEqual(data.branchEdges);
+  const output = createChartExportModel({
+    chart: scoped,
+    records: new Map(["trust", "branch"].map((id) => [id, record(id)])),
+    fields: [],
+    title: "Trust structure",
+    percentages: false,
+    intl,
+    measure,
+  });
+  expect(output.edges.map((edge) => edge.kind)).toEqual(["branch", "role"]);
+  expect(output.cards.find((card) => card.id === "party:class")?.border).toBe("dotted");
+  expect(output.texts.map((line) => line.text)).toEqual(
+    expect.arrayContaining(["Branch", "Beneficiary", "Class", "Descendants & family"]),
+  );
+  expect(output.texts.some((line) => line.text.includes("%"))).toBe(false);
+  const svg = new DOMParser().parseFromString(chartSvgMarkup(output), "image/svg+xml");
+  expect(svg.querySelector("parsererror")).toBeNull();
+  expect(svg.querySelector('[data-edge-kind="role"]')?.getAttribute("stroke-dasharray")).toBe(
+    "3 4",
+  );
+  expect(svg.querySelector('[data-edge-kind="branch"]')?.hasAttribute("stroke-dasharray")).toBe(
+    false,
+  );
+  expect(svg.querySelector('rect[stroke-dasharray="2 4"]')).not.toBeNull();
+  expect(svg.documentElement.textContent).toContain("Descendants & family");
 });

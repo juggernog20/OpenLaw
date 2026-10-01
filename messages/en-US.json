@@ -5042,6 +5042,12 @@
   "entities.chart.actualSize": {
     "defaultMessage": "Reset zoom to 100%"
   },
+  "entities.chart.branch": {
+    "defaultMessage": "Branch"
+  },
+  "entities.chart.class": {
+    "defaultMessage": "Class"
+  },
   "entities.chart.clearHighlight": {
     "defaultMessage": "Clear highlight"
   },
@@ -5049,7 +5055,7 @@
     "defaultMessage": "Confidential Entity"
   },
   "entities.chart.description": {
-    "defaultMessage": "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines."
+    "defaultMessage": "The largest Holding for each Entity forms the solid tree. Other Holdings use dashed lines. Trust roles use short dashed lines; branches use solid lines labelled Branch."
   },
   "entities.chart.export.actualSizePreview": {
     "defaultMessage": "Preview at actual size"
@@ -5132,8 +5138,14 @@
   "entities.chart.export.format.pdf": {
     "defaultMessage": "PDF (.pdf)"
   },
+  "entities.chart.export.format.png": {
+    "defaultMessage": "PNG (.png)"
+  },
   "entities.chart.export.format.pptx": {
     "defaultMessage": "PowerPoint (.pptx)"
+  },
+  "entities.chart.export.format.svg": {
+    "defaultMessage": "SVG (.svg)"
   },
   "entities.chart.export.legalName": {
     "defaultMessage": "Legal name (always included)"
@@ -5177,6 +5189,9 @@
   "entities.chart.label": {
     "defaultMessage": "Entity ownership chart"
   },
+  "entities.chart.legend": {
+    "defaultMessage": "Chart legend"
+  },
   "entities.chart.navigationHint": {
     "defaultMessage": "Drag to move · Scroll to zoom · Single click to highlight entity · Double click to open entity"
   },
@@ -5188,6 +5203,15 @@
   },
   "entities.chart.overview": {
     "defaultMessage": "Chart overview — select an area to move there"
+  },
+  "entities.chart.primary": {
+    "defaultMessage": "Primary Holding"
+  },
+  "entities.chart.role": {
+    "defaultMessage": "Trust role"
+  },
+  "entities.chart.secondary": {
+    "defaultMessage": "Other Holding"
   },
   "entities.chart.title": {
     "defaultMessage": "Entity ownership chart"
