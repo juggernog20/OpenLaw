@@ -6050,9 +6050,6 @@
   "entities.registerKind.emptyPartnership": {
     "defaultMessage": "No partnership entries recorded."
   },
-  "entities.registerKind.emptyTrust": {
-    "defaultMessage": "No trust entries recorded."
-  },
   "entities.registerKind.field": {
     "defaultMessage": "Register"
   },
@@ -6109,6 +6106,168 @@
   },
   "entities.title": {
     "defaultMessage": "Entities"
+  },
+  "entities.trust.amount": {
+    "defaultMessage": "Amount"
+  },
+  "entities.trust.amountOrProperty": {
+    "defaultMessage": "Amount or property"
+  },
+  "entities.trust.appointed": {
+    "defaultMessage": "Appointed"
+  },
+  "entities.trust.ceased": {
+    "defaultMessage": "Ceased"
+  },
+  "entities.trust.class": {
+    "defaultMessage": "Class"
+  },
+  "entities.trust.description": {
+    "defaultMessage": "Description"
+  },
+  "entities.trust.empty": {
+    "defaultMessage": "No trust register yet"
+  },
+  "entities.trust.emptyHint": {
+    "defaultMessage": "Record the first entry. Trust parties come from the entries."
+  },
+  "entities.trust.entityJurisdiction": {
+    "defaultMessage": "Entity · {jurisdiction}"
+  },
+  "entities.trust.entries": {
+    "defaultMessage": "Register of trust entries"
+  },
+  "entities.trust.entry.amountPrecision": {
+    "defaultMessage": "Enter a positive amount with up to {digits} decimal places."
+  },
+  "entities.trust.entry.currencyRequired": {
+    "defaultMessage": "Choose a currency for the amount."
+  },
+  "entities.trust.entry.partyRequired": {
+    "defaultMessage": "Choose a party and fill in its details."
+  },
+  "entities.trust.entry.required": {
+    "defaultMessage": "Complete the effective date and the required fields for this entry."
+  },
+  "entities.trust.entry.saveError": {
+    "defaultMessage": "The entry could not be saved."
+  },
+  "entities.trust.form": {
+    "defaultMessage": "Form"
+  },
+  "entities.trust.fund": {
+    "defaultMessage": "Settled {settled} {currency} · Distributed {distributed} {currency} · Fund {balance} {currency}"
+  },
+  "entities.trust.fundNegative": {
+    "defaultMessage": "Distributions exceed settlements in {currency}. The fund is a ledger, not a valuation."
+  },
+  "entities.trust.group.beneficiary": {
+    "defaultMessage": "Beneficiaries"
+  },
+  "entities.trust.group.enforcer": {
+    "defaultMessage": "Enforcers"
+  },
+  "entities.trust.group.other": {
+    "defaultMessage": "Other"
+  },
+  "entities.trust.group.protector": {
+    "defaultMessage": "Protectors"
+  },
+  "entities.trust.group.settlor": {
+    "defaultMessage": "Settlors"
+  },
+  "entities.trust.group.trustee": {
+    "defaultMessage": "Trustees"
+  },
+  "entities.trust.interest": {
+    "defaultMessage": "Interest or powers"
+  },
+  "entities.trust.kind.appointment": {
+    "defaultMessage": "Appointment"
+  },
+  "entities.trust.kind.cessation": {
+    "defaultMessage": "Cessation"
+  },
+  "entities.trust.kind.distribution": {
+    "defaultMessage": "Distribution"
+  },
+  "entities.trust.kind.settlement": {
+    "defaultMessage": "Settlement"
+  },
+  "entities.trust.meta": {
+    "defaultMessage": "{parties, plural, one {# party} other {# parties}} · {roles, plural, one {# role} other {# roles}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
+  },
+  "entities.trust.money": {
+    "defaultMessage": "Money"
+  },
+  "entities.trust.moneyValue": {
+    "defaultMessage": "{amount} {currency}"
+  },
+  "entities.trust.noMoney": {
+    "defaultMessage": "No money settlements or distributions recorded at this date."
+  },
+  "entities.trust.noParties": {
+    "defaultMessage": "No trust parties at this date."
+  },
+  "entities.trust.number": {
+    "defaultMessage": "#"
+  },
+  "entities.trust.parties": {
+    "defaultMessage": "Register of trust parties"
+  },
+  "entities.trust.partiesAt": {
+    "defaultMessage": "Register of trust parties at {date}"
+  },
+  "entities.trust.party": {
+    "defaultMessage": "Party"
+  },
+  "entities.trust.pickEntity": {
+    "defaultMessage": "Choose an Entity…"
+  },
+  "entities.trust.pickParty": {
+    "defaultMessage": "Choose a party…"
+  },
+  "entities.trust.property": {
+    "defaultMessage": "Property"
+  },
+  "entities.trust.reappointed": {
+    "defaultMessage": "Reappointed {date}"
+  },
+  "entities.trust.reference": {
+    "defaultMessage": "Reference"
+  },
+  "entities.trust.role": {
+    "defaultMessage": "Role"
+  },
+  "entities.trust.role.beneficiary": {
+    "defaultMessage": "Beneficiary"
+  },
+  "entities.trust.role.enforcer": {
+    "defaultMessage": "Enforcer"
+  },
+  "entities.trust.role.other": {
+    "defaultMessage": "Other"
+  },
+  "entities.trust.role.protector": {
+    "defaultMessage": "Protector"
+  },
+  "entities.trust.role.settlor": {
+    "defaultMessage": "Settlor"
+  },
+  "entities.trust.role.trustee": {
+    "defaultMessage": "Trustee"
+  },
+  "entities.trust.roleDetail": {
+    "defaultMessage": "Role detail"
+  },
+  "entities.trust.roleLabel": {
+    "defaultMessage": "Role label"
+  },
+  "entities.trust.since": {
+    "defaultMessage": "Since"
+  },
+  "entities.trust.until": {
+    "defaultMessage": "Until"
   },
   "entities.view.calendar": {
     "defaultMessage": "Calendar"
