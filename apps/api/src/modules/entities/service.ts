@@ -240,6 +240,7 @@ export async function getEntity(db: Db, user: AuthenticatedUser, id: string) {
     entity: {
       ...toRow(row.entity, row.entityTypeName),
       ...(await entityRegisterState(db, row.entity)),
+      partnershipBasis: row.entity.partnershipBasis,
       headOfficeEntityId: row.entity.headOfficeEntityId,
     },
     canManageAccess: await canManageEntityAccess(db, user, row.entity),

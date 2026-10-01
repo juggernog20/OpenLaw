@@ -6849,6 +6849,70 @@ export interface paths {
     patch: operations["updateEntityTrustEntry"];
     trace?: never;
   };
+  "/api/v1/entities/{id}/partnership-register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEntityPartnershipRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/partnership-register/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["exportEntityPartnershipRegister"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/partnership-entries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createEntityPartnershipEntry"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/partnership-entries/{entryId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteEntityPartnershipEntry"];
+    options?: never;
+    head?: never;
+    patch: operations["updateEntityPartnershipEntry"];
+    trace?: never;
+  };
   "/api/v1/entities/{id}/officers": {
     parameters: {
       query?: never;
@@ -38720,6 +38784,848 @@ export interface operations {
       };
     };
   };
+  getEntityPartnershipRegister: {
+    parameters: {
+      query?: {
+        asOf?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            /** @enum {string} */
+            basis: "capital" | "units" | "stated" | "equal";
+            currency: string | null;
+            partners: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            partnersToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            totals: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            totalsToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind:
+                | "admission"
+                | "commitment"
+                | "contribution"
+                | "return"
+                | "transfer"
+                | "capacity_change"
+                | "withdrawal";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              fromParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              toParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              capacity: ("general" | "limited") | null;
+              transfereeStatus: ("admitted" | "assignee") | null;
+              units: number | null;
+              statedPercent: number | null;
+              amount: number | null;
+              currency: string | null;
+              formOfContribution: string | null;
+              consideration: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "stated-total";
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  exportEntityPartnershipRegister: {
+    parameters: {
+      query: {
+        kind: "partners" | "entries";
+        asOf?: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  createEntityPartnershipEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind:
+            | "admission"
+            | "commitment"
+            | "contribution"
+            | "return"
+            | "transfer"
+            | "capacity_change"
+            | "withdrawal";
+          /** Format: date */
+          effectiveOn: string;
+          party?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          fromParty?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          toParty?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          capacity?: ("general" | "limited") | null;
+          transfereeStatus?: ("admitted" | "assignee") | null;
+          units?: number | null;
+          statedPercent?: number | null;
+          amount?: number | null;
+          currency?: string | null;
+          formOfContribution?: string | null;
+          consideration?: string | null;
+          reference?: string | null;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            /** @enum {string} */
+            basis: "capital" | "units" | "stated" | "equal";
+            currency: string | null;
+            partners: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            partnersToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            totals: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            totalsToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind:
+                | "admission"
+                | "commitment"
+                | "contribution"
+                | "return"
+                | "transfer"
+                | "capacity_change"
+                | "withdrawal";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              fromParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              toParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              capacity: ("general" | "limited") | null;
+              transfereeStatus: ("admitted" | "assignee") | null;
+              units: number | null;
+              statedPercent: number | null;
+              amount: number | null;
+              currency: string | null;
+              formOfContribution: string | null;
+              consideration: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "stated-total";
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  deleteEntityPartnershipEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  updateEntityPartnershipEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        entryId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind:
+            | "admission"
+            | "commitment"
+            | "contribution"
+            | "return"
+            | "transfer"
+            | "capacity_change"
+            | "withdrawal";
+          /** Format: date */
+          effectiveOn: string;
+          party?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          fromParty?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          toParty?:
+            | (
+                | {
+                    /** @enum {string} */
+                    kind: "party";
+                    partyId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "entity";
+                    entityId: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "individual";
+                    name: string;
+                  }
+              )
+            | null;
+          capacity?: ("general" | "limited") | null;
+          transfereeStatus?: ("admitted" | "assignee") | null;
+          units?: number | null;
+          statedPercent?: number | null;
+          amount?: number | null;
+          currency?: string | null;
+          formOfContribution?: string | null;
+          consideration?: string | null;
+          reference?: string | null;
+          note?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: date */
+            asOf: string;
+            /** Format: date */
+            today: string;
+            /** @enum {string} */
+            basis: "capital" | "units" | "stated" | "equal";
+            currency: string | null;
+            partners: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            partnersToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+              party:
+                | {
+                    /** @enum {boolean} */
+                    restricted: true;
+                    id: string;
+                  }
+                | {
+                    /** @enum {boolean} */
+                    restricted: false;
+                    id: string;
+                    /** @enum {string} */
+                    kind: "entity" | "individual" | "class";
+                    name: string;
+                    entityId: string | null;
+                  };
+              capacity: ("general" | "limited") | null;
+              /** @enum {string} */
+              status: "admitted" | "assignee" | "ceased";
+              since: string | null;
+              transferred: number;
+              percent: number;
+            }[];
+            totals: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            totalsToday: {
+              units: number;
+              statedPercent: number;
+              committed: number;
+              contributed: number;
+              returned: number;
+              unreturned: number;
+            };
+            entries: {
+              id: string;
+              entryNo: number;
+              /** @enum {string} */
+              kind:
+                | "admission"
+                | "commitment"
+                | "contribution"
+                | "return"
+                | "transfer"
+                | "capacity_change"
+                | "withdrawal";
+              /** Format: date */
+              effectiveOn: string;
+              party:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              fromParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              toParty:
+                | (
+                    | {
+                        /** @enum {boolean} */
+                        restricted: true;
+                        id: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        restricted: false;
+                        id: string;
+                        /** @enum {string} */
+                        kind: "entity" | "individual" | "class";
+                        name: string;
+                        entityId: string | null;
+                      }
+                  )
+                | null;
+              capacity: ("general" | "limited") | null;
+              transfereeStatus: ("admitted" | "assignee") | null;
+              units: number | null;
+              statedPercent: number | null;
+              amount: number | null;
+              currency: string | null;
+              formOfContribution: string | null;
+              consideration: string | null;
+              reference: string | null;
+              note: string | null;
+              applied: boolean;
+              /** Format: date-time */
+              createdAt: string;
+              /** Format: date-time */
+              updatedAt: string;
+            }[];
+            dates: string[];
+            warnings: {
+              /** @enum {string} */
+              code: "stated-total";
+              total: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listEntityOfficers: {
     parameters: {
       query?: {
@@ -39459,6 +40365,8 @@ export interface operations {
               registerKindSource: "type" | "entity";
               registerKindLocked: boolean;
               registerKindLockReason: string | null;
+              /** @enum {string} */
+              partnershipBasis: "capital" | "units" | "stated" | "equal";
               headOfficeEntityId: string | null;
             };
             fields: {
@@ -39536,6 +40444,8 @@ export interface operations {
         "application/json": {
           legalName?: string;
           entityTypeId?: string;
+          /** @enum {string} */
+          partnershipBasis?: "capital" | "units" | "stated" | "equal";
           registerKind?: ("shares" | "partnership" | "trust" | "none") | null;
           headOfficeEntityId?: string | null;
           jurisdiction?: string | null;
@@ -39603,6 +40513,8 @@ export interface operations {
               registerKindSource: "type" | "entity";
               registerKindLocked: boolean;
               registerKindLockReason: string | null;
+              /** @enum {string} */
+              partnershipBasis: "capital" | "units" | "stated" | "equal";
               headOfficeEntityId: string | null;
             };
             fields: {

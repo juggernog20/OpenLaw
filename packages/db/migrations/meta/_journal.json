@@ -1317,6 +1317,13 @@
       "when": 1790806761757,
       "tag": "0187_ancient_thunderbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 188,
+      "version": "7",
+      "when": 1790814258369,
+      "tag": "0188_foamy_ozymandias",
+      "breakpoints": true
     }
   ]
 }

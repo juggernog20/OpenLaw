@@ -22,6 +22,7 @@ function record(id: string, legalName = id): ExportRecord {
       entityTypeId: "type",
       entityTypeName: "LLC",
       registerKind: "shares",
+      partnershipBasis: "capital",
       typeRegisterKind: "shares",
       registerKindSource: "type",
       registerKindLocked: false,

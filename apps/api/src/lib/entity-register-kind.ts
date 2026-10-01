@@ -32,6 +32,7 @@ export async function lockEntityRegisters(tx: Executor) {
 export const registerHasData = sql<boolean>`(
   exists (select 1 from entity_share_classes c where c.entity_id = ${entities.id})
   or exists (select 1 from entity_share_entries r where r.entity_id = ${entities.id})
+  or exists (select 1 from entity_partnership_entries r where r.entity_id = ${entities.id})
   or exists (select 1 from entity_trust_entries r where r.entity_id = ${entities.id})
 )`;
 

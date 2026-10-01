@@ -4,11 +4,11 @@ import { sql } from "drizzle-orm";
 import { check, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { entities } from "./entities.js";
 import { entityShareholders } from "./entity-share-register.js";
+import { entityRegisterParties } from "./entity-trust-register.js";
 import { uuidPk } from "./helpers.js";
 
-// An individual owner, projected from a named holder on the owned Entity's
-// share register (ENT-011, ENT-012). The row follows the holder, never the
-// name: matching names are not assumed to be the same person.
+// A projected individual owner, matched by share holder or register party.
+// Matching names are not assumed to be the same person.
 export const individualHoldings = pgTable(
   "individual_holdings",
   {
@@ -19,9 +19,12 @@ export const individualHoldings = pgTable(
     name: text("name").notNull(),
     ownershipPercent: numeric("ownership_percent", { precision: 5, scale: 2 }).notNull(),
     /** The register holder this row is projected from. */
-    shareholderId: text("shareholder_id")
-      .notNull()
-      .references(() => entityShareholders.id, { onDelete: "cascade" }),
+    registerPartyId: text("register_party_id").references(() => entityRegisterParties.id, {
+      onDelete: "cascade",
+    }),
+    shareholderId: text("shareholder_id").references(() => entityShareholders.id, {
+      onDelete: "cascade",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -35,8 +38,13 @@ export const individualHoldings = pgTable(
       sql`${table.ownershipPercent} >= 0 and ${table.ownershipPercent} <= 100`,
     ),
     check("individual_holdings_name_length", sql`length(trim(${table.name})) between 1 and 200`),
-    // The predicate is redundant since 0185 made the column required, and
-    // kept so the upgrade does not rebuild the index under an exclusive lock.
+    check(
+      "individual_holdings_register_identity",
+      sql`num_nonnulls(${table.shareholderId}, ${table.registerPartyId}) = 1`,
+    ),
+    uniqueIndex("individual_holdings_register_party_idx")
+      .on(table.registerPartyId)
+      .where(sql`${table.registerPartyId} is not null`),
     uniqueIndex("individual_holdings_shareholder_idx")
       .on(table.shareholderId)
       .where(sql`${table.shareholderId} is not null`),

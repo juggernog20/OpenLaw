@@ -1645,11 +1645,11 @@ Migration 0159 removes this earlier design after 0157 moved its questions to bui
 
 ### The share register (ENT-011)
 
-The five `entity_share_*` tables above. The Register of members is not a table: the API replays an Entity's entries to a date, ordered by `effective_on` then `entry_no`, and answers balances per Holder per class, treasury per class, issued and outstanding per class, votes, live certificates and member-since dates. Every write replays the register with the change applied and refuses negative balances, non-live certificate cancellations and ownership cycles. Every Holding is a projection of a register (ENT-012): `entity_holdings` rows for Entity holders, `individual_holdings` rows for named holders, each carrying the required, unique `individual_holdings.shareholder_id` it follows.
+The five `entity_share_*` tables above. The Register of members is not a table: the API replays an Entity's entries to a date, ordered by `effective_on` then `entry_no`, and answers balances per Holder per class, treasury per class, issued and outstanding per class, votes, live certificates and member-since dates. Every write replays the register with the change applied and refuses negative balances, non-live certificate cancellations and ownership cycles. Every Holding is a projection of a register (ENT-012): `entity_holdings` rows for Entity holders, `individual_holdings` rows for named holders, each carrying the unique `individual_holdings.shareholder_id` it follows. Since migration 0188 a row projected from a partnership register carries `register_party_id` instead (ENT-014).
 
 ### `individual_holdings`
 
-Migration 0146 adds individual owners alongside `entity_holdings`: UUIDv7 `id`, `owned_entity_id` FK, `name` (1–200 trimmed characters), `ownership_percent` (numeric 5,2; 0–100), and timestamps. Individuals are recorded per Holding; names are not unique and do not identify app users or registry Entities. The owned Entity's access and archival rules govern reads and writes. Holdings routes use `individual:<id>` to distinguish individual owners, while chart nodes mark them with `kind: individual`. The existing graph advisory lock also serializes individual writes, combined percentage totals, and transactional Activity entries. Migration 0151 added `shareholder_id`, the register Holder a projected row follows. Since migration 0185 (ENT-012) every row is projected: `shareholder_id` is required and unique, `source` is dropped, and no Holdings route writes a row.
+Migration 0146 adds individual owners alongside `entity_holdings`: UUIDv7 `id`, `owned_entity_id` FK, `name` (1–200 trimmed characters), `ownership_percent` (numeric 5,2; 0–100), and timestamps. Individuals are recorded per Holding; names are not unique and do not identify app users or registry Entities. The owned Entity's access and archival rules govern reads and writes. Holdings routes use `individual:<id>` to distinguish individual owners, while chart nodes mark them with `kind: individual`. The existing graph advisory lock also serializes individual writes, combined percentage totals, and transactional Activity entries. Migration 0151 added `shareholder_id`, the register Holder a projected row follows. Since migration 0185 (ENT-012) every row is projected: `shareholder_id` is required and unique, `source` is dropped, and no Holdings route writes a row. Migration 0188 (ENT-014) adds `register_party_id`, the partnership register party a projected row follows, and relaxes `shareholder_id` to nullable; the `individual_holdings_register_identity` CHECK requires exactly one of the two, and each has its own partial unique index. The projection matches rows by that id, never by name.
 
 ### `allowed_clients` and `allowed_client_links` (#1134)
 
@@ -1689,3 +1689,58 @@ by `name`, or a class by `description`; names never merge distinct individuals.
 Every write validates the full future history in its transaction and prunes
 unreferenced parties. CSV exports share the read's restricted-party projection.
 The MCP Entity summary carries current roles, fund totals and warnings for trusts.
+
+### The partnership register (ENT-014, M45/4)
+
+Migration `0188_foamy_ozymandias` adds `entity_partnership_entries`, keyed by Entity
+and `entry_no` from the shared `entity_register_entry_counters` row for the
+`partnership` register. An entry carries one of seven kinds (`admission`,
+`commitment`, `contribution`, `return`, `transfer`, `capacity_change`,
+`withdrawal`), an effective date, a party or a from and to party through the
+composite `(entity_id, id)` key into `entity_register_parties`, a capacity
+(`general` or `limited`), a transferee status (`admitted` or `assignee`), units,
+a stated percent to two decimals, a positive minor-unit amount with a currency,
+and form-of-contribution, consideration, reference and note text. Per-kind CHECKs
+pin which columns each kind carries: an admission or capacity change needs a
+capacity and no money; a money entry needs an amount and no units or percent; a
+transfer needs two different parties and at least one of units, percent or
+amount, and a capacity only when its transferee is admitted. The migration also
+adds `entities.partnership_basis` (`capital | units | stated | equal`, default
+`capital`) and `individual_holdings.register_party_id` as described above.
+
+Partners and balances are never stored. `lib/partnership-register.ts` replays
+the entries to a date, ordered by `effective_on` then `entry_no`, and answers
+each party's capacity, status (`admitted`, `assignee`, `ceased`), partner-since
+date, units, stated percent, committed, contributed, returned, net transferred
+and unreturned capital, plus register totals and the percent each party holds
+by the Entity's basis. The first money entry fixes the register's currency.
+Every write replays the full future history in its transaction and refuses a
+negative units, percent or capital balance at any date, a party over 100
+percent, a withdrawal while any balance is held, a capacity change or transfer
+naming a party that is not admitted or an assignee on that date, a second
+currency, a class party, and an aggregate beyond the safe integer range.
+
+After every entry write and basis change, `lib/partnership-projection.ts`
+rewrites the partnership's owner Holdings from today's register under the
+Holdings advisory lock: unreturned capital over the total for `capital`, units
+over total units for `units`, the stated percent as typed for `stated` (with a
+`stated-total` warning when today's total is not 100), and one equal share per
+admitted partner for `equal`. Entity parties become `entity_holdings` rows;
+individuals become `individual_holdings` rows matched by `register_party_id`.
+The ENT-011 cycle check runs on every projected Entity owner, and again on the
+Entity parties an admission or transfer names, so a loop rolls the write back.
+Parties no entry names are pruned after the projection has deleted their rows.
+
+`GET /entities/:id/partnership-register?asOf=` returns the basis, the currency,
+the partners at the date and today, every entry with an `applied` flag, totals
+for both dates and today's warnings. Creates use
+`POST /entities/:id/partnership-entries`; full entry replacements and deletion
+use `PATCH` and `DELETE /entities/:id/partnership-entries/:entryId`. The basis
+changes on `PATCH /entities/:id` for a `partnership` Entity only. A party input
+names an existing register party by `partyId`, a registry Entity by `entityId`
+or an individual by `name`; names never merge distinct individuals.
+`GET …/partnership-register/export?kind=partners|entries` renders CSV with the
+read's restricted-party projection. Three `entity_partnership_entry.*` Activity
+actions land on the partnership and on each Entity party an entry names. The
+MCP Entity summary carries today's partners, basis, currency, totals and
+warnings for partnerships.
