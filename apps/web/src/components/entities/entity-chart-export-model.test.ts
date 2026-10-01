@@ -388,3 +388,17 @@ it("exports role and branch edges without percentages and terminal class cards w
   expect(svg.querySelector('rect[stroke-dasharray="2 4"]')).not.toBeNull();
   expect(svg.documentElement.textContent).toContain("Descendants & family");
 });
+
+it("serializes names and titles as SVG text rather than markup", () => {
+  const text = '</text><script>alert("name")</script>& <image href="https://example.test" />';
+  const data = new Map(records);
+  data.set("child", record("child", text));
+  const output = model([], data);
+  output.title = text;
+  const svg = new DOMParser().parseFromString(chartSvgMarkup(output), "image/svg+xml");
+  expect(svg.querySelector("parsererror, script, image")).toBeNull();
+  expect(svg.querySelector("title")?.textContent).toBe(text);
+  expect([...svg.querySelectorAll("text")].map((node) => node.textContent).join("")).toContain(
+    '</text><script>alert("name")</script>&',
+  );
+});

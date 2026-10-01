@@ -206,6 +206,7 @@ export function EntityChart({ chart }: Readonly<{ chart: EntityChartData }>) {
         </div>
       </div>
       <div
+        role="group"
         aria-label={intl.formatMessage({
           id: "entities.chart.legend",
           defaultMessage: "Chart legend",

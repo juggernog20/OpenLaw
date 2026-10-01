@@ -175,12 +175,8 @@ export function downloadChart(blob: Blob, title: string, format: "pdf" | "pptx" 
 }
 
 export function chartSvgMarkup(model: ChartExportModel): string {
-  const escape = (text: string) =>
-    text
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;");
+  const serializer = new XMLSerializer();
+  const escape = (text: string) => serializer.serializeToString(document.createTextNode(text));
   const edges = model.edges
     .map(
       (edge) =>

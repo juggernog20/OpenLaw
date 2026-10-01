@@ -421,7 +421,7 @@ it("renders trust roles, branch lines, terminal parties and the DES-095 legend",
       .slice(-2)
       .map((link) => link.getAttribute("href")),
   ).toEqual(["/entities/current/ownership", "/entities/current/ownership"]);
-  const legend = screen.getByLabelText("Chart legend");
+  const legend = screen.getByRole("group", { name: "Chart legend" });
   for (const text of ["Trust role", "Branch", "Individual", "Class"])
     expect(within(legend).getByText(text)).toBeInTheDocument();
   await userEvent.setup().click(within(region).getByRole("link", { name: "Open UK Subsidiary" }));
