@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** ENT-014: record or edit a Partnership entry with only the fields its kind permits. */
+
 import { useState } from "react";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../../lib/api";

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** DES-095: partners and capital read as of a date, followed by entries and owned Holdings. */
+
 import { useId, useState, type ReactNode } from "react";
 import { useRevalidator, useSearchParams } from "react-router";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -87,27 +89,20 @@ function CapacityPill({
   );
 }
 
-function PartnerChange({
-  partner,
-  today,
+const changeColor = (delta: number) =>
+  delta > 0 ? "text-status-success-fg" : "text-status-danger-fg";
+
+function BalanceChange({
+  units,
+  capital,
   currency,
-}: Readonly<{
-  partner: PartnershipRegister["partners"][number];
-  today?: PartnershipRegister["partners"][number];
-  currency: string | null;
-}>) {
+}: Readonly<{ units: number; capital: number; currency: string | null }>) {
   const intl = useIntl();
-  const units = (today?.units ?? 0) - partner.units;
-  const capital = (today?.unreturned ?? 0) - partner.unreturned;
-  const percent = (today?.percent ?? 0) - partner.percent;
-  const statusChanged =
-    today && (today.status !== partner.status || today.capacity !== partner.capacity);
-  const color = (delta: number) => (delta > 0 ? "text-status-success-fg" : "text-status-danger-fg");
   return (
-    <div className="flex flex-col gap-1 text-end font-mono">
+    <>
       {units ? (
         <span
-          className={color(units)}
+          className={changeColor(units)}
           title={intl.formatMessage({ id: "entities.partnership.units", defaultMessage: "Units" })}
         >
           {intl.formatNumber(units, { signDisplay: "always" })}
@@ -115,7 +110,7 @@ function PartnerChange({
       ) : null}
       {capital && currency ? (
         <span
-          className={color(capital)}
+          className={changeColor(capital)}
           title={intl.formatMessage({
             id: "entities.partnership.unreturned",
             defaultMessage: "Unreturned",
@@ -134,8 +129,30 @@ function PartnerChange({
           )}
         </span>
       ) : null}
+    </>
+  );
+}
+
+function PartnerChange({
+  partner,
+  today,
+  currency,
+}: Readonly<{
+  partner: PartnershipRegister["partners"][number];
+  today?: PartnershipRegister["partners"][number];
+  currency: string | null;
+}>) {
+  const intl = useIntl();
+  const units = (today?.units ?? 0) - partner.units;
+  const capital = (today?.unreturned ?? 0) - partner.unreturned;
+  const percent = (today?.percent ?? 0) - partner.percent;
+  const statusChanged =
+    today && (today.status !== partner.status || today.capacity !== partner.capacity);
+  return (
+    <div className="flex flex-col gap-1 text-end font-mono">
+      <BalanceChange units={units} capital={capital} currency={currency} />
       {percent ? (
-        <span className={color(percent)}>
+        <span className={changeColor(percent)}>
           <FormattedMessage
             id="entities.partnership.percentChange"
             defaultMessage="{change} pp"
@@ -176,6 +193,8 @@ export function PartnershipRegisterTab({
   const [removing, setRemoving] = useState<PartnershipEntry | null>(null);
   const [basisOpen, setBasisOpen] = useState(false);
   const historic = register.asOf !== register.today;
+  const capitalCurrency =
+    register.currency ?? register.entries.find((e) => e.currency)?.currency ?? null;
   const day = (value: string) => formatFullDate(value, { locale: intl.locale });
   const count = (value: number) => formatCount(value, { locale: intl.locale });
   const percent = (value: number) =>
@@ -445,15 +464,7 @@ export function PartnershipRegisterTab({
                         </td>
                         {historic ? (
                           <td className="px-3 py-2">
-                            <PartnerChange
-                              partner={p}
-                              today={today}
-                              currency={
-                                register.currency ??
-                                register.entries.find((e) => e.currency)?.currency ??
-                                null
-                              }
-                            />
+                            <PartnerChange partner={p} today={today} currency={capitalCurrency} />
                           </td>
                         ) : null}
                       </tr>
@@ -477,11 +488,17 @@ export function PartnershipRegisterTab({
                     <td className="px-3 py-2">{none}</td>
                     {historic ? (
                       <td className="px-3 py-2 text-end font-mono">
-                        {register.totalsToday.units !== register.totals.units
-                          ? intl.formatNumber(register.totalsToday.units - register.totals.units, {
-                              signDisplay: "always",
-                            })
-                          : none}
+                        <div className="flex flex-col gap-1">
+                          <BalanceChange
+                            units={register.totalsToday.units - register.totals.units}
+                            capital={register.totalsToday.unreturned - register.totals.unreturned}
+                            currency={capitalCurrency}
+                          />
+                          {register.totalsToday.units === register.totals.units &&
+                          register.totalsToday.unreturned === register.totals.unreturned
+                            ? none
+                            : null}
+                        </div>
                       </td>
                     ) : null}
                   </tr>

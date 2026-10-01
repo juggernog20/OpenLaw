@@ -71,6 +71,13 @@ test("Partnership register and dialogs are axe clean in Light and Dark", async (
         currency: "AED",
       },
       {
+        kind: "return",
+        effectiveOn: "2023-01-01",
+        party: { kind: "party", partyId },
+        amount: 20000,
+        currency: "AED",
+      },
+      {
         kind: "transfer",
         effectiveOn: "2023-01-01",
         fromParty: { kind: "party", partyId },
@@ -100,7 +107,7 @@ test("Partnership register and dialogs are axe clean in Light and Dark", async (
       await expect(
         page.getByRole("heading", { name: /Register of partners(?: at|$)/ }),
       ).toBeVisible();
-      await expect(page.locator('tr[data-applied="false"]')).toHaveCount(2);
+      await expect(page.locator('tr[data-applied="false"]')).toHaveCount(3);
       await scan("historic");
       await page.getByRole("button", { name: "Reset to today" }).click();
       await expect(

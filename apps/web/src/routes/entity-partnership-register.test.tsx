@@ -609,4 +609,35 @@ describe("the partnership Ownership tab", () => {
     expect(within(row).getByText("+10 pp")).toBeInTheDocument();
     expect(within(row).getByTitle("Unreturned")).toHaveTextContent(/AED.*100/);
   });
+  it.each([10000, -10000])(
+    "shows a signed aggregate capital change of %s with unchanged units",
+    async (delta) => {
+      const api = registerApi();
+      stubApi({
+        signedIn: MEMBER,
+        extra: (call) => {
+          if (call.url.pathname.endsWith("/partnership-register")) {
+            const register = registerAt("2022-01-01");
+            register.totalsToday = {
+              ...register.totals,
+              unreturned: register.totals.unreturned + delta,
+            };
+            return json(200, register);
+          }
+          return api.handler(call);
+        },
+      });
+      renderAt("/entities/e1/ownership?asOf=2022-01-01");
+      await screen.findByRole("heading", { name: "Register of partners at Jan 1, 2022" });
+      const total = within(section(/Register of partners(?: at|$)/))
+        .getByText("Total")
+        .closest("tr")!;
+      const change = within(total).getAllByRole("cell").at(-1)!;
+      expect(change).toHaveTextContent(delta > 0 ? /\+AED.*100/ : /-AED.*100/);
+      expect(within(change).getByTitle("Unreturned")).toHaveClass(
+        delta > 0 ? "text-status-success-fg" : "text-status-danger-fg",
+      );
+      expect(change).not.toHaveTextContent("pp");
+    },
+  );
 });
