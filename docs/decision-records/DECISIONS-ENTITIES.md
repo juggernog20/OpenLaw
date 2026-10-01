@@ -252,8 +252,8 @@ The "Entities without a register keep manual Holdings" clause is superseded by E
 [#1253](https://github.com/juggernog20/OpenLaw/pull/1253). The Entity and type controls,
 register guards, head office, Share capital gate and MCP read use the effective kind.
 Migration 0186 pins shares on existing Entities with share data when their type now
-names another register. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250)
-adds the upgrade fixture for an old partnership-typed Entity with shares and the
+names another register. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250),
+[PR #1264](https://github.com/juggernog20/OpenLaw/pull/1264), adds the upgrade fixture for an old partnership-typed Entity with shares and the
 register-kind and head-office guide.
 
 ## ENT-014 — The partnership register: partners with capacity, capital and units; an ownership basis projects Holdings
@@ -273,7 +273,8 @@ API, replay and projection in [#1261](https://github.com/juggernog20/OpenLaw/pul
 [#1248](https://github.com/juggernog20/OpenLaw/issues/1248) shipped the Ownership tab
 in [#1262](https://github.com/juggernog20/OpenLaw/pull/1262). Migration 0188 adds
 Partnership entries, Ownership basis and the individual Holding's register-party
-reference. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250) adds the guide,
+reference. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250),
+[PR #1264](https://github.com/juggernog20/OpenLaw/pull/1264), adds the guide,
 upgrade fixture and admission-to-chart journey in `66-m45-registers.spec.ts`.
 
 ## ENT-015 — The trust register: parties hold dated roles; settlements and distributions are a ledger beside them; no percentage ownership
@@ -295,7 +296,8 @@ Ownership tab in [#1259](https://github.com/juggernog20/OpenLaw/pull/1259). Migr
 0187 adds register parties, entry counters and trust entries.
 [#1249](https://github.com/juggernog20/OpenLaw/issues/1249) shipped role and branch
 lines in the chart and exports in [#1263](https://github.com/juggernog20/OpenLaw/pull/1263).
-[#1250](https://github.com/juggernog20/OpenLaw/issues/1250) adds the guide, upgrade
+[#1250](https://github.com/juggernog20/OpenLaw/issues/1250),
+[PR #1264](https://github.com/juggernog20/OpenLaw/pull/1264), adds the guide, upgrade
 fixture and the empty-to-grouped-register journey with a distribution refused before
 appointment and accepted after it in `66-m45-registers.spec.ts`.
 

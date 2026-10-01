@@ -801,7 +801,7 @@ leaves a coherent product; none of them is optional in the sense that we intend 
       before the recipient is a Beneficiary and accepted after appointment, then admit
       Partners and change the Ownership basis to see the projected Holding on the chart.
       _Built on the feature branch:_ [#1243](https://github.com/juggernog20/OpenLaw/issues/1243),
-      tasks #1244–#1250, PRs #1253, #1258, #1259, #1261, #1262 and #1263. The two browser
+      tasks #1244–#1250, PRs #1253, #1258, #1259, #1261, #1262, #1263 and [#1264](https://github.com/juggernog20/OpenLaw/pull/1264). The two browser
       journeys are in [`66-m45-registers.spec.ts`](../e2e/tests/66-m45-registers.spec.ts).
       The milestone remains unchecked until the omnibus lands on `dev`.
   - Register kind on types and Entities, data guards, upgrade pin and Head office

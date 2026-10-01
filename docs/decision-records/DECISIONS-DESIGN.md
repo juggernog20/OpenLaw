@@ -5540,7 +5540,8 @@ The register-kind control and head office shipped in #1244 / PR #1253. The trust
 shipped in #1246 / PR #1259 and the partnership tab in #1248 / PR #1262. Both reuse
 the register timeline and entries filter bar, with kind-specific entry dialogs.
 The chart and exports gained role and branch lines in #1249 / PR #1263.
-[#1250](https://github.com/juggernog20/OpenLaw/issues/1250) adds the user guides,
+[#1250](https://github.com/juggernog20/OpenLaw/issues/1250),
+[PR #1264](https://github.com/juggernog20/OpenLaw/pull/1264), adds the user guides,
 real-app screenshots and the two journeys in `66-m45-registers.spec.ts`. The retained
 capture details live in `docs/documentation/batches/M45-7/README.md`. The screenshots
 show the grouped trust Roles and the partnership basis and totals; they do not
