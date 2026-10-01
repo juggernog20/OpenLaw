@@ -30,7 +30,7 @@ export function OwnedHoldingsCard({ rows }: Readonly<{ rows: EntityHolding[] }>)
         <p className="p-4 text-sm text-muted">
           <FormattedMessage
             id="entities.ownership.noneOwned"
-            defaultMessage="This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity."
+            defaultMessage="This Entity owns no other Entities. A Holding appears here when the share register or partnership register of another Entity names this Entity."
           />
         </p>
       ) : (

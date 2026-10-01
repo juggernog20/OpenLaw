@@ -5490,7 +5490,7 @@
     "defaultMessage": "Individual"
   },
   "entities.ownership.noneOwned": {
-    "defaultMessage": "This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity."
+    "defaultMessage": "This Entity owns no other Entities. A Holding appears here when the share register or partnership register of another Entity names this Entity."
   },
   "entities.ownership.rowPercent": {
     "defaultMessage": "{name} ownership percent"
