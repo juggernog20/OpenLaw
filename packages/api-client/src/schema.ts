@@ -35997,6 +35997,8 @@ export interface operations {
               isSystemDefault: boolean;
               archivedAt: string | null;
               inUseCount: number;
+              /** @enum {string} */
+              registerKind: "shares" | "partnership" | "trust" | "none";
             };
           };
         };
