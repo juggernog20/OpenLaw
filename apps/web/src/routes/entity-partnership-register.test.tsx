@@ -233,7 +233,7 @@ const section = (name: string | RegExp) =>
   screen.getByRole("heading", { name }).closest("section")!;
 
 describe("the partnership Ownership tab", () => {
-  it("loads the selected date and renders the register, totals, dimming and CSV downloads in DES-095 order", async () => {
+  it("loads the selected date and renders the register, totals, dimming and CSV downloads in DES-096 order", async () => {
     const api = registerApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/entities/e1/ownership?asOf=2022-01-01");

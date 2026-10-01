@@ -167,6 +167,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "contract_type.updated": TAXONOMY_UPDATE,
   "contract_type.reordered": { order: ["nda", "msa"] },
   "contract_type.archived": TAXONOMY_ARCHIVE,
+  "contract_type.duplicated": {
+    slug: "nda_copy",
+    displayName: "NDA (copy)",
+    sourceSlug: "nda",
+    sourceDisplayName: "NDA",
+  },
   "contract_type.restored": TAXONOMY_NAMED,
   "contract_type.deleted": TAXONOMY_NAMED,
   "matter_type.created": TAXONOMY_NAMED,
@@ -174,6 +180,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "matter_type.updated": TAXONOMY_UPDATE,
   "matter_type.reordered": { order: ["dispute", "advice"] },
   "matter_type.archived": TAXONOMY_ARCHIVE,
+  "matter_type.duplicated": {
+    slug: "nda_copy",
+    displayName: "NDA (copy)",
+    sourceSlug: "nda",
+    sourceDisplayName: "NDA",
+  },
   "matter_type.restored": TAXONOMY_NAMED,
   "matter_type.deleted": TAXONOMY_NAMED,
   "entity_type.created": TAXONOMY_NAMED,
@@ -181,6 +193,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
   "entity_type.updated": TAXONOMY_UPDATE,
   "entity_type.reordered": { order: ["llc", "gmbh"] },
   "entity_type.archived": TAXONOMY_ARCHIVE,
+  "entity_type.duplicated": {
+    slug: "nda_copy",
+    displayName: "NDA (copy)",
+    sourceSlug: "nda",
+    sourceDisplayName: "NDA",
+  },
   "entity_type.restored": TAXONOMY_NAMED,
   "entity_type.deleted": TAXONOMY_NAMED,
   "knowledge_type.created": TAXONOMY_NAMED,
@@ -1643,6 +1661,13 @@ describe("the sentences a reader gets", () => {
     );
     expect(narrate("envelope.voided", SAMPLE_PAYLOADS["envelope.voided"], null).sentence).toBe(
       "This contract's envelope was voided — Superseded",
+    );
+  });
+
+  it.each(["contract", "matter", "entity"] as const)("narrates a duplicated %s type", (module) => {
+    const action = `${module}_type.duplicated` as const;
+    expect(narrate(action, SAMPLE_PAYLOADS[action]).sentence).toBe(
+      `Nadia Counsel duplicated the ${module} type NDA as NDA (copy)`,
     );
   });
 

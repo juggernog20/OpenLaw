@@ -870,7 +870,7 @@ export const contractEnvelopesRoutes: FastifyPluginAsyncZod = async (app) => {
         schema: {
           operationId: preparing ? "prepareContractEnvelope" : "sendContractEnvelope",
           summary: preparing
-            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override."
+            ? "Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. On by default; an install with SIGNING_PREPARATION_ENABLED=false answers 404 (#1237). Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override."
             : "Legacy explicit direct-send API. Send a version of the contract's primary document out for " +
               "signature (CTR-013). The version must be a round of that " +
               "document's own chain — loose attachments are not sendable in " +

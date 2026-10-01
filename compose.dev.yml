@@ -55,6 +55,10 @@ services:
       # The E2E suite replays sign-in flows from one IP far faster than
       # any human; production keeps better-auth's limits.
       AUTH_RATE_LIMIT: "off"
+      # Preparation is the default on a real install (#1237). The overlay
+      # pins direct send because the M15 and M30 journeys drive Send
+      # envelope. Run the preparation journeys (1171 to 1177) on an
+      # isolated stack with SIGNING_PREPARATION_ENABLED=true.
       SIGNING_PREPARATION_ENABLED: ${SIGNING_PREPARATION_ENABLED:-false}
       # First-run setup demands a bootstrap token (TECH-031). Pinned so
       # the suite and the seed can run setup without reading the log; a

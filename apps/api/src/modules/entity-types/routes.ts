@@ -20,6 +20,7 @@ import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
 import { entityTypeUsage } from "../entities/type-usage.js";
 
 export const entityTypesRoutes = taxonomyRoutes({
+  duplicateFormModule: "entity",
   table: entityTypes,
   path: "entity-types",
   tag: "entity-types",

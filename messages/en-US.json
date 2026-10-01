@@ -806,6 +806,9 @@
   "activity.taxonomy.deleted": {
     "defaultMessage": "{actor} deleted the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
+  "activity.taxonomy.duplicated": {
+    "defaultMessage": "{actor} duplicated the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} other {type}} {sourceName} as {name}"
+  },
   "activity.taxonomy.renamed": {
     "defaultMessage": "{actor} renamed the {kind, select, contract_type {contract type} matter_type {matter type} entity_type {entity type} knowledge_type {knowledge type} request_type {request type} document_type {document type} contract_status {contract status} field {field} approver_group {approver group} matter_template {matter template} department {Department} region {Region} other {type}} {name}"
   },
@@ -4963,6 +4966,39 @@
   },
   "documents.versionTypeLabel": {
     "defaultMessage": "Type of version {number} of {title}"
+  },
+  "docusignConsent.blocked": {
+    "defaultMessage": "The browser blocked the consent window. Allow pop-ups for this site, then select Grant consent again."
+  },
+  "docusignConsent.grant": {
+    "defaultMessage": "Grant consent"
+  },
+  "docusignConsent.granted.body": {
+    "defaultMessage": "OpenLaw is testing the connection again. You can close this window."
+  },
+  "docusignConsent.granted.title": {
+    "defaultMessage": "Consent granted"
+  },
+  "docusignConsent.none.body": {
+    "defaultMessage": "DocuSign returns here after the consent step. Start it with Grant consent in Settings, under Integrations, E-signature."
+  },
+  "docusignConsent.none.title": {
+    "defaultMessage": "No consent answer to show"
+  },
+  "docusignConsent.redirectUri": {
+    "defaultMessage": "Consent redirect URI"
+  },
+  "docusignConsent.redirectUri.hint": {
+    "defaultMessage": "Add this address once under Redirect URIs on your DocuSign app. DocuSign refuses the consent step until it is there."
+  },
+  "docusignConsent.refused": {
+    "defaultMessage": "DocuSign did not grant consent: {reason}"
+  },
+  "docusignConsent.refused.body": {
+    "defaultMessage": "Close this window, check the integration key and the redirect URI on the DocuSign app, then select Grant consent again."
+  },
+  "docusignConsent.refused.title": {
+    "defaultMessage": "DocuSign did not grant consent"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
@@ -10901,6 +10937,9 @@
   "settings.contractTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
   },
+  "settings.contractTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
+  },
   "settings.contractTypes.edit": {
     "defaultMessage": "Edit {name}"
   },
@@ -11192,6 +11231,9 @@
   "settings.eSignature.connected": {
     "defaultMessage": "Connected to {account}."
   },
+  "settings.eSignature.consentBeforeSave": {
+    "defaultMessage": "Consent granted. Save the connector, then test the connection."
+  },
   "settings.eSignature.docusign": {
     "defaultMessage": "DocuSign"
   },
@@ -11280,7 +11322,7 @@
     "defaultMessage": "User ID"
   },
   "settings.eSignature.userId.hint": {
-    "defaultMessage": "The DocuSign user envelopes are sent as. Grant that user consent to the integration once, from the DocuSign console."
+    "defaultMessage": "The DocuSign user that sends envelopes. This user must give consent to the integration once. Select Grant consent, sign in to DocuSign as this user, and accept."
   },
   "settings.eSignature.webhook.hint": {
     "defaultMessage": "Receives updates as DocuSign delivers them. Requires a public HTTPS gateway and a signed Connect subscription. OpenLaw also checks periodically to recover missed updates."
@@ -11362,6 +11404,9 @@
   },
   "settings.entityTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.entityTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
   },
   "settings.entityTypes.edit": {
     "defaultMessage": "Edit {name}"
@@ -12100,6 +12145,9 @@
   },
   "settings.matterTypes.count": {
     "defaultMessage": "{count, plural, one {# type} other {# types}}"
+  },
+  "settings.matterTypes.duplicate": {
+    "defaultMessage": "Duplicate {name}"
   },
   "settings.matterTypes.edit": {
     "defaultMessage": "Edit {name}"
@@ -13975,6 +14023,9 @@
   },
   "welcome.eSignature.configured.disabled": {
     "defaultMessage": "DocuSign is configured in the {environment, select, production {production} other {demo}} environment, as integration key {integrationKey}, but sending from records is turned off. Contracts use the manual hand-off until it is turned back on."
+  },
+  "welcome.eSignature.consentBeforeSave": {
+    "defaultMessage": "Consent granted. Select Test DocuSign connection to save and test these credentials."
   },
   "welcome.eSignature.error.incomplete": {
     "defaultMessage": "Enter the integration key and the user ID from your DocuSign integration, or choose Set up later."

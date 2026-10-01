@@ -59,6 +59,20 @@ export class SigningConfigError extends SigningError {
   }
 }
 
+/**
+ * The provider knows the integration and the user, but the user has not
+ * consented to the integration yet. A kind of configuration fault, so
+ * every caller that handles one handles this too. Only the connection
+ * test tells it apart, because its remedy is a different act: grant
+ * consent once, rather than fix a credential.
+ */
+export class SigningConsentRequiredError extends SigningConfigError {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "SigningConsentRequiredError";
+  }
+}
+
 /** The adapter proves it failed before submitting creation. Generic provider
  * errors do not carry this guarantee, even when they describe credentials. */
 export class SigningNotSubmittedError extends SigningError {

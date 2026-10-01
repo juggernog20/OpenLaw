@@ -878,6 +878,10 @@ old Void and erasure, and repeated completion before Sent without a browser retu
 
 ### CTR-013 addendum, 2026-09-26, #1178. Live acceptance blocks rollout
 
+_(2026-10-01, #1237: **the off-by-default rule is superseded** by the #1237
+addendum below. Continue to DocuSign is now the default. The rest of this addendum
+stands: the live checks, the stop-rollout rule and the #888 gap.)_
+
 Continue to DocuSign remains off by default. The prerequisite code and stand-in
 journeys do not establish native editor enforcement in the deployment account.
 The live acceptance records use configure-signing V-C42 and electronic-signing
@@ -899,6 +903,26 @@ claim that connector disable stops callbacks and reconciliation. #1177 supersede
 older claims that preparing is not narrated or that a provider-confirmed Send can
 be attributed to the last OpenLaw browser user. Existing decisions remain in place
 as historical records with those amendments.
+
+### CTR-013 addendum, 2026-10-01, #1237. Preparation is the default
+
+With the Signing connector configured and turned on, Send for signature now opens
+Prepare Envelope, and Continue to DocuSign opens the Sender View. Every install
+gets this unless its operator sets `SIGNING_PREPARATION_ENABLED=false`, which
+restores immediate Send envelope. The legacy direct-send API and manual hand-off
+remain available with either value. An install with no usable connector still
+offers manual hand-off only.
+
+This takes the default ahead of the #1178 live walkthrough. The reason is what
+people saw: a send that went out at once, with no DocuSign editor, read as a
+misconfigured integration, and there was no supported way to turn preparation on
+against the real provider. The native editor restrictions are still not proven
+live. The stop-rollout rule of the #1178 addendum now means telling operators to
+set the switch to false, not holding a default that was never on. #1178 stays open
+for the live evidence.
+
+Turning the switch off hides Resume and refuses new launches for drafts that
+already exist. Reconciliation, Void and completion still follow them.
 
 ### CTR-012 addendum, 2026-09-28, #1207. The Soft gate applies at send
 

@@ -10,7 +10,7 @@ test("confirms and files completion after the sender leaves DocuSign without ret
 }) => {
   test.skip(
     process.env.SIGNING_PREPARATION_ENABLED !== "true",
-    "Preparation is off until final cutover.",
+    "The E2E overlay pins direct send.",
   );
   const returnPage = await page.request.get("/signing/return");
   expect(returnPage.headers()["cache-control"]).toBe("no-store");

@@ -2377,6 +2377,23 @@ export interface paths {
     patch: operations["updateContractType"];
     trace?: never;
   };
+  "/api/v1/contract-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live contract type's identity and Form */
+    post: operations["duplicateContractType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/order": {
     parameters: {
       query?: never;
@@ -2660,6 +2677,23 @@ export interface paths {
     head?: never;
     /** Rename a matter type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
     patch: operations["updateMatterType"];
+    trace?: never;
+  };
+  "/api/v1/matter-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live matter type's identity and Form */
+    post: operations["duplicateMatterType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/matter-types/order": {
@@ -5245,7 +5279,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. Gated off by default pending live acceptance. Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override. */
+    /** Prepare one durable, unsent Envelope for an exact primary Document Version and resolved Signers. On by default; an install with SIGNING_PREPARATION_ENABLED=false answers 404 (#1237). Requires a stable idempotency key; matching retries reuse the preparation. Uncertain creation stays reserved. Does not send invitations or advance the Contract Stage. The send that follows moves the Contract forward to Signature, so CTR-012's soft gate is asked here: with approvals pending or rejected, a preparation that would cross the approval Stage is refused 409 until it is repeated with `overrideSoftGate`, and the later move records the override. */
     post: operations["prepareContractEnvelope"];
     delete?: never;
     options?: never;
@@ -6371,6 +6405,23 @@ export interface paths {
     head?: never;
     /** Rename an entity type's display name (DES-017 in-place rename) or edit its description; the slug never changes, and even `other` may rename */
     patch: operations["updateEntityType"];
+    trace?: never;
+  };
+  "/api/v1/entity-types/{id}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Duplicate a live entity type's identity and Form */
+    post: operations["duplicateEntityType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/entity-types/order": {
@@ -11697,6 +11748,32 @@ export interface operations {
           };
         };
       };
+      /** @description The connection test failed. A credential refusal names its type, so the pane can offer the consent step (#1236); a provider outage names none. */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            /**
+             * @description Which refusal this is. A client branches on this, never on `detail` — `detail` is copy, and copy is rewritten. `about:blank` is a refusal at this status that names no type; print it rather than branching on it.
+             * @enum {string}
+             */
+            type:
+              | "urn:openlaw:problem:signing-consent-required"
+              | "urn:openlaw:problem:signing-credentials-refused"
+              | "about:blank";
+            title: string;
+            status: number;
+            detail?: string;
+            instance?: string;
+            errors?: {
+              path: string;
+              message: string;
+            }[];
+          };
+        };
+      };
       /** @description Problem details (RFC 9457) */
       default: {
         headers: {
@@ -15659,6 +15736,49 @@ export interface operations {
       };
     };
   };
+  duplicateContractType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            contractType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              isDefault: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   reorderContractTypes: {
     parameters: {
       query?: never;
@@ -16629,6 +16749,49 @@ export interface operations {
     responses: {
       /** @description Default Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            matterType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
+              isDefault: boolean;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  duplicateMatterType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };
@@ -35792,6 +35955,48 @@ export interface operations {
               inUseCount: number;
               /** @enum {string} */
               registerKind: "shares" | "partnership" | "trust" | "none";
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  duplicateEntityType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            entityType: {
+              id: string;
+              slug: string;
+              displayName: string;
+              description: string | null;
+              displayOrder: number;
+              isSystemDefault: boolean;
+              archivedAt: string | null;
+              inUseCount: number;
             };
           };
         };
