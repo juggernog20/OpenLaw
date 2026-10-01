@@ -5583,7 +5583,7 @@
     "defaultMessage": "Transferee status"
   },
   "entities.partnership.unchangedStatus": {
-    "defaultMessage": "Keep current status"
+    "defaultMessage": "No change · already a Partner"
   },
   "entities.partnership.units": {
     "defaultMessage": "Units"

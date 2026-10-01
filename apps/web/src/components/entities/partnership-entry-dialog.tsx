@@ -164,9 +164,19 @@ export function PartnershipEntryDialog({
   const [from, setFrom] = useState(choice(entry?.fromParty));
   const [to, setTo] = useState(choice(entry?.toParty));
   const [capacity, setCapacity] = useState<"general" | "limited">(entry?.capacity ?? "general");
+  // ENT-014: only a transferee with no standing needs the admitted-or-assignee
+  // choice. A party admitted or holding as an assignee today keeps that standing
+  // unless the entry says otherwise, so "" (no change) is the default for one.
+  const stands = (value: PartyChoice) =>
+    value.pick.startsWith("party:") &&
+    register.partnersToday.some((p) => p.party.id === value.pick.slice(6) && p.status !== "ceased");
   const [status, setStatus] = useState<"admitted" | "assignee" | "">(
     entry?.kind === "transfer" ? (entry.transfereeStatus ?? "") : "admitted",
   );
+  const changeTo = (next: PartyChoice) => {
+    setTo(next);
+    if (next.pick !== to.pick) setStatus(stands(next) ? "" : status || "admitted");
+  };
   const [units, setUnits] = useState(entry?.units == null ? "" : String(entry.units));
   const [percent, setPercent] = useState(
     entry?.statedPercent == null ? "" : String(entry.statedPercent),
@@ -369,7 +379,7 @@ export function PartnershipEntryDialog({
                   id="partnership-to"
                   label={{ id: "entities.register.entry.to", defaultMessage: "To" }}
                   value={to}
-                  onChange={setTo}
+                  onChange={changeTo}
                   original={entry?.toParty}
                 />
                 <Label htmlFor="partnership-status" required>
@@ -384,14 +394,12 @@ export function PartnershipEntryDialog({
                   value={status}
                   onChange={(e) => setStatus(e.target.value as typeof status)}
                 >
-                  {entry?.kind === "transfer" && entry.transfereeStatus === null ? (
-                    <option value="">
-                      {intl.formatMessage({
-                        id: "entities.partnership.unchangedStatus",
-                        defaultMessage: "Keep current status",
-                      })}
-                    </option>
-                  ) : null}
+                  <option value="">
+                    {intl.formatMessage({
+                      id: "entities.partnership.unchangedStatus",
+                      defaultMessage: "No change · already a Partner",
+                    })}
+                  </option>
                   <option value="admitted">
                     {intl.formatMessage({
                       id: "entities.partnership.admitted",

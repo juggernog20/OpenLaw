@@ -483,6 +483,35 @@ describe("the partnership Ownership tab", () => {
       expect(api.reads.length).toBeGreaterThan(1);
     },
   );
+  it("transfers to a standing Partner with no status change, and asks for one for a new party", async () => {
+    const api = registerApi();
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/entities/e1/ownership");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Record entry" }));
+    const d = within(screen.getByRole("dialog"));
+    await user.selectOptions(d.getByLabelText(/^Entry/), "transfer");
+    await user.selectOptions(d.getByLabelText(/^From/), "party:p3");
+    await user.selectOptions(d.getByLabelText(/^To/), "party:p1");
+    expect(d.getByLabelText(/^Transferee status/)).toHaveValue("");
+    expect(d.queryByLabelText(/^Capacity/)).not.toBeInTheDocument();
+    await user.selectOptions(d.getByLabelText(/^To/), "individual");
+    expect(d.getByLabelText(/^Transferee status/)).toHaveValue("admitted");
+    expect(d.getByLabelText(/^Capacity/)).toBeInTheDocument();
+    await user.selectOptions(d.getByLabelText(/^To/), "party:p1");
+    expect(d.getByLabelText(/^Transferee status/)).toHaveValue("");
+    await user.type(d.getByLabelText(/^Units/), "5");
+    await user.click(d.getByRole("button", { name: "Enter in register" }));
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]?.body).toMatchObject({
+      kind: "transfer",
+      fromParty: { kind: "party", partyId: "p3" },
+      toParty: { kind: "party", partyId: "p1" },
+      transfereeStatus: null,
+      capacity: null,
+      units: 5,
+    });
+  });
   it("rejects imprecise amounts and stale fields when changing entry kinds", async () => {
     const api = registerApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
