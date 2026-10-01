@@ -4,25 +4,33 @@
  * follow Entity reach: an inaccessible Entity is named only as Restricted Entity.
  */
 
-import { and, entities, entityHoldings, eq, inArray, type Transaction } from "@openlaw/db";
+import { and, entities, entityHoldings, inArray, type Transaction } from "@openlaw/db";
 import { ENTITY_HOLDING_CYCLE_PROBLEM_TYPE } from "@openlaw/shared";
 import type { AuthenticatedUser as User } from "../auth/guards.js";
 import { entityReachScope } from "./entity-access.js";
 import { ownershipPath } from "./ownership-path.js";
 import { httpError } from "./problem.js";
 
-export async function assertNoRegisterCycle(
-  tx: Transaction,
-  user: User,
-  holderEntityId: string,
-  issuerId: string,
-) {
-  const holdings = await tx
+type HoldingEdge = { ownerEntityId: string; ownedEntityId: string };
+
+function loadHoldingEdges(tx: Transaction): Promise<HoldingEdge[]> {
+  return tx
     .select({
       ownerEntityId: entityHoldings.ownerEntityId,
       ownedEntityId: entityHoldings.ownedEntityId,
     })
     .from(entityHoldings);
+}
+
+/** Pass `edges` to reuse one read of `entity_holdings` across several checks. */
+export async function assertNoRegisterCycle(
+  tx: Transaction,
+  user: User,
+  holderEntityId: string,
+  issuerId: string,
+  edges?: readonly HoldingEdge[],
+) {
+  const holdings = edges ?? (await loadHoldingEdges(tx));
   const path = ownershipPath(holdings, issuerId, holderEntityId);
   if (!path) return;
   const loopIds = [holderEntityId, ...path];
@@ -44,11 +52,11 @@ export async function assertNoRegisterCycle(
  * write's transaction so a loop rolls the projection back with it.
  */
 export async function assertProjectionAcyclic(tx: Transaction, user: User, issuerId: string) {
-  const owners = await tx
-    .select({ ownerEntityId: entityHoldings.ownerEntityId })
-    .from(entityHoldings)
-    .where(eq(entityHoldings.ownedEntityId, issuerId));
-  for (const owner of owners) {
-    await assertNoRegisterCycle(tx, user, owner.ownerEntityId, issuerId);
+  const edges = await loadHoldingEdges(tx);
+  const owners = new Set(
+    edges.filter((edge) => edge.ownedEntityId === issuerId).map((edge) => edge.ownerEntityId),
+  );
+  for (const ownerEntityId of owners) {
+    await assertNoRegisterCycle(tx, user, ownerEntityId, issuerId, edges);
   }
 }

@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** ENT-015 replay, ordered by effective date then entry number. Roles are dated
+ * intervals per party; settlements and distributions are a fund ledger per currency.
+ * A negative fund balance is a warning, not a refusal.
+ */
+
 import type { TrustRole, TrustEntryKind } from "@openlaw/db";
 
 export interface TrustEntry {
