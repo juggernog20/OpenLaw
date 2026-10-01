@@ -4,7 +4,7 @@ Keep the corporate facts and supporting Documents on the Entity they describe. H
 
 ## Before you start
 
-Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. OpenLaw writes Holdings from share registers, so you record an owner in the owned Entity's register. An Officer role must be available; only an Administrator adds one, in [types, Statuses, and Fields](types-statuses-fields.md). See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
+Sign in as a Legal Team Member or Administrator and open an Entity you can reach. Restore it before changing archived records. OpenLaw writes Holdings from share and partnership registers, so you record an owner in the owned Entity's register. An Officer role must be available; only an Administrator adds one, in [types, Statuses, and Fields](types-statuses-fields.md). See [roles and access](roles-and-access.md) and [Entity structure and access](entity-structure-and-access.md).
 
 ## Record Officers and resignations
 
@@ -28,16 +28,21 @@ The Entity's **Formation jurisdiction** remains separate. A Registration describ
 
 ## Read an Entity's Holdings
 
-A Holding records the percentage one owner holds of an Entity. The owner is another Entity or a named individual. OpenLaw writes every Holding from a share register. You cannot add, edit, or remove a Holding by hand. To record an owner of an Entity, record an entry in that Entity's [share register](entity-structure-and-access.md#keep-the-share-register).
+A Holding records the percentage one owner holds of an Entity. The owner is another Entity or a named individual. OpenLaw writes every Holding from a share or partnership register. You cannot add, edit, or remove a Holding by hand. To record an owner of an Entity, record an entry in that Entity's [share register](entity-structure-and-access.md#keep-the-share-register) or [partnership register](entity-structure-and-access.md#keep-the-partnership-register).
 
 1. Open the Entity's **Ownership** tab.
-2. To see who owns this Entity, read **Register of members**. Each Holder on the register is an owner.
+2. To see who owns this Entity, read **Register of members** for shares or **Register of partners** for a partnership. The partnership's Ownership basis sets its percentages.
 3. To see what this Entity owns, read **Holdings in other Entities**. Each row shows the owned Entity and the percentage this Entity holds. An Entity you cannot reach shows as **Restricted Entity**.
-4. To change a row, select **From register**. OpenLaw opens the share register of the owned Entity. Record or correct an entry there.
+4. To change a row, select **From register**. OpenLaw opens the register of the owned Entity. Record or correct an entry there.
 
-When this Entity owns no other Entities, the card reads **This Entity owns no other Entities. A Holding appears here when the share register of another Entity records shares for this Entity.**
+When this Entity owns no other Entities, the card shows an empty state. A Holding
+appears when another Entity's share or partnership register gives it an interest.
 
-An Entity with no share register has no owners in OpenLaw and stands alone on the ownership chart. To connect it, open its **Ownership** tab, add a share class, and record an allotment to its owner. For an Entity without shares, such as a branch or a limited liability company, name the class after the interest the owner holds, for example **Membership units**.
+A trust shows Roles and a fund in its trust register and has no owner Holdings.
+An Entity with Register kind None shows its Head office. The chart connects trust
+parties by Role and branches to their head office without a percentage. Choose the
+[register kind](entity-structure-and-access.md#choose-the-register-and-head-office)
+that fits the Entity while its registers are empty.
 
 Holdings do not grant access or make one Entity a child record. An Entity cannot hold its own shares, and the register refuses an entry that would create an ownership loop. Use the [ownership chart](entity-structure-and-access.md#read-the-ownership-chart) to read the structure.
 
@@ -51,4 +56,4 @@ Open **Documents** and follow the shared [upload and Version instructions](docum
 2. To find it again, open **Entities** and choose **List**. Select **Filter**, then **Show archived**. Clear other filters if needed.
 3. Open the Entity and select **Restore**. Confirm that its facts, relationships, and Documents remain and that its editing controls return.
 
-Archiving preserves the Entity and its existing references; it does not delete its Documents or mean that the corporate Status is Dissolved. Archived Entities leave the compliance calendar and Home Obligation results. Restore the Entity before changing its Officers, Registrations, Holdings, share register, Obligations, Documents, or Grants. If another person has already archived or restored it, reload and check the current state before retrying.
+Archiving preserves the Entity and its existing references; it does not delete its Documents or mean that the corporate Status is Dissolved. Archived Entities leave the compliance calendar and Home Obligation results. Restore the Entity before changing its Officers, Registrations, Holdings, registers, Obligations, Documents, or Grants. If another person has already archived or restored it, reload and check the current state before retrying.

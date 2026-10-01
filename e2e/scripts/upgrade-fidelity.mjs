@@ -72,6 +72,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { assertMcpRows, snapshotMcpRows } from "./upgrade-mcp.mjs";
+import { seedRegisters, verifyRegisters } from "./upgrade-registers.mjs";
 
 const BASE_URL = process.env.UPGRADE_BASE_URL ?? "http://localhost:3000";
 
@@ -571,6 +572,7 @@ async function seed() {
       status: "active",
     })
   ).entity;
+  const registers = await seedRegisters({ get, post, patch });
   const homeObligation = (
     await post(`/api/v1/entities/${entity.id}/obligations`, {
       label: "Upgrade Home annual return",
@@ -911,6 +913,7 @@ async function seed() {
     }
   }
   return {
+    registers,
     mcp,
     aiConnector: {
       preset: aiConnector.preset,
@@ -1100,6 +1103,8 @@ async function verify(fingerprint) {
   await signInAdmin();
   const me = await get("/api/v1/me");
   check(me.user.email === ADMIN.email, `signed in as ${me.user.email}, seeded ${ADMIN.email}`);
+
+  await verifyRegisters({ get, post, patch }, fingerprint.registers);
 
   const mcpPolicy = await get("/api/v1/mcp-settings");
   for (const field of [
