@@ -352,7 +352,7 @@ it("labels an individual in the chart and opens their Holding instead of a nonex
   ).toBeVisible();
 });
 
-it("renders trust roles, branch lines, terminal parties and the DES-095 legend", async () => {
+it("renders trust roles, branch lines, terminal parties and the DES-096 legend", async () => {
   const chart = {
     nodes: [
       { ...node(rows.parent), primaryOwnerId: null },

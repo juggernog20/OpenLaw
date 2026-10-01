@@ -78916,6 +78916,10 @@
                           "type": "integer",
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
+                        },
+                        "registerKind": {
+                          "type": "string",
+                          "enum": ["shares", "partnership", "trust", "none"]
                         }
                       },
                       "required": [
@@ -78926,7 +78930,8 @@
                         "displayOrder",
                         "isSystemDefault",
                         "archivedAt",
-                        "inUseCount"
+                        "inUseCount",
+                        "registerKind"
                       ],
                       "additionalProperties": false
                     }

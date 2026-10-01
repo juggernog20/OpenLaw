@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Shared chart and export labels for ENT-003 relationships and the DES-095 legend. */
+/** Shared chart and export labels for ENT-003 relationships and the DES-096 legend. */
 import { defineMessages, type IntlShape } from "react-intl";
 import { roleMessages } from "../../lib/trust-register";
 
