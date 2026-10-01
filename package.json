@@ -69,9 +69,9 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "marked": "18.0.14",
     "prettier": "^3.9.9",
-    "sanitize-html": "2.17.7",
+    "sanitize-html": "2.18.0",
     "secretlint": "^13.0.6",
-    "turbo": "^2.11.5",
+    "turbo": "^2.11.6",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.71.0"
   }
