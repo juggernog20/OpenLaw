@@ -10873,12 +10873,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "individual_holdings_register_party_id_entity_register_parties_id_fk": {
-          "name": "individual_holdings_register_party_id_entity_register_parties_id_fk",
+        "individual_holdings_register_party_fk": {
+          "name": "individual_holdings_register_party_fk",
           "tableFrom": "individual_holdings",
           "tableTo": "entity_register_parties",
-          "columnsFrom": ["register_party_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["owned_entity_id", "register_party_id"],
+          "columnsTo": ["entity_id", "id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },

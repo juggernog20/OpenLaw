@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+
+/** The register party table that ENT-014 and ENT-015 share, the per-register entry
+ * counter, and ENT-015's trust entry rows. Entries store dated facts only; roles and
+ * the fund are replayed from them, never stored.
+ */
+
 import { sql } from "drizzle-orm";
 import {
   bigint,

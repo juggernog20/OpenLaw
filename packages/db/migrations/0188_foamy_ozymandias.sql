@@ -45,7 +45,7 @@ ALTER TABLE "entity_partnership_entries" ADD CONSTRAINT "entity_partnership_entr
 ALTER TABLE "entity_partnership_entries" ADD CONSTRAINT "entity_partnership_entries_party_2_fk" FOREIGN KEY ("entity_id","to_party_id") REFERENCES "public"."entity_register_parties"("entity_id","id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "entity_partnership_entries_entity_no_idx" ON "entity_partnership_entries" USING btree ("entity_id","entry_no");--> statement-breakpoint
 CREATE INDEX "entity_partnership_entries_entity_date_idx" ON "entity_partnership_entries" USING btree ("entity_id","effective_on");--> statement-breakpoint
-ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_register_party_id_entity_register_parties_id_fk" FOREIGN KEY ("register_party_id") REFERENCES "public"."entity_register_parties"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_register_party_fk" FOREIGN KEY ("owned_entity_id","register_party_id") REFERENCES "public"."entity_register_parties"("entity_id","id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "individual_holdings_register_party_idx" ON "individual_holdings" USING btree ("register_party_id") WHERE "individual_holdings"."register_party_id" is not null;--> statement-breakpoint
 ALTER TABLE "entities" ADD CONSTRAINT "entities_partnership_basis" CHECK ("entities"."partnership_basis" in ('capital', 'units', 'stated', 'equal'));--> statement-breakpoint
 ALTER TABLE "individual_holdings" ADD CONSTRAINT "individual_holdings_register_identity" CHECK (num_nonnulls("individual_holdings"."shareholder_id", "individual_holdings"."register_party_id") = 1);
