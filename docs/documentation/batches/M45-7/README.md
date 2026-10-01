@@ -30,8 +30,13 @@ The existing M40 and M41 CI baselines exercise the pre-M45 path; the feature-bra
 base exercises preservation of M45 data. No baseline rows are inserted through SQL.
 
 The author ran the fixture against the local app and ran its regression tests.
-The complete image-swap rehearsal is a CI check. This record does not claim that
-running seed and verify against one image proves a migration.
+The author also ran the register fixture through an image swap from canonical
+pre-M45 commit `1d00fb61` to `b57671c5`, preserving the Postgres volume. All register
+assertions passed, including the old partnership's share pin and writes to the new
+tables. [Upgrade check](upgrade-check.json) retains both immutable image identities.
+An earlier attempt using an old lab image stopped at the migration-journal guard;
+it was discarded because that image came from a different branch history. CI runs
+the complete fidelity script, including the unrelated module fixtures.
 
 The three changed articles return to `review`. Their prior DOC-032 evidence remains
 unchanged. There is no independent walkthrough in this batch because the ticket

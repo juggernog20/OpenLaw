@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
+import { randomUUID } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { test, expect, type Page, type Locator } from "@playwright/test";
@@ -128,8 +129,11 @@ test("M45 trust: empty register, grouped Roles, refused then accepted distributi
 test("M45 partnership: admission and capital, basis change, projected Holding and chart", async ({
   page,
 }) => {
-  const owner = await entity(page, "Helix Partnership Holdings Ltd");
-  const id = await entity(page, "Helix Ventures Partnership", "partnership");
+  const suffix = randomUUID().slice(0, 8);
+  const ownerName = `Helix Partnership Holdings Ltd ${suffix}`;
+  const partnershipName = `Helix Ventures Partnership ${suffix}`;
+  const owner = await entity(page, ownerName);
+  const id = await entity(page, partnershipName, "partnership");
   try {
     await page.goto(`/entities/${id}/ownership`);
     await expect(page.getByRole("heading", { name: "No partnership register yet" })).toBeVisible();
@@ -146,7 +150,7 @@ test("M45 partnership: admission and capital, basis change, projected Holding an
     await dialog.getByLabel("Units", { exact: true }).fill("40");
     await enter(page, dialog, "partnership");
     for (const [name, amount] of [
-      ["Helix Partnership Holdings Ltd", "750"],
+      [ownerName, "750"],
       ["Ravi Menon", "250"],
     ]) {
       dialog = await openEntry(page, "contribution");
@@ -164,26 +168,20 @@ test("M45 partnership: admission and capital, basis change, projected Holding an
       ).toContainText(`$${amount}.00`);
     }
     const partners = page.getByRole("region", { name: "Register of partners", exact: true });
-    await expect(
-      partners.getByRole("row").filter({ hasText: "Helix Partnership Holdings Ltd" }),
-    ).toContainText("75%");
+    await expect(partners.getByRole("row").filter({ hasText: ownerName })).toContainText("75%");
     await page.getByRole("button", { name: "Change basis" }).click();
     await page.getByRole("radio", { name: "Units", exact: true }).check();
     await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
-    await expect(
-      partners.getByRole("row").filter({ hasText: "Helix Partnership Holdings Ltd" }),
-    ).toContainText("60%");
+    await expect(partners.getByRole("row").filter({ hasText: ownerName })).toContainText("60%");
     expect(await csv(page, partners.getByRole("link", { name: "Export register" }))).toContain(
       "Ravi Menon",
     );
     await capture(page, "m45-partnership-register");
     await page.goto(`/entities/${owner}/ownership`);
     const holdings = page.getByRole("region", { name: "Holdings in other Entities" });
-    await expect(holdings.getByLabel("Helix Ventures Partnership ownership percent")).toHaveText(
-      "60%",
-    );
+    await expect(holdings.getByLabel(`${partnershipName} ownership percent`)).toHaveText("60%");
     await holdings.getByRole("link", { name: "From register" }).click();
-    await expect(page).toHaveURL(new RegExp(`/entities/${id}/ownership$`));
+    await expect(page).toHaveURL((url) => url.pathname === `/entities/${id}/ownership`);
     const chartResponse = await page.request.get("/api/v1/entities/chart");
     expect(chartResponse.status(), await chartResponse.text()).toBe(200);
     const chartData = z
@@ -204,8 +202,13 @@ test("M45 partnership: admission and capital, basis change, projected Holding an
     });
     await page.goto("/entities?view=chart");
     const chart = page.getByRole("region", { name: "Entity ownership chart", exact: true });
-    await expect(chart.locator(`a[href="/entities/${id}"]`)).toBeVisible();
-    await expect(chart.getByText("60%", { exact: true }).first()).toBeVisible();
+    await expect(
+      chart.getByRole("link", { name: `Open ${partnershipName}`, exact: true }),
+    ).toBeVisible();
+    const sixtyPercentEdges = chartData.edges.filter((edge) => edge.ownershipPercent === 60);
+    // Archived Holdings stay on the chart. Count all matching edges so an old one
+    // cannot stand in for the new partnership's edge.
+    await expect(chart.getByText("60%", { exact: true })).toHaveCount(sixtyPercentEdges.length);
     await capture(page, "m45-partnership-chart");
   } finally {
     for (const entityId of [id, owner]) {

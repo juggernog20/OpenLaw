@@ -36,7 +36,7 @@
     },
     {
       "id": "reference",
-      "contentSha256": "53da0d20aa8ed4ed59b529349e4529d67eaeed40cacfc4f458b0b739d861a14e"
+      "contentSha256": "8fc9af8e5de79857b8acff8d00266ee59d93354494250de38ecd3b2f196337a7"
     }
   ],
   "captures": [
@@ -66,5 +66,18 @@
     "Local chart capture includes earlier isolated test records.",
     "The historical DOC-032 evidence is retained unchanged.",
     "Strict docs:check fails on the base branch because its application compatibility review is stale. Development compilation renders all 62 articles."
+  ],
+  "captureTestCommit": "69c5352bf7678871d5d2477cf42b2f07dcb74aab",
+  "followupChecks": [
+    {
+      "method": "source-inspection",
+      "result": "pass",
+      "actual": "The reference Matter definition now states the signed-document boundary in CONTEXT.md."
+    },
+    {
+      "method": "automated-test",
+      "result": "pass",
+      "actual": "Both journeys passed after unique partnership fixture names and chart label-count assertions replaced the first matching percentage. The screenshots retain the original fictional fixture names."
+    }
   ]
 }
