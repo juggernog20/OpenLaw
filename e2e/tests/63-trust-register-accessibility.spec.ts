@@ -40,6 +40,7 @@ test("Trust register tab and entry dialogs are axe clean in Light and Dark", asy
     expect(changed.status(), await changed.text()).toBe(200);
     for (theme of ["light", "dark"] as const) {
       await page.goto(`/entities/${id}/ownership`);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await expect(page.getByRole("heading", { name: "No trust register yet" })).toBeVisible();
       await scan("empty");
     }

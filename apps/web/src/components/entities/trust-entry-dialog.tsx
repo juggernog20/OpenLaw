@@ -279,7 +279,7 @@ export function TrustEntryDialog({
                     })}
                   </option>
                   {candidates
-                    .filter((c) => c.archivedAt === null)
+                    .filter((c) => c.id !== entityId && c.archivedAt === null)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.legalName}

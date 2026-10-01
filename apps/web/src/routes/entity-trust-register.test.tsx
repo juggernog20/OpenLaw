@@ -360,6 +360,7 @@ describe("the trust Ownership tab", () => {
           call.url.pathname === "/api/v1/entities"
             ? json(200, {
                 entities: [
+                  entity(),
                   entity({ id: "e2", legalName: "Family Office", jurisdiction: "Jersey" }),
                 ],
               })
@@ -371,9 +372,15 @@ describe("the trust Ownership tab", () => {
       const dialog = screen.getByRole("dialog");
       await user.selectOptions(within(dialog).getByLabelText(/^Entry/), "settlement");
       await user.selectOptions(within(dialog).getByLabelText(/^Party/), partyKind);
-      if (partyKind === "entity")
+      if (partyKind === "entity") {
+        // The trust cannot be a party on its own register, so it is not offered.
+        expect(
+          within(within(dialog).getByLabelText(/^Entity/)).queryByRole("option", {
+            name: "Calloway Capital Partners Ltd",
+          }),
+        ).not.toBeInTheDocument();
         await user.selectOptions(within(dialog).getByLabelText(/^Entity/), "e2");
-      else await user.type(within(dialog).getByLabelText(/^Full name/), "New Settlor");
+      } else await user.type(within(dialog).getByLabelText(/^Full name/), "New Settlor");
       await user.type(within(dialog).getByLabelText(/^Amount/), "1200.251");
       await user.click(within(dialog).getByRole("button", { name: "Enter in register" }));
       expect(await within(dialog).findByRole("alert")).toHaveTextContent(
