@@ -402,3 +402,15 @@ it("serializes names and titles as SVG text rather than markup", () => {
     '</text><script>alert("name")</script>&',
   );
 });
+
+it("embeds the measured font faces in the SVG", () => {
+  const markup = chartSvgMarkup(model([], records), { regular: "UkVH", medium: "TUVE" });
+  const svg = new DOMParser().parseFromString(markup, "image/svg+xml");
+  expect(svg.querySelector("parsererror")).toBeNull();
+  expect(svg.documentElement.getAttribute("font-family")).toBe(
+    "'OpenLaw Chart', Arial, sans-serif",
+  );
+  const style = svg.querySelector("style")?.textContent ?? "";
+  expect(style).toContain("font-weight:400;src:url(data:font/ttf;base64,UkVH)");
+  expect(style).toContain("font-weight:700;src:url(data:font/ttf;base64,TUVE)");
+});

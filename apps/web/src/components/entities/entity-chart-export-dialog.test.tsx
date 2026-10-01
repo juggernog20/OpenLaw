@@ -18,7 +18,7 @@ import {
 vi.mock("./entity-chart-export-files", () => ({
   loadExportMeasure: vi.fn(async () => (text: string, size: number) => text.length * size * 0.6),
   createChartPdf: vi.fn(async () => new Blob(["pdf"], { type: "application/pdf" })),
-  createChartSvg: vi.fn(() => new Blob(["svg"], { type: "image/svg+xml" })),
+  createChartSvg: vi.fn(async () => new Blob(["svg"], { type: "image/svg+xml" })),
   createChartPng: vi.fn(async () => new Blob(["png"], { type: "image/png" })),
   createChartPowerPoint: vi.fn(async () => new Blob(["pptx"])),
   downloadChart: vi.fn(),
