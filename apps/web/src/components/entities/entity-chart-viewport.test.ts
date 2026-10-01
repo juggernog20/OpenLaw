@@ -2,7 +2,12 @@
 
 import { describe, expect, it } from "vitest";
 import type { EntityChart } from "../../lib/entities";
-import { layoutEntityChart, entityStructureChain } from "./entity-chart-layout";
+import {
+  CHART_NODE_HEIGHT,
+  entityChartRelationships,
+  layoutEntityChart,
+  entityStructureChain,
+} from "./entity-chart-layout";
 import { fitChart, zoomChart } from "./entity-chart-viewport";
 
 describe("entity chart navigation", () => {
@@ -167,4 +172,62 @@ it("places a role-only Entity party once around its trusts while leaving a conne
   expect(after.nodes.at(-1)!.y).toBeGreaterThan(
     after.nodes.find((node) => node.id === "trust-two")!.y,
   );
+});
+
+it("routes a role edge on the side of the party that faces the trust", () => {
+  const party = (id: string, trustEntityId: string) => ({
+    id,
+    restricted: false as const,
+    kind: "party" as const,
+    partyKind: "individual" as const,
+    trustEntityId,
+    legalName: id,
+    type: "Individual",
+    jurisdiction: null,
+    status: null,
+    primaryOwnerId: null,
+  });
+  const chart: EntityChart = {
+    nodes: [
+      { id: "holdco", restricted: true, primaryOwnerId: null },
+      { id: "trust", restricted: true, primaryOwnerId: "holdco" },
+      { id: "services", restricted: true, primaryOwnerId: null },
+      { id: "trustee", restricted: true, primaryOwnerId: "services" },
+      { id: "sub", restricted: true, primaryOwnerId: "trust" },
+      party("party:one", "trust"),
+    ],
+    edges: [
+      { ownerEntityId: "holdco", ownedEntityId: "trust", ownershipPercent: 100 },
+      { ownerEntityId: "trust", ownedEntityId: "sub", ownershipPercent: 100 },
+      { ownerEntityId: "services", ownedEntityId: "trustee", ownershipPercent: 100 },
+    ],
+    branchEdges: [],
+    roleEdges: [
+      { partyNodeId: "holdco", trustEntityId: "trust", role: "settlor", roleLabel: null },
+      { partyNodeId: "trustee", trustEntityId: "trust", role: "trustee", roleLabel: null },
+      { partyNodeId: "party:one", trustEntityId: "trust", role: "beneficiary", roleLabel: null },
+    ],
+  };
+  const layout = layoutEntityChart(chart);
+  const positions = new Map(layout.nodes.map((node) => [node.id, node]));
+  const trust = positions.get("trust")!;
+  const edges = new Map(
+    entityChartRelationships(chart, positions).map((edge) => [edge.fromId, edge]),
+  );
+  // The settlor sits above the trust: bottom of the settlor to top of the trust.
+  const settlor = edges.get("holdco")!;
+  expect(settlor.points[0]!.y).toBe(positions.get("holdco")!.y + CHART_NODE_HEIGHT);
+  expect(settlor.points.at(-1)!.y).toBe(trust.y);
+  // The beneficiary sits in the terminal row: top of the party to bottom of the trust.
+  const beneficiary = edges.get("party:one")!;
+  expect(beneficiary.points[0]!.y).toBe(positions.get("party:one")!.y);
+  expect(beneficiary.points.at(-1)!.y).toBe(trust.y + CHART_NODE_HEIGHT);
+  // The trustee shares the trust's row: both ends leave the bottom and the
+  // line stays below the row.
+  const trustee = edges.get("trustee")!;
+  expect(positions.get("trustee")!.y).toBe(trust.y);
+  expect(trustee.points[0]!.y).toBe(trust.y + CHART_NODE_HEIGHT);
+  expect(trustee.points.at(-1)!.y).toBe(trust.y + CHART_NODE_HEIGHT);
+  for (const point of trustee.points)
+    expect(point.y).toBeGreaterThanOrEqual(trust.y + CHART_NODE_HEIGHT);
 });

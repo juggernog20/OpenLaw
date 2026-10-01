@@ -253,11 +253,28 @@ export function entityChartRelationships(
         (edge.kind === "role"
           ? (peers.indexOf(edge) + 1) / (peers.length + 1)
           : (owners.indexOf(edge.fromId) + 1) / (owners.length + 1));
-    const y1 = from.y + (edge.kind === "role" ? 0 : height);
-    const y2 = to.y + (edge.kind === "role" ? height : 0);
-    const middle =
-      (y1 + y2) / 2 +
-      (edge.kind === "role" ? (peers.indexOf(edge) - (peers.length - 1) / 2) * 20 : 0);
+    // A branch edge runs head office bottom to branch top, as a Holding does.
+    // A role edge leaves the party on the side that faces the trust: a
+    // terminal party sits below it, an Entity party may sit above or in the
+    // same row. A same-row pair is joined below the row so the line never
+    // crosses either card.
+    const spread = edge.kind === "role" ? (peers.indexOf(edge) - (peers.length - 1) / 2) * 20 : 0;
+    let y1: number;
+    let y2: number;
+    let middle: number;
+    if (edge.kind === "branch" || from.y < to.y) {
+      y1 = from.y + height;
+      y2 = to.y;
+      middle = (y1 + y2) / 2 + spread;
+    } else if (from.y > to.y) {
+      y1 = from.y;
+      y2 = to.y + height;
+      middle = (y1 + y2) / 2 + spread;
+    } else {
+      y1 = from.y + height;
+      y2 = to.y + height;
+      middle = Math.max(y1 + 12, y1 + VERTICAL_GAP / 2 + spread);
+    }
     return [
       {
         ...edge,
