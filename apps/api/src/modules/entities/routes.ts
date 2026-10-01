@@ -60,6 +60,8 @@ import { httpError, problemResponse } from "../../lib/problem.js";
 import { resolveStaffRefs, StaffRequestCustomFieldRefsSchema } from "../requests/projection.js";
 import { entityRecordChildRoutes } from "./record-routes.js";
 import { entityHoldingRoutes } from "./holding-routes.js";
+import { entityPartnershipRegisterRoutes } from "./partnership-register-routes.js";
+import { projectPartnershipHoldings } from "../../lib/partnership-projection.js";
 import { entityTrustRegisterRoutes } from "./trust-register-routes.js";
 import { entityShareRegisterRoutes } from "./share-register-routes.js";
 import { entityObligationRoutes } from "./obligation-routes.js";
@@ -149,6 +151,7 @@ const EntityRecordEnvelope = z.object({
     registerKindSource: z.enum(["type", "entity"]),
     registerKindLocked: z.boolean(),
     registerKindLockReason: z.string().nullable(),
+    partnershipBasis: z.enum(["capital", "units", "stated", "equal"]),
     headOfficeEntityId: z.string().nullable(),
   }),
   fields: z.array(AttachedCustomFieldSchema),
@@ -167,6 +170,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
   await app.register(entityHoldingRoutes);
   await app.register(entityShareRegisterRoutes);
   await app.register(entityTrustRegisterRoutes);
+  await app.register(entityPartnershipRegisterRoutes);
   await app.register(entityRecordChildRoutes);
 
   app.get(
@@ -486,6 +490,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         body: z.strictObject({
           legalName: LegalNameSchema.optional(),
           entityTypeId: z.string().optional(),
+          partnershipBasis: z.enum(["capital", "units", "stated", "equal"]).optional(),
           registerKind: z.enum(REGISTER_KINDS).nullable().optional(),
           headOfficeEntityId: z.string().min(1).max(64).nullable().optional(),
           jurisdiction: CardTextSchema.nullable().optional(),
@@ -517,6 +522,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         // commit changes neither and must not queue behind every share
         // register write on the instance.
         if (
+          body.partnershipBasis !== undefined ||
           body.registerKind !== undefined ||
           body.headOfficeEntityId !== undefined ||
           body.entityTypeId !== undefined
@@ -603,6 +609,18 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         const registerChange = await registerKindPatch(tx, request.user, target, typeKind, body);
         Object.assign(patch, registerChange.patch);
         Object.assign(changed, registerChange.changed);
+        if (body.partnershipBasis !== undefined) {
+          if (
+            ((registerChange.patch.registerKind === undefined
+              ? target.registerKind
+              : registerChange.patch.registerKind) ?? typeKind) !== "partnership"
+          )
+            throw httpError(409, "Only a partnership register has an ownership basis.");
+          if (body.partnershipBasis !== target.partnershipBasis) {
+            patch.partnershipBasis = body.partnershipBasis;
+            changed.partnershipBasis = { from: target.partnershipBasis, to: body.partnershipBasis };
+          }
+        }
 
         // Free-text card scalars: blank normalizes to NULL, same as
         // registration; null clears deliberately.
@@ -704,6 +722,8 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
           .set(patch)
           .where(eq(entities.id, target.id))
           .returning();
+        if (patch.partnershipBasis !== undefined)
+          await projectPartnershipHoldings(tx, request.user, updated!);
         const legalNameNow = updated!.legalName;
         if (patch.portalListed !== undefined) {
           await recordActivity(tx, {
@@ -754,6 +774,7 @@ export const entitiesRoutes: FastifyPluginAsyncZod = async (app) => {
         entity: {
           ...toRow(row, entityTypeName),
           ...(await entityRegisterState(app.db, row)),
+          partnershipBasis: row.partnershipBasis,
           headOfficeEntityId: row.headOfficeEntityId,
         },
         fields: attached,

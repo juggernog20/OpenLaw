@@ -482,3 +482,5 @@ export async function rewrapSecrets(db: Db): Promise<SecretsRewrap> {
 
 export { conversionDrafts } from "./schema/conversion-drafts.js";
 export { runtimeStatus } from "./schema/runtime-status.js";
+
+export * from "./schema/entity-partnership-register.js";

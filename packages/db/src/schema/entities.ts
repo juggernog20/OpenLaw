@@ -48,6 +48,9 @@ export const entities = pgTable(
     /** NULL inherits the type's register kind; a value overrides it (ENT-013). */
     registerKind: text("register_kind", { enum: REGISTER_KINDS }),
     /** NULL means no head office; only set while the effective kind is none. */
+    partnershipBasis: text("partnership_basis", { enum: ["capital", "units", "stated", "equal"] })
+      .notNull()
+      .default("capital"),
     headOfficeEntityId: text("head_office_entity_id").references((): AnyPgColumn => entities.id),
     /** Formation jurisdiction; per-registration jurisdictions are ENT-002 (M27). */
     jurisdiction: text("jurisdiction"),
@@ -103,6 +106,10 @@ export const entities = pgTable(
     check(
       "entities_register_kind_check",
       sql`${table.registerKind} in ('shares', 'partnership', 'trust', 'none')`,
+    ),
+    check(
+      "entities_partnership_basis",
+      sql`${table.partnershipBasis} in ('capital', 'units', 'stated', 'equal')`,
     ),
     check("entities_head_office_not_self", sql`${table.headOfficeEntityId} <> ${table.id}`),
     index("entities_head_office_idx").on(table.headOfficeEntityId),

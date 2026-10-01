@@ -25,6 +25,7 @@ export type EntityRow = Omit<
   | "registerKindLocked"
   | "registerKindLockReason"
   | "headOfficeEntityId"
+  | "partnershipBasis"
 >;
 
 /** One row of M27/9's managed registry, including its derived next

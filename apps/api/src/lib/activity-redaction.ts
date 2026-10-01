@@ -81,6 +81,16 @@ function farReferenceOf(action: string, payload: Payload): FarReference | null {
       return isString(payload.trustId)
         ? { kind: "entityId", identity: payload.trustId, keys: ["trustId", "trustName", "changed"] }
         : null;
+    case "entity_partnership_entry.created":
+    case "entity_partnership_entry.updated":
+    case "entity_partnership_entry.deleted":
+      return isString(payload.partnershipId)
+        ? {
+            kind: "entityId",
+            identity: payload.partnershipId,
+            keys: ["partnershipId", "partnershipName", "changed"],
+          }
+        : null;
     case "entity_holding.created":
     case "entity_holding.updated":
     case "entity_holding.deleted": {
