@@ -5435,6 +5435,162 @@
   "entities.ownership.rowPercent": {
     "defaultMessage": "{name} ownership percent"
   },
+  "entities.partnership.admitted": {
+    "defaultMessage": "Admitted"
+  },
+  "entities.partnership.basis.capital": {
+    "defaultMessage": "Unreturned capital"
+  },
+  "entities.partnership.basis.equal": {
+    "defaultMessage": "Equal shares"
+  },
+  "entities.partnership.basis.error": {
+    "defaultMessage": "The ownership basis could not be changed."
+  },
+  "entities.partnership.basis.hint": {
+    "defaultMessage": "The ownership basis sets each Partner's percentage in the register and the ownership chart."
+  },
+  "entities.partnership.basis.stated": {
+    "defaultMessage": "Stated percent"
+  },
+  "entities.partnership.basis.units": {
+    "defaultMessage": "Units"
+  },
+  "entities.partnership.basisCurrency": {
+    "defaultMessage": "{basis} · {currency}"
+  },
+  "entities.partnership.capacity": {
+    "defaultMessage": "Capacity"
+  },
+  "entities.partnership.capacity.assignee": {
+    "defaultMessage": "Assignee"
+  },
+  "entities.partnership.capacity.general": {
+    "defaultMessage": "General"
+  },
+  "entities.partnership.capacity.limited": {
+    "defaultMessage": "Limited"
+  },
+  "entities.partnership.capitalIncrease": {
+    "defaultMessage": "+{amount}"
+  },
+  "entities.partnership.changeBasis": {
+    "defaultMessage": "Change basis"
+  },
+  "entities.partnership.committed": {
+    "defaultMessage": "Committed"
+  },
+  "entities.partnership.consideration": {
+    "defaultMessage": "Consideration"
+  },
+  "entities.partnership.contributed": {
+    "defaultMessage": "Contributed"
+  },
+  "entities.partnership.empty": {
+    "defaultMessage": "No partnership register yet"
+  },
+  "entities.partnership.emptyHint": {
+    "defaultMessage": "Record the first entry. Partners come from the entries."
+  },
+  "entities.partnership.entries": {
+    "defaultMessage": "Register of partnership entries"
+  },
+  "entities.partnership.entry.balances": {
+    "defaultMessage": "Enter whole non-negative units and a stated percent from 0 to 100 with up to 2 decimal places."
+  },
+  "entities.partnership.entry.required": {
+    "defaultMessage": "Complete the effective date and the Partner details for this entry."
+  },
+  "entities.partnership.entry.transferRequired": {
+    "defaultMessage": "Enter units, a stated percent or unreturned capital to transfer."
+  },
+  "entities.partnership.form": {
+    "defaultMessage": "Form of contribution"
+  },
+  "entities.partnership.kind.admission": {
+    "defaultMessage": "Admission"
+  },
+  "entities.partnership.kind.capacityChange": {
+    "defaultMessage": "Capacity change"
+  },
+  "entities.partnership.kind.commitment": {
+    "defaultMessage": "Commitment"
+  },
+  "entities.partnership.kind.contribution": {
+    "defaultMessage": "Contribution"
+  },
+  "entities.partnership.kind.return": {
+    "defaultMessage": "Return"
+  },
+  "entities.partnership.kind.transfer": {
+    "defaultMessage": "Transfer"
+  },
+  "entities.partnership.kind.withdrawal": {
+    "defaultMessage": "Withdrawal"
+  },
+  "entities.partnership.meta": {
+    "defaultMessage": "{partners, plural, one {# partner} other {# partners}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
+  },
+  "entities.partnership.noPartners": {
+    "defaultMessage": "No partners at this date."
+  },
+  "entities.partnership.note.capital": {
+    "defaultMessage": "Ownership by unreturned capital"
+  },
+  "entities.partnership.note.equal": {
+    "defaultMessage": "Ownership by equal shares"
+  },
+  "entities.partnership.note.stated": {
+    "defaultMessage": "Ownership by stated percent"
+  },
+  "entities.partnership.note.units": {
+    "defaultMessage": "Ownership by units"
+  },
+  "entities.partnership.partner": {
+    "defaultMessage": "Partner"
+  },
+  "entities.partnership.partners": {
+    "defaultMessage": "Register of partners"
+  },
+  "entities.partnership.partnersAt": {
+    "defaultMessage": "Register of partners at {date}"
+  },
+  "entities.partnership.percent": {
+    "defaultMessage": "%"
+  },
+  "entities.partnership.percentChange": {
+    "defaultMessage": "{change} pp"
+  },
+  "entities.partnership.pickPartner": {
+    "defaultMessage": "Choose a Partner…"
+  },
+  "entities.partnership.returned": {
+    "defaultMessage": "Returned"
+  },
+  "entities.partnership.since": {
+    "defaultMessage": "Partner since"
+  },
+  "entities.partnership.statedTotal": {
+    "defaultMessage": "Today's stated percentages total {total}, not 100%. Check the entries."
+  },
+  "entities.partnership.status.ceased": {
+    "defaultMessage": "Ceased"
+  },
+  "entities.partnership.total": {
+    "defaultMessage": "Total"
+  },
+  "entities.partnership.transfereeStatus": {
+    "defaultMessage": "Transferee status"
+  },
+  "entities.partnership.unchangedStatus": {
+    "defaultMessage": "Keep current status"
+  },
+  "entities.partnership.units": {
+    "defaultMessage": "Units"
+  },
+  "entities.partnership.unreturned": {
+    "defaultMessage": "Unreturned"
+  },
   "entities.portalListed": {
     "defaultMessage": "Portal-listed"
   },
@@ -6055,9 +6211,6 @@
   },
   "entities.registerKind.change": {
     "defaultMessage": "Change register"
-  },
-  "entities.registerKind.emptyPartnership": {
-    "defaultMessage": "No partnership entries recorded."
   },
   "entities.registerKind.field": {
     "defaultMessage": "Register"

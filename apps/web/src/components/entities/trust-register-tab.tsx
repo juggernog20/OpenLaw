@@ -22,10 +22,9 @@ import {
   entryRole,
   type TrustRegister,
   type TrustEntry,
-  type TrustParty,
 } from "../../lib/trust-register";
 import { cn } from "../../lib/utils";
-import { RestrictedRecordCell } from "../restricted-record-cell";
+import { RegisterPartyCell } from "./register-party-cell";
 import { RecordFilterBar, type RecordFilter } from "../table/record-filter-bar";
 import { Button } from "../ui/button";
 import { OwnedHoldingsCard } from "./owned-holdings-card";
@@ -63,59 +62,6 @@ function ExportLink({
       <Download size={14} aria-hidden="true" />
       {children}
     </a>
-  );
-}
-function PartyCell({
-  party,
-  candidates,
-}: Readonly<{ party: TrustParty; candidates: EntityRow[] }>) {
-  if (party.restricted)
-    return (
-      <RestrictedRecordCell
-        label={{ id: "entities.restricted", defaultMessage: "Restricted Entity" }}
-      />
-    );
-  const jurisdiction =
-    party.kind === "entity" ? candidates.find((c) => c.id === party.entityId)?.jurisdiction : null;
-  return (
-    <div className="flex items-center gap-2.5">
-      <span
-        aria-hidden="true"
-        className={cn(
-          "grid size-7 shrink-0 place-items-center text-xs font-semibold",
-          party.kind === "entity"
-            ? "rounded-button bg-badge-count-bg text-badge-count-fg"
-            : "rounded-avatar bg-avatar-bg text-avatar-fg",
-        )}
-      >
-        {party.name
-          .split(/\s+/)
-          .slice(0, 2)
-          .map((w) => w[0] ?? "")
-          .join("")
-          .toUpperCase()}
-      </span>
-      <div>
-        <p className="font-medium">{party.name}</p>
-        <p className="text-xs text-muted">
-          {party.kind === "entity" ? (
-            jurisdiction ? (
-              <FormattedMessage
-                id="entities.trust.entityJurisdiction"
-                defaultMessage="Entity · {jurisdiction}"
-                values={{ jurisdiction }}
-              />
-            ) : (
-              <FormattedMessage id="entities.register.holder.entity" defaultMessage="Entity" />
-            )
-          ) : party.kind === "class" ? (
-            <FormattedMessage id="entities.trust.class" defaultMessage="Class" />
-          ) : (
-            <FormattedMessage id="entities.ownership.individual" defaultMessage="Individual" />
-          )}
-        </p>
-      </div>
-    </div>
   );
 }
 export function TrustRegisterTab({
@@ -401,7 +347,7 @@ export function TrustRegisterTab({
                             className="border-b border-border-muted last:border-b-0"
                           >
                             <td className="px-3 py-2">
-                              <PartyCell party={r.party} candidates={candidates} />
+                              <RegisterPartyCell party={r.party} candidates={candidates} />
                             </td>
                             <td className="px-3 py-2">
                               {(r.role === "other" ? r.roleLabel : r.interest) || none}
@@ -564,7 +510,7 @@ export function TrustRegisterTab({
                           </span>
                         </td>
                         <td className="px-3 py-2">
-                          <PartyCell party={e.party} candidates={candidates} />
+                          <RegisterPartyCell party={e.party} candidates={candidates} />
                         </td>
                         <td className="px-3 py-2">
                           {e.roleLabel || intl.formatMessage(roleMessages[entryRole(e)])}
