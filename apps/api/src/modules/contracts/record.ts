@@ -1453,6 +1453,8 @@ export const ContractListQuery = z
     /** CTR-011's Our entity. "unassigned" finds Contracts with none
      * recorded. */
     entity: FilterChoices.optional(),
+    /** CTR-006's term type. An unknown value matches no row. */
+    termType: FilterChoices.optional(),
     effectiveFrom: z.iso.date().optional(),
     effectiveTo: z.iso.date().optional(),
     expiryFrom: z.iso.date().optional(),

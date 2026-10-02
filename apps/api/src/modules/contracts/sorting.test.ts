@@ -233,6 +233,30 @@ describe("the contracts list under no sort (CTR-024, unchanged)", () => {
     expect(ids(crafted.contracts)).toEqual(ids(made.slice(2, 3)));
   });
 
+  it("filters by Term type, with an expiry range, and an unknown value matches no row", async () => {
+    // made[0] expires on DATES[0], made[2] on DATES[1], and made[1] has
+    // no expiry.
+    const rolling = made.slice(0, 3);
+    await harness.db
+      .update(contracts)
+      .set({ termType: "auto_renew" })
+      .where(
+        inArray(
+          contracts.id,
+          rolling.map((row) => row.id),
+        ),
+      );
+    const ids = (rows: { id: string }[]) => new Set(rows.map((row) => row.id));
+
+    const all = await page({ termType: "auto_renew,evergreen" });
+    expect(all.total).toBe(3);
+    expect(ids(all.contracts)).toEqual(ids(rolling));
+    const soon = await page({ termType: "auto_renew", expiryFrom: DATES[0], expiryTo: DATES[0] });
+    expect(ids(soon.contracts)).toEqual(ids(made.slice(0, 1)));
+    expect((await page({ termType: "fixed" })).total).toBe(FIXTURE_SIZE - 3);
+    expect(await page({ termType: "perpetual" })).toMatchObject({ contracts: [], total: 0 });
+  });
+
   it("reads newest reference first, and pages the whole list exactly once", async () => {
     const rows = mine(await walk({}));
     expect(rows).toHaveLength(FIXTURE_SIZE);

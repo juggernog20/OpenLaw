@@ -37,6 +37,7 @@ export const SEARCH_PROPERTIES: readonly SearchProperty[] = [
   { kind: "contract", key: "owner", label: "Owner", type: "choices" },
   { kind: "contract", key: "counterparty", label: "Counterparty", type: "choices" },
   { kind: "contract", key: "entity", label: "Our entity", type: "choices" },
+  { kind: "contract", key: "termType", label: "Term type", type: "choices" },
   { kind: "contract", key: "effective", label: "Effective date", type: "date" },
   { kind: "contract", key: "expiry", label: "Expiry date", type: "date" },
   { kind: "contract", key: "noticeDeadline", label: "Notice deadline", type: "date" },

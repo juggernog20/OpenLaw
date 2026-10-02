@@ -3201,6 +3201,8 @@ For these two destinations, clause 7 is amended: Views and Columns remain availa
 
 _(2026-10-02, [#1280](https://github.com/juggernog20/OpenLaw/issues/1280): Contracts also offer Our entity, with Not known yet first and then the reachable Entities on Contracts. An Entity the viewer cannot reach matches no row.)_
 
+_(2026-10-02, [#1311](https://github.com/juggernog20/OpenLaw/issues/1311): Contracts also offer Term type, with Fixed term, Auto-renewing and Evergreen. Advanced search offers the same property.)_
+
 Visual references: [Linear's property and status filter menus](https://mobbin.com/screens/d1d26f7d-e1e5-490f-ab4f-c96dd12854c1) and [Notion's editable multi-select filter chip](https://mobbin.com/screens/d8abbe0b-4c55-4316-91b7-2e6b4baecb52). OpenLaw retains its own components and semantic colors.
 
 ## DES-047: The Team roster is an activity-bar applet (amends DES-016, DES-032, DES-028)

@@ -88,6 +88,7 @@ const PROPERTY_LABELS = defineMessages({
     defaultMessage: "Counterparty",
   },
   "contract.entity": { id: "search.property.contract.entity", defaultMessage: "Our entity" },
+  "contract.termType": { id: "search.property.contract.termType", defaultMessage: "Term type" },
   "contract.effective": {
     id: "search.property.contract.effective",
     defaultMessage: "Effective date",

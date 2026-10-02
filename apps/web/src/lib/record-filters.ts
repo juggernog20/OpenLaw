@@ -10,6 +10,7 @@ export const CONTRACT_FILTER_KEYS = [
   "status",
   "type",
   "entity",
+  "termType",
   "effectiveFrom",
   "effectiveTo",
   "expiryFrom",

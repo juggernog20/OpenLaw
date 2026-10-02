@@ -9083,6 +9083,9 @@
   "recordFilters.status": {
     "defaultMessage": "Status"
   },
+  "recordFilters.termType": {
+    "defaultMessage": "Term type"
+  },
   "recordFilters.to": {
     "defaultMessage": "To"
   },
@@ -9559,6 +9562,9 @@
   },
   "search.property.contract.status": {
     "defaultMessage": "Status"
+  },
+  "search.property.contract.termType": {
+    "defaultMessage": "Term type"
   },
   "search.property.contract.title": {
     "defaultMessage": "Title"

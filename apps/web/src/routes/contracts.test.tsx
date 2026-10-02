@@ -1036,11 +1036,40 @@ describe("quick contract filters", () => {
     ).toBeInTheDocument();
   });
 
+  it("filters by Term type, with the three term types as choices", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?expiryFrom=2027-01-01&expiryTo=2027-02-28");
+    const user = userEvent.setup();
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Term type",
+      }),
+    );
+    const choices = within(screen.getByRole("dialog", { name: "Filter" }))
+      .getAllByRole("checkbox")
+      .map((box) => box.closest("label")?.textContent?.trim());
+    expect(choices).toEqual(["Fixed term", "Auto-renewing", "Evergreen"]);
+    await user.click(screen.getByRole("checkbox", { name: "Auto-renewing" }));
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("termType") === "auto_renew",
+    );
+    expect(surface.queries.at(-1)?.get("termType")).toBe("auto_renew");
+    expect(surface.queries.at(-1)?.get("expiryTo")).toBe("2027-02-28");
+    await act(() => router.revalidate());
+    expect(screen.getByRole("button", { name: "Term type: Auto-renewing" })).toBeInTheDocument();
+  });
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });
     const { router } = renderAt(
-      "/contracts?owner=me&status=s-draft,s-active&entity=e-uk&expiryFrom=2027-01-01&expiryTo=2027-12-31",
+      "/contracts?owner=me&status=s-draft,s-active&entity=e-uk&termType=auto_renew&expiryFrom=2027-01-01&expiryTo=2027-12-31",
     );
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Default view/ }));
@@ -1062,6 +1091,7 @@ describe("quick contract filters", () => {
         owner: "me",
         status: "s-draft,s-active",
         entity: "e-uk",
+        termType: "auto_renew",
         expiryFrom: "2027-01-01",
         expiryTo: "2027-12-31",
       },
@@ -1079,6 +1109,7 @@ describe("quick contract filters", () => {
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
     expect(surface.queries.at(-1)?.get("entity")).toBe("e-uk");
+    expect(surface.queries.at(-1)?.get("termType")).toBe("auto_renew");
     expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
   });
 });

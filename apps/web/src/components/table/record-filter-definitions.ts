@@ -3,6 +3,7 @@
 /** DES-046 supplies the shared Contract and Matter filter choices. */
 
 import { useIntl } from "react-intl";
+import { TERM_TYPES, termTypeLabel } from "../../lib/contracts";
 import { MATTER_SEVERITIES, matterSeverityLabel } from "../../lib/matters";
 import type { RecordFilter } from "./record-filter-bar";
 
@@ -73,6 +74,15 @@ export function useRecordFilterDefinitions(
               },
               ...(options.entities ?? []),
             ],
+          },
+          {
+            key: "termType",
+            label: intl.formatMessage({
+              id: "recordFilters.termType",
+              defaultMessage: "Term type",
+            }),
+            kind: "choices",
+            choices: TERM_TYPES.map((id) => ({ id, displayName: termTypeLabel(intl, id) })),
           },
           {
             key: "effective",

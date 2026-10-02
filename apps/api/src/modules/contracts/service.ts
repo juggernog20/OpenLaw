@@ -145,6 +145,7 @@ export async function listContracts(
     choiceFilter(contracts.statusId, query.status),
     choiceFilter(contracts.contractTypeId, query.type),
     ourEntityFilter(db, user, query.entity),
+    choiceFilter(contracts.termType, query.termType),
     dateFilter(contracts.effectiveDate, query.effectiveFrom, query.effectiveTo),
     dateFilter(contracts.expiryDate, query.expiryFrom, query.expiryTo),
     // A Contributor's list is the contracts they are on. An

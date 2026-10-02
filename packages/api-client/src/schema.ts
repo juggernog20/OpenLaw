@@ -26216,6 +26216,7 @@ export interface operations {
         status?: string;
         type?: string;
         entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
@@ -41038,6 +41039,7 @@ export interface operations {
         status?: string;
         type?: string;
         entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
