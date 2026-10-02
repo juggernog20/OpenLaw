@@ -41,7 +41,7 @@ const SEEDS = [
     "r3",
     "legal_question",
     "Legal question",
-    "One-off question — no record is created up front.",
+    "Ask Legal a one-off question. You get a request number, and Legal replies on the request.",
     "matter",
     null,
     0,

@@ -104,6 +104,7 @@ import { requireAuth, requireRole } from "../../auth/guards.js";
 import type { AuthenticatedUser } from "../../auth/user.js";
 import { recordActivity } from "../../lib/activity.js";
 import { notificationScope, type NotificationSurface } from "../../lib/notifications/audience.js";
+import { EVENT_GROUP } from "../../lib/notifications/catalog.js";
 import {
   myBriefingChoices,
   myChannelChoices,
@@ -518,6 +519,10 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
             /** The previous page's `nextCursor`. Omit for the first
              * page. */
             cursor: RecordIdSchema.optional(),
+            /** Only this event group's items (#1297). The open approvals
+             * stay pinned on the first page whatever the group, and the
+             * cursor rule is the same. Omit for the whole bell. */
+            group: z.enum(NOTIFICATION_EVENT_GROUPS).optional(),
           }),
           response: {
             200: z.object({
@@ -559,6 +564,15 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
           handledAt: notifications.handledAt,
         };
         const scope = and(mine, notificationScope(app.db, request.user, surface));
+        const { group } = request.query;
+        const inGroup = group
+          ? inArray(
+              notifications.eventType,
+              Object.entries(EVENT_GROUP)
+                .filter(([, eventGroup]) => eventGroup === group)
+                .map(([eventType]) => eventType),
+            )
+          : undefined;
         // Both groups use one snapshot so a concurrent answer cannot put
         // the same item in the pinned group and the ordinary feed.
         const [approvals, rows] = await app.db.transaction(
@@ -573,7 +587,7 @@ function bellRoutes(mount: BellMount): FastifyPluginAsyncZod {
             const rows = await tx
               .select(columns)
               .from(notifications)
-              .where(and(scope, sql`not (${openApproval})`, before))
+              .where(and(scope, sql`not (${openApproval})`, inGroup, before))
               .orderBy(desc(notifications.createdAt), desc(notifications.id))
               // One past the page, which is how the answer knows whether
               // there is more without counting anything.

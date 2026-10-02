@@ -99,6 +99,11 @@ function setup({
           callbackUrl: "https://openlaw.example/api/auth/sso/callback",
         });
       }
+      if (path === "/api/v1/auth/invite-policy" && call.method === "PATCH") {
+        writes.push({ path, body: call.body });
+        if (fail) return problem(500, "The invite link lifetime could not be saved.");
+        return json(200, call.body);
+      }
       if (path.startsWith("/api/v1/auth/policy/")) {
         writes.push({ path, body: call.body });
         if (fail) return problem(400, "Enable at least one sign-in method.");
@@ -135,6 +140,28 @@ it("offers the same independent methods for both groups and preserves other enab
   );
   expect(within(legal).getByRole("switch", { name: "Email magic link" })).not.toBeChecked();
   expect(within(business).getByRole("switch", { name: "Email magic link" })).toBeChecked();
+});
+it("saves the invite link lifetime on blur and refuses a value outside 1 to 30 (#1288)", async () => {
+  const { writes, user } = setup();
+  const legal = await screen.findByRole("region", { name: "Legal User Authentication" });
+  const lifetime = within(legal).getByLabelText("Invite link lifetime (days)");
+  expect(lifetime).toHaveValue(7);
+
+  await user.clear(lifetime);
+  await user.type(lifetime, "31");
+  await user.tab();
+  expect(await within(legal).findByText("Enter a whole number from 1 to 30.")).toBeVisible();
+  expect(writes).toEqual([]);
+
+  await user.clear(lifetime);
+  await user.type(lifetime, "14");
+  await user.keyboard("{Enter}");
+  await waitFor(() =>
+    expect(writes).toEqual([
+      { path: "/api/v1/auth/invite-policy", body: { inviteLinkLifetimeDays: 14 } },
+    ]),
+  );
+  expect(await within(legal).findByText("Saved")).toBeVisible();
 });
 it("keeps the last sign-in method when the server rejects disabling it", async () => {
   const { user } = setup({ fail: true });

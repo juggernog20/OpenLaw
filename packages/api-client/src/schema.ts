@@ -120,6 +120,24 @@ export interface paths {
     patch: operations["setTwoFactorPolicy"];
     trace?: never;
   };
+  "/api/v1/auth/invite-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How long a staff invite link works (SET-005) */
+    get: operations["getInvitePolicy"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Set how long a staff invite link works, 1 to 30 days (SET-005); it applies to the next invite or resend */
+    patch: operations["setInvitePolicy"];
+    trace?: never;
+  };
   "/api/v1/auth/setup": {
     parameters: {
       query?: never;
@@ -198,7 +216,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Re-send a pending invite's set-password email (SET-005) */
+    /** Re-send a pending invite's set-password email (SET-005); the earlier link stops working */
     post: operations["resendInvite"];
     delete?: never;
     options?: never;
@@ -8705,6 +8723,74 @@ export interface operations {
       };
     };
   };
+  getInvitePolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            inviteLinkLifetimeDays: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setInvitePolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          inviteLinkLifetimeDays: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            inviteLinkLifetimeDays: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getSetupStatus: {
     parameters: {
       query?: never;
@@ -8912,6 +8998,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -8933,6 +9021,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -8976,6 +9066,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -10049,6 +10141,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             }[];
           };
         };
@@ -10098,6 +10196,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10148,6 +10252,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10191,6 +10301,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10234,6 +10350,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -46022,6 +46144,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;
@@ -46481,6 +46610,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;

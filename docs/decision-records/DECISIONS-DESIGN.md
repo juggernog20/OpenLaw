@@ -3420,6 +3420,20 @@ The NOT-005 amendment of the same date withdrew read-on-open: an item is read wh
 
 **The marker goes out when the row is opened**, because the click is the write, and when "Mark all read" lands, because the sweep is the other one. It never goes out merely because the panel was drawn, which was the whole complaint.
 
+### Addendum (2026-10-02, [#1297](https://github.com/juggernog20/OpenLaw/issues/1297)) — the staff panel gets a "Show" select under its head
+
+A focus group panelist with a Confidential Matter of their own found the bell full of New request items, and the news about their own Matter was hard to find. Point 6 gave the head only the title and "Mark all read", so the panel had no way to narrow the list.
+
+**A strip under the head holds a compact "Show" select**, on the staff bell only. It is a native `select` with the C10 control classes (`CONTROL_CLASS`), labelled "Show", in a 16px inset with `border-b border-border-muted`, so the 44px head of point 6 stays as it is. The choices are All and NOT-002's four staff event groups, in the preferences pane's order and with its labels: Assigned to you, Activity on your records, Dates approaching, New requests. The labels come from DES-050's `GROUP_COPY`, so the bell and the pane use the same words. All is the default, and every open of the panel starts on All.
+
+**The API does the narrowing.** `GET /notifications` takes an optional `group`, which it maps to event types through the catalog's group map, inside the same reach predicate and with the same cursor rule. A change of choice reads the first page again; "Show older" pages inside the choice.
+
+**Your approvals stays pinned under every choice.** The badge and "Mark all read" still cover the whole bell, because the filter is a view of the list and not of the bell. A choice with no items says "Nothing in this group." in point 12's inset; point 12's own line stays the All view's.
+
+**The portal bell has no select.** Its news is one group, so a filter would have one useful choice. No new tokens and no new primitive.
+
+The alternatives were to turn the New requests bell off by default for Legal Team Members, which changes NOT-002 and hides arrivals from the people who triage them, or to add a line under the list that links to Settings → Notifications, which sends the reader away from the bell to find their news. Both were declined.
+
 ## DES-050: The notification preferences pane — one row per event group, two switch columns (extends DES-017, DES-012, DES-011)
 
 - **Status:** Accepted
