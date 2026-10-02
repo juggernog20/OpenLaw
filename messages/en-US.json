@@ -2255,6 +2255,9 @@
   "autoDocs.publishCaption": {
     "defaultMessage": "Later edits leave this pair unchanged until you publish again."
   },
+  "autoDocs.publishNeedsTemplate": {
+    "defaultMessage": "Upload a Word template on the <link>Form tab</link> to publish."
+  },
   "autoDocs.publishNewPair": {
     "defaultMessage": "Publish new pair"
   },

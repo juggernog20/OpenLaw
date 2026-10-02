@@ -3,6 +3,7 @@
 /** Overview (DES-087 clause 2): the About card and the Publication card. */
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Link } from "react-router";
 import { api } from "../../lib/api";
 import { formatFullDate } from "../../lib/format";
 import { useFieldCommit } from "../../lib/field-commit";
@@ -70,9 +71,12 @@ export function AboutCard({
 
 export function PublicationCard({
   record,
+  publishBlocked,
   onPublish,
 }: {
   record: AutoDocAnswer;
+  /** A draft with no Word template: the card says what is missing. */
+  publishBlocked: boolean;
   onPublish: () => void;
 }) {
   const intl = useIntl();
@@ -117,6 +121,24 @@ export function PublicationCard({
             id="autoDocs.notPublished"
             defaultMessage="{state, select, archived {Archived.} other {Not published.}}"
             values={{ state: record.autoDoc.state }}
+          />
+        </p>
+      )}
+      {publishBlocked && (
+        <p className="text-sm">
+          <FormattedMessage
+            id="autoDocs.publishNeedsTemplate"
+            defaultMessage="Upload a Word template on the <link>Form tab</link> to publish."
+            values={{
+              link: (chunks) => (
+                <Link
+                  to={`/auto-docs/${record.autoDoc.id}/form`}
+                  className="text-link underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                >
+                  {chunks}
+                </Link>
+              ),
+            }}
           />
         </p>
       )}
