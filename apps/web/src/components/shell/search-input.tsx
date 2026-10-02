@@ -63,7 +63,7 @@ const MESSAGES: Record<
   searchingBody: {
     id: "search.searchingBody",
     defaultMessage:
-      "Looking across Contracts, Matters, Documents, Entities, Counterparties, and Requests.",
+      "Looking across Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items.",
   },
   noMatches: { id: "search.noMatches", defaultMessage: "No matches" },
   noMatchesBody: {

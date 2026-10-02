@@ -20,7 +20,7 @@ Use this path for separate library entries. To put several Documents on one item
 ## Start with guidance
 
 1. In **Knowledge**, select **New**, then **New Knowledge Item**.
-2. Enter **Title**, and choose **Type** and **Folder**. To add files now, select **Attach documents**. There is no type choice for the files; they show the item's Knowledge type. Select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**. If a file upload fails, the item still exists; select **Retry failed uploads** or **Continue**.
+2. Enter **Title**, and choose **Type** and **Folder**. Search matches words, so put an abbreviation people use, such as DPA or NDA, in the title or guidance. To add files now, select **Attach documents**. There is no type choice for the files; they show the item's Knowledge type. Select **Create item**. The item starts as **Draft**, with **Audience** set to **Legal Only**. If a file upload fails, the item still exists; select **Retry failed uploads** or **Continue**.
 3. Under **Guidance**, select **Add guidance** and enter your instructions in the editor. The editor accepts Markdown headings, lists, emphasis, code, and links. It does not show these rules, so use **Preview** to check the result.
 4. Select **Preview** to save when the editor loses focus and inspect the rendered guidance. A saved item opens with its guidance rendered. Select **Edit** to return to the source. Reload the item to confirm the saved text if a save is uncertain.
 
