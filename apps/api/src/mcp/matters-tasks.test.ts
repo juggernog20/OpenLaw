@@ -347,10 +347,12 @@ it.each(["contract", "matter"] as const)(
   "creates and atomically completes, reassigns and reschedules a %s Task under UI assignee rules",
   async (kind) => {
     const number = kind === "contract" ? contract.number : visible.number;
+    // A Business User on the team may own a Task (MTR-005 addendum), so
+    // the refused assignee is an id that names no user.
     await refused(
       legal,
       "task_create",
-      { kind, number, title: "Bad assignee", assigneeId: businessId },
+      { kind, number, title: "Bad assignee", assigneeId: "no-such-user" },
       "validation_error",
     );
     await refused(
@@ -383,7 +385,7 @@ it.each(["contract", "matter"] as const)(
     await refused(
       legal,
       "task_update",
-      { kind, taskId: born.taskId, changes: { isDone: true, assigneeId: businessId } },
+      { kind, taskId: born.taskId, changes: { isDone: true, assigneeId: "no-such-user" } },
       "validation_error",
     );
     expect((await readTask()).isDone).toBe(false);

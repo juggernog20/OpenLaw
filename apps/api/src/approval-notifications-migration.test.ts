@@ -5,8 +5,7 @@ import { runMigrations, sql } from "@openlaw/db";
 import { freshDb, migrateThrough, migrationEntries } from "./testing/migration-rehearsal.js";
 import { buildApp } from "./app.js";
 import { testDeps } from "./testing/deps.js";
-import { provisionUser } from "./auth/instance.js";
-import { signInCookies, TEST_ADMIN, TEST_AUTH_CONFIG } from "./testing/harness.js";
+import { signInCookies, TEST_ADMIN } from "./testing/harness.js";
 
 let container: StartedPostgreSqlContainer;
 beforeAll(async () => {
@@ -19,12 +18,13 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
   let app: Awaited<ReturnType<typeof buildApp>> | undefined;
   try {
     await migrateThrough(db, "0165_api-key-notifications", migrationEntries());
-    // The old install has no OAuth tables. Use key-only auth to seed its person.
-    app = await buildApp(
-      testDeps({ db, config: { ...TEST_AUTH_CONFIG, baseUrl: "http://10.0.0.5:3000" } }),
+    // The old install's `users` table lacks the columns later migrations
+    // add, so today's auth adapter cannot write a person here. The row
+    // goes in by SQL, and its password is set after the upgrade.
+    const person = { id: "approver" };
+    await db.execute(
+      sql`insert into users (id, email, display_name, role, email_verified) values (${person.id}, ${TEST_ADMIN.email.toLowerCase()}, ${TEST_ADMIN.displayName}, 'administrator', true)`,
     );
-    const person = await provisionUser(app.auth, TEST_ADMIN);
-    await db.execute(sql`update users set role = 'administrator' where id = ${person.id}`);
     await db.execute(
       sql`insert into users (id, email, display_name) values ('requester', 'requester@example.com', 'Requester')`,
     );
@@ -51,8 +51,14 @@ it("upgrades existing open Contract Approval items into Your approvals", async (
       { id: "done-item", approval_kind: null, handled_at: null },
       { id: "open-item", approval_kind: "contract", handled_at: null },
     ]);
-    await app.close();
     app = await buildApp(testDeps({ db }));
+    const auth = await app.auth.$context;
+    await auth.internalAdapter.linkAccount({
+      userId: person.id,
+      providerId: "credential",
+      accountId: person.id,
+      password: await auth.password.hash(TEST_ADMIN.password),
+    });
     const cookies = await signInCookies(app, TEST_ADMIN.email, TEST_ADMIN.password);
     const list = await app.inject({ method: "GET", url: "/api/v1/notifications", cookies });
     expect(list.statusCode, list.body).toBe(200);
