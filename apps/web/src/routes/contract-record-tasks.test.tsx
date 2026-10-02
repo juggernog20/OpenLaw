@@ -368,6 +368,21 @@ describe("the record's Tasks section (CTR-017)", () => {
     );
   });
 
+  it("opens the linked Task's detail dialog, even a completed one, and drops the link on close", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi(CHECKLIST).handler });
+    const { router } = renderAt("/contracts/42/tasks?task=t-2");
+    const user = userEvent.setup();
+    const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+    expect(modal.getByLabelText(/^Title\*?$/)).toHaveValue("Review redline");
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument(),
+    );
+    expect(router.state.location.pathname).toBe("/contracts/42/tasks");
+    expect(router.state.location.search).toBe("");
+    expect(await section()).toBeTruthy();
+  });
+
   it("draws the section's own empty line when the record has no tasks", async () => {
     stubApi({ signedIn: MEMBER, extra: recordApi([]).handler });
     renderAt("/contracts/42/tasks");

@@ -18,7 +18,7 @@ const taskActions: Record<"reopen" | "complete", MessageDescriptor> = defineMess
 
 function taskHref(row: TasksHomeSection["rows"][number]): string {
   const destination = row.record.kind === "contract" ? "contracts" : "matters";
-  return `/${destination}/${String(row.record.number)}/tasks`;
+  return `/${destination}/${String(row.record.number)}/tasks?task=${encodeURIComponent(row.id)}`;
 }
 
 export function HomeTasksCard({

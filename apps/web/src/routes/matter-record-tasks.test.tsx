@@ -334,6 +334,25 @@ describe("team-first task picker", () => {
   });
 });
 
+it("opens the linked Task's detail dialog, even a completed one, and drops the link on close", async () => {
+  const surface = recordApi([
+    task(),
+    task({ id: "task-2", title: "File response", isDone: true, displayOrder: 1 }),
+  ]);
+  stubApi({ signedIn: MEMBER, extra: surface.handler });
+  const { router } = renderAt("/matters/12/tasks?task=task-2");
+  const user = userEvent.setup();
+  const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+  expect(modal.getByLabelText(/^Title\*?$/)).toHaveValue("File response");
+  await user.keyboard("{Escape}");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument(),
+  );
+  expect(router.state.location.pathname).toBe("/matters/12/tasks");
+  expect(router.state.location.search).toBe("");
+  expect(await section()).toBeTruthy();
+});
+
 it("opens a task in a detail modal and saves its description", async () => {
   const surface = recordApi([task()]);
   stubApi({ signedIn: MEMBER, extra: surface.handler });

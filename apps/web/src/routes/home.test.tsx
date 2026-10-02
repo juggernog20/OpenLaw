@@ -323,7 +323,10 @@ describe("Home", () => {
     );
 
     const contractTask = within(card).getByText("Prepare financing signature pages");
-    expect(contractTask.closest("a")).toHaveAttribute("href", "/contracts/42/tasks");
+    expect(contractTask.closest("a")).toHaveAttribute(
+      "href",
+      "/contracts/42/tasks?task=contract-task-1",
+    );
     expect(within(card).getByText(/Confidential financing · Contract C-42/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
     expect(within(card).getByText("Overdue")).toBeInTheDocument();
@@ -333,7 +336,10 @@ describe("Home", () => {
     );
 
     const matterTask = within(card).getByText("Review response exhibits");
-    expect(matterTask.closest("a")).toHaveAttribute("href", "/matters/12/tasks");
+    expect(matterTask.closest("a")).toHaveAttribute(
+      "href",
+      "/matters/12/tasks?task=matter-task-1",
+    );
     expect(within(card).getByText(/Regulatory response · Matter M-12/)).toBeInTheDocument();
     expect(within(card).getByText("Jan 1, 2099")).toBeInTheDocument();
     expect(within(card).getByText("No due date")).toBeInTheDocument();
@@ -367,7 +373,7 @@ describe("Home", () => {
     expect(within(card).getAllByRole("listitem")).toHaveLength(4);
     expect(
       within(card).getByRole("link", { name: /Follow up with external counsel/ }),
-    ).toHaveAttribute("href", "/matters/13/tasks");
+    ).toHaveAttribute("href", "/matters/13/tasks?task=fourth");
     expect(screen.queryByRole("link", { name: "View all 4" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: "Home" }));
     expect(await screen.findByRole("link", { name: "View all 4" })).toBeInTheDocument();
