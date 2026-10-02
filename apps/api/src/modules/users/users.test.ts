@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, asc, eq } from "@openlaw/db";
+import { activityLog, and, asc, eq, users } from "@openlaw/db";
 import {
   signIn,
   signInCookies,
@@ -261,6 +261,93 @@ describe("user archive (POST /api/v1/users/:userId/archive, SET-005 #66)", () =>
     expect((await post("archive", person.id)).statusCode).toBe(401);
     const outsider = await activatedUser("business_user");
     expect((await post("archive", person.id, outsider.cookies)).statusCode).toBe(403);
+  });
+});
+
+describe("who archived a user, from the Audit log (#1287)", () => {
+  interface Listed {
+    id: string;
+    status: string;
+    archivedAt: string | null;
+    archivedBy: { id: string; displayName: string } | null;
+  }
+
+  async function listed(userId: string): Promise<Listed> {
+    const { users: rows } = (await listUsers(adminCookies)).json() as { users: Listed[] };
+    return rows.find((row) => row.id === userId)!;
+  }
+
+  it("returns archivedAt and archivedBy for an archived user, null for active and invited", async () => {
+    const admin = await adminId();
+    const person = await activatedUser("legal_team_member");
+    const invited = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/invites",
+      cookies: adminCookies,
+      payload: {
+        email: "kim.archive@example.com",
+        displayName: "Kim Ito",
+        role: "legal_team_member",
+      },
+    });
+    expect(invited.statusCode, invited.body).toBe(201);
+    const invitedId = (invited.json() as { user: { id: string } }).user.id;
+
+    expect(await listed(person.id)).toMatchObject({ archivedAt: null, archivedBy: null });
+    expect(await listed(invitedId)).toMatchObject({
+      status: "invited",
+      archivedAt: null,
+      archivedBy: null,
+    });
+
+    const archived = await post("archive", person.id, adminCookies);
+    expect(archived.statusCode, archived.body).toBe(200);
+    const answer = (archived.json() as { user: Listed }).user;
+    expect(answer.archivedAt).toBeTruthy();
+    expect(answer.archivedBy).toEqual({ id: admin, displayName: TEST_ADMIN.displayName });
+
+    const row = await listed(person.id);
+    expect(row.archivedAt).toBe(answer.archivedAt);
+    expect(row.archivedBy).toEqual({ id: admin, displayName: TEST_ADMIN.displayName });
+  });
+
+  it("names the second archiver after archive, restore and archive again", async () => {
+    const admin = await adminId();
+    const second = await activatedUser("administrator");
+    const person = await activatedUser("business_user");
+
+    expect((await post("archive", person.id, adminCookies)).statusCode).toBe(200);
+    const restored = await post("unarchive", person.id, adminCookies);
+    expect(restored.statusCode, restored.body).toBe(200);
+    // Restore clears both fields.
+    expect(restored.json()).toMatchObject({ user: { archivedAt: null, archivedBy: null } });
+    expect(await listed(person.id)).toMatchObject({ archivedAt: null, archivedBy: null });
+
+    const again = await post("archive", person.id, second.cookies);
+    expect(again.statusCode, again.body).toBe(200);
+    expect(again.json()).toMatchObject({
+      user: { archivedBy: { id: second.id, displayName: expect.stringMatching(/^Person /) } },
+    });
+    const row = await listed(person.id);
+    expect(row.archivedBy?.id).toBe(second.id);
+    expect(row.archivedBy?.id).not.toBe(admin);
+
+    // Leave one Administrator, as the floor tests expect.
+    expect((await changeRole(second.id, "business_user", adminCookies)).statusCode).toBe(200);
+  });
+
+  it("returns a date and archivedBy null when no Audit log entry exists", async () => {
+    // An install restored from a backup can hold an archived row with no
+    // matching entry.
+    const person = await activatedUser("business_user");
+    const archivedAt = new Date("2026-09-01T09:30:00.000Z");
+    await harness.db.update(users).set({ archivedAt }).where(eq(users.id, person.id));
+
+    expect(await listed(person.id)).toMatchObject({
+      status: "archived",
+      archivedAt: archivedAt.toISOString(),
+      archivedBy: null,
+    });
   });
 });
 

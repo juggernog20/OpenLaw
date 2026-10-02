@@ -9965,6 +9965,11 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
             }[];
           };
         };
@@ -10014,6 +10019,11 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
             };
           };
         };
@@ -10064,6 +10074,11 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
             };
           };
         };
@@ -10107,6 +10122,11 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
             };
           };
         };
@@ -10150,6 +10170,11 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
             };
           };
         };

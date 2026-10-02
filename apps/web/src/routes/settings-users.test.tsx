@@ -64,6 +64,8 @@ const LISTED = [
     role: "business_user",
     status: "archived",
     lastActiveAt: new Date(Date.now() - 40 * 24 * HOUR).toISOString(),
+    archivedAt: new Date(Date.now() - 3 * HOUR).toISOString(),
+    archivedBy: { id: "u1", displayName: "Devon Calloway" },
   },
 ];
 
@@ -132,12 +134,21 @@ function usersApi(calls: UsersCalls) {
     const archive = /^\/api\/v1\/users\/([^/]+)\/archive$/.exec(path);
     if (archive && call.method === "POST") {
       calls.archivePosts.push(archive[1]!);
-      return json(200, { user: { ...byId(archive[1]!), status: "archived" } });
+      return json(200, {
+        user: {
+          ...byId(archive[1]!),
+          status: "archived",
+          archivedAt: new Date().toISOString(),
+          archivedBy: { id: "u1", displayName: "Devon Calloway" },
+        },
+      });
     }
     const unarchive = /^\/api\/v1\/users\/([^/]+)\/unarchive$/.exec(path);
     if (unarchive && call.method === "POST") {
       calls.unarchivePosts.push(unarchive[1]!);
-      return json(200, { user: { ...byId(unarchive[1]!), status: "active" } });
+      return json(200, {
+        user: { ...byId(unarchive[1]!), status: "active", archivedAt: null, archivedBy: null },
+      });
     }
     const sessions = /^\/api\/v1\/users\/([^/]+)\/revoke-sessions$/.exec(path);
     if (sessions && call.method === "POST") {
@@ -432,6 +443,7 @@ describe("the Users pane (#65)", () => {
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     const caseyRow = (await screen.findByText("casey@example.com")).closest("tr")!;
     expect(within(caseyRow).getByText("Archived")).toBeVisible();
+    expect(within(caseyRow).getByText(/^By Devon Calloway, /)).toBeVisible();
     expect(
       within(caseyRow).getByRole("button", { name: "Restore casey@example.com" }),
     ).toBeVisible();
@@ -449,6 +461,10 @@ describe("the Users pane (#65)", () => {
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     const marcusRow = (await screen.findByText("marcus.webb@example.com")).closest("tr")!;
     expect(within(marcusRow).getByText("Archived")).toBeVisible();
+    // Who archived the user and when, with the full timestamp on hover (#1287).
+    const archivedLine = within(marcusRow).getByText("By Devon Calloway, 3 hours ago");
+    expect(archivedLine).toBeVisible();
+    expect(archivedLine).toHaveAttribute("title", expect.stringMatching(/\d{4}/));
     // No role select and no archive/revoke actions on an archived row.
     expect(
       within(marcusRow).queryByRole("button", {
@@ -459,6 +475,27 @@ describe("the Users pane (#65)", () => {
       within(marcusRow).getByRole("button", { name: "Restore marcus.webb@example.com" }),
     ).toBeVisible();
     expect(screen.getByText("4 users")).toBeVisible();
+  });
+
+  it("shows the archive date alone when the Audit log names no archiver (#1287)", async () => {
+    const user = userEvent.setup();
+    const listed = usersApi(newCalls());
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/users" && call.method === "GET"
+          ? json(200, {
+              users: LISTED.map((row) => (row.id === "u4" ? { ...row, archivedBy: null } : row)),
+            })
+          : listed(call),
+    });
+    renderAt("/settings/users");
+
+    await screen.findByText("devon@example.com");
+    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    const marcusRow = (await screen.findByText("marcus.webb@example.com")).closest("tr")!;
+    expect(within(marcusRow).getByText("3 hours ago")).toBeVisible();
+    expect(within(marcusRow).queryByText(/^By /)).not.toBeInTheDocument();
   });
 
   it("restores an archived user from their row (#66)", async () => {
@@ -476,6 +513,7 @@ describe("the Users pane (#65)", () => {
     await waitFor(() => expect(calls.unarchivePosts).toEqual(["u4"]));
     const marcusRow = screen.getByText("marcus.webb@example.com").closest("tr")!;
     expect(await within(marcusRow).findByText("Active")).toBeVisible();
+    expect(within(marcusRow).queryByText(/^By Devon Calloway/)).not.toBeInTheDocument();
     expect(
       within(marcusRow).getByRole("button", { name: "Archive marcus.webb@example.com" }),
     ).toBeVisible();

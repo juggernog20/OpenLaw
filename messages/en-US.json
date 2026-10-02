@@ -12956,6 +12956,12 @@
   "settings.users.archived": {
     "defaultMessage": "Archived"
   },
+  "settings.users.archivedBy": {
+    "defaultMessage": "By {name}, {date}"
+  },
+  "settings.users.archivedOn": {
+    "defaultMessage": "{date}"
+  },
   "settings.users.changeRole": {
     "defaultMessage": "{role} — change the role of {email}"
   },

@@ -26,6 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
 import { field } from "../lib/forms";
 import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
@@ -70,6 +71,8 @@ interface UserRow {
   status: "active" | "invited" | "archived";
   lastActiveAt: string | null;
   departmentId: string | null;
+  archivedAt: string | null;
+  archivedBy: { id: string; displayName: string } | null;
 }
 
 const INVITE_ROLES = ["legal_team_member", "administrator"] as const;
@@ -105,6 +108,33 @@ function StatusPill({ status }: Readonly<{ status: UserRow["status"] }>) {
       )}
       {status === "archived" && (
         <FormattedMessage id="settings.users.archived" defaultMessage="Archived" />
+      )}
+    </span>
+  );
+}
+
+/** The line under an archived row's pill: who archived the user and
+ * when (#1287). With no Audit log entry, the date stands alone. */
+function ArchivedLine({ row }: Readonly<{ row: UserRow }>) {
+  if (!row.archivedAt) return null;
+  const date = formatRelativeOrShort(row.archivedAt);
+  return (
+    <span
+      className="mt-0.5 block text-sm whitespace-nowrap text-muted"
+      title={formatLongDateTime(row.archivedAt)}
+    >
+      {row.archivedBy ? (
+        <FormattedMessage
+          id="settings.users.archivedBy"
+          defaultMessage="By {name}, {date}"
+          values={{ name: row.archivedBy.displayName, date }}
+        />
+      ) : (
+        <FormattedMessage
+          id="settings.users.archivedOn"
+          defaultMessage="{date}"
+          values={{ date }}
+        />
       )}
     </span>
   );
@@ -161,7 +191,14 @@ function InviteDialog({
       });
       const { data } = result;
       if (data) {
-        onInvited({ ...data.user, status: "invited", lastActiveAt: null, departmentId: null });
+        onInvited({
+          ...data.user,
+          status: "invited",
+          lastActiveAt: null,
+          departmentId: null,
+          archivedAt: null,
+          archivedBy: null,
+        });
         setRole("legal_team_member");
         onOpenChange(false);
       } else {
@@ -569,6 +606,7 @@ export function SettingsUsersPage() {
                   </td>
                   <td className="px-3">
                     <StatusPill status={row.status} />
+                    {row.status === "archived" && <ArchivedLine row={row} />}
                   </td>
                   <td className="px-3 text-sm whitespace-nowrap text-muted">
                     {lastActiveLabel(intl, row.lastActiveAt)}

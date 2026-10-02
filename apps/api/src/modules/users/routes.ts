@@ -12,13 +12,17 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   accounts,
+  activityLog,
   and,
   asc,
+  desc,
   eq,
+  inArray,
   isNull,
   sessions,
   users,
   USER_ROLES,
+  type Db,
   type Transaction,
 } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
@@ -39,6 +43,14 @@ const UserRowSchema = z.object({
   /** NULL = has never signed in, which for staff means a pending invite. */
   lastActiveAt: z.iso.datetime().nullable(),
   departmentId: z.string().nullable(),
+  /** NULL unless the user is archived. Restore clears it. */
+  archivedAt: z.iso.datetime().nullable(),
+  /**
+   * The actor of the newest `user.archived` Audit log entry. NULL when
+   * the user is not archived or no entry exists, for example after a
+   * restore from a backup.
+   */
+  archivedBy: z.object({ id: z.string(), displayName: z.string() }).nullable(),
 });
 
 const UserRowEnvelope = z.object({ user: UserRowSchema });
@@ -77,7 +89,38 @@ function statusOf(row: UserRecord, activated: boolean) {
   return "active" as const;
 }
 
-function toUserRow(row: UserRecord, activated: boolean) {
+interface Archiver {
+  id: string;
+  displayName: string;
+}
+
+/**
+ * Who archived each user, read from the newest `user.archived` entry in
+ * the Audit log (DD-017). No column stores the archiver, so users
+ * archived before the Users pane showed it are covered too.
+ */
+async function archiversOf(db: Db, userIds: string[]): Promise<Map<string, Archiver>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await db
+    .selectDistinctOn([activityLog.entityId], {
+      userId: activityLog.entityId,
+      id: users.id,
+      displayName: users.displayName,
+    })
+    .from(activityLog)
+    .innerJoin(users, eq(users.id, activityLog.actorId))
+    .where(
+      and(
+        eq(activityLog.entityType, "user"),
+        eq(activityLog.action, "user.archived"),
+        inArray(activityLog.entityId, userIds),
+      ),
+    )
+    .orderBy(asc(activityLog.entityId), desc(activityLog.createdAt), desc(activityLog.id));
+  return new Map(rows.map(({ userId, id, displayName }) => [userId!, { id, displayName }]));
+}
+
+function toUserRow(row: UserRecord, activated: boolean, archiver: Archiver | null) {
   return {
     id: row.id,
     email: row.email,
@@ -86,6 +129,8 @@ function toUserRow(row: UserRecord, activated: boolean) {
     status: statusOf(row, activated),
     lastActiveAt: row.lastActiveAt?.toISOString() ?? null,
     departmentId: row.departmentId,
+    archivedAt: row.archivedAt?.toISOString() ?? null,
+    archivedBy: row.archivedAt ? archiver : null,
   };
 }
 
@@ -97,6 +142,15 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
       .where(eq(accounts.userId, userId))
       .limit(1);
     return rows.length > 0;
+  }
+
+  /** The answer of every single-user mutation here. */
+  async function userRowEnvelope(row: UserRecord) {
+    const [isActivated, archivers] = await Promise.all([
+      activated(row.id),
+      archiversOf(app.db, row.archivedAt ? [row.id] : []),
+    ]);
+    return { user: toUserRow(row, isActivated, archivers.get(row.id) ?? null) };
   }
 
   /**
@@ -144,7 +198,15 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
           (account) => account.userId,
         ),
       );
-      return { users: rows.map((row) => toUserRow(row, activatedIds.has(row.id))) };
+      const archivers = await archiversOf(
+        app.db,
+        rows.filter((row) => row.archivedAt).map((row) => row.id),
+      );
+      return {
+        users: rows.map((row) =>
+          toUserRow(row, activatedIds.has(row.id), archivers.get(row.id) ?? null),
+        ),
+      };
     },
   );
 
@@ -173,7 +235,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         await setUserDepartment(tx, target, departmentId, request.user.id);
         return { ...target, departmentId };
       });
-      return { user: toUserRow(row, await activated(row.id)) };
+      return userRowEnvelope(row);
     },
   );
 
@@ -228,7 +290,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { user: toUserRow(row, await activated(row.id)) };
+      return userRowEnvelope(row);
     },
   );
 
@@ -286,7 +348,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { user: toUserRow(row, await activated(row.id)) };
+      return userRowEnvelope(row);
     },
   );
 
@@ -329,7 +391,7 @@ export const usersRoutes: FastifyPluginAsyncZod = async (app) => {
         });
         return updated!;
       });
-      return { user: toUserRow(row, await activated(row.id)) };
+      return userRowEnvelope(row);
     },
   );
 
