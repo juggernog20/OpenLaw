@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Match register individuals under ENT-003's 2026-10-02 amendment. */
+
 import { defineMessage } from "react-intl";
 
 export const duplicateIndividualMessage = defineMessage({

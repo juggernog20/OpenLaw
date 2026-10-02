@@ -267,13 +267,31 @@ test("M35: Legal publishes, Sales generates, a Member claims, and a changed live
       .getByRole("combobox", { name: "Formats", exact: true })
       .selectOption("both");
     const acknowledgement = page.getByRole("region", { name: "Acknowledgement", exact: true });
+    const customSourceSaved = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PATCH" &&
+        response.url().endsWith(`/auto-docs/${id}`) &&
+        typeof response.request().postDataJSON()?.acknowledgementText === "string",
+    );
     await acknowledgement.getByRole("radio", { name: "Custom text", exact: true }).check();
+    const sourceResponse = await customSourceSaved;
+    expect(sourceResponse.status(), await sourceResponse.text()).toBe(200);
+    await expect(acknowledgement.getByText("Saved", { exact: true }).last()).toBeVisible();
     const ackText = acknowledgement.getByRole("textbox", {
       name: "Acknowledgement text",
       exact: true,
     });
     await ackText.fill("Do not edit the generated NDA. Ask Legal for changes.");
+    const customTextSaved = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PATCH" &&
+        response.url().endsWith(`/auto-docs/${id}`) &&
+        response.request().postDataJSON()?.acknowledgementText ===
+          "Do not edit the generated NDA. Ask Legal for changes.",
+    );
     await ackText.blur();
+    const textResponse = await customTextSaved;
+    expect(textResponse.status(), await textResponse.text()).toBe(200);
     await expect(acknowledgement.getByText("Saved", { exact: true }).last()).toBeVisible();
     await publish();
     await page.getByRole("link", { name: "Overview", exact: true }).click();

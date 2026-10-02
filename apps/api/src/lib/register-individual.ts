@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
+/** Resolve register individuals under ENT-003's 2026-10-02 amendment. */
+
 import { and, eq, isNull, users, type Transaction } from "@openlaw/db";
 import { httpError } from "./problem.js";
 

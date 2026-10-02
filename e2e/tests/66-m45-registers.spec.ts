@@ -64,12 +64,25 @@ test.beforeEach(async ({ page, request }) => {
 test("M45 trust: empty register, grouped Roles, refused then accepted distribution and fund", async ({
   page,
 }) => {
-  const id = await entity(page, "Helix Family Trust");
+  const createdType = await page.request.post("/api/v1/entity-types", {
+    data: { displayName: `M45 Trust ${randomUUID()}` },
+  });
+  expect(createdType.status(), await createdType.text()).toBe(201);
+  const trustType = z
+    .object({ entityType: z.object({ id: z.string(), slug: z.string() }) })
+    .parse(await createdType.json()).entityType;
+  const id = await entity(page, "Helix Family Trust", trustType.slug);
   try {
+    await page.goto(`/settings/entities/types/${trustType.id}`);
+    const savedKind = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PATCH" &&
+        response.url().endsWith(`/entity-types/${trustType.id}`),
+    );
+    await page.getByRole("combobox", { name: "Register", exact: true }).selectOption("trust");
+    const changedKind = await savedKind;
+    expect(changedKind.status(), await changedKind.text()).toBe(200);
     await page.goto(`/entities/${id}/ownership`);
-    await page.getByRole("button", { name: "Change register" }).click();
-    await page.getByRole("radio", { name: "Trust register", exact: false }).check();
-    await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.getByRole("heading", { name: "No trust register yet" })).toBeVisible();
 
     let dialog = await openEntry(page, "settlement");
@@ -113,7 +126,7 @@ test("M45 trust: empty register, grouped Roles, refused then accepted distributi
       parties.getByRole("rowheader", { name: "Beneficiaries", exact: true }),
     ).toBeVisible();
     await expect(page.getByText(/Settled 1,000.*Distributed 250.*Fund 750/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Change register" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Change register" })).toHaveCount(0);
     expect(await csv(page, parties.getByRole("link", { name: "Export register" }))).toContain(
       "Children and remoter issue",
     );

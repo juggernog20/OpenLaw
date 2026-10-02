@@ -57,6 +57,11 @@ export function HeadOfficePanel({
     setError(null);
     setDialog(true);
   }
+  function close() {
+    if (busy) return;
+    setDialog(false);
+    setError(null);
+  }
   if (entity.registerKind !== "none") return null;
   return (
     <>
@@ -106,7 +111,7 @@ export function HeadOfficePanel({
       <Dialog
         open={dialog}
         onOpenChange={(open) => {
-          if (!open && !busy) setDialog(false);
+          if (!open) close();
         }}
       >
         <DialogContent>
@@ -153,7 +158,7 @@ export function HeadOfficePanel({
             </p>
           ) : null}
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" disabled={busy} onClick={() => setDialog(false)}>
+            <Button variant="secondary" disabled={busy} onClick={close}>
               <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
             </Button>
             <Button disabled={busy} onClick={() => void save({ headOfficeEntityId: head || null })}>

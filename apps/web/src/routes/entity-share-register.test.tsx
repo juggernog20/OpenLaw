@@ -514,7 +514,7 @@ describe("the Ownership register kind", () => {
   });
 });
 
-it("keeps a refused head-office change in its dialog", async () => {
+it.each(["Cancel", "Escape"])("clears a refused head-office change after %s", async (dismiss) => {
   stubApi({
     signedIn: MEMBER,
     extra: registerApi({
@@ -531,6 +531,10 @@ it("keeps a refused head-office change in its dialog", async () => {
     "The head office would create a cycle.",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
+  if (dismiss === "Cancel") await user.click(screen.getByRole("button", { name: "Cancel" }));
+  else await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 });
 
 it("selects an existing user as an individual", async () => {
