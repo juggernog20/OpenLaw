@@ -2963,7 +2963,14 @@ function ContractRecord() {
                     onConfirmAll={confirmAllAnalysisFields}
                   />
                 }
-                note={<AnalysisRunNote analysis={analysis} runError={analysisRunError} />}
+                note={
+                  <AnalysisRunNote
+                    analysis={analysis}
+                    runError={analysisRunError}
+                    canRun={analysis.available && analysisRunnable}
+                    viewerRole={user.role}
+                  />
+                }
               />
             )}
             {/* The record's paper (M11/2, M11/3), in the section the

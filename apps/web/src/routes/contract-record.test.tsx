@@ -959,6 +959,73 @@ describe("the /contracts/:number record page", () => {
       expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
     });
 
+    /** The failed run's note, read whole: the reason, the sentence
+     * that the values still stand, and the one next step (#1286). */
+    async function failedNote(signedIn: typeof MEMBER, available: boolean) {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available,
+        latestRun: analysisRun({
+          state: "failed",
+          failure: "The provider reply did not match the requested fields or value types.",
+        }),
+      });
+      stubApi({ signedIn, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const card = within(await screen.findByRole("region", { name: "Fields" }));
+      return card
+        .getAllByRole("alert")
+        .find((alert) => /Analysis failed/.test(alert.textContent ?? ""))!;
+    }
+
+    it("says a failed run changed no Fields, and to run analysis again", async () => {
+      const note = await failedNote(MEMBER, true);
+      expect(note).toHaveTextContent(
+        // Two paragraphs, so no space between the reason and the sentence.
+        "Analysis failed: The provider reply did not match the requested fields or value types." +
+          "This run changed no Fields. Values marked Unverified still need a check. Run analysis again.",
+      );
+      expect(within(note).queryByRole("link")).not.toBeInTheDocument();
+      // The control the step names is in the same header.
+      expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
+    });
+
+    it("points an Administrator at the AI analysis settings when analysis is off", async () => {
+      const note = await failedNote(ADMIN, false);
+      expect(note).toHaveTextContent(
+        "This run changed no Fields. Values marked Unverified still need a check. " +
+          "Turn on AI analysis in Settings",
+      );
+      expect(
+        within(note).getByRole("link", { name: "Turn on AI analysis in Settings" }),
+      ).toHaveAttribute("href", "/settings/ai-analysis");
+      expect(note).not.toHaveTextContent("Run analysis again.");
+    });
+
+    it("tells anyone else to ask an Administrator when analysis is off", async () => {
+      const note = await failedNote(MEMBER, false);
+      expect(note).toHaveTextContent(
+        "This run changed no Fields. Values marked Unverified still need a check. " +
+          "Ask an Administrator to check AI analysis settings.",
+      );
+      expect(within(note).queryByRole("link")).not.toBeInTheDocument();
+      expect(note).not.toHaveTextContent("Run analysis again.");
+    });
+
+    it("keeps the conversion failure message as it was", async () => {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: analysisRun({ state: "failed", trigger: "conversion", failure: "Timed out." }),
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const card = within(await screen.findByRole("region", { name: "Fields" }));
+      const note = await card.findByText(
+        "Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.",
+      );
+      expect(note).toHaveAttribute("role", "alert");
+      expect(card.queryByText(/This run changed no Fields/)).not.toBeInTheDocument();
+    });
+
     it("runs from the Fields header and the overflow menu", async () => {
       const sources = stubEventSource();
       const api = recordApi(contractRow(), undefined, undefined, undefined, {
