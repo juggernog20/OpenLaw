@@ -428,6 +428,9 @@
   "activity.entityOfficer.deleted": {
     "defaultMessage": "{actor} removed officer {officer} from {name}"
   },
+  "activity.entityOfficer.resigned": {
+    "defaultMessage": "{actor} recorded that {officer} resigned as {role} from {name} on {date}"
+  },
   "activity.entityOfficer.updated": {
     "defaultMessage": "{actor} changed officer {officer} on {name}"
   },
@@ -513,7 +516,7 @@
     "defaultMessage": "{actor} exported the audit log"
   },
   "activity.field": {
-    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} effectiveOn {Effective date} capacity {Capacity} transfereeStatus {Transferee status} units {Units} statedPercent {Stated percent} amount {Amount (minor units)} currency {Currency} formOfContribution {Form of contribution} consideration {Consideration} reference {Reference} partnershipBasis {Ownership basis} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} other {{key}}}"
+    "defaultMessage": "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} entity {Our entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} contractType {Contract type} value {Value} status {Status} dueDate {Due date} termType {Term type} effectiveDate {Effective date} expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} noticePeriodDays {Notice period (days)} date {Date} label {Event} note {Note} kind {Kind} documentType {Type} primaryCounterparty {Primary counterparty} primaryDocument {Primary document} displayName {Name} display_name {Display name} name {Name} role {Role} email {Email} stage {Stage} moduleScope {Scope} isRequired {Required} visibleOnPortal {Visible on Portal} defaultPeople {Default people} targetModule {Target} targetType {Target type} targetContractType {Target Contract Type} targetContractTypeId {Target Contract Type} turnaroundDays {Target turnaround (business days)} theme {Theme} timezone {Timezone} avatar {Avatar} logo {Logo} defaultLocale {Default language} defaultTimezone {Default timezone} authMode {Sign-in method} allowedEmailDomains {Allowed email domains} reminderOffsetDays {Reminder lead times} reminderRecipientIds {Reminder recipients} smtpUrl {SMTP server} smtpFrom {From address} issuer {Issuer} domain {Email domain} clientId {Client ID} clientSecret {Client secret} environment {Environment} integrationKey {Integration key} apiUserId {User ID} privateKey {RSA private key} updateMode {Signing updates} webhookUrl {Public callback URL} webhookSecret {Connect HMAC secret} preset {Provider} protocol {Protocol} baseUrl {Base URL} model {Model} apiKey {API key} legalName {Legal name} entityType {Entity type} knowledgeType {Knowledge type} jurisdiction {Jurisdiction} formedOn {Formed on} registrationNumber {Registration number} taxId {Tax ID} registeredAgent {Registered agent} registeredAddress {Registered address} effectiveOn {Effective date} capacity {Capacity} transfereeStatus {Transferee status} units {Units} statedPercent {Stated percent} amount {Amount (minor units)} currency {Currency} formOfContribution {Form of contribution} consideration {Consideration} reference {Reference} partnershipBasis {Ownership basis} registerKind {Register kind} registerKindSource {Register kind source} headOfficeEntityId {Head office} sharesAuthorized {Authorized shares} sharesIssued {Issued shares} parValue {Par value} appointedOn {Appointed on} resignedOn {Resigned on} linkedUser {Linked user} registrationId {Registration} recurrenceMonths {Repeat every (months)} nextDueOn {Due date} assigneeId {Assignee} matterId {Matter} audience {Audience} url {Address} target {Target} audienceUsers {Selected people} audienceDepartments {Selected Departments} acknowledgementText {Acknowledgement text} acknowledgementFrequency {Acknowledgement frequency} requireTwoFactor {Require two-factor authentication} autoDocAcknowledgementText {Default acknowledgement text} autoDocAcknowledgementFrequency {Auto-Docs acknowledgement frequency} mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} inviteLinkLifetimeDays {Invite link lifetime (days)} other {{key}}}"
   },
   "activity.field.narrowed": {
     "defaultMessage": "{actor} updated the field {name}"
@@ -535,6 +538,30 @@
   },
   "activity.folder.unnamed": {
     "defaultMessage": "unnamed"
+  },
+  "activity.form.branchAdded": {
+    "defaultMessage": "Condition group added"
+  },
+  "activity.form.branchChanged": {
+    "defaultMessage": "Condition group changed"
+  },
+  "activity.form.branchRemoved": {
+    "defaultMessage": "Condition group removed"
+  },
+  "activity.form.rowAdded": {
+    "defaultMessage": "{row}: added to the Form"
+  },
+  "activity.form.rowMoved": {
+    "defaultMessage": "{row}: moved"
+  },
+  "activity.form.rowRemoved": {
+    "defaultMessage": "{row}: removed from the Form"
+  },
+  "activity.form.switch": {
+    "defaultMessage": "{row}, {name, select, onIntakeForm {On intake form} isRequired {Required for creation} visibleOnPortal {Visible on Portal} other {{name}}}"
+  },
+  "activity.form.switchValue": {
+    "defaultMessage": "{on, select, true {On} other {Off}}"
   },
   "activity.intakeLink.created": {
     "defaultMessage": "{actor} added the deflection link {name} to {onHome, select, true {the portal home} other {{placement}}}"
@@ -1358,6 +1385,9 @@
   "audit.filter.from": {
     "defaultMessage": "From"
   },
+  "audit.filter.period": {
+    "defaultMessage": "Period"
+  },
   "audit.filter.record": {
     "defaultMessage": "Record"
   },
@@ -1378,6 +1408,27 @@
   },
   "audit.panes": {
     "defaultMessage": "Audit log panes"
+  },
+  "audit.period.anyTime": {
+    "defaultMessage": "Any time"
+  },
+  "audit.period.custom": {
+    "defaultMessage": "Custom"
+  },
+  "audit.period.last30": {
+    "defaultMessage": "Last 30 days"
+  },
+  "audit.period.last7": {
+    "defaultMessage": "Last 7 days"
+  },
+  "audit.period.today": {
+    "defaultMessage": "Today"
+  },
+  "audit.summary": {
+    "defaultMessage": "{total, plural, one {# entry} other {# entries}}. {people}."
+  },
+  "audit.summary.more": {
+    "defaultMessage": "and {count} more"
   },
   "audit.tier": {
     "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
@@ -2255,6 +2306,9 @@
   "autoDocs.publishCaption": {
     "defaultMessage": "Later edits leave this pair unchanged until you publish again."
   },
+  "autoDocs.publishNeedsTemplate": {
+    "defaultMessage": "Upload a Word template on the <link>Form tab</link> to publish."
+  },
   "autoDocs.publishNewPair": {
     "defaultMessage": "Publish new pair"
   },
@@ -2948,8 +3002,20 @@
   "contracts.analysis.evidenceUnavailable": {
     "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
   },
+  "contracts.analysis.failedAskAdmin": {
+    "defaultMessage": "Ask an Administrator to check AI analysis settings."
+  },
+  "contracts.analysis.failedRunAgain": {
+    "defaultMessage": "Run analysis again."
+  },
   "contracts.analysis.failedShort": {
     "defaultMessage": "Analysis failed: {reason}"
+  },
+  "contracts.analysis.failedTurnOn": {
+    "defaultMessage": "Turn on AI analysis in Settings"
+  },
+  "contracts.analysis.failedValuesStand": {
+    "defaultMessage": "This run changed no Fields. Values marked Unverified still need a check."
   },
   "contracts.analysis.loadingEvidence": {
     "defaultMessage": "Opening cited passage…"
@@ -3022,6 +3088,9 @@
   },
   "contracts.column.noticeDeadline": {
     "defaultMessage": "Notice by"
+  },
+  "contracts.column.noticePassed": {
+    "defaultMessage": "Passed"
   },
   "contracts.column.owner": {
     "defaultMessage": "Owner"
@@ -3140,6 +3209,9 @@
   "contracts.field.numberInvalidNamed": {
     "defaultMessage": "{fieldName}: enter this as a number."
   },
+  "contracts.field.requiredAnswer": {
+    "defaultMessage": "Required"
+  },
   "contracts.field.requiredMark": {
     "defaultMessage": "(required)"
   },
@@ -3193,6 +3265,12 @@
   },
   "contracts.form.matter": {
     "defaultMessage": "Matter"
+  },
+  "contracts.form.matterConfidentialAccept": {
+    "defaultMessage": "Make this Contract confidential"
+  },
+  "contracts.form.matterConfidentialAlert": {
+    "defaultMessage": "{reference} is confidential. This Contract will be open to every Legal Team Member."
   },
   "contracts.form.matterHelp": {
     "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
@@ -3503,9 +3581,6 @@
   "contracts.softGate.title": {
     "defaultMessage": "Move past approval"
   },
-  "contracts.stage.done": {
-    "defaultMessage": "done"
-  },
   "contracts.stage.move": {
     "defaultMessage": "{stage} — move contract"
   },
@@ -3541,6 +3616,12 @@
   },
   "contracts.termTimeline.noticeDeadlineOn": {
     "defaultMessage": "Notice deadline {date}"
+  },
+  "contracts.termTimeline.noticePassedOn": {
+    "defaultMessage": "Passed {date}"
+  },
+  "contracts.termTimeline.noticePassedRenewal": {
+    "defaultMessage": "Notice can no longer stop the renewal on {expiry}."
   },
   "contracts.termTimeline.openPeriodDates": {
     "defaultMessage": "From {start}"
@@ -4601,11 +4682,17 @@
   "documents.composer.notePlaceholder": {
     "defaultMessage": "What changed in this round"
   },
+  "documents.composer.sameAsCurrent": {
+    "defaultMessage": "This file is the same as version {number}. Upload it anyway?"
+  },
   "documents.composer.submit": {
     "defaultMessage": "Upload"
   },
   "documents.composer.type": {
     "defaultMessage": "Type"
+  },
+  "documents.composer.uploadAnyway": {
+    "defaultMessage": "Upload anyway"
   },
   "documents.composer.uploadTitle": {
     "defaultMessage": "Upload document"
@@ -4999,6 +5086,9 @@
   },
   "docusignConsent.refused.title": {
     "defaultMessage": "DocuSign did not grant consent"
+  },
+  "dueDate.overdue": {
+    "defaultMessage": "Overdue"
   },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
@@ -5708,6 +5798,9 @@
   "entities.record.obligations.assignee": {
     "defaultMessage": "Assignee"
   },
+  "entities.record.obligations.attachFiledPaper": {
+    "defaultMessage": "Attach the filed paper"
+  },
   "entities.record.obligations.column": {
     "defaultMessage": "Obligation"
   },
@@ -5723,6 +5816,9 @@
   "entities.record.obligations.completedOnField": {
     "defaultMessage": "Completed on"
   },
+  "entities.record.obligations.documentRemoved": {
+    "defaultMessage": "Document removed"
+  },
   "entities.record.obligations.dueDate": {
     "defaultMessage": "Due date"
   },
@@ -5735,6 +5831,21 @@
   "entities.record.obligations.emptyHint": {
     "defaultMessage": "Add the first due date when it is known."
   },
+  "entities.record.obligations.filedOnBy": {
+    "defaultMessage": "{date} · Filed by {name}"
+  },
+  "entities.record.obligations.filedPaper": {
+    "defaultMessage": "Filed paper"
+  },
+  "entities.record.obligations.filingHistory": {
+    "defaultMessage": "Filing history"
+  },
+  "entities.record.obligations.filingHistoryEmpty": {
+    "defaultMessage": "No filings yet."
+  },
+  "entities.record.obligations.filingHistoryLoading": {
+    "defaultMessage": "Loading…"
+  },
   "entities.record.obligations.label": {
     "defaultMessage": "Label"
   },
@@ -5743,6 +5854,12 @@
   },
   "entities.record.obligations.matter": {
     "defaultMessage": "Matter"
+  },
+  "entities.record.obligations.matterMatches": {
+    "defaultMessage": "Matter matches"
+  },
+  "entities.record.obligations.matterNoMatch": {
+    "defaultMessage": "No matching Matters"
   },
   "entities.record.obligations.matterOption": {
     "defaultMessage": "{reference} · {title}"
@@ -5797,6 +5914,21 @@
   },
   "entities.record.officers.remove": {
     "defaultMessage": "Remove {officer}"
+  },
+  "entities.record.officers.resign": {
+    "defaultMessage": "Resign {officer}"
+  },
+  "entities.record.officers.resignAction": {
+    "defaultMessage": "Resign"
+  },
+  "entities.record.officers.resignFailed": {
+    "defaultMessage": "The resignation could not be saved. Try again."
+  },
+  "entities.record.officers.resignSummary": {
+    "defaultMessage": "{officer} resigns as {role}. The row moves to Show former."
+  },
+  "entities.record.officers.resignTitle": {
+    "defaultMessage": "Resign {officer}"
   },
   "entities.record.officers.resignedOn": {
     "defaultMessage": "Resigned on"
@@ -6494,9 +6626,6 @@
   "fields.descriptionFor": {
     "defaultMessage": "Show description for {field}"
   },
-  "fields.notSet": {
-    "defaultMessage": "Not set"
-  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -6605,9 +6734,6 @@
   "home.obligations.entityDue": {
     "defaultMessage": "{entity} · Due {date}"
   },
-  "home.obligations.overdue": {
-    "defaultMessage": "Overdue"
-  },
   "home.obligations.title": {
     "defaultMessage": "Entity obligations"
   },
@@ -6625,6 +6751,21 @@
   },
   "home.tasks.completed": {
     "defaultMessage": "Completed: {title}"
+  },
+  "home.tasks.due": {
+    "defaultMessage": "Due"
+  },
+  "home.tasks.dueAll": {
+    "defaultMessage": "All"
+  },
+  "home.tasks.dueFailed": {
+    "defaultMessage": "Tasks could not be loaded. Try changing the Due filter again."
+  },
+  "home.tasks.dueOverdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.tasks.dueWeek": {
+    "defaultMessage": "Due in the next 7 days"
   },
   "home.tasks.empty": {
     "defaultMessage": "No open Tasks assigned to you."
@@ -6644,11 +6785,8 @@
   "home.tasks.noDueDate": {
     "defaultMessage": "No due date"
   },
-  "home.tasks.overdue": {
-    "defaultMessage": "Overdue"
-  },
   "home.tasks.pageTitle": {
-    "defaultMessage": "Your Tasks"
+    "defaultMessage": "My Tasks"
   },
   "home.tasks.record": {
     "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
@@ -7361,6 +7499,15 @@
   "knowledge.onPortal": {
     "defaultMessage": "On the portal"
   },
+  "knowledge.portalReady": {
+    "defaultMessage": "Portal-ready"
+  },
+  "knowledge.portalReadyHelp": {
+    "defaultMessage": "No deflection link points here yet. Business Users reach this item only through one. Ask an Administrator to add it in Settings, Intake, Deflection links."
+  },
+  "knowledge.portalReadyHelpAdmin": {
+    "defaultMessage": "No deflection link points here yet. Business Users reach this item only through one. <link>Add one in Settings, Intake, Deflection links.</link>"
+  },
   "knowledge.reach.title": {
     "defaultMessage": "Remove this from the portal?"
   },
@@ -7465,9 +7612,6 @@
   },
   "matterTasks.doneCount": {
     "defaultMessage": "{done} of {total} done"
-  },
-  "matterTasks.due": {
-    "defaultMessage": "Due {date}"
   },
   "matterTasks.edit": {
     "defaultMessage": "Edit Task"
@@ -7645,6 +7789,9 @@
   },
   "matters.field.type": {
     "defaultMessage": "Matter type"
+  },
+  "matters.filter.confidential": {
+    "defaultMessage": "Confidential only"
   },
   "matters.filter.incomplete": {
     "defaultMessage": "Incomplete"
@@ -8077,6 +8224,15 @@
   },
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
+  },
+  "notifications.filter.all": {
+    "defaultMessage": "All"
+  },
+  "notifications.filter.empty": {
+    "defaultMessage": "Nothing in this group."
+  },
+  "notifications.filter.label": {
+    "defaultMessage": "Show"
   },
   "notifications.keyClient": {
     "defaultMessage": "a Client"
@@ -8546,6 +8702,9 @@
   "portal.documents.versionOf": {
     "defaultMessage": "New version of {name}"
   },
+  "portal.form.answerRequired": {
+    "defaultMessage": "Answer this before you submit."
+  },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
   },
@@ -8579,6 +8738,9 @@
   "portal.form.basicsHeading": {
     "defaultMessage": "About your request"
   },
+  "portal.form.choosePlaceholder": {
+    "defaultMessage": "Choose an answer"
+  },
   "portal.form.confirmationBack": {
     "defaultMessage": "Back to the portal"
   },
@@ -8594,14 +8756,14 @@
   "portal.form.description": {
     "defaultMessage": "Description"
   },
-  "portal.form.fieldRequired": {
-    "defaultMessage": "{field} is required."
+  "portal.form.fieldNumberInvalid": {
+    "defaultMessage": "Enter a number without symbols, for example 180000."
   },
   "portal.form.footerNote": {
     "defaultMessage": "You'll get email updates and can track progress here."
   },
   "portal.form.missingRequired": {
-    "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
+    "defaultMessage": "{count, plural, one {Answer this before you submit: {fields}} other {Answer these before you submit: {fields}}}"
   },
   "portal.form.numberInvalid": {
     "defaultMessage": "{fieldName}: enter this as a number."
@@ -8643,7 +8805,7 @@
     "defaultMessage": "Download"
   },
   "portal.knowledge.downloadNamed": {
-    "defaultMessage": "Download {filename}"
+    "defaultMessage": "Download {title}"
   },
   "portal.knowledge.files": {
     "defaultMessage": "Documents"
@@ -8963,6 +9125,48 @@
   "portal.settings.title": {
     "defaultMessage": "Notification settings"
   },
+  "portal.tasks.assigned": {
+    "defaultMessage": "Tasks assigned to you"
+  },
+  "portal.tasks.completed": {
+    "defaultMessage": "Completed: {title}"
+  },
+  "portal.tasks.count": {
+    "defaultMessage": "{count, plural, one {# Task} other {# Tasks}}"
+  },
+  "portal.tasks.description": {
+    "defaultMessage": "Legal assigned these Tasks to you. Mark a Task done when you finish it."
+  },
+  "portal.tasks.empty": {
+    "defaultMessage": "No open Tasks assigned to you."
+  },
+  "portal.tasks.emptyAll": {
+    "defaultMessage": "No Tasks assigned to you."
+  },
+  "portal.tasks.loadFailed": {
+    "defaultMessage": "Tasks could not be loaded. Try again."
+  },
+  "portal.tasks.loadMore": {
+    "defaultMessage": "Load more Tasks"
+  },
+  "portal.tasks.navigation": {
+    "defaultMessage": "Tasks"
+  },
+  "portal.tasks.record": {
+    "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "portal.tasks.reopened": {
+    "defaultMessage": "Reopened: {title}"
+  },
+  "portal.tasks.saveFailed": {
+    "defaultMessage": "The Task could not be saved. Try again."
+  },
+  "portal.tasks.title": {
+    "defaultMessage": "Your Tasks"
+  },
+  "portal.tasks.toggle": {
+    "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
+  },
   "portal.team.confidential": {
     "defaultMessage": "Ask Legal to add members to a Confidential record."
   },
@@ -8987,6 +9191,9 @@
   "record.team.addError": {
     "defaultMessage": "That person could not be added to the team."
   },
+  "record.team.businessUserConfidential": {
+    "defaultMessage": "{name} is a Business User. They will see this confidential {module, select, contract {Contract} other {Matter}} in the Portal, with its Documents and Full Thread comments."
+  },
   "record.team.choose": {
     "defaultMessage": "Choose a person"
   },
@@ -8995,6 +9202,12 @@
   },
   "record.team.empty": {
     "defaultMessage": "Nobody is on this team yet."
+  },
+  "record.team.groupBusiness": {
+    "defaultMessage": "Business Users"
+  },
+  "record.team.groupLegal": {
+    "defaultMessage": "Legal"
   },
   "record.team.person": {
     "defaultMessage": "Person"
@@ -9011,6 +9224,9 @@
   "recordFilters.apply": {
     "defaultMessage": "Apply"
   },
+  "recordFilters.awaitingMyApproval": {
+    "defaultMessage": "Waiting on my approval"
+  },
   "recordFilters.back": {
     "defaultMessage": "Back to filters"
   },
@@ -9025,6 +9241,12 @@
   },
   "recordFilters.effective": {
     "defaultMessage": "Effective date"
+  },
+  "recordFilters.entity": {
+    "defaultMessage": "Our entity"
+  },
+  "recordFilters.entityNone": {
+    "defaultMessage": "Not known yet"
   },
   "recordFilters.expiry": {
     "defaultMessage": "Expiry date"
@@ -9091,6 +9313,9 @@
   },
   "recordFilters.status": {
     "defaultMessage": "Status"
+  },
+  "recordFilters.termType": {
+    "defaultMessage": "Term type"
   },
   "recordFilters.to": {
     "defaultMessage": "To"
@@ -9549,7 +9774,7 @@
     "defaultMessage": "Effective date"
   },
   "search.property.contract.entity": {
-    "defaultMessage": "Signing Entity"
+    "defaultMessage": "Our entity"
   },
   "search.property.contract.expiry": {
     "defaultMessage": "Expiry date"
@@ -9568,6 +9793,9 @@
   },
   "search.property.contract.status": {
     "defaultMessage": "Status"
+  },
+  "search.property.contract.termType": {
+    "defaultMessage": "Term type"
   },
   "search.property.contract.title": {
     "defaultMessage": "Title"
@@ -9741,7 +9969,7 @@
     "defaultMessage": "Searching…"
   },
   "search.searchingBody": {
-    "defaultMessage": "Looking across Contracts, Matters, Documents, Entities, Counterparties, and Requests."
+    "defaultMessage": "Looking across Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items."
   },
   "search.seeAll": {
     "defaultMessage": "See all results"
@@ -10555,6 +10783,15 @@
   },
   "settings.auth.identityProviders": {
     "defaultMessage": "Identity providers"
+  },
+  "settings.auth.inviteLifetime": {
+    "defaultMessage": "Invite link lifetime (days)"
+  },
+  "settings.auth.inviteLifetimeHelp": {
+    "defaultMessage": "A new invite link stops working after this many days. Choose 1 to 30. A password reset link still expires after 1 hour."
+  },
+  "settings.auth.inviteLifetimeInvalid": {
+    "defaultMessage": "Enter a whole number from 1 to 30."
   },
   "settings.auth.issuer": {
     "defaultMessage": "Issuer URL"
@@ -12707,6 +12944,9 @@
   "settings.requestTypeEditor.defaultType": {
     "defaultMessage": "Default"
   },
+  "settings.requestTypeEditor.defaultTypeForm": {
+    "defaultMessage": "This is the {module, select, contract {Contract} other {Matter}} Default type."
+  },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
   },
@@ -12751,6 +12991,15 @@
   },
   "settings.requestTypeEditor.retryForm": {
     "defaultMessage": "Retry"
+  },
+  "settings.requestTypeEditor.separateForm": {
+    "defaultMessage": "Use a separate Form"
+  },
+  "settings.requestTypeEditor.separateFormError": {
+    "defaultMessage": "The separate Form could not be created."
+  },
+  "settings.requestTypeEditor.sharedForm": {
+    "defaultMessage": "Also used by {names}. Changes here apply to {total, plural, =2 {both} other {all # Request types}}."
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"
@@ -12971,6 +13220,12 @@
   "settings.users.archived": {
     "defaultMessage": "Archived"
   },
+  "settings.users.archivedBy": {
+    "defaultMessage": "By {name}, {date}"
+  },
+  "settings.users.archivedOn": {
+    "defaultMessage": "{date}"
+  },
   "settings.users.changeRole": {
     "defaultMessage": "{role} — change the role of {email}"
   },
@@ -13003,6 +13258,9 @@
   },
   "settings.users.inviteError": {
     "defaultMessage": "The invite could not be sent."
+  },
+  "settings.users.inviteExpires": {
+    "defaultMessage": "{expired, select, true {Link expired {date}} other {Link valid until {date}}}"
   },
   "settings.users.inviteName": {
     "defaultMessage": "Display name"
@@ -13322,6 +13580,9 @@
   "signing.waiting": {
     "defaultMessage": "Waiting for confirmation"
   },
+  "statusProgression.earlier": {
+    "defaultMessage": "earlier"
+  },
   "table.columns": {
     "defaultMessage": "Columns"
   },
@@ -13448,6 +13709,9 @@
   "tasks.emptyOpen": {
     "defaultMessage": "No open Tasks."
   },
+  "tasks.overdue": {
+    "defaultMessage": "Overdue"
+  },
   "tasks.remove": {
     "defaultMessage": "Remove task"
   },
@@ -13459,6 +13723,9 @@
   },
   "tasks.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
+  },
+  "teamRoster.archived": {
+    "defaultMessage": "Archived"
   },
   "theme.dark": {
     "defaultMessage": "Dark"

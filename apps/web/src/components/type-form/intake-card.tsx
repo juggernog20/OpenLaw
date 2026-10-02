@@ -2,11 +2,12 @@
 
 /** DES-090 inventory of the destination Form. Only the preview evaluates answers. */
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
-import { FormattedMessage } from "react-intl";
+import { Link, useNavigate } from "react-router";
+import { FormattedMessage, useIntl } from "react-intl";
 import { Eye } from "lucide-react";
 import { formForTouchpoint, type Form, type FormRow } from "@openlaw/shared";
 import { api } from "../../lib/api";
+import { problem } from "../../lib/problem";
 import type { ApiField } from "../../lib/field-catalog";
 import { SettingsCard } from "../settings-card";
 import { Button } from "../ui/button";
@@ -20,13 +21,48 @@ export function IntakeFormCard({
   destinationType,
   catalog,
   requestType,
+  requestTypeId,
+  sharedWith = [],
 }: Readonly<{
   module: "contract" | "matter";
   destinationType?: { id: string; displayName: string; isDefault: boolean };
   catalog: readonly ApiField[];
   requestType: { displayName: string; description: string | null };
+  requestTypeId?: string;
+  /** The other live Request types whose destination resolves to this
+   * type. An edit to the Form changes their Portal form too. */
+  sharedWith?: readonly string[];
 }>) {
   const t = useFormText();
+  const intl = useIntl();
+  const navigate = useNavigate();
+  const [separating, setSeparating] = useState(false);
+  const [separateError, setSeparateError] = useState<string | null>(null);
+
+  /** DES-090 point 7 addendum: copy the shared type, point this Request
+   * type at the copy, then open the copy's Form tab. */
+  async function separate() {
+    if (separating || !requestTypeId) return;
+    setSeparating(true);
+    setSeparateError(null);
+    const result = await api
+      .POST("/api/v1/request-types/{id}/separate-form", {
+        params: { path: { id: requestTypeId } },
+      })
+      .catch(() => undefined);
+    if (result?.data) {
+      void navigate(`/settings/${module}s/types/${result.data.type.id}/form`);
+      return;
+    }
+    setSeparateError(
+      (await problem(result)).detail ??
+        intl.formatMessage({
+          id: "settings.requestTypeEditor.separateFormError",
+          defaultMessage: "The separate Form could not be created.",
+        }),
+    );
+    setSeparating(false);
+  }
   const eye = useRef<HTMLButtonElement>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [failed, setFailed] = useState(false);
@@ -169,7 +205,50 @@ export function IntakeFormCard({
       }
     >
       {destinationType && (
-        <p className="px-4 py-3 text-sm text-muted">{destinationType.displayName}</p>
+        <div className="flex flex-col items-start gap-2 px-4 py-3">
+          <p className="text-sm text-muted">{destinationType.displayName}</p>
+          {(sharedWith.length > 0 || destinationType.isDefault) && (
+            <p className="text-sm">
+              {sharedWith.length > 0 && (
+                <FormattedMessage
+                  id="settings.requestTypeEditor.sharedForm"
+                  defaultMessage="Also used by {names}. Changes here apply to {total, plural, =2 {both} other {all # Request types}}."
+                  values={{
+                    names: intl.formatList(sharedWith, { type: "conjunction" }),
+                    total: sharedWith.length + 1,
+                  }}
+                />
+              )}
+              {sharedWith.length > 0 && destinationType.isDefault && " "}
+              {destinationType.isDefault && (
+                <FormattedMessage
+                  id="settings.requestTypeEditor.defaultTypeForm"
+                  defaultMessage="This is the {module, select, contract {Contract} other {Matter}} Default type."
+                  values={{ module }}
+                />
+              )}
+            </p>
+          )}
+          {sharedWith.length > 0 && requestTypeId && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={separating}
+              onClick={() => void separate()}
+            >
+              <FormattedMessage
+                id="settings.requestTypeEditor.separateForm"
+                defaultMessage="Use a separate Form"
+              />
+            </Button>
+          )}
+          {separateError && (
+            <p role="alert" className="text-sm text-status-danger-fg">
+              {separateError}
+            </p>
+          )}
+        </div>
       )}
       {failed ? (
         <div className="p-4">

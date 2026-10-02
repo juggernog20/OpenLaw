@@ -9,10 +9,13 @@ export const CONTRACT_FILTER_KEYS = [
   "owner",
   "status",
   "type",
+  "entity",
+  "termType",
   "effectiveFrom",
   "effectiveTo",
   "expiryFrom",
   "expiryTo",
+  "awaitingMyApproval",
   "includeEnded",
   "includeArchived",
 ] as const;
@@ -27,6 +30,7 @@ export const MATTER_FILTER_KEYS = [
   "deadlineFrom",
   "deadlineTo",
   "incomplete",
+  "confidential",
   "includeClosed",
   "includeArchived",
 ] as const;
@@ -38,7 +42,14 @@ export const INBOX_FILTER_KEYS = [
   "receivedFrom",
   "receivedTo",
 ] as const;
-const FLAGS = new Set(["includeEnded", "includeArchived", "includeClosed", "incomplete"]);
+const FLAGS = new Set([
+  "includeEnded",
+  "includeArchived",
+  "includeClosed",
+  "incomplete",
+  "confidential",
+  "awaitingMyApproval",
+]);
 
 export function filterQuery(
   filters: Layout["filters"],

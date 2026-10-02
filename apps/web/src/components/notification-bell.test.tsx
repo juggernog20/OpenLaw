@@ -1292,3 +1292,92 @@ it("shows a once-issued key when a newly promoted Administrator approves their o
   await user.click(within(dialog).getByRole("button", { name: "Done" }));
   expect(screen.queryByText("once-shown-key")).not.toBeInTheDocument();
 });
+
+describe("the Show filter (#1297)", () => {
+  it("narrows the list by event group, keeps Your approvals pinned, and leaves the badge alone", async () => {
+    const user = userEvent.setup();
+    const approval = item(1, {
+      approvalKind: "contract",
+      payload: { contractNumber: 41, contractTitle: "Acme MSA 1", approvalId: "approval-1" },
+    });
+    const arrival = item(2, {
+      eventType: "request.submitted",
+      entityType: "request",
+      entityId: "r2",
+      payload: { requestNumber: 72, requestTitle: "Lease question", requesterName: "Jonas Weber" },
+    });
+    const status = item(3, { eventType: "contract.status_changed" });
+    const asked: (string | null)[] = [];
+    let countReads = 0;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/notifications/unread-count") {
+          countReads += 1;
+          return json(200, { unread: 4 });
+        }
+        if (call.url.pathname === "/api/v1/notifications" && call.method === "GET") {
+          const group = call.url.searchParams.get("group");
+          asked.push(group);
+          const news =
+            group === null
+              ? [arrival, status]
+              : group === "new_requests"
+                ? [arrival]
+                : group === "activity_on_your_records"
+                  ? [status]
+                  : [];
+          return json(200, { notifications: [approval, ...news], nextCursor: null });
+        }
+        return undefined;
+      },
+    });
+    renderAt("/");
+
+    await user.click(await bell("4 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    const show = within(centre).getByRole("combobox", { name: "Show" });
+    expect(show).toHaveValue("all");
+    expect(
+      within(show)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "All",
+      "Assigned to you",
+      "Activity on your records",
+      "Dates approaching",
+      "New requests",
+    ]);
+    await waitFor(() => expect(within(centre).getAllByRole("listitem")).toHaveLength(3));
+
+    await user.selectOptions(show, "new_requests");
+    await waitFor(() => expect(asked).toEqual([null, "new_requests"]));
+    await waitFor(() => expect(within(centre).getAllByRole("listitem")).toHaveLength(2));
+    expect(within(centre).getByRole("region", { name: "Your approvals" })).toBeVisible();
+    expect(within(centre).getByText(/Lease question/)).toBeVisible();
+
+    await user.selectOptions(show, "dates_approaching");
+    expect(await within(centre).findByText("Nothing in this group.")).toBeVisible();
+    expect(within(centre).getByRole("region", { name: "Your approvals" })).toBeVisible();
+    expect(
+      within(centre).queryByText("Nothing to catch up on. News about your records shows up here."),
+    ).not.toBeInTheDocument();
+
+    // The badge is the whole bell's: no count was re-read for a filter,
+    // and Mark all read still offers to clear it.
+    expect(screen.getByRole("button", { name: "Notifications, 4 unread" })).toBeVisible();
+    expect(countReads).toBe(1);
+    expect(within(centre).getByRole("button", { name: "Mark all read" })).toBeVisible();
+  });
+
+  it("is absent from the portal bell", async () => {
+    const user = userEvent.setup();
+    bellApi({ unread: 0, surface: "portal" });
+    renderAt("/portal");
+
+    await user.click(await bell("none unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+    expect(within(centre).queryByRole("combobox", { name: "Show" })).not.toBeInTheDocument();
+  });
+});

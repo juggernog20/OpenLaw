@@ -120,6 +120,24 @@ export interface paths {
     patch: operations["setTwoFactorPolicy"];
     trace?: never;
   };
+  "/api/v1/auth/invite-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How long a staff invite link works (SET-005) */
+    get: operations["getInvitePolicy"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Set how long a staff invite link works, 1 to 30 days (SET-005); it applies to the next invite or resend */
+    patch: operations["setInvitePolicy"];
+    trace?: never;
+  };
   "/api/v1/auth/setup": {
     parameters: {
       query?: never;
@@ -198,7 +216,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Re-send a pending invite's set-password email (SET-005) */
+    /** Re-send a pending invite's set-password email (SET-005); the earlier link stops working */
     post: operations["resendInvite"];
     delete?: never;
     options?: never;
@@ -2557,6 +2575,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Tasks assigned to the signed-in user on Contracts and Matters they reach in the Portal, by due date with undated Tasks last. Completed Tasks are hidden by default. kind and number keep the Tasks on one record */
+    get: operations["listPortalTasks"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/tasks/{taskId}/toggle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete or reopen one Task assigned to the signed-in user on a record they reach in the Portal. Logs task.completed or task.reopened with them as actor. Any other Task answers 404 */
+    post: operations["togglePortalTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/{id}/people": {
     parameters: {
       query?: never;
@@ -3316,7 +3368,7 @@ export interface paths {
     put?: never;
     /**
      * Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     post: operations["addMatterTask"];
     delete?: never;
@@ -3341,7 +3393,7 @@ export interface paths {
     head?: never;
     /**
      * Edit a Task's title, assignee, or internal due date on a reached Matter
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     patch: operations["updateMatterTask"];
     trace?: never;
@@ -3583,6 +3635,23 @@ export interface paths {
     put?: never;
     /** Restore an archived request type (SET-003's recovery story) to the end of the display order */
     post: operations["restoreRequestType"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/request-types/{id}/separate-form": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Give a Request type that shares its destination Form a Form of its own: copy the destination type with its Form, name the copy after the Request type, and point the Request type at the copy (DD-028) */
+    post: operations["separateRequestTypeForm"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5544,7 +5613,7 @@ export interface paths {
     put?: never;
     /**
      * Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     post: operations["addContractTask"];
     delete?: never;
@@ -5569,7 +5638,7 @@ export interface paths {
     head?: never;
     /**
      * Edit a task's title, description, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     patch: operations["updateContractTask"];
     trace?: never;
@@ -6353,6 +6422,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/audit-log/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How many entries the current filters match, and how many of them each person wrote, most first (DES-027 addendum). The same filters and record reach as the page, so the counts match the entries the page returns and a record outside the reader's reach adds nothing. Entries with no person are one row with a null id. Administrator-only (SET-002) */
+    get: operations["summarizeAuditLog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/audit-log/export": {
     parameters: {
       query?: never;
@@ -6670,6 +6756,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["fileEntityObligation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/entities/{id}/obligations/{childId}/filings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligationFilings"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -7822,7 +7924,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default */
+    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default. overdue keeps only open Tasks due before today; dueWithinDays keeps Tasks due through today plus N days, overdue ones included */
     get: operations["listAssignedTasks"];
     put?: never;
     post?: never;
@@ -8621,6 +8723,74 @@ export interface operations {
       };
     };
   };
+  getInvitePolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            inviteLinkLifetimeDays: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  setInvitePolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          inviteLinkLifetimeDays: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            inviteLinkLifetimeDays: number;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   getSetupStatus: {
     parameters: {
       query?: never;
@@ -8828,6 +8998,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -8849,6 +9021,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -8892,6 +9066,8 @@ export interface operations {
               image: string | null;
               timezone: string | null;
             };
+            /** Format: date-time */
+            inviteExpiresAt: string;
           };
         };
       };
@@ -9965,6 +10141,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             }[];
           };
         };
@@ -10014,6 +10196,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10064,6 +10252,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10107,6 +10301,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -10150,6 +10350,12 @@ export interface operations {
               status: "active" | "invited" | "archived";
               lastActiveAt: string | null;
               departmentId: string | null;
+              archivedAt: string | null;
+              archivedBy: {
+                id: string;
+                displayName: string;
+              } | null;
+              inviteExpiresAt: string | null;
             };
           };
         };
@@ -16268,6 +16474,113 @@ export interface operations {
       };
     };
   };
+  listPortalTasks: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+        includeCompleted?: "true" | "false";
+        kind?: "contract" | "matter";
+        number?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            rows: {
+              id: string;
+              title: string;
+              dueDate: string | null;
+              isDone: boolean;
+              isOverdue: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  togglePortalTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "contract" | "matter";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            task: {
+              id: string;
+              title: string;
+              dueDate: string | null;
+              isDone: boolean;
+              isOverdue: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   listContractTypeDefaultPeople: {
     parameters: {
       query?: never;
@@ -18111,6 +18424,7 @@ export interface operations {
         deadlineTo?: string;
         manager?: string;
         incomplete?: "true" | "false";
+        confidential?: "true" | "false";
         sort?:
           "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
         dir?: "asc" | "desc";
@@ -21195,6 +21509,49 @@ export interface operations {
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  separateRequestTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requestType: {
+              id: string;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
+              targetTypeId: string;
+            };
+            type: {
+              id: string;
+              slug: string;
+              displayName: string;
             };
           };
         };
@@ -26237,12 +26594,15 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"
@@ -26255,6 +26615,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";
@@ -35738,6 +36100,58 @@ export interface operations {
       };
     };
   };
+  summarizeAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?:
+          | "matter"
+          | "contract"
+          | "document"
+          | "request"
+          | "user"
+          | "entity"
+          | "knowledge_item"
+          | "auto_doc"
+          | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            actors: {
+              id: string | null;
+              displayName: string | null;
+              count: number;
+            }[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
   exportAuditLog: {
     parameters: {
       query?: {
@@ -37051,6 +37465,8 @@ export interface operations {
         "application/json": {
           /** Format: date */
           filedOn?: string;
+          note?: string | null;
+          documentId?: string | null;
         };
       };
     };
@@ -37100,6 +37516,64 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligationFilings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            filings: {
+              id: string;
+              /** Format: date */
+              filedOn: string;
+              note: string | null;
+              filedBy: {
+                id: string;
+                displayName: string;
+              };
+              document:
+                | (
+                    | {
+                        id: string;
+                        versionId: string;
+                        title: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        removed: true;
+                      }
+                  )
+                | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
           };
         };
       };
@@ -41058,12 +41532,15 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"
@@ -41076,6 +41553,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";
@@ -41237,6 +41716,7 @@ export interface operations {
         deadlineTo?: string;
         manager?: string;
         incomplete?: "true" | "false";
+        confidential?: "true" | "false";
         sort?:
           "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
         dir?: "asc" | "desc";
@@ -44383,6 +44863,8 @@ export interface operations {
         limit?: number;
         cursor?: string;
         includeCompleted?: "true" | "false";
+        overdue?: "true" | "false";
+        dueWithinDays?: number;
       };
       header?: never;
       path?: never;
@@ -45684,6 +46166,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;
@@ -46143,6 +46632,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;

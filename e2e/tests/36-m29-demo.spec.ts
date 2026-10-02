@@ -56,7 +56,7 @@ test.describe.serial("M29 deployer journey", () => {
       const invitation = await waitForMailTo(
         page.request,
         MEMBER.email,
-        /^Set your OpenLaw password$/,
+        /^You are invited to OpenLaw$/,
       );
       memberContext = await browser.newContext();
       const memberPage = await memberContext.newPage();

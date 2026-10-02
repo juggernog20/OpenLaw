@@ -15,6 +15,7 @@ export interface TeamAppletOptions {
   users: readonly UserOption[];
   frozen: boolean;
   audienceLocked: boolean;
+  isConfidential: boolean;
   onRoster: (team: ContractTeamMember[]) => void;
 }
 export function useTeamApplet(options: TeamAppletOptions) {
@@ -51,6 +52,7 @@ export function useTeamApplet(options: TeamAppletOptions) {
     users: options.users,
     frozen: options.frozen,
     audienceLocked: options.audienceLocked,
+    isConfidential: options.isConfidential,
     onTeam: options.onRoster,
   });
 }

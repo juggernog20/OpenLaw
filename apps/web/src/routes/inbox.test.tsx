@@ -476,6 +476,67 @@ async function chooseFilter(
 }
 
 describe("Inbox filters and views", () => {
+  it("applies changed ticks when the Status chip or the Filter menu closes with Escape or a click outside", async () => {
+    const api = inboxApi([inboxRow()]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/requests/filter-options"
+          ? json(200, { types: [], people: [] })
+          : api.handler(call),
+    });
+    const { router } = renderAt("/inbox");
+    const user = userEvent.setup();
+    await screen.findByRole("row", { name: /Injunction threat/ });
+    const arrived = async (action: () => Promise<void>, key: string, value: string) => {
+      await act(async () => {
+        await action();
+        await vi.waitFor(() => {
+          expect(new URLSearchParams(router.state.location.search).get(key)).toBe(value);
+          expect(router.state.navigation.state).toBe("idle");
+        });
+      });
+    };
+
+    await user.click(screen.getByRole("button", { name: /^Status:/ }));
+    for (const name of ["Converted", "Resolved", "Declined"])
+      await user.click(screen.getByRole("checkbox", { name }));
+    await arrived(
+      () => user.keyboard("{Escape}"),
+      "status",
+      "new,read,converted,resolved,declined",
+    );
+    expect(api.asked.at(-1)?.searchParams.get("status")).toBe(
+      "new,read,converted,resolved,declined",
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Status:/ }));
+    await user.click(screen.getByRole("checkbox", { name: "Declined" }));
+    await arrived(
+      () => user.click(screen.getByRole("heading", { level: 1 })),
+      "status",
+      "new,read,converted,resolved",
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Urgency",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "High" }));
+    await arrived(() => user.keyboard("{Escape}"), "urgency", "high");
+
+    // Closing with no change makes no list request.
+    const reads = api.asked.length;
+    await user.click(screen.getByRole("button", { name: /^Urgency:/ }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "High" })).not.toBeInTheDocument(),
+    );
+    expect(api.asked).toHaveLength(reads);
+  });
+
   it("combines multiple urgency values with requester choices, carries filters into paging, and restores browser history", async () => {
     const asked: URL[] = [];
     stubApi({

@@ -46,7 +46,7 @@ import {
   type ContractTask,
   type TasksOutcome,
 } from "../../lib/tasks";
-import { formatShortDate } from "../../lib/format";
+import { TaskDueDate } from "../tasks/due-date";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -308,15 +308,7 @@ function TaskRow({
         >
           {task.title}
         </button>
-        {task.dueDate !== null && (
-          <span className="text-xs text-muted">
-            <FormattedMessage
-              id="tasks.dueDate"
-              defaultMessage="Due {date}"
-              values={{ date: formatShortDate(task.dueDate) }}
-            />
-          </span>
-        )}
+        {task.dueDate !== null && <TaskDueDate dueDate={task.dueDate} isDone={task.isDone} />}
       </div>
       <TaskAssigneePicker
         value={taskAssignee(task, assignees)}

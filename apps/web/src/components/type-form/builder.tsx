@@ -987,7 +987,14 @@ function AttachMenu({
         />
         {matches.map((f) => (
           <DropdownMenuItem data-field-option key={f.id} onSelect={() => onAttach(f)}>
-            <span>{f.displayName}</span>
+            {/* The description is what tells two Fields of one name
+                apart, so it rides under the name, cut to one line. */}
+            <span className="flex min-w-0 flex-col">
+              <span>{f.displayName}</span>
+              {f.description && (
+                <span className="max-w-64 truncate text-sm text-muted">{f.description}</span>
+              )}
+            </span>
             <span className="text-sm text-muted">{fieldTypeName(f.fieldType, t)}</span>
           </DropdownMenuItem>
         ))}

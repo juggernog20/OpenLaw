@@ -149,6 +149,9 @@ export function CreateAttachments({
   disabled = false,
   module,
   existing = [],
+  single = false,
+  label,
+  chooseLabel,
 }: Readonly<{
   uploads: ReturnType<typeof useCreateAttachments>;
   disabled?: boolean;
@@ -158,6 +161,12 @@ export function CreateAttachments({
   /** Files already on the way to the record, shown read-only before
    * anything staged here. */
   existing?: readonly ExistingAttachment[];
+  /** One file only, for a control that links a single Document. */
+  single?: boolean;
+  /** The section name, when "Documents" does not say what the file is for. */
+  label?: string;
+  /** The choose button's name, for the same reason. */
+  chooseLabel?: string;
 }>) {
   const intl = useIntl();
   const id = useId();
@@ -181,10 +190,12 @@ export function CreateAttachments({
   const input = useRef<HTMLInputElement>(null);
   const blocked = disabled || uploads.pending;
   const failures = uploads.rows.some((row) => row.state === "failed");
+  const full = single && uploads.rows.length > 0;
+  const take = (files: File[]) => uploads.add(single ? files.slice(0, 1) : files);
   return (
     <section className="flex flex-col gap-3" aria-labelledby={`${id}-label`}>
       <Label id={`${id}-label`}>
-        <FormattedMessage id="createAttachments.label" defaultMessage="Documents" />
+        {label ?? <FormattedMessage id="createAttachments.label" defaultMessage="Documents" />}
       </Label>
       {!uploads.created && (
         <div
@@ -194,7 +205,7 @@ export function CreateAttachments({
           }}
           onDrop={(event) => {
             event.preventDefault();
-            if (!blocked) uploads.add(Array.from(event.dataTransfer.files));
+            if (!blocked && !full) take(Array.from(event.dataTransfer.files));
           }}
         >
           {existing.length > 0 && (
@@ -253,33 +264,45 @@ export function CreateAttachments({
           {existing.length === 0 && uploads.rows.length === 0 && (
             <Paperclip size={20} className="text-muted" aria-hidden="true" />
           )}
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={blocked}
-            onClick={() => input.current?.click()}
-          >
-            <FormattedMessage id="createAttachments.choose" defaultMessage="Attach documents" />
-          </Button>
-          <span className="text-xs text-muted">
-            <FormattedMessage
-              id="createAttachments.drop"
-              defaultMessage="or drag and drop files here"
-            />
-          </span>
+          {!full && (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={blocked}
+                onClick={() => input.current?.click()}
+              >
+                {chooseLabel ?? (
+                  <FormattedMessage
+                    id="createAttachments.choose"
+                    defaultMessage="Attach documents"
+                  />
+                )}
+              </Button>
+              <span className="text-xs text-muted">
+                <FormattedMessage
+                  id="createAttachments.drop"
+                  defaultMessage="or drag and drop files here"
+                />
+              </span>
+            </>
+          )}
           <input
             ref={input}
             type="file"
-            multiple
+            multiple={!single}
             className="sr-only"
             tabIndex={-1}
-            disabled={blocked}
-            aria-label={intl.formatMessage({
-              id: "createAttachments.choose",
-              defaultMessage: "Attach documents",
-            })}
+            disabled={blocked || full}
+            aria-label={
+              chooseLabel ??
+              intl.formatMessage({
+                id: "createAttachments.choose",
+                defaultMessage: "Attach documents",
+              })
+            }
             onChange={(event) => {
-              uploads.add(Array.from(event.target.files ?? []));
+              take(Array.from(event.target.files ?? []));
               event.target.value = "";
             }}
           />

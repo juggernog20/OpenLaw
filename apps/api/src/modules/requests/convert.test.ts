@@ -117,7 +117,7 @@ beforeAll(async () => {
   // "Counterparty" is on the NDA request form *and* on both contract
   // types, so it is the value that carries. "Deal desk region" is on
   // the request form and on no contract type, so it is the value with
-  // nowhere to land (the INT-002 M19/7 addendum). "Governing law" is
+  // nowhere to land (the INT-002 M19/7 addendum). "Deal governing law" is
   // hard-required on the MSA contract type and on no request form, so
   // it is the gap the dialog has to prompt for (CTR-016/MTR-014).
   // "Requesting manager" is a carried reference whose archived row
@@ -141,7 +141,7 @@ beforeAll(async () => {
       required: false,
     },
     {
-      displayName: "Governing law",
+      displayName: "Deal governing law",
       fieldType: "text",
       onRequestForm: false,
       onNda: false,
@@ -390,7 +390,7 @@ describe("the target is confirmed, never classified (DD-018, INT-002)", () => {
       title: "Actually an MSA",
       contractTypeId: contractTypeIds.get("msa"),
       priority: "low",
-      customFields: { [slug]: "Revised party", [fieldSlugs.get("Governing law")!]: "England" },
+      customFields: { [slug]: "Revised party", [fieldSlugs.get("Deal governing law")!]: "England" },
     });
     expect(res.statusCode, res.body).toBe(200);
     const contract = await contractNumbered(res.json().request.convertedContract.number as number);
@@ -572,7 +572,7 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
       contractTypeId: contractTypeIds.get("msa"),
     });
     expect(res.statusCode, res.body).toBe(400);
-    expect(res.json().detail).toContain("Governing law");
+    expect(res.json().detail).toContain("Deal governing law");
     // All-or-nothing: no contract, no status move, no back-link.
     expect(await contractCount()).toBe(before);
     const row = await stored(request.id);
@@ -589,12 +589,12 @@ describe("what the record is born with (INT-002, MTR-012, CTR-016)", () => {
     const res = await convert(request.number, {
       title: "Orion MSA renewal",
       contractTypeId: contractTypeIds.get("msa"),
-      customFields: { [fieldSlugs.get("Governing law")!]: "England and Wales" },
+      customFields: { [fieldSlugs.get("Deal governing law")!]: "England and Wales" },
     });
     expect(res.statusCode, res.body).toBe(200);
     const number = res.json().request.convertedContract.number as number;
     expect((await contractNumbered(number)).customFields).toMatchObject({
-      [fieldSlugs.get("Governing law")!]: "England and Wales",
+      [fieldSlugs.get("Deal governing law")!]: "England and Wales",
     });
   });
 

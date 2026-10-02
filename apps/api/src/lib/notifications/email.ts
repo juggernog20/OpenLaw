@@ -113,6 +113,11 @@ export function matterLink(baseUrl: string, matterNumber: number): string {
   return `${origin(baseUrl)}/matters/${matterNumber}`;
 }
 
+/** A Business User opens a Contract or Matter in the Portal, where their Tasks are. */
+function portalRecordLink(baseUrl: string, kind: "contract" | "matter", number: number): string {
+  return `${origin(baseUrl).replace(/\/portal$/, "")}/portal/${kind}s/${number}`;
+}
+
 /**
  * The deep link a group-5 message points at: the Request in the portal.
  *
@@ -385,6 +390,11 @@ function matterMail(
   const who = notificationActor(notification);
   if (notification.eventType === "matter.task_assigned") {
     const task = detail(notification, "taskTitle");
+    const portal = notification.recipientRole === "business_user";
+    const href = portal ? portalRecordLink(baseUrl, "matter", record.number) : `${link}/tasks`;
+    const line = portal
+      ? "Your Task is on the Matter in the Portal."
+      : "The checklist is on the Matter record.";
     return {
       ...recordLayout(notification, baseUrl, brand, {
         subject: task ? `Task assigned: ${task} (${named})` : `Task assigned on ${named}`,
@@ -396,12 +406,11 @@ function matterMail(
             ? `${who} has given you a Task on ${named}: ${task}.`
             : `${who} has given you a Task on ${named}.`,
         ],
-        record: { facts: task ? [{ label: "Task", value: task }] : [] },
-        action: {
-          label: "Open tasks",
-          href: `${link}/tasks`,
-          line: "The checklist is on the Matter record.",
+        record: {
+          facts: task ? [{ label: "Task", value: task }] : [],
+          ...(portal ? { href } : {}),
         },
+        action: { label: "Open tasks", href, line },
         footer: { kind: "notification", why: "The task is assigned to you." },
       }),
       to,
@@ -413,9 +422,9 @@ function matterMail(
           ? `${who} has given you a Task on ${named}: ${task}.`
           : `${who} has given you a Task on ${named}.`,
         "",
-        `${link}/tasks`,
+        href,
         "",
-        "The checklist is on the Matter record.",
+        line,
       ].join("\n"),
     };
   }
@@ -777,6 +786,11 @@ function contractMail(
       // by a build that did not is still a real prompt about a real
       // record, so it says "a task" rather than nothing at all.
       const task = detail(notification, "taskTitle");
+      const portal = notification.recipientRole === "business_user";
+      const href = portal ? portalRecordLink(baseUrl, "contract", record.number) : link;
+      const line = portal
+        ? "Your task is on the contract in the Portal."
+        : "The checklist is on the record.";
       return {
         ...recordLayout(notification, baseUrl, brand, {
           subject: task
@@ -790,8 +804,11 @@ function contractMail(
               ? `${who} has given you a task on ${contractTitle}: ${task}.`
               : `${who} has given you a task on ${contractTitle}.`,
           ],
-          record: { facts: task ? [{ label: "Task", value: task }] : [] },
-          action: { label: "Open tasks", href: link, line: "The checklist is on the record." },
+          record: {
+            facts: task ? [{ label: "Task", value: task }] : [],
+            ...(portal ? { href } : {}),
+          },
+          action: { label: "Open tasks", href, line },
           footer: { kind: "notification", why: "The task is assigned to you." },
         }),
         to,
@@ -805,9 +822,9 @@ function contractMail(
             ? `${who} has given you a task on ${contractTitle}: ${task}.`
             : `${who} has given you a task on ${contractTitle}.`,
           "",
-          link,
+          href,
           "",
-          "The checklist is on the record.",
+          line,
         ].join("\n"),
       };
     }

@@ -963,3 +963,163 @@ it("refuses the retired formFieldOrder body key", async () => {
   expect(res.statusCode).toBe(400);
   expect(res.body).toContain("formFieldOrder");
 });
+
+describe("POST /request-types/:id/separate-form (DD-028)", () => {
+  const separate = (id: string, cookies = adminCookies) =>
+    harness.app.inject({
+      method: "POST",
+      url: `/api/v1/request-types/${id}/separate-form`,
+      cookies,
+    });
+
+  async function addType(displayName: string, target: Record<string, unknown>) {
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/request-types",
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const patched = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/request-types/${created.json().requestType.id}`,
+      cookies: adminCookies,
+      payload: target,
+    });
+    expect(patched.statusCode, patched.body).toBe(200);
+    return patched.json().requestType as TypeRow;
+  }
+
+  const readForm = async (module: "contract" | "matter", id: string) => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/${module}-types/${id}/form`,
+      cookies: adminCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json().form as unknown;
+  };
+
+  const entriesFor = (action: string) =>
+    harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, action))
+      .orderBy(asc(activityLog.createdAt));
+
+  it("copies a shared type with its Form and points only this Request type at the copy", async () => {
+    const [nda] = await harness.db
+      .select()
+      .from(contractTypes)
+      .where(eq(contractTypes.slug, "nda"))
+      .limit(1);
+    const marketing = await addType("Marketing content review", {
+      targetModule: "contract",
+      targetTypeId: nda!.id,
+    });
+
+    const res = await separate(marketing.id);
+    expect(res.statusCode, res.body).toBe(201);
+    const { requestType, type } = res.json() as {
+      requestType: { id: string; targetModule: string; targetTypeId: string };
+      type: { id: string; slug: string; displayName: string };
+    };
+    expect(type.displayName).toBe("Marketing content review");
+    expect(requestType).toEqual({
+      id: marketing.id,
+      targetModule: "contract",
+      targetTypeId: type.id,
+    });
+    expect((await typeBySlug(marketing.slug)).targetTypeId).toBe(type.id);
+    // The other Request type on NDA keeps its destination.
+    expect((await typeBySlug("nda_request")).targetTypeId).toBe(nda!.id);
+
+    const [copy] = await harness.db
+      .select()
+      .from(contractTypes)
+      .where(eq(contractTypes.id, type.id))
+      .limit(1);
+    expect(copy).toMatchObject({
+      slug: type.slug,
+      description: nda!.description,
+      isDefault: false,
+      isSystemDefault: false,
+      archivedAt: null,
+    });
+    expect(await readForm("contract", type.id)).toEqual(await readForm("contract", nda!.id));
+
+    expect(
+      (await entriesFor("contract_type.duplicated")).find(
+        (entry) => (entry.payload as { slug: string }).slug === type.slug,
+      ),
+    ).toMatchObject({
+      visibility: "admin_only",
+      payload: {
+        displayName: "Marketing content review",
+        sourceSlug: "nda",
+        sourceDisplayName: nda!.displayName,
+      },
+    });
+    expect(
+      (await entriesFor("request_type.updated"))
+        .filter((entry) => (entry.payload as { slug: string }).slug === marketing.slug)
+        .at(-1)?.payload,
+    ).toMatchObject({
+      changed: { targetType: { from: nda!.displayName, to: "Marketing content review" } },
+    });
+
+    // The Form is no longer shared, so a second press copies nothing.
+    const again = await separate(marketing.id);
+    expect(again.statusCode, again.body).toBe(409);
+    expect(again.json().detail).toBe("This request type already has its own Form.");
+  });
+
+  it("copies the Default type for a module-only destination as a plain type", async () => {
+    const [matterDefault] = await harness.db
+      .select()
+      .from(matterTypes)
+      .where(eq(matterTypes.isDefault, true))
+      .limit(1);
+    const legalQuestion = await typeBySlug("legal_question");
+    const ops = await addType("Operations question", { targetModule: "matter" });
+    expect(ops.targetTypeId).toBeNull();
+
+    const res = await separate(ops.id);
+    expect(res.statusCode, res.body).toBe(201);
+    const { type } = res.json() as { type: { id: string } };
+    const [copy] = await harness.db
+      .select()
+      .from(matterTypes)
+      .where(eq(matterTypes.id, type.id))
+      .limit(1);
+    expect(copy).toMatchObject({ displayName: "Operations question", isDefault: false });
+    expect(await readForm("matter", type.id)).toEqual(await readForm("matter", matterDefault!.id));
+    expect((await typeBySlug(ops.slug)).targetTypeId).toBe(type.id);
+    expect((await typeBySlug("legal_question")).targetTypeId).toBe(legalQuestion.targetTypeId);
+    expect(
+      (await entriesFor("request_type.updated"))
+        .filter((entry) => (entry.payload as { slug: string }).slug === ops.slug)
+        .at(-1)?.payload,
+    ).toMatchObject({ changed: { targetType: { from: null, to: "Operations question" } } });
+  });
+
+  it("refuses an unknown or archived Request type and a Legal Team Member", async () => {
+    expect((await separate("no-such-type")).statusCode).toBe(404);
+
+    const archived = await addType("Archived sharer", { targetModule: "matter" });
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/request-types/${archived.id}/archive`,
+      cookies: adminCookies,
+      payload: {},
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+    const refused = await separate(archived.id);
+    expect(refused.statusCode, refused.body).toBe(409);
+    expect(refused.json().detail).toContain("Restore this request type");
+
+    const cookies = await harnessSignInCookies(harness.app, MEMBER.email, MEMBER.password);
+    const member = await separate((await typeBySlug("legal_question")).id, cookies);
+    expect(member.statusCode, member.body).toBe(403);
+  });
+});

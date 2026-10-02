@@ -508,6 +508,8 @@ export const CONTRACT_SORT_KEYS = [
   "priority",
   "effectiveDate",
   "expiryDate",
+  "nextDeadline",
+  "noticeDeadline",
   "createdAt",
   "updatedAt",
 ] as const;

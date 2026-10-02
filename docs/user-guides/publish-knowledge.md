@@ -20,7 +20,7 @@ A Document marked Confidential stays off the Portal, even on an item published f
 ## Publish and check the Portal
 
 1. Set **Audience** to **Everyone** if the item is intended for Portal readers, or keep **Legal Only** for the legal team's library.
-2. Open **Knowledge Item actions** and select **Publish**. The **Draft** marker disappears. A live published item with **Everyone** shows **On the portal**.
+2. Open **Knowledge Item actions** and select **Publish**. The **Draft** marker disappears. A live published item with **Everyone** shows one of two markers. **Portal-ready** means no deflection link points at the item yet, so Business Users cannot reach it. A note at the top of the record says so, and for an Administrator the note links to the deflection links. **On the portal** means at least one deflection link points at the item.
 3. Publishing alone gives readers no way to reach the item. Ask an Administrator to open **Settings**, **Intake**, **Deflection links** and select **Add link**. The link needs **Target** set to **Knowledge item**, this item chosen, a reader-facing **Label**, and **Placement** set to **Portal home** or one [request type](request-forms.md). The **Knowledge item** list offers only live items published for **Everyone**, so publish first.
 4. In a separate signed-in Business Portal session, open that deflection link under **Before you submit**. Check the title, guidance, and current downloads for both primary and supporting Documents. A Confidential Document is not listed. The [Portal reading guide](portal-knowledge.md) explains this view.
 

@@ -221,7 +221,9 @@ async function moveToStatus(page: Page, number: number, status: StatusOption): P
       response.url().endsWith(`/api/v1/contracts/${number}`) &&
       response.request().method() === "PATCH",
   );
-  await page.getByRole("button", { name: /move contract$/ }).click();
+  // Every stage is a trigger for its own statuses (DES-053 addendum).
+  const stage = status.stage.charAt(0).toUpperCase() + status.stage.slice(1);
+  await page.getByRole("button", { name: `${stage} — move contract`, exact: true }).click();
   await page
     .getByRole("menuitemradio")
     .filter({ hasText: startsWithName(status.displayName) })

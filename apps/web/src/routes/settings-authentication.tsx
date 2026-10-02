@@ -27,18 +27,20 @@ import { Label } from "../components/ui/label";
 export async function settingsAuthenticationLoader() {
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
-  const [methods, domains, providers] = await Promise.all([
+  const [methods, domains, providers, invites] = await Promise.all([
     api.GET("/api/v1/auth/methods"),
     api.GET("/api/v1/auth/allowed-domains"),
     api.GET("/api/v1/auth/sso-providers"),
+    api.GET("/api/v1/auth/invite-policy"),
   ]);
-  if (!methods.data || !domains.data || !providers.data) {
+  if (!methods.data || !domains.data || !providers.data || !invites.data) {
     throw new Error("The authentication settings could not be read.");
   }
   return {
     policy: methods.data.policy,
     domains: domains.data.domains,
     providers: providers.data.providers,
+    inviteLinkLifetimeDays: invites.data.inviteLinkLifetimeDays,
   };
 }
 
@@ -364,15 +366,24 @@ export function SettingsAuthenticationPage() {
   const [rowError, setRowError] = useState<Record<string, string | undefined>>({});
   const listRef = useRef<HTMLUListElement>(null);
 
-  const [status, setStatus] = useState<Record<"legal" | "business" | "domains", FieldStatus>>({
+  const [inviteLifetime, setInviteLifetime] = useState(loaded.inviteLinkLifetimeDays);
+  const [inviteLifetimeInput, setInviteLifetimeInput] = useState(
+    String(loaded.inviteLinkLifetimeDays),
+  );
+
+  const [status, setStatus] = useState<
+    Record<"legal" | "business" | "domains" | "invites", FieldStatus>
+  >({
     legal: "idle",
     business: "idle",
     domains: "idle",
+    invites: "idle",
   });
   const [detail, setDetail] = useState<Record<keyof typeof status, string | undefined>>({
     legal: undefined,
     business: undefined,
     domains: undefined,
+    invites: undefined,
   });
 
   function note(field: keyof typeof status, value: FieldStatus, message?: string) {
@@ -397,6 +408,37 @@ export function SettingsAuthenticationPage() {
     setPolicy(result.data);
     note(group, "saved");
     void revalidator.revalidate();
+  }
+
+  /** Saves the invite link lifetime on blur. A password reset keeps
+   * its 1 hour lifetime (SET-005 addendum, 2026-10-02). */
+  async function commitInviteLifetime() {
+    const days = Number(inviteLifetimeInput);
+    if (!Number.isInteger(days) || days < 1 || days > 30) {
+      note(
+        "invites",
+        "error",
+        intl.formatMessage({
+          id: "settings.auth.inviteLifetimeInvalid",
+          defaultMessage: "Enter a whole number from 1 to 30.",
+        }),
+      );
+      return;
+    }
+    if (days === inviteLifetime) {
+      note("invites", "idle");
+      return;
+    }
+    note("invites", "saving");
+    const result = await api
+      .PATCH("/api/v1/auth/invite-policy", { body: { inviteLinkLifetimeDays: days } })
+      .catch(() => undefined);
+    if (!result?.data) {
+      note("invites", "error", (await problem(result)).detail ?? networkError(intl));
+      return;
+    }
+    setInviteLifetime(result.data.inviteLinkLifetimeDays);
+    note("invites", "saved");
   }
 
   /** Resolves with whether the list landed, so callers can sequence on
@@ -508,6 +550,42 @@ export function SettingsAuthenticationPage() {
             defaultMessage="Administrators retain emergency password sign-in. Any required two-factor authentication still applies."
           />
         </p>
+
+        <div className="flex flex-col gap-1.5 border-t border-border-default pt-4">
+          <div className="flex items-center gap-2">
+            <Label
+              htmlFor="invite-lifetime"
+              help={
+                <FormattedMessage
+                  id="settings.auth.inviteLifetimeHelp"
+                  defaultMessage="A new invite link stops working after this many days. Choose 1 to 30. A password reset link still expires after 1 hour."
+                />
+              }
+            >
+              <FormattedMessage
+                id="settings.auth.inviteLifetime"
+                defaultMessage="Invite link lifetime (days)"
+              />
+            </Label>
+            <StatusNote status={status.invites} detail={detail.invites} />
+          </div>
+          <Input
+            id="invite-lifetime"
+            className="w-24"
+            type="number"
+            min={1}
+            max={30}
+            step={1}
+            required
+            value={inviteLifetimeInput}
+            disabled={status.invites === "saving"}
+            onChange={(event) => setInviteLifetimeInput(event.target.value)}
+            onBlur={() => void commitInviteLifetime()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+            }}
+          />
+        </div>
       </SettingsCard>
 
       <SettingsCard

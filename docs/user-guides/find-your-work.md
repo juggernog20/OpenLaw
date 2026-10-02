@@ -33,13 +33,15 @@ Home is a personal summary. Use a module's list to browse other reachable record
 ## Open all your Tasks
 
 1. Select **My Tasks** in the app navigation. You can also select **View all** with the displayed count in **Tasks assigned to you** on Home.
-2. On **Your Tasks**, select a Task title to open its owning record.
+2. On **My Tasks**, select a Task title. Its owning record opens on the Tasks tab, with the Task's details open.
 3. Use **Load more Tasks** if the list has another page.
 4. Select **Home** in the app navigation to return.
 
 The list contains open Tasks assigned to you, ordered by due date, with undated Tasks after dated ones. **No open Tasks assigned to you.** means the list is empty. If the Home card is absent, no matching Tasks are available there. Turn on the **Show completed** switch to add your completed Tasks to the list. The switch label then says **Hide completed**. Turn it off to remove them again.
 
-Administrators and Legal Team Members can use a Task's completion control on **Your Tasks** when the work is done. **Undo** reopens the Task you just completed. When completed Tasks are shown, clear a completed Task's control to reopen it. Wait for the **Completed** or **Reopened** message before continuing. If saving fails, follow the displayed retry instruction.
+Use **Due** to narrow the list. **Overdue** keeps open Tasks with a due date before today. **Due in the next 7 days** keeps Tasks due through 7 days from today, overdue Tasks included. **All** removes the filter. The count, the empty message and **Load more Tasks** follow your choice, and the page keeps it when you reload.
+
+Administrators and Legal Team Members can use a Task's completion control on **My Tasks** when the work is done. **Undo** reopens the Task you just completed. When completed Tasks are shown, clear a completed Task's control to reopen it. Wait for the **Completed** or **Reopened** message before continuing. If saving fails, follow the displayed retry instruction.
 
 Task due dates belong to Tasks. They do not become Key dates and do not feed **Dates approaching**. Use that section's **View all** to open **Your dates**, a calendar of record dates.
 

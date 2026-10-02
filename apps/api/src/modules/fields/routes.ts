@@ -155,6 +155,42 @@ function checkOptions(fieldType: string, options: string[] | undefined): string[
 
 export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   /** Locks and returns one row, or 404s — every :id mutation starts here. */
+  /**
+   * Field names are unique per module scope, case ignored, across live
+   * and archived Fields (CTR-016 addendum, #1277). Across scopes the
+   * same name is allowed, because migration 0140 made same-name copies
+   * in each module on purpose. The advisory lock serializes every
+   * create and rename, so two saves of one name cannot both pass. Take
+   * it before any row lock.
+   */
+  async function lockFieldNames(tx: Transaction) {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext('fields.display_name'))`);
+  }
+
+  async function refuseTakenName(
+    tx: Transaction,
+    moduleScope: Field["moduleScope"],
+    displayName: string,
+    exceptId?: string,
+  ) {
+    const [taken] = await tx
+      .select({ id: fields.id })
+      .from(fields)
+      .where(
+        and(
+          eq(fields.moduleScope, moduleScope),
+          sql`lower(${fields.displayName}) = lower(${displayName})`,
+          exceptId === undefined ? undefined : sql`${fields.id} <> ${exceptId}`,
+        ),
+      )
+      .limit(1);
+    if (taken) {
+      const module = moduleScope.charAt(0).toUpperCase() + moduleScope.slice(1);
+      const article = /^[AEIOU]/.test(module) ? "An" : "A";
+      throw httpError(409, `${article} ${module} Field named ${displayName} already exists.`);
+    }
+  }
+
   async function lockedField(tx: Transaction, id: string): Promise<Field> {
     const [row] = await tx.select().from(fields).where(eq(fields.id, id)).limit(1).for("update");
     if (!row) throw httpError(404, "No field exists with this id.");
@@ -338,6 +374,8 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       const row = await app.db.transaction(async (tx) => {
+        await lockFieldNames(tx);
+        await refuseTakenName(tx, moduleScope, displayName);
         // The slug derives from the full row set — archived rows still
         // hold their slugs (restore brings them back), so the scan
         // includes them.
@@ -399,6 +437,7 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request) => {
       const body = request.body;
       const row = await app.db.transaction(async (tx) => {
+        if (body.displayName !== undefined) await lockFieldNames(tx);
         const target = await lockedField(tx, request.params.id);
 
         const patch: Partial<Field> = {};
@@ -411,6 +450,11 @@ export const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         };
 
         if (body.displayName !== undefined) wants("displayName", body.displayName.trim());
+        // A save that keeps the name passes, so a same-name pair from
+        // before the rule can still be edited.
+        if (patch.displayName !== undefined) {
+          await refuseTakenName(tx, target.moduleScope, patch.displayName, target.id);
+        }
         if (body.description !== undefined) {
           wants("description", body.description?.trim() || null);
         }

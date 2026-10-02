@@ -45,6 +45,10 @@ The Ownership tab's reconciliation line compares the Overview's declared `shares
 
 Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
 
+### Resignation addendum (2026-10-02, [#1312](https://github.com/juggernog20/OpenLaw/issues/1312))
+
+Each current officer row has a Resign button. It opens a dialog that takes the date, set to today, and says that the row moves to Show former. This is a DES-017 purpose-built dialog with its own confirm, so DES-017 does not change. The inline Appointed on and Resigned on fields stay for corrections. Enter saves them and Escape reverts them. A first resignation date writes `entity_officer.resigned`, and History says that the officer resigned, with the role and the date. A later change or a cleared date still writes `entity_officer.updated`.
+
 ### Amendment (2026-09-21, DD-028) — Entity types get the Form
 
 `entity_type_fields` becomes the Row table of an Entity type's Form: Required for creation and Branches, no intake switch and no built-in Rows. The entity create form collects the required Rows of the chosen type; the rest go on the record.
@@ -114,6 +118,10 @@ Migration 0151 (the same migration as the register tables) adds `source` (`manua
 
 Hand-typed Holdings are superseded by ENT-012. The write routes, Add Holding, the individual-owner dialog and the soft ≤100% warning are removed, and migration 0185 deletes the typed rows. The graph, the chart and the majority spine read the projected rows as before.
 
+### Archived Entities addendum (2026-10-02, [#1298](https://github.com/juggernog20/OpenLaw/issues/1298))
+
+The chart draws live Entities only. `GET /entities/chart` leaves out an archived Entity, its Holdings in either direction, its individual holders, a trust role it holds and a branch link to it. Restoring the Entity puts all of them back. ENT-009 treats an archive as a recoverable mistake, so the chart follows the registry heading, which never counts an archived row. A dissolved or divested Entity is not archived, so it keeps its status and stays on the chart. We considered drawing archived Entities with the list's archived treatment and counting them apart, and rejected it. The chart export counts the Entities the viewer reaches, as the heading does. Individual, class and Confidential Entity cards draw but do not count.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 **Amended 10 September 2026:** the DD-014 administrator bypass is removed. Confidential Entities require a grant for administrators too. New Entity creators receive a recorded grant; explicit grantees can manage access. The DD-014 amendment in [DECISIONS.md](DECISIONS.md) supersedes the original administrator exceptions below.
@@ -170,6 +178,18 @@ The obligation row is the schedule. Member+ can create, read, edit, and delete i
 `Mark filed` takes the filing day, defaulting to the caller's local day. A recurring obligation advances by its `recurrence_months` at least once and keeps advancing until the resulting due day is after the filing day. That catches up a filing made after several missed cycles without inventing several completed rows. A one-off keeps its due day and records `completed_on`. Both write `entity_obligation.filed` with the cycle date and previous due day; recurring rows also carry the new due day. Reading the calendar, opening a new month, and running the morning round never mutate the schedule.
 
 A deleted Registration is not a deleted obligation: its foreign key is set to null and the obligation remains on the calendar. Registration rows on Overview expose the obligations that currently point at them.
+
+### Filing record addendum (2026-10-02, [#1321](https://github.com/juggernog20/OpenLaw/issues/1321)) — each filing keeps its proof
+
+The 2026-09-29 focus group wanted to keep the filed board minutes and a filing reference when marking an Obligation complete. ENT-006 logged the cycle date and recorded no proof, and a recurring Obligation keeps one row whose note is the standing note on the schedule. Each filing now writes a row in `entity_obligation_filings`: the Obligation, the filing date, an optional note of up to 2,000 characters, who filed it, and an optional Entity Document.
+
+- **The Document link.** The filing names a live Document of the same Entity and pins its current Version as a `document_id` and `version_id` pair. The pair has the paired-null check and the SET NULL foreign key of `comment_attachments`, so DOC-010 erasure clears the link. A `document_filed` flag stays true, so Filing history says "Document removed" rather than nothing. A Document of another Entity is refused with 400.
+- **One transaction.** The filing row, the due-date change and the `entity_obligation.filed` History entry are written together. The History payload gains `filingId` and never the note, so no prose enters the append-only log.
+- **The dialog.** Mark complete takes an optional Note and an optional "Attach the filed paper" file. The file uploads to the Entity's Documents tab first, then the filing names it. Mark complete with neither works as before.
+- **Filing history.** The row menu lists each filing newest first, with its date, who filed it, the note and a link to the Document. A completed one-off keeps the menu with Filing history as its only item, because its one filing is the record of what was done.
+- **Deletion.** Deleting an Obligation deletes its filings. The History entries stay.
+- **Earlier filings.** Filings made before this change have no rows. Their History entries remain the record.
+- **Not taken.** The other option put the note and the Document id in the History payload only. It needed no migration, but the note would become permanent log text and the link could go stale after erasure.
 
 ## ENT-007 — Roll-ups: linked-records tabs with query-derived counts
 

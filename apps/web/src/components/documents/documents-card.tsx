@@ -150,6 +150,7 @@ import {
   Pin,
   Star,
   Trash2,
+  TriangleAlert,
   Upload,
   X,
 } from "lucide-react";
@@ -1731,18 +1732,20 @@ export function DocumentsCard({
           document={composer.document}
           seedKind={composer.kind}
           typeOptions={typeOptions ?? []}
+          folders={folders}
           supportingOnly={supportingUploads && frozen}
           onClose={() => setComposer(null)}
-          onBatch={(files, documentTypeId) => {
+          onBatch={(files, documentTypeId, destination) => {
             // More than one file is a batch, wherever it came from
             // (DOC-011). The composer's own fields are a round's — one
             // note about one change — and a batch is not a round, so it
             // hands over rather than growing a second shape.
             //
             // A directory picker's files carry the folder each one sat
-            // at; a plain multi-select's carry none, and land at the
-            // record root. Either way the batch is the same batch, which
-            // is what makes the picker folder drop's pointer-free twin
+            // at; a plain multi-select's carry none. Both land in the
+            // folder the composer's File in names, or at the record root
+            // when it names none. Either way the batch is the same batch,
+            // which is what makes the picker folder drop's pointer-free twin
             // (DES-033 §7). No empty directory comes through a picker:
             // a file input carries files, and a directory holding none
             // produces none.
@@ -1751,14 +1754,20 @@ export function DocumentsCard({
               files,
               emptyFolders: [],
               unreadable: [],
-              destination: null,
+              destination,
               source: "picker",
               documentTypeId,
             });
           }}
           onSaved={(document) => {
             if (composer.document) replace(document);
-            else prepend(document);
+            else if (document.folderId) {
+              // Filed in a folder, so it joins that folder's listing and
+              // moves its count. Both are read again, as after a Move.
+              setDetail(null);
+              setStatus("saved");
+              void applyPaper();
+            } else prepend(document);
             setComposer(null);
           }}
         />
@@ -3744,6 +3753,25 @@ function UploaderCell({ version, intl }: Readonly<{ version: DocumentVersion; in
 }
 
 /**
+ * A file's SHA-256 as lowercase hex, the form the API stores on a
+ * version. Null when the browser cannot say: `crypto.subtle` exists only
+ * in a secure context, so a plain HTTP install skips the check and
+ * uploads as before.
+ */
+async function sha256Hex(file: File): Promise<string | null> {
+  const subtle = globalThis.crypto?.subtle as SubtleCrypto | undefined;
+  if (!subtle) return null;
+  try {
+    const digest = await subtle.digest("SHA-256", await file.arrayBuffer());
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(
+      "",
+    );
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The composer: one file, what it is in the negotiation, and what
  * changed in this round.
  *
@@ -3758,6 +3786,7 @@ function UploadDialog({
   document,
   seedKind,
   typeOptions,
+  folders,
   supportingOnly,
   onClose,
   onBatch,
@@ -3773,6 +3802,8 @@ function UploadDialog({
   seedKind: HandSetDocumentVersionKind | undefined;
   /** The record module's live Document types. */
   typeOptions: readonly DocumentTypeOption[];
+  /** The record's folders, which a new upload may be filed in. */
+  folders: readonly ContractFolder[];
   /** A Contributor may use this one-file supporting upload action, but
    * not the folder picker that recreates and administers a tree. */
   supportingOnly: boolean;
@@ -3781,12 +3812,36 @@ function UploadDialog({
    * M13/5). This is the drop's pointer-free twin: the picker is where a
    * keyboard reaches bulk intake, so it has to reach the same dialog —
    * and the directory picker beside it is folder drop's twin, handing
-   * over the same shape with a path on each file. */
-  onBatch: (files: DroppedFile[], documentTypeId: string) => void;
+   * over the same shape with a path on each file. The destination is
+   * the folder File in names, or null for the record root. */
+  onBatch: (
+    files: DroppedFile[],
+    documentTypeId: string,
+    destination: BatchDestination | null,
+  ) => void;
   onSaved: (document: ContractDocument) => void;
 }>) {
   const intl = useIntl();
   const [file, setFile] = useState<File | null>(null);
+  /** Where a new upload is filed (DES-033). Only a new document asks:
+   * a version lands where its document already is. A Knowledge item has
+   * no folders, and the supporting-only upload does not administer the
+   * tree, so neither asks either. The record root is the empty value,
+   * as in Move to folder. */
+  const asksFolder =
+    document === undefined &&
+    !supportingOnly &&
+    record.entityType !== "knowledge_item" &&
+    folders.length > 0;
+  const [folderId, setFolderId] = useState("");
+  const separator = intl.formatMessage({
+    id: "documents.folder.pathSeparator",
+    defaultMessage: "/",
+  });
+  const into = asksFolder ? folders.find((row) => row.id === folderId) : undefined;
+  const destination: BatchDestination | null = into
+    ? { id: into.id, name: pathOf(folders, into, separator) }
+    : null;
   // The seed is read off the options each render, because a renewal
   // can open the composer before the type list has answered; a pick,
   // once made, wins.
@@ -3805,6 +3860,38 @@ function UploadDialog({
    * `webkitdirectory` is set on the element rather than passed to the
    * dialog it opens — one input cannot offer both. */
   const directoryPicker = useRef<HTMLInputElement>(null);
+  /** On Add version, the version the picked file is a byte-for-byte copy
+   * of. Kept with the file it is about, so a slow check of an earlier
+   * pick cannot warn about a later one. */
+  const [sameAs, setSameAs] = useState<{ file: File; version: number } | null>(null);
+  const warning = sameAs !== null && sameAs.file === file ? sameAs : null;
+  /** One check per pick, shared by the pick and the submit. */
+  const checks = useRef(new WeakMap<File, Promise<number | null>>());
+
+  /** The current version's number when `candidate` has its bytes, or
+   * null. A new document has no current version, so it is never
+   * checked. */
+  function sameVersion(candidate: File): Promise<number | null> {
+    const current = document ? chainOf(document)?.current : undefined;
+    if (!current) return Promise.resolve(null);
+    let check = checks.current.get(candidate);
+    if (!check) {
+      check = sha256Hex(candidate).then((hex) =>
+        hex === current.checksumSha256.toLowerCase() ? current.versionNumber : null,
+      );
+      checks.current.set(candidate, check);
+    }
+    return check;
+  }
+
+  function pick(one: File | null) {
+    if (one) setError(null);
+    setFile(one);
+    if (!one) return;
+    void sameVersion(one).then((version) => {
+      if (version !== null) setSameAs({ file: one, version });
+    });
+  }
 
   async function submit() {
     // One upload at a time. The CTA is disabled while one is in
@@ -3823,6 +3910,16 @@ function UploadDialog({
     }
     setBusy(true);
     setError(null);
+    // A submit that outran the check waits for it. A copy of the
+    // current version is said once, and "Upload anyway" sends it.
+    if (!warning) {
+      const version = await sameVersion(file);
+      if (version !== null) {
+        setSameAs({ file, version });
+        setBusy(false);
+        return;
+      }
+    }
     // A seeded amendment sent before the type list answers carries its
     // kind, which the API maps to the fixed Amendment type (DOC-015).
     const draft: UploadDraft =
@@ -3831,7 +3928,10 @@ function UploadDialog({
         : { file, documentTypeId: typeId || null, note };
     const outcome = document
       ? await uploadDocumentVersion(document.id, draft)
-      : await uploadRecordDocument(record, draft);
+      : await uploadRecordDocument(
+          record,
+          destination ? { ...draft, destination: { folderId: destination.id } } : draft,
+        );
     setBusy(false);
     if (outcome.ok) {
       onSaved(outcome.document);
@@ -3866,6 +3966,30 @@ function UploadDialog({
             void submit();
           }}
         >
+          {/* First, so a multi-file pick below already knows where its
+              batch lands. It reuses Move to folder's select and copy. */}
+          {asksFolder && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="document-upload-folder">
+                <FormattedMessage id="documents.move.into" defaultMessage="File in" />
+              </Label>
+              <select
+                id="document-upload-folder"
+                value={folderId}
+                className={CONTROL_CLASS}
+                onChange={(event) => setFolderId(event.target.value)}
+              >
+                <option value="">
+                  {intl.formatMessage(RECORD_COPY[record.entityType].recordRoot)}
+                </option>
+                {folders.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {pathOf(folders, option, separator)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label id="document-file-label" htmlFor="document-file">
               <FormattedMessage id="documents.composer.file" defaultMessage="File" />
@@ -3889,18 +4013,17 @@ function UploadDialog({
                 onChange={(event) => {
                   const chosen = [...(event.target.files ?? [])];
                   if (chosen.length > 1) {
-                    // Picked flat, so every file lands at the record
-                    // root — the batch's shape is the drop's, with an
+                    // Picked flat, so every file lands in the folder File
+                    // in names — the batch's shape is the drop's, with an
                     // empty path on each row.
                     onBatch(
                       chosen.map((one) => ({ file: one, path: [] })),
                       typeId,
+                      destination,
                     );
                     return;
                   }
-                  const one = chosen[0] ?? null;
-                  if (one) setError(null);
-                  setFile(one);
+                  pick(chosen[0] ?? null);
                 }}
               />
               {/* Folder drop's pointer-free twin (DES-033 §7). The
@@ -3929,7 +4052,9 @@ function UploadDialog({
                   {...{ webkitdirectory: "" }}
                   onChange={(event) => {
                     const chosen = [...(event.target.files ?? [])];
-                    if (chosen.length > 0) onBatch(filesFromDirectoryPicker(chosen), typeId);
+                    if (chosen.length > 0) {
+                      onBatch(filesFromDirectoryPicker(chosen), typeId, destination);
+                    }
                   }}
                 />
               )}
@@ -4039,13 +4164,34 @@ function UploadDialog({
               value={note}
               maxLength={MAX_NOTE_LENGTH}
               className={TEXTAREA_CLASS}
-              placeholder={intl.formatMessage({
-                id: "documents.composer.notePlaceholder",
-                defaultMessage: "What changed in this round",
-              })}
+              // A first upload has no round before it, so only Add
+              // version asks what changed.
+              placeholder={
+                document
+                  ? intl.formatMessage({
+                      id: "documents.composer.notePlaceholder",
+                      defaultMessage: "What changed in this round",
+                    })
+                  : undefined
+              }
               onChange={(event) => setNote(event.target.value)}
             />
           </div>
+          {warning && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-card bg-status-warning-bg p-3 text-sm text-status-warning-fg"
+            >
+              <TriangleAlert size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <p>
+                <FormattedMessage
+                  id="documents.composer.sameAsCurrent"
+                  defaultMessage="This file is the same as version {number}. Upload it anyway?"
+                  values={{ number: warning.version }}
+                />
+              </p>
+            </div>
+          )}
           {error && (
             <p id="document-upload-error" role="alert" className="text-xs text-status-danger-fg">
               {error}
@@ -4056,7 +4202,14 @@ function UploadDialog({
               <FormattedMessage id="action.cancel" defaultMessage="Cancel" />
             </Button>
             <Button type="submit" disabled={busy}>
-              <FormattedMessage id="documents.composer.submit" defaultMessage="Upload" />
+              {warning ? (
+                <FormattedMessage
+                  id="documents.composer.uploadAnyway"
+                  defaultMessage="Upload anyway"
+                />
+              ) : (
+                <FormattedMessage id="documents.composer.submit" defaultMessage="Upload" />
+              )}
             </Button>
           </div>
         </form>

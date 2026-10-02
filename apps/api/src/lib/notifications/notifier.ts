@@ -82,6 +82,7 @@ import {
   contractRecordAudience,
   CONTRACT_ENTITY,
   PORTAL_SHARED_EVENTS,
+  PORTAL_TASK_EVENTS,
   ENTITY_ENTITY,
   entityReachedBy,
   inboxAudience,
@@ -937,7 +938,8 @@ async function fanOut(
       if (
         eventType !== "approval.requested" &&
         !sharedComment &&
-        !PORTAL_SHARED_EVENTS.includes(eventType)
+        !PORTAL_SHARED_EVENTS.includes(eventType) &&
+        !PORTAL_TASK_EVENTS.includes(eventType)
       )
         reachable.delete(person.id);
     }

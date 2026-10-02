@@ -183,7 +183,8 @@ test.describe.serial("M28 deployer journey", () => {
       );
       await page.getByLabel("Audience").selectOption("everyone");
       expect((await audienceChanged).status()).toBe(200);
-      await expect(page.getByText("On the portal")).toBeVisible();
+      // No deflection link points at the item yet (#1294).
+      await expect(page.getByText("Portal-ready")).toBeVisible();
 
       await page.goto("/settings/intake/links");
       await page.getByRole("button", { name: "Add link" }).click();

@@ -2,7 +2,7 @@
 
 /** Persistent Portal destinations, shared by lists and records (DES-078). */
 
-import { ListChecks, BriefcaseBusiness, FileText, Inbox, Signature } from "lucide-react";
+import { ListChecks, ListTodo, BriefcaseBusiness, FileText, Inbox, Signature } from "lucide-react";
 import { defineMessage, FormattedMessage, useIntl } from "react-intl";
 import { Link, matchPath, useLocation } from "react-router";
 import { cn } from "../../lib/utils";
@@ -19,6 +19,12 @@ const destinations = [
     matches: ["/portal/approvals", "/portal/approvals/*"],
     icon: ListChecks,
     label: defineMessage({ id: "portal.navigation.approvals", defaultMessage: "Approvals" }),
+  },
+  {
+    to: "/portal/tasks",
+    matches: ["/portal/tasks"],
+    icon: ListTodo,
+    label: defineMessage({ id: "portal.tasks.navigation", defaultMessage: "Tasks" }),
   },
   {
     to: "/portal/contracts",

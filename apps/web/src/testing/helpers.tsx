@@ -456,6 +456,9 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
       return json(200, { providers: [] });
     }
+    if (call.url.pathname === "/api/v1/auth/invite-policy" && call.method === "GET") {
+      return json(200, { inviteLinkLifetimeDays: 7 });
+    }
     if (call.url.pathname === "/api/v1/auth/methods" && call.method === "GET") {
       const methods = state.methods ?? {
         mode: "built_in" as const,
@@ -504,6 +507,9 @@ export function stubApi(state: ApiState) {
       call.method === "GET"
     )
       return json(200, { documents: [], nextCursor: null });
+    // A Portal record reads the viewer's own Tasks on it. None by default.
+    if (call.url.pathname === "/api/v1/portal/tasks" && call.method === "GET")
+      return json(200, { total: 0, rows: [], nextCursor: null });
     // A contract record reads its paper (M11/2). Empty by default, so
     // every suite that is not about documents needs no stub of its own;
     // the ones that are supply rows through `extra`, which runs first.

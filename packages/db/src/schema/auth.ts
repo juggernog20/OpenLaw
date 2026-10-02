@@ -69,6 +69,10 @@ export const users = pgTable(
     // live session rows would regress to "never" the moment they are
     // deleted. NULL = has never signed in (a pending invite).
     lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
+    // When the newest invite link stops working (SET-005 addendum,
+    // 2026-10-02). Each invite and resend sets it from the org's invite
+    // link lifetime. NULL for users who were never invited this way.
+    inviteExpiresAt: timestamp("invite_expires_at", { withTimezone: true }),
   },
   (table) => [
     // Unique on lower(email): every write path normalizes to lower case,

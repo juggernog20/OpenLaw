@@ -4,7 +4,7 @@ Use these steps for an Administrator or Legal Team Member account. Ask your Admi
 
 ## Accept a password invitation
 
-1. Open the invitation email, **Set your OpenLaw password**, and select **Set password**. The link expires in one hour.
+1. Open the invitation email, **You are invited to OpenLaw**, and select **Set password**. The email says when the link expires. If the link has expired, ask your Administrator to resend the invite.
 2. Enter **New password** with at least eight characters.
 3. Enter the same value in **Confirm password**.
 4. Select **Set password**.

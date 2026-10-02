@@ -11,12 +11,20 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { DescribedField, DescribedFieldLabel } from "../described-field";
 
+/** The empty choice on a select the requester still has to answer. A
+ * record page says "Not set", because there empty is a saved state. */
+export const CHOOSE_ANSWER: MessageDescriptor = defineMessage({
+  id: "portal.form.choosePlaceholder",
+  defaultMessage: "Choose an answer",
+});
+
 export function Field({
   htmlFor,
   label,
   required = false,
   description,
   unanswered = false,
+  error,
   children,
 }: Readonly<{
   htmlFor: string;
@@ -24,6 +32,8 @@ export function Field({
   required?: boolean;
   description?: string | null;
   unanswered?: boolean;
+  /** A refusal with its own reason. It replaces the required line. */
+  error?: string;
   children: React.ReactNode;
 }>) {
   return (
@@ -46,14 +56,17 @@ export function Field({
         )}
       </DescribedFieldLabel>
       {children}
-      {unanswered && (
-        <p className="text-xs text-status-danger-fg">
-          <FormattedMessage
-            id="portal.form.fieldRequired"
-            defaultMessage="{field} is required."
-            values={{ field: label }}
-          />
-        </p>
+      {error !== undefined ? (
+        <p className="text-xs text-status-danger-fg">{error}</p>
+      ) : (
+        unanswered && (
+          <p className="text-xs text-status-danger-fg">
+            <FormattedMessage
+              id="portal.form.answerRequired"
+              defaultMessage="Answer this before you submit."
+            />
+          </p>
+        )
       )}
     </DescribedField>
   );

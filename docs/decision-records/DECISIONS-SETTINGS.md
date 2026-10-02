@@ -178,6 +178,18 @@ Start blank hard-deletes the catalog rows. It does not archive them. At first ru
 
 An invite exists only through its set-password email. When the effective mailer is unconfigured, for example `SMTP_URL` set with `SMTP_FROM` unset, `POST /auth/invites` and `POST /auth/invites/:userId/resend` answer 409 with the problem type `/problems/email-setup-required`, the same answer `POST /onboarding/complete` gives. The refusal is checked before any write, so no **Invited** row is created that nobody can activate and the Administrator has nothing to revoke. The Invite user dialog shows the API's detail, and Resend invite shows it beside the row. The alternative, creating the row and reporting that the email was not sent, was declined: the row would sit as Invited until someone noticed, which is the failure #889 reported.
 
+### Addendum (2026-10-02): the invite link lifetime is a setting, split from password resets
+
+Before this change, an invite and a password reset shared one flow, and better-auth gave both a 1 hour token. A new hire who opened the invite days later found a dead link (#1288). Now the invite routes mint their own set-password token. The token is the same `reset-password:<token>` verification row that a reset writes, so `/auth/set-password` redeems both. Only the lifetime differs.
+
+- **Invite link lifetime (days)** is an org setting in the **Legal User Authentication** card of Settings → Advanced → Authentication, stored as `org_settings.invite_link_lifetime_days`. It is seeded at 7 days and bounded 1 to 30. A change applies to the next invite or resend and is logged as `org_settings.updated` at `admin_only`.
+- **A password reset keeps 1 hour.** A forgotten-password reset protects an account that already has a credential, so it keeps the short lifetime.
+- **A resend deletes every earlier set-password token of the user** before it mints the new one, so only the newest link works. Revoke still deletes the user and its tokens.
+- **The invite email has its own subject and copy.** The subject is "You are invited to OpenLaw". The email names the expiry date and tells the person to ask an Administrator to resend the invite if the link has expired. When **Email magic link** is on for Legal Users, the email also says that the person can sign in with an email link.
+- **The Invited row shows the expiry.** `users.invite_expires_at` stores it. The row reads "Link valid until Oct 9", or "Link expired" with the date once it has passed.
+
+A week covers a normal notice period, and the token is single-use and hashed at rest. A fixed 7 days was declined, because an organization with a longer onboarding gap would have no remedy except a resend. Keeping 1 hour and changing only the copy was declined, because the dead link was the problem.
+
 ## SET-006 — Personal profile scope; email change deferred
 
 - **Status** — Accepted

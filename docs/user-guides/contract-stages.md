@@ -8,8 +8,8 @@ Sign in as a Legal Team Member or Administrator with access to an unarchived Con
 
 ## Change the Status
 
-1. Open the Contract and select its current Stage in the header's Stage display.
-2. Select the intended Status. Read the Stage beside it rather than relying on the Status name alone.
+1. Open the Contract and select any Stage in the header's Stage display. The current Stage is the filled one. Each Stage opens a menu of only its own Statuses, with the current Status checked.
+2. Select the intended Status.
 3. If **Move past approval** appears, read the unresolved approvals. Select **Cancel** to keep the current Status, or **Move anyway** to make the stated override. A send from the **Signatures** tab can show the same warning.
 4. Check the new Status beside the C- reference and the Stage display. Select **History** to read the recorded change in the Activity feed.
 

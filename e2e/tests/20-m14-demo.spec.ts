@@ -385,7 +385,7 @@ function pipeline(page: Page): Locator {
 }
 
 /** One stage's place in the strip. Matched on the name it starts with,
- * because a stage behind the marker carries a screen-reader "done"
+ * because a stage behind the marker carries a screen-reader "earlier"
  * after it. */
 function stageStep(page: Page, stage: StageName): Locator {
   return pipeline(page)
@@ -395,15 +395,15 @@ function stageStep(page: Page, stage: StageName): Locator {
 
 /**
  * The whole pipeline, read as one statement: the marker on the stage
- * the contract sits at, a "done" on every stage behind it, and neither
- * on any stage ahead.
+ * the contract sits at, an "earlier" on every stage behind it, and
+ * neither on any stage ahead.
  *
  * Read whole rather than one step at a time because the property is
  * about the strip and not about a step. It renders **position, not
- * progress** (CTR-001, DES-034): a stage carries its check because it
- * is behind the marker now, so a regression would have to take those
- * checks away again — and only an assertion over all six stages would
- * notice if it did not.
+ * progress** (CTR-001, DES-034): a stage carries its marker because it
+ * is behind the current one now, so a regression would have to take
+ * those markers away again — and only an assertion over all six stages
+ * would notice if it did not.
  */
 async function expectPipelineAt(page: Page, stage: StageName): Promise<void> {
   const position = STAGE_NAMES.indexOf(stage);
@@ -416,31 +416,34 @@ async function expectPipelineAt(page: Page, stage: StageName): Promise<void> {
     await expect(item, `the pipeline draws no ${step} step`).toHaveCount(1);
     if (index === position) {
       await expect(item, `the marker is not on ${step}`).toHaveAttribute("aria-current", "step");
-      await expect(item).not.toContainText("done");
+      await expect(item).not.toContainText("earlier");
     } else {
       await expect(item, `${step} is marked as the current stage`).not.toHaveAttribute(
         "aria-current",
         "step",
       );
       if (index < position) {
-        await expect(item, `${step} is behind the marker and is not marked done`).toContainText(
-          "done",
+        await expect(item, `${step} is behind the marker and is not marked earlier`).toContainText(
+          "earlier",
         );
       } else {
-        await expect(item, `${step} is ahead of the marker and is marked done`).not.toContainText(
-          "done",
-        );
+        await expect(
+          item,
+          `${step} is ahead of the marker and is marked earlier`,
+        ).not.toContainText("earlier");
       }
     }
   }
 }
 
 /**
- * The record's own move control (DES-053) — the current stage's pill in
- * the strip, which is the one item of the six that can be pressed.
+ * One stage's move control in the strip. Every stage is a trigger
+ * (DES-053 addendum), named for its own stage, and its menu holds only
+ * that stage's statuses.
  */
-function moveControl(page: Page): Locator {
-  return page.getByRole("button", { name: /move contract$/ });
+function moveControl(page: Page, stage: string): Locator {
+  const name = stage.charAt(0).toUpperCase() + stage.slice(1);
+  return page.getByRole("button", { name: `${name} — move contract`, exact: true });
 }
 
 /**
@@ -464,14 +467,13 @@ function moveControl(page: Page): Locator {
  * one thing that can still be read behind a dialog is read that way.
  */
 async function expectStageBehindDialog(page: Page, stage: StageName): Promise<void> {
-  await expect(page.locator('button[aria-label$="move contract"]')).toHaveAttribute(
-    "aria-label",
-    `${stage} — move contract`,
-  );
+  await expect(
+    page.locator('li[aria-current="step"] button[aria-label$="move contract"]'),
+  ).toHaveAttribute("aria-label", `${stage} — move contract`);
 }
 
 async function expectStatus(page: Page, status: StatusOption): Promise<void> {
-  await moveControl(page).click();
+  await moveControl(page, status.stage).click();
   await expect(
     page
       .getByRole("menuitemradio")
@@ -486,7 +488,7 @@ async function expectStatus(page: Page, status: StatusOption): Promise<void> {
 
 /** Opens the move menu and picks one status by the label it wears. */
 async function pickFrom(page: Page, status: StatusOption): Promise<void> {
-  await moveControl(page).click();
+  await moveControl(page, status.stage).click();
   await page
     .getByRole("menuitemradio")
     .filter({ hasText: startsWithName(status.displayName) })

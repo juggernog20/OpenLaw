@@ -3,19 +3,26 @@
 /** Request types keep their identity, turnaround and destination. A destination
 names a module and may name a type; module-only Requests use its Default Form. */
 
+import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
+  and,
   contractTypes,
   eq,
+  isNull,
   matterTypes,
+  ne,
+  or,
   requestTypes,
   type Executor,
   type RequestType,
 } from "@openlaw/db";
 import { type ChangedFields } from "@openlaw/shared";
-import { httpError } from "../../lib/problem.js";
+import { requireRole } from "../../auth/guards.js";
+import { recordActivity } from "../../lib/activity.js";
+import { httpError, problemResponse } from "../../lib/problem.js";
 import { requestTypeUsage } from "../requests/type-usage.js";
-import { taxonomyRoutes } from "../../lib/taxonomy-routes.js";
+import { insertTypeCopy, lockTypeIdentities, taxonomyRoutes } from "../../lib/taxonomy-routes.js";
 import { TARGET_MODULES, type TargetModule } from "./form-definition.js";
 
 const TargetModuleSchema = z.enum(TARGET_MODULES);
@@ -46,7 +53,7 @@ async function targetTypeName(
   return row?.displayName ?? null;
 }
 
-export const requestTypesRoutes = taxonomyRoutes({
+const requestTypeTaxonomy = taxonomyRoutes({
   table: requestTypes,
   path: "request-types",
   tag: "request-types",
@@ -146,3 +153,124 @@ export const requestTypesRoutes = taxonomyRoutes({
     },
   },
 });
+
+const SeparateFormEnvelope = z.object({
+  requestType: z.object({
+    id: z.string(),
+    targetModule: TargetModuleSchema,
+    targetTypeId: z.string(),
+  }),
+  type: z.object({ id: z.string(), slug: z.string(), displayName: z.string() }),
+});
+
+/**
+ * The taxonomy routes, plus one action of a Request type's own: give it
+ * its own Form (DD-028, 2026-10-02 line in the 2026-09-30 amendment).
+ * Several Request types may share one destination type, and an edit to
+ * that Form changes every one of them. This copies the destination type
+ * and its Form, names the copy after the Request type, and points this
+ * Request type at the copy, all in one transaction. The other Request
+ * types keep their destination.
+ */
+export const requestTypesRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(requestTypeTaxonomy);
+
+  app.post(
+    "/request-types/:id/separate-form",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "separateRequestTypeForm",
+        summary:
+          "Give a Request type that shares its destination Form a Form of its own: copy the " +
+          "destination type with its Form, name the copy after the Request type, and point " +
+          "the Request type at the copy (DD-028)",
+        tags: ["request-types"],
+        params: z.object({ id: z.string() }),
+        response: { 201: SeparateFormEnvelope, default: problemResponse },
+      },
+    },
+    async (request, reply) => {
+      const result = await app.db.transaction(async (tx) => {
+        const [requestType] = await tx
+          .select()
+          .from(requestTypes)
+          .where(eq(requestTypes.id, request.params.id))
+          .limit(1)
+          .for("update");
+        if (!requestType) throw httpError(404, "No request type exists with this id.");
+        if (requestType.archivedAt)
+          throw httpError(409, "Restore this request type before you give it its own Form.");
+        const module = requestType.targetModule;
+        const table = TARGET_TABLES[module];
+        const column =
+          module === "contract"
+            ? requestTypes.targetContractTypeId
+            : requestTypes.targetMatterTypeId;
+        const existing = await lockTypeIdentities(tx, table, `${module}-types`);
+        const currentTypeId = targetTypeId(requestType);
+        // A module-only destination lands on the module's Default type.
+        const isDefault = (row: (typeof existing)[number]) =>
+          (row as { isDefault?: boolean }).isDefault === true;
+        const source = existing.find((row) =>
+          currentTypeId === null ? isDefault(row) : row.id === currentTypeId,
+        );
+        if (!source || source.archivedAt)
+          throw httpError(409, `The destination must be a live ${module} type.`);
+        // The rule the Intake form card and the preview use to name the
+        // Request types that share a Form.
+        const [sharer] = await tx
+          .select({ id: requestTypes.id })
+          .from(requestTypes)
+          .where(
+            and(
+              ne(requestTypes.id, requestType.id),
+              isNull(requestTypes.archivedAt),
+              eq(requestTypes.targetModule, module),
+              or(eq(column, source.id), isDefault(source) ? isNull(column) : undefined),
+            ),
+          )
+          .limit(1);
+        if (!sharer) throw httpError(409, "This request type already has its own Form.");
+
+        const copy = await insertTypeCopy(tx, {
+          table,
+          module,
+          source,
+          existing,
+          displayName: requestType.displayName,
+          actorId: request.user.id,
+          columns: { isDefault: false },
+        });
+        await tx
+          .update(requestTypes)
+          .set({
+            targetMatterTypeId: module === "matter" ? copy.id : null,
+            targetContractTypeId: module === "contract" ? copy.id : null,
+          })
+          .where(eq(requestTypes.id, requestType.id));
+        await recordActivity(tx, {
+          entityType: "system",
+          actorId: request.user.id,
+          action: "request_type.updated",
+          visibility: "admin_only",
+          payload: {
+            slug: requestType.slug,
+            displayName: requestType.displayName,
+            changed: {
+              targetType: {
+                from: currentTypeId === null ? null : source.displayName,
+                to: copy.displayName,
+              },
+            },
+          },
+        });
+        return {
+          requestType: { id: requestType.id, targetModule: module, targetTypeId: copy.id },
+          type: { id: copy.id, slug: copy.slug, displayName: copy.displayName },
+        };
+      });
+      return reply.status(201).send(result);
+    },
+  );
+};

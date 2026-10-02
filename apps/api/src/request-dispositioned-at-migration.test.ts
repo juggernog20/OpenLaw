@@ -14,7 +14,7 @@ afterAll(async () => container?.stop());
 it("backfills the close time of every closed Request and leaves open Requests null (#1322)", async () => {
   const db = await freshDb(container, "request_dispositioned_at");
   try {
-    await migrateThrough(db, "0190_share_holder_users", migrationEntries());
+    await migrateThrough(db, "0193_legal-question-description", migrationEntries());
     await db.execute(sql`insert into users (id, email, display_name, role) values
       ('requester', 'requester@example.com', 'Requester', 'business_user'),
       ('triager', 'triager@example.com', 'Triager', 'legal_team_member')`);

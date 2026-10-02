@@ -2,7 +2,7 @@
 
 /** DES-046 edits list filters through one menu and removable chips. */
 
-import { useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { ArrowLeft, CalendarDays, ChevronDown, ListFilter, X } from "lucide-react";
 import { useIntl } from "react-intl";
 import type { Layout } from "../../lib/list-views";
@@ -21,6 +21,13 @@ function selected(filter: RecordFilter, values: Layout["filters"]): boolean {
   return filter.kind === "date"
     ? !!(values[`${filter.key}From`] || values[`${filter.key}To`])
     : !!values[filter.key];
+}
+
+/** A popover that holds a FilterEditor closes through this. Closing
+ * applies a changed draft, as Apply does. It answers false while the
+ * draft is invalid, and the popover then stays open with its error. */
+export interface FilterEditorHandle {
+  commit: () => boolean;
 }
 
 function without(filter: RecordFilter, values: Layout["filters"]): Layout["filters"] {
@@ -48,6 +55,7 @@ export function RecordFilterBar({
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
+  const editor = useRef<FilterEditorHandle>(null);
   const active = definitions.filter((filter) => selected(filter, values));
   const filter = definitions.find((item) => item.key === editing);
   const filterLabel = intl.formatMessage({ id: "recordFilters.filter", defaultMessage: "Filter" });
@@ -68,6 +76,7 @@ export function RecordFilterBar({
       <Popover
         open={open}
         onOpenChange={(next) => {
+          if (!next && editor.current && !editor.current.commit()) return;
           setOpen(next);
           if (!next) setEditing(null);
         }}
@@ -90,6 +99,7 @@ export function RecordFilterBar({
           {filter ? (
             <FilterEditor
               key={filter.key}
+              ref={editor}
               filter={filter}
               values={values}
               onApply={apply}
@@ -156,6 +166,7 @@ function FilterChip({
 }>) {
   const intl = useIntl();
   const [open, setOpen] = useState(false);
+  const editor = useRef<FilterEditorHandle>(null);
   const ids = String(values[filter.key] ?? "").split(",");
   const formatDate = (value: boolean | string | undefined) =>
     typeof value === "string" &&
@@ -190,7 +201,13 @@ function FilterChip({
         : "";
   return (
     <span className="inline-flex max-w-full items-center rounded-button border border-border-default bg-raised">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          if (!next && editor.current && !editor.current.commit()) return;
+          setOpen(next);
+        }}
+      >
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -212,6 +229,7 @@ function FilterChip({
           aria-label={filter.label}
         >
           <FilterEditor
+            ref={editor}
             filter={filter}
             values={values}
             onApply={(next) => {
@@ -238,11 +256,13 @@ function FilterChip({
 }
 
 export function FilterEditor({
+  ref,
   filter,
   values,
   onApply,
   onBack,
 }: Readonly<{
+  ref?: Ref<FilterEditorHandle>;
   filter: RecordFilter;
   values: Layout["filters"];
   onApply: (values: Layout["filters"]) => void;
@@ -258,14 +278,32 @@ export function FilterEditor({
   const [from, setFrom] = useState(String(values[`${filter.key}From`] ?? ""));
   const [to, setTo] = useState(String(values[`${filter.key}To`] ?? ""));
   const valid = !from || !to || from <= to;
-  const save = () => {
+  const draft = () => {
     const next = without(filter, values);
     if (filter.kind === "date") {
       if (from) next[`${filter.key}From`] = from;
       if (to) next[`${filter.key}To`] = to;
     } else if (filter.kind === "choices" && ids.length) next[filter.key] = ids.join(",");
-    onApply(next);
+    return next;
   };
+  const save = () => onApply(draft());
+  useImperativeHandle(ref, () => ({
+    commit: () => {
+      if (!valid) return false;
+      // A flag's only action is its remove button, so a close keeps it.
+      if (filter.kind === "flag") return true;
+      const next = draft();
+      // Ticks are a set. Their order is not a change.
+      const set = (value: boolean | string | undefined) =>
+        String(value ?? "")
+          .split(",")
+          .sort()
+          .join(",");
+      const same = (key: string) => set(next[key]) === set(values[key]);
+      if (![filter.key, `${filter.key}From`, `${filter.key}To`].every(same)) save();
+      return true;
+    },
+  }));
   return (
     <form
       onSubmit={(e) => {

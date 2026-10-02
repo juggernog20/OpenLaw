@@ -110,10 +110,10 @@ import { identifierLabel } from "../lib/identifier-label";
  * progress: transitions are unrestricted, so a status change that lands
  * on an earlier stage moves the marker back.
  *
- * The marker is also the way the contract is moved (DES-053). For a
- * viewer who may write, the current stage's pill is a menu trigger, and
- * the menu offers every status the record may hold — forwards,
- * backwards, and skipping. The soft gate is unchanged: it is the seam's
+ * The strip is also the way the contract is moved (DES-053). For a
+ * viewer who may write, every stage is a menu trigger, and each menu
+ * offers the statuses in its own stage. A move may go forwards,
+ * backwards, or skip stages. The soft gate is unchanged: it is the seam's
  * refusal that raises the dialog, from wherever the commit was sent.
  *
  * Archive (soft delete — for mistakes and imports, not for ending a
@@ -1305,6 +1305,7 @@ function ContractRecord() {
     // cannot hide "Manage team" from somebody the applet would
     // then let manage it.
     audienceLocked: saved.isConfidential && !canFlag,
+    isConfidential: saved.isConfidential,
     onRoster: setRoster,
   });
 
@@ -2525,9 +2526,9 @@ function ContractRecord() {
               {/* CTR-001's six-stage backbone, beside the pill that names
                 the status behind it (grill-plan D.8), and — for a
                 viewer who may write — the control that moves the
-                contract (DES-053). The current stage is the trigger, so
-                the act sits where the reader already looks and reaches
-                every section rather than the Overview alone. Frozen, it
+                contract (DES-053). Every stage is a trigger for its own
+                statuses, so the act sits where the reader already looks
+                and reaches every section rather than the Overview alone. Frozen, it
                 falls back to the reading it has always been: an
                 archived record and a Contributor get no trigger at all,
                 because where the contract sits is a fact about it and
@@ -2963,7 +2964,14 @@ function ContractRecord() {
                     onConfirmAll={confirmAllAnalysisFields}
                   />
                 }
-                note={<AnalysisRunNote analysis={analysis} runError={analysisRunError} />}
+                note={
+                  <AnalysisRunNote
+                    analysis={analysis}
+                    runError={analysisRunError}
+                    canRun={analysis.available && analysisRunnable}
+                    viewerRole={user.role}
+                  />
+                }
               />
             )}
             {/* The record's paper (M11/2, M11/3), in the section the
@@ -3071,16 +3079,13 @@ function ContractRecord() {
                 assignees={users.filter(
                   (person) =>
                     !person.archived &&
-                    person.role !== "business_user" &&
                     (saved.manager?.id === person.id ||
                       roster.some((member) => member.id === person.id)),
                 )}
                 teamExpansion={
                   !frozen && (!saved.isConfidential || canFlag)
                     ? {
-                        people: users.filter(
-                          (person) => !person.archived && person.role !== "business_user",
-                        ),
+                        people: users.filter((person) => !person.archived),
                         onAdded: (id) => {
                           const person = users.find((candidate) => candidate.id === id);
                           if (person)
@@ -3596,9 +3601,9 @@ function FieldsCard({
 /**
  * One custom field, committed on its own (DES-017). Which gesture
  * commits it follows the split the record already draws: a pick is a
- * decision, so a toggle, a select, and a checkbox group commit the
- * moment they change; typing is a draft, so a text, number, or date box
- * commits on blur and on Enter, and Escape puts back what was saved.
+ * decision, so a toggle, a select, a checkbox group, and a calendar
+ * commit the moment they change; typing is a draft, so a text or number
+ * box commits on blur and on Enter. Escape puts back what was saved.
  */
 function CustomFieldRow({
   field,
