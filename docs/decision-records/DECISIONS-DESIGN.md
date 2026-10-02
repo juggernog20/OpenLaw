@@ -1806,6 +1806,16 @@ Putting the filter bar inside the card rather than in its header strip is the on
 
 `apps/web/src/routes/settings-audit-log.tsx` is the pane. No new tokens: the row is `bg-control`, `border-muted`, `border-default`, `text-primary`, and `text-muted`, and the badge reuses the confidential and counter pairs, all already valued and gated. `lib/format.ts` gains `dayBounds`, which turns a civil date into the two instants it covers in the reader's timezone — the first surface to filter on a date range, and not the last. `lib/roles.ts` gains the role wording that the Users pane, the wizard, and the Profile pane each held a copy of, because the narration is the fourth reader of it. The narration layer's entry type is now structural rather than the record feed's response shape, so both surfaces narrate the same rows without either converting for the other.
 
+### Addendum (2026-10-02, [#1317](https://github.com/juggernog20/OpenLaw/issues/1317)): a Period preset and a summary line
+
+An Administrator who asked "who changed settings this week" typed a From date by hand, then selected Show older until 218 entries loaded, and counted the people by eye. The answer was two people. This addendum adds two things to the pane.
+
+**A seventh filter control.** Period is a native select before From and To, with Any time, Today, Last 7 days, Last 30 days and Custom. A preset fills From and To with civil dates in the reader's timezone. A range ends today and counts today as one of its days. The dates then go through `dayBounds`, as typed dates do. Editing either date sets Period to Custom. Clear filters sets it back to Any time. The filter bar still wraps, so seven controls need no new layout.
+
+**A summary line under the filter bar.** When any filter is set, one line at 12px `text-muted` on a `border-default` rule says how many entries match and how many each person wrote, most first: "218 entries. Devon Calloway 140, Daniel Okafor 78." The top five people show, then "and 3 more". Each name is a link Button that sets the Person filter. Entries with no person are counted under "OpenLaw", the name their sentences use, and that name is not a control. The line is absent when no filter is set and when nothing matches.
+
+This supersedes "No total anywhere" in the foot clause for the filtered case only. That clause and DES-026 refused a count because a paged feed counts only what it has loaded. The summary does not come from the pages. `GET /audit-log/summary` counts on the server with the same filter predicate and record reach as the page, so the total is the whole filtered set and a record outside the reader's reach adds nothing. The foot is unchanged.
+
 ## DES-028: The confidential record page — the Tier 2 banner and the flag control (extends DES-009)
 
 - **Status:** Accepted

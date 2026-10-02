@@ -6353,6 +6353,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/audit-log/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** How many entries the current filters match, and how many of them each person wrote, most first (DES-027 addendum). The same filters and record reach as the page, so the counts match the entries the page returns and a record outside the reader's reach adds nothing. Entries with no person are one row with a null id. Administrator-only (SET-002) */
+    get: operations["summarizeAuditLog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/audit-log/export": {
     parameters: {
       query?: never;
@@ -35719,6 +35736,58 @@ export interface operations {
         content: {
           "application/json": {
             actions: string[];
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  summarizeAuditLog: {
+    parameters: {
+      query?: {
+        actorId?: string;
+        action?: string;
+        entityType?:
+          | "matter"
+          | "contract"
+          | "document"
+          | "request"
+          | "user"
+          | "entity"
+          | "knowledge_item"
+          | "auto_doc"
+          | "system";
+        from?: string;
+        to?: string;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            actors: {
+              id: string | null;
+              displayName: string | null;
+              count: number;
+            }[];
           };
         };
       };

@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   activityLog,
   asc,
+  autoDocs,
   eq,
   knowledgeFolders,
   knowledgeItems,
@@ -219,6 +220,131 @@ describe("Knowledge Item create, read, and inline updates", () => {
       query: { entityType: "knowledge_item", entityId: id },
     });
     expect(contributorFeed.statusCode, contributorFeed.body).toBe(403);
+  });
+
+  describe("History of a Knowledge item's Documents (#1272)", () => {
+    const BOUNDARY = "knowledge-items-history";
+    function upload(url: string, filename: string, cookies = memberCookies) {
+      return harness.app.inject({
+        method: "POST",
+        url,
+        cookies,
+        headers: { "content-type": `multipart/form-data; boundary=${BOUNDARY}` },
+        payload: Buffer.from(
+          `--${BOUNDARY}\r\ncontent-disposition: form-data; name="file"; filename="${filename}"\r\n` +
+            `content-type: application/pdf\r\n\r\n%PDF ${filename}\r\n--${BOUNDARY}--\r\n`,
+        ),
+      });
+    }
+    type Entry = {
+      action: string;
+      visibility: string;
+      createdAt: string;
+      actor: { displayName: string } | null;
+      payload: Record<string, unknown>;
+    };
+    async function history(
+      entityId: string,
+      cookies: Record<string, string>,
+      entityType = "knowledge_item",
+    ) {
+      const feed = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/activity",
+        cookies,
+        query: { entityType, entityId },
+      });
+      expect(feed.statusCode, feed.body).toBe(200);
+      return feed.json().entries as Entry[];
+    }
+
+    it("shows the first upload, the primary pin and a new version with the actor and time", async () => {
+      const created = await create(memberCookies, {
+        title: "Data Processing Addendum",
+        knowledgeTypeId: templateId,
+      });
+      expect(created.statusCode, created.body).toBe(201);
+      const id = created.json().knowledgeItem.id as string;
+      const first = await upload(`/api/v1/knowledge/${id}/documents`, "dpa.pdf");
+      expect(first.statusCode, first.body).toBe(201);
+      const documentId = first.json().document.id as string;
+      const version = await upload(`/api/v1/documents/${documentId}/versions`, "dpa-v2.pdf");
+      expect(version.statusCode, version.body).toBe(201);
+
+      const entries = await history(id, memberCookies);
+      expect(entries.map((entry) => entry.action)).toEqual([
+        "document.version_added",
+        "document.primary_set",
+        "document.created",
+        "knowledge_item.created",
+      ]);
+      const [added] = entries;
+      expect(added!.visibility).toBe("working_team");
+      expect(added!.actor?.displayName).toBe(MEMBER.displayName);
+      expect(added!.payload).toMatchObject({ documentId, versionNumber: 2 });
+      expect(Number.isNaN(Date.parse(added!.createdAt))).toBe(false);
+      expect((await history(id, adminCookies)).map((entry) => entry.action)).toContain(
+        "document.version_added",
+      );
+
+      const business = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/activity",
+        cookies: businessCookies,
+        query: { entityType: "knowledge_item", entityId: id },
+      });
+      expect(business.statusCode, business.body).toBe(403);
+    });
+
+    it("hides a Confidential Document's entries from a Legal Team Member and shows them to an Administrator", async () => {
+      // KNW-004 security addendum: only an Administrator reaches a
+      // Confidential Knowledge Document.
+      const created = await create(memberCookies, {
+        title: "Board pack template",
+        knowledgeTypeId: templateId,
+      });
+      const id = created.json().knowledgeItem.id as string;
+      const open = await upload(`/api/v1/knowledge/${id}/documents`, "open.pdf");
+      expect(open.statusCode, open.body).toBe(201);
+      const secret = await upload(`/api/v1/knowledge/${id}/documents`, "secret.pdf");
+      expect(secret.statusCode, secret.body).toBe(201);
+      const secretId = secret.json().document.id as string;
+      const flagged = await harness.app.inject({
+        method: "PATCH",
+        url: `/api/v1/documents/${secretId}`,
+        cookies: adminCookies,
+        payload: { isConfidential: true },
+      });
+      expect(flagged.statusCode, flagged.body).toBe(200);
+      const names = (entries: Entry[]) =>
+        entries.filter(
+          (entry) =>
+            entry.payload.documentId === secretId || entry.payload.fromDocumentId === secretId,
+        );
+
+      const member = await history(id, memberCookies);
+      expect(names(member)).toEqual([]);
+      expect(member.map((entry) => entry.payload.documentId)).toContain(open.json().document.id);
+      const admin = await history(id, adminCookies);
+      expect(names(admin).map((entry) => entry.action)).toContain("document.created");
+    });
+
+    it("shows an Auto-Doc's Working Team Document entries", async () => {
+      const [autoDoc] = await harness.db
+        .insert(autoDocs)
+        .values({ name: "History Auto-Doc", createdBy: adminId, updatedBy: adminId })
+        .returning({ id: autoDocs.id });
+      await harness.db.insert(activityLog).values({
+        entityType: "auto_doc",
+        entityId: autoDoc!.id,
+        actorId: memberId,
+        action: "document.archived",
+        visibility: "working_team",
+        payload: { documentId: "template", title: "Template" },
+      });
+      const entries = await history(autoDoc!.id, memberCookies, "auto_doc");
+      expect(entries.map((entry) => entry.action)).toEqual(["document.archived"]);
+    });
   });
 
   it("requires live types and real folders", async () => {

@@ -632,6 +632,54 @@ export const auditLogRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.get(
+    "/audit-log/summary",
+    {
+      preHandler: requireAdministrator,
+      schema: {
+        operationId: "summarizeAuditLog",
+        summary:
+          "How many entries the current filters match, and how many of them " +
+          "each person wrote, most first (DES-027 addendum). The same filters " +
+          "and record reach as the page, so the counts match the entries the " +
+          "page returns and a record outside the reader's reach adds nothing. " +
+          "Entries with no person are one row with a null id. Administrator-only " +
+          "(SET-002)",
+        tags: ["audit-log"],
+        querystring: AuditFilterSchema,
+        response: {
+          200: z.object({
+            total: z.number().int(),
+            actors: z.array(
+              z.object({
+                /** NULL for the entries OpenLaw wrote with no person. */
+                id: z.string().nullable(),
+                displayName: z.string().nullable(),
+                count: z.number().int(),
+              }),
+            ),
+          }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const count = sql<number>`count(*)::int`;
+      const rows = await app.db
+        .select({ id: users.id, displayName: users.displayName, count })
+        .from(activityLog)
+        // The same join the page reads through: search matches the actor's name.
+        .leftJoin(users, eq(activityLog.actorId, users.id))
+        .where(and(auditPredicate(request.query), auditReachScope(app.db, request.user)))
+        .groupBy(users.id, users.displayName)
+        .orderBy(desc(count), users.displayName);
+      return {
+        total: rows.reduce((sum, row) => sum + row.count, 0),
+        actors: rows,
+      };
+    },
+  );
+
+  app.get(
     "/audit-log/export",
     {
       preHandler: requireAdministrator,

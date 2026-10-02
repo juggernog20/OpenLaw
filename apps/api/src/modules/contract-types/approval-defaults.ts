@@ -134,6 +134,7 @@ export const approvalDefaultsRoutes: FastifyPluginAsyncZod = async (app) => {
             visibility: "admin_only",
             payload: {
               slug: type.slug,
+              displayName: type.displayName,
               changed: {
                 defaultApproverGroupId: { from: type.defaultApproverGroupId, to: groupId },
               },

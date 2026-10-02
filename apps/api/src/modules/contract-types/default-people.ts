@@ -57,7 +57,7 @@ async function typeRow(db: Executor, id: string, edit = true) {
  * is on ids: two people can share a display name. */
 async function audit(
   tx: Transaction,
-  type: { id: string; slug: string },
+  type: { id: string; slug: string; displayName: string },
   actorId: string,
   before: readonly DefaultPerson[],
   after: readonly DefaultPerson[],
@@ -72,6 +72,7 @@ async function audit(
     visibility: "admin_only",
     payload: {
       slug: type.slug,
+      displayName: type.displayName,
       changed: { defaultPeople: { from: names(before), to: names(after) } },
     },
   });

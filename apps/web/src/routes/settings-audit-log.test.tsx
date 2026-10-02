@@ -30,6 +30,7 @@ import { describe, expect, it } from "vitest";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { civilToday, dayBounds } from "../lib/format";
 
 const ADMIN = {
   id: "u1",
@@ -173,6 +174,14 @@ const ENTRIES = [
 interface LogCalls {
   /** Every audit-log read, as the query the pane sent. */
   reads: URLSearchParams[];
+  /** Every summary read, as the query the pane sent. */
+  summaries?: URLSearchParams[];
+}
+
+/** What the summary route answers, as the API shapes it. */
+interface SummaryAnswer {
+  total: number;
+  actors: { id: string | null; displayName: string | null; count: number }[];
 }
 
 /**
@@ -182,10 +191,14 @@ interface LogCalls {
  */
 function auditApi(
   calls: LogCalls,
-  options: { pages?: (typeof ENTRIES)[] } = {},
+  options: { pages?: (typeof ENTRIES)[]; summary?: SummaryAnswer } = {},
 ): (call: StubCall) => Response | undefined {
   return (call) => {
     const path = call.url.pathname;
+    if (path === "/api/v1/audit-log/summary" && call.method === "GET") {
+      (calls.summaries ??= []).push(call.url.searchParams);
+      return json(200, options.summary ?? { total: 0, actors: [] });
+    }
     if (path === "/api/v1/audit-log/actions" && call.method === "GET") {
       return json(200, { actions: ACTIONS });
     }
@@ -453,6 +466,102 @@ describe("the filters", () => {
     expect(await screen.findByText("Devon Calloway created this contract")).toBeVisible();
     const query = await lastRead(calls);
     expect([...query.keys()]).toEqual([]);
+  });
+});
+
+describe("the Period presets (#1317)", () => {
+  /** A civil date some days before another, as the pane counts them. */
+  function daysBefore(civil: string, days: number) {
+    const date = new Date(`${civil}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  it("fills From and To for the reader's timezone, and editing a date makes it Custom", async () => {
+    const calls = newCalls();
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: auditApi(calls) });
+    renderAt("/settings/audit-log");
+    await screen.findByText("Devon Calloway created this contract");
+    const period = filterBar().getByLabelText("Period");
+    expect(period).toHaveValue("any");
+    const today = civilToday();
+
+    for (const [preset, days] of [
+      ["today", 0],
+      ["last7", 6],
+      ["last30", 29],
+    ] as const) {
+      await user.selectOptions(period, preset);
+      const from = daysBefore(today, days);
+      expect(filterBar().getByLabelText("From")).toHaveValue(from);
+      expect(filterBar().getByLabelText("To")).toHaveValue(today);
+      await waitFor(() => {
+        const query = calls.reads.at(-1)!;
+        expect(query.get("from")).toBe(dayBounds(from)!.start);
+        expect(query.get("to")).toBe(dayBounds(today)!.end);
+      });
+    }
+
+    await user.selectOptions(period, "any");
+    expect(filterBar().getByLabelText("From")).toHaveValue("");
+    expect(filterBar().getByLabelText("To")).toHaveValue("");
+    await waitFor(() => expect([...calls.reads.at(-1)!.keys()]).toEqual([]));
+
+    await user.selectOptions(period, "last7");
+    await user.clear(filterBar().getByLabelText("From"));
+    await user.type(filterBar().getByLabelText("From"), "2026-08-01");
+    expect(period).toHaveValue("custom");
+    expect(filterBar().getByLabelText("To")).toHaveValue(today);
+  });
+});
+
+describe("the summary line (#1317)", () => {
+  const SUMMARY: SummaryAnswer = {
+    total: 218,
+    actors: [
+      { id: "u1", displayName: "Devon Calloway", count: 140 },
+      { id: "u2", displayName: "Casey Counsel", count: 70 },
+      { id: null, displayName: null, count: 3 },
+      { id: "u3", displayName: "Ines Duarte", count: 2 },
+      { id: "u4", displayName: "Bao Business", count: 1 },
+      { id: "u5", displayName: "Sam Subject", count: 1 },
+      { id: "u6", displayName: "Nadia Counsel", count: 1 },
+    ],
+  };
+
+  it("shows nothing until a filter is set", async () => {
+    const calls = newCalls();
+    stubApi({ signedIn: ADMIN, extra: auditApi(calls, { summary: SUMMARY }) });
+    renderAt("/settings/audit-log");
+    await screen.findByText("Devon Calloway created this contract");
+    expect(calls.summaries).toBeUndefined();
+    expect(screen.queryByText(/218 entries/)).not.toBeInTheDocument();
+  });
+
+  it("counts the matching entries per person, and a name sets the Person filter", async () => {
+    const calls = newCalls();
+    const user = userEvent.setup();
+    stubApi({ signedIn: ADMIN, extra: auditApi(calls, { summary: SUMMARY }) });
+    renderAt("/settings/audit-log");
+    await screen.findByText("Devon Calloway created this contract");
+
+    await user.selectOptions(filterBar().getByLabelText("Record"), "contract");
+    const line = await screen.findByText(/218 entries/);
+    expect(line).toHaveTextContent(
+      "218 entries. Devon Calloway 140, Casey Counsel 70, OpenLaw 3, Ines Duarte 2, Bao Business 1, and 2 more.",
+    );
+    // The summary asks the same question as the table.
+    expect(calls.summaries!.at(-1)!.get("entityType")).toBe("contract");
+
+    await user.click(within(line).getByRole("button", { name: "Casey Counsel" }));
+    expect(filterBar().getByLabelText("Person")).toHaveValue("u2");
+    await waitFor(() => {
+      expect(calls.reads.at(-1)!.get("actorId")).toBe("u2");
+      expect(calls.summaries!.at(-1)!.get("actorId")).toBe("u2");
+    });
+    // OpenLaw's own entries have no person to narrow to.
+    expect(within(line).queryByRole("button", { name: "OpenLaw" })).not.toBeInTheDocument();
   });
 });
 

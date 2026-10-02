@@ -409,19 +409,20 @@ function ActivityRow({
             {/* One change is already named by the sentence above, so its
                 line is the pair alone. Several need their labels to be
                 told apart. */}
-            {changes.length > 1 ? (
-              <FormattedMessage
-                id="activity.changeWithLabel"
-                defaultMessage="{label}: {from} → {to}"
-                values={{ label: change.label, from: change.from, to: change.to }}
-              />
-            ) : (
-              <FormattedMessage
-                id="activity.change"
-                defaultMessage="{from} → {to}"
-                values={{ from: change.from, to: change.to }}
-              />
-            )}
+            {change.line ??
+              (changes.length > 1 ? (
+                <FormattedMessage
+                  id="activity.changeWithLabel"
+                  defaultMessage="{label}: {from} → {to}"
+                  values={{ label: change.label, from: change.from, to: change.to }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="activity.change"
+                  defaultMessage="{from} → {to}"
+                  values={{ from: change.from, to: change.to }}
+                />
+              ))}
           </p>
         ))}
         {closingNote && (

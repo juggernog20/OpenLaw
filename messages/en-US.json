@@ -539,6 +539,30 @@
   "activity.folder.unnamed": {
     "defaultMessage": "unnamed"
   },
+  "activity.form.branchAdded": {
+    "defaultMessage": "Condition group added"
+  },
+  "activity.form.branchChanged": {
+    "defaultMessage": "Condition group changed"
+  },
+  "activity.form.branchRemoved": {
+    "defaultMessage": "Condition group removed"
+  },
+  "activity.form.rowAdded": {
+    "defaultMessage": "{row}: added to the Form"
+  },
+  "activity.form.rowMoved": {
+    "defaultMessage": "{row}: moved"
+  },
+  "activity.form.rowRemoved": {
+    "defaultMessage": "{row}: removed from the Form"
+  },
+  "activity.form.switch": {
+    "defaultMessage": "{row}, {name, select, onIntakeForm {On intake form} isRequired {Required for creation} visibleOnPortal {Visible on Portal} other {{name}}}"
+  },
+  "activity.form.switchValue": {
+    "defaultMessage": "{on, select, true {On} other {Off}}"
+  },
   "activity.intakeLink.created": {
     "defaultMessage": "{actor} added the deflection link {name} to {onHome, select, true {the portal home} other {{placement}}}"
   },
@@ -1361,6 +1385,9 @@
   "audit.filter.from": {
     "defaultMessage": "From"
   },
+  "audit.filter.period": {
+    "defaultMessage": "Period"
+  },
   "audit.filter.record": {
     "defaultMessage": "Record"
   },
@@ -1381,6 +1408,27 @@
   },
   "audit.panes": {
     "defaultMessage": "Audit log panes"
+  },
+  "audit.period.anyTime": {
+    "defaultMessage": "Any time"
+  },
+  "audit.period.custom": {
+    "defaultMessage": "Custom"
+  },
+  "audit.period.last30": {
+    "defaultMessage": "Last 30 days"
+  },
+  "audit.period.last7": {
+    "defaultMessage": "Last 7 days"
+  },
+  "audit.period.today": {
+    "defaultMessage": "Today"
+  },
+  "audit.summary": {
+    "defaultMessage": "{total, plural, one {# entry} other {# entries}}. {people}."
+  },
+  "audit.summary.more": {
+    "defaultMessage": "and {count} more"
   },
   "audit.tier": {
     "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"
