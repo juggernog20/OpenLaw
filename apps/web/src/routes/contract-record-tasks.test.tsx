@@ -10,7 +10,7 @@
  * read-only or archived record is asserted just as hard.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
@@ -381,6 +381,51 @@ describe("the record's Tasks section (CTR-017)", () => {
     expect(router.state.location.pathname).toBe("/contracts/42/tasks");
     expect(router.state.location.search).toBe("");
     expect(await section()).toBeTruthy();
+  });
+
+  describe("overdue tasks", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      vi.setSystemTime(new Date("2026-09-29T12:00:00Z"));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("marks only an open task due before today with the severe pill", async () => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi([
+          task({ id: "late", title: "Late task", dueDate: "2026-09-26" }),
+          task({ id: "today", title: "Today task", dueDate: "2026-09-29", displayOrder: 1 }),
+          task({ id: "later", title: "Later task", dueDate: "2026-10-20", displayOrder: 2 }),
+          task({ id: "undated", title: "Undated task", displayOrder: 3 }),
+          task({
+            id: "done",
+            title: "Done task",
+            dueDate: "2026-09-13",
+            isDone: true,
+            displayOrder: 4,
+          }),
+        ]).handler,
+      });
+      renderAt("/contracts/42/tasks");
+      const card = await section();
+      await userEvent
+        .setup({ advanceTimers: vi.advanceTimersByTime })
+        .click(card.getByRole("switch", { name: "Show completed" }));
+      const row = (title: string) =>
+        card.getAllByRole("listitem").find((item) => item.textContent?.includes(title))!;
+      const late = within(row("Late task")).getByText("Sep 26 (3 days overdue)");
+      expect(late).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+      expect(within(row("Late task")).getByText("Overdue")).toHaveClass("sr-only");
+      for (const title of ["Today task", "Later task", "Undated task", "Done task"]) {
+        expect(within(row(title)).queryByText("Overdue")).not.toBeInTheDocument();
+        expect(row(title).querySelector(".bg-status-severe-bg")).toBeNull();
+      }
+      expect(row("Today task")).toHaveTextContent("Due Sep 29");
+      expect(row("Done task")).toHaveTextContent("Due Sep 13");
+    });
   });
 
   it("draws the section's own empty line when the record has no tasks", async () => {

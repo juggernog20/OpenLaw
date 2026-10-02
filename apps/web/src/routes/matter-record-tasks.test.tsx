@@ -3,7 +3,7 @@
 /** Matter Tasks through the real record route (MTR-005, #492). */
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 afterEach(cleanup);
@@ -331,6 +331,51 @@ describe("team-first task picker", () => {
       ),
     ).toBeInTheDocument();
     expect(modal.queryByText(/Confidential contract/)).not.toBeInTheDocument();
+  });
+});
+
+describe("overdue Tasks", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-29T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("marks only an open Task due before today with the severe pill", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi([
+        task({ id: "late", title: "Late Task", dueDate: "2026-09-26" }),
+        task({ id: "today", title: "Today Task", dueDate: "2026-09-29", displayOrder: 1 }),
+        task({ id: "later", title: "Later Task", dueDate: "2026-10-20", displayOrder: 2 }),
+        task({ id: "undated", title: "Undated Task", displayOrder: 3 }),
+        task({
+          id: "done",
+          title: "Done Task",
+          dueDate: "2026-09-13",
+          isDone: true,
+          displayOrder: 4,
+        }),
+      ]).handler,
+    });
+    renderAt("/matters/12/tasks");
+    const card = await section();
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(card.getByRole("switch", { name: "Show completed" }));
+    const row = (title: string) =>
+      card.getAllByRole("listitem").find((item) => item.textContent?.includes(title))!;
+    const late = within(row("Late Task")).getByText("Sep 26 (3 days overdue)");
+    expect(late).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(within(row("Late Task")).getByText("Overdue")).toHaveClass("sr-only");
+    for (const title of ["Today Task", "Later Task", "Undated Task", "Done Task"]) {
+      expect(within(row(title)).queryByText("Overdue")).not.toBeInTheDocument();
+      expect(row(title).querySelector(".bg-status-severe-bg")).toBeNull();
+    }
+    expect(row("Today Task")).toHaveTextContent("Due Sep 29");
+    expect(row("Done Task")).toHaveTextContent("Due Sep 13");
   });
 });
 

@@ -6644,9 +6644,6 @@
   "home.tasks.noDueDate": {
     "defaultMessage": "No due date"
   },
-  "home.tasks.overdue": {
-    "defaultMessage": "Overdue"
-  },
   "home.tasks.pageTitle": {
     "defaultMessage": "Your Tasks"
   },
@@ -7456,9 +7453,6 @@
   },
   "matterTasks.doneCount": {
     "defaultMessage": "{done} of {total} done"
-  },
-  "matterTasks.due": {
-    "defaultMessage": "Due {date}"
   },
   "matterTasks.edit": {
     "defaultMessage": "Edit Task"
@@ -13432,6 +13426,9 @@
   },
   "tasks.emptyOpen": {
     "defaultMessage": "No open Tasks."
+  },
+  "tasks.overdue": {
+    "defaultMessage": "Overdue"
   },
   "tasks.remove": {
     "defaultMessage": "Remove task"

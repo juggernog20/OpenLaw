@@ -119,7 +119,7 @@ export function HomeTasksCard({
                   >
                     {row.isOverdue ? (
                       <span className="sr-only">
-                        <FormattedMessage id="home.tasks.overdue" defaultMessage="Overdue" />{" "}
+                        <FormattedMessage id="tasks.overdue" defaultMessage="Overdue" />{" "}
                       </span>
                     ) : null}
                     {row.isDone ? formatShortDate(row.dueDate) : formatDeadline(row.dueDate)}
