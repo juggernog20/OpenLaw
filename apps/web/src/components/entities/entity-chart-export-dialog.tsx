@@ -109,6 +109,10 @@ function ExportDialog({
   const [busy, setBusy] = useState(false);
   const [previewActualSize, setPreviewActualSize] = useState(false);
   const scopedChart = useMemo(() => scopeExportChart(chart, rootId), [chart, rootId]);
+  // The count names the Entities the viewer reaches, as the registry
+  // heading does. People, classes and Confidential Entity cards draw but
+  // do not count.
+  const entityCount = scopedChart.nodes.filter((node) => !node.restricted && !node.kind).length;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -396,7 +400,7 @@ function ExportDialog({
                   <FormattedMessage
                     id="entities.chart.export.count"
                     defaultMessage="{count, plural, one {# entity} other {# entities}} · One page or slide sized to the chart"
-                    values={{ count: model.cards.length }}
+                    values={{ count: entityCount }}
                   />
                 </p>
               </>

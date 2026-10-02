@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { civilToday } from "../lib/format";
 
 const MEMBER = {
   id: "u2",
@@ -605,6 +606,109 @@ describe("the /entities/:entityId record page", () => {
       }),
     );
     expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
+  });
+
+  it("saves an officer date on Enter, reverts it on Escape, and resigns from a dialog", async () => {
+    const api = recordApi(entityRow());
+    const officer = (id: string, name: string) => ({
+      id,
+      entityId: "e1",
+      name,
+      officerRoleId: "r-director",
+      officerRoleName: "Director",
+      appointedOn: "2025-02-03",
+      resignedOn: null as string | null,
+      user: null,
+      createdAt: "2026-08-01T00:00:00.000Z",
+      updatedAt: "2026-08-01T00:00:00.000Z",
+    });
+    let held = [officer("o1", "Dana Director"), officer("o2", "Naomi Ellis")];
+    const patches: { id: string; body: Record<string, unknown> }[] = [];
+    let refuse = false;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/officers" && call.method === "GET") {
+          const former = call.url.searchParams.get("includeFormer") === "true";
+          return json(200, {
+            officers: held.filter((row) => former || row.resignedOn === null),
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/officer-roles") {
+          return json(200, {
+            officerRoles: [{ id: "r-director", slug: "director", displayName: "Director" }],
+            users: [],
+          });
+        }
+        const match = /^\/api\/v1\/entities\/e1\/officers\/(o\d)$/.exec(call.url.pathname);
+        if (match && call.method === "PATCH") {
+          const body = call.body as Record<string, unknown>;
+          patches.push({ id: match[1]!, body });
+          if (refuse) return problem(400, "The resignation date cannot be before the appointment.");
+          held = held.map((row) => (row.id === match[1] ? { ...row, ...body } : row));
+          return json(200, { officer: held.find((row) => row.id === match[1]) });
+        }
+        return api.handler(call);
+      },
+    });
+    renderAt("/entities/e1");
+    const user = userEvent.setup();
+
+    // Enter sends one PATCH, and the blur after it sends nothing.
+    const appointed = await screen.findByLabelText("Dana Director Appointed on");
+    await user.clear(appointed);
+    await user.type(appointed, "2024-01-01{Enter}");
+    await waitFor(() =>
+      expect(patches).toEqual([{ id: "o1", body: { appointedOn: "2024-01-01" } }]),
+    );
+    expect(appointed).not.toHaveFocus();
+    await user.click(appointed);
+    await user.tab();
+    expect(patches).toHaveLength(1);
+
+    // Escape restores the saved date, and the blur after it sends nothing.
+    const resigned = screen.getByLabelText("Dana Director Resigned on");
+    await user.type(resigned, "2026-09-22");
+    await user.keyboard("{Escape}");
+    expect(resigned).toHaveValue("");
+    await user.tab();
+    expect(patches).toHaveLength(1);
+
+    // Enter on Resigned on saves, and the row leaves the current list.
+    await user.type(screen.getByLabelText("Dana Director Resigned on"), "2026-09-22{Enter}");
+    await waitFor(() =>
+      expect(patches.at(-1)).toEqual({ id: "o1", body: { resignedOn: "2026-09-22" } }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Dana Director Resigned on")).not.toBeInTheDocument(),
+    );
+    expect(patches).toHaveLength(2);
+
+    // Resign opens a dialog with today's date that says where the row goes.
+    await user.click(screen.getByRole("button", { name: "Resign Naomi Ellis" }));
+    const dialog = screen.getByRole("dialog", { name: "Resign Naomi Ellis" });
+    expect(dialog).toHaveAccessibleDescription(
+      "Naomi Ellis resigns as Director. The row moves to Show former.",
+    );
+    const date = within(dialog).getByLabelText("Resigned on");
+    expect(date).toHaveValue(civilToday());
+    await user.clear(date);
+    await user.type(date, "2026-09-23");
+    refuse = true;
+    await user.click(within(dialog).getByRole("button", { name: "Resign" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+      "The resignation date cannot be before the appointment.",
+    );
+    refuse = false;
+    await user.click(within(dialog).getByRole("button", { name: "Resign" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(patches.at(-1)).toEqual({ id: "o2", body: { resignedOn: "2026-09-23" } });
+    expect(await screen.findByText("No current directors or officers.")).toBeInTheDocument();
+
+    // A former officer keeps the inline date for corrections, with no Resign.
+    await user.click(screen.getByRole("checkbox", { name: "Show former" }));
+    expect(await screen.findByLabelText("Naomi Ellis Resigned on")).toHaveValue("2026-09-23");
+    expect(screen.queryByRole("button", { name: /^Resign / })).not.toBeInTheDocument();
   });
 
   it("adds a registration, changes its status, and shows a refused row edit", async () => {

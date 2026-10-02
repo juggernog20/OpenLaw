@@ -3685,6 +3685,19 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
     }),
     changes: changesFrom,
   },
+  "entity_officer.resigned": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityOfficer.resigned",
+      defaultMessage: "{actor} recorded that {officer} resigned as {role} from {name} on {date}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+      role: named(intl, payload, "role"),
+      date: civilDateIn(intl, payload, "resignedOn"),
+    }),
+  },
   "entity_officer.deleted": {
     icon: UserMinus,
     message: defineMessage({

@@ -335,9 +335,24 @@ export function AutoDocsPage() {
                 {error}
               </p>
             )}
-            <Button type="submit" disabled={busy}>
-              <FormattedMessage id="autoDocs.createSubmit" defaultMessage="Create" />
-            </Button>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => {
+                  setCreating(false);
+                  setName("");
+                  setDescription("");
+                  setError(undefined);
+                }}
+              >
+                <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+              </Button>
+              <Button type="submit" disabled={busy}>
+                <FormattedMessage id="autoDocs.createSubmit" defaultMessage="Create" />
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

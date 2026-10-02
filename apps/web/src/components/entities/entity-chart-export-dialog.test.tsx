@@ -105,6 +105,71 @@ describe("chart export dialog", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("counts the Entities the viewer reaches, not people, classes or Confidential Entity cards", async () => {
+    stubApi({
+      extra: (call) =>
+        call.url.pathname.endsWith("/officers")
+          ? json(200, { officers: [] })
+          : json(200, details(call.url.pathname.split("/").at(-1)!)),
+    });
+    const data: EntityChart = {
+      ...chart,
+      nodes: [
+        ...chart.nodes,
+        {
+          ...node("individual:holder"),
+          legalName: "Alex Morgan",
+          kind: "individual",
+          type: "Individual",
+          jurisdiction: null,
+          status: null,
+          primaryOwnerId: null,
+        },
+        {
+          ...node("party:class"),
+          kind: "party",
+          partyKind: "class",
+          trustEntityId: "Other",
+          legalName: "Descendants",
+          type: "Class",
+          jurisdiction: null,
+          status: null,
+        },
+      ],
+      edges: [
+        ...chart.edges,
+        { ownerEntityId: "individual:holder", ownedEntityId: "Parent", ownershipPercent: 50 },
+      ],
+      roleEdges: [
+        {
+          partyNodeId: "party:class",
+          trustEntityId: "Other",
+          role: "beneficiary",
+          roleLabel: null,
+        },
+      ],
+    };
+    render(
+      <IntlProvider locale="en-US" messages={{}}>
+        <EntityChartExport chart={data} selectedId={null} />
+      </IntlProvider>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Export chart" }));
+    await screen.findByRole("img", { name: "Export preview" });
+    // Six cards draw: Parent, Child, Other, the Confidential Entity, Alex Morgan, Descendants.
+    expect(
+      screen.getByText("3 entities · One page or slide sized to the chart"),
+    ).toBeInTheDocument();
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Structure to export" }),
+      "Child",
+    );
+    expect(
+      screen.getByText("2 entities · One page or slide sized to the chart"),
+    ).toBeInTheDocument();
+  });
+
   it("blocks exports when a readable record becomes inaccessible and supports retry", async () => {
     let denied = true;
     stubApi({

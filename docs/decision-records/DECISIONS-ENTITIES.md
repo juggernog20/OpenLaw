@@ -45,6 +45,10 @@ The Ownership tab's reconciliation line compares the Overview's declared `shares
 
 Migration `0082_great_betty_ross` adds the share-capital columns, `entity` Field scope, `entity_type_fields`, officer roles, and `entity_officers`. Entities Settings mounts the shared taxonomy, type-editor, and Field-catalog machinery. The Entity record reads and writes the three share-capital columns and its type-attached Fields through `PATCH /entities/:id`. Each Field commit uses the shared coercion and required-value checks, including live `user` and `entity` references. Officers have Member+ list, create, inline update, resignation, and delete routes. Each write appends its own `entity_officer.*` Activity entry in the same transaction.
 
+### Resignation addendum (2026-10-02, [#1312](https://github.com/juggernog20/OpenLaw/issues/1312))
+
+Each current officer row has a Resign button. It opens a dialog that takes the date, set to today, and says that the row moves to Show former. This is a DES-017 purpose-built dialog with its own confirm, so DES-017 does not change. The inline Appointed on and Resigned on fields stay for corrections. Enter saves them and Escape reverts them. A first resignation date writes `entity_officer.resigned`, and History says that the officer resigned, with the role and the date. A later change or a cleared date still writes `entity_officer.updated`.
+
 ### Amendment (2026-09-21, DD-028) — Entity types get the Form
 
 `entity_type_fields` becomes the Row table of an Entity type's Form: Required for creation and Branches, no intake switch and no built-in Rows. The entity create form collects the required Rows of the chosen type; the rest go on the record.
@@ -113,6 +117,10 @@ Migration 0151 (the same migration as the register tables) adds `source` (`manua
 ### ENT-012 amendment (2026-09-30)
 
 Hand-typed Holdings are superseded by ENT-012. The write routes, Add Holding, the individual-owner dialog and the soft ≤100% warning are removed, and migration 0185 deletes the typed rows. The graph, the chart and the majority spine read the projected rows as before.
+
+### Archived Entities addendum (2026-10-02, [#1298](https://github.com/juggernog20/OpenLaw/issues/1298))
+
+The chart draws live Entities only. `GET /entities/chart` leaves out an archived Entity, its Holdings in either direction, its individual holders, a trust role it holds and a branch link to it. Restoring the Entity puts all of them back. ENT-009 treats an archive as a recoverable mistake, so the chart follows the registry heading, which never counts an archived row. A dissolved or divested Entity is not archived, so it keeps its status and stays on the chart. We considered drawing archived Entities with the list's archived treatment and counting them apart, and rejected it. The chart export counts the Entities the viewer reaches, as the heading does. Individual, class and Confidential Entity cards draw but do not count.
 
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
