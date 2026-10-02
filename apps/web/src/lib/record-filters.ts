@@ -9,6 +9,7 @@ export const CONTRACT_FILTER_KEYS = [
   "owner",
   "status",
   "type",
+  "entity",
   "effectiveFrom",
   "effectiveTo",
   "expiryFrom",

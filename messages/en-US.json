@@ -9011,6 +9011,12 @@
   "recordFilters.effective": {
     "defaultMessage": "Effective date"
   },
+  "recordFilters.entity": {
+    "defaultMessage": "Our entity"
+  },
+  "recordFilters.entityNone": {
+    "defaultMessage": "Not known yet"
+  },
   "recordFilters.expiry": {
     "defaultMessage": "Expiry date"
   },

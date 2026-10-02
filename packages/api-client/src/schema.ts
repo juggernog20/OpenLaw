@@ -26215,6 +26215,7 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
@@ -41036,6 +41037,7 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;

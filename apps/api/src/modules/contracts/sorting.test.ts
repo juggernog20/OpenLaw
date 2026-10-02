@@ -173,6 +173,66 @@ describe("the contracts list under no sort (CTR-024, unchanged)", () => {
     expect(empty).toMatchObject({ contracts: [], total: 0, nextCursor: null });
   });
 
+  it("filters by Our entity, and an Entity the viewer cannot reach matches no row", async () => {
+    const adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
+    const types = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/types",
+      cookies: adminCookies,
+    });
+    expect(types.statusCode, types.body).toBe(200);
+    const corporation = (types.json().entityTypes as { id: string; slug: string }[]).find(
+      (row) => row.slug === "corporation",
+    )!;
+    const entity = async (legalName: string) => {
+      const res = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/entities",
+        cookies: adminCookies,
+        payload: { legalName, entityTypeId: corporation.id },
+      });
+      expect(res.statusCode, res.body).toBe(201);
+      return (res.json().entity as { id: string }).id;
+    };
+    const [first, second, walled] = [
+      await entity("Filter One Ltd"),
+      await entity("Filter Two Ltd"),
+      await entity("Filter Walled Ltd"),
+    ];
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${walled}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+    const signedBy = {
+      [first]: made.slice(0, 2),
+      [second]: made.slice(2, 3),
+      [walled]: [made[3]!],
+    };
+    for (const [entityId, rows] of Object.entries(signedBy))
+      await harness.db
+        .update(contracts)
+        .set({ entityId })
+        .where(
+          inArray(
+            contracts.id,
+            rows.map((row) => row.id),
+          ),
+        );
+    const ids = (rows: { id: string }[]) => new Set(rows.map((row) => row.id));
+
+    const either = await page({ entity: `${first},${second}` });
+    expect(either.total).toBe(3);
+    expect(ids(either.contracts)).toEqual(ids(made.slice(0, 3)));
+    const none = mine(await walk({ entity: "unassigned" }));
+    expect(ids(none)).toEqual(ids(made.slice(4)));
+    expect(await page({ entity: walled })).toMatchObject({ contracts: [], total: 0 });
+    const crafted = await page({ entity: `${walled},${second}` });
+    expect(ids(crafted.contracts)).toEqual(ids(made.slice(2, 3)));
+  });
+
   it("reads newest reference first, and pages the whole list exactly once", async () => {
     const rows = mine(await walk({}));
     expect(rows).toHaveLength(FIXTURE_SIZE);

@@ -914,6 +914,10 @@ describe("quick contract filters", () => {
           types: OPTIONS.contractTypes,
           statuses: OPTIONS.contractStatuses,
           people: OPTIONS.users,
+          entities: [
+            { id: "e-uk", displayName: "Helix Holdings Ltd" },
+            { id: "e-us", displayName: "Helix Inc." },
+          ],
         });
       if (call.url.pathname === "/api/v1/list-views") {
         if (call.method === "POST") {
@@ -998,11 +1002,45 @@ describe("quick contract filters", () => {
     expect(screen.queryByRole("button", { name: "Owner: Me" })).not.toBeInTheDocument();
   });
 
+  it("filters by Our entity, with Not known yet first, and keeps it in the link", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts");
+    const user = userEvent.setup();
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Our entity",
+      }),
+    );
+    const choices = within(screen.getByRole("dialog", { name: "Filter" }))
+      .getAllByRole("checkbox")
+      .map((box) => box.closest("label")?.textContent?.trim());
+    expect(choices).toEqual(["Not known yet", "Helix Holdings Ltd", "Helix Inc."]);
+    await user.click(screen.getByRole("checkbox", { name: "Not known yet" }));
+    await user.click(screen.getByRole("checkbox", { name: "Helix Holdings Ltd" }));
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("entity") === "unassigned,e-uk",
+    );
+    expect(surface.queries.at(-1)?.get("entity")).toBe("unassigned,e-uk");
+    expect(
+      screen.getByRole("button", { name: "Our entity: Not known yet, Helix Holdings Ltd" }),
+    ).toBeInTheDocument();
+    await act(() => router.revalidate());
+    expect(
+      screen.getByRole("button", { name: "Our entity: Not known yet, Helix Holdings Ltd" }),
+    ).toBeInTheDocument();
+  });
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });
     const { router } = renderAt(
-      "/contracts?owner=me&status=s-draft,s-active&expiryFrom=2027-01-01&expiryTo=2027-12-31",
+      "/contracts?owner=me&status=s-draft,s-active&entity=e-uk&expiryFrom=2027-01-01&expiryTo=2027-12-31",
     );
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Default view/ }));
@@ -1023,6 +1061,7 @@ describe("quick contract filters", () => {
       filters: {
         owner: "me",
         status: "s-draft,s-active",
+        entity: "e-uk",
         expiryFrom: "2027-01-01",
         expiryTo: "2027-12-31",
       },
@@ -1039,6 +1078,7 @@ describe("quick contract filters", () => {
     await user.click(screen.getByRole("button", { name: /My renewals/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
+    expect(surface.queries.at(-1)?.get("entity")).toBe("e-uk");
     expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
   });
 });

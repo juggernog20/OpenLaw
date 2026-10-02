@@ -10,6 +10,8 @@ export interface RecordFilterOptions {
   types: { id: string; displayName: string }[];
   statuses: { id: string; displayName: string }[];
   people: { id: string; displayName: string }[];
+  /** The reachable Entities on Contracts, for Our entity. */
+  entities?: { id: string; displayName: string }[];
 }
 
 export function useRecordFilterDefinitions(
@@ -57,6 +59,21 @@ export function useRecordFilterDefinitions(
   const specific: RecordFilter[] =
     module === "contracts"
       ? [
+          {
+            key: "entity",
+            label: intl.formatMessage({ id: "recordFilters.entity", defaultMessage: "Our entity" }),
+            kind: "choices",
+            choices: [
+              {
+                ...unassigned,
+                displayName: intl.formatMessage({
+                  id: "recordFilters.entityNone",
+                  defaultMessage: "Not known yet",
+                }),
+              },
+              ...(options.entities ?? []),
+            ],
+          },
           {
             key: "effective",
             label: intl.formatMessage({

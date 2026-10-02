@@ -1450,6 +1450,9 @@ export const ContractListQuery = z
     owner: FilterChoices.optional(),
     status: FilterChoices.optional(),
     type: FilterChoices.optional(),
+    /** CTR-011's Our entity. "unassigned" finds Contracts with none
+     * recorded. */
+    entity: FilterChoices.optional(),
     effectiveFrom: z.iso.date().optional(),
     effectiveTo: z.iso.date().optional(),
     expiryFrom: z.iso.date().optional(),
