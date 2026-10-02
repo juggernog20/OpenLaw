@@ -5747,6 +5747,12 @@
   "entities.record.obligations.matter": {
     "defaultMessage": "Matter"
   },
+  "entities.record.obligations.matterMatches": {
+    "defaultMessage": "Matter matches"
+  },
+  "entities.record.obligations.matterNoMatch": {
+    "defaultMessage": "No matching Matters"
+  },
   "entities.record.obligations.matterOption": {
     "defaultMessage": "{reference} · {title}"
   },

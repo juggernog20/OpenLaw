@@ -13,7 +13,7 @@
  */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { useId, useState, type ReactNode } from "react";
+import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
 import { Check, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
@@ -31,6 +31,7 @@ import { readTableWidths, writeTableWidths } from "../../lib/table-width-prefere
 import { ManagedTable } from "../table/managed-table";
 import { problem } from "../../lib/problem";
 import { DueDate } from "../due-date";
+import { ObligationMatterInput, type MatterChoice } from "./obligation-matter-input";
 import { RestrictedRecordCell } from "../restricted-record-cell";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -469,6 +470,31 @@ function ObligationDialog({
   const [error, setError] = useState<string>();
   const set = (key: keyof Draft, value: string) =>
     setDraft((current) => ({ ...current, [key]: value }));
+  // A linked Matter outside the options stays a choice, so an edit keeps it.
+  const kept = obligation?.matter;
+  const matterChoices: MatterChoice[] = [
+    ...(kept && !options.matters.some((row) => row.id === kept.id)
+      ? [
+          {
+            id: kept.id,
+            label:
+              "restricted" in kept
+                ? intl.formatMessage({
+                    id: "entities.record.obligations.restrictedMatter",
+                    defaultMessage: "Restricted matter",
+                  })
+                : matterLabel(intl, kept),
+          },
+        ]
+      : []),
+    ...options.matters.map((row) => ({ id: row.id, label: matterLabel(intl, row) })),
+  ];
+  /** A ref, not state: the dialog's Escape handler reads it in the same
+   * key event that closes the list, before React renders again. */
+  const matterListOpen = useRef(false);
+  const onMatterListOpenChange = useCallback((open: boolean) => {
+    matterListOpen.current = open;
+  }, []);
 
   async function submit() {
     if (!draft.label.trim() || !draft.nextDueOn || busy) return;
@@ -510,7 +536,14 @@ function ObligationDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
-      <DialogContent aria-describedby={undefined} width="xl">
+      <DialogContent
+        aria-describedby={undefined}
+        width="xl"
+        // Escape closes the Matter list first, and only the list (DES-010).
+        onEscapeKeyDown={(event) => {
+          if (matterListOpen.current) event.preventDefault();
+        }}
+      >
         <DialogTitle>{title}</DialogTitle>
         <form
           className="mt-4 grid grid-cols-1 gap-4 @sm/dialog:grid-cols-2"
@@ -582,30 +615,16 @@ function ObligationDialog({
               </option>
             ))}
           </SelectDraft>
-          <SelectDraft
-            id="obligation-matter"
-            label={labels.matter}
-            value={draft.matterId}
-            onChange={(value) => set("matterId", value)}
-          >
-            <option value="">{labels.none}</option>
-            {obligation?.matter &&
-            !options.matters.some((row) => row.id === obligation.matter?.id) ? (
-              <option value={obligation.matter.id}>
-                {"restricted" in obligation.matter
-                  ? intl.formatMessage({
-                      id: "entities.record.obligations.restrictedMatter",
-                      defaultMessage: "Restricted matter",
-                    })
-                  : matterLabel(intl, obligation.matter)}
-              </option>
-            ) : null}
-            {options.matters.map((row) => (
-              <option key={row.id} value={row.id}>
-                {matterLabel(intl, row)}
-              </option>
-            ))}
-          </SelectDraft>
+          <Field id="obligation-matter" label={labels.matter}>
+            <ObligationMatterInput
+              id="obligation-matter"
+              value={draft.matterId}
+              choices={matterChoices}
+              noneLabel={labels.none}
+              onChange={(value) => set("matterId", value)}
+              onListOpenChange={onMatterListOpenChange}
+            />
+          </Field>
           <div className="flex flex-col gap-1.5 @sm/dialog:col-span-2">
             <Label htmlFor="obligation-note">{labels.note}</Label>
             <AutoResizeTextarea

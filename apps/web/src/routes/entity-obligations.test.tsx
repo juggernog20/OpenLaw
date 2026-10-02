@@ -211,6 +211,94 @@ describe("the Entity Obligations tab", () => {
     expect(screen.getByText("Tax return")).toBeInTheDocument();
   });
 
+  it("filters the Matter combobox by reference or title and posts the picked Matter", async () => {
+    let posted: unknown;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/obligation-options") {
+          return json(200, {
+            users: [{ id: "u1", displayName: "Nadia Counsel", image: null }],
+            matters: [
+              { id: "m1", number: 42, title: "Annual filing support" },
+              { id: "m7", number: 7, title: "Board pack review" },
+              { id: "m98", number: 98, title: "Nimbus Metrics wind-down" },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "POST") {
+          posted = call.body;
+          return json(201, { obligation: { ...obligation, id: "o2", label: "Tax return" } });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add obligation" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add obligation" });
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+
+    await user.type(matter, "board");
+    const list = within(dialog).getByRole("listbox", { name: "Matter matches" });
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["M-7 · Board pack review"]);
+    await user.clear(matter);
+    await user.type(matter, "zzz");
+    expect(within(list).getByRole("option", { name: "No matching Matters" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await user.clear(matter);
+    await user.type(matter, "M-98");
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["M-98 · Nimbus Metrics wind-down"]);
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(matter).toHaveValue("M-98 · Nimbus Metrics wind-down");
+    expect(list).not.toBeVisible();
+    expect(screen.getByRole("dialog", { name: "Add obligation" })).toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText("Label"), "Tax return");
+    await user.type(within(dialog).getByLabelText("Due date"), "2026-10-31");
+    await user.click(within(dialog).getByRole("button", { name: "Add obligation" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(posted).toMatchObject({ label: "Tax return", matterId: "m98" });
+  });
+
+  it("clears the Matter link with None", async () => {
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.method === "PATCH" && call.url.pathname === "/api/v1/entities/e1/obligations/o1") {
+          patches.push(call.body);
+          return json(200, { obligation: { ...obligation, matter: null } });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Actions for Annual return" }));
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit obligation" });
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+    expect(matter).toHaveValue("M-42 · Annual filing support");
+    await user.click(matter);
+    const list = within(dialog).getByRole("listbox", { name: "Matter matches" });
+    await user.click(within(list).getByRole("option", { name: "None" }));
+    expect(matter).toHaveValue("");
+    await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(patches).toEqual([expect.objectContaining({ matterId: null })]);
+  });
+
   it("sends nothing from Add obligation until both label and due date are filled", async () => {
     let posted = 0;
     stubApi({
@@ -394,7 +482,14 @@ describe("the Entity Obligations tab", () => {
     await user.click(await screen.findByRole("button", { name: "Actions for Annual return" }));
     await user.click(screen.getByRole("menuitem", { name: "Edit" }));
     const dialog = await screen.findByRole("dialog", { name: "Edit obligation" });
-    expect(within(dialog).getByLabelText("Matter")).toHaveValue("private-matter");
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+    expect(matter).toHaveValue("Restricted matter");
+    // Typing and then Escape closes only the list and keeps the link.
+    await user.type(matter, "Annual");
+    expect(within(dialog).getByRole("listbox", { name: "Matter matches" })).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Edit obligation" })).toBeInTheDocument();
+    expect(matter).toHaveValue("Restricted matter");
     await user.clear(within(dialog).getByLabelText("Label"));
     await user.type(within(dialog).getByLabelText("Label"), "Draft change");
     await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
