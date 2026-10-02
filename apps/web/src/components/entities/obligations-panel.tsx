@@ -23,13 +23,14 @@ import type {
   EntityObligationOptions,
   EntityRegistration,
 } from "../../lib/entities";
-import { civilToday, formatFullDate } from "../../lib/format";
+import { civilToday, formatFullDate, formatShortDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { matterReference } from "../../lib/matters";
 import { type TableCatalogue } from "../../lib/list-views";
 import { readTableWidths, writeTableWidths } from "../../lib/table-width-preferences";
 import { ManagedTable } from "../table/managed-table";
 import { problem } from "../../lib/problem";
+import { DueDate } from "../due-date";
 import { RestrictedRecordCell } from "../restricted-record-cell";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -253,6 +254,7 @@ export function ObligationsPanel({
 
 function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> {
   const labels = fieldLabels(intl);
+  const today = civilToday();
   const columns: TableCatalogue<EntityObligation>["columns"] = [
     {
       key: "due",
@@ -260,7 +262,14 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       label: () => labels.dueDate,
       defaultWidth: 144,
       minWidth: 100,
-      render: (row) => <time dateTime={row.nextDueOn}>{formatFullDate(row.nextDueOn)}</time>,
+      // A completed one-off keeps a plain date beside its Completed pill.
+      render: (row) =>
+        row.completedOn ? (
+          <time dateTime={row.nextDueOn}>{formatShortDate(row.nextDueOn)}</time>
+        ) : (
+          // The pill's own inset moves out, so its text lines up with the header.
+          <DueDate date={row.nextDueOn} overdue={row.nextDueOn < today} className="-ms-2" />
+        ),
     },
     {
       key: "label",

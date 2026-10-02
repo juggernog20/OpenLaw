@@ -3,7 +3,7 @@
 /** The Entity record's Obligations tab, Add obligation, and Mark complete dialogs. */
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatFullDate } from "../lib/format";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -111,7 +111,15 @@ function entityRecordApi(call: StubCall): Response | undefined {
 }
 
 describe("the Entity Obligations tab", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    // A fixed today, so the DES-014 due-date qualifiers read the same on every run.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-20T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   it("lists obligations by due date with every optional link and opens Add obligation", async () => {
     stubApi({ signedIn: MEMBER, extra: entityRecordApi });
     renderAt("/entities/e1/obligations");
@@ -135,6 +143,42 @@ describe("the Entity Obligations tab", () => {
     expect(within(dialog).getByLabelText("Assignee")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Matter")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Note")).toBeInTheDocument();
+  });
+
+  it("marks an overdue open row and leaves future and completed rows plain", async () => {
+    const overdue = { ...obligation, id: "o-late", label: "Late filing", nextDueOn: "2026-08-01" };
+    const completed = {
+      ...obligation,
+      id: "o-done",
+      label: "Board minutes",
+      recurrenceMonths: null,
+      nextDueOn: "2026-08-15",
+      completedOn: "2026-08-14",
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "GET"
+          ? json(200, { obligations: [obligation, overdue, completed] })
+          : entityRecordApi(call),
+    });
+    renderAt("/entities/e1/obligations");
+
+    const late = await screen.findByRole("row", { name: /Late filing/ });
+    const pill = within(late).getByText("Aug 1 (50 days overdue)");
+    expect(pill).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(pill).toHaveTextContent(/^Overdue Aug 1 \(50 days overdue\)$/);
+
+    const future = screen.getByRole("row", { name: /Annual return/ });
+    const upcoming = within(future).getByText("Sep 30 (in 10 days)");
+    expect(upcoming).toHaveClass("text-muted");
+    expect(upcoming).not.toHaveClass("bg-status-severe-bg");
+    expect(future).not.toHaveTextContent(/overdue/i);
+
+    const done = screen.getByRole("row", { name: /Board minutes/ });
+    expect(within(done).getByText("Aug 15")).not.toHaveClass("bg-status-severe-bg");
+    expect(within(done).getByText(`Completed ${formatFullDate("2026-08-14")}`)).toBeInTheDocument();
+    expect(done).not.toHaveTextContent(/overdue/i);
   });
 
   it("posts the Add obligation dialog and adds the returned row", async () => {
@@ -226,7 +270,7 @@ describe("the Entity Obligations tab", () => {
     const dialog = await screen.findByRole("dialog", { name: "Mark complete" });
     await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
     expect(await within(dialog).findByText(detail)).toBeInTheDocument();
-    expect(screen.getByText(formatFullDate("2026-09-30"))).toBeInTheDocument();
+    expect(screen.getByText("Sep 30 (in 10 days)")).toBeInTheDocument();
   });
 
   it("opens Mark complete with the cycle date and replaces the recurring row after confirmation", async () => {
@@ -253,7 +297,7 @@ describe("the Entity Obligations tab", () => {
     await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(filed).toEqual({ filedOn: "2026-09-20" });
-    expect(screen.getByText(formatFullDate("2027-09-30"))).toBeInTheDocument();
+    expect(screen.getByText("Sep 30, 2027")).toBeInTheDocument();
   });
 
   it("shows read-only values, resizes columns, and saves edits only on confirmation", async () => {
