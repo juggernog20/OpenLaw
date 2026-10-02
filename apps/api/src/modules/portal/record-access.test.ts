@@ -662,6 +662,16 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
   });
 
   it("redirects converted Requests through the team grant and keeps only the original ask after archival", async () => {
+    const listed = async (id: string) =>
+      (
+        (
+          await harness.app.inject({
+            method: "GET",
+            url: "/api/v1/portal/requests",
+            cookies: business,
+          })
+        ).json().requests as { id: string; convertedRecord: unknown }[]
+      ).find((row) => row.id === id);
     const record = await create(module);
     const staff = `/api/v1/${module}s/${record.number}`;
     const [type] = await harness.db.select().from(requestTypes).limit(1);
@@ -701,17 +711,18 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         description: "Submission remains unchanged",
       }),
     ]);
-    const list = await harness.app.inject({
-      method: "GET",
-      url: "/api/v1/portal/requests",
-      cookies: business,
+    // The DD-023 addendum of 2026-10-02 (#1307): Your requests keeps a
+    // converted Request while its record is reachable, naming the record.
+    expect(await listed(request!.id)).toMatchObject({
+      convertedRecord: { module, number: record.number },
     });
-    expect(list.json().requests.some((row: { id: string }) => row.id === request!.id)).toBe(false);
     await harness.app.inject({
       method: "DELETE",
       url: `${staff}/team/${businessId}`,
       cookies: admin,
     });
+    // Team removal takes it off the list, as it takes away the redirect.
+    expect(await listed(request!.id)).toBeUndefined();
     expect(
       (await harness.app.inject({ method: "GET", url: requestPath, cookies: business })).statusCode,
     ).toBe(404);
@@ -725,7 +736,17 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
       ).statusCode,
     ).toBe(404);
     const table = module === "contract" ? contracts : matters;
+    const readded = await harness.app.inject({
+      method: "POST",
+      url: `${staff}/team`,
+      cookies: admin,
+      payload: { userId: businessId },
+    });
+    expect(readded.statusCode, readded.body).toBeLessThan(300);
+    expect(await listed(request!.id)).toBeDefined();
     await harness.db.update(table).set({ archivedAt: new Date() }).where(eq(table.id, record.id));
+    // Archival takes it off the list too, even for a team member.
+    expect(await listed(request!.id)).toBeUndefined();
     const archived = await harness.app.inject({
       method: "GET",
       url: requestPath,

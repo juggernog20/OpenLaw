@@ -8762,6 +8762,9 @@
   "portal.matters.title": {
     "defaultMessage": "Your Matters"
   },
+  "portal.myRequests.convertedRecord": {
+    "defaultMessage": "{module, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"
   },

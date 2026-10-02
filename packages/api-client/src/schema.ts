@@ -4242,7 +4242,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001). The whole list is answered: it is one person's own asks, and a cap would hide a Request from the only person who can see it */
+    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's. A converted Request stays on the list with its convertedRecord while that record is live and the user is on its team, and leaves it after team removal or archive (DD-023 addendum). The whole list is answered: it is one person's own asks, and a cap would hide a Request from the only person who can see it */
     get: operations["listMyRequests"];
     put?: never;
     post?: never;
@@ -23840,6 +23840,11 @@ export interface operations {
                 displayName: string;
               };
               createdAt: string;
+              convertedRecord: {
+                /** @enum {string} */
+                module: "contract" | "matter";
+                number: number;
+              } | null;
             }[];
           };
         };

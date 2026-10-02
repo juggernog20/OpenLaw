@@ -144,7 +144,7 @@ it("accepts nullable whole-day turnaround settings and refuses invalid values", 
 });
 
 it.each(["contract", "matter"] as const)(
-  "moves a converted %s out of Your Requests and redirects its address",
+  "keeps a converted %s on Your Requests with its record and redirects its address",
   async (module) => {
     const request = await submit();
     let matterTypeId: string | undefined;
@@ -177,6 +177,11 @@ it.each(["contract", "matter"] as const)(
       url: "/api/v1/portal/requests",
       cookies: cast.requesterCookies,
     });
-    expect(list.json().requests.some((row: { id: string }) => row.id === request.id)).toBe(false);
+    // The DD-023 addendum of 2026-10-02 (#1307).
+    expect(list.json().requests.find((row: { id: string }) => row.id === request.id)).toMatchObject(
+      {
+        convertedRecord: { module, number: response.json().redirectTo.number },
+      },
+    );
   },
 );

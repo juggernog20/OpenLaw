@@ -972,3 +972,7 @@ A Business User followed the bell item "Your request ... is now In progress" and
 - Device push copy does not change. It names no payload values.
 
 This narrows the M21/6 addendum above and the INT-007 M21/9 addendum. The requester's four words still label the pills and the Resolve and Decline messages. Conversion is no longer told to the requester as "In progress". After conversion the Request address redirects to the record, so the record is where the requester acts.
+
+### INT-003 addendum (2026-10-02, #1307): Your requests names the record, not In progress
+
+A converted Request now stays on **Your requests** while its record is reachable (the DD-023 addendum of the same date). Its row shows the record reference, for example "Contract C-193", where the status pill was. It does not say "In progress", for the same reason the conversion notification no longer does (#1299): the record's status is live. The requester's four words still label every other row. The pill keeps the `converted` colour family from `REQUEST_STATUS_PILL`.
