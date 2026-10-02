@@ -429,12 +429,10 @@ describe("the two events the Inbox will fire (INT-006, INT-007)", () => {
     expect(message.text).toContain(portalLink(request));
   });
 
-  it("says a converted Request is in progress, the word the pill uses (INT-003)", async () => {
-    // `converted` is the one arm where the machinery and the requester
-    // part company: a record now exists, and what that means to the
-    // person who asked is that Legal is working on it. The pill on their
-    // screen says "In progress" too, so their inbox and their page never
-    // disagree about the same Request.
+  it("says in progress for a conversion row that names no record (INT-003)", async () => {
+    // A conversion now carries the record and the mail names it (#1299).
+    // A row raised without the record keys, as rows written before that
+    // change were, keeps the requester's word for the status.
     const request = await submit(REQUESTER, "Renew the Stark supply agreement");
     await raise((tx) =>
       harness.app.notifier.requestStatusChanged(tx, {

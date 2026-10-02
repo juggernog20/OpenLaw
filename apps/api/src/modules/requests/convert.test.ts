@@ -781,26 +781,32 @@ describe("what a conversion tells the requester (INT-003, NOT-002 group 5)", () 
     expect(rows.find((row) => row.eventType === "request.status_changed")!.payload).toMatchObject({
       from: "new",
       to: "converted",
+      // The record rides on the bell item, so it can name it (#1299).
+      recordModule: "contract",
+      recordNumber: expect.any(Number),
     });
   });
 
-  it("mails it in the requester's own words, not the enum's", async () => {
+  it("mails the record Legal opened and no status word (#1299)", async () => {
     const request = await submit("The conversion reaches the inbox");
-    expect((await convert(request.number, { title: "Mailed NDA" })).statusCode).toBe(200);
+    const res = await convert(request.number, { title: "Mailed NDA" });
+    expect(res.statusCode).toBe(200);
+    const opened = `Contract C-${res.json().request.convertedContract.number as number}`;
 
     await settles(`the conversion email about R-${request.number}`, () =>
       mailAbout(REQUESTER.email, request.number).some((m) =>
-        m.subject.includes("Your request is in progress"),
+        m.subject.includes(`Legal opened ${opened} from your request`),
       ),
     );
     const messages = mailAbout(REQUESTER.email, request.number).filter((m) =>
-      m.subject.includes("Your request is in progress"),
+      m.subject.includes(`Legal opened ${opened} from your request`),
     );
     expect(messages).toHaveLength(1);
-    // The INT-003 M21/6 vocabulary: the mail and the portal say one word
-    // for one status, and "converted" is not that word.
-    expect(messages[0]!.text).toContain("is now in progress");
-    expect(messages[0]!.subject).not.toContain("converted");
+    // The record's status is live, so the mail names no status at all
+    // (the INT-003 2026-10-02 addendum).
+    expect(messages[0]!.text).toContain(`Legal opened ${opened} from your request R-`);
+    expect(messages[0]!.subject).not.toMatch(/in progress|converted/i);
+    expect(messages[0]!.text).not.toMatch(/in progress|converted/i);
   });
 
   it("tells the triager nothing about their own act", async () => {

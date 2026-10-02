@@ -864,11 +864,19 @@ describe("Re-target, reach, narration, and the race", () => {
     expect(matterEntries.map((row) => row.action)).toContain("matter.created_from_request");
 
     const bells = await cast.bellRowsOn(requesterId, request.id);
-    expect(bells.filter((row) => row.eventType === "request.status_changed")).toHaveLength(1);
+    const changed = bells.filter((row) => row.eventType === "request.status_changed");
+    expect(changed).toHaveLength(1);
+    expect(changed[0]!.payload).toMatchObject({
+      to: "converted",
+      recordModule: "matter",
+      recordNumber: matter.number,
+    });
     await settles(`matter conversion mail about R-${request.number}`, () =>
       cast
         .mailAbout(REQUESTER.email, request.number)
-        .some((mail) => mail.subject.includes("Your request is in progress")),
+        .some((mail) =>
+          mail.subject.includes(`Legal opened Matter M-${matter.number} from your request`),
+        ),
     );
   });
 

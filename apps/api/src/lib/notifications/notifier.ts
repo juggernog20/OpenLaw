@@ -471,6 +471,11 @@ export interface RequestStatusChangedEvent extends RequestEvent {
    * status, which is a label an Administrator chose. */
   from: RequestStatus;
   to: RequestStatus;
+  /** The record a conversion made, set only when `to` is `converted`.
+   * The bell and the email name it instead of a status, because the
+   * record's own status is live and a snapshot would compete with it
+   * (#1299). */
+  record?: { module: "contract" | "matter"; number: number };
 }
 
 /** What one reply on a Request's thread tells the person who asked
@@ -1869,6 +1874,9 @@ export function createNotifier(deps: NotifierDeps): Notifier {
       await fanOutToRequest(tx, "request.status_changed", event, {
         from: event.from,
         to: event.to,
+        ...(event.record
+          ? { recordModule: event.record.module, recordNumber: event.record.number }
+          : {}),
       });
     },
 

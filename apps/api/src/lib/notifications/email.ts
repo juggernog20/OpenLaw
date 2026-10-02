@@ -1080,6 +1080,40 @@ function requestMail(
         ].join("\n"),
       };
     case "request.status_changed": {
+      // A conversion names the record and no status. The record's
+      // status is live and Legal changes it, so a status word here
+      // would compete with it (#1299). A row written before the record
+      // keys existed keeps the status sentence below.
+      const opened = convertedRecordName(notification);
+      if (opened) {
+        return {
+          ...recordLayout(notification, baseUrl, brand, {
+            subject: `Legal opened ${opened} from your request: ${named}`,
+            tone: "warning",
+            label: "Status update",
+            headline: `Legal opened ${opened} from your request`,
+            body: [`Legal opened ${opened} from your request ${named}.`],
+            // No step tracker: its "In progress" would be a second status.
+            action: {
+              label: `View ${opened}`,
+              href: link,
+              line: `Your conversation with Legal continues on ${opened}.`,
+            },
+            footer: { kind: "notification", why: "You submitted this request." },
+          }),
+          to,
+          subject: `Legal opened ${opened} from your request: ${named}`,
+          text: [
+            hello,
+            "",
+            `Legal opened ${opened} from your request ${named}.`,
+            "",
+            link,
+            "",
+            `Your conversation with Legal continues on ${opened}.`,
+          ].join("\n"),
+        };
+      }
       const moved = statusWord(detail(notification, "to"));
       return {
         ...recordLayout(notification, baseUrl, brand, {
@@ -1179,6 +1213,18 @@ const REQUEST_STATUS_WORDS: Record<RequestStatus, string> = {
  * answers null, and the arm says the honest general thing instead of
  * splicing `undefined` into a subject line.
  */
+/** "Contract C-12" or "Matter M-7" for a conversion row that carries
+ * the record keys, or null. */
+function convertedRecordName(notification: NotificationMail): string | null {
+  if (detail(notification, "to") !== "converted") return null;
+  const number = count(notification, "recordNumber");
+  if (number === null) return null;
+  const module = detail(notification, "recordModule");
+  if (module === "contract") return `Contract C-${number}`;
+  if (module === "matter") return `Matter M-${number}`;
+  return null;
+}
+
 function statusWord(status: string | null): string | null {
   return wordFor(REQUEST_STATUS_WORDS, status);
 }

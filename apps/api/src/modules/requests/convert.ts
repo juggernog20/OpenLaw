@@ -34,9 +34,10 @@ import { conversionForm, ConversionParties } from "./convert-form.js";
  * two numbers are the two names, and the log is append-only.
  *
  * **`requestStatusChanged` is raised, not a conversion event of its
- * own** — Resolve's shape rather than Decline's (the M20/8 rule). The
- * requester hears "In progress", which is the whole of what a
- * conversion means to them (the INT-003 M21/6 vocabulary).
+ * own** — Resolve's shape rather than Decline's (the M20/8 rule). It
+ * carries the record's module and number, and the requester is told
+ * which record Legal opened rather than a status (the INT-003
+ * 2026-10-02 addendum).
  *
  * The lock, the `new` guard, the race refusal, and the envelope read
  * are all `disposition.ts`'s. The 409 gained one extension member for
@@ -127,7 +128,7 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "Matter conversions may apply a live template for the confirmed type; " +
           "carried values and triager answers override its defaults. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
-          "the Requester's In progress notification. Attachments become ordinary " +
+          "the Requester's notification naming the record Legal opened. Attachments become ordinary " +
           "root documents and the tiered thread moves onto either target while " +
           "the Portal Request address redirects to the converted record. Member+ only",
         tags: ["requests"],
@@ -478,15 +479,17 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             });
 
             // Resolve's shape rather than Decline's: the closure is the
-            // whole news, and the requester's word for it is "In progress".
-            // The audience, the actor exclusion, the preferences, and the
-            // after-commit wake-up are all the seam's.
+            // whole news. The requester is told which record Legal opened,
+            // not a status, because the record's status is live and moves
+            // after this (#1299). The audience, the actor exclusion, the
+            // preferences, and the after-commit wake-up are all the seam's.
             await app.notifier.requestStatusChanged(tx, {
               requestId: held.id,
               actorId: request.user.id,
               actorName: request.user.displayName,
               from: held.status,
               to: "converted",
+              record: { module: record.module, number: record.number },
             });
           }),
       );

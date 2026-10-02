@@ -8189,6 +8189,9 @@
   "notifications.request.conversionDraftFinished": {
     "defaultMessage": "{outcome, select, ready {The Conversion draft for {request} is ready to review} other {The Conversion draft for {request} could not finish}}"
   },
+  "notifications.request.converted": {
+    "defaultMessage": "Legal opened {recordModule, select, contract {Contract C-{recordNumber}} other {Matter M-{recordNumber}}} from your request {request}"
+  },
   "notifications.request.created": {
     "defaultMessage": "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}"
   },

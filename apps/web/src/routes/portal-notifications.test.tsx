@@ -210,7 +210,8 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     await user.click(await bell("2 unread"));
     const centre = await screen.findByRole("dialog", { name: "Notifications" });
 
-    // `converted` is Legal's word; "In progress" is the requester's
+    // A conversion row written before it carried the record keeps the
+    // requester's word: `converted` is Legal's, "In progress" is theirs
     // (INT-003 M20/10).
     expect(
       within(centre).getByRole("link", {
@@ -220,6 +221,67 @@ describe("the portal bell (NOT-001, NOT-005)", () => {
     expect(
       within(centre).getByRole("link", {
         name: /Your request Review the Northwind redline 2 is now Declined/,
+      }),
+    ).toBeVisible();
+  });
+
+  it("names the record a conversion opened and no status, and keeps Resolved (#1299)", async () => {
+    const user = userEvent.setup();
+    portalBellApi({
+      unread: 3,
+      items: [
+        item(1, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 19,
+            requestTitle: "Can we extend a probation period in France?",
+            from: "new",
+            to: "converted",
+            recordModule: "matter",
+            recordNumber: 87,
+          },
+        }),
+        item(2, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 20,
+            requestTitle: "Review the Northwind redline",
+            from: "read",
+            to: "converted",
+            recordModule: "contract",
+            recordNumber: 193,
+          },
+        }),
+        item(3, {
+          eventType: "request.status_changed",
+          payload: {
+            requestNumber: 21,
+            requestTitle: "Which NDA template?",
+            from: "new",
+            to: "resolved",
+          },
+        }),
+      ],
+    });
+    renderAt("/portal");
+
+    await user.click(await bell("3 unread"));
+    const centre = await screen.findByRole("dialog", { name: "Notifications" });
+
+    const matter = within(centre).getByRole("link", {
+      name: /Legal opened Matter M-87 from your request Can we extend a probation period in France\?/,
+    });
+    // The link still goes through the Request, which redirects to the record.
+    expect(matter).toHaveAttribute("href", "/portal/requests/19");
+    expect(matter).not.toHaveTextContent(/In progress/);
+    expect(
+      within(centre).getByRole("link", {
+        name: /Legal opened Contract C-193 from your request Review the Northwind redline/,
+      }),
+    ).toHaveAttribute("href", "/portal/requests/20");
+    expect(
+      within(centre).getByRole("link", {
+        name: /Your request Which NDA template\? is now Resolved/,
       }),
     ).toBeVisible();
   });

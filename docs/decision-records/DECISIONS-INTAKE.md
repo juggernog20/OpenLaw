@@ -959,3 +959,16 @@ Two panelists in the focus group of 2026-09-29 found that Convert to matter alwa
 This supersedes "Manager unassigned, confidentiality off" in the INT-007 M22 close addendum for the matter arm.
 
 **Convert to contract does not get these controls.** The converting person stays the Contract Owner, by the 2026-09-09 addendum, and the Contract starts non-Confidential. A contract conversion that sends either member is refused with 400, as a template is. The focus group asked only about Matters. A later change can add the same pair to the contract arm.
+
+### INT-003 addendum (2026-10-02, #1299): a conversion names the record, not a status
+
+A Business User followed the bell item "Your request ... is now In progress" and opened a Matter that said On hold. The bell item is a snapshot, and the Matter's status is live. Legal changes it after conversion, so the two disagreed and the requester could not tell which was true.
+
+**Decision.** On conversion, the bell and the email name the record Legal opened and no status. The bell reads "Legal opened Matter M-87 from your request {request}", or "Contract C-193". The email subject is "Legal opened Matter M-87 from your request: R-19 · {title}", and its headline and body say the same. The record page then holds the only status.
+
+- `request.status_changed` carries `recordModule` and `recordNumber` when `to` is `converted`. The convert route has the record's module and number at that point.
+- The conversion email has no step tracker, because its "In progress" step would be a second status. Its action reads "View Matter M-87" and still goes through the Request address, which redirects to the record.
+- A conversion row written before this change has no record keys. It keeps the status sentence, "is now In progress". Resolve still reads "is now Resolved", and Decline keeps its own event.
+- Device push copy does not change. It names no payload values.
+
+This narrows the M21/6 addendum above and the INT-007 M21/9 addendum. The requester's four words still label the pills and the Resolve and Decline messages. Conversion is no longer told to the requester as "In progress". After conversion the Request address redirects to the record, so the record is where the requester acts.
