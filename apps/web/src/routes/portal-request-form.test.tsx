@@ -18,6 +18,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, type FormNode } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { pickDate } from "../testing/dates";
 
 const REQUESTER = {
   id: "u9",
@@ -484,6 +485,44 @@ describe("submitting the form", () => {
       screen.queryByText("Enter a number without symbols, for example 180000."),
     ).not.toBeInTheDocument();
     expect(deal).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("collects a Date Field from the month calendar as a civil date", async () => {
+    const LAUNCH: FormField = {
+      fieldId: "f5",
+      slug: "launch_date",
+      displayName: "Launch date",
+      description: null,
+      fieldType: "date",
+      options: null,
+      displayOrder: 3,
+      isRequired: true,
+    };
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [COUNTERPARTY, LAUNCH] });
+    await fillComplete(user);
+    const launch = screen.getByLabelText(/^Launch date/);
+    // A button that opens a calendar, so no typed digits can be read in
+    // the wrong order.
+    expect(launch.tagName).toBe("BUTTON");
+    expect(launch).toHaveTextContent("Select a date");
+    expect(launch).toHaveAccessibleDescription("Required");
+
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    expect(fieldOf(launch).getByText(ANSWER_REQUIRED)).toBeInTheDocument();
+    expect(launch).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+
+    await pickDate(user, /^Launch date/, "2026-10-15");
+    expect(screen.getByLabelText(/^Launch date/)).toHaveTextContent("Oct 15, 2026");
+    expect(screen.getByLabelText(/^Launch date/)).not.toHaveAttribute("aria-invalid");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
+    expect(
+      (submissions.bodies[0] as { customFields: Record<string, unknown> }).customFields.launch_date,
+    ).toBe("2026-10-15");
   });
 
   it("clears a field's mark the moment it is answered", async () => {

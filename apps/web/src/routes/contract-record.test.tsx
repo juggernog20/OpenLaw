@@ -43,6 +43,7 @@ import {
   type StubAnswer,
   type StubCall,
 } from "../testing/helpers";
+import { clearDate, pickDate } from "../testing/dates";
 import type { CustomFieldValue, CustomFieldValues } from "../lib/custom-fields";
 import type { Comment } from "../lib/comments";
 import type { DocumentVersion } from "../lib/documents";
@@ -2779,7 +2780,8 @@ describe("the /contracts/:number record page", () => {
       ),
     ).toHaveLength(9);
     expect(card.getByLabelText("Notice period")).toHaveAttribute("inputmode", "decimal");
-    expect(card.getByLabelText("Signed on")).toHaveAttribute("type", "date");
+    // A date is the month calendar, never the browser's date box.
+    expect(card.getByLabelText("Signed on")).toHaveTextContent("Select a date");
     // The two that name a row reuse the record's own pickers: the
     // people the Owner select offers and the M7 registry.
     expect(
@@ -2803,6 +2805,51 @@ describe("the /contracts/:number record page", () => {
         { customFields: { field_6: ["APAC"] } },
       ]),
     );
+  });
+
+  it("commits a picked date once, clears it, and reverts a refused pick on Escape", async () => {
+    let refuse = false;
+    const api = recordApi(
+      contractRow({
+        contractTypeId: "t-full",
+        contractTypeName: "Every field",
+        customFields: { field_3: "2026-03-01" },
+      }),
+    );
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        refuse && call.url.pathname === "/api/v1/contracts/42" && call.method === "PATCH"
+          ? problem(400, "Signed on: enter a real calendar date.")
+          : api.handler(call),
+    });
+    renderAt("/contracts/42/fields");
+    const user = userEvent.setup();
+
+    expect(await screen.findByLabelText("Signed on")).toHaveTextContent("Mar 1, 2026");
+    // A pick is a decision, so it commits at once, and only once.
+    await pickDate(user, "Signed on", "2026-10-15");
+    await waitFor(() => expect(api.patches).toEqual([{ customFields: { field_3: "2026-10-15" } }]));
+    expect(screen.getByLabelText("Signed on")).toHaveTextContent("Oct 15, 2026");
+
+    await clearDate(user, "Signed on");
+    await waitFor(() =>
+      expect(api.patches).toEqual([
+        { customFields: { field_3: "2026-10-15" } },
+        { customFields: { field_3: null } },
+      ]),
+    );
+    expect(screen.getByLabelText("Signed on")).toHaveTextContent("Select a date");
+
+    refuse = true;
+    await pickDate(user, "Signed on", "2027-01-05");
+    expect(await screen.findByText("Signed on: enter a real calendar date.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Signed on")).toHaveTextContent("Jan 5, 2027");
+    expect(screen.getByLabelText("Signed on")).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(screen.getByLabelText("Signed on")).toHaveTextContent("Select a date");
+    expect(screen.queryByRole("dialog", { name: "Choose a date" })).not.toBeInTheDocument();
+    expect(api.patches).toHaveLength(2);
   });
 
   it("commits a number field as a number, and clears it when the box is emptied", async () => {

@@ -21,6 +21,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import type { AttachedField, CustomFieldDraft } from "../lib/custom-fields";
 import { CurrencySelect } from "./currency-select";
+import { DatePicker } from "./date-picker";
 import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
@@ -118,15 +119,34 @@ export function CustomFieldControl({
         />
       );
     case "date":
+      // The month calendar, not the browser's date box (DES-048). The
+      // browser box takes its day and month order from the browser
+      // language, so a day-first entry could become another date. A
+      // pick is a decision, so it commits on change and has no blur.
+      // A button takes no `aria-required`, so a hidden word says it.
       return (
-        <Input
-          {...shared}
-          type="date"
-          value={text}
-          onChange={(event) => onDraft(event.target.value)}
-          onBlur={onBlur}
-          onKeyDown={onKeyDown}
-        />
+        <>
+          <DatePicker
+            id={id}
+            value={text}
+            disabled={disabled}
+            invalid={invalid}
+            describedBy={
+              [describedBy, required ? `${id}-required` : undefined].filter(Boolean).join(" ") ||
+              undefined
+            }
+            onChange={onDraft}
+            onKeyDown={onKeyDown}
+          />
+          {required && (
+            <span id={`${id}-required`} className="sr-only">
+              {intl.formatMessage({
+                id: "contracts.field.requiredAnswer",
+                defaultMessage: "Required",
+              })}
+            </span>
+          )}
+        </>
       );
     case "boolean":
       return (

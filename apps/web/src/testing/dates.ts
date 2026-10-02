@@ -47,7 +47,7 @@ function ordinal(day: number): string {
 }
 
 /** Opens the labelled date picker and chooses `civil` (`YYYY-MM-DD`). */
-export async function pickDate(user: UserEvent, label: string, civil: string) {
+export async function pickDate(user: UserEvent, label: string | RegExp, civil: string) {
   await user.click(await screen.findByLabelText(label));
   const year = civil.slice(0, 4);
   const month = Number(civil.slice(5, 7));

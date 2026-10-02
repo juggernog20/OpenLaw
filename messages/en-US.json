@@ -3140,6 +3140,9 @@
   "contracts.field.numberInvalidNamed": {
     "defaultMessage": "{fieldName}: enter this as a number."
   },
+  "contracts.field.requiredAnswer": {
+    "defaultMessage": "Required"
+  },
   "contracts.field.requiredMark": {
     "defaultMessage": "(required)"
   },
