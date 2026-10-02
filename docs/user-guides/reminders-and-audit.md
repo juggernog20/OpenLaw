@@ -37,9 +37,10 @@ Changing the schedule does not recall delivered reminders or guarantee catch-up 
 
 1. In **Settings**, open **Advanced**, then **Audit log**.
 2. Use **Person** to select the actor, **Action** for the event, and **Record** for the record kind. These filters combine.
-3. Use **From** and **To** to narrow the date range, and **Search** to narrow the available audit text. The date bounds use your browser's local calendar days.
-4. Read the event, record, audience, and time. Where shown, inspect the before-and-after values.
-5. Select **Show older** for more results, or **Clear filters** to start again.
+3. Use **Period** to pick **Today**, **Last 7 days**, or **Last 30 days**, or use **From** and **To** to narrow the date range. Editing a date sets **Period** to **Custom**. Use **Search** to narrow the available audit text. The date bounds use your browser's local calendar days.
+4. When a filter is set, read the line under the filters. It shows how many entries match and how many each person wrote, most first. Select a name to set **Person** to that person.
+5. Read the event, record, audience, and time. Where shown, inspect the before-and-after values.
+6. Select **Show older** for more results, or **Clear filters** to start again.
 
 The Audit log includes configuration events and recorded record-level activity, including Administrator-only events. Entries about a Confidential Contract, Matter, Entity, or Document appear only when you are in that record's audience. An entry can name a second record, such as a related Contract. If you cannot reach that second record, the entry shows without its number and title. **Export CSV** applies the same limits. Other app roles cannot open this settings log; their permitted record Activity remains a separate surface.
 

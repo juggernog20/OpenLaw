@@ -1382,6 +1382,9 @@
   "audit.filter.from": {
     "defaultMessage": "From"
   },
+  "audit.filter.period": {
+    "defaultMessage": "Period"
+  },
   "audit.filter.record": {
     "defaultMessage": "Record"
   },
@@ -1402,6 +1405,27 @@
   },
   "audit.panes": {
     "defaultMessage": "Audit log panes"
+  },
+  "audit.period.anyTime": {
+    "defaultMessage": "Any time"
+  },
+  "audit.period.custom": {
+    "defaultMessage": "Custom"
+  },
+  "audit.period.last30": {
+    "defaultMessage": "Last 30 days"
+  },
+  "audit.period.last7": {
+    "defaultMessage": "Last 7 days"
+  },
+  "audit.period.today": {
+    "defaultMessage": "Today"
+  },
+  "audit.summary": {
+    "defaultMessage": "{total, plural, one {# entry} other {# entries}}. {people}."
+  },
+  "audit.summary.more": {
+    "defaultMessage": "and {count} more"
   },
   "audit.tier": {
     "defaultMessage": "{tier, select, legal_only {Legal only} working_team {Working team} full_thread {Full thread} admin_only {Administrators} other {{tier}}}"

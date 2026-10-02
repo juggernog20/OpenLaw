@@ -44,7 +44,13 @@ import { Download, Lock } from "lucide-react";
 import { api } from "../lib/api";
 import { narrateActivity } from "../lib/activity";
 import { contractReference } from "../lib/contracts";
-import { dayBounds, formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import {
+  civilToday,
+  dayBounds,
+  formatCount,
+  formatLongDateTime,
+  formatRelativeOrShort,
+} from "../lib/format";
 import { matterReference } from "../lib/matters";
 import { requestReference } from "../lib/requests";
 import { CONTROL_CLASS } from "../lib/form-controls";
@@ -60,6 +66,8 @@ import type { paths } from "@openlaw/api-client";
 
 type LogResponse =
   paths["/api/v1/audit-log"]["get"]["responses"]["200"]["content"]["application/json"];
+type SummaryResponse =
+  paths["/api/v1/audit-log/summary"]["get"]["responses"]["200"]["content"]["application/json"];
 
 /** One entry as the audit log answers it — wider than a record feed's,
  * because this surface has no entity scope and no tier filter. */
@@ -107,12 +115,18 @@ export async function settingsAuditLogLoader() {
   return { actions: actions.data.actions, actors: people.data?.users ?? [] };
 }
 
+/** The date presets ahead of From and To. Custom is a range the reader
+ * typed. */
+type Period = "any" | "today" | "last7" | "last30" | "custom";
+
 /** What the reader has narrowed by. Empty string means "not narrowed" —
  * the state a `select` and an `input` are both natively in. */
 interface Filters {
   actorId: string;
   action: string;
   entityType: string;
+  /** Which preset filled From and To. It is not sent: the dates are. */
+  period: Period;
   /** Civil dates, as the date inputs answer them. */
   from: string;
   to: string;
@@ -123,10 +137,31 @@ const UNFILTERED: Filters = {
   actorId: "",
   action: "",
   entityType: "",
+  period: "any",
   from: "",
   to: "",
   q: "",
 };
+
+/** How many people the summary names before it counts the rest. */
+const SUMMARY_PEOPLE = 5;
+
+/** A civil date some whole days before another one. Noon keeps a DST
+ * shift from moving the date. */
+function daysBefore(civil: string, days: number): string {
+  const date = new Date(`${civil}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** The From and To a preset fills, as civil dates in the reader's own
+ * timezone. A range ends today and counts today as one of its days. */
+function periodDates(period: Period): { from: string; to: string } {
+  if (period === "any" || period === "custom") return { from: "", to: "" };
+  const today = civilToday();
+  const span = { today: 0, last7: 6, last30: 29 }[period];
+  return { from: daysBefore(today, span), to: today };
+}
 
 /**
  * The filters as the API takes them. The two civil dates become the
@@ -231,7 +266,7 @@ function AudienceBadge({ tier }: Readonly<{ tier: Tier }>) {
 }
 
 /** One labelled filter control. The label is visible, not a
- * placeholder: six controls in a row need naming to be usable, and a
+ * placeholder: seven controls in a row need naming to be usable, and a
  * placeholder disappears the moment somebody uses it. */
 function FilterField({
   id,
@@ -351,6 +386,26 @@ export function SettingsAuditLogPage() {
     void loadPage(null);
   }, [loadPage]);
 
+  /** Who wrote the matching entries, tagged with the question it answers.
+   * Read only once a filter is set: the whole log needs no summary. */
+  const [counted, setCounted] = useState<{ key: string; summary: SummaryResponse } | null>(null);
+  const filtered = Object.keys(query).length > 0;
+  useEffect(() => {
+    if (!filtered) return;
+    let current = true;
+    // A failed count leaves the line out. The table still answers.
+    void api
+      .GET("/api/v1/audit-log/summary", { params: { query } })
+      .catch(() => ({ data: undefined }))
+      .then(({ data }) => {
+        if (current && data) setCounted({ key: queryKey, summary: data });
+      });
+    return () => {
+      current = false;
+    };
+  }, [filtered, query, queryKey]);
+  const summary = filtered && counted?.key === queryKey ? counted.summary : null;
+
   const exportHref = `/api/v1/audit-log/export?${new URLSearchParams(query).toString()}`;
 
   function narrow(patch: Partial<Filters>) {
@@ -459,6 +514,38 @@ export function SettingsAuditLogPage() {
           </FilterField>
 
           <FilterField
+            id="auditPeriod"
+            label={<FormattedMessage id="audit.filter.period" defaultMessage="Period" />}
+          >
+            <select
+              id="auditPeriod"
+              className={CONTROL_CLASS}
+              value={filters.period}
+              onChange={(event) => {
+                const period = event.target.value as Period;
+                // Custom keeps the dates on screen. Every other choice fills them.
+                narrow(period === "custom" ? { period } : { period, ...periodDates(period) });
+              }}
+            >
+              <option value="any">
+                {intl.formatMessage({ id: "audit.period.anyTime", defaultMessage: "Any time" })}
+              </option>
+              <option value="today">
+                {intl.formatMessage({ id: "audit.period.today", defaultMessage: "Today" })}
+              </option>
+              <option value="last7">
+                {intl.formatMessage({ id: "audit.period.last7", defaultMessage: "Last 7 days" })}
+              </option>
+              <option value="last30">
+                {intl.formatMessage({ id: "audit.period.last30", defaultMessage: "Last 30 days" })}
+              </option>
+              <option value="custom">
+                {intl.formatMessage({ id: "audit.period.custom", defaultMessage: "Custom" })}
+              </option>
+            </select>
+          </FilterField>
+
+          <FilterField
             id="auditFrom"
             label={<FormattedMessage id="audit.filter.from" defaultMessage="From" />}
           >
@@ -466,7 +553,7 @@ export function SettingsAuditLogPage() {
               id="auditFrom"
               type="date"
               value={filters.from}
-              onChange={(event) => narrow({ from: event.target.value })}
+              onChange={(event) => narrow({ from: event.target.value, period: "custom" })}
             />
           </FilterField>
 
@@ -478,7 +565,7 @@ export function SettingsAuditLogPage() {
               id="auditTo"
               type="date"
               value={filters.to}
-              onChange={(event) => narrow({ to: event.target.value })}
+              onChange={(event) => narrow({ to: event.target.value, period: "custom" })}
             />
           </FilterField>
 
@@ -507,6 +594,10 @@ export function SettingsAuditLogPage() {
             <FormattedMessage id="audit.filter.clear" defaultMessage="Clear filters" />
           </Button>
         </div>
+
+        {summary !== null && summary.total > 0 && (
+          <AuditSummary summary={summary} onPerson={(actorId) => narrow({ actorId })} />
+        )}
 
         {loadFailed && (
           <p role="alert" className="px-4 py-3 text-sm text-status-danger-fg">
@@ -569,6 +660,59 @@ export function SettingsAuditLogPage() {
         )}
       </SettingsCard>
     </>
+  );
+}
+
+/**
+ * The count line under the filter bar (DES-027 addendum): how many
+ * entries match, and how many each person wrote, most first. A name
+ * narrows the log to that person. Entries with no person are OpenLaw's,
+ * named as their sentences name them, and cannot be narrowed to.
+ */
+function AuditSummary({
+  summary,
+  onPerson,
+}: Readonly<{ summary: SummaryResponse; onPerson: (actorId: string) => void }>) {
+  const intl = useIntl();
+  const shown = summary.actors.slice(0, SUMMARY_PEOPLE);
+  const rest = summary.actors.length - shown.length;
+  const people = intl.formatList(
+    [
+      ...shown.map((actor) => (
+        <span key={actor.id ?? "system"}>
+          {actor.id === null ? (
+            intl.formatMessage({ id: "activity.actor.system", defaultMessage: "OpenLaw" })
+          ) : (
+            <Button
+              variant="link"
+              className="h-auto p-0 text-sm"
+              onClick={() => onPerson(actor.id!)}
+            >
+              {actor.displayName}
+            </Button>
+          )}{" "}
+          {formatCount(actor.count, { locale: intl.locale })}
+        </span>
+      )),
+      ...(rest > 0
+        ? [
+            intl.formatMessage(
+              { id: "audit.summary.more", defaultMessage: "and {count} more" },
+              { count: rest },
+            ),
+          ]
+        : []),
+    ],
+    { type: "unit" },
+  );
+  return (
+    <p className="border-b border-border-default px-4 py-2 text-sm text-muted">
+      <FormattedMessage
+        id="audit.summary"
+        defaultMessage="{total, plural, one {# entry} other {# entries}}. {people}."
+        values={{ total: summary.total, people }}
+      />
+    </p>
   );
 }
 
