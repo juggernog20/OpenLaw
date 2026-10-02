@@ -68,6 +68,7 @@ import { matterReference } from "../../lib/matters";
 import { isMemberPlus } from "../../lib/roles";
 import { ConfidentialToggle } from "../confidential-toggle";
 import { type FieldReference } from "../custom-field-control";
+import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -522,13 +523,39 @@ export function CreateContractDialog({
               confidential={confidential}
               onChange={setConfidential}
             />
-            {selectedMatter && selectedMatter.isConfidential !== confidential && (
-              <p className="text-xs text-status-warning-fg">
-                <FormattedMessage
-                  id="contracts.form.matterMismatch"
-                  defaultMessage="This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
-                />
-              </p>
+            {/* CTR-018's one-time suggestion, never enforcement: the
+              switch starts off, and the button is the person's choice. */}
+            {selectedMatter?.isConfidential && !confidential ? (
+              <Alert variant="warning" className="flex flex-col items-start gap-2 text-sm">
+                <p>
+                  <FormattedMessage
+                    id="contracts.form.matterConfidentialAlert"
+                    defaultMessage="{reference} is confidential. This Contract will be open to every Legal Team Member."
+                    values={{ reference: matterReference(intl, selectedMatter.number) }}
+                  />
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setConfidential(true)}
+                >
+                  <FormattedMessage
+                    id="contracts.form.matterConfidentialAccept"
+                    defaultMessage="Make this Contract confidential"
+                  />
+                </Button>
+              </Alert>
+            ) : (
+              selectedMatter &&
+              selectedMatter.isConfidential !== confidential && (
+                <p className="text-xs text-status-warning-fg">
+                  <FormattedMessage
+                    id="contracts.form.matterMismatch"
+                    defaultMessage="This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically."
+                  />
+                </p>
+              )
             )}
             <CreateAttachments module="contract" uploads={attachments} disabled={busy} />
             {error && (

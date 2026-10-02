@@ -3206,6 +3206,12 @@
   "contracts.form.matter": {
     "defaultMessage": "Matter"
   },
+  "contracts.form.matterConfidentialAccept": {
+    "defaultMessage": "Make this Contract confidential"
+  },
+  "contracts.form.matterConfidentialAlert": {
+    "defaultMessage": "{reference} is confidential. This Contract will be open to every Legal Team Member."
+  },
   "contracts.form.matterHelp": {
     "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
   },

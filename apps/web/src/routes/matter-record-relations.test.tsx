@@ -409,6 +409,76 @@ describe("the Matter record's linked Contracts (M23/6)", () => {
     ]);
   });
 
+  /** The New contract dialog opened from Matter M-12, flagged as
+   * `confidential`. The options answer is the least the dialog needs. */
+  async function newContractFrom(confidential: boolean) {
+    mountApi(MEMBER, { parent: null, children: [], related: [] }, (call) => {
+      if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET") {
+        return json(200, {
+          matter: { ...MATTER, isConfidential: confidential },
+          fields: [],
+          customFieldRefs: { users: [], entities: [] },
+          team: [],
+        });
+      }
+      if (call.url.pathname === "/api/v1/contracts/options")
+        return json(200, {
+          contractTypes: [{ id: "ct-nda", slug: "nda", displayName: "NDA", fields: [] }],
+          users: [],
+          contractStatuses: [],
+          approverGroups: [],
+        });
+      if (call.url.pathname === "/api/v1/matters/12/contracts") return json(200, { contracts: [] });
+      return undefined;
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "New contract" }));
+    const dialog = within(await screen.findByRole("dialog"));
+    return { user, dialog };
+  }
+
+  const ALERT_TEXT = "M-12 is confidential. This Contract will be open to every Legal Team Member.";
+  const MISMATCH_TEXT =
+    "This Contract and Matter will have different Confidential flags. Consider aligning them later if appropriate; creation changes neither flag automatically.";
+
+  it("warns that a Contract from a confidential Matter starts open, and offers to match it", async () => {
+    const { user, dialog } = await newContractFrom(true);
+    const toggle = dialog.getByRole("switch", {
+      name: "Confidential — restrict to the contract team",
+    });
+
+    // CTR-018: the flag never flows, so the switch still starts off.
+    expect(toggle).not.toBeChecked();
+    expect(dialog.getByRole("alert")).toHaveTextContent(ALERT_TEXT);
+    expect(dialog.queryByText(MISMATCH_TEXT)).not.toBeInTheDocument();
+
+    await user.click(dialog.getByRole("button", { name: "Make this Contract confidential" }));
+    expect(toggle).toBeChecked();
+    expect(dialog.queryByText(ALERT_TEXT)).not.toBeInTheDocument();
+    expect(dialog.queryByText(MISMATCH_TEXT)).not.toBeInTheDocument();
+
+    // Turning the switch off again brings the warning back.
+    await user.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(dialog.getByRole("alert")).toHaveTextContent(ALERT_TEXT);
+  });
+
+  it("shows only the mismatch line for an open Matter with the switch on", async () => {
+    const { user, dialog } = await newContractFrom(false);
+    const toggle = dialog.getByRole("switch", {
+      name: "Confidential — restrict to the contract team",
+    });
+    expect(dialog.queryByText(MISMATCH_TEXT)).not.toBeInTheDocument();
+
+    await user.click(toggle);
+    expect(dialog.getByText(MISMATCH_TEXT)).toBeInTheDocument();
+    expect(dialog.queryByText(ALERT_TEXT)).not.toBeInTheDocument();
+    expect(
+      dialog.queryByRole("button", { name: "Make this Contract confidential" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("links an eligible standalone Contract from the Matter and refreshes the canonical list", async () => {
     let isLinked = false;
     let body: unknown;
