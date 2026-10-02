@@ -3,7 +3,7 @@
 /** The Entity record's Obligations tab, Add obligation, and Mark complete dialogs. */
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatFullDate } from "../lib/format";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
@@ -107,11 +107,22 @@ function entityRecordApi(call: StubCall): Response | undefined {
   if (call.url.pathname === "/api/v1/entities/e1/holdings") {
     return json(200, { owners: [], owned: [] });
   }
+  if (call.url.pathname === "/api/v1/documents/type-options") {
+    return json(200, { documentTypes: [] });
+  }
   return undefined;
 }
 
 describe("the Entity Obligations tab", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+    // A fixed today, so the DES-014 due-date qualifiers read the same on every run.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-20T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
   it("lists obligations by due date with every optional link and opens Add obligation", async () => {
     stubApi({ signedIn: MEMBER, extra: entityRecordApi });
     renderAt("/entities/e1/obligations");
@@ -135,6 +146,42 @@ describe("the Entity Obligations tab", () => {
     expect(within(dialog).getByLabelText("Assignee")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Matter")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Note")).toBeInTheDocument();
+  });
+
+  it("marks an overdue open row and leaves future and completed rows plain", async () => {
+    const overdue = { ...obligation, id: "o-late", label: "Late filing", nextDueOn: "2026-08-01" };
+    const completed = {
+      ...obligation,
+      id: "o-done",
+      label: "Board minutes",
+      recurrenceMonths: null,
+      nextDueOn: "2026-08-15",
+      completedOn: "2026-08-14",
+    };
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "GET"
+          ? json(200, { obligations: [obligation, overdue, completed] })
+          : entityRecordApi(call),
+    });
+    renderAt("/entities/e1/obligations");
+
+    const late = await screen.findByRole("row", { name: /Late filing/ });
+    const pill = within(late).getByText("Aug 1 (50 days overdue)");
+    expect(pill).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(pill).toHaveTextContent(/^Overdue Aug 1 \(50 days overdue\)$/);
+
+    const future = screen.getByRole("row", { name: /Annual return/ });
+    const upcoming = within(future).getByText("Sep 30 (in 10 days)");
+    expect(upcoming).toHaveClass("text-muted");
+    expect(upcoming).not.toHaveClass("bg-status-severe-bg");
+    expect(future).not.toHaveTextContent(/overdue/i);
+
+    const done = screen.getByRole("row", { name: /Board minutes/ });
+    expect(within(done).getByText("Aug 15")).not.toHaveClass("bg-status-severe-bg");
+    expect(within(done).getByText(`Completed ${formatFullDate("2026-08-14")}`)).toBeInTheDocument();
+    expect(done).not.toHaveTextContent(/overdue/i);
   });
 
   it("posts the Add obligation dialog and adds the returned row", async () => {
@@ -165,6 +212,94 @@ describe("the Entity Obligations tab", () => {
       assigneeId: "u2",
     });
     expect(screen.getByText("Tax return")).toBeInTheDocument();
+  });
+
+  it("filters the Matter combobox by reference or title and posts the picked Matter", async () => {
+    let posted: unknown;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/obligation-options") {
+          return json(200, {
+            users: [{ id: "u1", displayName: "Nadia Counsel", image: null }],
+            matters: [
+              { id: "m1", number: 42, title: "Annual filing support" },
+              { id: "m7", number: 7, title: "Board pack review" },
+              { id: "m98", number: 98, title: "Nimbus Metrics wind-down" },
+            ],
+          });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations" && call.method === "POST") {
+          posted = call.body;
+          return json(201, { obligation: { ...obligation, id: "o2", label: "Tax return" } });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Add obligation" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add obligation" });
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+
+    await user.type(matter, "board");
+    const list = within(dialog).getByRole("listbox", { name: "Matter matches" });
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["M-7 · Board pack review"]);
+    await user.clear(matter);
+    await user.type(matter, "zzz");
+    expect(within(list).getByRole("option", { name: "No matching Matters" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await user.clear(matter);
+    await user.type(matter, "M-98");
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["M-98 · Nimbus Metrics wind-down"]);
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(matter).toHaveValue("M-98 · Nimbus Metrics wind-down");
+    expect(list).not.toBeVisible();
+    expect(screen.getByRole("dialog", { name: "Add obligation" })).toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText("Label"), "Tax return");
+    await user.type(within(dialog).getByLabelText("Due date"), "2026-10-31");
+    await user.click(within(dialog).getByRole("button", { name: "Add obligation" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(posted).toMatchObject({ label: "Tax return", matterId: "m98" });
+  });
+
+  it("clears the Matter link with None", async () => {
+    const patches: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.method === "PATCH" && call.url.pathname === "/api/v1/entities/e1/obligations/o1") {
+          patches.push(call.body);
+          return json(200, { obligation: { ...obligation, matter: null } });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Actions for Annual return" }));
+    await user.click(screen.getByRole("menuitem", { name: "Edit" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit obligation" });
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+    expect(matter).toHaveValue("M-42 · Annual filing support");
+    await user.click(matter);
+    const list = within(dialog).getByRole("listbox", { name: "Matter matches" });
+    await user.click(within(list).getByRole("option", { name: "None" }));
+    expect(matter).toHaveValue("");
+    await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(patches).toEqual([expect.objectContaining({ matterId: null })]);
   });
 
   it("sends nothing from Add obligation until both label and due date are filled", async () => {
@@ -226,7 +361,7 @@ describe("the Entity Obligations tab", () => {
     const dialog = await screen.findByRole("dialog", { name: "Mark complete" });
     await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
     expect(await within(dialog).findByText(detail)).toBeInTheDocument();
-    expect(screen.getByText(formatFullDate("2026-09-30"))).toBeInTheDocument();
+    expect(screen.getByText("Sep 30 (in 10 days)")).toBeInTheDocument();
   });
 
   it("opens Mark complete with the cycle date and replaces the recurring row after confirmation", async () => {
@@ -253,7 +388,84 @@ describe("the Entity Obligations tab", () => {
     await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(filed).toEqual({ filedOn: "2026-09-20" });
-    expect(screen.getByText(formatFullDate("2027-09-30"))).toBeInTheDocument();
+    expect(screen.getByText("Sep 30, 2027")).toBeInTheDocument();
+  });
+
+  it("files a note and the filed paper, then lists filings newest first in Filing history", async () => {
+    let uploadedTo: string | undefined;
+    let filed: unknown;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/documents" && call.method === "POST") {
+          uploadedTo = call.url.pathname;
+          expect((call.body as FormData).get("file")).toBeInstanceOf(File);
+          return json(201, { document: { id: "d1", title: "board-minutes.pdf", versions: [] } });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations/o1/file") {
+          filed = call.body;
+          return json(200, { obligation: { ...obligation, nextDueOn: "2027-09-30" } });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations/o1/filings") {
+          return json(200, {
+            filings: [
+              {
+                id: "f2",
+                filedOn: "2026-09-20",
+                note: "Filing reference MCA-0042",
+                filedBy: { id: "u1", displayName: "Nadia Counsel" },
+                document: { id: "d1", versionId: "v1", title: "board-minutes.pdf" },
+                createdAt: "2026-09-20T10:00:00.000Z",
+              },
+              {
+                id: "f1",
+                filedOn: "2025-09-18",
+                note: null,
+                filedBy: { id: "u2", displayName: "Yusuf Haddad" },
+                document: { removed: true },
+                createdAt: "2025-09-18T10:00:00.000Z",
+              },
+            ],
+          });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Mark complete" }));
+    const dialog = await screen.findByRole("dialog", { name: "Mark complete" });
+    await user.type(within(dialog).getByLabelText("Note"), "Filing reference MCA-0042");
+    await user.upload(
+      within(dialog).getByLabelText("Attach the filed paper"),
+      new File(["%PDF"], "board-minutes.pdf", { type: "application/pdf" }),
+    );
+    expect(within(dialog).getByText("board-minutes.pdf")).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "Attach the filed paper" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(uploadedTo).toBe("/api/v1/entities/e1/documents");
+    expect(filed).toEqual({
+      filedOn: "2026-09-20",
+      note: "Filing reference MCA-0042",
+      documentId: "d1",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Actions for Annual return" }));
+    await user.click(screen.getByRole("menuitem", { name: "Filing history" }));
+    const history = await screen.findByRole("dialog", { name: "Filing history" });
+    const items = await within(history).findAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent(`${formatFullDate("2026-09-20")} · Filed by Nadia Counsel`);
+    expect(within(items[0]!).getByText("Filing reference MCA-0042")).toBeInTheDocument();
+    expect(within(items[0]!).getByRole("link", { name: "board-minutes.pdf" })).toHaveAttribute(
+      "href",
+      "/entities/e1/documents?doc=d1&version=v1",
+    );
+    expect(items[1]).toHaveTextContent(`${formatFullDate("2025-09-18")} · Filed by Yusuf Haddad`);
+    expect(within(items[1]!).getByText("Document removed")).toBeInTheDocument();
   });
 
   it("shows read-only values, resizes columns, and saves edits only on confirmation", async () => {
@@ -350,7 +562,14 @@ describe("the Entity Obligations tab", () => {
     await user.click(await screen.findByRole("button", { name: "Actions for Annual return" }));
     await user.click(screen.getByRole("menuitem", { name: "Edit" }));
     const dialog = await screen.findByRole("dialog", { name: "Edit obligation" });
-    expect(within(dialog).getByLabelText("Matter")).toHaveValue("private-matter");
+    const matter = within(dialog).getByRole("combobox", { name: "Matter" });
+    expect(matter).toHaveValue("Restricted matter");
+    // Typing and then Escape closes only the list and keeps the link.
+    await user.type(matter, "Annual");
+    expect(within(dialog).getByRole("listbox", { name: "Matter matches" })).toBeVisible();
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Edit obligation" })).toBeInTheDocument();
+    expect(matter).toHaveValue("Restricted matter");
     await user.clear(within(dialog).getByLabelText("Label"));
     await user.type(within(dialog).getByLabelText("Label"), "Draft change");
     await user.click(within(dialog).getByRole("button", { name: "Save changes" }));
@@ -408,9 +627,11 @@ describe("the Entity Obligations tab", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByText(`Completed ${formatFullDate("2026-09-20")}`)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Mark complete" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Actions for Annual return" }),
-    ).not.toBeInTheDocument();
+    // Only reading is left: Filing history, with no Edit or Delete.
+    await user.click(screen.getByRole("button", { name: "Actions for Annual return" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Filing history",
+    ]);
   });
 
   it("shows linked obligations beneath their registration on Overview", async () => {

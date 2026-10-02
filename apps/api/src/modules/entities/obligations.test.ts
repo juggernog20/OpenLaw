@@ -2,7 +2,16 @@
 
 /** M27/6's Entity obligations and unified compliance calendar at the HTTP seam. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { activityLog, and, entityObligations, eq, matters, users } from "@openlaw/db";
+import {
+  activityLog,
+  and,
+  documents,
+  entityObligationFilings,
+  entityObligations,
+  eq,
+  matters,
+  users,
+} from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -108,6 +117,40 @@ async function newMatter(title: string) {
   });
   expect(response.statusCode, response.body).toBe(201);
   return response.json().matter as { id: string; number: number; title: string };
+}
+
+const BOUNDARY = "obligation-filing-boundary";
+
+/** Uploads one PDF as an Entity Document and answers it with its Versions. */
+async function newEntityDocument(entityId: string, filename: string) {
+  const response = await harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${entityId}/documents`,
+    cookies: memberCookies,
+    headers: { "content-type": `multipart/form-data; boundary=${BOUNDARY}` },
+    payload: Buffer.from(
+      `--${BOUNDARY}\r\ncontent-disposition: form-data; name="file"; filename="${filename}"\r\ncontent-type: application/pdf\r\n\r\n%PDF filed paper\r\n--${BOUNDARY}--\r\n`,
+    ),
+  });
+  expect(response.statusCode, response.body).toBe(201);
+  return response.json().document as { id: string; title: string; versions: { id: string }[] };
+}
+
+function fileObligation(entityId: string, obligationId: string, body: Record<string, unknown>) {
+  return harness.app.inject({
+    method: "POST",
+    url: `/api/v1/entities/${entityId}/obligations/${obligationId}/file`,
+    cookies: memberCookies,
+    payload: body,
+  });
+}
+
+function listFilings(entityId: string, obligationId: string) {
+  return harness.app.inject({
+    method: "GET",
+    url: `/api/v1/entities/${entityId}/obligations/${obligationId}/filings`,
+    cookies: memberCookies,
+  });
 }
 
 async function createObligation(entityId: string, body: Record<string, unknown>) {
@@ -389,6 +432,183 @@ describe("Mark filed", () => {
     });
     expect(filed.statusCode, filed.body).toBe(200);
     expect(filed.json().obligation.nextDueOn).toBe("2026-07-31");
+  });
+});
+
+describe("filing records", () => {
+  it("files with no note and no Document, as before, and still keeps a filing row", async () => {
+    const entity = await newEntity("Plain Filing Ltd");
+    const created = await createObligation(entity.id, {
+      label: "Annual return",
+      recurrenceMonths: 12,
+      nextDueOn: "2026-09-30",
+    });
+    const obligationId = created.json().obligation.id as string;
+    const filed = await fileObligation(entity.id, obligationId, { filedOn: "2026-09-20" });
+    expect(filed.statusCode, filed.body).toBe(200);
+    const rows = await harness.db
+      .select()
+      .from(entityObligationFilings)
+      .where(eq(entityObligationFilings.obligationId, obligationId));
+    expect(rows).toEqual([
+      expect.objectContaining({
+        filedOn: "2026-09-20",
+        note: null,
+        filedBy: memberId,
+        documentId: null,
+        versionId: null,
+        documentFiled: false,
+      }),
+    ]);
+  });
+
+  it("files with a note and an Entity Document in one filing row, one Document and one History entry", async () => {
+    const entity = await newEntity("Proof Filing Ltd");
+    const created = await createObligation(entity.id, {
+      label: "Board meeting - minutes filed",
+      recurrenceMonths: 12,
+      nextDueOn: "2026-09-30",
+    });
+    const obligationId = created.json().obligation.id as string;
+    const document = await newEntityDocument(entity.id, "board-minutes.pdf");
+    const note = "Filing reference MCA-2026-0042";
+
+    const filed = await fileObligation(entity.id, obligationId, {
+      filedOn: "2026-09-20",
+      note: `  ${note}  `,
+      documentId: document.id,
+    });
+    expect(filed.statusCode, filed.body).toBe(200);
+    expect(filed.json().obligation.nextDueOn).toBe("2027-09-30");
+
+    const rows = await harness.db
+      .select()
+      .from(entityObligationFilings)
+      .where(eq(entityObligationFilings.obligationId, obligationId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      note,
+      documentId: document.id,
+      versionId: document.versions[0]!.id,
+      documentFiled: true,
+    });
+    expect(
+      await harness.db
+        .select({ id: documents.id })
+        .from(documents)
+        .where(eq(documents.entityId, entity.id)),
+    ).toHaveLength(1);
+    const entries = await harness.db
+      .select({ payload: activityLog.payload })
+      .from(activityLog)
+      .where(
+        and(eq(activityLog.entityId, entity.id), eq(activityLog.action, "entity_obligation.filed")),
+      );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.payload).toMatchObject({ obligationId, filingId: rows[0]!.id });
+    expect(JSON.stringify(entries[0]!.payload)).not.toContain("MCA-2026-0042");
+
+    const history = await listFilings(entity.id, obligationId);
+    expect(history.statusCode, history.body).toBe(200);
+    expect(history.json().filings).toEqual([
+      expect.objectContaining({
+        id: rows[0]!.id,
+        filedOn: "2026-09-20",
+        note,
+        filedBy: { id: memberId, displayName: MEMBER.displayName },
+        document: { id: document.id, versionId: document.versions[0]!.id, title: document.title },
+      }),
+    ]);
+  });
+
+  it("refuses a Document from another Entity with 400 and files nothing", async () => {
+    const entity = await newEntity("Refused Filing Ltd");
+    const other = await newEntity("Other Paper Ltd");
+    const created = await createObligation(entity.id, {
+      label: "Annual return",
+      recurrenceMonths: 12,
+      nextDueOn: "2026-09-30",
+    });
+    const obligationId = created.json().obligation.id as string;
+    const foreign = await newEntityDocument(other.id, "other-minutes.pdf");
+    const refused = await fileObligation(entity.id, obligationId, {
+      filedOn: "2026-09-20",
+      documentId: foreign.id,
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const [row] = await harness.db
+      .select({ nextDueOn: entityObligations.nextDueOn })
+      .from(entityObligations)
+      .where(eq(entityObligations.id, obligationId));
+    expect(row?.nextDueOn).toBe("2026-09-30");
+    expect(
+      await harness.db
+        .select()
+        .from(entityObligationFilings)
+        .where(eq(entityObligationFilings.obligationId, obligationId)),
+    ).toEqual([]);
+  });
+
+  it("lists filings newest first, drops an erased Document, and goes with its Obligation while History stays", async () => {
+    const entity = await newEntity("History Filing Ltd");
+    const created = await createObligation(entity.id, {
+      label: "Licence renewal",
+      recurrenceMonths: 6,
+      nextDueOn: "2026-01-31",
+    });
+    const obligationId = created.json().obligation.id as string;
+    const document = await newEntityDocument(entity.id, "licence-2026.pdf");
+    expect(
+      (
+        await fileObligation(entity.id, obligationId, {
+          filedOn: "2026-01-20",
+          documentId: document.id,
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (await fileObligation(entity.id, obligationId, { filedOn: "2026-07-20", note: "Renewed" }))
+        .statusCode,
+    ).toBe(200);
+    const erased = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/documents/${document.id}`,
+      cookies: adminCookies,
+      payload: { confirmTitle: document.title },
+    });
+    expect(erased.statusCode, erased.body).toBeLessThan(300);
+
+    const history = await listFilings(entity.id, obligationId);
+    expect(history.statusCode, history.body).toBe(200);
+    expect(
+      history
+        .json()
+        .filings.map((row: { filedOn: string; document: unknown }) => [row.filedOn, row.document]),
+    ).toEqual([
+      ["2026-07-20", null],
+      ["2026-01-20", { removed: true }],
+    ]);
+
+    const removed = await harness.app.inject({
+      method: "DELETE",
+      url: `/api/v1/entities/${entity.id}/obligations/${obligationId}`,
+      cookies: memberCookies,
+    });
+    expect(removed.statusCode, removed.body).toBe(204);
+    expect(
+      await harness.db
+        .select()
+        .from(entityObligationFilings)
+        .where(eq(entityObligationFilings.obligationId, obligationId)),
+    ).toEqual([]);
+    const entries = await harness.db
+      .select({ id: activityLog.id })
+      .from(activityLog)
+      .where(
+        and(eq(activityLog.entityId, entity.id), eq(activityLog.action, "entity_obligation.filed")),
+      );
+    expect(entries).toHaveLength(2);
+    expect((await listFilings(entity.id, obligationId)).statusCode).toBe(404);
   });
 });
 

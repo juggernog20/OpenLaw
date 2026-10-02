@@ -5027,6 +5027,9 @@
   "docusignConsent.refused.title": {
     "defaultMessage": "DocuSign did not grant consent"
   },
+  "dueDate.overdue": {
+    "defaultMessage": "Overdue"
+  },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
@@ -5735,6 +5738,9 @@
   "entities.record.obligations.assignee": {
     "defaultMessage": "Assignee"
   },
+  "entities.record.obligations.attachFiledPaper": {
+    "defaultMessage": "Attach the filed paper"
+  },
   "entities.record.obligations.column": {
     "defaultMessage": "Obligation"
   },
@@ -5750,6 +5756,9 @@
   "entities.record.obligations.completedOnField": {
     "defaultMessage": "Completed on"
   },
+  "entities.record.obligations.documentRemoved": {
+    "defaultMessage": "Document removed"
+  },
   "entities.record.obligations.dueDate": {
     "defaultMessage": "Due date"
   },
@@ -5762,6 +5771,21 @@
   "entities.record.obligations.emptyHint": {
     "defaultMessage": "Add the first due date when it is known."
   },
+  "entities.record.obligations.filedOnBy": {
+    "defaultMessage": "{date} · Filed by {name}"
+  },
+  "entities.record.obligations.filedPaper": {
+    "defaultMessage": "Filed paper"
+  },
+  "entities.record.obligations.filingHistory": {
+    "defaultMessage": "Filing history"
+  },
+  "entities.record.obligations.filingHistoryEmpty": {
+    "defaultMessage": "No filings yet."
+  },
+  "entities.record.obligations.filingHistoryLoading": {
+    "defaultMessage": "Loading…"
+  },
   "entities.record.obligations.label": {
     "defaultMessage": "Label"
   },
@@ -5770,6 +5794,12 @@
   },
   "entities.record.obligations.matter": {
     "defaultMessage": "Matter"
+  },
+  "entities.record.obligations.matterMatches": {
+    "defaultMessage": "Matter matches"
+  },
+  "entities.record.obligations.matterNoMatch": {
+    "defaultMessage": "No matching Matters"
   },
   "entities.record.obligations.matterOption": {
     "defaultMessage": "{reference} · {title}"
@@ -6646,9 +6676,6 @@
   },
   "home.obligations.entityDue": {
     "defaultMessage": "{entity} · Due {date}"
-  },
-  "home.obligations.overdue": {
-    "defaultMessage": "Overdue"
   },
   "home.obligations.title": {
     "defaultMessage": "Entity obligations"

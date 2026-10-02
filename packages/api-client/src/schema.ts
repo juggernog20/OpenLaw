@@ -6676,6 +6676,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/entities/{id}/obligations/{childId}/filings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEntityObligationFilings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/entities/{id}/grants": {
     parameters: {
       query?: never;
@@ -37029,6 +37045,8 @@ export interface operations {
         "application/json": {
           /** Format: date */
           filedOn?: string;
+          note?: string | null;
+          documentId?: string | null;
         };
       };
     };
@@ -37078,6 +37096,64 @@ export interface operations {
               /** Format: date-time */
               updatedAt: string;
             };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listEntityObligationFilings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        childId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            filings: {
+              id: string;
+              /** Format: date */
+              filedOn: string;
+              note: string | null;
+              filedBy: {
+                id: string;
+                displayName: string;
+              };
+              document:
+                | (
+                    | {
+                        id: string;
+                        versionId: string;
+                        title: string;
+                      }
+                    | {
+                        /** @enum {boolean} */
+                        removed: true;
+                      }
+                  )
+                | null;
+              /** Format: date-time */
+              createdAt: string;
+            }[];
           };
         };
       };

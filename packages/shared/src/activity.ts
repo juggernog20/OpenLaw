@@ -692,6 +692,9 @@ type EntityPayloads = {
     previousDueOn: string;
     nextDueOn: string | null;
     completedOn: string | null;
+    /** The `entity_obligation_filings` row. Absent on entries written
+     * before filings had rows. The note stays out of the log. */
+    filingId?: string;
   };
 };
 

@@ -1046,9 +1046,15 @@ Component code stays declarative (`<span>{formatRelativeOrShort(comment.createdA
 - **Session seam.** `configureFormatting({ locale, timeZone })` is where the stored user preference lands when a session loads; per-call options override it, then browser detection, then UTC — the DES resolution order. Tests inject `locale`, `timeZone`, and `now` for determinism.
 - **Sub-minute activity.** Renders as ICU's own "this minute" (`RelativeTimeFormat` with `numeric: "auto"`), not an invented "just now" string. Casing throughout follows ICU ("yesterday" lowercase — the decision table's "Yesterday" was illustrative).
 - **Day math.** The relative-or-short window uses truncated 24-hour units (feed precision); `formatDeadline` uses calendar days in the display timezone, because deadlines are dates. Year elision likewise compares calendar years in the display timezone.
-- **Deadline qualifier window.** The "(in 7 days)" / "(3 days overdue)" qualifier shows within ±30 calendar days and drops beyond, where the absolute date alone reads better. The "overdue" wording is helper-owned ICU copy (`format.deadline.overdue`); future and today qualifiers come from `RelativeTimeFormat` directly.
+- **Deadline qualifier window.** The "(in 7 days)" / "(3 days overdue)" qualifier shows within ±30 calendar days and drops beyond, where the absolute date alone reads better. The "overdue" wording is helper-owned ICU copy (`format.deadline.overdue`); future and today qualifiers come from `RelativeTimeFormat` directly. _Narrowed by the 2026-10-02 clarification below: the window applies to future dates only._
 - **File sizes.** Intl `unit` style with SI decimal steps (1 kB = 1000 bytes) — the labels ICU renders are SI units, so the math matches them.
 - **The `<TimeStamp>` component** from the consequences waits for its first consumer; this ticket shipped the pure library only (#43).
+
+**Overdue qualifier clarification (2026-10-02, [#1276](https://github.com/juggernog20/OpenLaw/issues/1276), [#1275](https://github.com/juggernog20/OpenLaw/issues/1275)):** the 30-day window on the due-date qualifier applies to future dates only. An overdue date keeps its "(N days overdue)" qualifier at any age. Before this, a date 39 days late read only "Aug 21", and the 2026-09-29 focus group read such Obligations as future dates. The qualifier is the existing `format.deadline.overdue` copy, so no new message lands. A past Matter Key date already counts as overdue in the Key dates tally, so its longer qualifier agrees with the card.
+
+- **One overdue pill.** `DueDate` in `apps/web/src/components/due-date.tsx` draws an open due date: the severe pill and an "Overdue" prefix for screen readers when the date is overdue, and muted `formatDeadline` text when it is not. Home's Entity obligations card, the compliance calendar list and the Entity Obligations tab use it.
+- **The month grid.** An overdue chip keeps its severe colours and gains the same "Overdue" prefix in its accessible name.
+- **Completed rows.** A completed Obligation shows a plain `formatShortDate` date and no overdue text.
 
 ---
 

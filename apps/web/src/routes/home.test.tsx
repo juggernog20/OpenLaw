@@ -327,10 +327,10 @@ describe("Home", () => {
     expect(within(card).getByText(/Confidential financing · Contract C-42/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
     expect(within(card).getByText("Overdue")).toBeInTheDocument();
-    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
-      "bg-status-severe-bg",
-      "text-status-severe-fg",
-    );
+    // DES-014: an overdue date keeps its qualifier at any age.
+    const overdue = within(card).getByText(/^Jan 1, 2000 \([\d,]+ days overdue\)$/);
+    expect(overdue).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(overdue).toHaveTextContent(/^Overdue Jan 1, 2000/);
 
     const matterTask = within(card).getByText("Review response exhibits");
     expect(matterTask.closest("a")).toHaveAttribute("href", "/matters/12/tasks");
@@ -767,10 +767,10 @@ describe("Home", () => {
       "href",
       "/entities/entity-1/obligations",
     );
-    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
-      "bg-status-severe-bg",
-      "text-status-severe-fg",
-    );
+    // DES-014: an overdue date keeps its qualifier at any age.
+    const overdue = within(card).getByText(/^Jan 1, 2000 \([\d,]+ days overdue\)$/);
+    expect(overdue).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(overdue).toHaveTextContent(/^Overdue Jan 1, 2000/);
     expect(within(card).getByText("Unassigned")).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "View all 6" })).toHaveAttribute(
       "href",
