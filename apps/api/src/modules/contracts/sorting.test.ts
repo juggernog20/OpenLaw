@@ -41,8 +41,13 @@ const MEMBER = {
 const FIXTURE_SIZE = 60;
 
 /** Three dates over thirty dated rows: ten rows per date, so every tie
- * the cursor has to break is a ten-way one. */
-const DATES = ["2027-01-31", "2027-06-30", "2027-11-30"] as const;
+ * the cursor has to break is a ten-way one. Far in the future, because
+ * Next deadline drops a date once it has passed. */
+const DATES = ["2097-01-31", "2097-06-30", "2097-11-30"] as const;
+
+/** Every fourth row has a notice period, so Notice by has five-way ties
+ * over fifteen rows, and those rows' Next deadline is the notice date. */
+const NOTICE_DAYS = 30;
 
 let harness: TestHarness;
 let memberCookies: Record<string, string>;
@@ -52,7 +57,14 @@ const made: { id: string; number: number; title: string }[] = [];
 
 interface ListAnswer {
   total: number;
-  contracts: { id: string; number: number; title: string; expiryDate: string | null }[];
+  contracts: {
+    id: string;
+    number: number;
+    title: string;
+    expiryDate: string | null;
+    noticeDeadline: string | null;
+    nextDeadline: { date: string; label: string } | null;
+  }[];
   nextCursor: string | null;
 }
 
@@ -101,7 +113,10 @@ beforeAll(async () => {
       index % 2 === 0
         ? harness.db
             .update(contracts)
-            .set({ expiryDate: DATES[(index / 2) % DATES.length] })
+            .set({
+              expiryDate: DATES[(index / 2) % DATES.length],
+              noticePeriodDays: index % 4 === 0 ? NOTICE_DAYS : null,
+            })
             .where(eq(contracts.id, row.id))
         : Promise.resolve(),
     ),
@@ -171,6 +186,90 @@ describe("the contracts list under no sort (CTR-024, unchanged)", () => {
     expect(dated.contracts.every((row) => row.expiryDate === DATES[0])).toBe(true);
     const empty = await page({ owner: "missing-person" });
     expect(empty).toMatchObject({ contracts: [], total: 0, nextCursor: null });
+  });
+
+  it("filters by Our entity, and an Entity the viewer cannot reach matches no row", async () => {
+    const adminCookies = await signInCookies(harness.app, ADMIN.email, ADMIN.password);
+    const types = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/entities/types",
+      cookies: adminCookies,
+    });
+    expect(types.statusCode, types.body).toBe(200);
+    const corporation = (types.json().entityTypes as { id: string; slug: string }[]).find(
+      (row) => row.slug === "corporation",
+    )!;
+    const entity = async (legalName: string) => {
+      const res = await harness.app.inject({
+        method: "POST",
+        url: "/api/v1/entities",
+        cookies: adminCookies,
+        payload: { legalName, entityTypeId: corporation.id },
+      });
+      expect(res.statusCode, res.body).toBe(201);
+      return (res.json().entity as { id: string }).id;
+    };
+    const [first, second, walled] = [
+      await entity("Filter One Ltd"),
+      await entity("Filter Two Ltd"),
+      await entity("Filter Walled Ltd"),
+    ];
+    const sealed = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/entities/${walled}`,
+      cookies: adminCookies,
+      payload: { isConfidential: true },
+    });
+    expect(sealed.statusCode, sealed.body).toBe(200);
+    const signedBy = {
+      [first]: made.slice(0, 2),
+      [second]: made.slice(2, 3),
+      [walled]: [made[3]!],
+    };
+    for (const [entityId, rows] of Object.entries(signedBy))
+      await harness.db
+        .update(contracts)
+        .set({ entityId })
+        .where(
+          inArray(
+            contracts.id,
+            rows.map((row) => row.id),
+          ),
+        );
+    const ids = (rows: { id: string }[]) => new Set(rows.map((row) => row.id));
+
+    const either = await page({ entity: `${first},${second}` });
+    expect(either.total).toBe(3);
+    expect(ids(either.contracts)).toEqual(ids(made.slice(0, 3)));
+    const none = mine(await walk({ entity: "unassigned" }));
+    expect(ids(none)).toEqual(ids(made.slice(4)));
+    expect(await page({ entity: walled })).toMatchObject({ contracts: [], total: 0 });
+    const crafted = await page({ entity: `${walled},${second}` });
+    expect(ids(crafted.contracts)).toEqual(ids(made.slice(2, 3)));
+  });
+
+  it("filters by Term type, with an expiry range, and an unknown value matches no row", async () => {
+    // made[0] expires on DATES[0], made[2] on DATES[1], and made[1] has
+    // no expiry.
+    const rolling = made.slice(0, 3);
+    await harness.db
+      .update(contracts)
+      .set({ termType: "auto_renew" })
+      .where(
+        inArray(
+          contracts.id,
+          rolling.map((row) => row.id),
+        ),
+      );
+    const ids = (rows: { id: string }[]) => new Set(rows.map((row) => row.id));
+
+    const all = await page({ termType: "auto_renew,evergreen" });
+    expect(all.total).toBe(3);
+    expect(ids(all.contracts)).toEqual(ids(rolling));
+    const soon = await page({ termType: "auto_renew", expiryFrom: DATES[0], expiryTo: DATES[0] });
+    expect(ids(soon.contracts)).toEqual(ids(made.slice(0, 1)));
+    expect((await page({ termType: "fixed" })).total).toBe(FIXTURE_SIZE - 3);
+    expect(await page({ termType: "perpetual" })).toMatchObject({ contracts: [], total: 0 });
   });
 
   it("reads newest reference first, and pages the whole list exactly once", async () => {
@@ -243,6 +342,39 @@ describe("the keyset cursor under a sort with ties and nulls", () => {
     expect(following.every((row) => row.expiryDate === null)).toBe(true);
   });
 
+  it.each([
+    ["nextDeadline", 30],
+    ["noticeDeadline", 15],
+  ] as const)(
+    "walks every row once under %s, both ways, with the rows that have no date last",
+    async (key, datedCount) => {
+      const value = (row: ListAnswer["contracts"][number]) =>
+        key === "nextDeadline" ? (row.nextDeadline?.date ?? null) : row.noticeDeadline;
+      for (const dir of ["asc", "desc"] as const) {
+        const rows = mine(await walk({ sort: key, dir }));
+        expect(rows).toHaveLength(FIXTURE_SIZE);
+        expect(new Set(rows.map((row) => row.id)).size).toBe(FIXTURE_SIZE);
+        const dated = rows.filter((row) => value(row) !== null);
+        expect(dated).toHaveLength(datedCount);
+        expect(rows.slice(0, dated.length)).toEqual(dated);
+        const dates = dated.map((row) => value(row)!);
+        expect(dates).toEqual(dir === "asc" ? [...dates].sort() : [...dates].sort().reverse());
+        for (const date of new Set(dates)) {
+          const tied = dated.filter((row) => value(row) === date).map((row) => row.number);
+          expect(tied).toEqual([...tied].sort((a, b) => b - a));
+        }
+
+        // A cursor inside the dated rows takes the boundary branch that
+        // reads the derived value back from the table.
+        const boundary = 7;
+        const after = await page({ sort: key, dir }, rows[boundary]!.id);
+        expect(mine(after.contracts).map((row) => row.id)).toEqual(
+          rows.slice(boundary + 1, boundary + 51).map((row) => row.id),
+        );
+      }
+    },
+  );
+
   it("answers an empty page for a cursor naming a contract this viewer cannot reach", async () => {
     // A confidential contract nobody added this member to. The cursor
     // resolves to nothing under their scope, so the page is empty rather
@@ -271,6 +403,21 @@ describe("the keyset cursor under a sort with ties and nulls", () => {
 });
 
 describe("what each sort key orders on", () => {
+  it("orders Next deadline and Notice by on the derived date, nearest first", async () => {
+    const shift = (date: string, days: number) =>
+      new Date(Date.parse(`${date}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+    const notice = shift(DATES[0], NOTICE_DAYS);
+
+    const byDeadline = mine(await walk({ sort: "nextDeadline", dir: "asc" }));
+    // A notice deadline comes before its own expiry, so it leads.
+    expect(byDeadline[0]!.nextDeadline).toMatchObject({ date: notice, label: "Notice deadline" });
+    expect(byDeadline.at(29)!.nextDeadline?.date).toBe(DATES[2]);
+
+    const byNotice = mine(await walk({ sort: "noticeDeadline", dir: "asc" }));
+    expect(byNotice[0]!.noticeDeadline).toBe(notice);
+    expect(byNotice[0]!.expiryDate).toBe(DATES[0]);
+  });
+
   it("folds case on a title sort, so one alphabet comes back and not two", async () => {
     const rows = mine(await walk({ sort: "title", dir: "asc" }));
     expect(rows).toHaveLength(FIXTURE_SIZE);
@@ -312,7 +459,7 @@ describe("what the seam refuses", () => {
   it("refuses a sort key it does not know", async () => {
     const res = await harness.app.inject({
       method: "GET",
-      url: "/api/v1/contracts?sort=noticeDeadline",
+      url: "/api/v1/contracts?sort=daysRemaining",
       cookies: memberCookies,
     });
     expect(res.statusCode).toBe(400);

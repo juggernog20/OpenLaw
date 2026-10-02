@@ -26249,12 +26249,15 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"
@@ -26267,6 +26270,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";
@@ -41182,12 +41187,15 @@ export interface operations {
         owner?: string;
         status?: string;
         type?: string;
+        entity?: string;
+        termType?: string;
         effectiveFrom?: string;
         effectiveTo?: string;
         expiryFrom?: string;
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"
@@ -41200,6 +41208,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";

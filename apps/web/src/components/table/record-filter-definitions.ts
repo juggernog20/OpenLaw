@@ -3,6 +3,7 @@
 /** DES-046 supplies the shared Contract and Matter filter choices. */
 
 import { useIntl } from "react-intl";
+import { TERM_TYPES, termTypeLabel } from "../../lib/contracts";
 import { MATTER_SEVERITIES, matterSeverityLabel } from "../../lib/matters";
 import type { RecordFilter } from "./record-filter-bar";
 
@@ -10,6 +11,8 @@ export interface RecordFilterOptions {
   types: { id: string; displayName: string }[];
   statuses: { id: string; displayName: string }[];
   people: { id: string; displayName: string }[];
+  /** The reachable Entities on Contracts, for Our entity. */
+  entities?: { id: string; displayName: string }[];
 }
 
 export function useRecordFilterDefinitions(
@@ -58,6 +61,30 @@ export function useRecordFilterDefinitions(
     module === "contracts"
       ? [
           {
+            key: "entity",
+            label: intl.formatMessage({ id: "recordFilters.entity", defaultMessage: "Our entity" }),
+            kind: "choices",
+            choices: [
+              {
+                ...unassigned,
+                displayName: intl.formatMessage({
+                  id: "recordFilters.entityNone",
+                  defaultMessage: "Not known yet",
+                }),
+              },
+              ...(options.entities ?? []),
+            ],
+          },
+          {
+            key: "termType",
+            label: intl.formatMessage({
+              id: "recordFilters.termType",
+              defaultMessage: "Term type",
+            }),
+            kind: "choices",
+            choices: TERM_TYPES.map((id) => ({ id, displayName: termTypeLabel(intl, id) })),
+          },
+          {
             key: "effective",
             label: intl.formatMessage({
               id: "recordFilters.effective",
@@ -72,6 +99,14 @@ export function useRecordFilterDefinitions(
               defaultMessage: "Expiry date",
             }),
             kind: "date",
+          },
+          {
+            key: "awaitingMyApproval",
+            label: intl.formatMessage({
+              id: "recordFilters.awaitingMyApproval",
+              defaultMessage: "Waiting on my approval",
+            }),
+            kind: "flag",
           },
           {
             key: "includeEnded",

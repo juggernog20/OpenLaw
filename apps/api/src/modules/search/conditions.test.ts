@@ -326,6 +326,36 @@ describe("Contract and Matter conditions", () => {
     expect((await run("matter", [condition("matter", "incomplete", "is", true)])).total).toBe(2);
     expect((await run("matter", [condition("matter", "incomplete", "is", false)])).total).toBe(1);
   });
+  it("matches Term type as the Contracts list filter does, and an unknown value matches nothing", async () => {
+    await h.db
+      .update(contracts)
+      .set({ termType: "auto_renew" })
+      .where(eq(contracts.id, ids.contract![0]!));
+    try {
+      const searched = await run("contract", [
+        condition("contract", "termType", "is_any_of", ["auto_renew"]),
+      ]);
+      const listed = await h.app.inject({
+        method: "GET",
+        url: "/api/v1/contracts?termType=auto_renew",
+        cookies,
+      });
+      expect(listed.statusCode, listed.body).toBe(200);
+      expect(searched.results.map((r) => r.id)).toEqual([ids.contract![0]]);
+      expect(listed.json<{ contracts: { id: string }[] }>().contracts.map((r) => r.id)).toEqual([
+        ids.contract![0],
+      ]);
+      expect(
+        (await run("contract", [condition("contract", "termType", "is_any_of", ["perpetual"])]))
+          .total,
+      ).toBe(0);
+    } finally {
+      await h.db
+        .update(contracts)
+        .set({ termType: "fixed" })
+        .where(eq(contracts.id, ids.contract![0]!));
+    }
+  });
   it("supplies linked choices only from reached records", async () => {
     const [hiddenParty] = await h.db
       .insert(counterparties)

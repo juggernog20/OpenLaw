@@ -9,10 +9,13 @@ export const CONTRACT_FILTER_KEYS = [
   "owner",
   "status",
   "type",
+  "entity",
+  "termType",
   "effectiveFrom",
   "effectiveTo",
   "expiryFrom",
   "expiryTo",
+  "awaitingMyApproval",
   "includeEnded",
   "includeArchived",
 ] as const;
@@ -45,6 +48,7 @@ const FLAGS = new Set([
   "includeClosed",
   "incomplete",
   "confidential",
+  "awaitingMyApproval",
 ]);
 
 export function filterQuery(

@@ -2827,6 +2827,12 @@ Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**,
 
 **Two is the ceiling.** A third surface needing month arithmetic is the trigger to reopen this and hoist all three into one home. Until then, each copy stays where its caller is, and each carries a comment saying the other exists.
 
+### Addendum (2026-10-02, [#1274](https://github.com/juggernog20/OpenLaw/issues/1274)): a passed notice deadline says Passed
+
+Clause 5 is amended. A notice deadline before today shows "Passed {date}" in its pill, and its screen-reader text says the same. A notice deadline of today or later still shows the date alone. The pill is where the eye lands, so a missed deadline must not look like an open one. The other option was to keep the pill and tell the reader only in a line under the scale. We did not choose it, because a reader who looks only at the mark would still think there is time to act.
+
+An auto-renewing term with a passed notice deadline and an expiry of today or later gets one line under the scale captions: "Notice can no longer stop the renewal on {expiry}." A Contract in renewal pending confirmation gets no line, because DES-043's banner already speaks for it. Today is the reader's own day, as clause 10 says. The Contracts list Notice by cell uses the same rule and puts a muted "Passed" under a past date. Next deadline still drops a passed notice deadline.
+
 ## DES-042: The Key dates section — one union, one Source chip, and the order as the answer (extends DES-035, DES-032, DES-040)
 
 - **Status:** Accepted
@@ -3244,6 +3250,10 @@ Contracts offer Owner (including Me and Unassigned), Status, Type, Effective dat
 The API applies filters and access scope before pagination, and uses those same predicates for the matching total. Filter choices come from the entire reachable collection, including retired labels still in use. Links carry filters and sort; browser history, refresh, and saved views restore them. Existing single-value saved filters remain readable. Home's Your Contracts opens Owner: Me; Your Matters opens Manager: Me. Explicit link filters override the saved default view's filters.
 
 For these two destinations, clause 7 is amended: Views and Columns remain available on an empty result, so the reader can save or leave a view that currently matches nothing. Counts describe the matching collection, including archived or closed records when included.
+
+_(2026-10-02, [#1280](https://github.com/juggernog20/OpenLaw/issues/1280): Contracts also offer Our entity, with Not known yet first and then the reachable Entities on Contracts. An Entity the viewer cannot reach matches no row.)_
+
+_(2026-10-02, [#1311](https://github.com/juggernog20/OpenLaw/issues/1311): Contracts also offer Term type, with Fixed term, Auto-renewing and Evergreen. Advanced search offers the same property.)_
 
 Visual references: [Linear's property and status filter menus](https://mobbin.com/screens/d1d26f7d-e1e5-490f-ab4f-c96dd12854c1) and [Notion's editable multi-select filter chip](https://mobbin.com/screens/d8abbe0b-4c55-4316-91b7-2e6b4baecb52). OpenLaw retains its own components and semantic colors.
 

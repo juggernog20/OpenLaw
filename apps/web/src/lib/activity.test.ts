@@ -1712,6 +1712,16 @@ describe("the sentences a reader gets", () => {
     expect(several.sentence).toBe("Nadia Counsel changed 2 fields");
   });
 
+  it("names a changed Our entity as the Contract card does", () => {
+    const narration = narrate("contract.updated", {
+      number: 62,
+      title: "Co-working licence - London",
+      changed: { entity: { from: "Helix Holdings Ltd", to: "Helix Inc." } },
+    });
+    expect(narration.sentence).toBe("Nadia Counsel changed Our entity");
+    expect(narration.changes?.[0]?.label).toBe("Our entity");
+  });
+
   it("names the Row visibility switch in activity changes", () => {
     const narration = narrate("field.updated", {
       displayName: "Context",
