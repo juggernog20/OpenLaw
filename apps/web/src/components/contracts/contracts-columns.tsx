@@ -28,7 +28,7 @@ import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import type { IntlShape } from "react-intl";
 import { FileText } from "lucide-react";
-import { formatDeadline, formatShortDate } from "../../lib/format";
+import { civilToday, formatDeadline, formatShortDate } from "../../lib/format";
 import {
   contractReference,
   formatContractValue,
@@ -297,7 +297,22 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
     // Derived at read and never stored (CTR-006). The sort orders on the
     // same expiry minus notice period.
     sortKey: "noticeDeadline",
-    render: (row) => (row.noticeDeadline ? formatShortDate(row.noticeDeadline) : <NotRecorded />),
+    render: (row) =>
+      row.noticeDeadline === null ? (
+        <NotRecorded />
+      ) : row.noticeDeadline < civilToday() ? (
+        // A passed deadline can no longer stop the next renewal, so it
+        // must not read like an open one. Today is the reader's own day
+        // (DES-041 clause 10).
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate">{formatShortDate(row.noticeDeadline)}</span>
+          <span className="text-xs text-muted">
+            <FormattedMessage id="contracts.column.noticePassed" defaultMessage="Passed" />
+          </span>
+        </span>
+      ) : (
+        formatShortDate(row.noticeDeadline)
+      ),
   },
   {
     key: "daysRemaining",

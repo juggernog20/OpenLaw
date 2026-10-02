@@ -3023,6 +3023,9 @@
   "contracts.column.noticeDeadline": {
     "defaultMessage": "Notice by"
   },
+  "contracts.column.noticePassed": {
+    "defaultMessage": "Passed"
+  },
   "contracts.column.owner": {
     "defaultMessage": "Owner"
   },
@@ -3541,6 +3544,12 @@
   },
   "contracts.termTimeline.noticeDeadlineOn": {
     "defaultMessage": "Notice deadline {date}"
+  },
+  "contracts.termTimeline.noticePassedOn": {
+    "defaultMessage": "Passed {date}"
+  },
+  "contracts.termTimeline.noticePassedRenewal": {
+    "defaultMessage": "Notice can no longer stop the renewal on {expiry}."
   },
   "contracts.termTimeline.openPeriodDates": {
     "defaultMessage": "From {start}"

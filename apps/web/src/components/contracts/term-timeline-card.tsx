@@ -146,7 +146,7 @@ export function TermTimelineCard({ contract }: { contract: ContractRow }) {
           />
         </p>
       ) : (
-        <TermPlot periods={periods} noticeDeadline={contract.noticeDeadline} />
+        <TermPlot periods={periods} contract={contract} />
       )}
     </section>
   );
@@ -154,16 +154,38 @@ export function TermTimelineCard({ contract }: { contract: ContractRow }) {
 
 function TermPlot({
   periods,
-  noticeDeadline,
+  contract,
 }: {
   periods: readonly TermPeriod[];
-  noticeDeadline: string | null;
+  contract: ContractRow;
 }) {
   const intl = useIntl();
   const today = civilToday();
+  const { noticeDeadline, expiryDate } = contract;
   const scale = plotScale(periods, noticeDeadline === null ? [today] : [today, noticeDeadline]);
   const open = periods.some((period) => period.end === null);
   const rolls = periods.some((period) => period.renewal > 0);
+  const noticePassed = noticeDeadline !== null && noticeDeadline < today;
+  const noticeMark =
+    noticeDeadline === null
+      ? null
+      : noticePassed
+        ? intl.formatMessage(
+            { id: "contracts.termTimeline.noticePassedOn", defaultMessage: "Passed {date}" },
+            { date: formatShortDate(noticeDeadline) },
+          )
+        : formatShortDate(noticeDeadline);
+  /** The renewal a passed notice deadline can no longer stop. A Contract
+   * in renewal pending confirmation has its own banner, so it gets no
+   * second line here. */
+  const unstoppable =
+    noticePassed &&
+    contract.termType === "auto_renew" &&
+    expiryDate !== null &&
+    expiryDate >= today &&
+    !contract.renewalPendingConfirmation
+      ? expiryDate
+      : null;
 
   return (
     <div className="p-4">
@@ -255,16 +277,18 @@ function TermPlot({
                   className="absolute top-0 flex w-0 justify-center"
                   style={{ insetInlineStart: percent(along(scale, noticeDeadline)) }}
                 >
-                  <span className="rounded-chip bg-status-severe-bg px-1 text-xs font-medium text-status-severe-fg">
-                    <span aria-hidden>{formatShortDate(noticeDeadline)}</span>
+                  <span className="rounded-chip bg-status-severe-bg px-1 text-xs font-medium text-status-severe-fg whitespace-nowrap">
+                    <span aria-hidden>{noticeMark}</span>
                     {/* The date alone is the mark's whole visible copy;
                         the key's swatch says which mark it is, and a
-                        reader who cannot see the swatch is told here. */}
+                        reader who cannot see the swatch is told here.
+                        A passed date says so in both (DES-041 clause 5
+                        addendum). */}
                     <span className="sr-only">
                       <FormattedMessage
                         id="contracts.termTimeline.noticeDeadlineOn"
                         defaultMessage="Notice deadline {date}"
-                        values={{ date: formatShortDate(noticeDeadline) }}
+                        values={{ date: noticeMark }}
                       />
                     </span>
                   </span>
@@ -302,6 +326,15 @@ function TermPlot({
               )}
             </span>
           </div>
+          {unstoppable !== null && (
+            <p className="mt-2 text-sm">
+              <FormattedMessage
+                id="contracts.termTimeline.noticePassedRenewal"
+                defaultMessage="Notice can no longer stop the renewal on {expiry}."
+                values={{ expiry: formatShortDate(unstoppable) }}
+              />
+            </p>
+          )}
         </div>
       </div>
       {/* The key names the fills the plot uses and nothing else: a

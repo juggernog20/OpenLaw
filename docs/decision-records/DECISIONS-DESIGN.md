@@ -2781,6 +2781,12 @@ Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**,
 
 **Two is the ceiling.** A third surface needing month arithmetic is the trigger to reopen this and hoist all three into one home. Until then, each copy stays where its caller is, and each carries a comment saying the other exists.
 
+### Addendum (2026-10-02, [#1274](https://github.com/juggernog20/OpenLaw/issues/1274)): a passed notice deadline says Passed
+
+Clause 5 is amended. A notice deadline before today shows "Passed {date}" in its pill, and its screen-reader text says the same. A notice deadline of today or later still shows the date alone. The pill is where the eye lands, so a missed deadline must not look like an open one. The other option was to keep the pill and tell the reader only in a line under the scale. We did not choose it, because a reader who looks only at the mark would still think there is time to act.
+
+An auto-renewing term with a passed notice deadline and an expiry of today or later gets one line under the scale captions: "Notice can no longer stop the renewal on {expiry}." A Contract in renewal pending confirmation gets no line, because DES-043's banner already speaks for it. Today is the reader's own day, as clause 10 says. The Contracts list Notice by cell uses the same rule and puts a muted "Passed" under a past date. Next deadline still drops a passed notice deadline.
+
 ## DES-042: The Key dates section — one union, one Source chip, and the order as the answer (extends DES-035, DES-032, DES-040)
 
 - **Status:** Accepted
