@@ -1920,6 +1920,10 @@ Home renders the inline lock and literal `CONFI` beside reachable Confidential C
 
 This closes the last future surface named in this record's consequences. Search adopted the marker in M25, and Home adopts it in M29.
 
+### Addendum (2026-10-02, [#1306](https://github.com/juggernog20/OpenLaw/issues/1306)): the inline marker has a hover title
+
+A focus group panelist read the lock and "CONFI" as a clipped word and took it for a rendering bug. The inline marker keeps the drawn "CONFI", because the density reason above still holds in list rows. It now has a `title` of "Confidential", the same message as its accessible name, so a hover gives a sighted reader the whole word. The micro variant stays decorative and has no title. Drawing the full word and drawing the lock alone were both rejected. Each needs addenda to DES-009, this record and DES-069, and only one of 20 panelists misread the marker.
+
 ## DES-030: The shell scroll model — one viewport tall, and `main` owns the scroll
 
 - **Status:** Accepted
