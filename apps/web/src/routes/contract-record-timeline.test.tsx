@@ -309,6 +309,62 @@ describe("the Term timeline card", () => {
     expect(card.getByText("Notice deadline Dec 1")).toBeInTheDocument();
     // No such column exists, so no such mark is drawn (G.R6, I.B7).
     expect(screen.queryByText(/renewal cap/i)).not.toBeInTheDocument();
+    // An open deadline reads as a date alone, with no renewal line.
+    expect(card.queryByText(/Passed/)).not.toBeInTheDocument();
+    expect(card.queryByText(/can no longer stop/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["an expiry ahead", "2026-09-01", "Passed Aug 2", "Sep 1"],
+    ["an expiry of today", "2026-08-17", "Passed Jul 18", "Aug 17"],
+  ])(
+    "says a passed notice deadline on an auto-renewing term with %s cannot stop the renewal",
+    async (_, expiryDate, pill, expiry) => {
+      stubApi({
+        signedIn: MEMBER,
+        extra: recordApi(
+          contractRow({
+            termType: "auto_renew",
+            effectiveDate: "2026-01-01",
+            expiryDate,
+            renewalPeriodMonths: 12,
+            noticePeriodDays: 30,
+          }),
+        ).handler,
+      });
+      renderAt("/contracts/42");
+
+      const card = await timeline();
+      expect(card.getByText(pill)).toBeInTheDocument();
+      expect(card.getByText(`Notice deadline ${pill}`)).toBeInTheDocument();
+      expect(
+        card.getByText(`Notice can no longer stop the renewal on ${expiry}.`),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ["a fixed term", { termType: "fixed", renewalPeriodMonths: null }],
+    ["a renewal pending confirmation", { renewalPendingConfirmation: true }],
+  ])("marks a passed notice deadline on %s, with no renewal line", async (_, overrides) => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(
+        contractRow({
+          termType: "auto_renew",
+          effectiveDate: "2026-01-01",
+          expiryDate: "2026-09-01",
+          renewalPeriodMonths: 12,
+          noticePeriodDays: 30,
+          ...overrides,
+        }),
+      ).handler,
+    });
+    renderAt("/contracts/42");
+
+    const card = await timeline();
+    expect(card.getByText("Notice deadline Passed Aug 2")).toBeInTheDocument();
+    expect(card.queryByText(/can no longer stop/)).not.toBeInTheDocument();
   });
 
   it("moves the notice-deadline mark when the notice period is edited", async () => {

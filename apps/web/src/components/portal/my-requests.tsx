@@ -10,9 +10,10 @@
  * no control that could widen it. Member+ staff who visit the portal
  * read their own submissions on the same block, for the same reason.
  *
- * **A converted Request is a row like any other.** Conversion links the
- * Request to what it became; it does not take the requester's window
- * away (INT-001, DD-018), so the row stays and still opens.
+ * **A converted Request stays while its record is reachable.** The row
+ * names the Contract or Matter in the status pill's place and opens the
+ * record. The API drops the row after team removal or archive (the
+ * DD-023 addendum of 2026-10-02, #1307).
  *
  * ### Recorded normalization points (I5 deviations accepted)
  *
@@ -89,7 +90,11 @@ export function MyRequests({ requests }: Readonly<{ requests: readonly MyRequest
           {requests.map((row) => (
             <li key={row.id}>
               <Link
-                to={`/portal/requests/${row.number}`}
+                to={
+                  row.convertedRecord
+                    ? `/portal/${row.convertedRecord.module}s/${row.convertedRecord.number}`
+                    : `/portal/requests/${row.number}`
+                }
                 className="group flex items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-control focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-link"
               >
                 <span className="inline-flex w-14 shrink-0 justify-center rounded-chip bg-badge-count-bg px-1.5 py-0.5 text-xs font-semibold text-badge-count-fg tabular-nums">
@@ -109,7 +114,20 @@ export function MyRequests({ requests }: Readonly<{ requests: readonly MyRequest
                 <span
                   className={`inline-flex shrink-0 rounded-pill px-2 py-0.5 text-xs font-medium ${REQUEST_STATUS_PILL[row.status]}`}
                 >
-                  {requesterStatusLabel(intl, row.status)}
+                  {row.convertedRecord ? (
+                    // The record's own status is live, so the row names
+                    // the record rather than a status (INT-003, #1299).
+                    <FormattedMessage
+                      id="portal.myRequests.convertedRecord"
+                      defaultMessage="{module, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+                      values={{
+                        module: row.convertedRecord.module,
+                        number: String(row.convertedRecord.number),
+                      }}
+                    />
+                  ) : (
+                    requesterStatusLabel(intl, row.status)
+                  )}
                 </span>
                 <ChevronRight
                   aria-hidden="true"

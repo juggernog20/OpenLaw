@@ -444,6 +444,37 @@ describe("search conditions", () => {
     ).not.toBeInTheDocument();
     expect(within(dialog).getByText("Conditions for Contract were removed.")).toBeVisible();
   });
+
+  it("applies changed ticks when the value list closes with Escape or a click outside", async () => {
+    stubConditions();
+    renderAt("/");
+    const user = userEvent.setup();
+    const dialog = await openDialog();
+    await user.click(within(dialog).getByRole("button", { name: "Contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+    await user.click(screen.getByRole("button", { name: "Status" }));
+    const row = within(dialog).getByRole("group", { name: "Contract Status condition" });
+
+    await user.click(within(row).getByRole("button", { name: "Choose values" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "Active" })).not.toBeInTheDocument(),
+    );
+    // Escape closed the value list only, not the Advanced search dialog.
+    expect(screen.getByRole("dialog", { name: "Advanced search" })).toBeVisible();
+    expect(within(row).getByRole("button", { name: "Choose values" })).toHaveTextContent("Active");
+
+    await user.click(within(row).getByRole("button", { name: "Choose values" }));
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await user.click(within(dialog).getByRole("heading", { name: "Advanced search" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "Draft" })).not.toBeInTheDocument(),
+    );
+    expect(within(row).getByRole("button", { name: "Choose values" })).toHaveTextContent(
+      "Active, Draft",
+    );
+  });
   it("edits a condition chip on its row, removes it, and keeps the question on reload", async () => {
     stubConditions();
     const question = {
@@ -478,6 +509,42 @@ describe("search conditions", () => {
     expect(
       await screen.findByRole("button", { name: "Edit Contract Confidential is Yes" }),
     ).toBeVisible();
+  });
+  it("names the Contract entity property Our entity, and still reads the stored entity key", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/filter-options")
+          ? json(200, { ...options, entities: [{ id: "e-uk", displayName: "Helix Holdings Ltd" }] })
+          : call.url.pathname === "/api/v1/search/query"
+            ? answer([CONTRACT])
+            : undefined,
+    });
+    // The property key stays `entity`, so a question saved before the
+    // rename opens with the same condition.
+    const question = {
+      ...simpleSearchQuestion("", ["contract"]),
+      conditions: [
+        { kind: "contract" as const, property: "entity", operator: "is_any_of", value: ["e-uk"] },
+      ],
+    };
+    renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Edit Contract Our entity is any of Helix Holdings Ltd",
+      }),
+    );
+    expect(screen.getByRole("group", { name: "Contract Our entity condition" })).toBeVisible();
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+    await user.type(screen.getByRole("textbox", { name: "Search properties" }), "our");
+    expect(
+      within(screen.getByRole("group", { name: "Contract" })).getByRole("button", {
+        name: "Our entity",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Signing Entity" })).not.toBeInTheDocument();
   });
 });
 

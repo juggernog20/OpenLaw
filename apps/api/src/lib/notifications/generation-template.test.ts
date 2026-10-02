@@ -56,6 +56,22 @@ it("puts the label, headline, greeting and sentence above a formatted Legal note
   expect(html).toMatch(/<ol[^>]*><li>Send it to Legal<\/li><li>Keep the original<\/li><\/ol>/);
 });
 
+it("prints a cover-note table as one line per row and a data table in the HTML", () => {
+  const mail = renderGenerationMail({
+    ...input,
+    coverNote:
+      "| Contract | Value |\n| --- | --- |\n| **C-17** | [12,000](/contracts/17) |\n| C-18 | <b>9</b> |",
+  });
+  expect(mail.text).toContain(
+    "Contract | Value\nC-17 | 12,000 (https://legal.example.com/contracts/17)\nC-18 | <b>9</b>\n\n",
+  );
+  expect(mail.html).toMatch(
+    /<table cellpadding="0"[^>]*><thead><tr><th scope="col"[^>]*>Contract<\/th>/,
+  );
+  expect(mail.html).toMatch(/<td[^>]*><strong>C-17<\/strong><\/td>/);
+  expect(mail.html).toContain("&lt;b&gt;9&lt;/b&gt;");
+});
+
 it("lists the attached files with badges and sizes, followed by the download button", () => {
   const { html, attachments } = renderGenerationMail(input);
   expect(html).toMatch(/width="28" height="28"[^>]*>W<\/td>/);

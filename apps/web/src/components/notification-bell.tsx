@@ -45,6 +45,12 @@
  * count, and from what mark-all-read touches. This surface renders what
  * it is answered and has no filter of its own — which is what makes the
  * omission silent rather than a gap somebody could count.
+ *
+ * **The staff bell has a "Show" select under its head** (#1297, the
+ * DES-049 addendum of 2026-10-02): All, or one of the four staff event
+ * groups. The API does the narrowing. Your approvals stays pinned under
+ * every choice, and the badge and Mark all read still cover the whole
+ * bell.
  */
 
 import { useCallback, useEffect, useId, useRef, useState, type Ref } from "react";
@@ -59,7 +65,9 @@ import { closeReadNotifications, closeAllReadNotifications } from "../lib/device
 import { api } from "../lib/api";
 import { subscribeLiveEvents } from "../lib/events";
 import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import { CONTROL_CLASS } from "../lib/form-controls";
 import { narrateNotification, type BellItem } from "../lib/notifications";
+import { GROUP_COPY } from "./notification-preferences";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
@@ -113,6 +121,19 @@ const TRIGGER_TONE: Record<BellSurface, string> = {
   portal: "text-muted hover:text-primary",
 };
 
+/**
+ * The staff bell's "Show" choices (#1297): the four staff event groups
+ * NOT-002 names, in the order the preferences pane draws them, with the
+ * same labels. The portal bell carries one group and so no filter.
+ */
+const FILTER_GROUPS = [
+  "assigned_to_you",
+  "activity_on_your_records",
+  "dates_approaching",
+  "new_requests",
+] as const;
+type BellFilter = (typeof FILTER_GROUPS)[number] | "all";
+
 type KeyDecision =
   paths["/api/v1/api-key-requests/{id}/approve"]["post"]["responses"][200]["content"]["application/json"];
 
@@ -124,6 +145,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   const intl = useIntl();
   const location = useLocation();
   const approvalHeading = useId();
+  const filterId = useId();
   const [open, setOpen] = useState(false);
   /** The current popover state for work that resumes after a read. */
   const openNow = useRef(false);
@@ -136,6 +158,11 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
   const [cursor, setCursor] = useState<string | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
+  /** The "Show" choice. It narrows the list only: the badge and Mark
+   * all read still cover the whole bell. The ref is what a page read
+   * consults, so a live re-read keeps the reader's choice. */
+  const [filter, setFilter] = useState<BellFilter>("all");
+  const filterNow = useRef<BellFilter>("all");
   /**
    * Which row focus is owed once the page in flight lands — the count
    * of rows drawn when "Show older" was pressed, so the first new one
@@ -238,7 +265,8 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
         setItems(null);
         setCursor(null);
       }
-      const query = { query: from ? { cursor: from } : {} };
+      const group = filterNow.current === "all" ? undefined : filterNow.current;
+      const query = { query: { ...(from ? { cursor: from } : {}), ...(group ? { group } : {}) } };
       const { data } = await (
         surface === "portal"
           ? api.GET("/api/v1/portal/notifications", { params: query })
@@ -291,7 +319,22 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
     (next: boolean) => {
       openNow.current = next;
       setOpen(next);
-      if (next) void loadPage(null);
+      if (next) {
+        // Every open starts on All, the bell's whole news.
+        filterNow.current = "all";
+        setFilter("all");
+        void loadPage(null);
+      }
+    },
+    [loadPage],
+  );
+
+  /** A new "Show" choice reads the first page again under it. */
+  const changeFilter = useCallback(
+    (next: BellFilter) => {
+      filterNow.current = next;
+      setFilter(next);
+      void loadPage(null);
     },
     [loadPage],
   );
@@ -438,6 +481,31 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
               </Button>
             )}
           </header>
+          {surface === "staff" && (
+            <div className="flex shrink-0 items-center gap-2 border-b border-border-muted px-4 py-2">
+              <label htmlFor={filterId} className="text-sm text-muted">
+                <FormattedMessage id="notifications.filter.label" defaultMessage="Show" />
+              </label>
+              <select
+                id={filterId}
+                className={`${CONTROL_CLASS} min-w-0 flex-1`}
+                value={filter}
+                onChange={(event) => {
+                  const next = FILTER_GROUPS.find((group) => group === event.target.value);
+                  changeFilter(next ?? "all");
+                }}
+              >
+                <option value="all">
+                  {intl.formatMessage({ id: "notifications.filter.all", defaultMessage: "All" })}
+                </option>
+                {FILTER_GROUPS.map((group) => (
+                  <option key={group} value={group}>
+                    {intl.formatMessage(GROUP_COPY[group].label)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="min-h-0 flex-1 overflow-y-auto">
             {/* Two failures, and they leave the reader in different
               places. A first page that fails has no list and no control
@@ -452,7 +520,7 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
                 />
               </p>
             )}
-            {items !== null && items.length === 0 && (
+            {items !== null && items.length === 0 && filter === "all" && (
               <p className="px-4 py-3 text-sm text-muted">
                 <FormattedMessage {...EMPTY_COPY[surface]} />
               </p>
@@ -481,6 +549,14 @@ export function NotificationBell({ surface }: Readonly<{ surface: BellSurface }>
                   ))}
                 </ol>
               </section>
+            )}
+            {items !== null && earlier.length === 0 && filter !== "all" && (
+              <p className="px-4 py-3 text-sm text-muted">
+                <FormattedMessage
+                  id="notifications.filter.empty"
+                  defaultMessage="Nothing in this group."
+                />
+              </p>
             )}
             {earlier.length > 0 && (
               <>

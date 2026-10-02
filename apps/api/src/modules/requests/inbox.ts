@@ -103,6 +103,8 @@ export const InboxRowSchema = z.object({
   requester: InboxRequesterSchema,
   assignee: RequestAssigneeSchema.nullable(),
   createdAt: z.string(),
+  /** When the Request closed, for the Closed column. NULL while open. */
+  dispositionedAt: z.string().nullable(),
   /** The record a conversion made, when this viewer reaches it, and
    * `null` in every other case — never converted, converted into a
    * record they may not see, or converted into another module. */

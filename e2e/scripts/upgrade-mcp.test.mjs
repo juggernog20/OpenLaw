@@ -17,17 +17,23 @@ const before = {
   oauth_grants: '[{"id":"grant","toolsets":["team","administration"]}]',
   allowed_clients: '[{"id":"client","enabled":false}]',
 };
+// Migration 0192 gives every existing row the default invite link lifetime.
+const withLifetime = (rows) => rows.map((row) => ({ ...row, invite_link_lifetime_days: 7 }));
 const upgraded = () => ({
   ...structuredClone(before),
-  org_settings: before.org_settings.map((row) => ({
+  org_settings: withLifetime(before.org_settings).map((row) => ({
     ...row,
     mcp_toolset_ceiling: ["contracts", "matters"],
   })),
 });
+const untouched = () => ({
+  ...structuredClone(before),
+  org_settings: withLifetime(before.org_settings),
+});
 
 test("only Team and Administration leave each Organization ceiling", () => {
   assert.doesNotThrow(() => assertMcpRows(before, upgraded(), true));
-  assert.doesNotThrow(() => assertMcpRows(before, structuredClone(before), false));
+  assert.doesNotThrow(() => assertMcpRows(before, untouched(), false));
   const multiple = {
     ...before,
     org_settings: [...before.org_settings, { id: "second", mcp_toolset_ceiling: [] }],
@@ -37,10 +43,33 @@ test("only Team and Administration leave each Organization ceiling", () => {
       multiple,
       {
         ...upgraded(),
-        org_settings: [...upgraded().org_settings, { id: "second", mcp_toolset_ceiling: [] }],
+        org_settings: [
+          ...upgraded().org_settings,
+          { id: "second", mcp_toolset_ceiling: [], invite_link_lifetime_days: 7 },
+        ],
       },
       true,
     ),
+  );
+});
+
+test("the invite link lifetime column arrives as 7 and a stored value survives", () => {
+  const other = untouched();
+  other.org_settings[0].invite_link_lifetime_days = 14;
+  assert.throws(
+    () => assertMcpRows(before, other, false),
+    /org_settings.*row org column invite_link_lifetime_days$/,
+  );
+  assert.throws(
+    () => assertMcpRows(before, structuredClone(before), false),
+    /org_settings.*row org column invite_link_lifetime_days \(dropped\)$/,
+  );
+  // A baseline that already has the column keeps what the Administrator set.
+  const stored = structuredClone(other);
+  assert.doesNotThrow(() => assertMcpRows(stored, other, false));
+  assert.throws(
+    () => assertMcpRows(stored, untouched(), false),
+    /org_settings.*row org column invite_link_lifetime_days$/,
   );
 });
 

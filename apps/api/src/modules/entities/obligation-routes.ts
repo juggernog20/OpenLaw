@@ -6,7 +6,11 @@ import { z } from "zod";
 import {
   and,
   asc,
+  desc,
+  documents,
+  documentVersions,
   entities,
+  entityObligationFilings,
   entityObligations,
   entityRegistrations,
   eq,
@@ -73,6 +77,22 @@ const ObligationSchema = z.object({
   completedOn: z.iso.date().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+/** One filing of an Obligation. `document` is null when nothing was
+ * filed with it, and `{ removed: true }` when the filed Document was
+ * since erased or deleted. */
+const FilingSchema = z.object({
+  id: z.string(),
+  filedOn: z.iso.date(),
+  note: z.string().nullable(),
+  filedBy: z.object({ id: z.string(), displayName: z.string() }),
+  document: z
+    .union([
+      z.object({ id: z.string(), versionId: z.string(), title: z.string() }),
+      z.object({ removed: z.literal(true) }),
+    ])
+    .nullable(),
+  createdAt: z.iso.datetime(),
 });
 const CalendarObligationSchema = ObligationSchema.extend({
   entity: z.object({ id: z.string(), legalName: z.string() }),
@@ -537,7 +557,12 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "fileEntityObligation",
         tags: ["entities"],
         params: ChildParams,
-        body: z.strictObject({ filedOn: z.iso.date().optional() }),
+        body: z.strictObject({
+          filedOn: z.iso.date().optional(),
+          note: NullableNote.optional(),
+          /** An Entity Document of this Entity. Its current Version is pinned. */
+          documentId: NullableId.optional(),
+        }),
         response: { 200: z.object({ obligation: ObligationSchema }), default: problemResponse },
       },
     },
@@ -558,6 +583,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!target) throw httpError(404, "No obligation exists with this id under this entity.");
         if (target.completedOn) throw httpError(409, "This one-off obligation is already filed.");
         const filedOn = request.body.filedOn ?? localMoment(new Date(), request.user.timezone).date;
+        const filedDocument = await filedVersion(tx, entity.id, request.body.documentId ?? null);
         let nextDueOn: string | null = null;
         let completedOn: string | null = null;
         if (target.recurrenceMonths === null) {
@@ -576,12 +602,25 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
             .set({ nextDueOn, updatedAt: new Date() })
             .where(eq(entityObligations.id, target.id));
         }
+        const [filing] = await tx
+          .insert(entityObligationFilings)
+          .values({
+            obligationId: target.id,
+            filedOn,
+            note: request.body.note?.trim() || null,
+            filedBy: request.user.id,
+            documentId: filedDocument?.documentId ?? null,
+            versionId: filedDocument?.versionId ?? null,
+            documentFiled: filedDocument !== null,
+          })
+          .returning({ id: entityObligationFilings.id });
         await recordActivity(tx, {
           entityType: "entity",
           entityId: entity.id,
           actorId: request.user.id,
           action: "entity_obligation.filed",
           visibility: "legal_only",
+          // The filing row holds the note. The append-only log keeps no prose.
           payload: {
             legalName: entity.legalName,
             obligationId: target.id,
@@ -590,6 +629,7 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
             previousDueOn: target.nextDueOn,
             nextDueOn,
             completedOn,
+            filingId: filing!.id,
           },
         });
         return target.id;
@@ -597,7 +637,102 @@ export const entityObligationRoutes: FastifyPluginAsyncZod = async (app) => {
       return { obligation: await projectedObligation(app.db, request.user, id) };
     },
   );
+
+  app.get(
+    "/entities/:id/obligations/:childId/filings",
+    {
+      preHandler: requireMember,
+      schema: {
+        operationId: "listEntityObligationFilings",
+        tags: ["entities"],
+        params: ChildParams,
+        response: {
+          200: z.object({ filings: z.array(FilingSchema) }),
+          default: problemResponse,
+        },
+      },
+    },
+    async (request) => {
+      const entity = await reachedEntity(app.db, request.user, request.params.id);
+      if (!entity) throw httpError(404, NO_ENTITY);
+      const [target] = await app.db
+        .select({ id: entityObligations.id })
+        .from(entityObligations)
+        .where(
+          and(
+            eq(entityObligations.id, request.params.childId),
+            eq(entityObligations.entityId, entity.id),
+          ),
+        )
+        .limit(1);
+      if (!target) throw httpError(404, "No obligation exists with this id under this entity.");
+      // Entity paper has no audience of its own beyond Entity reach
+      // (ENT-004), which is checked above. A deleted Document reads as
+      // gone, the same as an erased one.
+      const rows = await app.db
+        .select({
+          filing: entityObligationFilings,
+          filedByName: users.displayName,
+          documentTitle: documents.title,
+        })
+        .from(entityObligationFilings)
+        .innerJoin(users, eq(entityObligationFilings.filedBy, users.id))
+        .leftJoin(
+          documents,
+          and(eq(entityObligationFilings.documentId, documents.id), isNull(documents.archivedAt)),
+        )
+        .where(eq(entityObligationFilings.obligationId, target.id))
+        .orderBy(
+          desc(entityObligationFilings.filedOn),
+          desc(entityObligationFilings.createdAt),
+          desc(entityObligationFilings.id),
+        );
+      return {
+        filings: rows.map(({ filing, filedByName, documentTitle }) => ({
+          id: filing.id,
+          filedOn: filing.filedOn,
+          note: filing.note,
+          filedBy: { id: filing.filedBy, displayName: filedByName },
+          document:
+            filing.documentId && filing.versionId && documentTitle !== null
+              ? { id: filing.documentId, versionId: filing.versionId, title: documentTitle }
+              : filing.documentFiled
+                ? { removed: true as const }
+                : null,
+          createdAt: filing.createdAt.toISOString(),
+        })),
+      };
+    },
+  );
 };
+
+/** The Document a filing pins, at its current Version. It must be a live
+ * Document of this Entity. The row lock holds the Document while the
+ * filing pins it. */
+async function filedVersion(tx: Transaction, entityId: string, documentId: string | null) {
+  if (documentId === null) return null;
+  const [document] = await tx
+    .select({ id: documents.id })
+    .from(documents)
+    .where(
+      and(
+        eq(documents.id, documentId),
+        eq(documents.entityId, entityId),
+        isNull(documents.archivedAt),
+      ),
+    )
+    .limit(1)
+    .for("update");
+  if (!document) throw httpError(400, "The Document must belong to this entity.");
+  const [version] = await tx
+    .select({ id: documentVersions.id })
+    .from(documentVersions)
+    .where(eq(documentVersions.documentId, document.id))
+    .orderBy(desc(documentVersions.versionNumber))
+    .limit(1);
+  if (!version) throw new Error("A Document requires at least one Version.");
+  return { documentId: document.id, versionId: version.id };
+}
 
 export async function listEntityObligations(db: Db, user: AuthenticatedUser, id: string) {
   // The route above asks requireMember. A caller that is not a route

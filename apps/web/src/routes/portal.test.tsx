@@ -553,6 +553,7 @@ describe("my-requests", () => {
       title: "Orion Cloud MSA renewal — redline review",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: FIVE_HOURS_AGO,
+      convertedRecord: null,
     },
     {
       owner: null,
@@ -562,6 +563,7 @@ describe("my-requests", () => {
       title: "Marketing agency SOW — Q3 campaign",
       requestType: { id: "rt2", slug: "contract_review", displayName: "Contract review" },
       createdAt: "2026-07-28T09:00:00.000Z",
+      convertedRecord: { module: "contract", number: 193 },
     },
     {
       owner: null,
@@ -571,6 +573,7 @@ describe("my-requests", () => {
       title: "Office sublease question",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-07-12T09:00:00.000Z",
+      convertedRecord: null,
     },
     {
       owner: null,
@@ -580,6 +583,7 @@ describe("my-requests", () => {
       title: "Personal apartment lease",
       requestType: { id: "rt3", slug: "legal_question", displayName: "Legal question" },
       createdAt: "2026-06-30T09:00:00.000Z",
+      convertedRecord: null,
     },
   ];
 
@@ -609,19 +613,21 @@ describe("my-requests", () => {
     expect(within(row).getByText("5 hours ago")).toBeInTheDocument();
   });
 
-  it("renders all four statuses in the requester's own vocabulary", async () => {
+  it("renders the statuses in the requester's own vocabulary and names a converted record", async () => {
     // The INT-003 M21/6 addendum: the list pill says what the email
-    // says, so one person is never told two names for one status.
+    // says, so one person is never told two names for one status. A
+    // converted row names its record instead (the 2026-10-02 addendum).
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
 
     const block = await screen.findByRole("region", { name: "Your requests" });
-    for (const label of ["Open", "In progress", "Resolved", "Declined"]) {
+    expect(within(block).queryByText("In progress")).not.toBeInTheDocument();
+    for (const label of ["Open", "Contract C-193", "Resolved", "Declined"]) {
       expect(within(block).getByText(label)).toBeInTheDocument();
     }
   });
 
-  it("opens each row on that Request's detail, by its R-### number", async () => {
+  it("opens each row on that Request's detail, and a converted row on its record", async () => {
     stubApi({ signedIn: REQUESTER, extra: homeWith(MINE) });
     renderAt("/portal");
 
@@ -632,22 +638,37 @@ describe("my-requests", () => {
         .map((link) => link.getAttribute("href")),
     ).toEqual([
       "/portal/requests/45",
-      "/portal/requests/38",
+      "/portal/contracts/193",
       "/portal/requests/31",
       "/portal/requests/22",
     ]);
   });
 
-  it("keeps a converted Request on the list and openable", async () => {
-    // INT-001, DD-018: conversion links the Request to what it became.
-    // It does not take the requester's window away.
-    stubApi({ signedIn: REQUESTER, extra: homeWith([MINE[1]!]) });
+  it("keeps a converted Request on the list, naming and opening its record (#1307)", async () => {
+    // The DD-023 addendum of 2026-10-02: the row stays while the record
+    // is reachable. The API leaves it out after team removal or archive.
+    stubApi({
+      signedIn: REQUESTER,
+      extra: homeWith([
+        MINE[1]!,
+        {
+          ...MINE[1]!,
+          id: "rq5",
+          number: 19,
+          title: "Can we extend a probation period in France?",
+          convertedRecord: { module: "matter", number: 87 },
+        },
+      ]),
+    });
     renderAt("/portal");
 
     const block = await screen.findByRole("region", { name: "Your requests" });
-    const row = within(block).getByRole("link");
-    expect(within(row).getByText("In progress")).toBeInTheDocument();
-    expect(row).toHaveAttribute("href", "/portal/requests/38");
+    const [contract, matter] = within(block).getAllByRole("link");
+    expect(within(contract!).getByText("Contract C-193")).toBeInTheDocument();
+    expect(within(contract!).getByText("R-38")).toBeInTheDocument();
+    expect(contract).toHaveAttribute("href", "/portal/contracts/193");
+    expect(within(matter!).getByText("Matter M-87")).toBeInTheDocument();
+    expect(matter).toHaveAttribute("href", "/portal/matters/87");
   });
 
   it("counts what it draws", async () => {

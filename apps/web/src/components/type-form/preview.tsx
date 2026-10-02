@@ -16,7 +16,7 @@ import { toValue, type AttachedField, type CustomFieldDraft } from "../../lib/cu
 import { readPortalEntityOptions } from "../../lib/portal-entities";
 import { api } from "../../lib/api";
 import { CONTROL_CLASS } from "../../lib/form-controls";
-import { Field, AttachmentsField } from "../intake/form-fields";
+import { CHOOSE_ANSWER, Field, AttachmentsField } from "../intake/form-fields";
 import { CustomFieldControl, type FieldReference } from "../custom-field-control";
 import { DepartmentPicker } from "../department-picker";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -262,11 +262,13 @@ export function IntakePreview({
                 ) : row.rowRef === "region" ? (
                   <select
                     id={id}
+                    aria-required={row.isRequired}
+                    aria-invalid={submitted && row.isRequired && !answered(row.rowRef)}
                     className={CONTROL_CLASS}
                     value={String(answers[row.rowRef] ?? "")}
                     onChange={(e) => answer(row.rowRef, e.target.value)}
                   >
-                    <option value="">{t("Not set")}</option>
+                    <option value="">{intl.formatMessage(CHOOSE_ANSWER)}</option>
                     {regions.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.displayName}
@@ -310,7 +312,7 @@ export function IntakePreview({
                     value={String(answers[row.rowRef] ?? "")}
                     onChange={(e) => answer(row.rowRef, e.target.value)}
                   >
-                    <option value="">{t("Not set")}</option>
+                    <option value="">{intl.formatMessage(CHOOSE_ANSWER)}</option>
                     {options.map((o) => (
                       <option key={o.value} value={o.value}>
                         {o.label}
@@ -334,6 +336,7 @@ export function IntakePreview({
                     entities={entities}
                     required={row.isRequired}
                     invalid={submitted && row.isRequired && !answered(row.rowRef)}
+                    placeholder={intl.formatMessage(CHOOSE_ANSWER)}
                     onDraft={(draft) => {
                       setDrafts((old) => ({ ...old, [row.id]: draft }));
                       const converted = toValue(field(row), draft);

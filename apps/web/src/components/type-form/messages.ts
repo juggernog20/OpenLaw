@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /** DES-013 messages shared by the type Form editor and intake preview. */
-import { defineMessages, useIntl, type MessageDescriptor } from "react-intl";
+import { defineMessages, useIntl, type IntlShape, type MessageDescriptor } from "react-intl";
 const messages = defineMessages({
   Attachments: { id: "settings.requestTypeEditor.basicAttachments", defaultMessage: "Attachments" },
   "Remove condition {number}": {
@@ -232,7 +232,9 @@ const messages = defineMessages({
 });
 export type FormMessageKey = keyof typeof messages;
 export type FormText = (text: FormMessageKey, values?: Record<string, string | number>) => string;
-export function useFormText(): FormText {
-  const intl = useIntl();
+export function formText(intl: IntlShape): FormText {
   return (text, values) => intl.formatMessage(messages[text] as MessageDescriptor, values);
+}
+export function useFormText(): FormText {
+  return formText(useIntl());
 }

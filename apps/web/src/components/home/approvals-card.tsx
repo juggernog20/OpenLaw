@@ -17,7 +17,8 @@ export function HomeApprovalsCard({ section }: Readonly<{ section: ApprovalHomeS
         <FormattedMessage id="home.approvals.title" defaultMessage="Approvals waiting on you" />
       }
       total={section.total}
-      viewAllTo="/contracts"
+      // Ended Contracts too, so the list counts what the card counts.
+      viewAllTo="/contracts?awaitingMyApproval=true&includeEnded=true"
     >
       {section.rows.map((row) => (
         <li key={row.id}>

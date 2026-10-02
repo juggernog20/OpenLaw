@@ -315,7 +315,11 @@ describe("document type colours", () => {
     expect(audit.json().entries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          payload: { slug: fixed.slug, changed: { color: { from: null, to: "blue" } } },
+          payload: {
+            slug: fixed.slug,
+            displayName: "Executed",
+            changed: { color: { from: null, to: "blue" } },
+          },
         }),
       ]),
     );

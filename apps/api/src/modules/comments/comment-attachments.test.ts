@@ -555,7 +555,7 @@ describe("the attachment inherits the comment's audience", () => {
     const contract = await contractWithContributor("Converted request record");
     await harness.db
       .update(requests)
-      .set({ status: "converted", convertedContractId: contract.id })
+      .set({ status: "converted", dispositionedAt: new Date(), convertedContractId: contract.id })
       .where(eq(requests.id, requestId));
 
     const [original] = await harness.db

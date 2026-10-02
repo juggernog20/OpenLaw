@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** Assigned Tasks, with optional completed rows and Undo for the latest completion (DES-069). */
+/** Assigned Tasks, with a Due filter, optional completed rows and Undo for the latest completion (DES-069). */
 
-import { useState } from "react";
-import { redirect, useLoaderData } from "react-router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { useId, useState } from "react";
+import {
+  redirect,
+  useLoaderData,
+  useSearchParams,
+  type LoaderFunctionArgs,
+  type ShouldRevalidateFunctionArgs,
+} from "react-router";
+import { defineMessages, FormattedMessage, useIntl } from "react-intl";
 import { Undo2 } from "lucide-react";
 import { api } from "../lib/api";
 import { civilToday } from "../lib/format";
@@ -28,12 +34,43 @@ function compareTasks(a: AssignedTask, b: AssignedTask) {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
-export async function homeTasksLoader() {
+/** The Due filter lives in the `due` search parameter; no parameter means All. */
+type Due = "all" | "overdue" | "week";
+const dueChoices = defineMessages({
+  all: { id: "home.tasks.dueAll", defaultMessage: "All" },
+  overdue: { id: "home.tasks.dueOverdue", defaultMessage: "Overdue" },
+  week: { id: "home.tasks.dueWeek", defaultMessage: "Due in the next 7 days" },
+});
+
+function dueFrom(value: string | null): Due {
+  return value === "overdue" || value === "week" ? value : "all";
+}
+
+function dueQuery(due: Due) {
+  if (due === "overdue") return { overdue: "true" as const };
+  if (due === "week") return { dueWithinDays: 7 };
+  return {};
+}
+
+export async function homeTasksLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
-  const { data } = await api.GET("/api/v1/home/tasks");
-  if (!data) throw new Error("Your Tasks could not be read.");
+  const due = dueFrom(new URL(request.url).searchParams.get("due"));
+  const { data } = await api.GET("/api/v1/home/tasks", { params: { query: dueQuery(due) } });
+  if (!data) throw new Error("My Tasks could not be read.");
   return { user, tasks: data };
+}
+
+/** The page reads a new Due choice itself, so the URL change does not reload it. */
+export function homeTasksShouldRevalidate({
+  currentUrl,
+  nextUrl,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs): boolean {
+  return currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.searchParams.get("due") !== nextUrl.searchParams.get("due")
+    ? false
+    : defaultShouldRevalidate;
 }
 
 export function HomeTasksPage() {
@@ -41,8 +78,11 @@ export function HomeTasksPage() {
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
   const [page, setPage] = useState(tasks);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const due = dueFrom(searchParams.get("due"));
+  const dueId = useId();
   const [showCompleted, setShowCompleted] = useState(false);
-  const [filterFailed, setFilterFailed] = useState(false);
+  const [filterFailed, setFilterFailed] = useState<"completed" | "due" | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [completing, setCompleting] = useState(false);
@@ -56,20 +96,33 @@ export function HomeTasksPage() {
   const [departure, setDeparture] = useState<AssignedTask | null>(null);
   const busy = loading || completing || undoing || departure !== null;
 
-  async function changeCompletedVisibility(includeCompleted: boolean) {
+  async function changeFilter(includeCompleted: boolean, nextDue: Due) {
     if (busy) return;
     setLoading(true);
-    setFilterFailed(false);
+    setFilterFailed(null);
     try {
       const { data } = await api.GET("/api/v1/home/tasks", {
-        params: { query: { includeCompleted: includeCompleted ? "true" : "false" } },
+        params: {
+          query: { includeCompleted: includeCompleted ? "true" : "false", ...dueQuery(nextDue) },
+        },
       });
       if (!data) throw new Error("Tasks could not be read.");
       setPage(data);
       setShowCompleted(includeCompleted);
+      if (nextDue !== due) {
+        setSearchParams(
+          (current) => {
+            const next = new URLSearchParams(current);
+            if (nextDue === "all") next.delete("due");
+            else next.set("due", nextDue);
+            return next;
+          },
+          { replace: true },
+        );
+      }
       setFailed(false);
     } catch {
-      setFilterFailed(true);
+      setFilterFailed(nextDue === due ? "completed" : "due");
     } finally {
       setLoading(false);
     }
@@ -174,7 +227,11 @@ export function HomeTasksPage() {
     try {
       const { data } = await api.GET("/api/v1/home/tasks", {
         params: {
-          query: { cursor: page.nextCursor, includeCompleted: showCompleted ? "true" : "false" },
+          query: {
+            cursor: page.nextCursor,
+            includeCompleted: showCompleted ? "true" : "false",
+            ...dueQuery(due),
+          },
         },
       });
       if (!data) throw new Error("Tasks could not be read.");
@@ -198,7 +255,7 @@ export function HomeTasksPage() {
 
   const title = intl.formatMessage({
     id: "home.tasks.pageTitle",
-    defaultMessage: "Your Tasks",
+    defaultMessage: "My Tasks",
   });
   return (
     <AppShell user={user} onSignOut={() => void signOut()} subbar={<PageSubBar title={title} />}>
@@ -206,10 +263,17 @@ export function HomeTasksPage() {
       <div className="space-y-4">
         {filterFailed ? (
           <p role="alert" className="text-status-severe-fg">
-            <FormattedMessage
-              id="tasks.completed.failed"
-              defaultMessage="Tasks could not be loaded. Try changing the completed filter again."
-            />
+            {filterFailed === "due" ? (
+              <FormattedMessage
+                id="home.tasks.dueFailed"
+                defaultMessage="Tasks could not be loaded. Try changing the Due filter again."
+              />
+            ) : (
+              <FormattedMessage
+                id="tasks.completed.failed"
+                defaultMessage="Tasks could not be loaded. Try changing the completed filter again."
+              />
+            )}
           </p>
         ) : null}
         <div
@@ -266,11 +330,31 @@ export function HomeTasksPage() {
           section={{ type: "tasks", total: page.total, rows: page.rows }}
           showViewAll={false}
           headerAction={
-            <CompletedTasksToggle
-              showCompleted={showCompleted}
-              disabled={busy}
-              onChange={(value) => void changeCompletedVisibility(value)}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex shrink-0 items-center gap-2 text-xs font-medium text-primary">
+                <label htmlFor={dueId}>
+                  <FormattedMessage id="home.tasks.due" defaultMessage="Due" />
+                </label>
+                <select
+                  id={dueId}
+                  value={due}
+                  disabled={busy}
+                  onChange={(event) =>
+                    void changeFilter(showCompleted, dueFrom(event.target.value))
+                  }
+                  className="h-7 rounded-button border border-border-default bg-raised px-2 text-sm text-primary focus-visible:outline-2 focus-visible:outline-link"
+                >
+                  <option value="all">{intl.formatMessage(dueChoices.all)}</option>
+                  <option value="overdue">{intl.formatMessage(dueChoices.overdue)}</option>
+                  <option value="week">{intl.formatMessage(dueChoices.week)}</option>
+                </select>
+              </div>
+              <CompletedTasksToggle
+                showCompleted={showCompleted}
+                disabled={busy}
+                onChange={(value) => void changeFilter(value, due)}
+              />
+            </div>
           }
           emptyMessage={
             !page.nextCursor &&

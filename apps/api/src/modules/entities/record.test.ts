@@ -144,6 +144,7 @@ const entityActivity = (id: string) =>
         "entity.updated",
         "entity_officer.created",
         "entity_officer.updated",
+        "entity_officer.resigned",
         "entity_officer.deleted",
         "entity_registration.created",
         "entity_registration.updated",
@@ -366,12 +367,70 @@ describe("Entity officers", () => {
     expect(rows.map((row) => row.action)).toEqual([
       "entity_officer.created",
       "entity_officer.created",
-      "entity_officer.updated",
+      "entity_officer.resigned",
       "entity_officer.updated",
       "entity_officer.deleted",
     ]);
+    expect(rows[2]!.payload).toEqual({
+      legalName: "Officer Record Ltd",
+      officerName: "Dana Director",
+      role: "Director",
+      resignedOn: "2026-08-29",
+    });
     expect(rows[3]!.payload).toMatchObject({
       changed: { linkedUser: { from: MEMBER.displayName, to: null } },
+    });
+  });
+
+  it("writes a later change or a cleared resignation date as an edit", async () => {
+    const entity = await newEntity("Officer Resignation Ltd");
+    const created = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${entity.id}/officers`,
+      cookies: memberCookies,
+      payload: { name: "Rory Resigning", officerRoleId: directorRoleId },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const url = `/api/v1/entities/${entity.id}/officers/${created.json().officer.id}`;
+    for (const payload of [
+      { resignedOn: "2026-08-29", name: "Rory Resigned" },
+      { resignedOn: "2026-09-01" },
+      { resignedOn: null },
+    ]) {
+      const patched = await harness.app.inject({
+        method: "PATCH",
+        url,
+        cookies: memberCookies,
+        payload,
+      });
+      expect(patched.statusCode, patched.body).toBe(200);
+    }
+    const rows = await entityActivity(entity.id);
+    // The first PATCH writes two rows in one transaction, so they share a
+    // timestamp and their order is not fixed.
+    const first = rows.slice(1, 3).sort((a, b) => a.action.localeCompare(b.action));
+    expect([rows[0], ...first, ...rows.slice(3)].map((row) => row!.action)).toEqual([
+      "entity_officer.created",
+      "entity_officer.resigned",
+      "entity_officer.updated",
+      "entity_officer.updated",
+      "entity_officer.updated",
+    ]);
+    expect(first[0]!.payload).toMatchObject({
+      officerName: "Rory Resigned",
+      resignedOn: "2026-08-29",
+    });
+    // The name edit rides with the first date, but the date is not in its map.
+    expect(first[1]!.payload).toEqual({
+      legalName: "Officer Resignation Ltd",
+      officerName: "Rory Resigned",
+      changed: { name: { from: "Rory Resigning", to: "Rory Resigned" } },
+    });
+    expect(rows[3]!.payload).toMatchObject({
+      changed: { resignedOn: { from: "2026-08-29", to: "2026-09-01" } },
+    });
+    expect(rows[4]!.payload).toMatchObject({
+      changed: { resignedOn: { from: "2026-09-01", to: null } },
     });
   });
 

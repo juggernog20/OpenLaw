@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { matchesEntityName, searchEntityChart } from "../lib/entity-search";
 import { api } from "../lib/api";
-import { civilToday, formatFullDate } from "../lib/format";
+import { civilToday, formatShortDate } from "../lib/format";
 import {
   ENTITY_STATUSES,
   readRegistry,
@@ -68,6 +68,7 @@ import { problem as readProblem } from "../lib/problem";
 import { isMemberPlus } from "../lib/roles";
 import { requireUser, useSignOut } from "../lib/session";
 import { AppShell } from "../components/shell/app-shell";
+import { DueDate, OverduePrefix } from "../components/due-date";
 import { EntityChart } from "../components/entities/entity-chart";
 import {
   ENTITIES_CATALOGUE as CATALOGUE,
@@ -962,8 +963,14 @@ function CalendarList({ rows }: Readonly<{ rows: CalendarObligation[] }>) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.id} className="border-t border-border-default">
-              <td className={`px-4 py-3 text-sm ${row.overdue ? OVERDUE_TEXT : "text-muted"}`}>
-                {formatFullDate(row.nextDueOn)}
+              <td className="px-2 py-3 text-sm">
+                {row.completedOn ? (
+                  <time dateTime={row.nextDueOn} className="px-2 text-muted">
+                    {formatShortDate(row.nextDueOn)}
+                  </time>
+                ) : (
+                  <DueDate date={row.nextDueOn} overdue={row.overdue} />
+                )}
               </td>
               <td className="px-4 py-3">
                 <Link
@@ -1111,6 +1118,7 @@ function MonthCalendar({
                         to={`/entities/${row.entityId}/obligations`}
                         className={`rounded-chip px-1.5 py-1 text-xs hover:underline ${row.overdue ? "bg-status-severe-bg text-status-severe-fg" : "bg-accent/25 text-primary"}`}
                       >
+                        {row.overdue ? <OverduePrefix /> : null}
                         {row.label}
                       </Link>
                     ))}

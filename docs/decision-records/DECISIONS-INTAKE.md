@@ -274,7 +274,7 @@ The M20/6 addendum above built request attachments and left one sentence for M21
 
 **Each promotion narrates `document.created` naming its destination** (DD-017). One entry per file, carrying the document, the version, the title, and a null folder name, which is the upload route's own payload, so the record's feed reads one way whatever put the paper there. There is no promotion event and no batch entry: a batch is not a thing a record holds, files are.
 
-**The first promoted document takes the instrument designation** (CTR-014), and it narrates `document.primary_set` beside the creation. The upload route's rule is mechanical, whatever lands first takes it and it moves afterwards, and a promotion is not the place to make an exception. A conversion that left the designation empty would hand it to whatever somebody uploaded by hand next, which is both a worse answer and a stranger one. The kind is `draft_ours`, the upload route's own default for a file that names none, because a requester is one of our own people and their paper is our side's.
+**The first promoted document takes the instrument designation** (CTR-014), and it narrates `document.primary_set` beside the creation. The upload route's rule is mechanical, whatever lands first takes it and it moves afterwards, and a promotion is not the place to make an exception. A conversion that left the designation empty would hand it to whatever somebody uploaded by hand next, which is both a worse answer and a stranger one. ~~The kind is `draft_ours`, the upload route's own default for a file that names none, because a requester is one of our own people and their paper is our side's.~~ Superseded by DOC-015 and the 2026-10-02 addendum below.
 
 **Group 2's document event is raised, and today it reaches nobody.** A record born by conversion has one person on it, the triager who converted, and the event excludes the actor, so no bell row is written. It is raised anyway, because the rule belongs to the event rather than to what a newborn record's roster happens to hold.
 
@@ -345,6 +345,10 @@ M22 made `matter` a complete target rather than a configuration value waiting fo
 ### Amendment (2026-09-21, DD-028) — the Request form is the destination type's Intake rows
 
 The Decision above defined the Portal form as basics plus `request_type_fields`. DD-028 moves the form onto the destination type: the Portal form uses the destination type’s Intake Rows, Branches included. Amended 2026-09-29 after UX review: Title is the pinned required Intake Row; Department and Priority are shown only as configured, with no separate Portal basics. Preview and submission use the same Row order, visibility and required settings. Attachments remain an optional upload control at the end. `request_type_fields` and `form_field_order` are retired after migration; the 2026-09-19 companion-attach addendum below is retired with them, because there is no longer a second list to keep in step. The destination must name a module and may name a type; a module-only destination lands on that module's Default type. The M19/7 strand state and the M20/11 required rule (`user` may never be required on a Portal form) carry over to the Form: a `user` Row may be On intake form, and Required for creation is refused on it while it is, in the same house style. An optional `user` question stays allowed, as today. Q6 in the Consequences above (conditional form logic) is now taken by DD-028's Branches.
+
+### Addendum (2026-10-02, focus group 2026-09-29, [#1278](https://github.com/juggernog20/OpenLaw/issues/1278)): promoted paper has No type
+
+The M21/10 addendum gave a promoted Contract file the kind `draft_ours`, because it was the upload route's default. DOC-015 made No type the upload default in every module on 2026-09-23, so that premise is gone. A Requester may also send the counterparty's paper, and a "Draft · ours" label invites a colleague to send it out as ours. A promoted Version now has kind `general` and No type, on a Contract and on a Matter, until a person types it. The first promoted Document still takes the instrument designation on a Contract and still narrates `document.primary_set`. Letting the Convert dialog type the Requester's files needs a new convert body field, and waits until Legal asks for it.
 
 ## INT-003 — Requester updates: email notifications only; no status-poke button
 
@@ -932,3 +936,47 @@ styles. Prompted catalog text Fields use the effective style through the shared 
 path, including Contract Field overrides. Sources, provenance and acceptance rules
 remain as recorded above. The same per-target validation preserves valid sibling
 answers when another value fails validation.
+
+### INT-007 built addendum (2026-10-02, #1322): the close time is stored on the Request
+
+A Request now records when it closed. Before this, it stored only when it was submitted. The close time existed only as the stamp of the `request.converted`, `request.resolved` or `request.declined` Activity entry, so no screen could measure time to close.
+
+- `requests.dispositioned_at` is a nullable `timestamptz`. Convert, Resolve and Decline set it to `now()` in the same write as the status. It therefore equals the stamp of the Activity entry that the same transaction writes. A losing second press is refused before the write, so the value is set once.
+- The check `requests_dispositioned_at_check` requires the column to be set exactly when `status` is `converted`, `resolved` or `declined`. No route reopens a closed Request.
+- Migration `0194_request-dispositioned-at` backfills every closed Request from its earliest disposition Activity entry, the same lookup the staff detail uses for "Converted by". A closed Request with no entry takes `updated_at`, so the check holds for every row. Open Requests stay null.
+- The staff Request detail shows Resolved or Declined with the date beside Submitted. The full timestamp is on hover. A converted Request keeps its "Converted by" line on the Status card.
+- The Inbox column picker offers Closed after Age. It is not in the default layout. It is blank for an open Request. The `dispositionedAt` sort key orders by close time, and open Requests sort after every closed one in ascending order.
+- The Portal does not show the close time. A turnaround report is not part of this change. This column is its base.
+
+### INT-002 addendum (2026-10-02, #1310): Convert to matter offers the Matter Manager and Confidential
+
+Two panelists in the focus group of 2026-09-29 found that Convert to matter always made the converter Matter Manager and always made a non-Confidential Matter. A sensitive Request's Matter was open to every Legal Team Member until someone flagged it by hand. Create matter already offers both controls.
+
+**Decision.** The matter arm of the Convert dialog shows a **Matter Manager** select after the template and the Confidential switch before the attachments. The select starts on the converting person and offers every live Administrator and Legal Team Member, and **Unassigned**. The switch starts off. These are the same controls and defaults as Create matter.
+
+- The convert body takes optional `managerId`, a person id or null, and optional `isConfidential`. An omitted `managerId` keeps the converting person, so the 2026-09-06 default stands. Null is Unassigned.
+- `createMatter` checks the person, as it does for Create matter. A Business User or an archived person is refused with 400 and nothing is written.
+- Template Tasks for the Matter Manager go to the chosen person, or have no assignee when the Matter is Unassigned.
+- A Confidential conversion writes `matter.confidentiality_set`, as Create matter does. The Requester still joins the team as Business Owner under DD-023.
+- The triage assignee still does not decide the Matter Manager.
+
+This supersedes "Manager unassigned, confidentiality off" in the INT-007 M22 close addendum for the matter arm.
+
+**Convert to contract does not get these controls.** The converting person stays the Contract Owner, by the 2026-09-09 addendum, and the Contract starts non-Confidential. A contract conversion that sends either member is refused with 400, as a template is. The focus group asked only about Matters. A later change can add the same pair to the contract arm.
+
+### INT-003 addendum (2026-10-02, #1299): a conversion names the record, not a status
+
+A Business User followed the bell item "Your request ... is now In progress" and opened a Matter that said On hold. The bell item is a snapshot, and the Matter's status is live. Legal changes it after conversion, so the two disagreed and the requester could not tell which was true.
+
+**Decision.** On conversion, the bell and the email name the record Legal opened and no status. The bell reads "Legal opened Matter M-87 from your request {request}", or "Contract C-193". The email subject is "Legal opened Matter M-87 from your request: R-19 · {title}", and its headline and body say the same. The record page then holds the only status.
+
+- `request.status_changed` carries `recordModule` and `recordNumber` when `to` is `converted`. The convert route has the record's module and number at that point.
+- The conversion email has no step tracker, because its "In progress" step would be a second status. Its action reads "View Matter M-87" and still goes through the Request address, which redirects to the record.
+- A conversion row written before this change has no record keys. It keeps the status sentence, "is now In progress". Resolve still reads "is now Resolved", and Decline keeps its own event.
+- Device push copy does not change. It names no payload values.
+
+This narrows the M21/6 addendum above and the INT-007 M21/9 addendum. The requester's four words still label the pills and the Resolve and Decline messages. Conversion is no longer told to the requester as "In progress". After conversion the Request address redirects to the record, so the record is where the requester acts.
+
+### INT-003 addendum (2026-10-02, #1307): Your requests names the record, not In progress
+
+A converted Request now stays on **Your requests** while its record is reachable (the DD-023 addendum of the same date). Its row shows the record reference, for example "Contract C-193", where the status pill was. It does not say "In progress", for the same reason the conversion notification no longer does (#1299): the record's status is live. The requester's four words still label every other row. The pill keeps the `converted` colour family from `REQUEST_STATUS_PILL`.

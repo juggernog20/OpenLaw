@@ -47,7 +47,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { contracts, eq, users } from "@openlaw/db";
+import { contractApprovals, contracts, eq, users } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
   signInCookies,
@@ -439,6 +439,47 @@ describe("the Confidential flag and the contract list (M10/1)", () => {
     // The Administrator's list is untouched — oversight has no blind
     // spots (DD-014).
     expect((await listContracts(adminCookies)).map((row) => row.number)).toContain(walled.number);
+  });
+
+  it("lists only reachable Contracts with a pending Approval request for the reader under Waiting on my approval", async () => {
+    const waiting = await newContract("Confi approvals: waiting on me");
+    const approved = await newContract("Confi approvals: approved");
+    const rejected = await newContract("Confi approvals: rejected");
+    const someoneElse = await newContract("Confi approvals: waiting on another");
+    const walled = await newContract("Confi approvals: walled");
+    await markConfidential(walled.id);
+    const ask = (
+      contract: ContractRow,
+      approver: string,
+      status: "pending" | "approved" | "rejected",
+    ) => ({
+      contractId: contract.id,
+      approverId: approver,
+      requestedBy: idOf(ADMIN),
+      source: "manual" as const,
+      status,
+      decidedAt: status === "pending" ? null : new Date(),
+    });
+    await harness.db
+      .insert(contractApprovals)
+      .values([
+        ask(waiting, idOf(OUTSIDER), "pending"),
+        ask(approved, idOf(OUTSIDER), "approved"),
+        ask(rejected, idOf(OUTSIDER), "rejected"),
+        ask(someoneElse, idOf(MEMBER), "pending"),
+        ask(walled, idOf(OUTSIDER), "pending"),
+      ]);
+
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts?awaitingMyApproval=true&includeEnded=true",
+      cookies: outsiderCookies,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const answer = res.json() as { total: number; contracts: ContractRow[] };
+    expect(answer.contracts.map((row) => row.number)).toEqual([waiting.number]);
+    expect(answer.total).toBe(1);
+    expect(JSON.stringify(answer)).not.toContain(walled.id);
   });
 });
 

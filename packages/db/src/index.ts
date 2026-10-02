@@ -47,6 +47,7 @@ import * as entityGrantsSchema from "./schema/entity-grants.js";
 import * as individualHoldingsSchema from "./schema/individual-holdings.js";
 import * as entityHoldingsSchema from "./schema/entity-holdings.js";
 import * as entityObligationsSchema from "./schema/entity-obligations.js";
+import * as entityObligationFilingsSchema from "./schema/entity-obligation-filings.js";
 import * as entityOfficersSchema from "./schema/entity-officers.js";
 import * as entityRegistrationsSchema from "./schema/entity-registrations.js";
 import * as entityTrustRegisterSchema from "./schema/entity-trust-register.js";
@@ -115,6 +116,7 @@ export * from "./schema/entity-holdings.js";
 export * from "./schema/individual-holdings.js";
 export * from "./schema/entity-share-register.js";
 export * from "./schema/entity-obligations.js";
+export * from "./schema/entity-obligation-filings.js";
 export * from "./schema/entity-officers.js";
 export * from "./schema/entity-registrations.js";
 export * from "./schema/entity-type-fields.js";
@@ -197,6 +199,7 @@ export const schema = {
   ...entityHoldingsSchema,
   ...individualHoldingsSchema,
   ...entityObligationsSchema,
+  ...entityObligationFilingsSchema,
   ...entityOfficersSchema,
   ...entityRegistrationsSchema,
   ...entityShareRegisterSchema,

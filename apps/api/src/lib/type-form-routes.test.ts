@@ -125,6 +125,58 @@ it("round-trips nested Branches and audits one whole replacement", async () => {
   const entries = audit.filter((a) => (a.payload as { slug: string }).slug === type!.slug);
   expect(entries).toHaveLength(1);
   expect(JSON.stringify(entries[0]!.payload)).toContain(first.rowRef);
+  // The type is named as the Administrator saw it, not by its slug (#1300).
+  expect(entries[0]!.payload).toMatchObject({ displayName: type!.displayName });
+});
+
+type Changed = Record<
+  string,
+  { from: Record<string, unknown> | null; to: Record<string, unknown> | null }
+>;
+async function lastChange(id: string): Promise<Changed> {
+  const [type] = await h.db.select().from(contractTypes).where(eq(contractTypes.id, id));
+  const audit = await h.db
+    .select()
+    .from(activityLog)
+    .where(eq(activityLog.action, "contract_type.updated"));
+  const [entry] = audit
+    .filter((a) => (a.payload as { slug: string }).slug === type!.slug)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return (entry!.payload as { changed: Changed }).changed;
+}
+
+it("names each changed Field Row and leaves unmoved siblings out of the audit entry", async () => {
+  const id = await createType();
+  const kept = await field();
+  const dropped = await field();
+  const saved = await put(id, [...(await read(id)), dropped, kept]);
+  expect(saved.statusCode, saved.body).toBe(200);
+  const res = await put(
+    id,
+    (await read(id))
+      .filter((n) => n.id !== dropped.id)
+      .map((n) => (n.id === kept.id ? { ...kept, isRequired: true } : n)),
+  );
+  expect(res.statusCode, res.body).toBe(200);
+  const changed = await lastChange(id);
+  // Removing a Row ahead of another is not a move of the Row after it.
+  expect(Object.keys(changed).sort()).toEqual(
+    [`Row ${dropped.rowRef}`, `Row ${kept.rowRef}`].sort(),
+  );
+  expect(changed[`Row ${dropped.rowRef}`]).toMatchObject({ from: { name: "Test Row" }, to: null });
+  expect(changed[`Row ${kept.rowRef}`]).toMatchObject({
+    from: { name: "Test Row", isRequired: false },
+    to: { name: "Test Row", isRequired: true },
+  });
+  // A built-in Row stores no name. The narration labels it.
+  const value = await put(
+    id,
+    (await read(id)).map((n) => (n.id === "value" ? { ...n, isRequired: true } : n)),
+  );
+  expect(value.statusCode, value.body).toBe(200);
+  const builtin = await lastChange(id);
+  expect(Object.keys(builtin)).toEqual(["Row value"]);
+  expect(builtin["Row value"]!.to).not.toHaveProperty("name");
 });
 
 it("names a Branch referencing its children and rolls back the replacement", async () => {
@@ -583,6 +635,13 @@ it("does not copy Contract type default people or the default approver group", a
       })
     ).statusCode,
   ).toBe(200);
+  const [type] = await h.db.select().from(contractTypes).where(eq(contractTypes.id, id));
+  const approvals = (
+    await h.db.select().from(activityLog).where(eq(activityLog.action, "contract_type.updated"))
+  ).filter((a) => JSON.stringify(a.payload).includes("defaultApproverGroupId"));
+  expect(approvals.map((a) => a.payload)).toContainEqual(
+    expect.objectContaining({ slug: type!.slug, displayName: type!.displayName }),
+  );
   const res = await h.app.inject({
     method: "POST",
     url: `/api/v1/contract-types/${id}/duplicate`,

@@ -182,6 +182,9 @@ function legalNote(blocks: MarkdownBlock[], baseUrl: string): string {
         const tag = block.ordered ? "ol" : "ul";
         return `<${tag} style="margin:0 0 8px;padding-left:20px;${TEXT}">${block.items.map((item) => `<li>${noteInline(item, baseUrl)}</li>`).join("")}</${tag}>`;
       }
+      // A data table, so it keeps its table role for screen readers.
+      if (block.kind === "table")
+        return `<table cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;border-collapse:collapse;"><thead><tr>${block.header.map((cell) => `<th scope="col" align="left" style="padding:5px 12px 5px 0;border-bottom:1px solid #d0d7de;${SMALL}font-weight:600;">${noteInline(cell, baseUrl)}</th>`).join("")}</tr></thead><tbody>${block.rows.map((row) => `<tr>${row.map((cell) => `<td style="padding:5px 12px 5px 0;${TEXT}font-size:13px;">${noteInline(cell, baseUrl)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
       const tag = block.kind === "heading" ? "h3" : "p";
       return `<${tag} style="margin:0 0 8px;${TEXT}">${noteInline(block.children, baseUrl)}</${tag}>`;
     })

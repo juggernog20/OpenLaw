@@ -590,6 +590,28 @@ const NUMBERED_REQUEST: MessageDescriptor = defineMessage({
   defaultMessage: "R-{number}",
 });
 
+/**
+ * A conversion's bell item names the record Legal opened and no status.
+ * The record's status is live and Legal changes it, so a status word in
+ * a snapshot would compete with it (#1299).
+ */
+const CONVERTED_REQUEST: MessageDescriptor = defineMessage({
+  id: "notifications.request.converted",
+  defaultMessage:
+    "Legal opened {recordModule, select, contract {Contract C-{recordNumber}} other {Matter M-{recordNumber}}} from your request {request}",
+});
+
+/** The record a conversion row names, or null. A row written before
+ * the record keys existed answers null and keeps the status sentence. */
+function convertedRecord(item: BellItem): { module: string; number: number } | null {
+  if (item.entityType !== "request" || item.eventType !== "request.status_changed") return null;
+  if (text(item.payload, "to") !== "converted") return null;
+  const module = text(item.payload, "recordModule");
+  const number = wholeNumber(item.payload, "recordNumber");
+  if ((module !== "contract" && module !== "matter") || number === null) return null;
+  return { module, number };
+}
+
 /** What a record with neither a title nor a number is called. */
 const UNNAMED = defineMessage({
   id: "notifications.unnamedRecord",
@@ -785,9 +807,10 @@ export function narrateNotification(
       )
     : actorName;
   const status = newStatus(intl, item);
+  const converted = convertedRecord(item);
   return {
     icon: arm.icon,
-    sentence: intl.formatMessage(arm.message, {
+    sentence: intl.formatMessage(converted ? CONVERTED_REQUEST : arm.message, {
       // The one name, offered under both spellings. A contract's arms
       // call it `{contract}` and a Request's call it `{request}`,
       // because a translator reading one sentence should see the noun
@@ -815,6 +838,8 @@ export function narrateNotification(
       status: status ?? "",
       hasStatus: status ? "yes" : "no",
       outcome: text(item.payload, "outcome") ?? "",
+      recordModule: converted?.module ?? "",
+      recordNumber: converted ? String(converted.number) : "",
     }),
     href,
   };

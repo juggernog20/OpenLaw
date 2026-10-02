@@ -26,6 +26,7 @@ it.each([
   ["/portal/contracts/42", "Contracts"],
   ["/portal/approvals", "Approvals"],
   ["/portal/approvals/a1", "Approvals"],
+  ["/portal/tasks", "Tasks"],
   ["/portal/matters", "Matters"],
   ["/portal/matters/42", "Matters"],
 ])("marks the current destination at %s", (path, name) => {

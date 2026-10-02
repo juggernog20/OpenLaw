@@ -326,7 +326,10 @@ describe("attaching paper to a Request", () => {
     "refuses paper once the Request is %s and names its thread",
     async (status) => {
       const number = await submitted();
-      await harness.db.update(requests).set({ status }).where(eq(requests.number, number));
+      await harness.db
+        .update(requests)
+        .set({ status, dispositionedAt: new Date() })
+        .where(eq(requests.number, number));
       const before = await storedBlobCount();
 
       const refused = await attach(number);

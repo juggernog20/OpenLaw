@@ -68,6 +68,7 @@ interface DocumentRow {
     id: string;
     versionNumber: number;
     kind: string;
+    documentType: { id: string; displayName: string } | null;
     originalFilename: string;
     mimeType: string;
     renderFamily: string;
@@ -356,9 +357,10 @@ describe("promotion writes one ordinary document per attachment (INT-002, DOC-00
       expect(document.versions).toHaveLength(1);
       const version = document.versions[0]!;
       expect(version.versionNumber).toBe(1);
-      // A requester is one of our own people, so their paper is our
-      // side's (CTR-014) — the upload route's own default.
-      expect(version.kind).toBe("draft_ours");
+      // No type, the upload route's own default (DOC-015). A Requester
+      // may have sent the counterparty's paper, so a person types it.
+      expect(version.kind).toBe("general");
+      expect(version.documentType).toBeNull();
       expect(version.originalFilename).toBe(file.filename);
       expect(version.byteSize).toBe(file.content.byteLength);
     }

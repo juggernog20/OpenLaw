@@ -271,9 +271,10 @@ describe("Home", () => {
     ).toHaveAttribute("href", "/contracts/42/approvals");
     expect(within(card).getByText(/Requested by Priya Nair/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    // Ended Contracts too, so the list count equals the card total.
     expect(within(card).getByRole("link", { name: "View all 5" })).toHaveAttribute(
       "href",
-      "/contracts",
+      "/contracts?awaitingMyApproval=true&includeEnded=true",
     );
     expect(screen.queryByText("Welcome to OpenLaw")).not.toBeInTheDocument();
   });
@@ -323,17 +324,20 @@ describe("Home", () => {
     );
 
     const contractTask = within(card).getByText("Prepare financing signature pages");
-    expect(contractTask.closest("a")).toHaveAttribute("href", "/contracts/42/tasks");
+    expect(contractTask.closest("a")).toHaveAttribute(
+      "href",
+      "/contracts/42/tasks?task=contract-task-1",
+    );
     expect(within(card).getByText(/Confidential financing · Contract C-42/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
     expect(within(card).getByText("Overdue")).toBeInTheDocument();
-    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
-      "bg-status-severe-bg",
-      "text-status-severe-fg",
-    );
+    // DES-014: an overdue date keeps its qualifier at any age.
+    const overdue = within(card).getByText(/^Jan 1, 2000 \([\d,]+ days overdue\)$/);
+    expect(overdue).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(overdue).toHaveTextContent(/^Overdue Jan 1, 2000/);
 
     const matterTask = within(card).getByText("Review response exhibits");
-    expect(matterTask.closest("a")).toHaveAttribute("href", "/matters/12/tasks");
+    expect(matterTask.closest("a")).toHaveAttribute("href", "/matters/12/tasks?task=matter-task-1");
     expect(within(card).getByText(/Regulatory response · Matter M-12/)).toBeInTheDocument();
     expect(within(card).getByText("Jan 1, 2099")).toBeInTheDocument();
     expect(within(card).getByText("No due date")).toBeInTheDocument();
@@ -362,12 +366,12 @@ describe("Home", () => {
     });
     renderAt("/");
     await user.click(await screen.findByRole("link", { name: "View all 4" }));
-    await screen.findByRole("heading", { level: 1, name: "Your Tasks" });
+    await screen.findByRole("heading", { level: 1, name: "My Tasks" });
     const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
     expect(within(card).getAllByRole("listitem")).toHaveLength(4);
     expect(
       within(card).getByRole("link", { name: /Follow up with external counsel/ }),
-    ).toHaveAttribute("href", "/matters/13/tasks");
+    ).toHaveAttribute("href", "/matters/13/tasks?task=fourth");
     expect(screen.queryByRole("link", { name: "View all 4" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: "Home" }));
     expect(await screen.findByRole("link", { name: "View all 4" })).toBeInTheDocument();
@@ -630,6 +634,85 @@ describe("Home", () => {
     expect(new URLSearchParams(reads.at(-1)).has("cursor")).toBe(false);
   });
 
+  it("filters My Tasks by due date on the server and keeps the choice in the address", async () => {
+    const user = userEvent.setup();
+    const [late, , undated] = tasksSection.rows;
+    const later = { ...tasksSection.rows[1], id: "matter-task-3", title: "Send weekly update" };
+    const reads: URLSearchParams[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home/tasks") return undefined;
+        const query = call.url.searchParams;
+        reads.push(query);
+        if (query.get("overdue") === "true")
+          return json(200, { total: 1, rows: [late], nextCursor: null });
+        if (query.get("dueWithinDays") === "7")
+          return query.has("cursor")
+            ? json(200, { total: 2, rows: [later], nextCursor: null })
+            : json(200, { total: 2, rows: [late], nextCursor: "week-page-two" });
+        return json(200, { total: 3, rows: [late, later, undated], nextCursor: null });
+      },
+    });
+    const { router } = renderAt("/home/tasks");
+    await screen.findByRole("heading", { level: 1, name: "My Tasks" });
+    await waitFor(() => expect(document.title).toBe("My Tasks · OpenLaw"));
+    const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
+    const due = within(card).getByRole("combobox", { name: "Due" });
+    expect(due).toHaveValue("all");
+    expect(
+      within(due)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["All", "Overdue", "Due in the next 7 days"]);
+    expect(within(card).getAllByRole("listitem")).toHaveLength(3);
+
+    await user.selectOptions(due, "overdue");
+    await waitFor(() => expect(within(card).getAllByRole("listitem")).toHaveLength(1));
+    expect(within(card).getByText("1")).toBeInTheDocument();
+    expect(reads.at(-1)?.get("overdue")).toBe("true");
+    expect(reads.at(-1)?.get("includeCompleted")).toBe("false");
+    expect(router.state.location.search).toBe("?due=overdue");
+
+    await user.selectOptions(due, "week");
+    expect(await screen.findByRole("button", { name: "Load more Tasks" })).toBeInTheDocument();
+    expect(reads.at(-1)?.get("dueWithinDays")).toBe("7");
+    expect(reads.at(-1)?.has("overdue")).toBe(false);
+    expect(router.state.location.search).toBe("?due=week");
+    await user.click(screen.getByRole("button", { name: "Load more Tasks" }));
+    expect(await within(card).findByText(later.title)).toBeInTheDocument();
+    expect(reads.at(-1)?.get("dueWithinDays")).toBe("7");
+    expect(reads.at(-1)?.get("cursor")).toBe("week-page-two");
+
+    await user.click(within(card).getByRole("switch", { name: "Show completed" }));
+    await waitFor(() => expect(reads.at(-1)?.get("includeCompleted")).toBe("true"));
+    expect(reads.at(-1)?.get("dueWithinDays")).toBe("7");
+
+    const count = reads.length;
+    await user.selectOptions(due, "all");
+    await waitFor(() => expect(within(card).getAllByRole("listitem")).toHaveLength(3));
+    expect(reads).toHaveLength(count + 1);
+    expect(reads.at(-1)?.has("dueWithinDays")).toBe(false);
+    expect(router.state.location.search).toBe("");
+  });
+
+  it("reads the Due choice from the address on a page reload", async () => {
+    const reads: URLSearchParams[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home/tasks") return undefined;
+        reads.push(call.url.searchParams);
+        return json(200, { total: 1, rows: [tasksSection.rows[0]], nextCursor: null });
+      },
+    });
+    renderAt("/home/tasks?due=overdue");
+    const card = await screen.findByRole("region", { name: "Tasks assigned to you" });
+    expect(within(card).getByRole("combobox", { name: "Due" })).toHaveValue("overdue");
+    expect(reads).toHaveLength(1);
+    expect(reads[0]?.get("overdue")).toBe("true");
+  });
+
   it.each([
     ["Contract", tasksSection.rows[0], "/api/v1/tasks/contract-task-1/toggle"],
     ["Matter", tasksSection.rows[1], "/api/v1/matter-tasks/matter-task-1/toggle"],
@@ -666,7 +749,7 @@ describe("Home", () => {
       const checked = await screen.findByRole("checkbox", { name: `Reopen Task: ${task.title}` });
       expect(checked).toBeChecked();
       expect(checked.closest("li")).not.toHaveClass("home-task-exit");
-      expect(screen.queryByText("Overdue")).not.toBeInTheDocument();
+      expect(within(checked.closest("li")!).queryByText("Overdue")).not.toBeInTheDocument();
       await user.click(checked);
       expect(
         await screen.findByRole("checkbox", { name: `Complete Task: ${task.title}` }),
@@ -767,10 +850,10 @@ describe("Home", () => {
       "href",
       "/entities/entity-1/obligations",
     );
-    expect(within(card).getByText("Jan 1, 2000")).toHaveClass(
-      "bg-status-severe-bg",
-      "text-status-severe-fg",
-    );
+    // DES-014: an overdue date keeps its qualifier at any age.
+    const overdue = within(card).getByText(/^Jan 1, 2000 \([\d,]+ days overdue\)$/);
+    expect(overdue).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(overdue).toHaveTextContent(/^Overdue Jan 1, 2000/);
     expect(within(card).getByText("Unassigned")).toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "View all 6" })).toHaveAttribute(
       "href",
@@ -984,5 +1067,21 @@ describe("Home", () => {
       "href",
       "/matters?manager=me",
     );
+  });
+
+  it("gives the CONFI marker a Confidential hover title", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [mattersSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const matters = await screen.findByRole("region", { name: "Your matters" });
+    const marker = within(matters).getByRole("img", { name: "Confidential" });
+    expect(marker).toHaveAttribute("title", "Confidential");
+    expect(marker).toHaveTextContent("CONFI");
   });
 });

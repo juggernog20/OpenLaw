@@ -69,7 +69,7 @@ export function PortalKnowledgePage() {
                     <FileText size={16} />
                   </span>
                   <span className="min-w-0 flex-1 truncate text-base font-medium">
-                    {document.currentVersion.originalFilename}
+                    {document.title}
                   </span>
                   <Button asChild variant="secondary" size="sm">
                     <a
@@ -77,9 +77,9 @@ export function PortalKnowledgePage() {
                       aria-label={intl.formatMessage(
                         {
                           id: "portal.knowledge.downloadNamed",
-                          defaultMessage: "Download {filename}",
+                          defaultMessage: "Download {title}",
                         },
-                        { filename: document.currentVersion.originalFilename },
+                        { title: document.title },
                       )}
                     >
                       <Download size={16} aria-hidden="true" />

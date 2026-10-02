@@ -153,6 +153,8 @@ export const orgSettings = pgTable(
       .default([...MCP_DEFAULT_TOOLSET_CEILING]),
     mcpReadOnly: boolean("mcp_read_only").notNull().default(false),
     mcpApiKeyLifetimeDays: integer("mcp_api_key_lifetime_days").notNull().default(90),
+    /** How long a staff invite link works (SET-005 addendum, 2026-10-02). A password reset keeps 1 hour. */
+    inviteLinkLifetimeDays: integer("invite_link_lifetime_days").notNull().default(7),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     // $onUpdate keeps the audit trail honest for writers that forget to
     // set it — application code owns every write here, unlike the
@@ -166,6 +168,10 @@ export const orgSettings = pgTable(
     check(
       "org_settings_mcp_api_key_lifetime_check",
       sql`${table.mcpApiKeyLifetimeDays} between 1 and 365`,
+    ),
+    check(
+      "org_settings_invite_link_lifetime_check",
+      sql`${table.inviteLinkLifetimeDays} between 1 and 30`,
     ),
     check(
       "org_settings_auto_doc_acknowledgement_frequency_check",

@@ -26,11 +26,12 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   const user = await requireUser();
   if (user.role !== "administrator") return redirect("/settings/profile");
   const id = params.typeId!;
-  const [typeRes, catalogRes, matterRes, contractRes] = await Promise.all([
+  const [typeRes, catalogRes, matterRes, contractRes, requestTypesRes] = await Promise.all([
     api.GET("/api/v1/request-types/{id}", { params: { path: { id } } }),
     api.GET("/api/v1/fields", {}),
     api.GET("/api/v1/matter-types", { params: { query: { includeArchived: "true" } } }),
     api.GET("/api/v1/contract-types", { params: { query: { includeArchived: "true" } } }),
+    api.GET("/api/v1/request-types", {}),
   ]);
   if (!typeRes.data) {
     throw new Error("The request type could not be read.");
@@ -38,11 +39,13 @@ export async function settingsRequestTypeEditorLoader({ params }: LoaderFunction
   if (!catalogRes.data) throw new Error("The field catalog could not be read.");
   if (!matterRes.data || !contractRes.data)
     throw new Error("The destination types could not be read.");
+  if (!requestTypesRes.data) throw new Error("The request types could not be read.");
   return {
     requestType: typeRes.data.requestType,
     catalog: catalogRes.data.fields,
     matterTypes: matterRes.data.matterTypes,
     contractTypes: contractRes.data.contractTypes,
+    requestTypes: requestTypesRes.data.requestTypes,
   };
 }
 
@@ -327,7 +330,7 @@ function TurnaroundControl({
 }
 
 export function SettingsRequestTypeEditorPage() {
-  const { requestType, catalog, matterTypes, contractTypes } =
+  const { requestType, catalog, matterTypes, contractTypes, requestTypes } =
     useLoaderData<typeof settingsRequestTypeEditorLoader>();
   const [destination, setDestination] = useState<Destination>({
     targetModule: requestType.targetModule,
@@ -338,6 +341,21 @@ export function SettingsRequestTypeEditorPage() {
   const destinationType = destination.targetTypeId
     ? types.find((type) => type.id === destination.targetTypeId)
     : types.find((type) => type.isDefault);
+  // The other live Request types that resolve to the same type, by the
+  // rule the Form preview uses. A module-only destination resolves to
+  // the module's Default type (DD-028 decision 6).
+  const sharedWith = destinationType
+    ? requestTypes
+        .filter(
+          (other) =>
+            other.id !== requestType.id &&
+            !other.archivedAt &&
+            other.targetModule === destination.targetModule &&
+            (other.targetTypeId === destinationType.id ||
+              (other.targetTypeId === null && destinationType.isDefault)),
+        )
+        .map((other) => other.displayName)
+    : [];
   const editorApi: TypeEditorIdentityApi = {
     async update(id, body) {
       const result = await api
@@ -380,6 +398,8 @@ export function SettingsRequestTypeEditorPage() {
           destinationType={destinationType}
           catalog={catalog}
           requestType={identity}
+          requestTypeId={requestType.id}
+          sharedWith={sharedWith}
         />
       }
     />

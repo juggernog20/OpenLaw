@@ -9,13 +9,16 @@
 import type { Db, SQL } from "@openlaw/db";
 import {
   and,
+  contractApprovals,
   contracts,
   contractStatuses,
   contractTypes,
   entities,
   eq,
+  inArray,
   isNull,
   ne,
+  or,
   sql,
   USER_ROLES,
   type Contract,
@@ -91,6 +94,27 @@ const RETYPE_RETAINED_CONVERSION_SLUGS: ReadonlySet<string> = new Set([
   "needed_by",
 ]);
 
+/** The Our entity filter. An Entity id matches only when ENT-004 lets
+ * this viewer reach that Entity, so a crafted id cannot find the
+ * Contracts a walled Entity signed. */
+function ourEntityFilter(db: Db, user: AuthenticatedUser, value?: string): SQL | undefined {
+  if (!value) return undefined;
+  const values = value.split(",");
+  const ids = values.filter((item) => item !== "unassigned");
+  return or(
+    values.includes("unassigned") ? isNull(contracts.entityId) : undefined,
+    ids.length
+      ? inArray(
+          contracts.entityId,
+          db
+            .select({ id: entities.id })
+            .from(entities)
+            .where(and(inArray(entities.id, ids), entityReachScope(db, user))),
+        )
+      : undefined,
+  );
+}
+
 function assertReader(user: AuthenticatedUser): void {
   if (user.role !== "administrator" && user.role !== "legal_team_member")
     throw httpError(403, NO_PERMISSION);
@@ -121,6 +145,16 @@ export async function listContracts(
     choiceFilter(contracts.managerId, query.owner, user.id),
     choiceFilter(contracts.statusId, query.status),
     choiceFilter(contracts.contractTypeId, query.type),
+    ourEntityFilter(db, user, query.entity),
+    choiceFilter(contracts.termType, query.termType),
+    // The Home Approvals section's own predicate, so the two totals agree.
+    query.awaitingMyApproval === "true"
+      ? sql`exists (select 1 from ${contractApprovals} where ${and(
+          eq(contractApprovals.contractId, contracts.id),
+          eq(contractApprovals.approverId, user.id),
+          eq(contractApprovals.status, "pending"),
+        )})`
+      : undefined,
     dateFilter(contracts.effectiveDate, query.effectiveFrom, query.effectiveTo),
     dateFilter(contracts.expiryDate, query.expiryFrom, query.expiryTo),
     // A Contributor's list is the contracts they are on. An

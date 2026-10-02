@@ -17,18 +17,18 @@
  * notice deadline; a triage pass wants Owner and status.
  *
  * **Sortable is not the same as shown.** A column offers a sort by naming
- * an API sort key, and some of these deliberately name none: the notice
- * deadline, the days remaining, and the renewal proposal are derived at
- * read, so no index can serve an ordering the row does not hold (CTR-006),
- * and the value is an amount, a currency, and a cadence with no honest
- * single order between them (CTR-010).
+ * an API sort key. Next deadline and Notice by are derived at read, and
+ * they sort on the same derived date the cell shows, nearest first. Some
+ * columns name no key. The days remaining is the expiry sort read another
+ * way, so it adds no order of its own. The value is an amount, a currency,
+ * and a cadence with no honest single order between them (CTR-010).
  */
 
 import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import type { IntlShape } from "react-intl";
 import { FileText } from "lucide-react";
-import { formatDeadline, formatShortDate } from "../../lib/format";
+import { civilToday, formatDeadline, formatShortDate } from "../../lib/format";
 import {
   contractReference,
   formatContractValue,
@@ -193,6 +193,7 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
       intl.formatMessage({ id: "matters.column.nextDeadline", defaultMessage: "Next deadline" }),
     defaultWidth: 220,
     minWidth: 144,
+    sortKey: "nextDeadline",
     render: (row) =>
       row.nextDeadline ? (
         <Link
@@ -293,9 +294,25 @@ const COLUMNS: ColumnDef<ContractRow>[] = [
       intl.formatMessage({ id: "contracts.column.noticeDeadline", defaultMessage: "Notice by" }),
     defaultWidth: 120,
     minWidth: 88,
-    // Derived at read and never stored (CTR-006), so there is nothing to
-    // order on.
-    render: (row) => (row.noticeDeadline ? formatShortDate(row.noticeDeadline) : <NotRecorded />),
+    // Derived at read and never stored (CTR-006). The sort orders on the
+    // same expiry minus notice period.
+    sortKey: "noticeDeadline",
+    render: (row) =>
+      row.noticeDeadline === null ? (
+        <NotRecorded />
+      ) : row.noticeDeadline < civilToday() ? (
+        // A passed deadline can no longer stop the next renewal, so it
+        // must not read like an open one. Today is the reader's own day
+        // (DES-041 clause 10).
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate">{formatShortDate(row.noticeDeadline)}</span>
+          <span className="text-xs text-muted">
+            <FormattedMessage id="contracts.column.noticePassed" defaultMessage="Passed" />
+          </span>
+        </span>
+      ) : (
+        formatShortDate(row.noticeDeadline)
+      ),
   },
   {
     key: "daysRemaining",

@@ -718,7 +718,11 @@ describe("sending for signature", () => {
     const header = within(screen.getByRole("region", { name: "Acme master services agreement" }));
     expect(await header.findByText("Out for signature")).toBeInTheDocument();
     expect(header.getAllByText("Out for signature")).toHaveLength(1);
-    expect(header.queryByText("Draft", { selector: ".rounded-pill" })).not.toBeInTheDocument();
+    // Every stage is a menu trigger (DES-053 addendum), so Draft still
+    // draws. It is no longer the current step.
+    expect(
+      header.getByRole("button", { name: "Draft — move contract" }).closest("li"),
+    ).not.toHaveAttribute("aria-current");
   });
 
   it("sends a picked user by id, beside a typed signer, in row order", async () => {

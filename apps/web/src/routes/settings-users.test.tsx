@@ -56,6 +56,7 @@ const LISTED = [
     role: "legal_team_member",
     status: "invited",
     lastActiveAt: null,
+    inviteExpiresAt: "2099-10-09T12:00:00.000Z",
   },
   {
     id: "u4",
@@ -64,6 +65,8 @@ const LISTED = [
     role: "business_user",
     status: "archived",
     lastActiveAt: new Date(Date.now() - 40 * 24 * HOUR).toISOString(),
+    archivedAt: new Date(Date.now() - 3 * HOUR).toISOString(),
+    archivedBy: { id: "u1", displayName: "Devon Calloway" },
   },
 ];
 
@@ -111,12 +114,13 @@ function usersApi(calls: UsersCalls) {
           role: body.role,
           theme: "light",
         },
+        inviteExpiresAt: "2099-10-16T12:00:00.000Z",
       });
     }
     const resend = /^\/api\/v1\/auth\/invites\/([^/]+)\/resend$/.exec(path);
     if (resend && call.method === "POST") {
       calls.resendPosts.push(resend[1]!);
-      return json(200, { user: byId(resend[1]!) });
+      return json(200, { user: byId(resend[1]!), inviteExpiresAt: "2099-10-20T12:00:00.000Z" });
     }
     const revoke = /^\/api\/v1\/auth\/invites\/([^/]+)$/.exec(path);
     if (revoke && call.method === "DELETE") {
@@ -132,12 +136,21 @@ function usersApi(calls: UsersCalls) {
     const archive = /^\/api\/v1\/users\/([^/]+)\/archive$/.exec(path);
     if (archive && call.method === "POST") {
       calls.archivePosts.push(archive[1]!);
-      return json(200, { user: { ...byId(archive[1]!), status: "archived" } });
+      return json(200, {
+        user: {
+          ...byId(archive[1]!),
+          status: "archived",
+          archivedAt: new Date().toISOString(),
+          archivedBy: { id: "u1", displayName: "Devon Calloway" },
+        },
+      });
     }
     const unarchive = /^\/api\/v1\/users\/([^/]+)\/unarchive$/.exec(path);
     if (unarchive && call.method === "POST") {
       calls.unarchivePosts.push(unarchive[1]!);
-      return json(200, { user: { ...byId(unarchive[1]!), status: "active" } });
+      return json(200, {
+        user: { ...byId(unarchive[1]!), status: "active", archivedAt: null, archivedBy: null },
+      });
     }
     const sessions = /^\/api\/v1\/users\/([^/]+)\/revoke-sessions$/.exec(path);
     if (sessions && call.method === "POST") {
@@ -173,6 +186,9 @@ describe("the Users pane (#65)", () => {
     // role is plain text — invites never edit roles (SET-005).
     const danaRow = screen.getByText("dana.ruiz@example.com").closest("tr")!;
     expect(within(danaRow).getByText("Invited")).toBeVisible();
+    // When the emailed link stops working, full timestamp on hover (#1288).
+    const expiry = within(danaRow).getByText("Link valid until Oct 9, 2099");
+    expect(expiry).toHaveAttribute("title", expect.stringMatching(/2099/));
     expect(within(danaRow).getByText("—")).toBeVisible();
     expect(
       within(danaRow).getByRole("button", { name: "Resend the invite to dana.ruiz@example.com" }),
@@ -239,6 +255,7 @@ describe("the Users pane (#65)", () => {
     );
     const noorRow = (await screen.findByText("noor@example.com")).closest("tr")!;
     expect(within(noorRow).getByText("Invited")).toBeVisible();
+    expect(within(noorRow).getByText("Link valid until Oct 16, 2099")).toBeVisible();
     expect(screen.getByText("4 users")).toBeVisible();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -309,6 +326,28 @@ describe("the Users pane (#65)", () => {
 
     await waitFor(() => expect(calls.resendPosts).toEqual(["u3"]));
     expect(await screen.findByText("Saved")).toBeVisible();
+    // The fresh link replaces the old one, and so does its expiry.
+    const danaRow = screen.getByText("dana.ruiz@example.com").closest("tr")!;
+    expect(within(danaRow).getByText("Link valid until Oct 20, 2099")).toBeVisible();
+  });
+
+  it("says when an Invited row's link has expired (#1288)", async () => {
+    const listed = usersApi(newCalls());
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/users" && call.method === "GET"
+          ? json(200, {
+              users: LISTED.map((row) =>
+                row.id === "u3" ? { ...row, inviteExpiresAt: "2020-03-04T12:00:00.000Z" } : row,
+              ),
+            })
+          : listed(call),
+    });
+    renderAt("/settings/users");
+
+    const danaRow = (await screen.findByText("dana.ruiz@example.com")).closest("tr")!;
+    expect(within(danaRow).getByText("Link expired Mar 4, 2020")).toBeVisible();
   });
 
   it("shows the error micro-state when a resend fails", async () => {
@@ -432,6 +471,7 @@ describe("the Users pane (#65)", () => {
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     const caseyRow = (await screen.findByText("casey@example.com")).closest("tr")!;
     expect(within(caseyRow).getByText("Archived")).toBeVisible();
+    expect(within(caseyRow).getByText(/^By Devon Calloway, /)).toBeVisible();
     expect(
       within(caseyRow).getByRole("button", { name: "Restore casey@example.com" }),
     ).toBeVisible();
@@ -449,6 +489,10 @@ describe("the Users pane (#65)", () => {
     await user.click(screen.getByRole("switch", { name: "Show archived" }));
     const marcusRow = (await screen.findByText("marcus.webb@example.com")).closest("tr")!;
     expect(within(marcusRow).getByText("Archived")).toBeVisible();
+    // Who archived the user and when, with the full timestamp on hover (#1287).
+    const archivedLine = within(marcusRow).getByText("By Devon Calloway, 3 hours ago");
+    expect(archivedLine).toBeVisible();
+    expect(archivedLine).toHaveAttribute("title", expect.stringMatching(/\d{4}/));
     // No role select and no archive/revoke actions on an archived row.
     expect(
       within(marcusRow).queryByRole("button", {
@@ -459,6 +503,27 @@ describe("the Users pane (#65)", () => {
       within(marcusRow).getByRole("button", { name: "Restore marcus.webb@example.com" }),
     ).toBeVisible();
     expect(screen.getByText("4 users")).toBeVisible();
+  });
+
+  it("shows the archive date alone when the Audit log names no archiver (#1287)", async () => {
+    const user = userEvent.setup();
+    const listed = usersApi(newCalls());
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/users" && call.method === "GET"
+          ? json(200, {
+              users: LISTED.map((row) => (row.id === "u4" ? { ...row, archivedBy: null } : row)),
+            })
+          : listed(call),
+    });
+    renderAt("/settings/users");
+
+    await screen.findByText("devon@example.com");
+    await user.click(screen.getByRole("switch", { name: "Show archived" }));
+    const marcusRow = (await screen.findByText("marcus.webb@example.com")).closest("tr")!;
+    expect(within(marcusRow).getByText("3 hours ago")).toBeVisible();
+    expect(within(marcusRow).queryByText(/^By /)).not.toBeInTheDocument();
   });
 
   it("restores an archived user from their row (#66)", async () => {
@@ -476,6 +541,7 @@ describe("the Users pane (#65)", () => {
     await waitFor(() => expect(calls.unarchivePosts).toEqual(["u4"]));
     const marcusRow = screen.getByText("marcus.webb@example.com").closest("tr")!;
     expect(await within(marcusRow).findByText("Active")).toBeVisible();
+    expect(within(marcusRow).queryByText(/^By Devon Calloway/)).not.toBeInTheDocument();
     expect(
       within(marcusRow).getByRole("button", { name: "Archive marcus.webb@example.com" }),
     ).toBeVisible();

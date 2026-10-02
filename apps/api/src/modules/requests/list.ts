@@ -146,6 +146,7 @@ function selectInbox(db: Db) {
       title: requests.title,
       urgency: requests.urgency,
       createdAt: requests.createdAt,
+      dispositionedAt: requests.dispositionedAt,
       typeId: requestTypes.id,
       typeDisplayName: requestTypes.displayName,
       targetModule: requestTypes.targetModule,
@@ -178,6 +179,9 @@ const SORTS: Record<InboxSortKey, SQL> = {
   requester: sql`lower(${users.displayName})`,
   urgency: urgencyRank,
   createdAt: sql`${requests.createdAt}`,
+  // Open Requests have no close time. They sort as the latest, so the
+  // keyset comparison never meets a NULL.
+  dispositionedAt: sql`coalesce(${requests.dispositionedAt}, 'infinity'::timestamptz)`,
   status: sql`case ${requests.status} ${sql.join(
     REQUEST_STATUSES.map((status, index) => sql`when ${status} then ${sql.raw(String(index))}`),
     sql` `,
@@ -244,6 +248,7 @@ function toRow(
     title: string;
     urgency: (typeof SEVERITY_LEVELS)[number];
     createdAt: Date;
+    dispositionedAt: Date | null;
     typeId: string;
     typeDisplayName: string;
     targetModule: string | null;
@@ -267,6 +272,7 @@ function toRow(
     requestType: toStaffRequestType(row),
     requester: { id: row.requesterId, displayName: row.requesterDisplayName },
     createdAt: row.createdAt.toISOString(),
+    dispositionedAt: row.dispositionedAt?.toISOString() ?? null,
     convertedContract: convertedContractOf(convertedRecord),
     convertedRecord: convertedRecordOf(convertedRecord),
   };

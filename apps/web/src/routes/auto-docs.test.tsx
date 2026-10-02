@@ -127,6 +127,62 @@ it("lists Auto-Docs and creates a draft from name and description", async () => 
   expect(creates).toEqual([{ name: "Supplier NDA", description: "For suppliers" }]);
 });
 
+it("cancels Create Auto-Doc without sending, and the next open starts empty", async () => {
+  const user = userEvent.setup();
+  const creates: unknown[] = [];
+  let releaseCreate: (() => void) | undefined;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname === "/api/v1/auto-docs/options")
+        return json(200, { catalogFields: [], contractTypes: [], entities: [], legalOwners: [] });
+      if (call.url.pathname === "/api/v1/auto-docs") {
+        if (call.method === "POST") {
+          creates.push(call.body);
+          return new Promise<Response>((resolve) => {
+            releaseCreate = () => resolve(problem(422, "Name is taken."));
+          });
+        }
+        return json(200, { autoDocs: [autoDoc] });
+      }
+      return undefined;
+    },
+  });
+  renderAt("/auto-docs");
+  await screen.findByRole("link", { name: "Supplier NDA" });
+  await user.click(screen.getByRole("button", { name: "Create Auto-Doc" }));
+  let dialog = screen.getByRole("dialog", { name: "Create Auto-Doc" });
+  const buttons = within(dialog).getAllByRole("button");
+  expect(buttons.map((button) => button.textContent)).toEqual(["Cancel", "Create"]);
+  await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Draft");
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(creates).toEqual([]);
+
+  await user.click(screen.getByRole("button", { name: "Create Auto-Doc" }));
+  dialog = screen.getByRole("dialog", { name: "Create Auto-Doc" });
+  expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue("");
+  await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Taken");
+  await user.type(within(dialog).getByRole("textbox", { name: "Description" }), "Old");
+  await user.click(within(dialog).getByRole("button", { name: "Create" }));
+  await waitFor(() =>
+    expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled(),
+  );
+  releaseCreate?.();
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent("Name is taken.");
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Create Auto-Doc" }));
+  dialog = screen.getByRole("dialog", { name: "Create Auto-Doc" });
+  expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue("");
+  expect(within(dialog).getByRole("textbox", { name: "Description" })).toHaveValue("");
+  expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(creates).toHaveLength(1);
+});
+
 it("applies chip filters, preserves search, and restores filters through browser history", async () => {
   const user = userEvent.setup();
   const queries: URLSearchParams[] = [];

@@ -66,9 +66,11 @@ describe("the portal Knowledge Item", () => {
     expect(screen.getByRole("link", { name: "Your requests" })).toHaveAttribute("href", "/portal");
     const files = screen.getByRole("list");
     const rows = within(files).getAllByRole("listitem");
-    expect(rows[0]).toHaveTextContent("nda-guide.pdf");
-    expect(rows[1]).toHaveTextContent("appendix.docx");
-    expect(within(rows[0]!).getByRole("link", { name: "Download nda-guide.pdf" })).toHaveAttribute(
+    // Each row names the Document by its title, not the current file name.
+    expect(rows[0]).toHaveTextContent("NDA guide");
+    expect(rows[1]).toHaveTextContent("Appendix");
+    expect(screen.queryByText(/nda-guide\.pdf/)).not.toBeInTheDocument();
+    expect(within(rows[0]!).getByRole("link", { name: "Download NDA guide" })).toHaveAttribute(
       "href",
       "/api/v1/portal/knowledge/knowledge-1/documents/primary-document/download",
     );

@@ -20,7 +20,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await page.getByRole("button", { name: "Create", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
   const recordUrl = page.url();
-  await page.getByRole("link", { name: /^Form/ }).click();
+  await page.getByRole("link", { name: /^Form(?! tab)/ }).click();
   const fixture = (file: string) =>
     fileURLToPath(
       new URL(`../../apps/api/src/testing/fixtures/auto-docs/${file}.docx`, import.meta.url),
@@ -90,7 +90,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(page.getByRole("link", { name: "Generate", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Overview", exact: true }).click();
   await expect(page.getByText(/^Live since .*: file version 1, form version \d+\.$/)).toBeVisible();
-  await page.getByRole("link", { name: /^Form/ }).click();
+  await page.getByRole("link", { name: /^Form(?! tab)/ }).click();
   await page.getByRole("button", { name: "Compare versions", exact: true }).click();
   // Every commit wrote a version; the first form is the one without the field.
   await page
@@ -125,7 +125,7 @@ test("Legal publishes one pair, sees a stale Clause refusal, and restores an arc
   await expect(dialog).toHaveCount(0);
   await page.getByRole("link", { name: "Overview", exact: true }).click();
   await expect(page.getByText(/^Live since .*: file version 2, form version \d+\.$/)).toBeVisible();
-  await page.getByRole("link", { name: /^Form/ }).click();
+  await page.getByRole("link", { name: /^Form(?! tab)/ }).click();
   await expect(page.getByRole("link", { name: "Compare files", exact: true })).toHaveAttribute(
     "href",
     /\/documents\/[^/]+\/compare\?from=.+&to=.+/,

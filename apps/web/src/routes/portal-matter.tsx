@@ -8,6 +8,8 @@ import { matterReference } from "../lib/matters";
 import { loadPortalWork } from "../lib/portal-records";
 import { PortalRecordShell } from "../components/portal/record-shell";
 import { PortalRecordWork } from "../components/portal/record-work";
+import { PortalTasksCard } from "../components/portal/tasks-card";
+import { readPortalTasks } from "../lib/portal-tasks";
 import { PageTitle } from "../components/page-title";
 
 export async function portalMatterLoader({ params, request }: LoaderFunctionArgs) {
@@ -18,11 +20,16 @@ export async function portalMatterLoader({ params, request }: LoaderFunctionArgs
   const result = await api.GET("/api/v1/portal/matters/{number}", { params: { path: { number } } });
   if (result.response.status === 404) return { user, matter: null };
   if (!result.data) throw new Error("This Matter could not be read.");
-  return { user, matter: result.data.matter, recordWork: await loadPortalWork("matter", number) };
+  return {
+    user,
+    matter: result.data.matter,
+    recordWork: await loadPortalWork("matter", number),
+    tasks: await readPortalTasks({ record: { kind: "matter", number } }).catch(() => undefined),
+  };
 }
 
 export function PortalMatterPage() {
-  const { user, matter, recordWork } = useLoaderData<typeof portalMatterLoader>();
+  const { user, matter, recordWork, tasks } = useLoaderData<typeof portalMatterLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/portal/login");
   const title =
@@ -100,6 +107,9 @@ export function PortalMatterPage() {
               <dd>{matter.department ?? unset}</dd>
             </div>
           </dl>
+          {tasks && tasks.total > 0 ? (
+            <PortalTasksCard initial={tasks} record={{ kind: "matter", number: matter.number }} />
+          ) : null}
           <PortalRecordWork module="matter" number={matter.number} {...recordWork} />
         </>
       )}

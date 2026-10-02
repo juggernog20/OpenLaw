@@ -105,7 +105,23 @@ it.each(["legal_team_member", "business_user"] as const)(
       expectSecurity(message, role === "business_user", "Set password", expiryLine);
       expect(message.html).toContain("Hello Alex &amp; Morgan,");
     };
-    if (role !== "business_user") check();
+    if (role !== "business_user") {
+      // A staff invite has its own copy and lifetime (SET-005 addendum,
+      // 2026-10-02). The password reset below keeps the shared text.
+      const message = harness.mailer.messagesTo(email).at(-1)!;
+      const link = linkFrom(message);
+      const expires = /The link expires in 7 days, on [A-Z][a-z]{2} \d{1,2}, \d{4}\./.exec(
+        message.text,
+      )![0];
+      const recovery = "If the link has expired, ask your Administrator to resend the invite.";
+      expect(message.subject).toBe("You are invited to OpenLaw");
+      expect(message.text).toBe(
+        `Hello ${name},\n\nAn Administrator invited you to OpenLaw. Set your password using the link below:\n\n${link}\n\n${expires}\n${recovery}\n\nYou can also sign in with an email link. On the sign-in page, select Email me a sign-in link.`,
+      );
+      expect(link).toMatch(/^http:\/\/localhost\/auth\/set-password#token=/);
+      expectSecurity(message, false, "Set password", `${expires} ${recovery}`, expires);
+      expect(message.html).toContain("Hello Alex &amp; Morgan,");
+    }
     const reset = await harness.app.inject({
       method: "POST",
       url: "/api/v1/auth/password-setup",

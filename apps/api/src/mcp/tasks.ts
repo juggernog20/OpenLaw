@@ -71,7 +71,7 @@ export const taskTools: readonly ToolDefinition[] = [
     name: "openlaw_task_create",
     title: "Create a Task",
     description:
-      "Create a Task on kind contract or matter, identified by its number. Supply title, optional description, assigneeId and dueDate in YYYY-MM-DD. Assignees must be active staff who manage the record or are on its team. Ask the person before using addToTeam true to add an eligible assignee. Confidential team changes require audience permission. Creates a new Task each time.",
+      "Create a Task on kind contract or matter, identified by its number. Supply title, optional description, assigneeId and dueDate in YYYY-MM-DD. Assignees must be active users who manage the record or are on its team. A Business User on the team may own a Task. Ask the person before using addToTeam true to add an eligible assignee. Confidential team changes require audience permission. Creates a new Task each time.",
     inputSchema: createInput,
     outputSchema: output,
     run: async (input, { db, user, notifier }) =>
@@ -94,7 +94,7 @@ export const taskTools: readonly ToolDefinition[] = [
     name: "openlaw_task_update",
     title: "Update a Task",
     description:
-      "Update a Task by taskId and kind contract or matter. Set changes.isDone true to complete, false to reopen; assigneeId reassigns and dueDate reschedules. Null clears assignee or due date. title and description are editable. Uses the same active-staff and team rules as creation. Ask before addToTeam true. Completion, assignment, rescheduling, activity and notifications commit together. Repeating the same values does not toggle completion.",
+      "Update a Task by taskId and kind contract or matter. Set changes.isDone true to complete, false to reopen; assigneeId reassigns and dueDate reschedules. Null clears assignee or due date. title and description are editable. Uses the same active-user and team rules as creation. Ask before addToTeam true. Completion, assignment, rescheduling, activity and notifications commit together. Repeating the same values does not toggle completion.",
     inputSchema: updateInput,
     outputSchema: output,
     run: async (input, { db, user, notifier }) =>

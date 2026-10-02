@@ -3,7 +3,7 @@
 /** Matter Tasks through the real record route (MTR-005, #492). */
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 afterEach(cleanup);
@@ -21,6 +21,14 @@ const TEAMMATE = {
   image: null,
   archived: false,
   role: "member",
+};
+
+const BUSINESS_USER = {
+  id: "felix",
+  displayName: "Felix Brandt",
+  image: null,
+  archived: false,
+  role: "business_user",
 };
 
 function matter(overrides: Record<string, unknown> = {}) {
@@ -103,6 +111,7 @@ function recordApi(
             },
             { ...MEMBER, image: null, archived: false },
             { ...TEAMMATE, role: "legal_team_member" },
+            BUSINESS_USER,
           ],
         });
       }
@@ -303,6 +312,61 @@ describe("team-first task picker", () => {
     expect(picker.getByRole("button", { name: "Olivia Outsider" })).toBeInTheDocument();
   });
 
+  it("offers a Business User through Add someone to the team and assigns the Task to them", async () => {
+    const api = recordApi([task()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    const card = within(await screen.findByRole("region", { name: "Tasks" }));
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+    );
+    const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(picker.queryByRole("button", { name: "Felix Brandt" })).not.toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+    await user.type(picker.getByRole("textbox", { name: "Search people" }), "Felix");
+    await user.click(picker.getByRole("button", { name: "Felix Brandt" }));
+    await user.click(picker.getByRole("button", { name: "Add to team and assign" }));
+    await waitFor(() =>
+      expect(api.writes).toEqual([
+        {
+          method: "PATCH",
+          path: "/api/v1/matter-tasks/task-1",
+          body: { assigneeId: "felix", addToTeam: true },
+        },
+      ]),
+    );
+  });
+
+  it.each([
+    { isConfidential: true, warns: "warns" },
+    { isConfidential: false, warns: "does not warn" },
+  ])(
+    "$warns before a Business User joins the team through the Task picker (confidential: $isConfidential)",
+    async ({ isConfidential }) => {
+      const warning =
+        "Felix Brandt is a Business User. They will see this confidential Matter in the Portal, with its Documents and Full Thread comments.";
+      const api = recordApi([task()], matter({ isConfidential }));
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/matters/12/tasks");
+      const user = userEvent.setup();
+      const card = within(await screen.findByRole("region", { name: "Tasks" }));
+      await user.click(
+        card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+      );
+      const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+      await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+      // A Legal Team Member gets no warning on either record.
+      await user.click(picker.getByRole("button", { name: "Olivia Outsider" }));
+      expect(picker.queryByText(/is a Business User/)).not.toBeInTheDocument();
+      await user.click(picker.getByRole("button", { name: "Back" }));
+      await user.click(picker.getByRole("button", { name: "Felix Brandt" }));
+      expect(picker.getByRole("button", { name: "Add to team and assign" })).toBeEnabled();
+      if (isConfidential) expect(picker.getByText(warning)).toBeInTheDocument();
+      else expect(picker.queryByText(warning)).not.toBeInTheDocument();
+    },
+  );
+
   it("does not offer team expansion to someone who cannot manage the confidential audience", async () => {
     const api = recordApi([task()], matter({ isConfidential: true, manager: null }));
     stubApi({ signedIn: { ...MEMBER, id: "ordinary-member" }, extra: api.handler });
@@ -332,6 +396,70 @@ describe("team-first task picker", () => {
     ).toBeInTheDocument();
     expect(modal.queryByText(/Confidential contract/)).not.toBeInTheDocument();
   });
+});
+
+describe("overdue Tasks", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-09-29T12:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("marks only an open Task due before today with the severe pill", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi([
+        task({ id: "late", title: "Late Task", dueDate: "2026-09-26" }),
+        task({ id: "today", title: "Today Task", dueDate: "2026-09-29", displayOrder: 1 }),
+        task({ id: "later", title: "Later Task", dueDate: "2026-10-20", displayOrder: 2 }),
+        task({ id: "undated", title: "Undated Task", displayOrder: 3 }),
+        task({
+          id: "done",
+          title: "Done Task",
+          dueDate: "2026-09-13",
+          isDone: true,
+          displayOrder: 4,
+        }),
+      ]).handler,
+    });
+    renderAt("/matters/12/tasks");
+    const card = await section();
+    await userEvent
+      .setup({ advanceTimers: vi.advanceTimersByTime })
+      .click(card.getByRole("switch", { name: "Show completed" }));
+    const row = (title: string) =>
+      card.getAllByRole("listitem").find((item) => item.textContent?.includes(title))!;
+    const late = within(row("Late Task")).getByText("Sep 26 (3 days overdue)");
+    expect(late).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(within(row("Late Task")).getByText("Overdue")).toHaveClass("sr-only");
+    for (const title of ["Today Task", "Later Task", "Undated Task", "Done Task"]) {
+      expect(within(row(title)).queryByText("Overdue")).not.toBeInTheDocument();
+      expect(row(title).querySelector(".bg-status-severe-bg")).toBeNull();
+    }
+    expect(row("Today Task")).toHaveTextContent("Due Sep 29");
+    expect(row("Done Task")).toHaveTextContent("Due Sep 13");
+  });
+});
+
+it("opens the linked Task's detail dialog, even a completed one, and drops the link on close", async () => {
+  const surface = recordApi([
+    task(),
+    task({ id: "task-2", title: "File response", isDone: true, displayOrder: 1 }),
+  ]);
+  stubApi({ signedIn: MEMBER, extra: surface.handler });
+  const { router } = renderAt("/matters/12/tasks?task=task-2");
+  const user = userEvent.setup();
+  const modal = within(await screen.findByRole("dialog", { name: "Task details" }));
+  expect(modal.getByLabelText(/^Title\*?$/)).toHaveValue("File response");
+  await user.keyboard("{Escape}");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Task details" })).not.toBeInTheDocument(),
+  );
+  expect(router.state.location.pathname).toBe("/matters/12/tasks");
+  expect(router.state.location.search).toBe("");
+  expect(await section()).toBeTruthy();
 });
 
 it("opens a task in a detail modal and saves its description", async () => {

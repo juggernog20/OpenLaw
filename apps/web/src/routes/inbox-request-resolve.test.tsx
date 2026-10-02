@@ -26,6 +26,19 @@ const request = (overrides: Record<string, unknown> = {}) =>
     ...overrides,
   });
 
+const RESOLVED_AT = "2026-08-21T10:30:00.000Z";
+
+/** The close time on the hero, by its label beside Submitted (#1322). */
+function closedOn(label: "Resolved" | "Declined", at: string) {
+  const overview = screen.getByRole("region", { name: "Overview" });
+  const time = within(overview)
+    .getByText(label)
+    .parentElement!.querySelector(`time[datetime="${at}"]`);
+  expect(time).not.toBeNull();
+  // The full stamp is one hover away, as it is for Submitted.
+  expect(time).toHaveAttribute("title", expect.stringContaining("2026"));
+}
+
 /**
  * The Request seam behind the screen, with Resolve's own outcome on it.
  * Everything else — the detail read, the thread, the counters — is the
@@ -39,7 +52,7 @@ function requestApi(
     segment: "resolve",
     initial,
     answer,
-    applied: (row) => ({ ...row, status: "resolved" }),
+    applied: (row) => ({ ...row, status: "resolved", dispositionedAt: RESOLVED_AT }),
   });
   return {
     handler: api.handler,
@@ -132,6 +145,7 @@ describe("the closing reply (INT-006)", () => {
     await waitFor(() => expect(within(bar).getByText("Resolved")).toBeInTheDocument());
     expect(within(bar).queryByRole("button", { name: "Triage" })).toBeNull();
     expect(within(bar).queryByRole("button", { name: "Decline" })).toBeNull();
+    closedOn("Resolved", RESOLVED_AT);
   });
 
   it("keeps the Request open without sending a write when the note is empty", async () => {
@@ -257,7 +271,16 @@ describe("the lost race (INT-007, TECH-020)", () => {
     // The other triager's decline, applied to what the next read answers.
     const handler = (call: StubCall) => {
       if (racedAway && /^\/api\/v1\/requests\/\d+$/.test(call.url.pathname)) {
-        return json(200, detail(request({ status: "declined", declinedReason: "Priya said no." })));
+        return json(
+          200,
+          detail(
+            request({
+              status: "declined",
+              declinedReason: "Priya said no.",
+              dispositionedAt: "2026-08-21T08:00:00.000Z",
+            }),
+          ),
+        );
       }
       return api.handler(call);
     };
@@ -273,5 +296,6 @@ describe("the lost race (INT-007, TECH-020)", () => {
 
     const outcome = await screen.findByRole("region", { name: "Status" });
     expect(within(outcome).getByText("Priya said no.")).toBeInTheDocument();
+    closedOn("Declined", "2026-08-21T08:00:00.000Z");
   });
 });

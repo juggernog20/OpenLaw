@@ -349,6 +349,7 @@ describe("the envelope (INT-006)", () => {
         .update(requests)
         .set({
           status,
+          dispositionedAt: status === "new" ? null : new Date(),
           declinedReason:
             status === "declined" ? "Procurement owns vendor paper under $10k." : null,
         })
@@ -588,7 +589,7 @@ describe("the trail from ask to work (DD-014, CTR-018)", () => {
   async function convert(requestId: string, contractId: string) {
     await harness.db
       .update(requests)
-      .set({ status: "converted", convertedContractId: contractId })
+      .set({ status: "converted", dispositionedAt: new Date(), convertedContractId: contractId })
       .where(eq(requests.id, requestId));
   }
 

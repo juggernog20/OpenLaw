@@ -45,6 +45,7 @@ function inboxRow(overrides: Partial<Record<string, unknown>> = {}) {
     },
     requester: { id: "u7", displayName: "Dana Reyes" },
     createdAt: "2026-08-20T11:00:00.000Z",
+    dispositionedAt: null,
     convertedContract: null,
     convertedRecord: null,
     ...overrides,
@@ -239,6 +240,45 @@ describe("the Inbox destination", () => {
     const declined = await screen.findByRole("row", { name: /Trademark check/ });
     expect(within(declined).getByText("Declined")).toBeInTheDocument();
     expect(api.asked.at(-1)?.searchParams.get("includeTriaged")).toBe("true");
+  });
+
+  it("offers a Closed column that is blank while open and sorts by close time (#1322)", async () => {
+    const api = inboxApi([
+      inboxRow(),
+      inboxRow({
+        id: "r9",
+        number: 39,
+        status: "resolved",
+        title: "Trademark check for Northstar",
+        dispositionedAt: "2026-08-21T09:30:00.000Z",
+      }),
+    ]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/inbox");
+    const user = userEvent.setup();
+    await screen.findByRole("row", { name: /Injunction threat/ });
+    expect(screen.queryByRole("columnheader", { name: "Closed" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Columns" }));
+    await user.click(
+      within(screen.getByRole("menu")).getByRole("menuitemcheckbox", { name: /Closed/ }),
+    );
+    await user.keyboard("{Escape}");
+
+    const header = await screen.findByRole("columnheader", { name: "Closed" });
+    const closed = screen.getByRole("row", { name: /Trademark check/ });
+    const time = within(closed).getByText(
+      (_, el) => el?.getAttribute("datetime") === "2026-08-21T09:30:00.000Z",
+    );
+    expect(time.tagName).toBe("TIME");
+    expect(time).toHaveAttribute("title", expect.stringContaining("2026"));
+    const open = screen.getByRole("row", { name: /Injunction threat/ });
+    expect(open.querySelector("time")).toBeNull();
+
+    await user.click(within(header).getByRole("button", { name: "Closed" }));
+    await waitFor(() => {
+      expect(api.asked.at(-1)?.searchParams.get("sort")).toBe("dispositionedAt");
+    });
   });
 
   it("says so when a filter read fails, and keeps the previous filter usable", async () => {
@@ -436,6 +476,67 @@ async function chooseFilter(
 }
 
 describe("Inbox filters and views", () => {
+  it("applies changed ticks when the Status chip or the Filter menu closes with Escape or a click outside", async () => {
+    const api = inboxApi([inboxRow()]);
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/requests/filter-options"
+          ? json(200, { types: [], people: [] })
+          : api.handler(call),
+    });
+    const { router } = renderAt("/inbox");
+    const user = userEvent.setup();
+    await screen.findByRole("row", { name: /Injunction threat/ });
+    const arrived = async (action: () => Promise<void>, key: string, value: string) => {
+      await act(async () => {
+        await action();
+        await vi.waitFor(() => {
+          expect(new URLSearchParams(router.state.location.search).get(key)).toBe(value);
+          expect(router.state.navigation.state).toBe("idle");
+        });
+      });
+    };
+
+    await user.click(screen.getByRole("button", { name: /^Status:/ }));
+    for (const name of ["Converted", "Resolved", "Declined"])
+      await user.click(screen.getByRole("checkbox", { name }));
+    await arrived(
+      () => user.keyboard("{Escape}"),
+      "status",
+      "new,read,converted,resolved,declined",
+    );
+    expect(api.asked.at(-1)?.searchParams.get("status")).toBe(
+      "new,read,converted,resolved,declined",
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Status:/ }));
+    await user.click(screen.getByRole("checkbox", { name: "Declined" }));
+    await arrived(
+      () => user.click(screen.getByRole("heading", { level: 1 })),
+      "status",
+      "new,read,converted,resolved",
+    );
+
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Urgency",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "High" }));
+    await arrived(() => user.keyboard("{Escape}"), "urgency", "high");
+
+    // Closing with no change makes no list request.
+    const reads = api.asked.length;
+    await user.click(screen.getByRole("button", { name: /^Urgency:/ }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "High" })).not.toBeInTheDocument(),
+    );
+    expect(api.asked).toHaveLength(reads);
+  });
+
   it("combines multiple urgency values with requester choices, carries filters into paging, and restores browser history", async () => {
     const asked: URL[] = [];
     stubApi({

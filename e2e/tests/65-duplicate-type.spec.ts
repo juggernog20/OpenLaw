@@ -320,8 +320,17 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     await expect(portal.getByLabel(/^Governing law/)).toHaveCount(0);
     await portal.getByLabel("Term type").selectOption("fixed");
     await portal.getByRole("button", { name: "Submit request", exact: true }).click();
-    await expect(portal.getByText("Expiry date is required.", { exact: true })).toBeVisible();
-    await portal.getByLabel("Expiry date").fill("2030-12-31");
+    // Expiry date and Governing law are both required once Term type is Fixed.
+    await expect(portal.getByText("Answer this before you submit.", { exact: true })).toHaveCount(
+      2,
+    );
+    // A Date Field is the month calendar, so the date is picked, not typed.
+    await portal.getByLabel("Expiry date").click();
+    const calendar = portal.getByRole("dialog", { name: "Choose a date" });
+    await calendar.getByRole("combobox", { name: "Year", exact: true }).selectOption("2030");
+    await calendar.getByRole("combobox", { name: "Month", exact: true }).selectOption("11");
+    await calendar.getByRole("button", { name: /December 31st, 2030/ }).click();
+    await expect(portal.getByLabel("Expiry date")).toHaveText("Dec 31, 2030");
     await portal.getByLabel(/^Governing law/).fill("England and Wales");
     await portal.getByLabel("Term type").selectOption("evergreen");
     await expect(portal.getByLabel("Expiry date")).toHaveCount(0);

@@ -8,6 +8,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import {
   alias,
+  and,
   asc,
   entities,
   entityHoldings,
@@ -19,6 +20,7 @@ import {
   inArray,
   ENTITY_STATUSES,
   eq,
+  isNull,
   or,
   sql,
   type Executor,
@@ -205,11 +207,20 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         .from(entities)
         .innerJoin(entityTypes, eq(entities.entityTypeId, entityTypes.id))
+        .where(isNull(entities.archivedAt))
         .orderBy(asc(sql`lower(${entities.legalName})`), asc(entities.id));
-      const visible = await reachableIds(app.db, request.user);
-      const allHoldings = await holdingProjection(app.db);
+      // ENT-003: the chart draws live Entities only, as the registry count
+      // does. An archived Entity, and every link that touches it, is left
+      // out until it is restored.
+      const live = new Set(allNodes.map((node) => node.id));
+      const visible = new Set(
+        [...(await reachableIds(app.db, request.user))].filter((id) => live.has(id)),
+      );
+      const allHoldings = (await holdingProjection(app.db)).filter(
+        (row) => live.has(row.ownerId) && live.has(row.ownedId),
+      );
       const individuals = await individualProjection(app.db).where(
-        entityReachScope(app.db, request.user),
+        and(isNull(entities.archivedAt), entityReachScope(app.db, request.user)),
       );
       const individualNodes = individuals.map((row) => ({
         id: INDIVIDUAL_PREFIX + row.id,
@@ -240,7 +251,11 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       const branchEdges = allNodes
         .filter(
-          (node) => visible.has(node.id) && node.registerKind === "none" && node.headOfficeEntityId,
+          (node) =>
+            visible.has(node.id) &&
+            node.registerKind === "none" &&
+            node.headOfficeEntityId &&
+            live.has(node.headOfficeEntityId),
         )
         .map((node) => ({ headOfficeEntityId: node.headOfficeEntityId!, branchEntityId: node.id }));
       for (const edge of branchEdges) included.add(edge.headOfficeEntityId);
@@ -272,6 +287,7 @@ export const entityHoldingRoutes: FastifyPluginAsyncZod = async (app) => {
           for (const party of trustParties) {
             const roles = openRoles.filter((role) => role.partyId === party.id);
             if (!roles.length) continue;
+            if (party.kind === "entity" && !live.has(party.partyEntityId!)) continue;
             const partyNodeId =
               party.kind === "entity" ? party.partyEntityId! : `party:${party.id}`;
             if (party.kind === "entity") included.add(partyNodeId);

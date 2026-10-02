@@ -280,7 +280,7 @@ describe("Entity Holdings", () => {
 });
 
 describe("GET /entities/chart", () => {
-  it("returns reachable nodes, Holdings, the majority spine, and legal-name tie-breaks", async () => {
+  it("returns reachable live nodes, Holdings, the majority spine, and legal-name tie-breaks", async () => {
     const high = await newEntity("Chart High Owner");
     const low = await newEntity("Chart Low Owner");
     const majorityChild = await newEntity("Chart Majority Child", "England & Wales", "dormant");
@@ -323,15 +323,69 @@ describe("GET /entities/chart", () => {
         }),
         expect.objectContaining({ id: tieChild.id, primaryOwnerId: tieAlpha.id }),
         expect.objectContaining({ id: unconnected.id, primaryOwnerId: null }),
-        expect.objectContaining({ id: archived.id, primaryOwnerId: null }),
       ]),
     );
+    // ENT-003: an archived Entity is not drawn, as the registry count leaves it out.
+    expect(chart.nodes.map((node) => node.id)).not.toContain(archived.id);
     expect(chart.edges).toEqual(
       expect.arrayContaining([
         { ownerEntityId: high.id, ownedEntityId: majorityChild.id, ownershipPercent: 70 },
         { ownerEntityId: low.id, ownedEntityId: majorityChild.id, ownershipPercent: 30 },
       ]),
     );
+  });
+});
+
+it("leaves an archived Entity and every link that touches it off the chart until it is restored", async () => {
+  const gone = await newEntity("Chart Archived Holding Co");
+  const child = await newEntity("Chart Child Of Archived");
+  const trust = await newEntity("Chart Trust With Archived Trustee");
+  await allot(child, gone, 100);
+  await allot(gone, "Archived Co Holder", 100);
+  await configure(trust.id, { registerKind: "trust" });
+  await appoint(trust.id, { kind: "entity", entityId: gone.id }, "trustee");
+  const toggle = async (action: "archive" | "restore") => {
+    const response = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/entities/${gone.id}/${action}`,
+      cookies: memberCookies,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+  };
+  type Chart = {
+    nodes: { id: string; legalName?: string; primaryOwnerId: string | null }[];
+    edges: { ownerEntityId: string; ownedEntityId: string }[];
+    roleEdges: { partyNodeId: string; trustEntityId: string }[];
+  };
+  const touches = (chart: Chart) => ({
+    node: chart.nodes.some((node) => node.id === gone.id),
+    holder: chart.nodes.some((node) => node.legalName === "Archived Co Holder"),
+    edges: chart.edges.filter(
+      (edge) => edge.ownerEntityId === gone.id || edge.ownedEntityId === gone.id,
+    ).length,
+    roles: chart.roleEdges.filter((edge) => edge.partyNodeId === gone.id).length,
+    childOwner: chart.nodes.find((node) => node.id === child.id)?.primaryOwnerId,
+  });
+
+  await toggle("archive");
+  const hidden = (await readChart()).json() as Chart;
+  expect(touches(hidden)).toEqual({
+    node: false,
+    holder: false,
+    edges: 0,
+    roles: 0,
+    childOwner: null,
+  });
+  expect(hidden.nodes.map((node) => node.id)).toEqual(expect.arrayContaining([child.id, trust.id]));
+
+  await toggle("restore");
+  const restored = (await readChart()).json() as Chart;
+  expect(touches(restored)).toEqual({
+    node: true,
+    holder: true,
+    edges: 2,
+    roles: 1,
+    childOwner: gone.id,
   });
 });
 

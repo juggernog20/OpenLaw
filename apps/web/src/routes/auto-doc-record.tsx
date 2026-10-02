@@ -57,6 +57,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import { Input } from "../components/ui/input";
+import { Tooltip } from "../components/ui/tooltip";
 import { AboutCard, PublicationCard } from "../components/auto-docs/overview";
 import { TemplatePane } from "../components/auto-docs/template-pane";
 import { FormBuilder, type BuilderSelection } from "../components/auto-docs/form-builder";
@@ -202,6 +203,18 @@ function AutoDocRecord({
   });
   const archived = saved.autoDoc.state === "archived";
   const published = saved.autoDoc.state === "published";
+  // A form version needs a template, so one reason covers both gaps.
+  const publishBlocked =
+    saved.autoDoc.state === "draft" && (!saved.template?.versions.length || !saved.formVersion);
+  const publishReason = publishBlocked
+    ? intl.formatMessage(
+        {
+          id: "autoDocs.publishNeedsTemplate",
+          defaultMessage: "Upload a Word template on the <link>Form tab</link> to publish.",
+        },
+        { link: (chunks) => chunks.join("") },
+      )
+    : undefined;
 
   // The reading follows the newest file version and the newest form
   // version: an upload changes the paragraphs, a form commit changes
@@ -376,12 +389,35 @@ function AutoDocRecord({
                 </Button>
               ) : (
                 !archived && (
-                  <Button
-                    disabled={!saved.template?.versions.length || !saved.formVersion}
-                    onClick={() => setDialog("publish")}
-                  >
-                    <FormattedMessage id="autoDocs.publish" defaultMessage="Publish" />
-                  </Button>
+                  <>
+                    <span id="auto-doc-publish-reason" className="sr-only">
+                      {publishReason}
+                    </span>
+                    <Tooltip content={publishReason} open={publishBlocked ? undefined : false}>
+                      <span
+                        role={publishBlocked ? "group" : undefined}
+                        tabIndex={publishBlocked ? 0 : undefined}
+                        aria-label={
+                          publishBlocked
+                            ? intl.formatMessage({
+                                id: "autoDocs.publish",
+                                defaultMessage: "Publish",
+                              })
+                            : undefined
+                        }
+                        aria-describedby={publishBlocked ? "auto-doc-publish-reason" : undefined}
+                        className={`inline-flex rounded-button focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link ${publishBlocked ? "cursor-not-allowed [&>button]:pointer-events-none" : ""}`}
+                      >
+                        <Button
+                          disabled={publishBlocked}
+                          aria-describedby={publishBlocked ? "auto-doc-publish-reason" : undefined}
+                          onClick={() => setDialog("publish")}
+                        >
+                          <FormattedMessage id="autoDocs.publish" defaultMessage="Publish" />
+                        </Button>
+                      </span>
+                    </Tooltip>
+                  </>
                 )
               )}
               <DropdownMenu>
@@ -523,7 +559,11 @@ function AutoDocRecord({
           {tab === "overview" && (
             <div className="flex flex-col gap-4">
               <AboutCard record={saved} onSaved={setSaved} />
-              <PublicationCard record={saved} onPublish={() => setDialog("publish")} />
+              <PublicationCard
+                record={saved}
+                publishBlocked={publishBlocked}
+                onPublish={() => setDialog("publish")}
+              />
             </div>
           )}
           {tab === "form" && (

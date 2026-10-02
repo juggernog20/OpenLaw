@@ -280,6 +280,10 @@ export interface ConvertRequestInput {
   contractTypeId?: string;
   matterTypeId?: string;
   templateId?: string;
+  /** Matter arm only. Null is Unassigned. */
+  managerId?: string | null;
+  /** Matter arm only. */
+  isConfidential?: boolean;
   priority?: StaffRequest["urgency"];
   customFields?: Record<string, CustomFieldValue | null>;
   counterparties?: ({ counterpartyId: string } | { name: string })[];
@@ -304,6 +308,8 @@ export async function convertRequest(
     ...(input.contractTypeId === undefined ? {} : { contractTypeId: input.contractTypeId }),
     ...(input.matterTypeId === undefined ? {} : { matterTypeId: input.matterTypeId }),
     ...(input.templateId === undefined ? {} : { templateId: input.templateId }),
+    ...(input.managerId === undefined ? {} : { managerId: input.managerId }),
+    ...(input.isConfidential === undefined ? {} : { isConfidential: input.isConfidential }),
     ...(input.customFields === undefined ? {} : { customFields: input.customFields }),
     ...(input.counterparties === undefined ? {} : { counterparties: input.counterparties }),
   };
