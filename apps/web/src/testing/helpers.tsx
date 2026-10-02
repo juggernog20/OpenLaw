@@ -456,6 +456,9 @@ export function stubApi(state: ApiState) {
     if (call.url.pathname === "/api/v1/auth/sso-providers" && call.method === "GET") {
       return json(200, { providers: [] });
     }
+    if (call.url.pathname === "/api/v1/auth/invite-policy" && call.method === "GET") {
+      return json(200, { inviteLinkLifetimeDays: 7 });
+    }
     if (call.url.pathname === "/api/v1/auth/methods" && call.method === "GET") {
       const methods = state.methods ?? {
         mode: "built_in" as const,

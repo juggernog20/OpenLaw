@@ -7,7 +7,7 @@
  */
 
 import type { Db } from "@openlaw/db";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { fromNodeHeaders } from "better-auth/node";
 import { isAPIError } from "better-auth/api";
@@ -42,6 +42,7 @@ import {
 import { requireAuth, requireRole, requireSession, userColumns } from "../../auth/guards.js";
 import { readTwoFactorPolicy } from "../../auth/two-factor-policy.js";
 import { recordActivity } from "../../lib/activity.js";
+import { renderEmailLayout } from "../../lib/email-layout.js";
 import { getOrgSettings, isEmailDomainAllowed } from "../../lib/org-settings.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { TimezoneSchema } from "../../lib/timezones.js";
@@ -57,6 +58,16 @@ const UserSchema = z.object({
 });
 
 const UserEnvelope = z.object({ user: UserSchema });
+
+/** An invite answer: the user and when the emailed link stops working. */
+const InviteEnvelope = z.object({ user: UserSchema, inviteExpiresAt: z.iso.datetime() });
+
+const InvitePolicySchema = z.object({
+  /** How long a staff invite link works. A password reset keeps 1 hour. */
+  inviteLinkLifetimeDays: z.number().int().min(1).max(30),
+});
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Compares the offered setup token with the expected one in constant
@@ -411,6 +422,63 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   );
 
   app.get(
+    "/auth/invite-policy",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "getInvitePolicy",
+        summary: "How long a staff invite link works (SET-005)",
+        tags: ["auth"],
+        response: { 200: InvitePolicySchema, default: problemResponse },
+      },
+    },
+    async () => {
+      const settings = await getOrgSettings(app.db);
+      return { inviteLinkLifetimeDays: settings.inviteLinkLifetimeDays };
+    },
+  );
+
+  app.patch(
+    "/auth/invite-policy",
+    {
+      preHandler: requireRole("administrator"),
+      schema: {
+        operationId: "setInvitePolicy",
+        summary:
+          "Set how long a staff invite link works, 1 to 30 days (SET-005); " +
+          "it applies to the next invite or resend",
+        tags: ["auth"],
+        body: InvitePolicySchema.strict(),
+        response: { 200: InvitePolicySchema, default: problemResponse },
+      },
+    },
+    async (request) =>
+      app.db.transaction(async (tx) => {
+        const [current] = await tx.select().from(orgSettings).for("update");
+        if (!current) throw httpError(500, "The organization settings could not be read.");
+        const next = request.body.inviteLinkLifetimeDays;
+        if (current.inviteLinkLifetimeDays !== next) {
+          await tx
+            .update(orgSettings)
+            .set({ inviteLinkLifetimeDays: next, updatedAt: new Date() })
+            .where(eq(orgSettings.id, current.id));
+          await recordActivity(tx, {
+            entityType: "system",
+            actorId: request.user.id,
+            action: "org_settings.updated",
+            visibility: "admin_only",
+            payload: {
+              field: "inviteLinkLifetimeDays",
+              old: current.inviteLinkLifetimeDays,
+              new: next,
+            },
+          });
+        }
+        return { inviteLinkLifetimeDays: next };
+      }),
+  );
+
+  app.get(
     "/auth/setup",
     {
       schema: {
@@ -603,8 +671,8 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           role: z.enum(INVITABLE_ROLES),
         }),
         response: {
-          200: UserEnvelope,
-          201: UserEnvelope,
+          200: InviteEnvelope,
+          201: InviteEnvelope,
           default: problemResponse,
         },
       },
@@ -637,7 +705,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         if (user.role !== role) {
           throw httpError(409, "This user already exists with a different role.");
         }
-        await sendSetPasswordEmail(email);
+        const expiresAt = await sendInviteEmail(user.id);
         await recordActivity(app.db, {
           entityType: "user",
           entityId: user.id,
@@ -646,7 +714,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: { email: user.email },
         });
-        return reply.status(200).send({ user });
+        return reply.status(200).send({ user, inviteExpiresAt: expiresAt.toISOString() });
       }
 
       // Server-trusted call (no request headers forwarded): authorization
@@ -656,7 +724,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       const created = await app.auth.api.createUser({
         body: { email, name: displayName, role },
       });
-      await sendSetPasswordEmail(email);
+      const expiresAt = await sendInviteEmail(created.user.id);
 
       const [user] = await app.db
         .select(userColumns)
@@ -675,7 +743,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         visibility: "admin_only",
         payload: { email: user.email, role: user.role },
       });
-      return reply.status(201).send({ user });
+      return reply.status(201).send({ user, inviteExpiresAt: expiresAt.toISOString() });
     },
   );
 
@@ -712,16 +780,18 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: requireRole("administrator"),
       schema: {
         operationId: "resendInvite",
-        summary: "Re-send a pending invite's set-password email (SET-005)",
+        summary:
+          "Re-send a pending invite's set-password email (SET-005); " +
+          "the earlier link stops working",
         tags: ["auth"],
         params: z.object({ userId: z.string() }),
-        response: { 200: UserEnvelope, default: problemResponse },
+        response: { 200: InviteEnvelope, default: problemResponse },
       },
     },
     async (request) => {
       await requireInviteMailer();
       const user = await pendingInvite(request.params.userId);
-      await sendSetPasswordEmail(user.email);
+      const expiresAt = await sendInviteEmail(user.id);
       await recordActivity(app.db, {
         entityType: "user",
         entityId: user.id,
@@ -730,7 +800,7 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
         visibility: "admin_only",
         payload: { email: user.email },
       });
-      return { user };
+      return { user, inviteExpiresAt: expiresAt.toISOString() };
     },
   );
 
@@ -1499,9 +1569,9 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
   /**
    * Refuses an invite while the effective mailer cannot send (#889).
    * The set-password email is the only way an invitee activates, so a
-   * row created without one could never be used. better-auth swallows
-   * the mailer's rejection inside `requestPasswordReset`, which is why
-   * the route asks the resolver itself, before it writes anything.
+   * row created without one could never be used. `sendInviteEmail` logs
+   * the mailer's rejection and does not fail, which is why the route
+   * asks the resolver itself, before it writes anything.
    * The same answer `POST /onboarding/complete` gives, so a client can
    * branch on the one problem type.
    */
@@ -1520,15 +1590,93 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     });
   }
 
-  /** Issues a set-password token and emails it (reset-password flow). */
-  async function sendSetPasswordEmail(email: string): Promise<void> {
+  /**
+   * Mints a staff invite's set-password token and emails it (SET-005
+   * addendum, 2026-10-02). The token is the row better-auth's
+   * `requestPasswordReset` writes, `reset-password:<token>` with the user
+   * id as its value, so /auth/set-password redeems it unchanged. Only the
+   * lifetime differs: the org's invite link lifetime, not the 1 hour a
+   * password reset keeps. Every earlier set-password token of the user
+   * goes first, so after a resend only the newest link works. Returns
+   * when the new link expires.
+   */
+  async function sendInviteEmail(userId: string): Promise<Date> {
+    const settings = await getOrgSettings(app.db);
+    const days = settings.inviteLinkLifetimeDays;
+    const expiresAt = new Date(Date.now() + days * DAY_MS);
+    const token = randomBytes(24).toString("base64url");
+    const context = await app.auth.$context;
+    await app.db.delete(verifications).where(eq(verifications.value, userId));
+    await context.internalAdapter.createVerificationValue({
+      value: userId,
+      identifier: `reset-password:${token}`,
+      expiresAt,
+    });
+    const [user] = await app.db
+      .update(users)
+      .set({ inviteExpiresAt: expiresAt })
+      .where(eq(users.id, userId))
+      .returning({ email: users.email, displayName: users.displayName });
+    if (!user) throw httpError(404, "No user exists with this id.");
+
+    // The token rides in the URL fragment, which a browser never sends,
+    // so no request log holds a live token (TECH-032).
+    const link = `${app.baseUrl}/auth/set-password#token=${token}`;
+    const until = new Intl.DateTimeFormat("en-US", {
+      timeZone: settings.defaultTimezone,
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(expiresAt);
+    const lifetime = `${days} ${days === 1 ? "day" : "days"}`;
+    const expiry = `The link expires in ${lifetime}, on ${until}.`;
+    const recovery = "If the link has expired, ask your Administrator to resend the invite.";
+    const magicLink = authenticationPolicy(settings).legal.magicLink
+      ? "You can also sign in with an email link. On the sign-in page, select Email me a sign-in link."
+      : null;
+    const body = [
+      "An Administrator invited you to OpenLaw. Set your password using the button below.",
+      ...(magicLink ? [magicLink] : []),
+    ];
+    const { mailer } = await app.resolveMailer();
     try {
-      await app.auth.api.requestPasswordReset({
-        body: { email, redirectTo: "/auth/set-password" },
+      await mailer.send({
+        ...renderEmailLayout(
+          {
+            subject: "You are invited to OpenLaw",
+            baseUrl: app.baseUrl,
+            surface: "staff",
+            preheader: expiry,
+            label: "Account",
+            headline: "Join OpenLaw",
+            greeting: `Hello ${user.displayName},`,
+            body,
+            action: { label: "Set password", href: link, line: `${expiry} ${recovery}` },
+            fallbackLink: link,
+            footer: { kind: "security" },
+          },
+          settings,
+        ),
+        to: user.email,
+        subject: "You are invited to OpenLaw",
+        text: [
+          `Hello ${user.displayName},`,
+          "",
+          "An Administrator invited you to OpenLaw. Set your password using the link below:",
+          "",
+          link,
+          "",
+          expiry,
+          recovery,
+          ...(magicLink ? ["", magicLink] : []),
+        ].join("\n"),
       });
     } catch (error) {
-      relayAuthError(error);
+      // The row and the token stay. Resend invite sends a fresh link,
+      // as it did when better-auth sent this email and logged the failure.
+      app.log.error({ err: error }, "The invite email could not be sent.");
     }
+    return expiresAt;
   }
 };
 

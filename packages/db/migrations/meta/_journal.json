@@ -1338,6 +1338,13 @@
       "when": 1790954953791,
       "tag": "0190_share_holder_users",
       "breakpoints": true
+    },
+    {
+      "idx": 191,
+      "version": "7",
+      "when": 1790965911886,
+      "tag": "0191_invite-link-lifetime",
+      "breakpoints": true
     }
   ]
 }

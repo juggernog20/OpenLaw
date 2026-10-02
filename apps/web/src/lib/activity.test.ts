@@ -1621,6 +1621,9 @@ describe("the sentences a reader gets", () => {
     expect(change("mcpApiKeyLifetimeDays", 90, 30)).toEqual([
       { label: "API key lifetime (days)", from: "90", to: "30" },
     ]);
+    expect(change("inviteLinkLifetimeDays", 7, 14)).toEqual([
+      { label: "Invite link lifetime (days)", from: "7", to: "14" },
+    ]);
     // The ceiling stores slugs; the feed says "Auto-Docs", and an empty
     // ceiling reads as unset like every other emptied list.
     expect(change("mcpToolsetCeiling", ["contracts", "auto-docs", "retired"], [])).toEqual([

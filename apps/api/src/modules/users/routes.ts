@@ -51,6 +51,8 @@ const UserRowSchema = z.object({
    * restore from a backup.
    */
   archivedBy: z.object({ id: z.string(), displayName: z.string() }).nullable(),
+  /** When the newest invite link stops working. NULL unless the row is invited. */
+  inviteExpiresAt: z.iso.datetime().nullable(),
 });
 
 const UserRowEnvelope = z.object({ user: UserRowSchema });
@@ -64,6 +66,7 @@ const userRowColumns = {
   archivedAt: users.archivedAt,
   lastActiveAt: users.lastActiveAt,
   departmentId: users.departmentId,
+  inviteExpiresAt: users.inviteExpiresAt,
 } as const;
 
 interface UserRecord {
@@ -74,6 +77,7 @@ interface UserRecord {
   archivedAt: Date | null;
   lastActiveAt: Date | null;
   departmentId: string | null;
+  inviteExpiresAt: Date | null;
 }
 
 /** Setting a password or signing in by any method activates an invite. */
@@ -121,16 +125,18 @@ async function archiversOf(db: Db, userIds: string[]): Promise<Map<string, Archi
 }
 
 function toUserRow(row: UserRecord, activated: boolean, archiver: Archiver | null) {
+  const status = statusOf(row, activated);
   return {
     id: row.id,
     email: row.email,
     displayName: row.displayName,
     role: row.role,
-    status: statusOf(row, activated),
+    status,
     lastActiveAt: row.lastActiveAt?.toISOString() ?? null,
     departmentId: row.departmentId,
     archivedAt: row.archivedAt?.toISOString() ?? null,
     archivedBy: row.archivedAt ? archiver : null,
+    inviteExpiresAt: status === "invited" ? (row.inviteExpiresAt?.toISOString() ?? null) : null,
   };
 }
 

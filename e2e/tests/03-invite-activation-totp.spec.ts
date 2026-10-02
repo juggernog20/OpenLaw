@@ -79,7 +79,7 @@ test.describe.serial("invite → activation → TOTP", () => {
     expect(invited.status()).toBe(201);
 
     const mail = await waitForMailTo(page.request, MEMBER.email);
-    expect(mail.subject).toBe("Set your OpenLaw password");
+    expect(mail.subject).toBe("You are invited to OpenLaw");
     const link = extractLink(mail.text, "/auth/set-password");
 
     // The invitee redeems the link, not the Administrator: hand the

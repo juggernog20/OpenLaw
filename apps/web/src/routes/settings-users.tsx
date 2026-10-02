@@ -26,7 +26,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../lib/api";
-import { formatLongDateTime, formatRelativeOrShort } from "../lib/format";
+import { formatLongDateTime, formatRelativeOrShort, formatShortDate } from "../lib/format";
 import { field } from "../lib/forms";
 import { problem as readProblem } from "../lib/problem";
 import { ROLE_MESSAGES } from "../lib/roles";
@@ -73,6 +73,7 @@ interface UserRow {
   departmentId: string | null;
   archivedAt: string | null;
   archivedBy: { id: string; displayName: string } | null;
+  inviteExpiresAt: string | null;
 }
 
 const INVITE_ROLES = ["legal_team_member", "administrator"] as const;
@@ -140,6 +141,32 @@ function ArchivedLine({ row }: Readonly<{ row: UserRow }>) {
   );
 }
 
+/** Whether an invite link's expiry has passed. */
+function hasPassed(iso: string): boolean {
+  return new Date(iso).getTime() <= Date.now();
+}
+
+/** The line under an Invited row's pill: when the emailed link stops
+ * working (#1288). Resend invite sends a fresh link. */
+function InviteExpiryLine({ iso }: Readonly<{ iso: string | null }>) {
+  if (!iso) return null;
+  return (
+    <span
+      className="mt-0.5 block text-sm whitespace-nowrap text-muted"
+      title={formatLongDateTime(iso)}
+    >
+      <FormattedMessage
+        id="settings.users.inviteExpires"
+        defaultMessage="{expired, select, true {Link expired {date}} other {Link valid until {date}}}"
+        values={{
+          expired: String(hasPassed(iso)),
+          date: formatShortDate(iso),
+        }}
+      />
+    </span>
+  );
+}
+
 /** Mock-style stamps: "3h ago" within the week, then "Jul 28", with the
  * year added once it is not the current one. */
 function lastActiveLabel(intl: IntlShape, iso: string | null): string {
@@ -198,6 +225,7 @@ function InviteDialog({
           departmentId: null,
           archivedAt: null,
           archivedBy: null,
+          inviteExpiresAt: data.inviteExpiresAt,
         });
         setRole("legal_team_member");
         onOpenChange(false);
@@ -317,6 +345,12 @@ export function SettingsUsersPage() {
       .catch(() => undefined);
     const { data } = result ?? {};
     if (data) {
+      // The fresh link replaces the old one, so the row shows its expiry.
+      setRows((current) =>
+        current.map((user) =>
+          user.id === row.id ? { ...user, inviteExpiresAt: data.inviteExpiresAt } : user,
+        ),
+      );
       noteRow(row.id, "saved");
       return;
     }
@@ -607,6 +641,7 @@ export function SettingsUsersPage() {
                   <td className="px-3">
                     <StatusPill status={row.status} />
                     {row.status === "archived" && <ArchivedLine row={row} />}
+                    {row.status === "invited" && <InviteExpiryLine iso={row.inviteExpiresAt} />}
                   </td>
                   <td className="px-3 text-sm whitespace-nowrap text-muted">
                     {lastActiveLabel(intl, row.lastActiveAt)}
@@ -720,9 +755,14 @@ export function SettingsUsersPage() {
         onOpenChange={setInviteOpen}
         onInvited={(user) =>
           // A 200 re-send of an already-pending invite returns the same
-          // user. Never append a duplicate row for it.
+          // user. Never append a duplicate row for it, but show the fresh
+          // link's expiry.
           setRows((current) =>
-            current.some(({ id }) => id === user.id) ? current : [...current, user],
+            current.some(({ id }) => id === user.id)
+              ? current.map((row) =>
+                  row.id === user.id ? { ...row, inviteExpiresAt: user.inviteExpiresAt } : row,
+                )
+              : [...current, user],
           )
         }
       />

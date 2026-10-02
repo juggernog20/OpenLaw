@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { accounts, activityLog, asc, eq, sql, users, verifications } from "@openlaw/db";
+import { accounts, activityLog, asc, desc, eq, sql, users, verifications } from "@openlaw/db";
 import {
   linkFrom,
   signIn,
@@ -536,5 +536,193 @@ describe("invites while the instance cannot send email (#889)", () => {
     });
     expect(res.statusCode, res.body).toBe(200);
     expect(harness.mailer.messagesTo(PENDING.email)).toHaveLength(2);
+  });
+});
+
+describe("the invite link lifetime (SET-005 addendum, #1288)", () => {
+  const DAY = 24 * 60 * 60 * 1000;
+
+  /** The user's live set-password tokens. Value is the plain user id. */
+  function tokensOf(userId: string) {
+    return harness.db.select().from(verifications).where(eq(verifications.value, userId));
+  }
+
+  async function setLifetime(days: number, cookies = adminCookies) {
+    return harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/auth/invite-policy",
+      cookies,
+      payload: { inviteLinkLifetimeDays: days },
+    });
+  }
+
+  it("seeds 7 days, and an invite token lives that long", async () => {
+    const policy = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/auth/invite-policy",
+      cookies: adminCookies,
+    });
+    expect(policy.statusCode, policy.body).toBe(200);
+    expect(policy.json()).toEqual({ inviteLinkLifetimeDays: 7 });
+
+    const before = Date.now();
+    const res = await invite(adminCookies, {
+      email: "hannah.brooks@example.com",
+      displayName: "Hannah Brooks",
+      role: "legal_team_member",
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    const { user, inviteExpiresAt } = res.json() as {
+      user: { id: string };
+      inviteExpiresAt: string;
+    };
+    const expires = new Date(inviteExpiresAt).getTime();
+    expect(expires).toBeGreaterThanOrEqual(before + 7 * DAY);
+    expect(expires).toBeLessThanOrEqual(Date.now() + 7 * DAY);
+
+    const [token] = await tokensOf(user.id);
+    expect(token!.expiresAt.toISOString()).toBe(inviteExpiresAt);
+
+    // The Invited row says when the link stops working.
+    const listed = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/users",
+      cookies: adminCookies,
+    });
+    expect(listed.json().users).toContainEqual(
+      expect.objectContaining({ id: user.id, status: "invited", inviteExpiresAt }),
+    );
+  });
+
+  it("redeems an invite token until its expiry and refuses it after", async () => {
+    const live = await invitePending("ines.alves@example.com", "Ines Alves");
+    const stale = await invitePending("omar.haddad@example.com", "Omar Haddad");
+    const liveToken = tokenFrom(harness.mailer.messagesTo("ines.alves@example.com").at(-1)!.text);
+    const staleToken = tokenFrom(harness.mailer.messagesTo("omar.haddad@example.com").at(-1)!.text);
+
+    // Long past the 1 hour a reset keeps, the invite still works one
+    // minute before its own expiry.
+    await harness.db
+      .update(verifications)
+      .set({ expiresAt: new Date(Date.now() + 60_000) })
+      .where(eq(verifications.value, live));
+    await harness.db
+      .update(verifications)
+      .set({ expiresAt: new Date(Date.now() - 60_000) })
+      .where(eq(verifications.value, stale));
+
+    expect((await setPassword(liveToken, "ines-sets-her-own-1")).statusCode).toBe(200);
+    const refused = await setPassword(staleToken, "omar-too-late-1");
+    expect(refused.statusCode).toBeGreaterThanOrEqual(400);
+    expect(refused.statusCode).toBeLessThan(500);
+  });
+
+  it("keeps the 1 hour lifetime for a password reset", async () => {
+    const [admin] = await harness.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, TEST_ADMIN.email));
+    const before = Date.now();
+    const asked = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/auth/password-setup",
+      payload: { email: TEST_ADMIN.email },
+    });
+    expect(asked.statusCode, asked.body).toBe(202);
+    const mail = harness.mailer.messagesTo(TEST_ADMIN.email).at(-1)!;
+    expect(mail.subject).toBe("Set your OpenLaw password");
+    const [token] = await tokensOf(admin!.id);
+    const expires = token!.expiresAt.getTime();
+    expect(expires).toBeGreaterThanOrEqual(before + 60 * 60 * 1000 - 1000);
+    expect(expires).toBeLessThanOrEqual(Date.now() + 60 * 60 * 1000 + 1000);
+  });
+
+  it("kills the earlier invite link after a resend", async () => {
+    const userId = await invitePending("leo.marsh@example.com", "Leo Marsh");
+    const first = tokenFrom(harness.mailer.messagesTo("leo.marsh@example.com").at(-1)!.text);
+
+    const resent = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/auth/invites/${userId}/resend`,
+      cookies: adminCookies,
+    });
+    expect(resent.statusCode, resent.body).toBe(200);
+    expect(resent.json().inviteExpiresAt).toEqual(expect.any(String));
+    const second = tokenFrom(harness.mailer.messagesTo("leo.marsh@example.com").at(-1)!.text);
+    expect(second).not.toBe(first);
+    expect(await tokensOf(userId)).toHaveLength(1);
+
+    const refused = await setPassword(first, "leo-old-link-1");
+    expect(refused.statusCode).toBeGreaterThanOrEqual(400);
+    expect(refused.statusCode).toBeLessThan(500);
+    expect((await setPassword(second, "leo-new-link-1")).statusCode).toBe(200);
+  });
+
+  it("names the expiry and Resend invite, and magic link sign-in only when it is on", async () => {
+    await invitePending("mia.chen@example.com", "Mia Chen");
+    const withLink = harness.mailer.messagesTo("mia.chen@example.com").at(-1)!;
+    expect(withLink.subject).toBe("You are invited to OpenLaw");
+    expect(withLink.text).toMatch(/The link expires in 7 days, on [A-Z][a-z]{2} \d{1,2}, \d{4}\./);
+    expect(withLink.text).toContain(
+      "If the link has expired, ask your Administrator to resend the invite.",
+    );
+    expect(withLink.text).toContain("You can also sign in with an email link.");
+    expect(withLink.html).toContain("ask your Administrator to resend the invite");
+
+    const policy = await harness.app.inject({
+      method: "PATCH",
+      url: "/api/v1/auth/policy/legal",
+      cookies: adminCookies,
+      payload: { password: true, magicLink: false, sso: false, requireTwoFactor: false },
+    });
+    expect(policy.statusCode, policy.body).toBe(200);
+    expect((await setLifetime(1)).statusCode).toBe(200);
+    try {
+      await invitePending("nils.berg@example.com", "Nils Berg");
+      const withoutLink = harness.mailer.messagesTo("nils.berg@example.com").at(-1)!;
+      expect(withoutLink.text).toContain("The link expires in 1 day, on ");
+      expect(withoutLink.text).not.toContain("email link");
+      expect(withoutLink.html).not.toContain("email link");
+    } finally {
+      await harness.app.inject({
+        method: "PATCH",
+        url: "/api/v1/auth/policy/legal",
+        cookies: adminCookies,
+        payload: { password: true, magicLink: true, sso: false, requireTwoFactor: false },
+      });
+      await setLifetime(7);
+    }
+  });
+
+  it("bounds the lifetime to 1 to 30 days, logs a change, and holds the Administrator gate", async () => {
+    expect((await setLifetime(0)).statusCode).toBe(400);
+    expect((await setLifetime(31)).statusCode).toBe(400);
+
+    const changed = await setLifetime(30);
+    expect(changed.statusCode, changed.body).toBe(200);
+    expect(changed.json()).toEqual({ inviteLinkLifetimeDays: 30 });
+    const [entry] = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.action, "org_settings.updated"))
+      .orderBy(desc(activityLog.createdAt))
+      .limit(1);
+    expect(entry).toMatchObject({
+      visibility: "admin_only",
+      payload: { field: "inviteLinkLifetimeDays", old: 7, new: 30 },
+    });
+    expect((await setLifetime(7)).statusCode).toBe(200);
+
+    const member = await signInCookies(harness.app, INVITEE.email, "casey-sets-her-own");
+    expect((await setLifetime(10, member)).statusCode).toBe(403);
+    expect(
+      (
+        await harness.app.inject({
+          method: "GET",
+          url: "/api/v1/auth/invite-policy",
+          cookies: member,
+        })
+      ).statusCode,
+    ).toBe(403);
   });
 });

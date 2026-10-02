@@ -408,6 +408,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
         "mcpEnabled {MCP} mcpLegalApiKeysEnabled {Legal Users API keys} mcpBusinessApiKeysEnabled {Business Users API keys} " +
         "mcpDynamicClientRegistrationEnabled {Dynamic client registration} mcpLegalOAuthClientsEnabled {Legal Users OAuth Clients} mcpBusinessOAuthClientsEnabled {Business Users OAuth Clients} " +
         "mcpToolsetCeiling {Toolset ceiling} mcpReadOnly {MCP read-only} mcpApiKeyLifetimeDays {API key lifetime (days)} " +
+        "inviteLinkLifetimeDays {Invite link lifetime (days)} " +
         "other {{key}}}",
     },
     { key },

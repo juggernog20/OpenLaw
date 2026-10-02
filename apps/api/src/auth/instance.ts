@@ -270,8 +270,10 @@ export function createAuth(
       // provisions through the adapter rather than this endpoint. Nothing
       // reaches /sign-up/email — not a browser, not our own server code.
       disableSignUp: true,
-      // Set-password links for invites *and* ordinary forgotten-password
-      // resets both ride this flow; the copy covers both. The link targets
+      // Forgotten-password resets ride this flow, with better-auth's
+      // 1 hour token. Staff invites mint their own longer-lived token in
+      // the invite routes and send their own email (SET-005 addendum,
+      // 2026-10-02), so this copy speaks to a reset. The link targets
       // our web page, which posts the token to /api/auth/reset-password.
       // The token rides in the URL fragment: a browser never sends the
       // fragment, so neither this process nor the proxy in front of it

@@ -56,6 +56,7 @@ const LISTED = [
     role: "legal_team_member",
     status: "invited",
     lastActiveAt: null,
+    inviteExpiresAt: "2099-10-09T12:00:00.000Z",
   },
   {
     id: "u4",
@@ -113,12 +114,13 @@ function usersApi(calls: UsersCalls) {
           role: body.role,
           theme: "light",
         },
+        inviteExpiresAt: "2099-10-16T12:00:00.000Z",
       });
     }
     const resend = /^\/api\/v1\/auth\/invites\/([^/]+)\/resend$/.exec(path);
     if (resend && call.method === "POST") {
       calls.resendPosts.push(resend[1]!);
-      return json(200, { user: byId(resend[1]!) });
+      return json(200, { user: byId(resend[1]!), inviteExpiresAt: "2099-10-20T12:00:00.000Z" });
     }
     const revoke = /^\/api\/v1\/auth\/invites\/([^/]+)$/.exec(path);
     if (revoke && call.method === "DELETE") {
@@ -184,6 +186,9 @@ describe("the Users pane (#65)", () => {
     // role is plain text — invites never edit roles (SET-005).
     const danaRow = screen.getByText("dana.ruiz@example.com").closest("tr")!;
     expect(within(danaRow).getByText("Invited")).toBeVisible();
+    // When the emailed link stops working, full timestamp on hover (#1288).
+    const expiry = within(danaRow).getByText("Link valid until Oct 9, 2099");
+    expect(expiry).toHaveAttribute("title", expect.stringMatching(/2099/));
     expect(within(danaRow).getByText("—")).toBeVisible();
     expect(
       within(danaRow).getByRole("button", { name: "Resend the invite to dana.ruiz@example.com" }),
@@ -250,6 +255,7 @@ describe("the Users pane (#65)", () => {
     );
     const noorRow = (await screen.findByText("noor@example.com")).closest("tr")!;
     expect(within(noorRow).getByText("Invited")).toBeVisible();
+    expect(within(noorRow).getByText("Link valid until Oct 16, 2099")).toBeVisible();
     expect(screen.getByText("4 users")).toBeVisible();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -320,6 +326,28 @@ describe("the Users pane (#65)", () => {
 
     await waitFor(() => expect(calls.resendPosts).toEqual(["u3"]));
     expect(await screen.findByText("Saved")).toBeVisible();
+    // The fresh link replaces the old one, and so does its expiry.
+    const danaRow = screen.getByText("dana.ruiz@example.com").closest("tr")!;
+    expect(within(danaRow).getByText("Link valid until Oct 20, 2099")).toBeVisible();
+  });
+
+  it("says when an Invited row's link has expired (#1288)", async () => {
+    const listed = usersApi(newCalls());
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/users" && call.method === "GET"
+          ? json(200, {
+              users: LISTED.map((row) =>
+                row.id === "u3" ? { ...row, inviteExpiresAt: "2020-03-04T12:00:00.000Z" } : row,
+              ),
+            })
+          : listed(call),
+    });
+    renderAt("/settings/users");
+
+    const danaRow = (await screen.findByText("dana.ruiz@example.com")).closest("tr")!;
+    expect(within(danaRow).getByText("Link expired Mar 4, 2020")).toBeVisible();
   });
 
   it("shows the error micro-state when a resend fails", async () => {
