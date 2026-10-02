@@ -17,6 +17,7 @@ export function Field({
   required = false,
   description,
   unanswered = false,
+  error,
   children,
 }: Readonly<{
   htmlFor: string;
@@ -24,6 +25,8 @@ export function Field({
   required?: boolean;
   description?: string | null;
   unanswered?: boolean;
+  /** A refusal with its own reason. It replaces the required line. */
+  error?: string;
   children: React.ReactNode;
 }>) {
   return (
@@ -46,14 +49,18 @@ export function Field({
         )}
       </DescribedFieldLabel>
       {children}
-      {unanswered && (
-        <p className="text-xs text-status-danger-fg">
-          <FormattedMessage
-            id="portal.form.fieldRequired"
-            defaultMessage="{field} is required."
-            values={{ field: label }}
-          />
-        </p>
+      {error !== undefined ? (
+        <p className="text-xs text-status-danger-fg">{error}</p>
+      ) : (
+        unanswered && (
+          <p className="text-xs text-status-danger-fg">
+            <FormattedMessage
+              id="portal.form.fieldRequired"
+              defaultMessage="{field} is required."
+              values={{ field: label }}
+            />
+          </p>
+        )
       )}
     </DescribedField>
   );

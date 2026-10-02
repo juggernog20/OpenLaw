@@ -410,6 +410,42 @@ describe("submitting the form", () => {
     expect(submissions.bodies).toEqual([]);
   });
 
+  it("says a refused number needs no symbols, not that it is missing", async () => {
+    const DEAL_VALUE: FormField = {
+      fieldId: "f3",
+      slug: "deal_value",
+      displayName: "Deal value (USD)",
+      description: null,
+      fieldType: "number",
+      options: null,
+      displayOrder: 3,
+      isRequired: true,
+    };
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [COUNTERPARTY, DEAL_VALUE] });
+    await fillComplete(user);
+    const deal = screen.getByLabelText(/^Deal value \(USD\)/);
+    await user.type(deal, "$180,000");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Deal value (USD): enter this as a number.",
+    );
+    expect(
+      screen.getByText("Enter a number without symbols, for example 180000."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/is required/)).not.toBeInTheDocument();
+    expect(deal).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+
+    // An edit clears the mark, as it does for a missing answer.
+    await user.type(deal, "{Backspace}");
+    expect(
+      screen.queryByText("Enter a number without symbols, for example 180000."),
+    ).not.toBeInTheDocument();
+    expect(deal).not.toHaveAttribute("aria-invalid");
+  });
+
   it("clears a field's mark the moment it is answered", async () => {
     const user = userEvent.setup();
     openForm({ fields: [] });

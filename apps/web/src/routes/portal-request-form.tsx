@@ -104,9 +104,10 @@ export function PortalRequestFormPage() {
   const [files, setFiles] = useState<readonly File[]>([]);
   const [busy, setBusy] = useState(false);
   /** The refusal, as a sentence and as a set of boxes. Both come from
-   * the same press, so they can never disagree. */
+   * the same press, so they can never disagree. Each marked box keeps
+   * its reason, so the line under it can say what to fix. */
   const [error, setError] = useState<string | null>(null);
-  const [unanswered, setUnanswered] = useState<ReadonlySet<string>>(new Set());
+  const [marks, setMarks] = useState<ReadonlyMap<string, FieldMark>>(new Map());
   /** Set by the 201, before the paper follows. It replaces the form,
    * because the Request now exists and the boxes are no longer a thing
    * to press — a requester whose browser closed while the files were
@@ -118,9 +119,9 @@ export function PortalRequestFormPage() {
   /** A key stops being marked the moment it is answered, so a refusal
    * clears box by box rather than only on the next press. */
   function clearMark(key: string) {
-    setUnanswered((current) => {
+    setMarks((current) => {
       if (!current.has(key)) return current;
-      const next = new Set(current);
+      const next = new Map(current);
       next.delete(key);
       return next;
     });
@@ -177,7 +178,7 @@ export function PortalRequestFormPage() {
             { fieldName: field.displayName },
           ),
         );
-        setUnanswered(new Set([field.slug]));
+        setMarks(new Map([[field.slug, "number"]]));
         return;
       }
     }
@@ -186,14 +187,14 @@ export function PortalRequestFormPage() {
     // fields. This runs first so the marks land on the boxes: the
     // refusal sentence names fields, and a sentence cannot point.
     const missing: string[] = [];
-    const marks = new Set<string>();
+    const missingMarks = new Map<string, FieldMark>();
     const customFields: Record<string, CustomFieldValue> = {};
     for (const field of visibleFields) {
       const parsed = { value: answers[field.slug] ?? null };
       if (parsed.value === null) {
         if (field.isRequired) {
           missing.push(field.displayName);
-          marks.add(field.slug);
+          missingMarks.set(field.slug, "required");
         }
         continue;
       }
@@ -201,7 +202,7 @@ export function PortalRequestFormPage() {
     }
 
     if (missing.length > 0) {
-      setUnanswered(marks);
+      setMarks(missingMarks);
       setError(
         intl.formatMessage(
           {
@@ -215,7 +216,7 @@ export function PortalRequestFormPage() {
       );
       return;
     }
-    setUnanswered(new Set());
+    setMarks(new Map());
 
     setBusy(true);
     const result = await api
@@ -321,7 +322,7 @@ export function PortalRequestFormPage() {
           counterparties={counterparties}
           onCounterparties={setCounterparties}
           draft={drafts[field.slug] ?? initialDraft(field)}
-          unanswered={unanswered.has(field.slug)}
+          mark={marks.get(field.slug)}
           onDraft={(next) => {
             setDrafts((current) => ({ ...current, [field.slug]: next }));
             clearMark(field.slug);
@@ -401,12 +402,15 @@ export function PortalRequestFormPage() {
   );
 }
 
+/** Why a submit marked a box: it has no answer, or its answer is not a number. */
+type FieldMark = "required" | "number";
+
 /** Entity Fields use ENT-010's list; person Fields still have no Portal choices. */
 function AttachedField({
   field,
   entities,
   draft,
-  unanswered,
+  mark,
   onDraft,
   requestTypeId,
   counterparties,
@@ -420,25 +424,34 @@ function AttachedField({
   field: FormField;
   entities: readonly FieldReference[];
   draft: CustomFieldDraft;
-  unanswered: boolean;
+  mark?: FieldMark;
   onDraft: (draft: CustomFieldDraft) => void;
 }>) {
   const controlId = `request-field-${field.slug}`;
   const intl = useIntl();
+  const invalid = mark !== undefined;
   return (
     <Field
       htmlFor={controlId}
       label={field.displayName}
       required={field.isRequired}
       description={field.description}
-      unanswered={unanswered}
+      unanswered={mark === "required"}
+      error={
+        mark === "number"
+          ? intl.formatMessage({
+              id: "portal.form.fieldNumberInvalid",
+              defaultMessage: "Enter a number without symbols, for example 180000.",
+            })
+          : undefined
+      }
     >
       {field.builtInKey === "title" ? (
         <Input
           id={controlId}
           value={typeof draft === "string" ? draft : ""}
           aria-required={field.isRequired}
-          aria-invalid={unanswered || undefined}
+          aria-invalid={invalid || undefined}
           placeholder={intl.formatMessage({
             id: "portal.form.summaryHint",
             defaultMessage: "Enter a descriptive title for your request",
@@ -451,7 +464,7 @@ function AttachedField({
           id={controlId}
           requestTypeId={requestTypeId}
           selections={counterparties}
-          invalid={unanswered}
+          invalid={invalid}
           describedBy={field.description ? `${controlId}-help` : undefined}
           onChange={(next) => {
             onCounterparties(next);
@@ -470,7 +483,7 @@ function AttachedField({
           className={CONTROL_CLASS}
           value={typeof draft === "string" ? draft : ""}
           aria-required={field.isRequired}
-          aria-invalid={unanswered || undefined}
+          aria-invalid={invalid || undefined}
           aria-describedby={field.description ? `${controlId}-help` : undefined}
           onChange={(e) => onDraft(e.target.value)}
         >
@@ -490,7 +503,7 @@ function AttachedField({
           entities={entities}
           draft={draft}
           required={field.isRequired}
-          invalid={unanswered}
+          invalid={invalid}
           describedBy={field.description ? `${controlId}-help` : undefined}
           onDraft={onDraft}
         />

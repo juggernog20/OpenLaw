@@ -8582,6 +8582,9 @@
   "portal.form.description": {
     "defaultMessage": "Description"
   },
+  "portal.form.fieldNumberInvalid": {
+    "defaultMessage": "Enter a number without symbols, for example 180000."
+  },
   "portal.form.fieldRequired": {
     "defaultMessage": "{field} is required."
   },
