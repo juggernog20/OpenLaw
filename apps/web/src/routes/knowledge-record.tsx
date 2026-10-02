@@ -2,7 +2,7 @@
 
 /** M28's one-section Knowledge record with DES-017 field commits. */
 import { AutoResizeTextarea } from "../components/auto-resize-textarea";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Archive,
   ArchiveRestore,
@@ -306,6 +306,12 @@ function KnowledgeRecord() {
     void commit("audience", { audience });
   }
 
+  // Publishing for Everyone makes the item readable on the portal, but a
+  // Business User finds it only through a deflection link (KNW-004).
+  const portalReadable =
+    saved.audience === "everyone" && saved.state === "published" && !saved.archivedAt;
+  const portalReady = portalReadable && saved.deflectionLinkCount === 0;
+
   function confirmLostReach() {
     if (reachWarning === "unpublish") void runAction("unpublish");
     else if (reachWarning === "legal_only") {
@@ -339,10 +345,14 @@ function KnowledgeRecord() {
                 <FormattedMessage id="knowledge.draftMarker" defaultMessage="Draft" />
               </span>
             ) : null}
-            {saved.audience === "everyone" && saved.state === "published" && !saved.archivedAt ? (
+            {portalReadable ? (
               <span className="inline-flex items-center gap-1 rounded-pill bg-status-info-bg px-2 py-0.5 text-xs font-medium text-status-info-fg">
                 <Globe2 size={12} aria-hidden="true" />
-                <FormattedMessage id="knowledge.onPortal" defaultMessage="On the portal" />
+                {portalReady ? (
+                  <FormattedMessage id="knowledge.portalReady" defaultMessage="Portal-ready" />
+                ) : (
+                  <FormattedMessage id="knowledge.onPortal" defaultMessage="On the portal" />
+                )}
               </span>
             ) : null}
             {saved.archivedAt ? (
@@ -423,6 +433,33 @@ function KnowledgeRecord() {
           }
         >
           <div className="flex flex-col gap-4 overflow-y-auto px-page-x py-page-y">
+            {portalReady ? (
+              <p className="rounded-card bg-status-info-bg px-3 py-2 text-sm text-status-info-fg">
+                {loaded.user.role === "administrator" ? (
+                  <FormattedMessage
+                    id="knowledge.portalReadyHelpAdmin"
+                    defaultMessage="No deflection link points here yet. Business Users reach this item only through one. <link>Add one in Settings, Intake, Deflection links.</link>"
+                    values={{
+                      link: (chunks: ReactNode) => (
+                        // Underlined at rest: inside a sentence, colour alone
+                        // does not tell the link apart.
+                        <Link
+                          to="/settings/intake/links"
+                          className="font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+                        >
+                          {chunks}
+                        </Link>
+                      ),
+                    }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="knowledge.portalReadyHelp"
+                    defaultMessage="No deflection link points here yet. Business Users reach this item only through one. Ask an Administrator to add it in Settings, Intake, Deflection links."
+                  />
+                )}
+              </p>
+            ) : null}
             <section
               aria-labelledby="knowledge-identity-heading"
               className="overflow-hidden rounded-card border border-border-default bg-raised"

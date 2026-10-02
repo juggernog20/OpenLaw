@@ -600,6 +600,82 @@ describe("a Knowledge record", () => {
     await waitFor(() => expect(writes).toContainEqual({ action: "unpublish", body: {} }));
   });
 
+  it("marks a published Everyone item with no deflection link Portal-ready and says how to reach it", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { audience: "everyone" }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Publish" }));
+    expect(await screen.findByText("Portal-ready")).toBeInTheDocument();
+    expect(screen.queryByText("On the portal")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "No deflection link points here yet. Business Users reach this item only through one. Ask an Administrator to add it in Settings, Intake, Deflection links.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Settings, Intake, Deflection links/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("links an Administrator from the Portal-ready note to the deflection links", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi([], {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+      }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByText("Portal-ready")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Add one in Settings, Intake, Deflection links." }),
+    ).toHaveAttribute("href", "/settings/intake/links");
+    expect(screen.queryByText(/Ask an Administrator/)).not.toBeInTheDocument();
+  });
+
+  it("shows On the portal and no note once deflection links point at the item", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi([], {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+        deflectionLinkCount: 2,
+      }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByText("On the portal")).toBeInTheDocument();
+    expect(screen.queryByText("Portal-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/No deflection link points here yet/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a draft", { audience: "everyone" }],
+    ["a Legal Only item", { state: "published", publishedAt: "2026-08-30T12:00:00.000Z" }],
+    [
+      "an archived item",
+      {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+        archivedAt: "2026-08-31T12:00:00.000Z",
+      },
+    ],
+  ])("shows no portal badge on %s", async (_label, overrides) => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], overrides) });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByRole("heading", { name: "Guidance" })).toBeInTheDocument();
+    expect(screen.queryByText("Portal-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("On the portal")).not.toBeInTheDocument();
+    expect(screen.queryByText(/No deflection link points here yet/)).not.toBeInTheDocument();
+  });
+
   it("archives with an optional replacement and restores from the overflow", async () => {
     const writes: unknown[] = [];
     stubApi({ signedIn: MEMBER, extra: recordApi(writes) });

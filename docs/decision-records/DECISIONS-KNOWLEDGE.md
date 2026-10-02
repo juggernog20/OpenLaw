@@ -82,6 +82,10 @@ The portal article is read-only: its title, current-version downloads, and body,
 
 A Document on a Knowledge Item may carry the DOC-008 Confidential flag, and the Portal reads apply the same Document audience predicate every staff read applies. A flagged Document leaves the Portal article's file list, and its download answers the article's own 404 body. Only an Administrator reaches a flagged Knowledge Document; a Legal Team Member and a Business User do not, whatever the item's audience. The item gate above is unchanged.
 
+### Built addendum (2026-10-02, [#1294](https://github.com/juggernog20/OpenLaw/issues/1294)) — the portal badge follows deflection links
+
+The staff record names portal reach with one of two badges. Both show only while the item is live, published, and `everyone`. With one or more deflection links pointing at the item, the badge reads "On the portal". With none, it reads "Portal-ready", and a note at the top of the record body says that Business Users reach the item only through a deflection link. A Legal Team Member's note asks an Administrator to add one. An Administrator's note links to Settings, Intake, Deflection links. Draft, Legal Only, and archived items show neither badge. The surfacing line above is unchanged: the Portal still has no Knowledge list or search, and only an Administrator places a deflection link under INT-004.
+
 ## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
 
 - **Status** — Accepted
