@@ -153,7 +153,8 @@ function KnowledgeRecord() {
   const [title, setTitle] = useState(saved.title);
   const [body, setBody] = useState(saved.body ?? "");
   const [editingBody, setEditingBody] = useState(Boolean(saved.body));
-  const [preview, setPreview] = useState(false);
+  // Most visits come to read, so saved guidance opens rendered.
+  const [preview, setPreview] = useState(Boolean(saved.body));
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string>();
   const [archiveOpen, setArchiveVisible] = useState(false);
@@ -250,6 +251,15 @@ function KnowledgeRecord() {
   function showEditor() {
     setEditingBody(true);
     requestAnimationFrame(() => textarea.current?.focus());
+  }
+
+  function togglePreview() {
+    if (preview) {
+      setPreview(false);
+      requestAnimationFrame(() => textarea.current?.focus());
+    } else {
+      setPreview(true);
+    }
   }
 
   async function runAction(kind: "publish" | "unpublish" | "archive" | "restore") {
@@ -695,13 +705,13 @@ function KnowledgeRecord() {
                       detail={commits.error.body}
                     />
                     {/* The textarea's blur has already committed the draft by
-                      the time this click lands, so the toggle only flips. */}
+                      the time this click lands, so the toggle only flips.
+                      An archived item may still render, but not edit. */}
                     <Button
                       size="sm"
                       variant="secondary"
-                      disabled={saved.archivedAt !== null}
-                      aria-pressed={preview}
-                      onClick={() => setPreview((value) => !value)}
+                      disabled={saved.archivedAt !== null && preview}
+                      onClick={togglePreview}
                     >
                       {preview ? (
                         <>

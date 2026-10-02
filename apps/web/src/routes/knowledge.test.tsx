@@ -563,8 +563,10 @@ describe("a Knowledge record", () => {
     stubApi({ signedIn: MEMBER, extra: recordApi([]) });
     renderAt("/knowledge/knowledge-1");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Preview" }));
-    expect(screen.getByRole("heading", { name: "Review" })).toBeInTheDocument();
+    // Saved guidance opens rendered, with Edit one click away (#1318).
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
     expect(screen.getByText("term").tagName).toBe("STRONG");
     expect(screen.getByRole("link", { name: "source (opens in a new tab)" })).toHaveAttribute(
       "rel",
@@ -578,6 +580,46 @@ describe("a Knowledge record", () => {
         "Nothing has happened to this record yet. Every change to it shows up here.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("switches rendered guidance to a focused source editor and commits the edit before Preview", async () => {
+    const patches: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: recordApi(patches, { body: "Read the term." }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByText("Read the term.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    const source = screen.getByRole("textbox", { name: "Guidance" });
+    await waitFor(() => expect(source).toHaveFocus());
+    expect(source).toHaveValue("Read the term.");
+    await user.type(source, " Then sign.");
+    await user.click(screen.getByRole("button", { name: "Preview" }));
+    expect(patches).toEqual([{ body: "Read the term. Then sign." }]);
+    expect(await screen.findByText("Read the term. Then sign.")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
+  });
+
+  it("opens a focused editor from Add guidance when the item has none", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { body: null }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Add guidance" }));
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Guidance" })).toHaveFocus());
+    expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
+  });
+
+  it("renders an archived item's guidance and disables its Edit button", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi([], { archivedAt: "2026-08-30T12:00:00.000Z" }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeDisabled();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
   });
 
   it("publishes from the overflow and warns with the deflection-link count before unpublishing", async () => {
