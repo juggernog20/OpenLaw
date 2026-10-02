@@ -12698,6 +12698,9 @@
   "settings.requestTypeEditor.defaultType": {
     "defaultMessage": "Default"
   },
+  "settings.requestTypeEditor.defaultTypeForm": {
+    "defaultMessage": "This is the {module, select, contract {Contract} other {Matter}} Default type."
+  },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
   },
@@ -12742,6 +12745,15 @@
   },
   "settings.requestTypeEditor.retryForm": {
     "defaultMessage": "Retry"
+  },
+  "settings.requestTypeEditor.separateForm": {
+    "defaultMessage": "Use a separate Form"
+  },
+  "settings.requestTypeEditor.separateFormError": {
+    "defaultMessage": "The separate Form could not be created."
+  },
+  "settings.requestTypeEditor.sharedForm": {
+    "defaultMessage": "Also used by {names}. Changes here apply to {total, plural, =2 {both} other {all # Request types}}."
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"

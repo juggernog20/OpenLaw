@@ -3589,6 +3589,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/request-types/{id}/separate-form": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Give a Request type that shares its destination Form a Form of its own: copy the destination type with its Form, name the copy after the Request type, and point the Request type at the copy (DD-028) */
+    post: operations["separateRequestTypeForm"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/intake-links/knowledge-options": {
     parameters: {
       query?: never;
@@ -21195,6 +21212,49 @@ export interface operations {
               /** @enum {string} */
               targetModule: "matter" | "contract";
               targetTypeId: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  separateRequestTypeForm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            requestType: {
+              id: string;
+              /** @enum {string} */
+              targetModule: "matter" | "contract";
+              targetTypeId: string;
+            };
+            type: {
+              id: string;
+              slug: string;
+              displayName: string;
             };
           };
         };
