@@ -2225,6 +2225,18 @@ Every documents table on a record takes the 76px trailing cell, whether or not t
 
 `designs/contracts.pen` is the reference: C4 rebuilt, and C24–C29 added. `designs/documents.pen` DOC4 and DOC5 are untouched and stay that way until M26.
 
+### Addendum (2026-10-02, focus group 2026-09-29, [#1309](https://github.com/juggernog20/OpenLaw/issues/1309)): the Upload dialog asks where a new document is filed
+
+Two panelists expanded a folder, clicked Upload, and found the file at the record root. Filing it took a second step through Move to folder.
+
+**A new upload shows a "File in" select as its first field.** It is Move to folder's select, with the same label and options: the record root first, then each folder by its whole path. It starts on the record root. A single upload lands in the chosen folder. A multi-file pick or a directory pick hands the folder to the batch, so the destination readout names it and every file lands inside it. The select comes first, so the folder is chosen before a pick can hand over to the batch.
+
+**The select is absent where it has no answer.** Add version does not draw it, because a version lands where its document is already filed. A Knowledge item has no folders. The supporting-only upload does not administer the tree. A record with no folders has nothing to choose.
+
+This adds a fifth keyboard way into a folder to the four §7 lists. The other option was to file into the expanded folder. It was rejected, because several folders can be open at once and the dialog would have to guess.
+
+The Note placeholder "What changed in this round" now shows on Add version only. A first upload has no round before it.
+
 ## DES-034: The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)
 
 - **Status:** Accepted

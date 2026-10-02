@@ -7080,6 +7080,112 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     ).toBeInTheDocument();
   });
 
+  /** A Document whose current version holds exactly `bytes`, with the
+   * checksum the API stores: SHA-256 as lowercase hex. */
+  async function draftHolding(bytes: string) {
+    const { createHash } = await import("node:crypto");
+    const checksumSha256 = createHash("sha256").update(bytes).digest("hex");
+    return { ...DRAFT, versions: [version({ checksumSha256 })] };
+  }
+
+  it("warns before Add version sends a copy of the current version, and sends it on Upload anyway", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
+    );
+
+    expect(
+      await within(dialog).findByText("This file is the same as version 1. Upload it anyway?"),
+    ).toBeVisible();
+    expect(api.writes).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Upload anyway" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-1/versions");
+    expect(await within(section).findByText("v2")).toBeVisible();
+  });
+
+  it("clears the copy warning when another file is picked", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    const input = within(dialog).getByLabelText("File", { selector: "input" });
+    await user.upload(input, new File(["our counter"], "same.docx", { type: "application/pdf" }));
+    await within(dialog).findByText("This file is the same as version 1. Upload it anyway?");
+
+    // A different file is a new round, so it uploads with no warning.
+    await user.upload(
+      input,
+      new File(["their redline"], "redline.docx", { type: "application/pdf" }),
+    );
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+  });
+
+  it("uploads a copy with no warning when the browser cannot hash it", async () => {
+    // A plain HTTP install has no `crypto.subtle`, so the check is skipped.
+    const original = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: original.getRandomValues.bind(original),
+      randomUUID: original.randomUUID.bind(original),
+    });
+    try {
+      const api = documentsApi([await draftHolding("our counter")]);
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/documents");
+      const user = userEvent.setup();
+
+      const section = await documentsSection();
+      await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+      const dialog = await screen.findByRole("dialog");
+      await user.upload(
+        within(dialog).getByLabelText("File", { selector: "input" }),
+        new File(["our counter"], "same.docx", { type: "application/pdf" }),
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+      await waitFor(() => expect(api.writes).toHaveLength(1));
+      expect(screen.queryByText(/is the same as version/)).toBeNull();
+      expect(screen.queryByRole("alert")).toBeNull();
+    } finally {
+      vi.stubGlobal("crypto", original);
+    }
+  });
+
+  it("never checks a new Document, which has no current version", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "copy.docx", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
+  });
+
   it("renames a document and edits its description, leaving the file's own name alone", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -9462,6 +9568,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     const record = recordApi(contractRow(), team);
     const reads: string[] = [];
     const writes: { url: string; body: unknown }[] = [];
+    /** Every new upload, with the folder it asked to be filed in. */
+    const uploads: { name: string; folderId: string | null }[] = [];
     let paper = documents;
     /** One listing, in the order the seam answers it. */
     const listing = (folderId: string | null) =>
@@ -9511,9 +9619,20 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         paper = paper.filter((row) => row.id !== removed[1]);
         return json(200, { document: gone });
       }
+      // A new upload lands in the folder it names, or at the record root
+      // when it names none (DES-033).
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        const folderId = form.has("folderId") ? String(form.get("folderId")) : null;
+        uploads.push({ name: file.name, folderId });
+        const added = document(`doc-${file.name}`, file.name, folderId);
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
       return record.handler(call);
     };
-    return { handler, reads, writes };
+    return { handler, reads, writes, uploads };
   }
 
   const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
@@ -10158,6 +10277,107 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["None", "Correspondence", "Correspondence / 2026"]);
+  });
+
+  it("files a new upload in the folder File in names", async () => {
+    const api = filingApi([document("doc-1", "loose.pdf")], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const dialog = await screen.findByRole("dialog");
+    // A first upload has no round before it, so its Note asks nothing.
+    expect(within(dialog).getByLabelText("Note")).not.toHaveAttribute("placeholder");
+    const fileIn = within(dialog).getByLabelText("File in");
+    // It starts on the record root, and lists each folder by its path.
+    expect(fileIn).toHaveValue("");
+    expect(
+      within(fileIn)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["None", "Board"]);
+    await user.selectOptions(fileIn, "f-1");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["minutes"], "minutes.pdf", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.uploads).toEqual([{ name: "minutes.pdf", folderId: "f-1" }]));
+    // Inside Board, not at the record root.
+    expect(await within(section).findByText("1 document")).toBeVisible();
+    expect(within(section).queryByText("minutes.pdf")).toBeNull();
+    await user.click(within(section).getByRole("button", { name: "Expand Board" }));
+    expect(await within(section).findByText("minutes.pdf")).toBeVisible();
+  });
+
+  it("carries the File in folder into a multi-file pick's batch", async () => {
+    const api = filingApi([], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    await user.selectOptions(within(composer).getByLabelText("File in"), "f-1");
+    await user.upload(within(composer).getByLabelText("File", { selector: "input" }), [
+      new File(["one"], "one.pdf", { type: "application/pdf" }),
+      new File(["two"], "two.pdf", { type: "application/pdf" }),
+    ]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    expect(within(dialog).getByRole("group", { name: "Destination" })).toHaveTextContent("Board");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploads).toHaveLength(2));
+    expect(api.uploads.map((one) => one.folderId)).toEqual(["f-1", "f-1"]);
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(await within(section).findByText("2 documents")).toBeVisible();
+  });
+
+  it("asks no folder on Add version, where the Note still asks what changed", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Add version" }));
+    const dialog = await screen.findByRole("dialog");
+
+    // A version lands where its document is already filed.
+    expect(within(dialog).queryByLabelText("File in")).toBeNull();
+    expect(within(dialog).getByLabelText("Note")).toHaveAttribute(
+      "placeholder",
+      "What changed in this round",
+    );
+  });
+
+  it("asks no folder on a record that has none", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], []);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("signed.pdf");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const dialog = await screen.findByRole("dialog");
+
+    expect(within(dialog).queryByLabelText("File in")).toBeNull();
   });
 
   it("says a folder's documents are on their way while they load", async () => {
