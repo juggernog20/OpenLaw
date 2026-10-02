@@ -2557,6 +2557,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/portal/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Tasks assigned to the signed-in user on Contracts and Matters they reach in the Portal, by due date with undated Tasks last. Completed Tasks are hidden by default. kind and number keep the Tasks on one record */
+    get: operations["listPortalTasks"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/portal/tasks/{taskId}/toggle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete or reopen one Task assigned to the signed-in user on a record they reach in the Portal. Logs task.completed or task.reopened with them as actor. Any other Task answers 404 */
+    post: operations["togglePortalTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/contract-types/{id}/people": {
     parameters: {
       query?: never;
@@ -3316,7 +3350,7 @@ export interface paths {
     put?: never;
     /**
      * Add a Task to a reached, non-archived Matter. Closing does not freeze the checklist
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     post: operations["addMatterTask"];
     delete?: never;
@@ -3341,7 +3375,7 @@ export interface paths {
     head?: never;
     /**
      * Edit a Task's title, assignee, or internal due date on a reached Matter
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     patch: operations["updateMatterTask"];
     trace?: never;
@@ -5544,7 +5578,7 @@ export interface paths {
     put?: never;
     /**
      * Add a task to a contract's checklist (CTR-017). A blank title is refused. The task starts not done, with the display order after the last existing task. Appends one task.added entry on the owning contract at the working-team tier (DD-017). Member+: a Contributor who reaches the record is refused 403. An archived contract takes no new task until it is restored
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     post: operations["addContractTask"];
     delete?: never;
@@ -5569,7 +5603,7 @@ export interface paths {
     head?: never;
     /**
      * Edit a task's title, description, assignee, or due date (CTR-017). Every field is optional and only what is sent is read. A request that changes nothing writes nothing and narrates nothing. Appends one task.edited entry naming only what moved, at the working-team tier (DD-017). A task on a contract this viewer cannot reach answers 404; an archived contract takes no edit until it is restored
-     * @description Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
+     * @description Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.
      */
     patch: operations["updateContractTask"];
     trace?: never;
@@ -7855,7 +7889,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default */
+    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default. overdue keeps only open Tasks due before today; dueWithinDays keeps Tasks due through today plus N days, overdue ones included */
     get: operations["listAssignedTasks"];
     put?: never;
     post?: never;
@@ -16286,6 +16320,113 @@ export interface operations {
               status: "pending" | "approved" | "rejected";
               note: string | null;
               decidedAt: string | null;
+            };
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  listPortalTasks: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+        includeCompleted?: "true" | "false";
+        kind?: "contract" | "matter";
+        number?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            total: number;
+            rows: {
+              id: string;
+              title: string;
+              dueDate: string | null;
+              isDone: boolean;
+              isOverdue: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
+            }[];
+            nextCursor: string | null;
+          };
+        };
+      };
+      /** @description Problem details (RFC 9457) */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": components["schemas"]["Problem"];
+        };
+      };
+    };
+  };
+  togglePortalTask: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taskId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          kind: "contract" | "matter";
+        };
+      };
+    };
+    responses: {
+      /** @description Default Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            task: {
+              id: string;
+              title: string;
+              dueDate: string | null;
+              isDone: boolean;
+              isOverdue: boolean;
+              record: {
+                /** @enum {string} */
+                kind: "contract" | "matter";
+                id: string;
+                number: number;
+                title: string;
+                isConfidential: boolean;
+              };
             };
           };
         };
@@ -44518,6 +44659,8 @@ export interface operations {
         limit?: number;
         cursor?: string;
         includeCompleted?: "true" | "false";
+        overdue?: "true" | "false";
+        dueWithinDays?: number;
       };
       header?: never;
       path?: never;

@@ -71,7 +71,7 @@ export const taskTools: readonly ToolDefinition[] = [
     name: "openlaw_task_create",
     title: "Create a Task",
     description:
-      "Create a Task on kind contract or matter, identified by its number. Supply title, optional description, assigneeId and dueDate in YYYY-MM-DD. Assignees must be active staff who manage the record or are on its team. Ask the person before using addToTeam true to add an eligible assignee. Confidential team changes require audience permission. Creates a new Task each time.",
+      "Create a Task on kind contract or matter, identified by its number. Supply title, optional description, assigneeId and dueDate in YYYY-MM-DD. Assignees must be active users who manage the record or are on its team. A Business User on the team may own a Task. Ask the person before using addToTeam true to add an eligible assignee. Confidential team changes require audience permission. Creates a new Task each time.",
     inputSchema: createInput,
     outputSchema: output,
     run: async (input, { db, user, notifier }) =>

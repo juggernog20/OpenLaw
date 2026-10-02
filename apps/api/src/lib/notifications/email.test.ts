@@ -225,7 +225,8 @@ it.each(examples)("renders $eventType, $label, with unchanged text", (example) =
 
 it.each(examples)("keeps $eventType links on the Portal for a Business User", (example) => {
   const message = render(example, {}, true);
-  const path = example.entityType ? "/matters/42/tasks" : "/contracts/42";
+  // The Portal has no Tasks tab, so a Business User's Task opens the Matter itself.
+  const path = example.entityType ? "/matters/42" : "/contracts/42";
   expect(message?.html).toContain("/ Legal portal");
   expect(message?.html).toContain(`href="${baseUrl}/portal${path}"`);
   expect(message?.html).toContain(`href="${baseUrl}/portal/settings"`);

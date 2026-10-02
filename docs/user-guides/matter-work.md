@@ -8,7 +8,7 @@ Use a Legal Team Member or Administrator account that can read the Matter. The M
 
 ## Maintain Tasks
 
-Open **Tasks** and select **Add Task**. Enter **Title**, optionally add **Description**, choose an **Assignee** and set **Due date**. Under **Comments & attachments**, you can use **Add a note** and add files. Task comments have no audience choice. Everyone who can access the Task can read them. Select **Add Task** to save. The assignee normally comes from the Matter team or its Matter Manager.
+Open **Tasks** and select **Add Task**. Enter **Title**, optionally add **Description**, choose an **Assignee** and set **Due date**. Under **Comments & attachments**, you can use **Add a note** and add files. Task comments have no audience choice. Everyone who can access the Task can read them. Select **Add Task** to save. The assignee normally comes from the Matter team or its Matter Manager. A Business User on the team can be the assignee. They see that Task in the Portal and can complete or reopen it there.
 
 If you need another person, use the assignee picker's **Add someone to the team…** flow. In an add/edit dialog, stage the person with **Use this person** and save the Task to save both membership and assignment. **Cancel** or **Close** before saving does neither. On an existing row, **Add to team and assign** saves that explicit change immediately. The available audience-management permissions still apply, especially on Confidential work.
 

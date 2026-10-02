@@ -6,6 +6,8 @@ import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-ro
 import { FormattedMessage, useIntl } from "react-intl";
 import { loadPortalWork } from "../lib/portal-records";
 import { PortalRecordWork } from "../components/portal/record-work";
+import { PortalTasksCard } from "../components/portal/tasks-card";
+import { readPortalTasks } from "../lib/portal-tasks";
 import { api } from "../lib/api";
 import { currentUserFor, useSignOut } from "../lib/session";
 import {
@@ -33,11 +35,12 @@ export async function portalContractLoader({ params, request }: LoaderFunctionAr
     user,
     contract: result.data.contract,
     recordWork: await loadPortalWork("contract", number),
+    tasks: await readPortalTasks({ record: { kind: "contract", number } }).catch(() => undefined),
   };
 }
 
 export function PortalContractPage() {
-  const { user, contract, recordWork } = useLoaderData<typeof portalContractLoader>();
+  const { user, contract, recordWork, tasks } = useLoaderData<typeof portalContractLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/portal/login");
   const title =
@@ -201,6 +204,12 @@ export function PortalContractPage() {
               )}
             </dl>
           </section>
+          {tasks && tasks.total > 0 ? (
+            <PortalTasksCard
+              initial={tasks}
+              record={{ kind: "contract", number: contract.number }}
+            />
+          ) : null}
           {recordWork && (
             <PortalRecordWork module="contract" number={contract.number} {...recordWork} />
           )}

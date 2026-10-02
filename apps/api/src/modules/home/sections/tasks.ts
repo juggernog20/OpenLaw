@@ -20,6 +20,7 @@ import {
 import type { AuthenticatedUser } from "../../../auth/user.js";
 import { contractTeamScope } from "../../../lib/contract-access.js";
 import { matterTeamScope } from "../../../lib/matter-access.js";
+import { portalRecordScope } from "../../../lib/portal-record-access.js";
 import { HOME_SECTION_LIMIT } from "./approvals.js";
 
 export const TaskHomeRowSchema = z.object({
@@ -109,6 +110,8 @@ export async function readAssignedTasks(
     assigneeId = user.id,
     dueWithinDays,
     overdue = false,
+    portal = false,
+    record,
   }: {
     limit: number;
     cursor?: string;
@@ -117,6 +120,13 @@ export async function readAssignedTasks(
     assigneeId?: string;
     dueWithinDays?: number;
     overdue?: boolean;
+    /**
+     * Read with Portal reach (MTR-005 addendum, 2026-10-02): a team row on a
+     * non-archived record, whatever its stage or category.
+     */
+    portal?: boolean;
+    /** Keep only the Tasks on this one record. */
+    record?: { kind: "contract" | "matter"; number: number };
   },
 ): Promise<z.infer<typeof AssignedTasksPageSchema>> {
   const today = dueThrough ? sql`${dueThrough}::date` : sql`current_date`;
@@ -153,9 +163,18 @@ export async function readAssignedTasks(
         overdue
           ? sql`not ${contractTasks.isDone} and ${contractTasks.dueDate} < current_date`
           : undefined,
-        isNull(contracts.archivedAt),
-        ne(contractStatuses.stage, "ended"),
-        contractTeamScope(db, user),
+        ...(portal
+          ? [portalRecordScope(db, user, "contract")]
+          : [
+              isNull(contracts.archivedAt),
+              ne(contractStatuses.stage, "ended"),
+              contractTeamScope(db, user),
+            ]),
+        record
+          ? record.kind === "contract"
+            ? eq(contracts.number, record.number)
+            : sql`false`
+          : undefined,
       )}
 
       union all
@@ -184,9 +203,18 @@ export async function readAssignedTasks(
         overdue
           ? sql`not ${matterTasks.isDone} and ${matterTasks.dueDate} < current_date`
           : undefined,
-        isNull(matters.archivedAt),
-        eq(matterStatuses.category, "open"),
-        matterTeamScope(db, user),
+        ...(portal
+          ? [portalRecordScope(db, user, "matter")]
+          : [
+              isNull(matters.archivedAt),
+              eq(matterStatuses.category, "open"),
+              matterTeamScope(db, user),
+            ]),
+        record
+          ? record.kind === "matter"
+            ? eq(matters.number, record.number)
+            : sql`false`
+          : undefined,
       )}
     ), page_tasks as (
     select

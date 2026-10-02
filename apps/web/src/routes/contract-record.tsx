@@ -3079,16 +3079,13 @@ function ContractRecord() {
                 assignees={users.filter(
                   (person) =>
                     !person.archived &&
-                    person.role !== "business_user" &&
                     (saved.manager?.id === person.id ||
                       roster.some((member) => member.id === person.id)),
                 )}
                 teamExpansion={
                   !frozen && (!saved.isConfidential || canFlag)
                     ? {
-                        people: users.filter(
-                          (person) => !person.archived && person.role !== "business_user",
-                        ),
+                        people: users.filter((person) => !person.archived),
                         onAdded: (id) => {
                           const person = users.find((candidate) => candidate.id === id);
                           if (person)

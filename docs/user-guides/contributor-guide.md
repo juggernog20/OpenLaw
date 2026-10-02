@@ -60,9 +60,19 @@ For a Confidential record, ask Legal to add people. Removing members and creatin
 
 ## Work that stays with Legal
 
-Ask Legal to change record Fields, Description, Value, dates, Status, Type, owners, parties, confidentiality, relationships, Tasks, Key dates, approval requests or signatures, or to remove team members. Business Users create [Requests](submit-request.md) to start new work.
+Ask Legal to change record Fields, Description, Value, dates, Status, Type, owners, parties, confidentiality, relationships, Tasks other than completing your own, Key dates, approval requests or signatures, or to remove team members. Business Users create [Requests](submit-request.md) to start new work.
 
 Closing a Matter or Ending a Contract does not remove permitted Portal work. Archiving removes the record from the Portal. If the record disappears, ask Legal to check its archive state and your membership. See [roles and access](roles-and-access.md).
+
+## Complete your Tasks
+
+Legal can assign you a Task on a Contract or Matter whose team you are on. You get a Portal notification, and an email if your preferences send one.
+
+1. Select **Tasks** in the Portal navigation bar. **Your Tasks** lists your open Tasks on the records you can open, by due date, with undated Tasks last. Each row shows the record it belongs to. An overdue date says how many days overdue it is.
+2. Select a Task's checkbox when the work is done. The Task leaves the list and **Completed** names it.
+3. To reopen a Task, turn on **Show completed**, then clear the Task's checkbox.
+
+A record page also lists your own Tasks on that record, under **Tasks assigned to you**. You see only Tasks assigned to you. Legal adds, edits, reassigns and removes Tasks. If you leave the record's team, its Tasks leave your list.
 
 ## Review an approval request
 
