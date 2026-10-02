@@ -6626,6 +6626,21 @@
   "home.tasks.completed": {
     "defaultMessage": "Completed: {title}"
   },
+  "home.tasks.due": {
+    "defaultMessage": "Due"
+  },
+  "home.tasks.dueAll": {
+    "defaultMessage": "All"
+  },
+  "home.tasks.dueFailed": {
+    "defaultMessage": "Tasks could not be loaded. Try changing the Due filter again."
+  },
+  "home.tasks.dueOverdue": {
+    "defaultMessage": "Overdue"
+  },
+  "home.tasks.dueWeek": {
+    "defaultMessage": "Due in the next 7 days"
+  },
   "home.tasks.empty": {
     "defaultMessage": "No open Tasks assigned to you."
   },
@@ -6645,7 +6660,7 @@
     "defaultMessage": "No due date"
   },
   "home.tasks.pageTitle": {
-    "defaultMessage": "Your Tasks"
+    "defaultMessage": "My Tasks"
   },
   "home.tasks.record": {
     "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"

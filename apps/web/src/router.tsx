@@ -60,7 +60,7 @@ import { KnowledgePage, knowledgeLoader } from "./routes/knowledge";
 import { KnowledgeRecordPage, knowledgeRecordLoader } from "./routes/knowledge-record";
 import { RouteErrorPage } from "./routes/error-page";
 import { HomePage, homeLoader } from "./routes/home";
-import { HomeTasksPage, homeTasksLoader } from "./routes/home-tasks";
+import { HomeTasksPage, homeTasksLoader, homeTasksShouldRevalidate } from "./routes/home-tasks";
 import { InboxPage, inboxLoader } from "./routes/inbox";
 import { InboxRequestPage, inboxRequestLoader } from "./routes/inbox-request";
 import { LinkExpiredPage, linkExpiredLoader } from "./routes/link-expired";
@@ -262,6 +262,7 @@ export const routes: RouteObject[] = [
   {
     path: "/home/tasks",
     loader: homeTasksLoader,
+    shouldRevalidate: homeTasksShouldRevalidate,
     element: <HomeTasksPage />,
     errorElement: <RouteErrorPage />,
     hydrateFallbackElement: <></>,

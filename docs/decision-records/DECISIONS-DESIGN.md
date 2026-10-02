@@ -4413,6 +4413,10 @@ Dates approaching opens **Your dates** in a wide modal through **View all N**. H
 
 **My Tasks** sits between Inbox and Matters in the main navigation and opens `/home/tasks`. My Tasks and the Task sections on Contracts and Matters place the shared switch in the Task card header. Its single label says **Show completed** while completed Tasks are hidden and **Hide completed** while they are visible. Completed Tasks are hidden by default; showing them includes both open and completed Tasks, with completed titles struck through and checked boxes available to reopen them. Record counts continue to show the whole checklist. My Tasks applies the filter before counting and pagination, preserving assignment, record access, and lifecycle rules. Completing a Task while completed rows are shown keeps it in the list; Hide completed retains the existing removal animation and Undo. Home keeps its open-Task preview.
 
+### UX review addendum (2026-10-02, #1308): My Tasks Due filter
+
+The My Tasks Task card header carries a **Due** select before the completed switch. Its choices are **All**, **Overdue** and **Due in the next 7 days**. Overdue keeps open Tasks with a due date before today. Due in the next 7 days keeps Tasks due through today plus 7 days, and includes overdue Tasks. The server applies the choice before counting and pagination, so the total, the empty state and **Load more Tasks** follow it. The page keeps the choice in the `due` search parameter, so a reload keeps it. The page heading and document title read **My Tasks**, the same as the navigation label. Home itself still has no Filter control, and the Task sections on Contracts and Matters keep only the completed switch. Grouping My Tasks by record is not part of this addendum.
+
 ## DES-070: AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)
 
 - **Status:** Accepted

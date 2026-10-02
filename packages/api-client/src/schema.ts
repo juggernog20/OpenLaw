@@ -7822,7 +7822,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default */
+    /** Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default. overdue keeps only open Tasks due before today; dueWithinDays keeps Tasks due through today plus N days, overdue ones included */
     get: operations["listAssignedTasks"];
     put?: never;
     post?: never;
@@ -44361,6 +44361,8 @@ export interface operations {
         limit?: number;
         cursor?: string;
         includeCompleted?: "true" | "false";
+        overdue?: "true" | "false";
+        dueWithinDays?: number;
       };
       header?: never;
       path?: never;

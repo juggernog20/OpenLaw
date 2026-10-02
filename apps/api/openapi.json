@@ -103461,7 +103461,7 @@
     "/api/v1/home/tasks": {
       "get": {
         "operationId": "listAssignedTasks",
-        "summary": "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default",
+        "summary": "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default. overdue keeps only open Tasks due before today; dueWithinDays keeps Tasks due through today plus N days, overdue ones included",
         "parameters": [
           {
             "schema": {
@@ -103489,6 +103489,25 @@
             },
             "in": "query",
             "name": "includeCompleted",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "overdue",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 36500
+            },
+            "in": "query",
+            "name": "dueWithinDays",
             "required": false
           }
         ],

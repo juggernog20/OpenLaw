@@ -72,11 +72,13 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "listAssignedTasks",
         summary:
-          "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default",
+          "Tasks assigned to the signed-in user across reachable active Contracts and Matters; completed Tasks are hidden by default. overdue keeps only open Tasks due before today; dueWithinDays keeps Tasks due through today plus N days, overdue ones included",
         querystring: z.object({
           limit: z.coerce.number().int().min(1).max(100).default(50),
           cursor: AssignedTasksCursorSchema.optional(),
           includeCompleted: z.enum(["true", "false"]).optional(),
+          overdue: z.enum(["true", "false"]).optional(),
+          dueWithinDays: z.coerce.number().int().min(0).max(36500).optional(),
         }),
         response: {
           200: AssignedTasksPageSchema,
@@ -91,6 +93,7 @@ export const homeRoutes: FastifyPluginAsyncZod = async (app) => {
       readAssignedTasks(app.db, request.user, {
         ...request.query,
         includeCompleted: request.query.includeCompleted === "true",
+        overdue: request.query.overdue === "true",
       }),
   );
 
