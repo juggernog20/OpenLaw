@@ -10,14 +10,17 @@
  * record, not a schedule. Filing a recurring obligation does not
  * complete the row. It advances `nextDueOn` by the recurrence, as many
  * times as it takes to pass the filing day, and the row stays open.
+ * Each filing keeps its own row with an optional note and filed
+ * Document, which the row menu's Filing history lists.
  */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, History, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
+import { uploadRecordDocument } from "../../lib/documents";
 import type {
   EntityObligation,
   EntityObligationOptions,
@@ -30,7 +33,9 @@ import { type TableCatalogue } from "../../lib/list-views";
 import { readTableWidths, writeTableWidths } from "../../lib/table-width-preferences";
 import { ManagedTable } from "../table/managed-table";
 import { problem } from "../../lib/problem";
+import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
 import { DueDate } from "../due-date";
+import { FilingHistoryDialog } from "./obligation-filing-history";
 import { ObligationMatterInput, type MatterChoice } from "./obligation-matter-input";
 import { RestrictedRecordCell } from "../restricted-record-cell";
 import { StatusNote, type FieldStatus } from "../status-note";
@@ -133,6 +138,7 @@ export function ObligationsPanel({
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<EntityObligation>();
   const [filing, setFiling] = useState<EntityObligation>();
+  const [history, setHistory] = useState<EntityObligation>();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [error, setError] = useState<string>();
 
@@ -214,6 +220,7 @@ export function ObligationsPanel({
                 frozen={frozen || status === "saving"}
                 onEdit={() => setEditing(row)}
                 onFile={() => setFiling(row)}
+                onHistory={() => setHistory(row)}
                 onRemove={() => void remove(row.id)}
               />
             ),
@@ -247,6 +254,13 @@ export function ObligationsPanel({
             replace(row);
             setFiling(undefined);
           }}
+        />
+      ) : null}
+      {history ? (
+        <FilingHistoryDialog
+          entityId={entityId}
+          obligation={history}
+          onClose={() => setHistory(undefined)}
         />
       ) : null}
     </section>
@@ -376,24 +390,28 @@ function ObligationActions({
   frozen,
   onEdit,
   onFile,
+  onHistory,
   onRemove,
 }: Readonly<{
   row: EntityObligation;
   frozen: boolean;
   onEdit: () => void;
   onFile: () => void;
+  onHistory: () => void;
   onRemove: () => void;
 }>) {
   const intl = useIntl();
   const labels = fieldLabels(intl);
+  // A locked row still shows what was filed. Only reading is left.
   const locked = frozen || row.completedOn !== null;
-  if (locked) return null;
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button size="sm" onClick={onFile}>
-        <Check size={16} aria-hidden="true" />
-        {labels.markComplete}
-      </Button>
+      {!locked ? (
+        <Button size="sm" onClick={onFile}>
+          <Check size={16} aria-hidden="true" />
+          {labels.markComplete}
+        </Button>
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -411,15 +429,28 @@ function ObligationActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={onEdit}>
-            <Pencil size={16} aria-hidden="true" />
-            <FormattedMessage id="common.edit" defaultMessage="Edit" />
+          {!locked ? (
+            <DropdownMenuItem onSelect={onEdit}>
+              <Pencil size={16} aria-hidden="true" />
+              <FormattedMessage id="common.edit" defaultMessage="Edit" />
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem onSelect={onHistory}>
+            <History size={16} aria-hidden="true" />
+            <FormattedMessage
+              id="entities.record.obligations.filingHistory"
+              defaultMessage="Filing history"
+            />
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={onRemove} className="text-status-danger-fg">
-            <Trash2 size={16} aria-hidden="true" />
-            <FormattedMessage id="common.delete" defaultMessage="Delete" />
-          </DropdownMenuItem>
+          {!locked ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onRemove} className="text-status-danger-fg">
+                <Trash2 size={16} aria-hidden="true" />
+                <FormattedMessage id="common.delete" defaultMessage="Delete" />
+              </DropdownMenuItem>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -667,15 +698,49 @@ function MarkFiledDialog({
   const intl = useIntl();
   const labels = fieldLabels(intl);
   const [filedOn, setFiledOn] = useState(() => civilToday());
+  const [note, setNote] = useState("");
+  const uploads = useCreateAttachments();
+  /** The Document an earlier try already uploaded, keyed by its staged
+   * file, so a retry after a refused filing does not upload it twice. */
+  const [uploaded, setUploaded] = useState<{ rowId: number; documentId: string }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   async function submit() {
     if (!filedOn || busy) return;
     setBusy(true);
+    setError(undefined);
+    // The paper goes to the Entity's Documents tab first. The filing
+    // then names that Document, and the server pins its current Version.
+    const staged = uploads.rows[0];
+    let documentId = staged && uploaded?.rowId === staged.id ? uploaded.documentId : undefined;
+    if (staged && !documentId) {
+      const sent = await uploadRecordDocument(
+        { entityType: "entity", id: entityId },
+        { file: staged.file, documentTypeId: uploads.typeId || null, note: "" },
+      );
+      if (!sent.ok) {
+        setBusy(false);
+        setError(
+          sent.detail ??
+            intl.formatMessage({
+              id: "createAttachments.failed",
+              defaultMessage: "The file could not be uploaded.",
+            }),
+        );
+        return;
+      }
+      documentId = sent.document.id;
+      setUploaded({ rowId: staged.id, documentId });
+    }
+    const trimmed = note.trim();
     const result = await api
       .POST("/api/v1/entities/{id}/obligations/{childId}/file", {
         params: { path: { id: entityId, childId: obligation.id } },
-        body: { filedOn },
+        body: {
+          filedOn,
+          ...(trimmed ? { note: trimmed } : {}),
+          ...(documentId ? { documentId } : {}),
+        },
       })
       .catch(() => undefined);
     setBusy(false);
@@ -725,6 +790,30 @@ function MarkFiledDialog({
               onChange={(event) => setFiledOn(event.target.value)}
             />
           </Field>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="obligation-filing-note">{labels.note}</Label>
+            <AutoResizeTextarea
+              id="obligation-filing-note"
+              className={TEXTAREA_CLASS}
+              maxLength={2_000}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </div>
+          <CreateAttachments
+            module="entity"
+            uploads={uploads}
+            disabled={busy}
+            single
+            label={intl.formatMessage({
+              id: "entities.record.obligations.filedPaper",
+              defaultMessage: "Filed paper",
+            })}
+            chooseLabel={intl.formatMessage({
+              id: "entities.record.obligations.attachFiledPaper",
+              defaultMessage: "Attach the filed paper",
+            })}
+          />
           {error ? (
             <p role="alert" className="text-status-danger-fg">
               {error}

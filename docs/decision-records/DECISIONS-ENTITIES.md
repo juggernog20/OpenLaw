@@ -171,6 +171,18 @@ The obligation row is the schedule. Member+ can create, read, edit, and delete i
 
 A deleted Registration is not a deleted obligation: its foreign key is set to null and the obligation remains on the calendar. Registration rows on Overview expose the obligations that currently point at them.
 
+### Filing record addendum (2026-10-02, [#1321](https://github.com/juggernog20/OpenLaw/issues/1321)) — each filing keeps its proof
+
+The 2026-09-29 focus group wanted to keep the filed board minutes and a filing reference when marking an Obligation complete. ENT-006 logged the cycle date and recorded no proof, and a recurring Obligation keeps one row whose note is the standing note on the schedule. Each filing now writes a row in `entity_obligation_filings`: the Obligation, the filing date, an optional note of up to 2,000 characters, who filed it, and an optional Entity Document.
+
+- **The Document link.** The filing names a live Document of the same Entity and pins its current Version as a `document_id` and `version_id` pair. The pair has the paired-null check and the SET NULL foreign key of `comment_attachments`, so DOC-010 erasure clears the link. A `document_filed` flag stays true, so Filing history says "Document removed" rather than nothing. A Document of another Entity is refused with 400.
+- **One transaction.** The filing row, the due-date change and the `entity_obligation.filed` History entry are written together. The History payload gains `filingId` and never the note, so no prose enters the append-only log.
+- **The dialog.** Mark complete takes an optional Note and an optional "Attach the filed paper" file. The file uploads to the Entity's Documents tab first, then the filing names it. Mark complete with neither works as before.
+- **Filing history.** The row menu lists each filing newest first, with its date, who filed it, the note and a link to the Document. A completed one-off keeps the menu with Filing history as its only item, because its one filing is the record of what was done.
+- **Deletion.** Deleting an Obligation deletes its filings. The History entries stay.
+- **Earlier filings.** Filings made before this change have no rows. Their History entries remain the record.
+- **Not taken.** The other option put the note and the Document id in the History payload only. It needed no migration, but the note would become permanent log text and the link could go stale after erasure.
+
 ## ENT-007 — Roll-ups: linked-records tabs with query-derived counts
 
 - **Status** — Accepted

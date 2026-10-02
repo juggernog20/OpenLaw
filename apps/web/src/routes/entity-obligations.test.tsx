@@ -107,6 +107,9 @@ function entityRecordApi(call: StubCall): Response | undefined {
   if (call.url.pathname === "/api/v1/entities/e1/holdings") {
     return json(200, { owners: [], owned: [] });
   }
+  if (call.url.pathname === "/api/v1/documents/type-options") {
+    return json(200, { documentTypes: [] });
+  }
   return undefined;
 }
 
@@ -388,6 +391,83 @@ describe("the Entity Obligations tab", () => {
     expect(screen.getByText("Sep 30, 2027")).toBeInTheDocument();
   });
 
+  it("files a note and the filed paper, then lists filings newest first in Filing history", async () => {
+    let uploadedTo: string | undefined;
+    let filed: unknown;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/entities/e1/documents" && call.method === "POST") {
+          uploadedTo = call.url.pathname;
+          expect((call.body as FormData).get("file")).toBeInstanceOf(File);
+          return json(201, { document: { id: "d1", title: "board-minutes.pdf", versions: [] } });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations/o1/file") {
+          filed = call.body;
+          return json(200, { obligation: { ...obligation, nextDueOn: "2027-09-30" } });
+        }
+        if (call.url.pathname === "/api/v1/entities/e1/obligations/o1/filings") {
+          return json(200, {
+            filings: [
+              {
+                id: "f2",
+                filedOn: "2026-09-20",
+                note: "Filing reference MCA-0042",
+                filedBy: { id: "u1", displayName: "Nadia Counsel" },
+                document: { id: "d1", versionId: "v1", title: "board-minutes.pdf" },
+                createdAt: "2026-09-20T10:00:00.000Z",
+              },
+              {
+                id: "f1",
+                filedOn: "2025-09-18",
+                note: null,
+                filedBy: { id: "u2", displayName: "Yusuf Haddad" },
+                document: { removed: true },
+                createdAt: "2025-09-18T10:00:00.000Z",
+              },
+            ],
+          });
+        }
+        return entityRecordApi(call);
+      },
+    });
+    renderAt("/entities/e1/obligations");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Mark complete" }));
+    const dialog = await screen.findByRole("dialog", { name: "Mark complete" });
+    await user.type(within(dialog).getByLabelText("Note"), "Filing reference MCA-0042");
+    await user.upload(
+      within(dialog).getByLabelText("Attach the filed paper"),
+      new File(["%PDF"], "board-minutes.pdf", { type: "application/pdf" }),
+    );
+    expect(within(dialog).getByText("board-minutes.pdf")).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "Attach the filed paper" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Mark complete" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(uploadedTo).toBe("/api/v1/entities/e1/documents");
+    expect(filed).toEqual({
+      filedOn: "2026-09-20",
+      note: "Filing reference MCA-0042",
+      documentId: "d1",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Actions for Annual return" }));
+    await user.click(screen.getByRole("menuitem", { name: "Filing history" }));
+    const history = await screen.findByRole("dialog", { name: "Filing history" });
+    const items = await within(history).findAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent(`${formatFullDate("2026-09-20")} · Filed by Nadia Counsel`);
+    expect(within(items[0]!).getByText("Filing reference MCA-0042")).toBeInTheDocument();
+    expect(within(items[0]!).getByRole("link", { name: "board-minutes.pdf" })).toHaveAttribute(
+      "href",
+      "/entities/e1/documents?doc=d1&version=v1",
+    );
+    expect(items[1]).toHaveTextContent(`${formatFullDate("2025-09-18")} · Filed by Yusuf Haddad`);
+    expect(within(items[1]!).getByText("Document removed")).toBeInTheDocument();
+  });
+
   it("shows read-only values, resizes columns, and saves edits only on confirmation", async () => {
     const patches: unknown[] = [];
     stubApi({
@@ -547,9 +627,11 @@ describe("the Entity Obligations tab", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByText(`Completed ${formatFullDate("2026-09-20")}`)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Mark complete" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Actions for Annual return" }),
-    ).not.toBeInTheDocument();
+    // Only reading is left: Filing history, with no Edit or Delete.
+    await user.click(screen.getByRole("button", { name: "Actions for Annual return" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Filing history",
+    ]);
   });
 
   it("shows linked obligations beneath their registration on Overview", async () => {

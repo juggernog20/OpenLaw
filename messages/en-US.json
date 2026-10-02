@@ -5711,6 +5711,9 @@
   "entities.record.obligations.assignee": {
     "defaultMessage": "Assignee"
   },
+  "entities.record.obligations.attachFiledPaper": {
+    "defaultMessage": "Attach the filed paper"
+  },
   "entities.record.obligations.column": {
     "defaultMessage": "Obligation"
   },
@@ -5726,6 +5729,9 @@
   "entities.record.obligations.completedOnField": {
     "defaultMessage": "Completed on"
   },
+  "entities.record.obligations.documentRemoved": {
+    "defaultMessage": "Document removed"
+  },
   "entities.record.obligations.dueDate": {
     "defaultMessage": "Due date"
   },
@@ -5737,6 +5743,21 @@
   },
   "entities.record.obligations.emptyHint": {
     "defaultMessage": "Add the first due date when it is known."
+  },
+  "entities.record.obligations.filedOnBy": {
+    "defaultMessage": "{date} · Filed by {name}"
+  },
+  "entities.record.obligations.filedPaper": {
+    "defaultMessage": "Filed paper"
+  },
+  "entities.record.obligations.filingHistory": {
+    "defaultMessage": "Filing history"
+  },
+  "entities.record.obligations.filingHistoryEmpty": {
+    "defaultMessage": "No filings yet."
+  },
+  "entities.record.obligations.filingHistoryLoading": {
+    "defaultMessage": "Loading…"
   },
   "entities.record.obligations.label": {
     "defaultMessage": "Label"
