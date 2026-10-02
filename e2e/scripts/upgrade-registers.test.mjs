@@ -44,3 +44,30 @@ test("register fingerprints detect lost parties, entry numbers, basis and money"
     );
   }
 });
+
+test("unlinked user fields preserve old register facts while user link changes fail", () => {
+  for (const [register, rows] of [
+    [partnership, "partners"],
+    [trust, "parties"],
+  ]) {
+    const withUser = (userId) => ({
+      ...register,
+      [rows]: register[rows].map((row) => ({ ...row, party: { ...row.party, userId } })),
+      entries: register.entries.map((entry) => ({
+        ...entry,
+        party: { id: "entry-party", userId },
+      })),
+    });
+    const unlinked = withUser(null);
+    const legacy = {
+      ...register,
+      entries: register.entries.map((entry) => ({ ...entry, party: { id: "entry-party" } })),
+    };
+    assertRegisterFacts(registerFacts(legacy), unlinked);
+    assertRegisterFacts(registerFacts(unlinked), legacy);
+    const linked = withUser("user-1");
+    assert.throws(() => assertRegisterFacts(registerFacts(legacy), linked), /register/);
+    assert.throws(() => assertRegisterFacts(registerFacts(linked), unlinked), /register/);
+    assert.throws(() => assertRegisterFacts(registerFacts(linked), withUser("user-2")), /register/);
+  }
+});
