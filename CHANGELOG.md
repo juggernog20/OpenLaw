@@ -4,9 +4,37 @@ This file records the notable changes in each OpenLaw release. The format follow
 
 ## Unreleased
 
+## 0.4.0 - 2026-10-02
+
 ### Upgrading
 
-- The app applies one database migration when it starts. It deletes every Holding that a person typed with Add Holding. Holdings that a share register wrote stay. Before you upgrade, open each Entity whose owners you typed, add a share class on its Ownership tab, and record an allotment to each owner. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)). (#1240)
+- The app applies four database migrations when it starts. Back up first, as for every upgrade ([Upgrades](docs/DEPLOYMENT.md#upgrades)). (#1240, #1266)
+- The first migration deletes every Holding that a person typed with Add Holding. Holdings that a share register wrote stay. Before you upgrade, open each Entity whose owners you typed, add a share class on its Ownership tab, and record an allotment to each owner. (#1240)
+- API clients that write Holdings must record share register entries instead. `POST`, `PATCH` and `DELETE` on `/api/v1/entities/{id}/holdings` are gone. Use `/api/v1/entities/{id}/share-classes` and `/api/v1/entities/{id}/share-entries`. (#1240)
+- Each Entity type now names a register. The Partnership type starts with the partnership register, the Branch type starts with None, and every other type starts with the share register. An Entity that already has a share register keeps it, whatever its type. (#1266)
+- An install with a DocuSign connector changes how it sends. Send for signature now saves an unsent Envelope and opens DocuSign's editor, where the preparer places the fields and sends. To keep the older interface, where Send envelope sends at once from OpenLaw, set `SIGNING_PREPARATION_ENABLED=false` in `.env` before you start the new version ([DocuSign sending interface](docs/DEPLOYMENT.md#docusign-sending-interface)). (#1260)
+- This release adds one optional environment variable, `SIGNING_PREPARATION_ENABLED`. Unset, empty or `true` means preparation. `false` means the older interface. The app does not start on any other value. This release has no Compose changes. (#1260)
+
+### Added
+
+- An Entity can keep a trust register. It records each Trust party's Roles by date: settlor, trustee, protector, enforcer, beneficiary, or another Role with a label. It also records settlements into the trust fund and distributions out of it, and shows the balance for each currency. (#1266)
+- An Entity can keep a partnership register. It records each Partner's admission, capacity, commitments, contributions, returns, transfers and withdrawal. The Ownership basis you choose sets the Holdings that the register writes: unreturned capital, units, stated percent or equal shares. (#1266)
+- Each Entity type names its register in Settings, Entities, Types: share register, partnership register, trust register or None. Change register on the Ownership tab sets another one for a single Entity while its registers are empty. (#1266)
+- An Entity with no register, such as a branch, names its Head office on the Ownership tab. (#1266)
+- The ownership chart draws each Trust party with a dashed line that names its Role and carries no percentage. It draws a branch under its Head office. The PDF and PowerPoint exports show the same lines. (#1266)
+- The trust register and the partnership register read at any past date and export to CSV, as the share register does. (#1266)
+- An Administrator can duplicate a Contract type, a Matter type or an Entity type from the Types list. The copy gets the source Form with every Row and Branch. Default people, the default approver group and Request type destinations stay on the source. (#1256)
+- The DocuSign settings form and the onboarding step have a Grant consent button. It opens DocuSign's consent page, and the connection test runs again when you grant consent. Both screens show the redirect URI to add to the DocuSign app. (#1260)
+- The API adds `POST /api/v1/contract-types/{id}/duplicate`, the same path for Matter types and Entity types, and the trust and partnership paths under `/api/v1/entities/{id}`: `trust-register`, `trust-entries`, `partnership-register` and `partnership-entries`. (#1256, #1266)
+
+### Changed
+
+- Send for signature with a DocuSign connector opens the Prepare Envelope dialog, and Continue to DocuSign opens DocuSign's editor. Before, an install had to turn this on. (#1260)
+- A failed DocuSign connection test says when the cause is missing consent or refused credentials, and offers Grant consent. The API returns the problem types `signing-consent-required` and `signing-credentials-refused` for these two cases. (#1260)
+- Settings, Organization, Notifications shows the reminder lead times furthest first, with no reorder handles. The order never changed a reminder. A new lead time goes to its place in the list. (#1238)
+- The MCP tool that reads one Entity returns the register the Entity keeps. `shareRegister` is null for an Entity that keeps another register, and `trustRegister` and `partnershipRegister` are new. (#1266)
+- A duplicated Entity type keeps the register of its source. (#1266)
+- Dependency updates, including better-auth, the AWS SDK, nodemailer, pg, pg-boss and sanitize-html. (#1235, #1265)
 
 ### Removed
 
@@ -16,6 +44,8 @@ This file records the notable changes in each OpenLaw release. The format follow
 ### Security
 
 - brace-expansion moves to 2.1.6 and 5.0.11 or later for GHSA-qhr7-859c-m2p7 and GHSA-6j4f-fj2g-mc7p, a denial of service through nested brace groups. Only development tooling and the API test suite used the old versions. (#1238, #1240)
+
+Full changes: https://github.com/juggernog20/OpenLaw/compare/v0.3.0...v0.4.0
 
 ## 0.3.0 - 2026-09-29
 

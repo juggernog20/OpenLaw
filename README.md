@@ -23,12 +23,12 @@ You run OpenLaw on your own server with Docker Compose. Your contracts and legal
 | [Contracts](docs/user-guides/create-contract.md)   | Each contract from draft through approval and signature to renewal and ending. Parallel approvals, Key dates, a notice deadline that OpenLaw calculates from the term, and a Confidential flag for sensitive deals. |
 | [Matters](docs/user-guides/create-matter.md)       | Every other piece of legal work: an employment issue, a regulatory inquiry, a board matter. Matter templates add the usual Tasks and Key dates for you.                                                             |
 | [Requests](docs/user-guides/submit-request.md)     | Business Users fill in a Form in the Portal. Legal triages each Request in the Inbox, then converts it to a Contract or Matter, resolves it, or declines it. The answers and attachments carry across.              |
-| [Entities](docs/user-guides/entity-records.md)     | Your own group companies. Officers, Registrations, statutory Documents, an ownership chart, a share register, and a compliance calendar of Obligations.                                                             |
+| [Entities](docs/user-guides/entity-records.md)     | Your own group companies. Officers, Registrations, statutory Documents, an ownership chart, share, partnership and trust registers, and a compliance calendar of Obligations.                                       |
 | [Knowledge](docs/user-guides/create-knowledge.md)  | Guidance and precedents. Publish a Knowledge Item to the Portal, and it can answer a Business User's question before they submit it.                                                                                |
 | [Documents](docs/user-guides/document-versions.md) | Every file belongs to one record and keeps a chain of Versions. Previews for Word and PowerPoint, OCR for scanned PDFs, and a redline between any two Versions.                                                     |
 | [Auto-Docs](docs/user-guides/auto-doc-template.md) | Upload a Word template. OpenLaw builds a form from its Placeholders and fills it into a `.docx` and a `.pdf`. Business Users can run an Auto-Doc from the Portal too.                                               |
 
-Also in 0.3.0:
+Also in 0.4.0:
 
 - **E-signature through DocuSign.** When everyone has signed, the executed PDF comes back onto the Contract and the Contract becomes active.
 - **AI Analysis with your own API key.** It reads a Contract's Document and fills in the term, the value, the notice period and your custom Fields. Each value stays marked Unverified until a person confirms it. It works with Anthropic, OpenAI and Gemini APIs, and with other providers that use the same protocols.
@@ -103,7 +103,7 @@ The user manual has 62 guides. Each instance also serves the manual at `/documen
 
 ## Project status
 
-0.3.0 is the latest release, from 29 September 2026. The first public release, 0.1.0, came out the day before. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
+0.4.0 is the latest release, from 2 October 2026. The first public release, 0.1.0, came out on 28 September 2026. One maintainer builds OpenLaw. There is no hosted version, so every instance is one that someone runs themselves. Security fixes go into the latest release line only.
 
 Some things are left out on purpose, for now:
 
