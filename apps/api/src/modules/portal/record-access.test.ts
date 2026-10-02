@@ -594,6 +594,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         title: "Original ask",
         urgency: "medium",
         status: "converted",
+        dispositionedAt: new Date(),
         ...(module === "contract"
           ? { convertedContractId: record.id }
           : { convertedMatterId: record.id }),
@@ -673,6 +674,7 @@ describe.each(["contract", "matter"] as const)("DD-023 Portal %s work", (module)
         description: "Submission remains unchanged",
         urgency: "medium",
         status: "converted",
+        dispositionedAt: new Date(),
         ...(module === "contract"
           ? { convertedContractId: record.id }
           : { convertedMatterId: record.id }),
@@ -1343,7 +1345,7 @@ it("keeps Request History with its Requester and closes it after conversion", as
   const record = await create();
   await harness.db
     .update(requests)
-    .set({ status: "converted", convertedContractId: record.id })
+    .set({ status: "converted", dispositionedAt: new Date(), convertedContractId: record.id })
     .where(eq(requests.id, request!.id));
   expect((await harness.app.inject({ method: "GET", url, cookies: business })).statusCode).toBe(
     404,

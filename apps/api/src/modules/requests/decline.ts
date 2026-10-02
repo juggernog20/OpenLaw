@@ -32,7 +32,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { eq, requests } from "@openlaw/db";
+import { eq, requests, sql } from "@openlaw/db";
 import { MAX_DECLINE_REASON_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
@@ -98,7 +98,7 @@ export const requestDeclineRoutes: FastifyPluginAsyncZod = async (app) => {
       return dispositionOf(app, request.user, request.params.number, async (tx, held) => {
         await tx
           .update(requests)
-          .set({ status: "declined", declinedReason: reason })
+          .set({ status: "declined", declinedReason: reason, dispositionedAt: sql`now()` })
           .where(eq(requests.id, held.id));
 
         // DD-017's narration, in the transaction that wrote the status,

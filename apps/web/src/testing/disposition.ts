@@ -49,6 +49,7 @@ export function staffRequest(overrides: Record<string, unknown> = {}): Record<st
     customFields: {},
     declinedReason: null,
     createdAt: "2026-08-20T09:14:00.000Z",
+    dispositionedAt: null,
     requestType: {
       id: "rt-nda",
       displayName: "NDA request",

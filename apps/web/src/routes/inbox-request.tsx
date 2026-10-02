@@ -574,6 +574,25 @@ function Hero({ request }: { request: StaffRequest }) {
           {formatRelativeOrShort(request.createdAt, { locale: intl.locale })}
         </time>
       </HeroItem>
+      {request.dispositionedAt &&
+        (request.status === "resolved" || request.status === "declined") && (
+          <HeroItem
+            label={
+              request.status === "resolved" ? (
+                <FormattedMessage id="inbox.request.resolvedOn" defaultMessage="Resolved" />
+              ) : (
+                <FormattedMessage id="inbox.request.declinedOn" defaultMessage="Declined" />
+              )
+            }
+          >
+            <time
+              dateTime={request.dispositionedAt}
+              title={formatLongDateTime(request.dispositionedAt, { locale: intl.locale })}
+            >
+              {formatRelativeOrShort(request.dispositionedAt, { locale: intl.locale })}
+            </time>
+          </HeroItem>
+        )}
     </section>
   );
 }

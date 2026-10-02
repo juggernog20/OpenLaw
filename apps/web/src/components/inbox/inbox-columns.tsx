@@ -8,7 +8,7 @@ import type { ColumnCatalogue, ColumnDef, Layout } from "../../lib/list-views";
 import { builtInLayout } from "../../lib/list-views";
 import { contractPath, contractReference, SEVERITY_PILL, severityLabel } from "../../lib/contracts";
 import { matterPath, matterReference } from "../../lib/matters";
-import { formatRelativeOrShort } from "../../lib/format";
+import { formatLongDateTime, formatRelativeOrShort } from "../../lib/format";
 import {
   requestReference,
   requestStatusLabel,
@@ -102,6 +102,25 @@ const COLUMNS: ColumnDef<InboxRow>[] = [
         {formatRelativeOrShort(row.createdAt, { locale: intl.locale })}
       </span>
     ),
+  },
+  {
+    key: "closed",
+    sortKey: "dispositionedAt",
+    header: <FormattedMessage id="inbox.column.closed" defaultMessage="Closed" />,
+    label: (intl) => intl.formatMessage({ id: "inbox.column.closed", defaultMessage: "Closed" }),
+    defaultWidth: 112,
+    minWidth: 88,
+    // Blank for an open Request, because it has not closed yet.
+    render: (row, intl) =>
+      row.dispositionedAt && (
+        <time
+          dateTime={row.dispositionedAt}
+          title={formatLongDateTime(row.dispositionedAt, { locale: intl.locale })}
+          className="text-muted"
+        >
+          {formatRelativeOrShort(row.dispositionedAt, { locale: intl.locale })}
+        </time>
+      ),
   },
   {
     key: "outcome",

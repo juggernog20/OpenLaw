@@ -23654,7 +23654,15 @@ export interface operations {
         receivedFrom?: string;
         receivedTo?: string;
         timeZone?: string;
-        sort?: "number" | "title" | "type" | "requester" | "urgency" | "createdAt" | "status";
+        sort?:
+          | "number"
+          | "title"
+          | "type"
+          | "requester"
+          | "urgency"
+          | "createdAt"
+          | "dispositionedAt"
+          | "status";
         dir?: "asc" | "desc";
         includeTriaged?: "true" | "false";
         cursor?: string;
@@ -23697,6 +23705,7 @@ export interface operations {
                 image: string | null;
               } | null;
               createdAt: string;
+              dispositionedAt: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -24153,6 +24162,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24483,6 +24493,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24571,6 +24582,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24756,6 +24768,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24897,6 +24910,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -25526,6 +25540,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;

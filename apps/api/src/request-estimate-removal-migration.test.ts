@@ -25,7 +25,7 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
       values ('estimate-change', 'request', 'request', 'owner', 'request.expected_by_changed', 'working_team', '{"number":1,"from":null,"to":"2026-10-01"}'::jsonb)`);
     const before = (
       await db.execute(
-        sql`select to_jsonb(r) - 'expected_by' as row from requests r where id = 'request'`,
+        sql`select to_jsonb(r) - 'expected_by' - 'dispositioned_at' as row from requests r where id = 'request'`,
       )
     ).rows;
     const history = (await db.execute(sql`select * from activity_log where id = 'estimate-change'`))
@@ -41,7 +41,7 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
     expect(
       (
         await db.execute(
-          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' as row from requests r where id = 'request'`,
+          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' - 'dispositioned_at' as row from requests r where id = 'request'`,
         )
       ).rows,
     ).toEqual(before);
@@ -59,7 +59,7 @@ it("drops return estimates while preserving Requests, submitted dates, ownership
     expect(
       (
         await db.execute(
-          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' as row from requests r where id = 'request'`,
+          sql`select to_jsonb(r) - 'department_id' - 'intake_counterparties' - 'dispositioned_at' as row from requests r where id = 'request'`,
         )
       ).rows,
     ).toEqual(before);

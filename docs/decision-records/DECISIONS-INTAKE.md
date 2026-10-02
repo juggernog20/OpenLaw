@@ -932,3 +932,14 @@ styles. Prompted catalog text Fields use the effective style through the shared 
 path, including Contract Field overrides. Sources, provenance and acceptance rules
 remain as recorded above. The same per-target validation preserves valid sibling
 answers when another value fails validation.
+
+### INT-007 built addendum (2026-10-02, #1322): the close time is stored on the Request
+
+A Request now records when it closed. Before this, it stored only when it was submitted. The close time existed only as the stamp of the `request.converted`, `request.resolved` or `request.declined` Activity entry, so no screen could measure time to close.
+
+- `requests.dispositioned_at` is a nullable `timestamptz`. Convert, Resolve and Decline set it to `now()` in the same write as the status. It therefore equals the stamp of the Activity entry that the same transaction writes. A losing second press is refused before the write, so the value is set once.
+- The check `requests_dispositioned_at_check` requires the column to be set exactly when `status` is `converted`, `resolved` or `declined`. No route reopens a closed Request.
+- Migration `0191_request-dispositioned-at` backfills every closed Request from its earliest disposition Activity entry, the same lookup the staff detail uses for "Converted by". A closed Request with no entry takes `updated_at`, so the check holds for every row. Open Requests stay null.
+- The staff Request detail shows Resolved or Declined with the date beside Submitted. The full timestamp is on hover. A converted Request keeps its "Converted by" line on the Status card.
+- The Inbox column picker offers Closed after Age. It is not in the default layout. It is blank for an open Request. The `dispositionedAt` sort key orders by close time, and open Requests sort after every closed one in ascending order.
+- The Portal does not show the close time. A turnaround report is not part of this change. This column is its base.

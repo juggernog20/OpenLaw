@@ -5,7 +5,7 @@
 
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { eq, requests } from "@openlaw/db";
+import { eq, requests, sql } from "@openlaw/db";
 import { requireRole } from "../../auth/guards.js";
 import { recordActivity, RECORD_ACTIVITY_TIER } from "../../lib/activity.js";
 import { problemResponse } from "../../lib/problem.js";
@@ -69,7 +69,10 @@ export const requestResolveRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "full_thread",
         });
 
-        await tx.update(requests).set({ status: "resolved" }).where(eq(requests.id, held.id));
+        await tx
+          .update(requests)
+          .set({ status: "resolved", dispositionedAt: sql`now()` })
+          .where(eq(requests.id, held.id));
 
         // DD-017's narration, in the transaction that wrote the status,
         // so no resolution exists without the entry that says who made

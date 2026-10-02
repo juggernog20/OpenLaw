@@ -525,6 +525,9 @@ export const StaffRequestSchema = z.object({
    * `declined`. */
   declinedReason: z.string().nullable(),
   createdAt: z.string(),
+  /** When Convert, Resolve or Decline closed the Request. NULL while it
+   * is open (INT-007). */
+  dispositionedAt: z.string().nullable(),
   requestType: StaffRequestTypeSchema,
   requester: StaffRequesterSchema,
   assignee: RequestAssigneeSchema.nullable(),
@@ -566,6 +569,7 @@ export async function staffRequestRow(db: Executor, user: AuthenticatedUser, num
       intakeCounterparties: requests.intakeCounterparties,
       declinedReason: requests.declinedReason,
       createdAt: requests.createdAt,
+      dispositionedAt: requests.dispositionedAt,
       typeId: requestTypes.id,
       typeDisplayName: requestTypes.displayName,
       targetModule: requestTypes.targetModule,
@@ -612,6 +616,7 @@ export function toStaffRequest(row: Awaited<ReturnType<typeof staffRequestRow>>)
     intakeCounterparties: row.intakeCounterparties,
     declinedReason: row.declinedReason,
     createdAt: row.createdAt.toISOString(),
+    dispositionedAt: row.dispositionedAt?.toISOString() ?? null,
     requestType: toStaffRequestType(row),
     requester: {
       id: row.requesterId,

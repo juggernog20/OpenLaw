@@ -6728,6 +6728,9 @@
   "inbox.column.age": {
     "defaultMessage": "Age"
   },
+  "inbox.column.closed": {
+    "defaultMessage": "Closed"
+  },
   "inbox.column.reference": {
     "defaultMessage": "Ref"
   },
@@ -6824,6 +6827,9 @@
   "inbox.request.convertedBy": {
     "defaultMessage": "{person, select, none {Converted on {date}} other {Converted by {person} on {date}}}"
   },
+  "inbox.request.declinedOn": {
+    "defaultMessage": "Declined"
+  },
   "inbox.request.description": {
     "defaultMessage": "Description"
   },
@@ -6844,6 +6850,9 @@
   },
   "inbox.request.resolveWithoutConverting": {
     "defaultMessage": "Resolve request without converting"
+  },
+  "inbox.request.resolvedOn": {
+    "defaultMessage": "Resolved"
   },
   "inbox.request.responses": {
     "defaultMessage": "Form responses"

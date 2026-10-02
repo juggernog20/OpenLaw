@@ -833,6 +833,24 @@ describe("the disposition scaffold, from Convert (INT-007)", () => {
     expect(await contractCount()).toBe(before);
   });
 
+  it("records the close time once, in the transaction that wrote the status (#1322)", async () => {
+    const request = await submit("When did it become work");
+    expect((await stored(request.id)).dispositionedAt).toBeNull();
+    const res = await convert(request.number, { title: "Timed NDA" });
+    expect(res.statusCode, res.body).toBe(200);
+
+    const row = await stored(request.id);
+    const entry = (await entriesOn("request", request.id)).find(
+      (e) => e.action === "request.converted",
+    )!;
+    // One transaction, one now(): the close time is the entry's own stamp.
+    expect(row.dispositionedAt).toEqual(entry.createdAt);
+    expect(res.json().request.dispositionedAt).toBe(row.dispositionedAt!.toISOString());
+
+    expect((await convert(request.number, { title: "Again" })).statusCode).toBe(409);
+    expect((await stored(request.id)).dispositionedAt).toEqual(row.dispositionedAt);
+  });
+
   it("names no record on an outcome that made none", async () => {
     const request = await submit("Declined, then converted at");
     expect(

@@ -75,6 +75,7 @@ import {
   requestTypes,
   SEVERITY_LEVELS,
   requests,
+  sql,
 } from "@openlaw/db";
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
@@ -410,9 +411,15 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               .update(requests)
               .set(
                 record.module === "contract"
-                  ? { status: "converted", convertedContractId: record.id, convertedMatterId: null }
+                  ? {
+                      status: "converted",
+                      dispositionedAt: sql`now()`,
+                      convertedContractId: record.id,
+                      convertedMatterId: null,
+                    }
                   : {
                       status: "converted",
+                      dispositionedAt: sql`now()`,
                       convertedContractId: null,
                       convertedMatterId: record.id,
                     },

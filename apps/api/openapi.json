@@ -42441,7 +42441,16 @@
           {
             "schema": {
               "type": "string",
-              "enum": ["number", "title", "type", "requester", "urgency", "createdAt", "status"]
+              "enum": [
+                "number",
+                "title",
+                "type",
+                "requester",
+                "urgency",
+                "createdAt",
+                "dispositionedAt",
+                "status"
+              ]
             },
             "in": "query",
             "name": "sort",
@@ -42583,6 +42592,9 @@
                           "createdAt": {
                             "type": "string"
                           },
+                          "dispositionedAt": {
+                            "type": ["string", "null"]
+                          },
                           "convertedContract": {
                             "anyOf": [
                               {
@@ -42656,6 +42668,7 @@
                           "requester",
                           "assignee",
                           "createdAt",
+                          "dispositionedAt",
                           "convertedContract",
                           "convertedRecord"
                         ],
@@ -43560,6 +43573,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -43711,6 +43727,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
@@ -44298,6 +44315,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -44449,6 +44469,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
@@ -44580,6 +44601,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -44731,6 +44755,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
@@ -45130,6 +45155,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -45281,6 +45309,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
@@ -45550,6 +45579,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -45701,6 +45733,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
@@ -47170,6 +47203,9 @@
                         "createdAt": {
                           "type": "string"
                         },
+                        "dispositionedAt": {
+                          "type": ["string", "null"]
+                        },
                         "requestType": {
                           "type": "object",
                           "properties": {
@@ -47321,6 +47357,7 @@
                         "customFields",
                         "declinedReason",
                         "createdAt",
+                        "dispositionedAt",
                         "requestType",
                         "requester",
                         "assignee",
