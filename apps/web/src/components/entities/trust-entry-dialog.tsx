@@ -5,7 +5,9 @@
 import { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api } from "../../lib/api";
-import type { EntityRow } from "../../lib/entities";
+import type { EntityRow, EntityPersonOption } from "../../lib/entities";
+import { registerIndividualMatch, duplicateIndividualMessage } from "../../lib/register-individual";
+import { OfficerNameInput } from "./officer-name-input";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
 import { problem } from "../../lib/problem";
@@ -34,6 +36,7 @@ export function TrustEntryDialog({
   register,
   entry,
   candidates,
+  users,
   onClose,
   onSaved,
 }: Readonly<{
@@ -41,6 +44,7 @@ export function TrustEntryDialog({
   register: TrustRegister;
   entry?: TrustEntry;
   candidates: EntityRow[];
+  users: EntityPersonOption[];
   onClose: () => void;
   onSaved: () => void;
 }>) {
@@ -50,6 +54,7 @@ export function TrustEntryDialog({
   const [pick, setPick] = useState(entry ? `party:${entry.party.id}` : "");
   const [entity, setEntity] = useState("");
   const [name, setName] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [role, setRole] = useState<TrustRole>(entry?.role ?? "trustee");
   const [roleLabel, setRoleLabel] = useState(entry?.roleLabel ?? "");
@@ -81,9 +86,18 @@ export function TrustEntryDialog({
     let party: TrustEntryBody["party"];
     if (selected.startsWith("party:")) party = { kind: "party", partyId: selected.slice(6) };
     else if (selected === "entity" && entity) party = { kind: "entity", entityId: entity };
-    else if (selected === "individual" && name.trim())
-      party = { kind: "individual", name: name.trim() };
-    else if (selected === "class" && description.trim())
+    else if (selected === "individual" && name.trim()) {
+      const { known, duplicate } = registerIndividualMatch(parties, name, userId);
+      if (duplicate) {
+        setError(intl.formatMessage(duplicateIndividualMessage));
+        return;
+      }
+      party = known
+        ? { kind: "party", partyId: known.id }
+        : userId
+          ? { kind: "user", userId }
+          : { kind: "individual", name: name.trim() };
+    } else if (selected === "class" && description.trim())
       party = { kind: "class", description: description.trim() };
     else {
       setError(
@@ -293,11 +307,17 @@ export function TrustEntryDialog({
                 <Label htmlFor="trust-name" required>
                   <FormattedMessage id="entities.ownership.fullName" defaultMessage="Full name" />
                 </Label>
-                <Input
+                <OfficerNameInput
                   id="trust-name"
-                  value={name}
-                  maxLength={200}
-                  onChange={(e) => setName(e.target.value)}
+                  name={name}
+                  userId={userId}
+                  users={users}
+                  disabled={busy}
+                  onChange={(person) => {
+                    setName(person.name);
+                    setUserId(person.userId);
+                    setError(null);
+                  }}
                 />
               </>
             ) : null}

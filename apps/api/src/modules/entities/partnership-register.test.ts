@@ -369,7 +369,7 @@ it("projects all four bases, including assignees, and matches individuals by par
     partnership.id,
     transfer(
       partyId,
-      { kind: "individual", name: "Same Name" },
+      { kind: "individual", name: "New Partner" },
       {
         units: 2,
         statedPercent: 30,
@@ -832,4 +832,38 @@ it("does not audit a percentage change when only the note changed", async () => 
   expect((logs[0]!.payload as { changed: Record<string, unknown> }).changed).not.toHaveProperty(
     "statedPercent",
   );
+});
+
+it("links users, reuses their register identity and blocks equivalent duplicate names", async () => {
+  const [person] = await harness.db.select().from(users).where(eq(users.email, MEMBER.email));
+  if (!person) throw new Error("The test member is missing.");
+  const record = await newEntity("Linked partnership individual", { registerKind: "partnership" });
+  const first = await entry(record.id, admission({ kind: "user", userId: person.id }));
+  expect(first.statusCode, first.body).toBe(201);
+  const individual = first.json().entries[0].party;
+  expect(individual).toMatchObject({
+    kind: "individual",
+    name: person.displayName,
+    userId: person.id,
+  });
+  const second = await entry(record.id, {
+    kind: "commitment",
+    effectiveOn: "2024-01-02",
+    party: { kind: "user", userId: person.id },
+    amount: 100,
+    currency: "USD",
+  });
+  expect(second.statusCode, second.body).toBe(201);
+  expect(second.json().entries[1].party.id).toBe(individual.id);
+  const duplicate = await entry(
+    record.id,
+    admission({
+      kind: "individual",
+      name: "  " + person.displayName.toUpperCase().replace(/ /g, "   ") + " ",
+    }),
+  );
+  expect(duplicate.statusCode, duplicate.body).toBe(409);
+  expect(duplicate.json().detail).toContain("already in the register");
+  const missing = await entry(record.id, admission({ kind: "user", userId: "missing-user" }));
+  expect(missing.statusCode, missing.body).toBe(400);
 });

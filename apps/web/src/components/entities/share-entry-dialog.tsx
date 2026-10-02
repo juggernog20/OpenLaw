@@ -29,11 +29,13 @@ import { NumberInput } from "../number-input";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { OfficerNameInput } from "./officer-name-input";
+import { registerIndividualMatch, duplicateIndividualMessage } from "../../lib/register-individual";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 type Side = "from" | "to";
-type HolderChoice = { pick: string; entityId: string; name: string };
+type HolderChoice = { pick: string; entityId: string; name: string; userId: string | null };
 type IssuedDraft = { number: string; holder: Side; quantity: string; distinctiveNumbers: string };
 
 /** Which ends a kind takes: true required, false refused, null optional. */
@@ -45,12 +47,22 @@ const SIDES: Record<ShareEntryKind, { from: boolean | null; to: boolean | null }
   conversion: { from: true, to: false },
 };
 
-const NONE: HolderChoice = { pick: "", entityId: "", name: "" };
+const NONE: HolderChoice = { pick: "", entityId: "", name: "", userId: null };
 
-function holderBody(choice: HolderChoice): ShareEntryBody["from"] {
+function holderBody(
+  choice: HolderChoice,
+  holders: ReturnType<typeof knownHolders>,
+): ShareEntryBody["from"] {
   if (choice.pick.startsWith("holder:")) return { kind: "holder", holderId: choice.pick.slice(7) };
   if (choice.pick === "entity") return { kind: "entity", entityId: choice.entityId };
-  if (choice.pick === "individual") return { kind: "individual", name: choice.name.trim() };
+  if (choice.pick === "individual") {
+    const { known } = registerIndividualMatch(holders, choice.name, choice.userId);
+    return known
+      ? { kind: "holder", holderId: known.id }
+      : choice.userId
+        ? { kind: "user", userId: choice.userId }
+        : { kind: "individual", name: choice.name.trim() };
+  }
   return null;
 }
 
@@ -59,6 +71,7 @@ export function ShareEntryDialog({
   register,
   entry,
   candidates,
+  users,
   onOpenChange,
   onSaved,
 }: Readonly<{
@@ -67,6 +80,7 @@ export function ShareEntryDialog({
   register: ShareRegister;
   entry?: RegisterEntry;
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   onOpenChange: (open: boolean) => void;
   onSaved: (register: ShareRegister) => void;
 }>) {
@@ -171,8 +185,17 @@ export function ShareEntryDialog({
       );
       return null;
     }
-    const fromBody = sides.from === false ? null : holderBody(from);
-    const toBody = sides.to === false ? null : holderBody(to);
+    for (const selected of [sides.from === false ? NONE : from, sides.to === false ? NONE : to]) {
+      if (
+        selected.pick === "individual" &&
+        registerIndividualMatch(holders, selected.name, selected.userId).duplicate
+      ) {
+        setError(intl.formatMessage(duplicateIndividualMessage));
+        return null;
+      }
+    }
+    const fromBody = sides.from === false ? null : holderBody(from, holders);
+    const toBody = sides.to === false ? null : holderBody(to, holders);
     if (sides.from === true && !fromBody) {
       setError(
         intl.formatMessage({
@@ -390,18 +413,19 @@ export function ShareEntryDialog({
           </select>
         ) : null}
         {choice.pick === "individual" ? (
-          <Input
-            aria-label={intl.formatMessage({
+          <OfficerNameInput
+            label={intl.formatMessage({
               id: "entities.ownership.fullName",
               defaultMessage: "Full name",
             })}
-            maxLength={200}
-            placeholder={intl.formatMessage({
-              id: "entities.ownership.fullName",
-              defaultMessage: "Full name",
-            })}
-            value={choice.name}
-            onChange={(event) => set({ ...choice, name: event.target.value })}
+            name={choice.name}
+            userId={choice.userId}
+            users={users}
+            disabled={busy}
+            onChange={(person) => {
+              set({ ...choice, ...person });
+              setError(null);
+            }}
           />
         ) : null}
       </div>

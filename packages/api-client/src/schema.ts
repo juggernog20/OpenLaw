@@ -37460,6 +37460,7 @@ export interface operations {
                     kind: "entity" | "individual";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                     jurisdiction: string | null;
                   }
                 | {
@@ -37507,6 +37508,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -37526,6 +37528,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -37637,6 +37640,7 @@ export interface operations {
                     kind: "entity" | "individual";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                     jurisdiction: string | null;
                   }
                 | {
@@ -37684,6 +37688,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -37703,6 +37708,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -37845,6 +37851,7 @@ export interface operations {
                     kind: "entity" | "individual";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                     jurisdiction: string | null;
                   }
                 | {
@@ -37892,6 +37899,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -37911,6 +37919,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -38003,6 +38012,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           to?:
@@ -38021,6 +38035,11 @@ export interface operations {
                     /** @enum {string} */
                     kind: "individual";
                     name: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
                   }
               )
             | null;
@@ -38075,6 +38094,7 @@ export interface operations {
                     kind: "entity" | "individual";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                     jurisdiction: string | null;
                   }
                 | {
@@ -38122,6 +38142,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -38141,6 +38162,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -38264,6 +38286,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           to?:
@@ -38282,6 +38309,11 @@ export interface operations {
                     /** @enum {string} */
                     kind: "individual";
                     name: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
                   }
               )
             | null;
@@ -38336,6 +38368,7 @@ export interface operations {
                     kind: "entity" | "individual";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                     jurisdiction: string | null;
                   }
                 | {
@@ -38383,6 +38416,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -38402,6 +38436,7 @@ export interface operations {
                         kind: "entity" | "individual";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                         jurisdiction: string | null;
                       }
                     | {
@@ -38497,6 +38532,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38523,6 +38559,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38555,6 +38592,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               role:
                 ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
@@ -38666,6 +38704,11 @@ export interface operations {
               }
             | {
                 /** @enum {string} */
+                kind: "user";
+                userId: string;
+              }
+            | {
+                /** @enum {string} */
                 kind: "class";
                 description: string;
               };
@@ -38708,6 +38751,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38734,6 +38778,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38766,6 +38811,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               role:
                 ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
@@ -38874,6 +38920,11 @@ export interface operations {
               }
             | {
                 /** @enum {string} */
+                kind: "user";
+                userId: string;
+              }
+            | {
+                /** @enum {string} */
                 kind: "class";
                 description: string;
               };
@@ -38916,6 +38967,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38942,6 +38994,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               /** @enum {string} */
               role: "settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other";
@@ -38974,6 +39027,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               role:
                 ("settlor" | "trustee" | "protector" | "enforcer" | "beneficiary" | "other") | null;
@@ -39065,6 +39119,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39094,6 +39149,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39147,6 +39203,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39165,6 +39222,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39183,6 +39241,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39296,6 +39355,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           fromParty?:
@@ -39315,6 +39379,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           toParty?:
@@ -39333,6 +39402,11 @@ export interface operations {
                     /** @enum {string} */
                     kind: "individual";
                     name: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
                   }
               )
             | null;
@@ -39385,6 +39459,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39414,6 +39489,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39467,6 +39543,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39485,6 +39562,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39503,6 +39581,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39613,6 +39692,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           fromParty?:
@@ -39632,6 +39716,11 @@ export interface operations {
                     kind: "individual";
                     name: string;
                   }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
+                  }
               )
             | null;
           toParty?:
@@ -39650,6 +39739,11 @@ export interface operations {
                     /** @enum {string} */
                     kind: "individual";
                     name: string;
+                  }
+                | {
+                    /** @enum {string} */
+                    kind: "user";
+                    userId: string;
                   }
               )
             | null;
@@ -39702,6 +39796,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39731,6 +39826,7 @@ export interface operations {
                     kind: "entity" | "individual" | "class";
                     name: string;
                     entityId: string | null;
+                    userId?: string | null;
                   };
               capacity: ("general" | "limited") | null;
               /** @enum {string} */
@@ -39784,6 +39880,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39802,6 +39899,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;
@@ -39820,6 +39918,7 @@ export interface operations {
                         kind: "entity" | "individual" | "class";
                         name: string;
                         entityId: string | null;
+                        userId?: string | null;
                       }
                   )
                 | null;

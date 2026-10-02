@@ -111,6 +111,7 @@ export const entityShareholders = pgTable(
       .references(() => entities.id),
     kind: text("kind", { enum: SHAREHOLDER_KINDS }).notNull(),
     holderEntityId: text("holder_entity_id").references(() => entities.id),
+    userId: text("user_id").references(() => users.id),
     name: text("name"),
     ...timestamps(),
   },
@@ -120,6 +121,13 @@ export const entityShareholders = pgTable(
     uniqueIndex("entity_shareholders_entity_holder_idx")
       .on(table.entityId, table.holderEntityId)
       .where(sql`${table.kind} = 'entity'`),
+    uniqueIndex("entity_shareholders_user_idx")
+      .on(table.entityId, table.userId)
+      .where(sql`${table.userId} is not null`),
+    check(
+      "entity_shareholders_user_kind",
+      sql`${table.userId} is null or ${table.kind} = 'individual'`,
+    ),
     check(
       "entity_shareholders_kind_shape",
       sql`(${table.kind} = 'entity' and ${table.holderEntityId} is not null and ${table.name} is null)

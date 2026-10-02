@@ -32,6 +32,7 @@ import { CurrencySchema } from "../../lib/currencies.js";
 import { csvRow } from "../../lib/csv.js";
 import { NO_ENTITY, reachedEntity, reachedEntityIds } from "../../lib/entity-access.js";
 import { assertRegisterKind, lockEntityRegisters } from "../../lib/entity-register-kind.js";
+import { resolveRegisterIndividual } from "../../lib/register-individual.js";
 import { httpError, problemResponse } from "../../lib/problem.js";
 import { END_OF_TIME, todayIsoDate } from "../../lib/share-register.js";
 import { assertNoRegisterCycle } from "../../lib/ownership-cycle.js";
@@ -45,6 +46,7 @@ const PartyInput = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("party"), partyId: z.string().min(1).max(64) }),
   z.strictObject({ kind: z.literal("entity"), entityId: z.string().min(1).max(64) }),
   z.strictObject({ kind: z.literal("individual"), name: z.string().trim().min(1).max(200) }),
+  z.strictObject({ kind: z.literal("user"), userId: z.string().min(1).max(64) }),
 ]);
 const EntryBody = z
   .strictObject({
@@ -100,6 +102,7 @@ const PartyRef = z.discriminatedUnion("restricted", [
     kind: z.enum(REGISTER_PARTY_KINDS),
     name: z.string(),
     entityId: z.string().nullable(),
+    userId: z.string().nullable().optional(),
   }),
 ]);
 const Totals = z.object({
@@ -162,6 +165,7 @@ async function readParties(db: Executor, entityId: string) {
       kind: entityRegisterParties.kind,
       partyEntityId: entityRegisterParties.partyEntityId,
       name: entityRegisterParties.name,
+      userId: entityRegisterParties.userId,
       description: entityRegisterParties.description,
       entityName: entities.legalName,
     })
@@ -198,6 +202,7 @@ async function readRegister(db: Executor, user: AuthenticatedUser, entityId: str
             kind: p.kind,
             name: p.entityName ?? p.name ?? p.description ?? "",
             entityId: p.partyEntityId,
+            userId: p.userId,
           },
     ]),
   );
@@ -287,13 +292,19 @@ async function resolveParty(
     const existing = parties.find((p) => p.partyEntityId === input.entityId);
     if (existing) return existing;
   }
+  const individual =
+    input.kind === "individual" || input.kind === "user"
+      ? await resolveRegisterIndividual(tx, input, parties)
+      : null;
+  if (individual?.existingId) return parties.find((party) => party.id === individual.existingId)!;
   const [created] = await tx
     .insert(entityRegisterParties)
     .values({
       entityId,
-      kind: input.kind,
+      kind: input.kind === "user" ? "individual" : input.kind,
       partyEntityId: input.kind === "entity" ? input.entityId : null,
-      name: input.kind === "individual" ? input.name : null,
+      name: individual?.name ?? null,
+      userId: individual?.userId ?? null,
       description: null,
     })
     .returning();

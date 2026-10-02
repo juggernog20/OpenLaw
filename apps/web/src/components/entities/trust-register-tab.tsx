@@ -69,12 +69,14 @@ export function TrustRegisterTab({
   register,
   holdings,
   candidates,
+  users,
   frozen,
 }: Readonly<{
   entity: EntityRow;
   register: TrustRegister;
   holdings: EntityHoldings;
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   frozen: boolean;
 }>) {
   const intl = useIntl();
@@ -261,17 +263,6 @@ export function TrustRegisterTab({
                   />
                 )}
               </h2>
-              <span className="text-xs text-muted">
-                <FormattedMessage
-                  id="entities.trust.meta"
-                  defaultMessage="{parties, plural, one {# party} other {# parties}} · {roles, plural, one {# role} other {# roles}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
-                  values={{
-                    parties: new Set(rows.map((r) => r.party.id)).size,
-                    roles: rows.length,
-                    entries: register.entries.filter((e) => e.applied).length,
-                  }}
-                />
-              </span>
               <ExportLink entityId={entity.id} kind="parties" asOf={register.asOf}>
                 <FormattedMessage
                   id="entities.register.members.export"
@@ -584,6 +575,7 @@ export function TrustRegisterTab({
           register={register}
           entry={dialog.entry}
           candidates={candidates}
+          users={users}
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null);

@@ -176,12 +176,14 @@ export function PartnershipRegisterTab({
   register,
   holdings,
   candidates,
+  users,
   frozen,
 }: Readonly<{
   entity: EntityRow;
   register: PartnershipRegister;
   holdings: EntityHoldings;
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   frozen: boolean;
 }>) {
   const intl = useIntl();
@@ -730,6 +732,7 @@ export function PartnershipRegisterTab({
           register={register}
           entry={dialog.entry}
           candidates={candidates}
+          users={users}
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null);

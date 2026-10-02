@@ -627,3 +627,34 @@ describe("trust register", () => {
     );
   });
 });
+
+it("links users, reuses their register identity and blocks equivalent duplicate names", async () => {
+  const [person] = await harness.db.select().from(users).where(eq(users.email, MEMBER.email));
+  if (!person) throw new Error("The test member is missing.");
+  const record = await newEntity("Linked trust individual", { registerKind: "trust" });
+  const first = await entry(record.id, appointment({ kind: "user", userId: person.id }));
+  expect(first.statusCode, first.body).toBe(201);
+  const individual = first.json().entries[0].party;
+  expect(individual).toMatchObject({
+    kind: "individual",
+    name: person.displayName,
+    userId: person.id,
+  });
+  const second = await entry(
+    record.id,
+    appointment({ kind: "user", userId: person.id }, { role: "trustee" }),
+  );
+  expect(second.statusCode, second.body).toBe(201);
+  expect(second.json().entries[1].party.id).toBe(individual.id);
+  const duplicate = await entry(
+    record.id,
+    appointment({
+      kind: "individual",
+      name: "  " + person.displayName.toUpperCase().replace(/ /g, "   ") + " ",
+    }),
+  );
+  expect(duplicate.statusCode, duplicate.body).toBe(409);
+  expect(duplicate.json().detail).toContain("already in the register");
+  const missing = await entry(record.id, appointment({ kind: "user", userId: "missing-user" }));
+  expect(missing.statusCode, missing.body).toBe(400);
+});

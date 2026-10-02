@@ -3,12 +3,7 @@
 /** The Entity type editor, with identity and the DD-028 Form on routed sections. */
 
 import { useState } from "react";
-import {
-  REGISTER_KINDS,
-  registerKindLabels,
-  registerKindDescriptions,
-  type RegisterKind,
-} from "../lib/register-kind";
+import { REGISTER_KINDS, registerKindLabels, type RegisterKind } from "../lib/register-kind";
 import { CONTROL_CLASS } from "../lib/form-controls";
 import { Label } from "../components/ui/label";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -101,7 +96,6 @@ function RegisterSelect({
         disabled={disabled || busy}
         className={CONTROL_CLASS}
         onChange={(e) => void save(e.target.value as RegisterKind)}
-        aria-describedby="type-register-help"
       >
         {REGISTER_KINDS.map((k) => (
           <option key={k} value={k}>
@@ -109,9 +103,6 @@ function RegisterSelect({
           </option>
         ))}
       </select>
-      <p id="type-register-help" className="text-muted">
-        {intl.formatMessage(registerKindDescriptions[kind])}
-      </p>
       {error ? (
         <p role="alert" className="text-status-danger-fg">
           {error}

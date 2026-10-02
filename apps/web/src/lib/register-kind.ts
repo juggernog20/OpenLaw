@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/**
- * ENT-013's fixed register vocabulary, with localized labels and descriptions
- * shared by the Entity type editor and the Ownership controls.
- */
+/** ENT-013's fixed register vocabulary and localized labels. */
 
 import { defineMessages } from "react-intl";
 
@@ -14,22 +11,4 @@ export const registerKindLabels = defineMessages({
   partnership: { id: "entities.registerKind.partnership", defaultMessage: "Partnership register" },
   trust: { id: "entities.registerKind.trust", defaultMessage: "Trust register" },
   none: { id: "entities.registerKind.none", defaultMessage: "None" },
-});
-export const registerKindDescriptions = defineMessages({
-  shares: {
-    id: "entities.registerKind.sharesHelp",
-    defaultMessage: "Share classes, holders and dated movements of shares.",
-  },
-  partnership: {
-    id: "entities.registerKind.partnershipHelp",
-    defaultMessage: "Partners, their capacity and capital.",
-  },
-  trust: {
-    id: "entities.registerKind.trustHelp",
-    defaultMessage: "Trust parties, their roles and the trust fund.",
-  },
-  none: {
-    id: "entities.registerKind.noneHelp",
-    defaultMessage: "No register. Record a head office for a branch.",
-  },
 });

@@ -75,7 +75,28 @@ Migration `0082_great_betty_ross` adds `entity_registrations`. The Entity Overvi
 
 Holdings now read and write from either Entity, with graph-wide transaction locking and a full-path cycle check before each insert. Aggregate ownership above 100 percent returns a warning and still commits. The chart endpoint derives one primary owner per Entity by percent and legal name.
 
-The web chart uses a dependency-free SVG layout. A compact layered forest places leaf nodes in horizontal slots and centers each primary owner over its children. Entities without Holdings occupy a final row. Secondary Holdings use dashed curves. The SVG supports pointer drag, wheel zoom, arrow-key pan, keyboard zoom, and fit-to-window.
+The web chart uses a dependency-free SVG layout. A compact layered forest places leaf nodes in horizontal slots and centers each primary owner over its children. ~~Entities without Holdings occupy a final row.~~ (Superseded by the disconnected-structures amendment below.) Secondary Holdings use dashed curves. The SVG supports pointer drag, wheel zoom, arrow-key pan, keyboard zoom, and fit-to-window.
+
+### Disconnected structures amendment (2026-10-02)
+
+Structures with no relationship between them sit side by side, aligned at the top,
+with a gap between their full bounds. Holdings, branch links and trust-role links
+all connect a structure. Each structure keeps its internal hierarchy; isolated
+Entities occupy their own position beside the structures. The viewer and chart
+exports share this layout.
+
+### Register individuals amendment (2026-10-02, ENT-011, ENT-014 and ENT-015)
+
+Share, partnership and trust entry pickers allow selecting an active OpenLaw user
+or entering an external individual's name. Holder and party rows retain an optional
+user link alongside their recorded name. Repeated selection of that user reuses
+the existing individual in the same register. A newly entered name matching an
+existing individual, after Unicode normalization, case folding and collapsing
+spaces, is refused with an instruction to select the existing individual. This
+amends the earlier allowance for duplicate names within a register; names do not
+automatically merge people or link existing records to users. Existing duplicates
+remain readable and entries can still refer to them by id. All writes check under
+the register lock, and a user link grants no Entity access.
 
 ### Individual owner addendum (2026-09-18)
 
@@ -255,6 +276,13 @@ Migration 0186 pins shares on existing Entities with share data when their type 
 names another register. [#1250](https://github.com/juggernog20/OpenLaw/issues/1250),
 [PR #1264](https://github.com/juggernog20/OpenLaw/pull/1264), adds the upgrade fixture for an old partnership-typed Entity with shares and the
 register-kind and head-office guide.
+
+### Ownership controls amendment (2026-10-02)
+
+The Ownership tab no longer displays the register-kind source or offers a Change
+register dialog. Administrators choose the register on the Entity type in Settings.
+Existing stored overrides and upgrade pins remain supported so existing register
+data stays reachable. Head-office editing remains on Ownership for kind `none`.
 
 ## ENT-014 — The partnership register: partners with capacity, capital and units; an ownership basis projects Holdings
 
