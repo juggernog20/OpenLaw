@@ -7352,6 +7352,15 @@
   "knowledge.onPortal": {
     "defaultMessage": "On the portal"
   },
+  "knowledge.portalReady": {
+    "defaultMessage": "Portal-ready"
+  },
+  "knowledge.portalReadyHelp": {
+    "defaultMessage": "No deflection link points here yet. Business Users reach this item only through one. Ask an Administrator to add it in Settings, Intake, Deflection links."
+  },
+  "knowledge.portalReadyHelpAdmin": {
+    "defaultMessage": "No deflection link points here yet. Business Users reach this item only through one. <link>Add one in Settings, Intake, Deflection links.</link>"
+  },
   "knowledge.reach.title": {
     "defaultMessage": "Remove this from the portal?"
   },
@@ -8631,7 +8640,7 @@
     "defaultMessage": "Download"
   },
   "portal.knowledge.downloadNamed": {
-    "defaultMessage": "Download {filename}"
+    "defaultMessage": "Download {title}"
   },
   "portal.knowledge.files": {
     "defaultMessage": "Documents"
@@ -9726,7 +9735,7 @@
     "defaultMessage": "Searching…"
   },
   "search.searchingBody": {
-    "defaultMessage": "Looking across Contracts, Matters, Documents, Entities, Counterparties, and Requests."
+    "defaultMessage": "Looking across Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items."
   },
   "search.seeAll": {
     "defaultMessage": "See all results"

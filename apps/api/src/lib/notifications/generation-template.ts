@@ -49,7 +49,11 @@ export function renderGenerationMail(input: {
                   `${block.ordered ? `${i + 1}.` : "-"} ${textInline(item, input.baseUrl)}`,
               )
               .join("\n")
-          : textInline(block.children, input.baseUrl),
+          : block.kind === "table"
+            ? [block.header, ...block.rows]
+                .map((row) => row.map((cell) => textInline(cell, input.baseUrl)).join(" | "))
+                .join("\n")
+            : textInline(block.children, input.baseUrl),
     )
     .join("\n\n");
   const brand = input.organizationName ? `${input.organizationName} · OpenLaw` : "OpenLaw";

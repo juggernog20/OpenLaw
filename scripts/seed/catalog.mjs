@@ -515,7 +515,7 @@ export const KNOWLEDGE_ITEMS = [
     title: "Data Processing Addendum - controller to processor",
     audience: "everyone",
     published: true,
-    body: "Attach this whenever Helix processes personal data on a customer's behalf. The 2021 standard contractual clauses are annexed. Module Two applies for most deals; check with Privacy before using Module Three.",
+    body: "Use this DPA whenever Helix processes personal data on a customer's behalf. The 2021 standard contractual clauses are annexed. Module Two applies for most deals; check with Privacy before using Module Three.",
   },
   {
     folder: "Templates",

@@ -39,6 +39,8 @@ The optional `body` stores Markdown source. The editor gives source and preview 
 
 **M35/8 addendum, #851:** The allowlist parser now lives in `@openlaw/shared`. Knowledge still renders its nodes as owned React elements. Auto-Doc cover notes use those same nodes for escaped HTML and plain-text email. The accepted Markdown and link protocols are unchanged.
 
+**Table addendum (2026-10-02, [#1314](https://github.com/juggernog20/OpenLaw/issues/1314)):** The allowlist adds a pipe table node. A table needs a header row, a delimiter row of dashes with the same number of cells, and body rows. A pipe line without a delimiter row stays a paragraph. Cells accept the same inline Markdown as a paragraph, and the same link protocols. Knowledge renders the node as owned `table`, `th scope="col"`, and `td` elements, and a wide table scrolls in its own box. The Auto-Doc cover note HTML email renders it as a data table with inline styles and no `role="presentation"`. The plain-text email prints each row as its cells joined by " | ". The no-raw-HTML rule holds: the table is an owned element, and its cell text stays escaped.
+
 ## KNW-002 — Publishing: Member+ authors, draft/published, edit-in-place
 
 - **Status** — Accepted
@@ -81,6 +83,10 @@ The portal article is read-only: its title, current-version downloads, and body,
 ### Built addendum (2026-09-18, security review H2) — the Portal applies the Document Confidential flag
 
 A Document on a Knowledge Item may carry the DOC-008 Confidential flag, and the Portal reads apply the same Document audience predicate every staff read applies. A flagged Document leaves the Portal article's file list, and its download answers the article's own 404 body. Only an Administrator reaches a flagged Knowledge Document; a Legal Team Member and a Business User do not, whatever the item's audience. The item gate above is unchanged.
+
+### Built addendum (2026-10-02, [#1294](https://github.com/juggernog20/OpenLaw/issues/1294)) — the portal badge follows deflection links
+
+The staff record names portal reach with one of two badges. Both show only while the item is live, published, and `everyone`. With one or more deflection links pointing at the item, the badge reads "On the portal". With none, it reads "Portal-ready", and a note at the top of the record body says that Business Users reach the item only through a deflection link. A Legal Team Member's note asks an Administrator to add one. An Administrator's note links to Settings, Intake, Deflection links. Draft, Legal Only, and archived items show neither badge. The surfacing line above is unchanged: the Portal still has no Knowledge list or search, and only an Administrator places a deflection link under INT-004.
 
 ## KNW-005 — Deferred set: search intelligence, usage tracking, staleness, AI, external ingestion
 
