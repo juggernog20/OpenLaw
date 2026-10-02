@@ -295,13 +295,17 @@ describe("Matter Tasks", () => {
         .where(and(eq(notifications.userId, teammateId), eq(notifications.entityId, matter.id))),
     ).toHaveLength(1);
     await harness.db.insert(matterTeam).values({ matterId: matter.id, userId: contributorId });
-    expect((await editRaw(task.id, { assigneeId: contributorId })).statusCode).toBe(400);
-    expect(
-      await harness.db
-        .select()
-        .from(notifications)
-        .where(and(eq(notifications.userId, contributorId), eq(notifications.entityId, matter.id))),
-    ).toHaveLength(0);
+    expect((await editRaw(task.id, { assigneeId: contributorId })).statusCode).toBe(200);
+    const portal = await harness.db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.userId, contributorId), eq(notifications.entityId, matter.id)));
+    expect(portal).toHaveLength(1);
+    expect(portal[0]).toMatchObject({ eventType: "matter.task_assigned" });
+    await waitForMail(CONTRIBUTOR.email, "Draft response");
+    expect(harness.mailer.messagesTo(CONTRIBUTOR.email).at(-1)!.text).toContain(
+      `/portal/matters/${matter.number}\n`,
+    );
     const self = await add(matter.number, { title: "Take it myself", assigneeId: memberId });
     expect(self.assigneeId).toBe(memberId);
     expect(
@@ -338,10 +342,11 @@ describe("Matter Tasks", () => {
     });
   });
 
-  it("refuses Business User Task reads and mutations on their team", async () => {
+  it("refuses Business User staff Task reads and mutations, even on their own Task", async () => {
     const reached = await newMatter("Contributor checklist", { contributor: true });
     const hidden = await newMatter("Hidden checklist", { confidential: true });
-    const visibleTask = await add(reached.number, { title: "Visible" });
+    const visibleTask = await add(reached.number, { title: "Visible", assigneeId: contributorId });
+    expect(visibleTask.assigneeId).toBe(contributorId);
     const hiddenTask = await add(hidden.number, { title: "Hidden" });
     expect((await listRaw(reached.number, contributorCookies)).statusCode).toBe(403);
     for (const response of [

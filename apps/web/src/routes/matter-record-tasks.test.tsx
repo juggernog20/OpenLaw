@@ -23,6 +23,14 @@ const TEAMMATE = {
   role: "member",
 };
 
+const BUSINESS_USER = {
+  id: "felix",
+  displayName: "Felix Brandt",
+  image: null,
+  archived: false,
+  role: "business_user",
+};
+
 function matter(overrides: Record<string, unknown> = {}) {
   return {
     id: "matter-12",
@@ -103,6 +111,7 @@ function recordApi(
             },
             { ...MEMBER, image: null, archived: false },
             { ...TEAMMATE, role: "legal_team_member" },
+            BUSINESS_USER,
           ],
         });
       }
@@ -301,6 +310,32 @@ describe("team-first task picker", () => {
     ]);
     picker = within(screen.getByRole("dialog", { name: "Assign task" }));
     expect(picker.getByRole("button", { name: "Olivia Outsider" })).toBeInTheDocument();
+  });
+
+  it("offers a Business User through Add someone to the team and assigns the Task to them", async () => {
+    const api = recordApi([task()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/matters/12/tasks");
+    const user = userEvent.setup();
+    const card = within(await screen.findByRole("region", { name: "Tasks" }));
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+    );
+    const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(picker.queryByRole("button", { name: "Felix Brandt" })).not.toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+    await user.type(picker.getByRole("textbox", { name: "Search people" }), "Felix");
+    await user.click(picker.getByRole("button", { name: "Felix Brandt" }));
+    await user.click(picker.getByRole("button", { name: "Add to team and assign" }));
+    await waitFor(() =>
+      expect(api.writes).toEqual([
+        {
+          method: "PATCH",
+          path: "/api/v1/matter-tasks/task-1",
+          body: { assigneeId: "felix", addToTeam: true },
+        },
+      ]),
+    );
   });
 
   it("does not offer team expansion to someone who cannot manage the confidential audience", async () => {

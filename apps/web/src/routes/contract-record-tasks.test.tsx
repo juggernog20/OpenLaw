@@ -37,6 +37,13 @@ const PEOPLE = [
     archived: false,
     role: "legal_team_member",
   },
+  {
+    id: "felix",
+    displayName: "Felix Brandt",
+    image: null,
+    archived: false,
+    role: "business_user",
+  },
 ];
 
 const OPTIONS = {
@@ -563,6 +570,30 @@ describe("the record's Tasks section (CTR-017)", () => {
 });
 
 describe("team-first task picker", () => {
+  it("offers a Business User through Add someone to the team and assigns the task to them", async () => {
+    const api = recordApi([task()]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/tasks");
+    const user = userEvent.setup();
+    const card = await section();
+    await user.click(
+      card.getByRole("button", { name: "Change assignee for Draft the NDA: Unassigned" }),
+    );
+    const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+    expect(picker.queryByRole("button", { name: "Felix Brandt" })).not.toBeInTheDocument();
+    await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+    await user.type(picker.getByRole("textbox", { name: "Search people" }), "Felix");
+    await user.click(picker.getByRole("button", { name: "Felix Brandt" }));
+    await user.click(picker.getByRole("button", { name: "Add to team and assign" }));
+    await waitFor(() =>
+      expect(api.writes.at(-1)).toEqual({
+        method: "PATCH",
+        path: "/api/v1/tasks/t-1",
+        body: { assigneeId: "felix", addToTeam: true },
+      }),
+    );
+  });
+
   it("requires confirmation before adding someone, then includes them in the team choices", async () => {
     const api = recordApi([task()]);
     stubApi({ signedIn: MEMBER, extra: api.handler });

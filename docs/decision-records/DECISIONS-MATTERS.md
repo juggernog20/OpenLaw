@@ -322,9 +322,19 @@ The Team panel groups entries by person: one avatar and name, with every held ro
 
 Four testers created a Matter or a Contract and found their own new record Unassigned. The rationale above stands: `manager_id` stays nullable, null stays a real state, and nothing invents an owner for work nobody has picked up. What changes is the two acts where a person is plainly taking the work on. The Create matter dialog seeds its Matter Manager picker with the acting person, who can clear it to Unassigned before pressing Create. Conversion from a Request seeds the converting person the same way, as INT-002's 2026-09-06 addendum already records. The Contract side is CTR-004's addendum of the same date, with the Owner picker in the Create contract dialog and `managerId` on `POST /contracts`.
 
+### Addendum (2026-10-02, [#1320](https://github.com/juggernog20/OpenLaw/issues/1320)): a Business User owns and closes their own Task
+
+Focus group, 2026-09-29. A Legal Team Member needed a Business User on the Matter team to send evidence. The assignee picker offered only Legal people, so the ask had no tracked owner. This addendum brings "Tasks in the Business Portal" out of FUTURE-FEATURES. It applies to Contract Tasks under CTR-017 and to Matter Tasks alike.
+
+**Assignment.** A Legal Team Member can assign a Task to an active Business User who is on the record's team. The ordinary team rule holds: the assignee must already be on the team, or the Legal Team Member uses **Add someone to the team… → Add to team and assign**, which now also offers Business Users. On a Confidential record that addition still needs the permission to change the Confidential team. The assignment notification reaches the Business User in the Portal bell, and its email links to the record in the Portal. The Portal bell shows the notification only while the Task is still theirs, on a record they still reach.
+
+**The Business User's one Task action.** A Business User sees the Tasks assigned to them on the Contracts and Matters they reach in the Portal: a **Tasks** destination lists them across records, and each Portal record lists the viewer's own Tasks on it. Each row shows the title, the due date with the overdue marker, and on the list, a link to the record. The Business User can complete or reopen their own Task. The write logs `task.completed` or `task.reopened` with them as actor, in the same transaction. Portal reach is a team row on a non-archived record, so team removal hides the Tasks on the next read, and a closed Matter or an ended Contract keeps them.
+
+**What stays Legal.** Adding, editing, reassigning, reordering and removing Tasks stay Member+. A Business User cannot toggle another person's Task, and every staff Task route still refuses them. They do not see Tasks assigned to anyone else, and the Task detail dialog and its thread stay in the app.
+
 ## MTR-006: External counsel — collaboration via Contributor role; fee tracking deferred
 
-**2026-09-11 amendment:** External counsel collaboration is deferred under DD-023 and recorded in FUTURE-FEATURES. Contributor accounts migrate to Business Users. The former collaboration path and its implementation addenda below are historical. Task completion remains Member+.
+**2026-09-11 amendment:** External counsel collaboration is deferred under DD-023 and recorded in FUTURE-FEATURES. Contributor accounts migrate to Business Users. The former collaboration path and its implementation addenda below are historical. ~~Task completion remains Member+.~~ Superseded by the MTR-005 addendum of 2026-10-02: a Business User completes their own Task in the Portal.
 
 - **Status:** Accepted
 - **Date:** 2026-08-02
@@ -370,9 +380,11 @@ The shipped external-counsel path is the ordinary Contributor path end to end: i
 
 Two Contributors in the focus group (a procurement lead and an HR partner) found a Task assigned to them with a checkbox they could not tick, and rated it their top ask. The counsel who assigned it expected them to be able to.
 
-**Decision, confirmed.** Completing a Task is a legal action and stays Member+ (DD-015). A Contributor may be named as a Task's assignee so the record shows who is doing the work, and may say "done" in the thread, but the tick belongs to a Legal Team Member with access to the record. The UI must say so: a disabled checkbox with no explanation reads as a bug, so the Task row and dialog carry the reason in words for a Contributor.
+~~**Decision, confirmed.** Completing a Task is a legal action and stays Member+ (DD-015). A Contributor may be named as a Task's assignee so the record shows who is doing the work, and may say "done" in the thread, but the tick belongs to a Legal Team Member with access to the record. The UI must say so: a disabled checkbox with no explanation reads as a bug, so the Task row and dialog carry the reason in words for a Contributor.~~
 
-**Deferred.** Tasks do not appear in the Business Portal today. Showing a requester their own Tasks there, and letting them close one, is recorded in FUTURE-FEATURES rather than decided.
+~~**Deferred.** Tasks do not appear in the Business Portal today. Showing a requester their own Tasks there, and letting them close one, is recorded in FUTURE-FEATURES rather than decided.~~
+
+Superseded by the MTR-005 addendum of 2026-10-02: a Business User on the team can own a Task, and completes or reopens it in the Portal.
 
 ## MTR-007: Matter ↔ Contract — contracts standalone by default, linked to a matter when part of broader work
 

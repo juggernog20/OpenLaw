@@ -51,6 +51,7 @@ import {
   asc,
   contracts,
   contractApprovals,
+  contractTasks,
   comments,
   sql,
   ne,
@@ -62,6 +63,7 @@ import {
   isNotNull,
   isNull,
   matters,
+  matterTasks,
   matterTeam,
   notifications,
   or,
@@ -691,6 +693,15 @@ export const PORTAL_SHARED_EVENTS: readonly NotificationEventType[] = [
   "document.version_added",
 ];
 
+/**
+ * Task assignments a Business User hears about in the Portal (MTR-005 addendum,
+ * 2026-10-02). The Portal bell shows one only while the Task is still theirs.
+ */
+export const PORTAL_TASK_EVENTS: readonly NotificationEventType[] = [
+  "contract.task_assigned",
+  "matter.task_assigned",
+];
+
 /** Portal news names only work and shared conversation the current team can open. */
 function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
   const sharedNews = or(
@@ -713,7 +724,33 @@ function portalScope(db: Executor, user: AuthenticatedUser): SQL | undefined {
       ),
     ),
   );
+  const ownTask = (kind: "contract" | "matter") => {
+    const tasks = kind === "contract" ? contractTasks : matterTasks;
+    const recordId = kind === "contract" ? contractTasks.contractId : matterTasks.matterId;
+    const record = kind === "contract" ? contracts : matters;
+    return and(
+      eq(notifications.entityType, kind),
+      inArray(
+        sql<string>`${notifications.payload}->>'taskId'`,
+        db
+          .select({ id: tasks.id })
+          .from(tasks)
+          .innerJoin(record, eq(record.id, recordId))
+          .where(
+            and(
+              eq(tasks.assigneeId, user.id),
+              eq(recordId, notifications.entityId),
+              portalRecordScope(db, user, kind),
+            ),
+          ),
+      ),
+    );
+  };
   return or(
+    and(
+      inArray(notifications.eventType, PORTAL_TASK_EVENTS),
+      or(ownTask("contract"), ownTask("matter")),
+    ),
     and(
       eq(notifications.entityType, CONTRACT_ENTITY),
       eq(notifications.eventType, "approval.requested"),

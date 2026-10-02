@@ -440,11 +440,7 @@ function MatterRecord() {
   const taskAssignees = useMemo(() => {
     const candidates = [
       ...(saved.manager && !saved.manager.archived ? [saved.manager] : []),
-      ...team.filter(
-        (person) =>
-          !person.archived &&
-          users.some((user) => user.id === person.id && user.role !== "business_user"),
-      ),
+      ...team.filter((person) => !person.archived && users.some((user) => user.id === person.id)),
     ];
     return [...new Map(candidates.map((person) => [person.id, person])).values()];
   }, [saved.manager, team, users]);
@@ -1472,9 +1468,7 @@ function MatterRecord() {
                 teamExpansion={
                   !frozen && !audienceLocked
                     ? {
-                        people: users.filter(
-                          (person) => !person.archived && person.role !== "business_user",
-                        ),
+                        people: users.filter((person) => !person.archived),
                         onAdded: (id) => {
                           const person = users.find((candidate) => candidate.id === id);
                           if (person)

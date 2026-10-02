@@ -8957,6 +8957,48 @@
   "portal.settings.title": {
     "defaultMessage": "Notification settings"
   },
+  "portal.tasks.assigned": {
+    "defaultMessage": "Tasks assigned to you"
+  },
+  "portal.tasks.completed": {
+    "defaultMessage": "Completed: {title}"
+  },
+  "portal.tasks.count": {
+    "defaultMessage": "{count, plural, one {# Task} other {# Tasks}}"
+  },
+  "portal.tasks.description": {
+    "defaultMessage": "Legal assigned these Tasks to you. Mark a Task done when you finish it."
+  },
+  "portal.tasks.empty": {
+    "defaultMessage": "No open Tasks assigned to you."
+  },
+  "portal.tasks.emptyAll": {
+    "defaultMessage": "No Tasks assigned to you."
+  },
+  "portal.tasks.loadFailed": {
+    "defaultMessage": "Tasks could not be loaded. Try again."
+  },
+  "portal.tasks.loadMore": {
+    "defaultMessage": "Load more Tasks"
+  },
+  "portal.tasks.navigation": {
+    "defaultMessage": "Tasks"
+  },
+  "portal.tasks.record": {
+    "defaultMessage": "{title} · {kind, select, contract {Contract C-{number}} other {Matter M-{number}}}"
+  },
+  "portal.tasks.reopened": {
+    "defaultMessage": "Reopened: {title}"
+  },
+  "portal.tasks.saveFailed": {
+    "defaultMessage": "The Task could not be saved. Try again."
+  },
+  "portal.tasks.title": {
+    "defaultMessage": "Your Tasks"
+  },
+  "portal.tasks.toggle": {
+    "defaultMessage": "{done, select, true {Reopen Task: {title}} other {Complete Task: {title}}}"
+  },
   "portal.team.confidential": {
     "defaultMessage": "Ask Legal to add members to a Confidential record."
   },
