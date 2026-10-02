@@ -271,9 +271,10 @@ describe("Home", () => {
     ).toHaveAttribute("href", "/contracts/42/approvals");
     expect(within(card).getByText(/Requested by Priya Nair/)).toBeInTheDocument();
     expect(within(card).getByRole("img", { name: "Confidential" })).toBeInTheDocument();
+    // Ended Contracts too, so the list count equals the card total.
     expect(within(card).getByRole("link", { name: "View all 5" })).toHaveAttribute(
       "href",
-      "/contracts",
+      "/contracts?awaitingMyApproval=true&includeEnded=true",
     );
     expect(screen.queryByText("Welcome to OpenLaw")).not.toBeInTheDocument();
   });

@@ -1078,6 +1078,20 @@ describe("quick contract filters", () => {
     },
   );
 
+  it("opens Home's approvals link with Waiting on my approval and Show ended on", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?awaitingMyApproval=true&includeEnded=true");
+    expect(
+      await screen.findByRole("button", { name: "Remove Waiting on my approval filter" }),
+    ).toBeInTheDocument();
+    expect(surface.queries.at(-1)?.get("awaitingMyApproval")).toBe("true");
+    expect(surface.queries.at(-1)?.get("includeEnded")).toBe("true");
+    const user = userEvent.setup();
+    await toggleListFlag(user, "Waiting on my approval", { router, flag: "awaitingMyApproval" });
+    expect(surface.queries.at(-1)?.has("awaitingMyApproval")).toBe(false);
+  });
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });

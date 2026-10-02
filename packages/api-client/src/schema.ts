@@ -26223,6 +26223,7 @@ export interface operations {
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"
@@ -41048,6 +41049,7 @@ export interface operations {
         expiryTo?: string;
         includeArchived?: "true" | "false";
         includeEnded?: "true" | "false";
+        awaitingMyApproval?: "true" | "false";
         sort?:
           | "number"
           | "title"

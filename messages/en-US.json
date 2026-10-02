@@ -8996,6 +8996,9 @@
   "recordFilters.apply": {
     "defaultMessage": "Apply"
   },
+  "recordFilters.awaitingMyApproval": {
+    "defaultMessage": "Waiting on my approval"
+  },
   "recordFilters.back": {
     "defaultMessage": "Back to filters"
   },

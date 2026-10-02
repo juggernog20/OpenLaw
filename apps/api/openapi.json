@@ -48925,6 +48925,15 @@
           {
             "schema": {
               "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "awaitingMyApproval",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": [
                 "number",
                 "title",
@@ -94671,6 +94680,15 @@
             },
             "in": "query",
             "name": "includeEnded",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "awaitingMyApproval",
             "required": false
           },
           {

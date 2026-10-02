@@ -460,6 +460,39 @@ describe("GET /api/v1/home", () => {
     expect(section.rows.some((row) => row.contract.id === contract.id)).toBe(false);
   });
 
+  it("totals the same Contracts as the list's Waiting on my approval link, ended ones too", async () => {
+    const ended = await newContract("Ended while waiting");
+    await ask(ended);
+    const [endedStatus] = await harness.db
+      .select({ id: contractStatuses.id })
+      .from(contractStatuses)
+      .where(eq(contractStatuses.stage, "ended"))
+      .limit(1);
+    await harness.db
+      .update(contracts)
+      .set({ statusId: endedStatus!.id, endedAt: new Date() })
+      .where(eq(contracts.id, ended.id));
+    try {
+      const section = approvalsIn(await home(APPROVER))!;
+      const list = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/contracts?awaitingMyApproval=true&includeEnded=true",
+        cookies: as(APPROVER),
+      });
+      expect(list.statusCode, list.body).toBe(200);
+      const answer = list.json() as { total: number; contracts: { id: string }[] };
+      expect(section.total).toBe(5);
+      expect(answer.total).toBe(section.total);
+      expect(answer.contracts.map((row) => row.id)).toContain(ended.id);
+    } finally {
+      // Out of every later section's way.
+      await harness.db
+        .update(contracts)
+        .set({ archivedAt: new Date() })
+        .where(eq(contracts.id, ended.id));
+    }
+  });
+
   it("merges the viewer's open Contract and Matter Tasks before ordering, totals, and the cap", async () => {
     const [openMatterStatus] = await harness.db
       .select({ id: matterStatuses.id })

@@ -101,6 +101,14 @@ export function useRecordFilterDefinitions(
             kind: "date",
           },
           {
+            key: "awaitingMyApproval",
+            label: intl.formatMessage({
+              id: "recordFilters.awaitingMyApproval",
+              defaultMessage: "Waiting on my approval",
+            }),
+            kind: "flag",
+          },
+          {
             key: "includeEnded",
             label: intl.formatMessage({ id: "contracts.showEnded", defaultMessage: "Show ended" }),
             kind: "flag",

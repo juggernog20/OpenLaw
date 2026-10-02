@@ -1478,6 +1478,9 @@ export const ContractListQuery = z
      * default list shows all non-ended stages, because ended is
      * a signal that the deal is done, not a lock. */
     includeEnded: z.enum(["true", "false"]).optional(),
+    /** Only Contracts with a pending Approval request whose approver is
+     * the reader (CTR-012). Home's Approvals View all opens it. */
+    awaitingMyApproval: z.enum(["true", "false"]).optional(),
     /**
      * Which column to order on (DD-019 clause 2). Omit for the
      * list's natural order, newest reference first. A closed set:

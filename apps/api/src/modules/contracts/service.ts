@@ -9,6 +9,7 @@
 import type { Db, SQL } from "@openlaw/db";
 import {
   and,
+  contractApprovals,
   contracts,
   contractStatuses,
   contractTypes,
@@ -146,6 +147,14 @@ export async function listContracts(
     choiceFilter(contracts.contractTypeId, query.type),
     ourEntityFilter(db, user, query.entity),
     choiceFilter(contracts.termType, query.termType),
+    // The Home Approvals section's own predicate, so the two totals agree.
+    query.awaitingMyApproval === "true"
+      ? sql`exists (select 1 from ${contractApprovals} where ${and(
+          eq(contractApprovals.contractId, contracts.id),
+          eq(contractApprovals.approverId, user.id),
+          eq(contractApprovals.status, "pending"),
+        )})`
+      : undefined,
     dateFilter(contracts.effectiveDate, query.effectiveFrom, query.effectiveTo),
     dateFilter(contracts.expiryDate, query.expiryFrom, query.expiryTo),
     // A Contributor's list is the contracts they are on. An
