@@ -39,6 +39,8 @@ The optional `body` stores Markdown source. The editor gives source and preview 
 
 **M35/8 addendum, #851:** The allowlist parser now lives in `@openlaw/shared`. Knowledge still renders its nodes as owned React elements. Auto-Doc cover notes use those same nodes for escaped HTML and plain-text email. The accepted Markdown and link protocols are unchanged.
 
+**Table addendum (2026-10-02, [#1314](https://github.com/juggernog20/OpenLaw/issues/1314)):** The allowlist adds a pipe table node. A table needs a header row, a delimiter row of dashes with the same number of cells, and body rows. A pipe line without a delimiter row stays a paragraph. Cells accept the same inline Markdown as a paragraph, and the same link protocols. Knowledge renders the node as owned `table`, `th scope="col"`, and `td` elements, and a wide table scrolls in its own box. The Auto-Doc cover note HTML email renders it as a data table with inline styles and no `role="presentation"`. The plain-text email prints each row as its cells joined by " | ". The no-raw-HTML rule holds: the table is an owned element, and its cell text stays escaped.
+
 ## KNW-002 — Publishing: Member+ authors, draft/published, edit-in-place
 
 - **Status** — Accepted

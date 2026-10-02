@@ -560,7 +560,10 @@ describe("a Knowledge record", () => {
   });
 
   it("previews Markdown as allowlisted React elements and exposes History", async () => {
-    stubApi({ signedIn: MEMBER, extra: recordApi([]) });
+    const table =
+      "\n\n| Contract | Value |\n| --- | --- |\n" +
+      "| *C-17* | [ledger](https://example.com/c17) |\n| <b>C-18</b> | [void](javascript:alert(2)) |";
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { body: String(item().body) + table }) });
     renderAt("/knowledge/knowledge-1");
     const user = userEvent.setup();
     // Saved guidance opens rendered, with Edit one click away (#1318).
@@ -574,6 +577,21 @@ describe("a Knowledge record", () => {
     );
     expect(screen.queryByRole("link", { name: "bad" })).not.toBeInTheDocument();
     expect(screen.getByText(/<img src=x onerror=alert/)).toBeInTheDocument();
+    // A pipe table renders as an owned table, its cells read as paragraphs do (#1314).
+    const grid = within(screen.getByRole("region", { name: "Guidance" })).getByRole("table");
+    expect(
+      within(grid)
+        .getAllByRole("columnheader")
+        .map((cell) => cell.textContent),
+    ).toEqual(["Contract", "Value"]);
+    const cells = within(grid).getAllByRole("cell");
+    expect(cells).toHaveLength(4);
+    expect(within(cells[0]!).getByText("C-17").tagName).toBe("EM");
+    expect(
+      within(cells[1]!).getByRole("link", { name: "ledger (opens in a new tab)" }),
+    ).toHaveAttribute("href", "https://example.com/c17");
+    expect(cells[2]).toHaveTextContent("<b>C-18</b>");
+    expect(within(grid).queryByRole("link", { name: /void/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "History" }));
     expect(
       await screen.findByText(
