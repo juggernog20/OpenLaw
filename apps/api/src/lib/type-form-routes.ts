@@ -509,7 +509,11 @@ export function typeFormRoutes(
             actorId: request.user.id,
             action: `${module}_type.updated`,
             visibility: "admin_only",
-            payload: { slug: type.slug, changed: changes(before, result, names) },
+            payload: {
+              slug: type.slug,
+              displayName: type.displayName,
+              changed: changes(before, result, names),
+            },
           });
           return { form: result };
         }),

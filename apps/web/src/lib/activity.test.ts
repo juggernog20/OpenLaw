@@ -49,6 +49,7 @@ const TAXONOMY_RENAME = { slug: "nda", from: "N.D.A.", to: "NDA" };
 /** What an edit of a taxonomy row's description looks like. */
 const TAXONOMY_UPDATE = {
   slug: "nda",
+  displayName: "NDA",
   changed: { description: { from: null, to: "Short-form confidentiality" } },
 };
 const TAXONOMY_ARCHIVE = {
@@ -1788,6 +1789,20 @@ describe("the sentences a reader gets", () => {
     );
     expect(narrate("contract_type_field.attached", TYPE_FIELD_ATTACH).sentence).toBe(
       "Nadia Counsel attached the field Governing law to the contract type Nda",
+    );
+  });
+
+  it("names a changed or renamed type by the name the Administrator saw (#1300)", () => {
+    expect(
+      narrate("matter_type.updated", { slug: "m_a", displayName: "M&A", changed: {} }).sentence,
+    ).toBe("Nadia Counsel changed the matter type M&A");
+    // A rename's payload has no display name. Its new name is the name.
+    expect(
+      narrate("contract_type.renamed", { slug: "nda", from: "N.D.A.", to: "NDA" }).sentence,
+    ).toBe("Nadia Counsel renamed the contract type NDA");
+    // The log is append-only, so an entry written before the name was stored keeps the slug.
+    expect(narrate("matter_type.updated", { slug: "m_a", changed: {} }).sentence).toBe(
+      "Nadia Counsel changed the matter type M a",
     );
   });
 

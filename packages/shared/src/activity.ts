@@ -81,7 +81,7 @@ export type TypeFieldActionPrefix =
 type TaxonomyPayloads = {
   created: { slug: string; displayName: string };
   renamed: { slug: string; from: string; to: string };
-  updated: { slug: string; changed: ChangedFields };
+  updated: { slug: string; displayName: string; changed: ChangedFields };
   reordered: { order: string[] };
   /** `reassignedTo` names the type the rows moved to, or null when none
    * were using this one. */

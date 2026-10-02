@@ -728,7 +728,7 @@ export function taxonomyRoutes<
               actorId: request.user.id,
               action: `${config.actionPrefix}.updated`,
               visibility: "admin_only",
-              payload: { slug: target.slug, changed },
+              payload: { slug: target.slug, displayName: updated!.displayName, changed },
             });
           }
           return updated!;

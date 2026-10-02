@@ -238,6 +238,7 @@ const addProbeType = async (displayName: string): Promise<ProbeRow> => {
 
 const UpdatedPayload = z.object({
   slug: z.string(),
+  displayName: z.string(),
   changed: z.record(z.string(), z.unknown()),
 });
 

@@ -1403,7 +1403,12 @@ function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
     renamed: {
       icon,
       message: TAXONOMY.renamed,
-      values,
+      // A rename's payload carries the new name as `to` and no display
+      // name, so the slug is the last resort here.
+      values: (intl, payload) => ({
+        kind,
+        name: text(payload, "displayName") ?? text(payload, "to") ?? thingName(intl, payload),
+      }),
       changes: (intl, payload, context) => directChange(intl, payload, "displayName", context),
     },
     updated: { icon, message: TAXONOMY.updated, values, changes: typeChanges },

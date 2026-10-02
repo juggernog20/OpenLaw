@@ -141,8 +141,11 @@ it("lets only Administrators manage an ordered, deduplicated list of live people
     .where(eq(activityLog.action, "contract_type.updated"))
     .orderBy(asc(activityLog.createdAt));
   const reorder = entries.at(-1)!.payload as {
+    displayName: string;
     changed: { defaultPeople: { from: string[]; to: string[] } };
   };
+  // The type is named as the Administrator saw it, not by its slug (#1300).
+  expect(reorder.displayName).toBe("Default people");
   expect(reorder.changed.defaultPeople.to).toEqual([
     "business_user",
     "legal_team_member",

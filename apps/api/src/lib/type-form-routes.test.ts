@@ -125,6 +125,8 @@ it("round-trips nested Branches and audits one whole replacement", async () => {
   const entries = audit.filter((a) => (a.payload as { slug: string }).slug === type!.slug);
   expect(entries).toHaveLength(1);
   expect(JSON.stringify(entries[0]!.payload)).toContain(first.rowRef);
+  // The type is named as the Administrator saw it, not by its slug (#1300).
+  expect(entries[0]!.payload).toMatchObject({ displayName: type!.displayName });
 });
 
 type Changed = Record<
@@ -633,6 +635,13 @@ it("does not copy Contract type default people or the default approver group", a
       })
     ).statusCode,
   ).toBe(200);
+  const [type] = await h.db.select().from(contractTypes).where(eq(contractTypes.id, id));
+  const approvals = (
+    await h.db.select().from(activityLog).where(eq(activityLog.action, "contract_type.updated"))
+  ).filter((a) => JSON.stringify(a.payload).includes("defaultApproverGroupId"));
+  expect(approvals.map((a) => a.payload)).toContainEqual(
+    expect.objectContaining({ slug: type!.slug, displayName: type!.displayName }),
+  );
   const res = await h.app.inject({
     method: "POST",
     url: `/api/v1/contract-types/${id}/duplicate`,
