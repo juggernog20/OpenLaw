@@ -41,8 +41,13 @@ const MEMBER = {
 const FIXTURE_SIZE = 60;
 
 /** Three dates over thirty dated rows: ten rows per date, so every tie
- * the cursor has to break is a ten-way one. */
-const DATES = ["2027-01-31", "2027-06-30", "2027-11-30"] as const;
+ * the cursor has to break is a ten-way one. Far in the future, because
+ * Next deadline drops a date once it has passed. */
+const DATES = ["2097-01-31", "2097-06-30", "2097-11-30"] as const;
+
+/** Every fourth row has a notice period, so Notice by has five-way ties
+ * over fifteen rows, and those rows' Next deadline is the notice date. */
+const NOTICE_DAYS = 30;
 
 let harness: TestHarness;
 let memberCookies: Record<string, string>;
@@ -52,7 +57,14 @@ const made: { id: string; number: number; title: string }[] = [];
 
 interface ListAnswer {
   total: number;
-  contracts: { id: string; number: number; title: string; expiryDate: string | null }[];
+  contracts: {
+    id: string;
+    number: number;
+    title: string;
+    expiryDate: string | null;
+    noticeDeadline: string | null;
+    nextDeadline: { date: string; label: string } | null;
+  }[];
   nextCursor: string | null;
 }
 
@@ -101,7 +113,10 @@ beforeAll(async () => {
       index % 2 === 0
         ? harness.db
             .update(contracts)
-            .set({ expiryDate: DATES[(index / 2) % DATES.length] })
+            .set({
+              expiryDate: DATES[(index / 2) % DATES.length],
+              noticePeriodDays: index % 4 === 0 ? NOTICE_DAYS : null,
+            })
             .where(eq(contracts.id, row.id))
         : Promise.resolve(),
     ),
@@ -327,6 +342,39 @@ describe("the keyset cursor under a sort with ties and nulls", () => {
     expect(following.every((row) => row.expiryDate === null)).toBe(true);
   });
 
+  it.each([
+    ["nextDeadline", 30],
+    ["noticeDeadline", 15],
+  ] as const)(
+    "walks every row once under %s, both ways, with the rows that have no date last",
+    async (key, datedCount) => {
+      const value = (row: ListAnswer["contracts"][number]) =>
+        key === "nextDeadline" ? (row.nextDeadline?.date ?? null) : row.noticeDeadline;
+      for (const dir of ["asc", "desc"] as const) {
+        const rows = mine(await walk({ sort: key, dir }));
+        expect(rows).toHaveLength(FIXTURE_SIZE);
+        expect(new Set(rows.map((row) => row.id)).size).toBe(FIXTURE_SIZE);
+        const dated = rows.filter((row) => value(row) !== null);
+        expect(dated).toHaveLength(datedCount);
+        expect(rows.slice(0, dated.length)).toEqual(dated);
+        const dates = dated.map((row) => value(row)!);
+        expect(dates).toEqual(dir === "asc" ? [...dates].sort() : [...dates].sort().reverse());
+        for (const date of new Set(dates)) {
+          const tied = dated.filter((row) => value(row) === date).map((row) => row.number);
+          expect(tied).toEqual([...tied].sort((a, b) => b - a));
+        }
+
+        // A cursor inside the dated rows takes the boundary branch that
+        // reads the derived value back from the table.
+        const boundary = 7;
+        const after = await page({ sort: key, dir }, rows[boundary]!.id);
+        expect(mine(after.contracts).map((row) => row.id)).toEqual(
+          rows.slice(boundary + 1, boundary + 51).map((row) => row.id),
+        );
+      }
+    },
+  );
+
   it("answers an empty page for a cursor naming a contract this viewer cannot reach", async () => {
     // A confidential contract nobody added this member to. The cursor
     // resolves to nothing under their scope, so the page is empty rather
@@ -355,6 +403,21 @@ describe("the keyset cursor under a sort with ties and nulls", () => {
 });
 
 describe("what each sort key orders on", () => {
+  it("orders Next deadline and Notice by on the derived date, nearest first", async () => {
+    const shift = (date: string, days: number) =>
+      new Date(Date.parse(`${date}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+    const notice = shift(DATES[0], NOTICE_DAYS);
+
+    const byDeadline = mine(await walk({ sort: "nextDeadline", dir: "asc" }));
+    // A notice deadline comes before its own expiry, so it leads.
+    expect(byDeadline[0]!.nextDeadline).toMatchObject({ date: notice, label: "Notice deadline" });
+    expect(byDeadline.at(29)!.nextDeadline?.date).toBe(DATES[2]);
+
+    const byNotice = mine(await walk({ sort: "noticeDeadline", dir: "asc" }));
+    expect(byNotice[0]!.noticeDeadline).toBe(notice);
+    expect(byNotice[0]!.expiryDate).toBe(DATES[0]);
+  });
+
   it("folds case on a title sort, so one alphabet comes back and not two", async () => {
     const rows = mine(await walk({ sort: "title", dir: "asc" }));
     expect(rows).toHaveLength(FIXTURE_SIZE);
@@ -396,7 +459,7 @@ describe("what the seam refuses", () => {
   it("refuses a sort key it does not know", async () => {
     const res = await harness.app.inject({
       method: "GET",
-      url: "/api/v1/contracts?sort=noticeDeadline",
+      url: "/api/v1/contracts?sort=daysRemaining",
       cookies: memberCookies,
     });
     expect(res.statusCode).toBe(400);

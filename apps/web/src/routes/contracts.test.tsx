@@ -1065,6 +1065,19 @@ describe("quick contract filters", () => {
     expect(screen.getByRole("button", { name: "Term type: Auto-renewing" })).toBeInTheDocument();
   });
 
+  it.each(["nextDeadline", "noticeDeadline"])(
+    "reads the %s sort from a link and carries it to the list read",
+    async (key) => {
+      const surface = filteringApi();
+      stubApi({ signedIn: MEMBER, extra: surface.handler });
+      // The shape of a copied link: filterSearch always writes filters=1.
+      renderAt(`/contracts?filters=1&view=all&sort=${key}&dir=desc`);
+      await screen.findByRole("button", { name: /^Filter/ });
+      expect(surface.queries.at(-1)?.get("sort")).toBe(key);
+      expect(surface.queries.at(-1)?.get("dir")).toBe("desc");
+    },
+  );
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });

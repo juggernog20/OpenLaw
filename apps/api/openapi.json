@@ -48937,6 +48937,8 @@
                 "priority",
                 "effectiveDate",
                 "expiryDate",
+                "nextDeadline",
+                "noticeDeadline",
                 "createdAt",
                 "updatedAt"
               ]
@@ -94686,6 +94688,8 @@
                 "priority",
                 "effectiveDate",
                 "expiryDate",
+                "nextDeadline",
+                "noticeDeadline",
                 "createdAt",
                 "updatedAt"
               ]

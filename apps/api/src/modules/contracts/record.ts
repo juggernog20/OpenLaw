@@ -852,7 +852,7 @@ export async function readNextDeadline(db: Executor, user: AuthenticatedUser, id
  * boundary, and a sort the client could name freely would be a sort
  * nothing indexes and an ordering the cursor cannot reproduce.
  *
- * Three of the expressions are not the column they are named after,
+ * Some of the expressions are not the column they are named after,
  * and each departure earns a reader something:
  *
  * - **Text sorts fold case.** `lower(...)` on every name, so "acme"
@@ -864,6 +864,10 @@ export async function readNextDeadline(db: Executor, user: AuthenticatedUser, id
  * - **Risk and priority order by severity.** They are stored as slugs,
  *   so ordering the text would read critical, high, low, medium —
  *   DES-018's ramp put them in a sequence, and this reproduces it.
+ * - **Next deadline and Notice by order on derived dates.** No index
+ *   serves them, and Next deadline depends on today, so a list paged
+ *   across midnight can shift by a row. The Matters deadline filter
+ *   accepts the same trade.
  */
 const SORTS: Record<ContractSortKey, { expr: SQL; joined: boolean }> = {
   number: { expr: sql`${contracts.number}`, joined: false },
@@ -877,6 +881,16 @@ const SORTS: Record<ContractSortKey, { expr: SQL; joined: boolean }> = {
   priority: { expr: severityRank(contracts.priority), joined: false },
   effectiveDate: { expr: sql`${contracts.effectiveDate}`, joined: false },
   expiryDate: { expr: sql`${contracts.expiryDate}`, joined: false },
+  // A getter, because Next deadline reads today and a value built once
+  // would keep the day the server started. It reads the Status stage,
+  // so the boundary row needs the joins.
+  get nextDeadline() {
+    return { expr: sql`((${nextDeadline("contract")}) ->> 'date')::date`, joined: true };
+  },
+  noticeDeadline: {
+    expr: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,
+    joined: false,
+  },
   createdAt: { expr: sql`${contracts.createdAt}`, joined: false },
   updatedAt: { expr: sql`${contracts.updatedAt}`, joined: false },
 };

@@ -26235,6 +26235,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";
@@ -41058,6 +41060,8 @@ export interface operations {
           | "priority"
           | "effectiveDate"
           | "expiryDate"
+          | "nextDeadline"
+          | "noticeDeadline"
           | "createdAt"
           | "updatedAt";
         dir?: "asc" | "desc";
