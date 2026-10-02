@@ -8640,7 +8640,7 @@
     "defaultMessage": "Download"
   },
   "portal.knowledge.downloadNamed": {
-    "defaultMessage": "Download {filename}"
+    "defaultMessage": "Download {title}"
   },
   "portal.knowledge.files": {
     "defaultMessage": "Documents"
