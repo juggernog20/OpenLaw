@@ -5,7 +5,8 @@ import { CalendarClock } from "lucide-react";
 import { Link } from "react-router";
 import { FormattedMessage } from "react-intl";
 import type { ObligationsHomeSection } from "../../lib/home";
-import { formatDeadline, formatFullDate } from "../../lib/format";
+import { formatFullDate } from "../../lib/format";
+import { DueDate } from "../due-date";
 import { HomeSectionCard } from "./section-card";
 
 export function HomeObligationsCard({ section }: Readonly<{ section: ObligationsHomeSection }>) {
@@ -47,18 +48,7 @@ export function HomeObligationsCard({ section }: Readonly<{ section: Obligations
                 </span>
               </span>
             </span>
-            <time
-              dateTime={row.dueDate}
-              title={formatFullDate(row.dueDate)}
-              className={`shrink-0 rounded-pill px-2 py-0.5 text-xs font-semibold ${row.isOverdue ? "bg-status-severe-bg text-status-severe-fg" : "text-muted"}`}
-            >
-              {row.isOverdue ? (
-                <span className="sr-only">
-                  <FormattedMessage id="home.obligations.overdue" defaultMessage="Overdue" />{" "}
-                </span>
-              ) : null}
-              {formatDeadline(row.dueDate)}
-            </time>
+            <DueDate date={row.dueDate} overdue={row.isOverdue} className="shrink-0" />
           </Link>
         </li>
       ))}

@@ -1046,9 +1046,15 @@ Component code stays declarative (`<span>{formatRelativeOrShort(comment.createdA
 - **Session seam.** `configureFormatting({ locale, timeZone })` is where the stored user preference lands when a session loads; per-call options override it, then browser detection, then UTC — the DES resolution order. Tests inject `locale`, `timeZone`, and `now` for determinism.
 - **Sub-minute activity.** Renders as ICU's own "this minute" (`RelativeTimeFormat` with `numeric: "auto"`), not an invented "just now" string. Casing throughout follows ICU ("yesterday" lowercase — the decision table's "Yesterday" was illustrative).
 - **Day math.** The relative-or-short window uses truncated 24-hour units (feed precision); `formatDeadline` uses calendar days in the display timezone, because deadlines are dates. Year elision likewise compares calendar years in the display timezone.
-- **Deadline qualifier window.** The "(in 7 days)" / "(3 days overdue)" qualifier shows within ±30 calendar days and drops beyond, where the absolute date alone reads better. The "overdue" wording is helper-owned ICU copy (`format.deadline.overdue`); future and today qualifiers come from `RelativeTimeFormat` directly.
+- **Deadline qualifier window.** The "(in 7 days)" / "(3 days overdue)" qualifier shows within ±30 calendar days and drops beyond, where the absolute date alone reads better. The "overdue" wording is helper-owned ICU copy (`format.deadline.overdue`); future and today qualifiers come from `RelativeTimeFormat` directly. _Narrowed by the 2026-10-02 clarification below: the window applies to future dates only._
 - **File sizes.** Intl `unit` style with SI decimal steps (1 kB = 1000 bytes) — the labels ICU renders are SI units, so the math matches them.
 - **The `<TimeStamp>` component** from the consequences waits for its first consumer; this ticket shipped the pure library only (#43).
+
+**Overdue qualifier clarification (2026-10-02, [#1276](https://github.com/juggernog20/OpenLaw/issues/1276), [#1275](https://github.com/juggernog20/OpenLaw/issues/1275)):** the 30-day window on the due-date qualifier applies to future dates only. An overdue date keeps its "(N days overdue)" qualifier at any age. Before this, a date 39 days late read only "Aug 21", and the 2026-09-29 focus group read such Obligations as future dates. The qualifier is the existing `format.deadline.overdue` copy, so no new message lands. A past Matter Key date already counts as overdue in the Key dates tally, so its longer qualifier agrees with the card.
+
+- **One overdue pill.** `DueDate` in `apps/web/src/components/due-date.tsx` draws an open due date: the severe pill and an "Overdue" prefix for screen readers when the date is overdue, and muted `formatDeadline` text when it is not. Home's Entity obligations card, the compliance calendar list and the Entity Obligations tab use it.
+- **The month grid.** An overdue chip keeps its severe colours and gains the same "Overdue" prefix in its accessible name.
+- **Completed rows.** A completed Obligation shows a plain `formatShortDate` date and no overdue text.
 
 ---
 
@@ -1271,6 +1277,10 @@ Explicit edit mode + atomic save: batches log entries, but mode-juggling on ever
 Field components need saving/saved/error micro-states (design-system addition). C.6/C.7 deleted from mocks. Bulk edits, if ever needed, are a list-surface feature, not a record-page mode.
 
 _(2026-08-28, high-level review, [#552](https://github.com/juggernog20/OpenLaw/issues/552): the micro-states shipped as `StatusNote` plus eleven hand-written copies of the state machine behind it, which had already diverged. The design-system addition this clause promised is now built: `useFieldCommit` in `apps/web/src/lib/field-commit.ts` is the implementation of the micro-states clause, with `useRowCommit` for row-keyed settings lists. The hook owns the saving/saved/error note per field, the Enter-then-blur double-submit guard, the unchanged-value no-op, and the empty-required revert. It answers every commit with a `CommitOutcome` (the refusal's `detail` and TECH-020 `type`), so a screen can act on a refusal without reading the note. `StatusNote` draws what the hook says. A new per-field surface uses the hook, never a local copy. `entity-record.tsx` is the canonical example; the other ten copies migrate one route per touch, not in a sweep.)_
+
+### Addendum (2026-10-02, [#1282](https://github.com/juggernog20/OpenLaw/issues/1282)): Esc reverts record fields, not list filters
+
+"Esc reverts the in-progress edit" governs record fields only. A list filter is a view setting and writes no record. When a filter popover closes with Escape or a click outside, it applies a changed draft, as Apply does. This holds for the Filter menu, a filter chip and the Advanced search value list. An unchanged draft closes with no read. A date range that ends before it starts does not apply, and the popover stays open with its error. The Back arrow still discards the draft. A focus group panelist pressed Escape to close and expected the ticks to stay. The chip's remove control undoes a filter in one press. Reverting on Escape and applying only on a click outside was rejected.
 
 ## DES-018: Chromatic discipline — status families kept, one severity ramp for ordinal scales, uniform avatars
 
@@ -1796,6 +1806,16 @@ Putting the filter bar inside the card rather than in its header strip is the on
 
 `apps/web/src/routes/settings-audit-log.tsx` is the pane. No new tokens: the row is `bg-control`, `border-muted`, `border-default`, `text-primary`, and `text-muted`, and the badge reuses the confidential and counter pairs, all already valued and gated. `lib/format.ts` gains `dayBounds`, which turns a civil date into the two instants it covers in the reader's timezone — the first surface to filter on a date range, and not the last. `lib/roles.ts` gains the role wording that the Users pane, the wizard, and the Profile pane each held a copy of, because the narration is the fourth reader of it. The narration layer's entry type is now structural rather than the record feed's response shape, so both surfaces narrate the same rows without either converting for the other.
 
+### Addendum (2026-10-02, [#1317](https://github.com/juggernog20/OpenLaw/issues/1317)): a Period preset and a summary line
+
+An Administrator who asked "who changed settings this week" typed a From date by hand, then selected Show older until 218 entries loaded, and counted the people by eye. The answer was two people. This addendum adds two things to the pane.
+
+**A seventh filter control.** Period is a native select before From and To, with Any time, Today, Last 7 days, Last 30 days and Custom. A preset fills From and To with civil dates in the reader's timezone. A range ends today and counts today as one of its days. The dates then go through `dayBounds`, as typed dates do. Editing either date sets Period to Custom. Clear filters sets it back to Any time. The filter bar still wraps, so seven controls need no new layout.
+
+**A summary line under the filter bar.** When any filter is set, one line at 12px `text-muted` on a `border-default` rule says how many entries match and how many each person wrote, most first: "218 entries. Devon Calloway 140, Daniel Okafor 78." The top five people show, then "and 3 more". Each name is a link Button that sets the Person filter. Entries with no person are counted under "OpenLaw", the name their sentences use, and that name is not a control. The line is absent when no filter is set and when nothing matches.
+
+This supersedes "No total anywhere" in the foot clause for the filtered case only. That clause and DES-026 refused a count because a paged feed counts only what it has loaded. The summary does not come from the pages. `GET /audit-log/summary` counts on the server with the same filter predicate and record reach as the page, so the total is the whole filtered set and a record outside the reader's reach adds nothing. The foot is unchanged.
+
 ## DES-028: The confidential record page — the Tier 2 banner and the flag control (extends DES-009)
 
 - **Status:** Accepted
@@ -1919,6 +1939,10 @@ _M11/6 adds the inline variant's second surface: a **document** row in the contr
 Home renders the inline lock and literal `CONFI` beside reachable Confidential Contract and Matter titles in its Approvals, Tasks, Dates, Your contracts, and Your matters sections. The marker keeps its accessible name and carries no background wash. Record reach runs before totals and the four-row cap, so an unreachable Confidential record still contributes no title, marker, row, count, or gap.
 
 This closes the last future surface named in this record's consequences. Search adopted the marker in M25, and Home adopts it in M29.
+
+### Addendum (2026-10-02, [#1306](https://github.com/juggernog20/OpenLaw/issues/1306)): the inline marker has a hover title
+
+A focus group panelist read the lock and "CONFI" as a clipped word and took it for a rendering bug. The inline marker keeps the drawn "CONFI", because the density reason above still holds in list rows. It now has a `title` of "Confidential", the same message as its accessible name, so a hover gives a sighted reader the whole word. The micro variant stays decorative and has no title. Drawing the full word and drawing the lock alone were both rejected. Each needs addenda to DES-009, this record and DES-069, and only one of 20 panelists misread the marker.
 
 ## DES-030: The shell scroll model — one viewport tall, and `main` owns the scroll
 
@@ -2225,6 +2249,18 @@ Every documents table on a record takes the 76px trailing cell, whether or not t
 
 `designs/contracts.pen` is the reference: C4 rebuilt, and C24–C29 added. `designs/documents.pen` DOC4 and DOC5 are untouched and stay that way until M26.
 
+### Addendum (2026-10-02, focus group 2026-09-29, [#1309](https://github.com/juggernog20/OpenLaw/issues/1309)): the Upload dialog asks where a new document is filed
+
+Two panelists expanded a folder, clicked Upload, and found the file at the record root. Filing it took a second step through Move to folder.
+
+**A new upload shows a "File in" select as its first field.** It is Move to folder's select, with the same label and options: the record root first, then each folder by its whole path. It starts on the record root. A single upload lands in the chosen folder. A multi-file pick or a directory pick hands the folder to the batch, so the destination readout names it and every file lands inside it. The select comes first, so the folder is chosen before a pick can hand over to the batch.
+
+**The select is absent where it has no answer.** Add version does not draw it, because a version lands where its document is already filed. A Knowledge item has no folders. The supporting-only upload does not administer the tree. A record with no folders has nothing to choose.
+
+This adds a fifth keyboard way into a folder to the four §7 lists. The other option was to file into the expanded folder. It was rejected, because several folders can be open at once and the dialog would have to guess.
+
+The Note placeholder "What changed in this round" now shows on Add version only. A first upload has no round before it.
+
 ## DES-034: The stage pipeline — six fixed steps beside the status pill (extends DES-005, DES-032)
 
 - **Status:** Accepted
@@ -2290,6 +2326,16 @@ Three new messages: the strip's accessible name, the stage-name select, and the 
 Anything reading the record's sub-bar by text now finds stage names there as well as the status label, and must say which of the two it means. The pipeline is the named list; the pill is what is outside it.
 
 `designs/contracts.pen` is the reference: `S2 StagePipe` in every C-frame, C2 and C22 being the clearest.
+
+### Addendum (2026-10-02, focus group of 2026-09-29, [#1281](https://github.com/juggernog20/OpenLaw/issues/1281)): a stage before the marker is "earlier", not "done"
+
+**Clauses 1 and 7 change for the stages behind the marker.** A stage before the marker takes a neutral 12px dot, a filled Lucide `circle-small` in the stage name's own `text-primary`. The check glyph and its `text-status-success-fg` colour go. The screen-reader-only word becomes "earlier". The message `statusProgression.earlier` replaces `contracts.stage.done`. The marker and the stages ahead do not change.
+
+Two panelists moved a Draft Contract straight to Out for signature. The strip then drew Review and Approval with green checks, and a screen reader said "done" after each. Nobody had reviewed or approved the Contract. A reader who skims the strip takes a green check as "reviewed and approved". Clause 2 already said that the check means position, not progress, but the glyph said the opposite. A dot says position and makes no claim.
+
+The change is in `StatusProgression`, so it applies to the Matter progression too. There, the earlier groups were grouped menu triggers with a muted check. They now take the same dot in `text-primary`, and the same "earlier" word beside the trigger.
+
+Two other options were declined. Checks only on stages the Contract held, read from its history, would draw progress, which DES-053 refuses. A Soft gate warning on any move across Approval with no Approval request would change CTR-012. That is a separate call: many small teams sign an NDA with no Approval, and a warning on every such move teaches people to press Move anyway. CTR-001 and CTR-012 do not change.
 
 ## DES-035: The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)
 
@@ -2781,6 +2827,12 @@ Grill rows **I.H1**, **I.H2**, **I.H3**, **I.X1**, **I.X2**, **I.X3**, **I.B1**,
 
 **Two is the ceiling.** A third surface needing month arithmetic is the trigger to reopen this and hoist all three into one home. Until then, each copy stays where its caller is, and each carries a comment saying the other exists.
 
+### Addendum (2026-10-02, [#1274](https://github.com/juggernog20/OpenLaw/issues/1274)): a passed notice deadline says Passed
+
+Clause 5 is amended. A notice deadline before today shows "Passed {date}" in its pill, and its screen-reader text says the same. A notice deadline of today or later still shows the date alone. The pill is where the eye lands, so a missed deadline must not look like an open one. The other option was to keep the pill and tell the reader only in a line under the scale. We did not choose it, because a reader who looks only at the mark would still think there is time to act.
+
+An auto-renewing term with a passed notice deadline and an expiry of today or later gets one line under the scale captions: "Notice can no longer stop the renewal on {expiry}." A Contract in renewal pending confirmation gets no line, because DES-043's banner already speaks for it. Today is the reader's own day, as clause 10 says. The Contracts list Notice by cell uses the same rule and puts a muted "Passed" under a past date. Next deadline still drops a passed notice deadline.
+
 ## DES-042: The Key dates section — one union, one Source chip, and the order as the answer (extends DES-035, DES-032, DES-040)
 
 - **Status:** Accepted
@@ -3198,6 +3250,10 @@ Contracts offer Owner (including Me and Unassigned), Status, Type, Effective dat
 The API applies filters and access scope before pagination, and uses those same predicates for the matching total. Filter choices come from the entire reachable collection, including retired labels still in use. Links carry filters and sort; browser history, refresh, and saved views restore them. Existing single-value saved filters remain readable. Home's Your Contracts opens Owner: Me; Your Matters opens Manager: Me. Explicit link filters override the saved default view's filters.
 
 For these two destinations, clause 7 is amended: Views and Columns remain available on an empty result, so the reader can save or leave a view that currently matches nothing. Counts describe the matching collection, including archived or closed records when included.
+
+_(2026-10-02, [#1280](https://github.com/juggernog20/OpenLaw/issues/1280): Contracts also offer Our entity, with Not known yet first and then the reachable Entities on Contracts. An Entity the viewer cannot reach matches no row.)_
+
+_(2026-10-02, [#1311](https://github.com/juggernog20/OpenLaw/issues/1311): Contracts also offer Term type, with Fixed term, Auto-renewing and Evergreen. Advanced search offers the same property.)_
 
 Visual references: [Linear's property and status filter menus](https://mobbin.com/screens/d1d26f7d-e1e5-490f-ab4f-c96dd12854c1) and [Notion's editable multi-select filter chip](https://mobbin.com/screens/d8abbe0b-4c55-4316-91b7-2e6b4baecb52). OpenLaw retains its own components and semantic colors.
 
@@ -3670,6 +3726,20 @@ The Contract card loses its Status field. `contracts.form.status` goes; `contrac
 Six e2e specs drove the status through `getByLabel("Status")`. They now open the menu and pick a row, and the two that asserted which status was held read the menu's checked row instead — the sub-bar pill cannot answer it, because a status label and a stage name are often the same word.
 
 The seeded `redlining` status is renamed to **"With counterparty"** by `0056_redlining_status_rename.sql`, guarded on the old text so an install that renamed it keeps its own name. `0009` seeded it as "Redlining with counterparty", which names the act; a status says where the contract sits, so the label says who holds it. Drawing the status list in a menu is where the wrong word showed.
+
+### Addendum (2026-10-02, focus group of 2026-09-29, [#1303](https://github.com/juggernog20/OpenLaw/issues/1303)): every stage opens its own Statuses
+
+**Clauses 1 and 4 are superseded.** Every stage in the strip is a menu trigger. A stage's menu holds only the Statuses in that stage, in the seam's order, with the held Status checked. The current stage keeps its pill, border and chevron. The other stages show their name and a chevron. Each trigger's accessible name is `{stage} — move contract` for its own stage.
+
+**Clause 3's stage column goes.** A menu of one stage does not need to name the stage on each row.
+
+Clauses 5, 7, 8 and 9 do not change. A pick commits as before, and re-picking the held Status commits nothing. The Soft gate is still raised by the seam's refusal, wherever the pick was made. An archived Contract gets no trigger on any stage. DD-023 removed the Contributor account type, so that is the one case of clause 9 left on this page. A stage the build cannot place still leaves no trigger, per normalization point 5.
+
+A Legal Team Member pressed Review on a Draft Contract and nothing happened. The Matter progression already works the other way, through the same `StatusProgression` component, so a person who uses both modules learned two rules for one control. Clause 1 refused six presses because "five of the six presses would have been a guess about which status was meant". A press on a stage that opens only that stage's Statuses is not a guess. CTR-001 keeps at least one live Status in every stage, so no menu is empty.
+
+The declined option kept clause 1 and added a tooltip on the other stages that points at the current pill. It explains the rule but keeps two rules for one control.
+
+`docs/user-guides/contract-stages.md` now says to select any Stage.
 
 ## DES-054: The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)
 
@@ -4427,6 +4497,10 @@ Dates approaching opens **Your dates** in a wide modal through **View all N**. H
 
 **My Tasks** sits between Inbox and Matters in the main navigation and opens `/home/tasks`. My Tasks and the Task sections on Contracts and Matters place the shared switch in the Task card header. Its single label says **Show completed** while completed Tasks are hidden and **Hide completed** while they are visible. Completed Tasks are hidden by default; showing them includes both open and completed Tasks, with completed titles struck through and checked boxes available to reopen them. Record counts continue to show the whole checklist. My Tasks applies the filter before counting and pagination, preserving assignment, record access, and lifecycle rules. Completing a Task while completed rows are shown keeps it in the list; Hide completed retains the existing removal animation and Undo. Home keeps its open-Task preview.
 
+### UX review addendum (2026-10-02, #1308): My Tasks Due filter
+
+The My Tasks Task card header carries a **Due** select before the completed switch. Its choices are **All**, **Overdue** and **Due in the next 7 days**. Overdue keeps open Tasks with a due date before today. Due in the next 7 days keeps Tasks due through today plus 7 days, and includes overdue Tasks. The server applies the choice before counting and pagination, so the total, the empty state and **Load more Tasks** follow it. The page keeps the choice in the `due` search parameter, so a reload keeps it. The page heading and document title read **My Tasks**, the same as the navigation label. Home itself still has no Filter control, and the Task sections on Contracts and Matters keep only the completed switch. Grouping My Tasks by record is not part of this addendum.
+
 ## DES-070: AI analysis is one settings pane, one record card, and one unverified marker (normalizes F.3; extends DES-054, DES-032, DES-042, DES-069)
 
 - **Status:** Accepted
@@ -4839,6 +4913,12 @@ The shared Contract team and Matter team roster shows each person once in both t
 The full app keeps one membership removal control when the person has a removable team membership. It removes only that membership. Owner and Creator statements remain, and the existing focus-after-removal rule still applies. Responsibility alone supplies no removal control or Portal access. The Portal roster remains read-only.
 
 This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
+
+### Addendum (2026-10-02, [#1273](https://github.com/juggernog20/OpenLaw/issues/1273)): the roster and the picker mark Business Users
+
+A Business User added to a Confidential record gets Portal access to it, and the full-app team did not say who was a Business User. The account type is a fact about access, not a team tag, so it joins the row's statements. A Business User's row on the full-app Contract team and Matter team shows "Business user" beside the other statements, in the shared role wording. Legal rows get no role statement. The Portal roster does not change.
+
+Add team member groups the people under Legal and Business Users. On a Confidential record, a chosen Business User shows a warning above the buttons. The warning names the Portal access, the Documents and the Full Thread comments. Add stays enabled, because DD-023 allows the add. The Portal dialog stays one flat list. DD-023 section 2 says the roster lists names. This adds one account-type statement, and only for Business Users.
 
 ## DES-081: One Documents section for Portal Contracts and Matters
 

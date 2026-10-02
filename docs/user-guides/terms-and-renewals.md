@@ -20,6 +20,8 @@ Changing away from Auto-renewing clears a renewal period the new type cannot hol
 
 **Term timeline** draws the recorded dates. In **Key dates**, **Current term expires** and **Renewal notice deadline** are derived from the Contract's term. The notice deadline is expiry minus the notice period; change the underlying term to correct it. Task due dates do not feed these deadlines. [Contract Tasks and Key dates](contract-tasks-and-dates.md) covers separately maintained dates.
 
+A notice deadline before today shows **Passed** with its date on **Term timeline** and in the Contracts list **Notice by** column. A passed deadline means notice given now is too late to stop the next renewal under the recorded term. On an Auto-renewing Contract whose expiry is today or later, **Term timeline** also says "Notice can no longer stop the renewal on" the expiry date. Check the paper before you rely on this, because the app only compares the recorded dates with today.
+
 ## Confirm a renewal on the same Contract
 
 1. On an Auto-renewing Contract with an expiry, open **Approvals** and select **Renew**. If the **Renewal date passed — pending confirmation** banner shows, you can select **Review renewal** instead.

@@ -8,6 +8,7 @@ import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { TeamRoster, type TeamPerson, type TeamRosterEntry } from "./team-roster";
 import type { Applet } from "./shell/applets";
+import { Alert } from "./ui/alert";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Label } from "./ui/label";
@@ -22,6 +23,7 @@ interface Options {
   users: readonly TeamPerson[];
   frozen: boolean;
   audienceLocked: boolean;
+  isConfidential: boolean;
   onTeam: (team: TeamPerson[]) => void;
 }
 
@@ -64,6 +66,7 @@ function TeamPanel({
   users,
   frozen,
   audienceLocked,
+  isConfidential,
   onTeam,
   adding,
   onAdding,
@@ -120,13 +123,20 @@ function TeamPanel({
     pendingFocus.current = pressed;
     onTeam(result.data.team);
   }
+  // The record read sends no account type, so each person's role comes
+  // from the user options, matched by id.
+  const roles = new Map(users.map((person) => [person.id, person.role]));
+  const withRole = (person: TeamPerson): TeamPerson => {
+    const role = roles.get(person.id) ?? person.role;
+    return role ? { ...person, role } : person;
+  };
   return (
     <>
       <TeamRoster
         entries={[
-          ...statements,
+          ...statements.map((entry) => ({ ...entry, person: withRole(entry.person) })),
           ...team.map((person) => ({
-            person,
+            person: withRole(person),
             onRemove:
               frozen || person.id === businessOwnerId ? undefined : () => void remove(person),
             removeDisabled: audienceLocked || removing !== null,
@@ -156,6 +166,7 @@ function TeamPanel({
             (person) => !person.archived && !team.some((member) => member.id === person.id),
           )}
           disabled={frozen || audienceLocked}
+          confidential={isConfidential}
           onOpenChange={onAdding}
           onAdded={onTeam}
         />
@@ -171,6 +182,7 @@ export function AddTeamDialog({
   number,
   users,
   disabled,
+  confidential = false,
   onOpenChange,
   onAdded,
 }: Readonly<{
@@ -180,6 +192,10 @@ export function AddTeamDialog({
   number: number;
   users: readonly TeamPerson[];
   disabled: boolean;
+  /** The record is Confidential. A chosen Business User then gets a
+   * warning, because joining the team opens the record to them in the
+   * Portal (DD-023). */
+  confidential?: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded: (team: TeamPerson[]) => void;
 }>) {
@@ -187,6 +203,16 @@ export function AddTeamDialog({
   const [userId, setUserId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const chosen = users.find((person) => person.id === userId);
+  // The Portal sends no roles, so its list stays flat.
+  const grouped = users.some((person) => person.role);
+  const legal = users.filter((person) => person.role !== "business_user");
+  const business = users.filter((person) => person.role === "business_user");
+  const option = (person: TeamPerson) => (
+    <option key={person.id} value={person.id}>
+      {person.displayName}
+    </option>
+  );
   async function submit() {
     if (saving || disabled) return;
     if (!userId) {
@@ -261,13 +287,43 @@ export function AddTeamDialog({
                   defaultMessage: "Choose a person",
                 })}
               </option>
-              {users.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.displayName}
-                </option>
-              ))}
+              {grouped ? (
+                <>
+                  {legal.length > 0 && (
+                    <optgroup
+                      label={intl.formatMessage({
+                        id: "record.team.groupLegal",
+                        defaultMessage: "Legal",
+                      })}
+                    >
+                      {legal.map(option)}
+                    </optgroup>
+                  )}
+                  {business.length > 0 && (
+                    <optgroup
+                      label={intl.formatMessage({
+                        id: "record.team.groupBusiness",
+                        defaultMessage: "Business Users",
+                      })}
+                    >
+                      {business.map(option)}
+                    </optgroup>
+                  )}
+                </>
+              ) : (
+                users.map(option)
+              )}
             </select>
           </div>
+          {confidential && chosen?.role === "business_user" && (
+            <Alert variant="warning" className="text-sm">
+              <FormattedMessage
+                id="record.team.businessUserConfidential"
+                defaultMessage="{name} is a Business User. They will see this confidential {module, select, contract {Contract} other {Matter}} in the Portal, with its Documents and Full Thread comments."
+                values={{ name: chosen.displayName, module }}
+              />
+            </Alert>
+          )}
           {error && (
             <p role="alert" className="text-sm text-status-danger-fg">
               {error}

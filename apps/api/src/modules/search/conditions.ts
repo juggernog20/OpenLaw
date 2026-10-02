@@ -84,6 +84,7 @@ function compile(
       type: contracts.contractTypeId,
       owner: contracts.managerId,
       entity: contracts.entityId,
+      termType: contracts.termType,
       effective: contracts.effectiveDate,
       expiry: contracts.expiryDate,
       noticeDeadline: sql`(${contracts.expiryDate} - ${contracts.noticePeriodDays})`,

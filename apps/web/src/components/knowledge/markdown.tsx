@@ -74,6 +74,37 @@ export function KnowledgeMarkdown({ source }: Readonly<{ source: string }>) {
               </Tag>
             );
           }
+          case "table":
+            // A wide table scrolls in its own box, as a code block does.
+            return (
+              <div
+                key={index}
+                className="overflow-x-auto rounded-card border border-border-default"
+              >
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-sm text-muted">
+                      {block.header.map((cell, i) => (
+                        <th key={i} scope="col" className="px-4 py-2 text-start font-medium">
+                          {inline(cell)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, r) => (
+                      <tr key={r} className="border-t border-border-muted">
+                        {row.map((cell, i) => (
+                          <td key={i} className="px-4 py-2.5">
+                            {inline(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
         }
       })}
     </div>

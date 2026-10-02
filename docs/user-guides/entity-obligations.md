@@ -35,14 +35,17 @@ Approaching-date reminders and the daily briefing also depend on organization sc
 
 1. On the Entity's **Obligations** tab, use **Mark complete** beside the Obligation.
 2. In **Mark complete**, check the explanation and **Completed on** date. It starts with your current local date; change it to the actual filing date if needed.
-3. Select **Mark complete**. For a recurring Obligation, check the new due date. Open **History** to read the filing entry and its recorded cycle.
+3. Optionally enter a **Note**, such as the filing reference, and select **Attach the filed paper** to add one file.
+4. Select **Mark complete**. For a recurring Obligation, check the new due date. Open **History** to read the filing entry and its recorded cycle.
+
+The attached file becomes a Document on the Entity's **Documents** tab. To see each filing with its date, who filed it, its note and its Document, open the row menu and choose **Filing history**. The newest filing is first. If someone later deletes the Document, the filing shows **Document removed**.
 
 A recurring Obligation advances from its held due date by the recurrence at least once, then repeats that advance until the next due date is after the filing date. For example, an annual Obligation due September 30, 2025 and filed October 5, 2026 advances to September 30, 2027. One late filing does not invent separate filings for missed cycles.
 
-A one-off keeps its due date and shows **Completed** with the filing date. It no longer appears among open Obligations and cannot be filed again. Use the **Show completed** filter in the calendar to find it. Its row becomes read-only; check the date before confirming.
+A one-off keeps its due date and shows **Completed** with the filing date. It no longer appears among open Obligations and cannot be filed again. Use the **Show completed** filter in the calendar to find it. Its row becomes read-only, and its menu keeps only **Filing history**; check the date before confirming.
 
 ## Recover from a mistake or refusal
 
 Read the message and correct invalid dates or recurrence values before retrying. In the calendar's **Due date** filter, an end date before the start date shows **End date must be on or after start date.** and **Apply** stays unavailable. If the Entity was archived or your Grant was removed, restore the Entity or ask a person with a Grant on that Entity to review access. Another person's filing can make a one-off unavailable for filing; reload to see the saved result.
 
-**Delete** in the row menu removes the Obligation and its future schedule at once, without a confirmation step. It does not file the Obligation or undo a recorded filing. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.
+**Delete** in the row menu removes the Obligation, its future schedule and its **Filing history** at once, without a confirmation step. It does not file the Obligation. The History entries for its filings remain. Do not delete an item merely to clear an overdue result. For an incorrect recurring next date, correct the open row and retain the History of what was recorded.

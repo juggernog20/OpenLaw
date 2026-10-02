@@ -214,25 +214,20 @@ const GATE_REFUSAL = {
   type: GATE_TYPE,
 };
 
-/** The strip's move control (DES-053): the current stage's pill, which
- * is the one item of the six that can be pressed. Queried by its
- * accessible name rather than its role, because an open soft gate hides
- * the page behind it from the accessibility tree. */
+/** One stage's move control in the strip. Every stage is a trigger
+ * (DES-053 addendum). Queried by its accessible name rather than its
+ * role, because an open soft gate hides the page behind it from the
+ * accessibility tree. */
 function moveControl(stage: string) {
   return screen.getByLabelText(`${stage} — move contract`);
 }
 
-/** Opens the move menu and picks a status. It does not wait for the
- * commit the pick sends — each test waits for whatever that commit
+/** Opens a stage's move menu and picks a status. It does not wait for
+ * the commit the pick sends. Each test waits for whatever that commit
  * produces. */
-async function pickStatus(user: ReturnType<typeof userEvent.setup>, status: string) {
-  await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-  // The name is the status and then its stage, matched on its start and
-  // literally: a status name is the install's own words, and regex
-  // punctuation in one would otherwise pick the wrong row.
-  await user.click(
-    await screen.findByRole("menuitemradio", { name: (name: string) => name.startsWith(status) }),
-  );
+async function pickStatus(user: ReturnType<typeof userEvent.setup>, stage: string, status: string) {
+  await user.click(await screen.findByRole("button", { name: `${stage} — move contract` }));
+  await user.click(await screen.findByRole("menuitemradio", { name: status }));
 }
 
 describe("the soft gate on the contract record", () => {
@@ -242,7 +237,10 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    // The Contract is at Approval. The pick is made from the Signature
+    // stage's own menu, and the seam's refusal still raises the gate.
+    expect(await screen.findByRole("button", { name: "Approval — move contract" })).toBeEnabled();
+    await pickStatus(user, "Signature", "Out for signature");
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("Move past approval")).toBeInTheDocument();
@@ -276,7 +274,7 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).queryByText("Nadia Counsel")).not.toBeInTheDocument();
@@ -293,7 +291,7 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Move anyway" }));
 
@@ -317,7 +315,7 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
@@ -350,7 +348,7 @@ describe("the soft gate on the contract record", () => {
     });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Move anyway" }));
 
@@ -375,7 +373,7 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Internal review");
+    await pickStatus(user, "Review", "Internal review");
 
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-review" }]));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -390,7 +388,7 @@ describe("the soft gate on the contract record", () => {
     stubApi({ signedIn: MEMBER, extra: api.handler });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
 
     expect(
       await screen.findByText("This contract is archived. Restore it before editing it."),
@@ -415,7 +413,7 @@ describe("the soft gate on the contract record", () => {
     });
     renderAt("/contracts/42");
 
-    await pickStatus(user, "Out for signature");
+    await pickStatus(user, "Signature", "Out for signature");
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Move anyway" }));
 

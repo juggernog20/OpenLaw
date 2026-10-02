@@ -914,6 +914,10 @@ describe("quick contract filters", () => {
           types: OPTIONS.contractTypes,
           statuses: OPTIONS.contractStatuses,
           people: OPTIONS.users,
+          entities: [
+            { id: "e-uk", displayName: "Helix Holdings Ltd" },
+            { id: "e-us", displayName: "Helix Inc." },
+          ],
         });
       if (call.url.pathname === "/api/v1/list-views") {
         if (call.method === "POST") {
@@ -998,11 +1002,167 @@ describe("quick contract filters", () => {
     expect(screen.queryByRole("button", { name: "Owner: Me" })).not.toBeInTheDocument();
   });
 
+  it("applies changed ticks when a filter popover closes with Escape or a click outside", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?owner=me");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
+    const outside = screen.getByRole("heading", { level: 1 });
+
+    // The Filter menu, closed with Escape.
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Status",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await navigated(
+      router,
+      () => user.keyboard("{Escape}"),
+      (search) => search.get("status") === "s-draft",
+    );
+    expect(screen.queryByRole("dialog", { name: "Filter" })).not.toBeInTheDocument();
+
+    // The chip, closed with a click outside.
+    await user.click(screen.getByRole("button", { name: "Status: Draft" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await navigated(
+      router,
+      () => user.click(outside),
+      (search) => search.get("status") === "s-draft,s-active",
+    );
+    expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
+
+    // No change, no read.
+    const reads = surface.queries.length;
+    await user.click(screen.getByRole("button", { name: "Status: Draft, Active" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Status" })).not.toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole("button", { name: "Status: Draft, Active" }));
+    await user.click(outside);
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Status" })).not.toBeInTheDocument(),
+    );
+    expect(surface.queries).toHaveLength(reads);
+
+    // An end before the start does not apply, and the popover stays open.
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Expiry date",
+      }),
+    );
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2027-02-01" } });
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2027-01-01" } });
+    await user.keyboard("{Escape}");
+    await user.click(outside);
+    const menu = screen.getByRole("dialog", { name: "Filter" });
+    expect(within(menu).getByRole("alert")).toHaveTextContent(
+      "End date must be on or after start date.",
+    );
+    expect(new URLSearchParams(router.state.location.search).has("expiryFrom")).toBe(false);
+    expect(surface.queries).toHaveLength(reads);
+  });
+
+  it("filters by Our entity, with Not known yet first, and keeps it in the link", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts");
+    const user = userEvent.setup();
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Our entity",
+      }),
+    );
+    const choices = within(screen.getByRole("dialog", { name: "Filter" }))
+      .getAllByRole("checkbox")
+      .map((box) => box.closest("label")?.textContent?.trim());
+    expect(choices).toEqual(["Not known yet", "Helix Holdings Ltd", "Helix Inc."]);
+    await user.click(screen.getByRole("checkbox", { name: "Not known yet" }));
+    await user.click(screen.getByRole("checkbox", { name: "Helix Holdings Ltd" }));
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("entity") === "unassigned,e-uk",
+    );
+    expect(surface.queries.at(-1)?.get("entity")).toBe("unassigned,e-uk");
+    expect(
+      screen.getByRole("button", { name: "Our entity: Not known yet, Helix Holdings Ltd" }),
+    ).toBeInTheDocument();
+    await act(() => router.revalidate());
+    expect(
+      screen.getByRole("button", { name: "Our entity: Not known yet, Helix Holdings Ltd" }),
+    ).toBeInTheDocument();
+  });
+
+  it("filters by Term type, with the three term types as choices", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?expiryFrom=2027-01-01&expiryTo=2027-02-28");
+    const user = userEvent.setup();
+    const filter = await screen.findByRole("button", { name: /^Filter/ });
+    await waitFor(() => expect(filter).toBeEnabled());
+    await user.click(filter);
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Term type",
+      }),
+    );
+    const choices = within(screen.getByRole("dialog", { name: "Filter" }))
+      .getAllByRole("checkbox")
+      .map((box) => box.closest("label")?.textContent?.trim());
+    expect(choices).toEqual(["Fixed term", "Auto-renewing", "Evergreen"]);
+    await user.click(screen.getByRole("checkbox", { name: "Auto-renewing" }));
+    await navigated(
+      router,
+      () => user.click(screen.getByRole("button", { name: "Apply" })),
+      (search) => search.get("termType") === "auto_renew",
+    );
+    expect(surface.queries.at(-1)?.get("termType")).toBe("auto_renew");
+    expect(surface.queries.at(-1)?.get("expiryTo")).toBe("2027-02-28");
+    await act(() => router.revalidate());
+    expect(screen.getByRole("button", { name: "Term type: Auto-renewing" })).toBeInTheDocument();
+  });
+
+  it.each(["nextDeadline", "noticeDeadline"])(
+    "reads the %s sort from a link and carries it to the list read",
+    async (key) => {
+      const surface = filteringApi();
+      stubApi({ signedIn: MEMBER, extra: surface.handler });
+      // The shape of a copied link: filterSearch always writes filters=1.
+      renderAt(`/contracts?filters=1&view=all&sort=${key}&dir=desc`);
+      await screen.findByRole("button", { name: /^Filter/ });
+      expect(surface.queries.at(-1)?.get("sort")).toBe(key);
+      expect(surface.queries.at(-1)?.get("dir")).toBe("desc");
+    },
+  );
+
+  it("opens Home's approvals link with Waiting on my approval and Show ended on", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?awaitingMyApproval=true&includeEnded=true");
+    expect(
+      await screen.findByRole("button", { name: "Remove Waiting on my approval filter" }),
+    ).toBeInTheDocument();
+    expect(surface.queries.at(-1)?.get("awaitingMyApproval")).toBe("true");
+    expect(surface.queries.at(-1)?.get("includeEnded")).toBe("true");
+    const user = userEvent.setup();
+    await toggleListFlag(user, "Waiting on my approval", { router, flag: "awaitingMyApproval" });
+    expect(surface.queries.at(-1)?.has("awaitingMyApproval")).toBe(false);
+  });
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });
     const { router } = renderAt(
-      "/contracts?owner=me&status=s-draft,s-active&expiryFrom=2027-01-01&expiryTo=2027-12-31",
+      "/contracts?owner=me&status=s-draft,s-active&entity=e-uk&termType=auto_renew&expiryFrom=2027-01-01&expiryTo=2027-12-31",
     );
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Default view/ }));
@@ -1023,6 +1183,8 @@ describe("quick contract filters", () => {
       filters: {
         owner: "me",
         status: "s-draft,s-active",
+        entity: "e-uk",
+        termType: "auto_renew",
         expiryFrom: "2027-01-01",
         expiryTo: "2027-12-31",
       },
@@ -1039,6 +1201,8 @@ describe("quick contract filters", () => {
     await user.click(screen.getByRole("button", { name: /My renewals/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "My renewals" }));
     await waitFor(() => expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active"));
+    expect(surface.queries.at(-1)?.get("entity")).toBe("e-uk");
+    expect(surface.queries.at(-1)?.get("termType")).toBe("auto_renew");
     expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
   });
 });

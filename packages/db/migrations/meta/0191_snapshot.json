@@ -1,5 +1,5 @@
 {
-  "id": "5b64a43a-f46e-4ce2-a287-0f54a2d9532a",
+  "id": "c919ec1a-a8a7-43d6-81db-099b13ca9bc9",
   "prevId": "b9cff9cf-a93f-438a-b361-a691ed7ed8e5",
   "version": "7",
   "dialect": "postgresql",
@@ -1762,12 +1762,6 @@
         },
         "last_active_at": {
           "name": "last_active_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "invite_expires_at": {
-          "name": "invite_expires_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -8531,6 +8525,161 @@
         "entity_holdings_distinct_entities": {
           "name": "entity_holdings_distinct_entities",
           "value": "\"entity_holdings\".\"owner_entity_id\" <> \"entity_holdings\".\"owned_entity_id\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.entity_obligation_filings": {
+      "name": "entity_obligation_filings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "obligation_id": {
+          "name": "obligation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "filed_on": {
+          "name": "filed_on",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filed_by": {
+          "name": "filed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_id": {
+          "name": "document_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_id": {
+          "name": "version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "document_filed": {
+          "name": "document_filed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "entity_obligation_filings_obligation_idx": {
+          "name": "entity_obligation_filings_obligation_idx",
+          "columns": [
+            {
+              "expression": "obligation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "filed_on",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "entity_obligation_filings_document_idx": {
+          "name": "entity_obligation_filings_document_idx",
+          "columns": [
+            {
+              "expression": "document_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "version_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "entity_obligation_filings_obligation_id_entity_obligations_id_fk": {
+          "name": "entity_obligation_filings_obligation_id_entity_obligations_id_fk",
+          "tableFrom": "entity_obligation_filings",
+          "tableTo": "entity_obligations",
+          "columnsFrom": ["obligation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "entity_obligation_filings_filed_by_users_id_fk": {
+          "name": "entity_obligation_filings_filed_by_users_id_fk",
+          "tableFrom": "entity_obligation_filings",
+          "tableTo": "users",
+          "columnsFrom": ["filed_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "entity_obligation_filings_document_version_fk": {
+          "name": "entity_obligation_filings_document_version_fk",
+          "tableFrom": "entity_obligation_filings",
+          "tableTo": "document_versions",
+          "columnsFrom": ["document_id", "version_id"],
+          "columnsTo": ["document_id", "id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "entity_obligation_filings_document_pair_check": {
+          "name": "entity_obligation_filings_document_pair_check",
+          "value": "(\"entity_obligation_filings\".\"document_id\" is null and \"entity_obligation_filings\".\"version_id\" is null) or (\"entity_obligation_filings\".\"document_id\" is not null and \"entity_obligation_filings\".\"version_id\" is not null)"
+        },
+        "entity_obligation_filings_document_filed_check": {
+          "name": "entity_obligation_filings_document_filed_check",
+          "value": "\"entity_obligation_filings\".\"document_id\" is null or \"entity_obligation_filings\".\"document_filed\""
         }
       },
       "isRLSEnabled": false
@@ -15443,13 +15592,6 @@
           "notNull": true,
           "default": 90
         },
-        "invite_link_lifetime_days": {
-          "name": "invite_link_lifetime_days",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 7
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -15490,10 +15632,6 @@
         "org_settings_mcp_api_key_lifetime_check": {
           "name": "org_settings_mcp_api_key_lifetime_check",
           "value": "\"org_settings\".\"mcp_api_key_lifetime_days\" between 1 and 365"
-        },
-        "org_settings_invite_link_lifetime_check": {
-          "name": "org_settings_invite_link_lifetime_check",
-          "value": "\"org_settings\".\"invite_link_lifetime_days\" between 1 and 30"
         },
         "org_settings_auto_doc_acknowledgement_frequency_check": {
           "name": "org_settings_auto_doc_acknowledgement_frequency_check",

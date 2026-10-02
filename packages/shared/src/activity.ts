@@ -81,7 +81,7 @@ export type TypeFieldActionPrefix =
 type TaxonomyPayloads = {
   created: { slug: string; displayName: string };
   renamed: { slug: string; from: string; to: string };
-  updated: { slug: string; changed: ChangedFields };
+  updated: { slug: string; displayName: string; changed: ChangedFields };
   reordered: { order: string[] };
   /** `reassignedTo` names the type the rows moved to, or null when none
    * were using this one. */
@@ -510,6 +510,12 @@ type EntityPayloads = {
     officerName: string;
     changed: ChangedFields;
   };
+  "entity_officer.resigned": {
+    legalName: string;
+    officerName: string;
+    role: string;
+    resignedOn: string;
+  };
   "entity_officer.deleted": { legalName: string; officerName: string; role: string };
   "entity_registration.created": {
     legalName: string;
@@ -686,6 +692,9 @@ type EntityPayloads = {
     previousDueOn: string;
     nextDueOn: string | null;
     completedOn: string | null;
+    /** The `entity_obligation_filings` row. Absent on entries written
+     * before filings had rows. The note stays out of the log. */
+    filingId?: string;
   };
 };
 

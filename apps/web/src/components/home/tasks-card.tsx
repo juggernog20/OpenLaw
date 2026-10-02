@@ -18,7 +18,7 @@ const taskActions: Record<"reopen" | "complete", MessageDescriptor> = defineMess
 
 function taskHref(row: TasksHomeSection["rows"][number]): string {
   const destination = row.record.kind === "contract" ? "contracts" : "matters";
-  return `/${destination}/${String(row.record.number)}/tasks`;
+  return `/${destination}/${String(row.record.number)}/tasks?task=${encodeURIComponent(row.id)}`;
 }
 
 export function HomeTasksCard({
@@ -119,7 +119,7 @@ export function HomeTasksCard({
                   >
                     {row.isOverdue ? (
                       <span className="sr-only">
-                        <FormattedMessage id="home.tasks.overdue" defaultMessage="Overdue" />{" "}
+                        <FormattedMessage id="tasks.overdue" defaultMessage="Overdue" />{" "}
                       </span>
                     ) : null}
                     {row.isDone ? formatShortDate(row.dueDate) : formatDeadline(row.dueDate)}

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-/** MTR-005 and CTR-017 add Task assignees to teams. Membership, assignment, activity and notification commit together. */
+/**
+ * MTR-005 and CTR-017 add Task assignees to teams. Membership, assignment, activity and
+ * notification commit together. A Business User on the team may own a Task (MTR-005 addendum,
+ * 2026-10-02).
+ */
 
 import { and, eq, contractTeam, matterTeam, users } from "@openlaw/db";
 import type { AuthenticatedUser } from "../auth/guards.js";
@@ -34,9 +38,7 @@ export async function prepareTaskAssignee(
     return;
   }
   const [person] = await tx.select().from(users).where(eq(users.id, assigneeId)).for("update");
-  if (!person || person.archivedAt || person.role === "business_user") {
-    throw httpError(400, "Choose an active staff member as the assignee.");
-  }
+  if (!person || person.archivedAt) throw httpError(400, "Choose an active user as the assignee.");
   if (record.managerId === assigneeId) return;
   const table = kind === "contract" ? contractTeam : matterTeam;
   const recordId = kind === "contract" ? contractTeam.contractId : matterTeam.matterId;

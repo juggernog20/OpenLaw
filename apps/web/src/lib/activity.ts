@@ -130,6 +130,8 @@ import {
   type TermType,
 } from "./contracts";
 import { knowledgeAudienceLabel } from "./knowledge";
+import { formText } from "../components/type-form/messages";
+import { builtinRowLabel } from "../components/type-form/model";
 
 type FeedResponse =
   paths["/api/v1/activity"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -162,6 +164,9 @@ export interface NarratedChange {
   label: string;
   from: string;
   to: string;
+  /** The whole line, for a change that has no old and new value, such as
+   * a Row added to a Form. The renderers show it instead of the pair. */
+  line?: string;
 }
 
 /** An entry ready to render. */
@@ -365,7 +370,7 @@ function changeLabel(intl: IntlShape, key: string, context: NarrationContext): s
       // honest rendering for one this build no longer writes.
       defaultMessage:
         "{key, select, answerStyle {Answer style} assignmentRules {Assignment rules} defaultLegalOwner {Default Legal Owner} title {Title} description {Description} owner {Legal Owner} businessOwner {Business Owner} owningDepartment {Department} department {Department} region {Region} stakeholders {Stakeholders} " +
-        "entity {Signing entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} " +
+        "entity {Our entity} priority {Priority} risk {Risk} matterManager {Matter Manager} matterType {Matter type} requestType {Request type} " +
         "contractType {Contract type} value {Value} status {Status} " +
         "dueDate {Due date} termType {Term type} effectiveDate {Effective date} " +
         "expiryDate {Expiry date} renewalPeriodMonths {Renewal period (months)} " +
@@ -630,6 +635,142 @@ function changesFrom(
       },
     ];
   });
+}
+
+/** Whether a changed key is one of a type Form's Rows or Branches (DD-028). */
+function isFormKey(key: string): boolean {
+  return key.startsWith("Row ") || key.startsWith("Branch ");
+}
+
+/** The three Row switches a Form save can turn on or off. */
+const FORM_SWITCHES = ["onIntakeForm", "isRequired", "visibleOnPortal"] as const;
+
+/**
+ * The lines a type Form save carries (DD-028), one per Row or Branch
+ * change. A Row is named by the Field name the writer stored, then by
+ * the built-in label, then by its key. An entry written before the
+ * writer stored names has only the key.
+ */
+function formChanges(intl: IntlShape, payload: Payload): NarratedChange[] {
+  const changed = payload.changed;
+  if (typeof changed !== "object" || changed === null || Array.isArray(changed)) return [];
+  const node = (value: unknown): Payload | null =>
+    typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as Payload)
+      : null;
+  const line = (label: string, text: string): NarratedChange => ({
+    label,
+    from: "",
+    to: "",
+    line: text,
+  });
+  return Object.entries(changed as Record<string, unknown>).flatMap(([key, pair]) => {
+    if (!isFormKey(key) || typeof pair !== "object" || pair === null) return [];
+    const from = node((pair as { from?: unknown }).from);
+    const to = node((pair as { to?: unknown }).to);
+    if (from === null && to === null) return [];
+    const moved =
+      from !== null && to !== null && (from.parent !== to.parent || from.order !== to.order);
+    if (key.startsWith("Branch ")) {
+      const said =
+        from === null
+          ? intl.formatMessage({
+              id: "activity.form.branchAdded",
+              defaultMessage: "Condition group added",
+            })
+          : to === null
+            ? intl.formatMessage({
+                id: "activity.form.branchRemoved",
+                defaultMessage: "Condition group removed",
+              })
+            : intl.formatMessage({
+                id: "activity.form.branchChanged",
+                defaultMessage: "Condition group changed",
+              });
+      return [line(said, said)];
+    }
+    const rowRef = key.slice("Row ".length);
+    const row =
+      text(to ?? {}, "name") ??
+      text(from ?? {}, "name") ??
+      builtinRowLabel(rowRef, formText(intl)) ??
+      identifierLabel(rowRef);
+    if (from === null)
+      return [
+        line(
+          row,
+          intl.formatMessage(
+            { id: "activity.form.rowAdded", defaultMessage: "{row}: added to the Form" },
+            { row },
+          ),
+        ),
+      ];
+    if (to === null)
+      return [
+        line(
+          row,
+          intl.formatMessage(
+            { id: "activity.form.rowRemoved", defaultMessage: "{row}: removed from the Form" },
+            { row },
+          ),
+        ),
+      ];
+    const switches = FORM_SWITCHES.flatMap((name) =>
+      Boolean(from[name]) === Boolean(to[name])
+        ? []
+        : [
+            {
+              label: intl.formatMessage(
+                {
+                  id: "activity.form.switch",
+                  defaultMessage:
+                    "{row}, {name, select, onIntakeForm {On intake form} isRequired {Required for creation} visibleOnPortal {Visible on Portal} other {{name}}}",
+                },
+                { row, name },
+              ),
+              from: intl.formatMessage(
+                {
+                  id: "activity.form.switchValue",
+                  defaultMessage: "{on, select, true {On} other {Off}}",
+                },
+                { on: String(Boolean(from[name])) },
+              ),
+              to: intl.formatMessage(
+                {
+                  id: "activity.form.switchValue",
+                  defaultMessage: "{on, select, true {On} other {Off}}",
+                },
+                { on: String(Boolean(to[name])) },
+              ),
+            },
+          ],
+    );
+    return moved
+      ? [
+          ...switches,
+          line(
+            row,
+            intl.formatMessage(
+              { id: "activity.form.rowMoved", defaultMessage: "{row}: moved" },
+              { row },
+            ),
+          ),
+        ]
+      : switches;
+  });
+}
+
+/** What a type's `updated` entry carries: Form lines for a Form save, and
+ * the usual pairs for every other key, such as a description edit. */
+function typeChanges(
+  intl: IntlShape,
+  payload: Payload,
+  context: NarrationContext,
+): NarratedChange[] {
+  const changed = payload.changed;
+  const formKeys =
+    typeof changed === "object" && changed !== null ? Object.keys(changed).filter(isFormKey) : [];
+  return [...changesFrom(intl, payload, context, formKeys), ...formChanges(intl, payload)];
 }
 
 /** A one-key change the payload states directly — a status move, a
@@ -1263,10 +1404,15 @@ function taxonomyArms<Kind extends string, Verb extends keyof typeof TAXONOMY>(
     renamed: {
       icon,
       message: TAXONOMY.renamed,
-      values,
+      // A rename's payload carries the new name as `to` and no display
+      // name, so the slug is the last resort here.
+      values: (intl, payload) => ({
+        kind,
+        name: text(payload, "displayName") ?? text(payload, "to") ?? thingName(intl, payload),
+      }),
       changes: (intl, payload, context) => directChange(intl, payload, "displayName", context),
     },
-    updated: { icon, message: TAXONOMY.updated, values, changes: changesFrom },
+    updated: { icon, message: TAXONOMY.updated, values, changes: typeChanges },
     reordered: { icon: ListOrdered, message: TAXONOMY.reordered, values },
     archived: { icon: Archive, message: TAXONOMY.archived, values },
     restored: { icon: ArchiveRestore, message: TAXONOMY.restored, values },
@@ -3685,6 +3831,19 @@ const ARMS: Readonly<Record<ActivityAction, Arm>> = {
       officer: named(intl, payload, "officerName"),
     }),
     changes: changesFrom,
+  },
+  "entity_officer.resigned": {
+    icon: UserMinus,
+    message: defineMessage({
+      id: "activity.entityOfficer.resigned",
+      defaultMessage: "{actor} recorded that {officer} resigned as {role} from {name} on {date}",
+    }),
+    values: (intl, payload) => ({
+      name: thingName(intl, payload),
+      officer: named(intl, payload, "officerName"),
+      role: named(intl, payload, "role"),
+      date: civilDateIn(intl, payload, "resignedOn"),
+    }),
   },
   "entity_officer.deleted": {
     icon: UserMinus,

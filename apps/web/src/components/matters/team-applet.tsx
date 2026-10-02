@@ -14,6 +14,7 @@ interface MatterTeamOptions {
   users: readonly MatterUserOption[];
   frozen: boolean;
   audienceLocked: boolean;
+  isConfidential: boolean;
   onTeam: (team: MatterTeamMember[]) => void;
 }
 export function useMatterTeamApplet(options: MatterTeamOptions) {

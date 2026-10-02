@@ -25,7 +25,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { PropertyList } from "../table/property-list";
-import { FilterEditor } from "../table/record-filter-bar";
+import { FilterEditor, type FilterEditorHandle } from "../table/record-filter-bar";
 import {
   operatorLabel,
   propertyLabel,
@@ -53,6 +53,7 @@ function ConditionRow({
 }>) {
   const intl = useIntl();
   const row = useRef<HTMLDivElement>(null);
+  const editor = useRef<FilterEditorHandle>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (focus) row.current?.focus();
@@ -185,7 +186,13 @@ function ConditionRow({
             ))}
           </div>
         ) : property.type === "choices" ? (
-          <Popover open={open} onOpenChange={setOpen}>
+          <Popover
+            open={open}
+            onOpenChange={(next) => {
+              if (!next && editor.current && !editor.current.commit()) return;
+              setOpen(next);
+            }}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="secondary"
@@ -212,6 +219,7 @@ function ConditionRow({
             </PopoverTrigger>
             <PopoverContent className="w-80 max-w-[calc(100vw-2rem)] p-0" aria-label={label}>
               <FilterEditor
+                ref={editor}
                 filter={{
                   key: condition.property,
                   label,

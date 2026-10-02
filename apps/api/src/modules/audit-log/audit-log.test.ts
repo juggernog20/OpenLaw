@@ -713,3 +713,90 @@ describe("structured emission", () => {
     expect(entries.at(-1)!.payload).toMatchObject({ to: "business_user" });
   });
 });
+
+// Last, because its walled Contract adds entries the Administrator cannot reach,
+// and the paging test above walks the whole table.
+describe("the summary of who wrote the matching entries (#1317)", () => {
+  interface Summary {
+    total: number;
+    actors: { id: string | null; displayName: string | null; count: number }[];
+  }
+  async function summary(query: Query = {}, cookies = adminCookies) {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/audit-log/summary",
+      cookies,
+      query,
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json() as Summary;
+  }
+
+  it("is for Administrators only", async () => {
+    for (const cookies of [memberCookies, contributorCookies, businessCookies]) {
+      const res = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/audit-log/summary",
+        cookies,
+      });
+      expect(res.statusCode).toBe(403);
+    }
+  });
+
+  it("counts the entries the same filters return, per person, most first", async () => {
+    for (const query of [
+      {},
+      { entityType: "contract" },
+      { actorId: userIds.get(MEMBER.email)! },
+      { q: "Ashford" },
+    ] as Query[]) {
+      const { entries } = await everyPage(query);
+      const counted = await summary(query);
+      expect(counted.total, JSON.stringify(query)).toBe(entries.length);
+      const byActor = new Map<string | null, number>();
+      for (const entry of entries)
+        byActor.set(entry.actor?.id ?? null, (byActor.get(entry.actor?.id ?? null) ?? 0) + 1);
+      expect(new Map(counted.actors.map((actor) => [actor.id, actor.count]))).toEqual(byActor);
+      const counts = counted.actors.map((actor) => actor.count);
+      expect(counts).toEqual([...counts].sort((a, b) => b - a));
+    }
+    const member = (await summary({ actorId: userIds.get(MEMBER.email)! })).actors;
+    expect(member).toEqual([
+      { id: userIds.get(MEMBER.email), displayName: MEMBER.displayName, count: expect.any(Number) },
+    ]);
+  });
+
+  it("adds nothing for a record outside the reader's reach", async () => {
+    const options = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/contracts/options",
+      cookies: memberCookies,
+    });
+    const type = (options.json().contractTypes as { id: string }[])[0]!;
+    const created = await harness.app.inject({
+      method: "POST",
+      url: "/api/v1/contracts",
+      cookies: memberCookies,
+      payload: { title: "Walled summary contract", contractTypeId: type.id },
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const walled = created.json().contract as { id: string; number: number };
+    const flagged = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/contracts/${walled.number}`,
+      cookies: memberCookies,
+      payload: { isConfidential: true },
+    });
+    expect(flagged.statusCode, flagged.body).toBe(200);
+    const stored = await harness.db
+      .select()
+      .from(activityLog)
+      .where(eq(activityLog.entityId, walled.id));
+    expect(stored.length).toBeGreaterThan(0);
+
+    expect(await summary({ q: walled.id })).toEqual({ total: 0, actors: [] });
+    const { entries } = await everyPage({ entityType: "contract" });
+    expect(entries.some((entry) => entry.entityId === walled.id)).toBe(false);
+    expect((await summary({ entityType: "contract" })).total).toBe(entries.length);
+  });
+});

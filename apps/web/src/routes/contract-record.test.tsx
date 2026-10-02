@@ -335,24 +335,19 @@ async function openTeam(user: ReturnType<typeof userEvent.setup>) {
   return screen.getByRole("complementary", { name: "Contract team" });
 }
 
-/** The strip's move control (DES-053): the current stage's pill, which
- * is the one item of the six that can be pressed. Queried by its
- * accessible name rather than its role, so it is still reachable behind
- * an open dialog — the soft gate hides the page from the a11y tree. */
+/** One stage's move control in the strip (DES-053 addendum). Every stage
+ * is a trigger. Queried by its accessible name rather than its role, so
+ * it is still reachable behind an open dialog. The soft gate hides the
+ * page from the a11y tree. */
 function moveControl(stage: string) {
   return screen.getByLabelText(`${stage} — move contract`);
 }
 
-/** Opens the move menu and picks a status by the label it wears. Does
- * not wait for the commit that follows. */
-async function moveTo(user: ReturnType<typeof userEvent.setup>, status: string) {
-  await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-  // A row's name is the status followed by its stage, so the match is on
-  // what the name starts with — literally, because a status name is the
-  // install's own words and may carry regex punctuation.
-  await user.click(
-    await screen.findByRole("menuitemradio", { name: (name: string) => name.startsWith(status) }),
-  );
+/** Opens a stage's move menu and picks a status by the label it wears.
+ * Does not wait for the commit that follows. */
+async function moveTo(user: ReturnType<typeof userEvent.setup>, stage: string, status: string) {
+  await user.click(await screen.findByRole("button", { name: `${stage} — move contract` }));
+  await user.click(await screen.findByRole("menuitemradio", { name: status }));
 }
 
 /** The record's overflow menu (DES-055), opened by its sub-bar trigger.
@@ -962,6 +957,73 @@ describe("the /contracts/:number record page", () => {
         await screen.findByText("Analysis failed: The provider timed out."),
       ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
+    });
+
+    /** The failed run's note, read whole: the reason, the sentence
+     * that the values still stand, and the one next step (#1286). */
+    async function failedNote(signedIn: typeof MEMBER, available: boolean) {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available,
+        latestRun: analysisRun({
+          state: "failed",
+          failure: "The provider reply did not match the requested fields or value types.",
+        }),
+      });
+      stubApi({ signedIn, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const card = within(await screen.findByRole("region", { name: "Fields" }));
+      return card
+        .getAllByRole("alert")
+        .find((alert) => /Analysis failed/.test(alert.textContent ?? ""))!;
+    }
+
+    it("says a failed run changed no Fields, and to run analysis again", async () => {
+      const note = await failedNote(MEMBER, true);
+      expect(note).toHaveTextContent(
+        // Two paragraphs, so no space between the reason and the sentence.
+        "Analysis failed: The provider reply did not match the requested fields or value types." +
+          "This run changed no Fields. Values marked Unverified still need a check. Run analysis again.",
+      );
+      expect(within(note).queryByRole("link")).not.toBeInTheDocument();
+      // The control the step names is in the same header.
+      expect(screen.getByRole("button", { name: "Run analysis" })).toBeEnabled();
+    });
+
+    it("points an Administrator at the AI analysis settings when analysis is off", async () => {
+      const note = await failedNote(ADMIN, false);
+      expect(note).toHaveTextContent(
+        "This run changed no Fields. Values marked Unverified still need a check. " +
+          "Turn on AI analysis in Settings",
+      );
+      expect(
+        within(note).getByRole("link", { name: "Turn on AI analysis in Settings" }),
+      ).toHaveAttribute("href", "/settings/ai-analysis");
+      expect(note).not.toHaveTextContent("Run analysis again.");
+    });
+
+    it("tells anyone else to ask an Administrator when analysis is off", async () => {
+      const note = await failedNote(MEMBER, false);
+      expect(note).toHaveTextContent(
+        "This run changed no Fields. Values marked Unverified still need a check. " +
+          "Ask an Administrator to check AI analysis settings.",
+      );
+      expect(within(note).queryByRole("link")).not.toBeInTheDocument();
+      expect(note).not.toHaveTextContent("Run analysis again.");
+    });
+
+    it("keeps the conversion failure message as it was", async () => {
+      const api = recordApi(contractRow(), undefined, undefined, undefined, {
+        available: true,
+        latestRun: analysisRun({ state: "failed", trigger: "conversion", failure: "Timed out." }),
+      });
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/fields");
+      const card = within(await screen.findByRole("region", { name: "Fields" }));
+      const note = await card.findByText(
+        "Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry.",
+      );
+      expect(note).toHaveAttribute("role", "alert");
+      expect(card.queryByText(/This run changed no Fields/)).not.toBeInTheDocument();
     });
 
     it("runs from the Fields header and the overflow menu", async () => {
@@ -1695,7 +1757,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
     const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
     // The pipeline beside the pill says "Active" too, so the pill is
@@ -1708,7 +1770,7 @@ describe("the /contracts/:number record page", () => {
     ).toHaveLength(1);
 
     // Backwards too — deals collapse and reopen (CTR-001).
-    await moveTo(user, "With counterparty");
+    await moveTo(user, "Review", "With counterparty");
     await waitFor(() =>
       expect(api.patches).toEqual([{ statusId: "s-active" }, { statusId: "s-redlining" }]),
     );
@@ -1720,7 +1782,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Draft");
+    await moveTo(user, "Draft", "Draft");
 
     // The record is already on Draft, so that press is not a move. An
     // entry saying the contract moved to where it was is worse than no
@@ -2032,6 +2094,56 @@ describe("the /contracts/:number record page", () => {
     );
     await waitFor(() => expect(api.teamCalls).toEqual(["add u3", "remove u3"]));
     expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument();
+  });
+
+  it("groups the team picker and warns before a Business User joins a confidential Contract", async () => {
+    const felix = { id: "u8", displayName: "Felix Brandt", image: null, archived: false };
+    const bree = { id: "u7", displayName: "Bree Portal", image: null, archived: false };
+    const api = recordApi(contractRow({ isConfidential: true }), [person("u2", "creator"), felix]);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/options" && call.method === "GET"
+          ? json(200, {
+              ...OPTIONS,
+              users: [
+                ...PEOPLE,
+                { ...felix, role: "business_user" },
+                { ...bree, role: "business_user" },
+              ],
+            })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const team = await openTeam(user);
+
+    const rows = within(team).getAllByRole("listitem");
+    const felixRow = rows.find((row) => within(row).queryByText("Felix Brandt"))!;
+    const nadiaRow = rows.find((row) => within(row).queryByText("Nadia Counsel"))!;
+    expect(within(felixRow).getByText("Business user")).toBeInTheDocument();
+    expect(within(nadiaRow).queryByText("Business user")).not.toBeInTheDocument();
+    expect(within(nadiaRow).getByText("Creator")).toBeInTheDocument();
+
+    await user.click(within(team).getByRole("button", { name: "Add team member" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add team member" });
+    const picker = within(dialog).getByLabelText("Person");
+    const legal = within(picker).getByRole("group", { name: "Legal" });
+    const business = within(picker).getByRole("group", { name: "Business Users" });
+    expect(within(legal).getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(within(legal).queryByRole("option", { name: "Bree Portal" })).toBeNull();
+    expect(within(business).getByRole("option", { name: "Bree Portal" })).toBeInTheDocument();
+
+    await user.selectOptions(picker, "u1");
+    expect(within(dialog).queryByText(/is a Business User/)).not.toBeInTheDocument();
+    await user.selectOptions(picker, "u7");
+    expect(
+      within(dialog).getByText(
+        "Bree Portal is a Business User. They will see this confidential Contract in the Portal, with its Documents and Full Thread comments.",
+      ),
+    ).toBeInTheDocument();
+    // DD-023 allows the add, so the warning does not block it.
+    expect(within(dialog).getByRole("button", { name: "Add" })).toBeEnabled();
   });
 
   it.each([false, true])(
@@ -2470,7 +2582,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
     expect(
       await screen.findByText("The status must be a live contract status."),
     ).toBeInTheDocument();
@@ -2484,8 +2596,8 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-    const row = await screen.findByRole("menuitemradio", { name: /^Superseded/ });
+    await user.click(await screen.findByRole("button", { name: "Draft — move contract" }));
+    const row = await screen.findByRole("menuitemradio", { name: "Superseded" });
     // Checked, so the menu says where the record is rather than leaving
     // every row unpicked and the reader guessing.
     expect(row).toHaveAttribute("aria-checked", "true");
@@ -3212,17 +3324,17 @@ describe("the contract record's broader Matter context (M23/6)", () => {
  */
 describe("the contract record's stage pipeline (M14/2)", () => {
   /** The six stages as the strip reads them: the name, whether the
-   * marker is on it, and whether it says the "done" word the check
-   * glyph says visually. */
+   * marker is on it, and whether it says the "earlier" word the dot
+   * says visually. */
   function steps(pipeline: HTMLElement) {
     return within(pipeline)
       .getAllByRole("listitem")
       .map((item) => {
         const text = (item.textContent ?? "").trim();
         return {
-          stage: text.replace(/\s*done$/, ""),
+          stage: text.replace(/\s*earlier$/, ""),
           current: item.getAttribute("aria-current") === "step",
-          done: /\s*done$/.test(text),
+          earlier: /\s*earlier$/.test(text),
         };
       });
   }
@@ -3239,12 +3351,12 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow());
 
     expect(steps(pipeline)).toEqual([
-      { stage: "Draft", current: true, done: false },
-      { stage: "Review", current: false, done: false },
-      { stage: "Approval", current: false, done: false },
-      { stage: "Signature", current: false, done: false },
-      { stage: "Active", current: false, done: false },
-      { stage: "Ended", current: false, done: false },
+      { stage: "Draft", current: true, earlier: false },
+      { stage: "Review", current: false, earlier: false },
+      { stage: "Approval", current: false, earlier: false },
+      { stage: "Signature", current: false, earlier: false },
+      { stage: "Active", current: false, earlier: false },
+      { stage: "Ended", current: false, earlier: false },
     ]);
   });
 
@@ -3258,7 +3370,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Review");
     expect(
       steps(pipeline)
-        .filter((step) => step.done)
+        .filter((step) => step.earlier)
         .map((step) => step.stage),
     ).toEqual(["Draft"]);
   });
@@ -3267,16 +3379,16 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow());
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
-        { stage: "Draft", current: false, done: true },
-        { stage: "Review", current: false, done: true },
-        { stage: "Approval", current: false, done: true },
-        { stage: "Signature", current: false, done: true },
-        { stage: "Active", current: true, done: false },
-        { stage: "Ended", current: false, done: false },
+        { stage: "Draft", current: false, earlier: true },
+        { stage: "Review", current: false, earlier: true },
+        { stage: "Approval", current: false, earlier: true },
+        { stage: "Signature", current: false, earlier: true },
+        { stage: "Active", current: true, earlier: false },
+        { stage: "Ended", current: false, earlier: false },
       ]),
     );
   });
@@ -3286,16 +3398,16 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const user = userEvent.setup();
 
     // The redline status maps to `review` — two stages behind where it sits.
-    await moveTo(user, "With counterparty");
+    await moveTo(user, "Review", "With counterparty");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
-        { stage: "Draft", current: false, done: true },
-        { stage: "Review", current: true, done: false },
-        { stage: "Approval", current: false, done: false },
-        { stage: "Signature", current: false, done: false },
-        { stage: "Active", current: false, done: false },
-        { stage: "Ended", current: false, done: false },
+        { stage: "Draft", current: false, earlier: true },
+        { stage: "Review", current: true, earlier: false },
+        { stage: "Approval", current: false, earlier: false },
+        { stage: "Signature", current: false, earlier: false },
+        { stage: "Active", current: false, earlier: false },
+        { stage: "Ended", current: false, earlier: false },
       ]),
     );
   });
@@ -3314,23 +3426,141 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
   });
 
-  it("names every status the record may hold, each beside the stage it maps to", async () => {
+  it("offers each stage's own statuses under that stage", async () => {
     await pipelineOn(contractRow());
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Draft — move contract" }));
 
-    // Statuses, not stages: what commits is the label, and two labels
-    // may share one stage (CTR-001). The stage is named on each row
-    // because that pair would otherwise read as unexplained.
+    // Statuses, not stages: what commits is the label (CTR-001). A
+    // stage's menu holds only its own statuses, so a row needs no stage
+    // beside it (DES-053 addendum).
     const rows = screen.getAllByRole("menuitemradio");
-    expect(rows.map((row) => row.textContent)).toEqual([
-      "DraftDraft",
-      "With counterpartyReview",
-      "ActiveActive",
-    ]);
+    expect(rows.map((row) => row.textContent)).toEqual(["Draft"]);
     // Where the record is now, marked in the menu as well as the strip.
     expect(rows[0]).toHaveAttribute("aria-checked", "true");
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Review — move contract" }));
+    const review = screen.getAllByRole("menuitemradio");
+    expect(review.map((row) => row.textContent)).toEqual(["With counterparty"]);
+    expect(review[0]).toHaveAttribute("aria-checked", "false");
+  });
+});
+
+/**
+ * The stage bar on an install whose Statuses cover all six stages, as
+ * CTR-001 keeps them. The shared stub offers three Statuses, so these
+ * cases swap in a fuller set and put the shared one back after.
+ */
+describe("the stage bar on every stage (#1281, #1303)", () => {
+  const SHARED_STATUSES = OPTIONS.contractStatuses;
+  const EVERY_STAGE = [
+    { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
+    { id: "s-internal", slug: "internal_review", displayName: "Internal review", stage: "review" },
+    { id: "s-redlining", slug: "redlining", displayName: "With counterparty", stage: "review" },
+    { id: "s-approval", slug: "approval", displayName: "Pending approval", stage: "approval" },
+    { id: "s-signature", slug: "signature", displayName: "Out for signature", stage: "signature" },
+    { id: "s-active", slug: "active", displayName: "Active", stage: "active" },
+    { id: "s-expired", slug: "expired", displayName: "Expired", stage: "ended" },
+  ];
+  beforeEach(() => {
+    OPTIONS.contractStatuses = EVERY_STAGE;
+  });
+  afterEach(() => {
+    OPTIONS.contractStatuses = SHARED_STATUSES;
+  });
+
+  it("marks the stages a jump skipped as earlier, never as done", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const pipeline = await screen.findByRole("list", { name: "Stage" });
+
+    await moveTo(user, "Signature", "Out for signature");
+    await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-signature" }]));
+    await waitFor(() =>
+      expect(pipeline.querySelector('[aria-current="step"]')).toHaveTextContent("Signature"),
+    );
+
+    // Nobody reviewed or approved this Contract. The stages before the
+    // marker say where it sits, not what was done (DES-034 addendum).
+    const items = within(pipeline).getAllByRole("listitem");
+    for (const item of items.slice(0, 3)) {
+      expect(item.querySelector("svg.lucide-circle-small")).not.toBeNull();
+      expect(item.querySelector("svg.lucide-check")).toBeNull();
+      expect(item).toHaveTextContent(/earlier$/);
+    }
+    for (const item of items.slice(3)) {
+      expect(item.querySelector("svg.lucide-circle-small")).toBeNull();
+      expect(item).not.toHaveTextContent(/earlier$/);
+    }
+    expect(pipeline).not.toHaveTextContent(/done/);
+  });
+
+  it("opens a menu of only its own statuses from each of the six stages", async () => {
+    const api = recordApi(contractRow({ statusId: "s-redlining", stage: "review" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    await screen.findByRole("list", { name: "Stage" });
+
+    const menus: Record<string, { status: string; checked: string | null }[]> = {};
+    for (const stage of ["Draft", "Review", "Approval", "Signature", "Active", "Ended"]) {
+      // Each trigger's name says its own stage, not the current one.
+      await user.click(screen.getByRole("button", { name: `${stage} — move contract` }));
+      menus[stage] = screen.getAllByRole("menuitemradio").map((row) => ({
+        status: row.textContent ?? "",
+        checked: row.getAttribute("aria-checked"),
+      }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    }
+    expect(menus).toEqual({
+      Draft: [{ status: "Draft", checked: "false" }],
+      Review: [
+        { status: "Internal review", checked: "false" },
+        { status: "With counterparty", checked: "true" },
+      ],
+      Approval: [{ status: "Pending approval", checked: "false" }],
+      Signature: [{ status: "Out for signature", checked: "false" }],
+      Active: [{ status: "Active", checked: "false" }],
+      Ended: [{ status: "Expired", checked: "false" }],
+    });
+    expect(api.patches).toEqual([]);
+  });
+
+  it("moves the Contract from a stage that is not the current one", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await moveTo(user, "Active", "Active");
+
+    await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
+    // The pressed stage is now the current one and keeps its trigger.
+    await waitFor(() =>
+      expect(
+        screen.getByRole("list", { name: "Stage" }).querySelector('[aria-current="step"]'),
+      ).toHaveTextContent("Active"),
+    );
+    expect(moveControl("Active")).toBeEnabled();
+  });
+
+  it("draws no trigger on any stage of an archived Contract", async () => {
+    // DD-023 removed the Contributor account type, and a Business User
+    // never reaches this page. An archived Contract is the one reader
+    // of the strip who may not move it (DES-053 clause 9).
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ archivedAt: "2026-08-01T00:00:00.000Z" })).handler,
+    });
+    renderAt("/contracts/42");
+    const archived = await screen.findByRole("list", { name: "Stage" });
+    expect(within(archived).getAllByRole("listitem")).toHaveLength(6);
+    expect(within(archived).queryAllByRole("button")).toEqual([]);
   });
 });
 
@@ -7080,6 +7310,112 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     ).toBeInTheDocument();
   });
 
+  /** A Document whose current version holds exactly `bytes`, with the
+   * checksum the API stores: SHA-256 as lowercase hex. */
+  async function draftHolding(bytes: string) {
+    const { createHash } = await import("node:crypto");
+    const checksumSha256 = createHash("sha256").update(bytes).digest("hex");
+    return { ...DRAFT, versions: [version({ checksumSha256 })] };
+  }
+
+  it("warns before Add version sends a copy of the current version, and sends it on Upload anyway", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
+    );
+
+    expect(
+      await within(dialog).findByText("This file is the same as version 1. Upload it anyway?"),
+    ).toBeVisible();
+    expect(api.writes).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Upload anyway" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-1/versions");
+    expect(await within(section).findByText("v2")).toBeVisible();
+  });
+
+  it("clears the copy warning when another file is picked", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    const input = within(dialog).getByLabelText("File", { selector: "input" });
+    await user.upload(input, new File(["our counter"], "same.docx", { type: "application/pdf" }));
+    await within(dialog).findByText("This file is the same as version 1. Upload it anyway?");
+
+    // A different file is a new round, so it uploads with no warning.
+    await user.upload(
+      input,
+      new File(["their redline"], "redline.docx", { type: "application/pdf" }),
+    );
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+  });
+
+  it("uploads a copy with no warning when the browser cannot hash it", async () => {
+    // A plain HTTP install has no `crypto.subtle`, so the check is skipped.
+    const original = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: original.getRandomValues.bind(original),
+      randomUUID: original.randomUUID.bind(original),
+    });
+    try {
+      const api = documentsApi([await draftHolding("our counter")]);
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/documents");
+      const user = userEvent.setup();
+
+      const section = await documentsSection();
+      await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+      const dialog = await screen.findByRole("dialog");
+      await user.upload(
+        within(dialog).getByLabelText("File", { selector: "input" }),
+        new File(["our counter"], "same.docx", { type: "application/pdf" }),
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+      await waitFor(() => expect(api.writes).toHaveLength(1));
+      expect(screen.queryByText(/is the same as version/)).toBeNull();
+      expect(screen.queryByRole("alert")).toBeNull();
+    } finally {
+      vi.stubGlobal("crypto", original);
+    }
+  });
+
+  it("never checks a new Document, which has no current version", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "copy.docx", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
+  });
+
   it("renames a document and edits its description, leaving the file's own name alone", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });
@@ -9462,6 +9798,8 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
     const record = recordApi(contractRow(), team);
     const reads: string[] = [];
     const writes: { url: string; body: unknown }[] = [];
+    /** Every new upload, with the folder it asked to be filed in. */
+    const uploads: { name: string; folderId: string | null }[] = [];
     let paper = documents;
     /** One listing, in the order the seam answers it. */
     const listing = (folderId: string | null) =>
@@ -9511,9 +9849,20 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         paper = paper.filter((row) => row.id !== removed[1]);
         return json(200, { document: gone });
       }
+      // A new upload lands in the folder it names, or at the record root
+      // when it names none (DES-033).
+      if (pathname === "/api/v1/contracts/42/documents" && call.method === "POST") {
+        const form = call.body as FormData;
+        const file = form.get("file") as File;
+        const folderId = form.has("folderId") ? String(form.get("folderId")) : null;
+        uploads.push({ name: file.name, folderId });
+        const added = document(`doc-${file.name}`, file.name, folderId);
+        paper = [added, ...paper];
+        return json(201, { document: added });
+      }
       return record.handler(call);
     };
-    return { handler, reads, writes };
+    return { handler, reads, writes, uploads };
   }
 
   const documentsSection = () => screen.findByRole("region", { name: /^Documents/ });
@@ -10158,6 +10507,107 @@ describe("filing documents into folders (M13/3, DES-033)", () => {
         .getAllByRole("option")
         .map((option) => option.textContent),
     ).toEqual(["None", "Correspondence", "Correspondence / 2026"]);
+  });
+
+  it("files a new upload in the folder File in names", async () => {
+    const api = filingApi([document("doc-1", "loose.pdf")], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const dialog = await screen.findByRole("dialog");
+    // A first upload has no round before it, so its Note asks nothing.
+    expect(within(dialog).getByLabelText("Note")).not.toHaveAttribute("placeholder");
+    const fileIn = within(dialog).getByLabelText("File in");
+    // It starts on the record root, and lists each folder by its path.
+    expect(fileIn).toHaveValue("");
+    expect(
+      within(fileIn)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["None", "Board"]);
+    await user.selectOptions(fileIn, "f-1");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["minutes"], "minutes.pdf", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.uploads).toEqual([{ name: "minutes.pdf", folderId: "f-1" }]));
+    // Inside Board, not at the record root.
+    expect(await within(section).findByText("1 document")).toBeVisible();
+    expect(within(section).queryByText("minutes.pdf")).toBeNull();
+    await user.click(within(section).getByRole("button", { name: "Expand Board" }));
+    expect(await within(section).findByText("minutes.pdf")).toBeVisible();
+  });
+
+  it("carries the File in folder into a multi-file pick's batch", async () => {
+    const api = filingApi([], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const composer = await screen.findByRole("dialog");
+    await user.selectOptions(within(composer).getByLabelText("File in"), "f-1");
+    await user.upload(within(composer).getByLabelText("File", { selector: "input" }), [
+      new File(["one"], "one.pdf", { type: "application/pdf" }),
+      new File(["two"], "two.pdf", { type: "application/pdf" }),
+    ]);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByRole("heading", { name: "Import 2 files" })).toBeVisible();
+    expect(within(dialog).getByRole("group", { name: "Destination" })).toHaveTextContent("Board");
+    await user.click(within(dialog).getByRole("button", { name: "Import 2 files" }));
+
+    await waitFor(() => expect(api.uploads).toHaveLength(2));
+    expect(api.uploads.map((one) => one.folderId)).toEqual(["f-1", "f-1"]);
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(await within(section).findByText("2 documents")).toBeVisible();
+  });
+
+  it("asks no folder on Add version, where the Note still asks what changed", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], [folder("f-1", "Board")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    // Board is empty, so it draws no disclosure to wait on.
+    await within(section).findByText("Board");
+    await user.click(
+      await within(section).findByRole("button", { name: "Actions for signed.pdf" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Add version" }));
+    const dialog = await screen.findByRole("dialog");
+
+    // A version lands where its document is already filed.
+    expect(within(dialog).queryByLabelText("File in")).toBeNull();
+    expect(within(dialog).getByLabelText("Note")).toHaveAttribute(
+      "placeholder",
+      "What changed in this round",
+    );
+  });
+
+  it("asks no folder on a record that has none", async () => {
+    const api = filingApi([document("doc-1", "signed.pdf")], []);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await within(section).findByText("signed.pdf");
+    await user.click(within(section).getByRole("button", { name: "Upload" }));
+    const dialog = await screen.findByRole("dialog");
+
+    expect(within(dialog).queryByLabelText("File in")).toBeNull();
   });
 
   it("says a folder's documents are on their way while they load", async () => {

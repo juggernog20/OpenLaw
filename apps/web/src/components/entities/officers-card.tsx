@@ -6,21 +6,25 @@
  *
  * The list shows current officers unless "Show former" is on, so an
  * update that sets `resignedOn` drops the row from the list while the
- * toggle is off. The row still exists; the toggle reads it back. A
- * row's role may be archived, so the role selector retains its saved value.
+ * toggle is off. Resign opens a dialog that confirms the date and says
+ * so. The inline Resigned on field stays for corrections. The row still
+ * exists; the toggle reads it back. A row's role may be archived, so the
+ * role selector retains its saved value.
  * The name picker also preserves links to users no longer offered in the list.
  */
 
-import { useId, useState } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, UserMinus } from "lucide-react";
 import { api } from "../../lib/api";
 import type { EntityOfficer, EntityPersonOption, OfficerRoleOption } from "../../lib/entities";
 import { CONTROL_CLASS } from "../../lib/form-controls";
+import { civilToday } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
+import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { OfficerNameInput } from "./officer-name-input";
@@ -91,7 +95,11 @@ export function OfficersCard({
     setStatus("saved");
   }
 
-  async function updateOfficer(id: string, body: Record<string, unknown>) {
+  async function updateOfficer(
+    id: string,
+    body: Record<string, unknown>,
+    onRefused?: (detail: string | undefined) => void,
+  ) {
     const result = await api
       .PATCH("/api/v1/entities/{id}/officers/{childId}", {
         params: { path: { id: entityId, childId: id } },
@@ -99,8 +107,13 @@ export function OfficersCard({
       })
       .catch(() => undefined);
     if (!result?.data) {
+      const { detail } = await problem(result);
+      if (onRefused) {
+        onRefused(detail);
+        return false;
+      }
       setStatus("error");
-      setError((await problem(result)).detail);
+      setError(detail);
       return false;
     }
     setOfficers((current) =>
@@ -245,7 +258,7 @@ export function OfficersCard({
               roles={roles}
               users={users}
               frozen={frozen}
-              onUpdate={(body) => updateOfficer(officer.id, body)}
+              onUpdate={(body, onRefused) => updateOfficer(officer.id, body, onRefused)}
               onRemove={() => void removeOfficer(officer.id)}
             />
           ))}
@@ -267,7 +280,10 @@ function OfficerRow({
   roles: readonly OfficerRoleOption[];
   users: readonly EntityPersonOption[];
   frozen: boolean;
-  onUpdate: (body: Record<string, unknown>) => Promise<boolean>;
+  onUpdate: (
+    body: Record<string, unknown>,
+    onRefused?: (detail: string | undefined) => void,
+  ) => Promise<boolean>;
   onRemove: () => void;
 }>) {
   const intl = useIntl();
@@ -281,6 +297,12 @@ function OfficerRow({
     );
   const [appointedOn, setAppointedOn] = useState(officer.appointedOn ?? "");
   const [resignedOn, setResignedOn] = useState(officer.resignedOn ?? "");
+  const [resigning, setResigning] = useState(false);
+  // DES-017: Enter commits through the blur, and Escape reverts the draft.
+  const keys = (revert: () => void) => (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") event.currentTarget.blur();
+    if (event.key === "Escape") revert();
+  };
   return (
     <div className="grid grid-cols-1 gap-3 p-4 @2xl/page:grid-cols-[1.4fr_1fr_1fr_1fr_auto]">
       <OfficerNameInput
@@ -325,6 +347,7 @@ function OfficerRow({
         value={appointedOn}
         disabled={frozen}
         onChange={(event) => setAppointedOn(event.target.value)}
+        onKeyDown={keys(() => setAppointedOn(officer.appointedOn ?? ""))}
         onBlur={() =>
           appointedOn !== (officer.appointedOn ?? "") &&
           onUpdate({ appointedOn: appointedOn || null })
@@ -341,23 +364,149 @@ function OfficerRow({
         value={resignedOn}
         disabled={frozen}
         onChange={(event) => setResignedOn(event.target.value)}
+        onKeyDown={keys(() => setResignedOn(officer.resignedOn ?? ""))}
         onBlur={() =>
           resignedOn !== (officer.resignedOn ?? "") && onUpdate({ resignedOn: resignedOn || null })
         }
       />
       {!frozen ? (
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label={intl.formatMessage(
-            { id: "entities.record.officers.remove", defaultMessage: "Remove {officer}" },
-            { officer: officer.name },
-          )}
-          onClick={onRemove}
-        >
-          <Trash2 size={16} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {officer.resignedOn === null ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={intl.formatMessage(
+                { id: "entities.record.officers.resign", defaultMessage: "Resign {officer}" },
+                { officer: officer.name },
+              )}
+              onClick={() => setResigning(true)}
+            >
+              <UserMinus size={16} aria-hidden="true" />
+              <FormattedMessage
+                id="entities.record.officers.resignAction"
+                defaultMessage="Resign"
+              />
+            </Button>
+          ) : null}
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={intl.formatMessage(
+              { id: "entities.record.officers.remove", defaultMessage: "Remove {officer}" },
+              { officer: officer.name },
+            )}
+            onClick={onRemove}
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
+      ) : null}
+      {resigning ? (
+        <ResignOfficerDialog
+          officer={officer}
+          onClose={() => setResigning(false)}
+          onResign={(date, onRefused) => onUpdate({ resignedOn: date }, onRefused)}
+        />
       ) : null}
     </div>
+  );
+}
+
+/** DES-017's compound-edit dialog: a resignation removes the row from
+ * the current list, so it asks for the date and says where the row goes. */
+function ResignOfficerDialog({
+  officer,
+  onClose,
+  onResign,
+}: Readonly<{
+  officer: EntityOfficer;
+  onClose: () => void;
+  onResign: (date: string, onRefused: (detail: string | undefined) => void) => Promise<boolean>;
+}>) {
+  const intl = useIntl();
+  const id = useId();
+  const [date, setDate] = useState(() => civilToday());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  async function confirm() {
+    if (!date || busy) return;
+    setBusy(true);
+    setError(undefined);
+    const saved = await onResign(date, (detail) =>
+      setError(
+        detail ??
+          intl.formatMessage({
+            id: "entities.record.officers.resignFailed",
+            defaultMessage: "The resignation could not be saved. Try again.",
+          }),
+      ),
+    );
+    setBusy(false);
+    if (saved) onClose();
+  }
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !busy) onClose();
+      }}
+    >
+      <DialogContent aria-describedby={`${id}-summary`}>
+        <DialogTitle>
+          <FormattedMessage
+            id="entities.record.officers.resignTitle"
+            defaultMessage="Resign {officer}"
+            values={{ officer: officer.name }}
+          />
+        </DialogTitle>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void confirm();
+          }}
+        >
+          <p id={`${id}-summary`} className="text-sm text-muted">
+            <FormattedMessage
+              id="entities.record.officers.resignSummary"
+              defaultMessage="{officer} resigns as {role}. The row moves to Show former."
+              values={{ officer: officer.name, role: officer.officerRoleName }}
+            />
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${id}-date`}>
+              <FormattedMessage
+                id="entities.record.officers.resignedOn"
+                defaultMessage="Resigned on"
+              />
+            </Label>
+            <Input
+              id={`${id}-date`}
+              type="date"
+              required
+              value={date}
+              disabled={busy}
+              onChange={(event) => setDate(event.target.value)}
+            />
+          </div>
+          {error ? (
+            <p role="alert" className="text-sm text-status-danger-fg">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" disabled={busy} onClick={onClose}>
+              <FormattedMessage id="common.cancel" defaultMessage="Cancel" />
+            </Button>
+            <Button type="submit" disabled={busy || !date}>
+              <FormattedMessage
+                id="entities.record.officers.resignAction"
+                defaultMessage="Resign"
+              />
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

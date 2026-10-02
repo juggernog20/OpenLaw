@@ -256,6 +256,32 @@ describe("the Matters list", () => {
     expect(answer.matters.some((row) => row.id === completeRequiredId)).toBe(false);
   });
 
+  it("lists only reached Confidential matters under the Confidential flag, and counts only those", async () => {
+    const reachedId = await insertMatter({
+      title: "Confidential member matter",
+      matterTypeId: plainTypeId,
+      statusId: openStatusId,
+      isConfidential: true,
+      createdBy: outsiderId,
+    });
+    await harness.db.insert(matterTeam).values({ matterId: reachedId, userId: memberId });
+    try {
+      const member = await list(memberCookies, { confidential: "true" });
+      expect(member.matters.map((row) => row.id)).toEqual([reachedId]);
+      expect(member.total).toBe(1);
+      // The outsider's Confidential matter stays out of reach with the flag on.
+      expect(member.matters.some((row) => row.title === "Confidential outsider matter")).toBe(
+        false,
+      );
+      const none = await list(memberCookies, { confidential: "true", type: requiredTypeId });
+      expect(none.matters).toEqual([]);
+      expect(none.total).toBe(0);
+    } finally {
+      await harness.db.delete(matterTeam).where(eq(matterTeam.matterId, reachedId));
+      await harness.db.delete(matters).where(eq(matters.id, reachedId));
+    }
+  });
+
   it("lists only named team records in Your Matters", async () => {
     const response = await harness.app.inject({
       method: "GET",

@@ -42,9 +42,16 @@ const LABELS: Record<string, FormMessageKey> = {
   value: "Value",
   needed_by: "Needed by",
 };
+/** The label of a built-in Row, or undefined for a Field Row. */
+export function builtinRowLabel(rowRef: string, t: FormText = (text) => text) {
+  return Object.hasOwn(LABELS, rowRef) ? t(LABELS[rowRef]!) : undefined;
+}
 export function rowName(row: FormRow, catalog: readonly ApiField[], t: FormText = (text) => text) {
-  const label = LABELS[row.rowRef];
-  return catalog.find((f) => f.id === row.id)?.displayName ?? (label ? t(label) : row.rowRef);
+  return (
+    catalog.find((f) => f.id === row.id)?.displayName ??
+    builtinRowLabel(row.rowRef, t) ??
+    row.rowRef
+  );
 }
 export function isPinned(node: FormNode) {
   return node.kind === "row" && ["title", "contract_type", "matter_type"].includes(node.rowRef);

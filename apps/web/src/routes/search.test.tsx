@@ -149,6 +149,29 @@ describe("the header search box", () => {
     expect(screen.getByRole("option", { name: /M-51/i })).toBeVisible();
   });
 
+  it("names every kind it searches, Knowledge Items included, while a search is pending", async () => {
+    let asked = false;
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (!searchCall(call)) return undefined;
+        asked = true;
+        return new Promise<Response>(() => undefined);
+      },
+    });
+    renderAt("/");
+
+    const input = await headerSearch();
+    await userEvent.setup().type(input, "DPA");
+    await waitFor(() => expect(asked).toBe(true));
+    expect(screen.getByText("Searching…")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Looking across Contracts, Matters, Documents, Entities, Counterparties, Requests, and Knowledge Items.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("groups rows, announces the listbox, and opens the active row with Arrow and Enter", async () => {
     stubApi({
       signedIn: MEMBER,

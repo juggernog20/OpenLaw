@@ -312,6 +312,76 @@ it("publishes from a dialog that lists every gap, then unpublishes, archives, an
   await screen.findByRole("button", { name: "Publish" });
 });
 
+it("says why Publish is disabled until a Word template is uploaded", async () => {
+  const user = userEvent.setup();
+  const reason = "Upload a Word template on the Form tab to publish.";
+  const full = record();
+  const blank: RecordAnswer = {
+    ...full,
+    autoDoc: { ...full.autoDoc, templateDocumentId: null },
+    template: null,
+    detection: { placeholders: [], blocks: [] },
+    formVersion: null,
+    formVersions: [],
+  };
+  let current = blank;
+  stubApi({
+    signedIn: member,
+    extra: (call) => {
+      if (call.url.pathname.endsWith("/generations")) return json(200, { generations: [] });
+      if (call.url.pathname === "/api/v1/auto-docs/options") return json(200, options);
+      if (call.url.pathname === "/api/v1/auto-docs/nda") return json(200, current);
+      if (call.url.pathname.endsWith("/reading")) return json(200, reading());
+      if (call.url.pathname.endsWith("/template")) {
+        current = full;
+        return json(201, current);
+      }
+      return undefined;
+    },
+  });
+  const first = renderAt("/auto-docs/nda");
+  await screen.findByRole("heading", { name: "Publish NDA" });
+  const publish = screen.getByRole("button", { name: "Publish" });
+  expect(publish).toBeDisabled();
+  expect(publish).toHaveAccessibleDescription(reason);
+  const wrapper = screen.getByRole("group", { name: "Publish" });
+  expect(wrapper).toHaveAccessibleDescription(reason);
+  await user.tab();
+  while (document.activeElement !== wrapper) await user.tab();
+  expect((await screen.findByRole("tooltip")).textContent).toBe(reason);
+  await user.keyboard("{Escape}");
+  await user.unhover(wrapper);
+  await user.hover(wrapper);
+  expect((await screen.findByRole("tooltip")).textContent).toBe(reason);
+  await user.unhover(wrapper);
+
+  const card = screen.getByRole("region", { name: "Publication" });
+  expect(within(card).getByText("Not published.")).toBeVisible();
+  expect(within(card).getByText(/Upload a Word template on the/)).toHaveTextContent(reason);
+  await user.click(within(card).getByRole("link", { name: "Form tab" }));
+  await user.click(await screen.findByRole("button", { name: "Upload version" }));
+  const dialog = screen.getByRole("dialog");
+  await user.upload(within(dialog).getByLabelText("Word template"), new File(["word"], "NDA.docx"));
+  await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+  await user.click(await within(dialog).findByRole("button", { name: "Done" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Publish" })).toBeEnabled());
+  expect(screen.getByRole("button", { name: "Publish" })).not.toHaveAccessibleDescription();
+  expect(screen.queryByRole("group", { name: "Publish" })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Upload a Word template on the/)).not.toBeInTheDocument();
+
+  first.view.unmount();
+
+  // A published or archived Auto-Doc shows no reason, even with no template.
+  for (const state of ["published", "archived"] as const) {
+    current = { ...blank, autoDoc: { ...blank.autoDoc, state } };
+    const view = renderAt("/auto-docs/nda").view;
+    await screen.findByRole("heading", { name: "Publish NDA" });
+    expect(screen.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Upload a Word template on the/)).not.toBeInTheDocument();
+    view.unmount();
+  }
+});
+
 it("commits each setting on its own, then applies list filters", async () => {
   const user = userEvent.setup();
   let current = record();

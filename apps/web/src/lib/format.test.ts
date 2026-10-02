@@ -152,9 +152,14 @@ describe("formatDeadline (due-date rule)", () => {
     expect(formatDeadline("2026-05-02", enUS)).toBe("May 2 (1 day overdue)");
   });
 
-  it("drops the qualifier beyond 30 days", () => {
+  it("drops the qualifier beyond 30 days ahead", () => {
     expect(formatDeadline("2026-06-17", enUS)).toBe("Jun 17");
     expect(formatDeadline("2026-12-24", enUS)).toBe("Dec 24");
+  });
+
+  it("keeps the overdue qualifier at any age", () => {
+    expect(formatDeadline("2026-03-24", enUS)).toBe("Mar 24 (40 days overdue)");
+    expect(formatDeadline("2025-05-03", enUS)).toBe("May 3, 2025 (365 days overdue)");
   });
 });
 

@@ -10,26 +10,33 @@
  * record, not a schedule. Filing a recurring obligation does not
  * complete the row. It advances `nextDueOn` by the recurrence, as many
  * times as it takes to pass the filing day, and the row stays open.
+ * Each filing keeps its own row with an optional note and filed
+ * Document, which the row menu's Filing history lists.
  */
 
 import { AutoResizeTextarea } from "../auto-resize-textarea";
-import { useId, useState, type ReactNode } from "react";
+import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { FormattedMessage, useIntl, type IntlShape } from "react-intl";
-import { Check, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, History, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
+import { uploadRecordDocument } from "../../lib/documents";
 import type {
   EntityObligation,
   EntityObligationOptions,
   EntityRegistration,
 } from "../../lib/entities";
-import { civilToday, formatFullDate } from "../../lib/format";
+import { civilToday, formatFullDate, formatShortDate } from "../../lib/format";
 import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
 import { matterReference } from "../../lib/matters";
 import { type TableCatalogue } from "../../lib/list-views";
 import { readTableWidths, writeTableWidths } from "../../lib/table-width-preferences";
 import { ManagedTable } from "../table/managed-table";
 import { problem } from "../../lib/problem";
+import { CreateAttachments, useCreateAttachments } from "../documents/create-attachments";
+import { DueDate } from "../due-date";
+import { FilingHistoryDialog } from "./obligation-filing-history";
+import { ObligationMatterInput, type MatterChoice } from "./obligation-matter-input";
 import { RestrictedRecordCell } from "../restricted-record-cell";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
@@ -131,6 +138,7 @@ export function ObligationsPanel({
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<EntityObligation>();
   const [filing, setFiling] = useState<EntityObligation>();
+  const [history, setHistory] = useState<EntityObligation>();
   const [status, setStatus] = useState<FieldStatus>("idle");
   const [error, setError] = useState<string>();
 
@@ -212,6 +220,7 @@ export function ObligationsPanel({
                 frozen={frozen || status === "saving"}
                 onEdit={() => setEditing(row)}
                 onFile={() => setFiling(row)}
+                onHistory={() => setHistory(row)}
                 onRemove={() => void remove(row.id)}
               />
             ),
@@ -247,12 +256,20 @@ export function ObligationsPanel({
           }}
         />
       ) : null}
+      {history ? (
+        <FilingHistoryDialog
+          entityId={entityId}
+          obligation={history}
+          onClose={() => setHistory(undefined)}
+        />
+      ) : null}
     </section>
   );
 }
 
 function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> {
   const labels = fieldLabels(intl);
+  const today = civilToday();
   const columns: TableCatalogue<EntityObligation>["columns"] = [
     {
       key: "due",
@@ -260,7 +277,14 @@ function obligationCatalogue(intl: IntlShape): TableCatalogue<EntityObligation> 
       label: () => labels.dueDate,
       defaultWidth: 144,
       minWidth: 100,
-      render: (row) => <time dateTime={row.nextDueOn}>{formatFullDate(row.nextDueOn)}</time>,
+      // A completed one-off keeps a plain date beside its Completed pill.
+      render: (row) =>
+        row.completedOn ? (
+          <time dateTime={row.nextDueOn}>{formatShortDate(row.nextDueOn)}</time>
+        ) : (
+          // The pill's own inset moves out, so its text lines up with the header.
+          <DueDate date={row.nextDueOn} overdue={row.nextDueOn < today} className="-ms-2" />
+        ),
     },
     {
       key: "label",
@@ -366,24 +390,28 @@ function ObligationActions({
   frozen,
   onEdit,
   onFile,
+  onHistory,
   onRemove,
 }: Readonly<{
   row: EntityObligation;
   frozen: boolean;
   onEdit: () => void;
   onFile: () => void;
+  onHistory: () => void;
   onRemove: () => void;
 }>) {
   const intl = useIntl();
   const labels = fieldLabels(intl);
+  // A locked row still shows what was filed. Only reading is left.
   const locked = frozen || row.completedOn !== null;
-  if (locked) return null;
   return (
     <div className="flex items-center justify-end gap-1">
-      <Button size="sm" onClick={onFile}>
-        <Check size={16} aria-hidden="true" />
-        {labels.markComplete}
-      </Button>
+      {!locked ? (
+        <Button size="sm" onClick={onFile}>
+          <Check size={16} aria-hidden="true" />
+          {labels.markComplete}
+        </Button>
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -401,15 +429,28 @@ function ObligationActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={onEdit}>
-            <Pencil size={16} aria-hidden="true" />
-            <FormattedMessage id="common.edit" defaultMessage="Edit" />
+          {!locked ? (
+            <DropdownMenuItem onSelect={onEdit}>
+              <Pencil size={16} aria-hidden="true" />
+              <FormattedMessage id="common.edit" defaultMessage="Edit" />
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem onSelect={onHistory}>
+            <History size={16} aria-hidden="true" />
+            <FormattedMessage
+              id="entities.record.obligations.filingHistory"
+              defaultMessage="Filing history"
+            />
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={onRemove} className="text-status-danger-fg">
-            <Trash2 size={16} aria-hidden="true" />
-            <FormattedMessage id="common.delete" defaultMessage="Delete" />
-          </DropdownMenuItem>
+          {!locked ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={onRemove} className="text-status-danger-fg">
+                <Trash2 size={16} aria-hidden="true" />
+                <FormattedMessage id="common.delete" defaultMessage="Delete" />
+              </DropdownMenuItem>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -460,6 +501,31 @@ function ObligationDialog({
   const [error, setError] = useState<string>();
   const set = (key: keyof Draft, value: string) =>
     setDraft((current) => ({ ...current, [key]: value }));
+  // A linked Matter outside the options stays a choice, so an edit keeps it.
+  const kept = obligation?.matter;
+  const matterChoices: MatterChoice[] = [
+    ...(kept && !options.matters.some((row) => row.id === kept.id)
+      ? [
+          {
+            id: kept.id,
+            label:
+              "restricted" in kept
+                ? intl.formatMessage({
+                    id: "entities.record.obligations.restrictedMatter",
+                    defaultMessage: "Restricted matter",
+                  })
+                : matterLabel(intl, kept),
+          },
+        ]
+      : []),
+    ...options.matters.map((row) => ({ id: row.id, label: matterLabel(intl, row) })),
+  ];
+  /** A ref, not state: the dialog's Escape handler reads it in the same
+   * key event that closes the list, before React renders again. */
+  const matterListOpen = useRef(false);
+  const onMatterListOpenChange = useCallback((open: boolean) => {
+    matterListOpen.current = open;
+  }, []);
 
   async function submit() {
     if (!draft.label.trim() || !draft.nextDueOn || busy) return;
@@ -501,7 +567,14 @@ function ObligationDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
-      <DialogContent aria-describedby={undefined} width="xl">
+      <DialogContent
+        aria-describedby={undefined}
+        width="xl"
+        // Escape closes the Matter list first, and only the list (DES-010).
+        onEscapeKeyDown={(event) => {
+          if (matterListOpen.current) event.preventDefault();
+        }}
+      >
         <DialogTitle>{title}</DialogTitle>
         <form
           className="mt-4 grid grid-cols-1 gap-4 @sm/dialog:grid-cols-2"
@@ -573,30 +646,16 @@ function ObligationDialog({
               </option>
             ))}
           </SelectDraft>
-          <SelectDraft
-            id="obligation-matter"
-            label={labels.matter}
-            value={draft.matterId}
-            onChange={(value) => set("matterId", value)}
-          >
-            <option value="">{labels.none}</option>
-            {obligation?.matter &&
-            !options.matters.some((row) => row.id === obligation.matter?.id) ? (
-              <option value={obligation.matter.id}>
-                {"restricted" in obligation.matter
-                  ? intl.formatMessage({
-                      id: "entities.record.obligations.restrictedMatter",
-                      defaultMessage: "Restricted matter",
-                    })
-                  : matterLabel(intl, obligation.matter)}
-              </option>
-            ) : null}
-            {options.matters.map((row) => (
-              <option key={row.id} value={row.id}>
-                {matterLabel(intl, row)}
-              </option>
-            ))}
-          </SelectDraft>
+          <Field id="obligation-matter" label={labels.matter}>
+            <ObligationMatterInput
+              id="obligation-matter"
+              value={draft.matterId}
+              choices={matterChoices}
+              noneLabel={labels.none}
+              onChange={(value) => set("matterId", value)}
+              onListOpenChange={onMatterListOpenChange}
+            />
+          </Field>
           <div className="flex flex-col gap-1.5 @sm/dialog:col-span-2">
             <Label htmlFor="obligation-note">{labels.note}</Label>
             <AutoResizeTextarea
@@ -639,15 +698,49 @@ function MarkFiledDialog({
   const intl = useIntl();
   const labels = fieldLabels(intl);
   const [filedOn, setFiledOn] = useState(() => civilToday());
+  const [note, setNote] = useState("");
+  const uploads = useCreateAttachments();
+  /** The Document an earlier try already uploaded, keyed by its staged
+   * file, so a retry after a refused filing does not upload it twice. */
+  const [uploaded, setUploaded] = useState<{ rowId: number; documentId: string }>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
   async function submit() {
     if (!filedOn || busy) return;
     setBusy(true);
+    setError(undefined);
+    // The paper goes to the Entity's Documents tab first. The filing
+    // then names that Document, and the server pins its current Version.
+    const staged = uploads.rows[0];
+    let documentId = staged && uploaded?.rowId === staged.id ? uploaded.documentId : undefined;
+    if (staged && !documentId) {
+      const sent = await uploadRecordDocument(
+        { entityType: "entity", id: entityId },
+        { file: staged.file, documentTypeId: uploads.typeId || null, note: "" },
+      );
+      if (!sent.ok) {
+        setBusy(false);
+        setError(
+          sent.detail ??
+            intl.formatMessage({
+              id: "createAttachments.failed",
+              defaultMessage: "The file could not be uploaded.",
+            }),
+        );
+        return;
+      }
+      documentId = sent.document.id;
+      setUploaded({ rowId: staged.id, documentId });
+    }
+    const trimmed = note.trim();
     const result = await api
       .POST("/api/v1/entities/{id}/obligations/{childId}/file", {
         params: { path: { id: entityId, childId: obligation.id } },
-        body: { filedOn },
+        body: {
+          filedOn,
+          ...(trimmed ? { note: trimmed } : {}),
+          ...(documentId ? { documentId } : {}),
+        },
       })
       .catch(() => undefined);
     setBusy(false);
@@ -697,6 +790,30 @@ function MarkFiledDialog({
               onChange={(event) => setFiledOn(event.target.value)}
             />
           </Field>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="obligation-filing-note">{labels.note}</Label>
+            <AutoResizeTextarea
+              id="obligation-filing-note"
+              className={TEXTAREA_CLASS}
+              maxLength={2_000}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </div>
+          <CreateAttachments
+            module="entity"
+            uploads={uploads}
+            disabled={busy}
+            single
+            label={intl.formatMessage({
+              id: "entities.record.obligations.filedPaper",
+              defaultMessage: "Filed paper",
+            })}
+            chooseLabel={intl.formatMessage({
+              id: "entities.record.obligations.attachFiledPaper",
+              defaultMessage: "Attach the filed paper",
+            })}
+          />
           {error ? (
             <p role="alert" className="text-status-danger-fg">
               {error}

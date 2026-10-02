@@ -339,6 +339,10 @@ describe("GET /api/v1/home", () => {
       "limit=0",
       "limit=101",
       "includeCompleted=invalid",
+      "overdue=invalid",
+      "dueWithinDays=-1",
+      "dueWithinDays=36501",
+      "dueWithinDays=soon",
       "cursor=invalid",
       "cursor=2099-02-31:contract:01950000-0000-7000-8000-000000000000",
     ]) {
@@ -458,6 +462,39 @@ describe("GET /api/v1/home", () => {
     expect(section.total).toBe(4);
     expect(section.rows).toHaveLength(4);
     expect(section.rows.some((row) => row.contract.id === contract.id)).toBe(false);
+  });
+
+  it("totals the same Contracts as the list's Waiting on my approval link, ended ones too", async () => {
+    const ended = await newContract("Ended while waiting");
+    await ask(ended);
+    const [endedStatus] = await harness.db
+      .select({ id: contractStatuses.id })
+      .from(contractStatuses)
+      .where(eq(contractStatuses.stage, "ended"))
+      .limit(1);
+    await harness.db
+      .update(contracts)
+      .set({ statusId: endedStatus!.id, endedAt: new Date() })
+      .where(eq(contracts.id, ended.id));
+    try {
+      const section = approvalsIn(await home(APPROVER))!;
+      const list = await harness.app.inject({
+        method: "GET",
+        url: "/api/v1/contracts?awaitingMyApproval=true&includeEnded=true",
+        cookies: as(APPROVER),
+      });
+      expect(list.statusCode, list.body).toBe(200);
+      const answer = list.json() as { total: number; contracts: { id: string }[] };
+      expect(section.total).toBe(5);
+      expect(answer.total).toBe(section.total);
+      expect(answer.contracts.map((row) => row.id)).toContain(ended.id);
+    } finally {
+      // Out of every later section's way.
+      await harness.db
+        .update(contracts)
+        .set({ archivedAt: new Date() })
+        .where(eq(contracts.id, ended.id));
+    }
   });
 
   it("merges the viewer's open Contract and Matter Tasks before ordering, totals, and the cap", async () => {
@@ -714,6 +751,80 @@ describe("GET /api/v1/home", () => {
       "Review response exhibits",
       "Confirm renewal owner",
     ]);
+
+    // The Due filter on My Tasks narrows the page, its total and its cursor.
+    const todayResult = await harness.db.execute<{ today: string }>(
+      sql`select current_date::text as today`,
+    );
+    const today = todayResult.rows[0]!.today;
+    await harness.db.insert(matterTasks).values(
+      [
+        ["Due today", 0],
+        ["Due in three days", 3],
+        ["Due on the seventh day", 7],
+        ["Due on the eighth day", 8],
+      ].map(([title, days], displayOrder) => ({
+        matterId: futureMatter.id,
+        title: String(title),
+        assigneeId: idOf(APPROVER),
+        dueDate: plusDays(today, Number(days)),
+        displayOrder: displayOrder + 1,
+      })),
+    );
+    const filtered = async (filter: Record<string, string>) => {
+      const response = await harness.app.inject({
+        method: "GET",
+        url: `/api/v1/home/tasks?${new URLSearchParams(filter).toString()}`,
+        cookies: as(APPROVER),
+      });
+      expect(response.statusCode, response.body).toBe(200);
+      return response.json() as {
+        total: number;
+        rows: TaskSection["rows"];
+        nextCursor: string | null;
+      };
+    };
+    const overdue = await filtered({ overdue: "true", includeCompleted: "true" });
+    expect(overdue.total).toBe(2);
+    expect(overdue.rows.map((row) => row.title)).toEqual([
+      "Prepare financing signature pages",
+      "Draft witness outline",
+    ]);
+    expect(overdue.rows.every((row) => row.isOverdue)).toBe(true);
+    const overdueFirst = await filtered({ overdue: "true", limit: "1" });
+    expect(overdueFirst).toMatchObject({ total: 2, rows: [{ title: overdue.rows[0]!.title }] });
+    const overdueNext = await filtered({
+      overdue: "true",
+      limit: "1",
+      cursor: overdueFirst.nextCursor!,
+    });
+    expect(overdueNext).toMatchObject({
+      total: 2,
+      rows: [{ title: "Draft witness outline" }],
+      nextCursor: null,
+    });
+    const week = await filtered({ dueWithinDays: "7" });
+    expect(week.total).toBe(5);
+    expect(week.rows.map((row) => row.title)).toEqual([
+      "Prepare financing signature pages",
+      "Draft witness outline",
+      "Due today",
+      "Due in three days",
+      "Due on the seventh day",
+    ]);
+    const weekFirst = await filtered({ dueWithinDays: "7", limit: "3" });
+    expect(weekFirst.total).toBe(5);
+    const weekNext = await filtered({
+      dueWithinDays: "7",
+      limit: "3",
+      cursor: weekFirst.nextCursor!,
+    });
+    expect(weekNext).toMatchObject({ total: 5, nextCursor: null });
+    expect(weekNext.rows.map((row) => row.title)).toEqual([
+      "Due in three days",
+      "Due on the seventh day",
+    ]);
+    expect((await filtered({ overdue: "false" })).total).toBe(8);
   });
 
   it("unions the four approaching date kinds for the Manager and team, before its total and cap", async () => {

@@ -145,6 +145,26 @@ it("renders decline, Legal note, attachment list, standalone action and fallback
   expect(html).not.toMatch(/<script|src=["']data:|calc\(/i);
 });
 
+it("renders a Legal note table as a data table with escaped cells", () => {
+  const { html } = renderEmailLayout(
+    {
+      ...base,
+      legalNote: parseKnowledgeMarkdown(
+        "| Contract | Value |\n| --- | --- |\n| [C-17](/contracts/17) | <img src=x> |\n| [bad](javascript:alert(1)) | 9 |",
+      ),
+      footer: { kind: "security" },
+    },
+    { name: "Northwind" },
+  );
+  const table = html!.match(/<table cellpadding="0"[^>]*><thead>[\s\S]*?<\/table>/)?.[0];
+  expect(table).toBeDefined();
+  expect(table).not.toContain('role="presentation"');
+  expect(table).toMatch(/<th scope="col"[^>]*>Contract<\/th><th scope="col"[^>]*>Value<\/th>/);
+  expect(table).toContain('<a href="https://legal.example.com/contracts/17"');
+  expect(table).toContain("&lt;img src=x&gt;");
+  expect(table).not.toContain("javascript:");
+});
+
 it("renders briefing counts, overflow links and dated rows", () => {
   const { html } = renderEmailLayout(
     {

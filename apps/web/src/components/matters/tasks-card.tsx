@@ -22,7 +22,7 @@ import {
   type MatterTask,
   type MatterTasksOutcome,
 } from "../../lib/matter-tasks";
-import { formatShortDate } from "../../lib/format";
+import { TaskDueDate } from "../tasks/due-date";
 import { StatusNote, type FieldStatus } from "../status-note";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -263,15 +263,7 @@ function TaskRow({
         >
           {task.title}
         </button>
-        {task.dueDate && (
-          <span className="text-xs text-muted">
-            <FormattedMessage
-              id="matterTasks.due"
-              defaultMessage="Due {date}"
-              values={{ date: formatShortDate(task.dueDate) }}
-            />
-          </span>
-        )}
+        {task.dueDate && <TaskDueDate dueDate={task.dueDate} isDone={task.isDone} />}
       </div>
       <TaskAssigneePicker
         value={taskAssignee(task, assignees)}

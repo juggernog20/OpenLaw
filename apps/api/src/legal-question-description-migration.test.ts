@@ -18,7 +18,7 @@ afterAll(async () => container?.stop());
 async function descriptionAfterUpgrade(name: string, edit?: string): Promise<unknown> {
   const db = await freshDb(container, name);
   try {
-    await migrateThrough(db, "0191_invite-link-lifetime", migrationEntries());
+    await migrateThrough(db, "0192_invite-link-lifetime", migrationEntries());
     expect(
       (await db.execute(sql`select description from request_types where slug = 'legal_question'`))
         .rows[0],

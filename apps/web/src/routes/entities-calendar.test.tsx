@@ -3,7 +3,7 @@
 /** The default cross-Entity compliance calendar, in due-date list and month forms. */
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { json, renderAt, stubApi, type StubCall } from "../testing/helpers";
 
 const MEMBER = {
@@ -102,7 +102,17 @@ async function pick(user: ReturnType<typeof userEvent.setup>, property: string, 
   await user.click(screen.getByRole("button", { name: "Apply" }));
 }
 
+/** Fixes today, so the DES-014 due-date qualifiers read the same on every run. */
+function onToday(day = "2026-08-23T12:00:00Z") {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(new Date(day));
+}
+
 describe("the Entities compliance calendar", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("searches entity names, retains the query in view switches, and clears it", async () => {
     const other = {
       ...obligations[0],
@@ -141,7 +151,16 @@ describe("the Entities compliance calendar", () => {
   });
 
   it("opens on the due-date list with filters and the severe overdue treatment", async () => {
-    stubApi({ signedIn: MEMBER, extra: calendarApi() });
+    onToday();
+    const completed = {
+      ...obligations[1],
+      id: "o3",
+      label: "Board minutes filed",
+      nextDueOn: "2026-08-10",
+      completedOn: "2026-08-09",
+      overdue: false,
+    };
+    stubApi({ signedIn: MEMBER, extra: calendarApi([...obligations, completed]) });
     renderAt("/entities");
 
     expect(await screen.findByRole("heading", { name: "Compliance calendar" })).toBeInTheDocument();
@@ -159,8 +178,18 @@ describe("the Entities compliance calendar", () => {
     expect(within(rows[0]!).getByText("Overdue annual return")).toHaveClass(
       "text-status-severe-fg",
     );
-    expect(within(rows[0]!).getByText("Aug 15, 2026")).toHaveClass("text-status-severe-fg");
+    // DES-018: the overdue state is a pill and a word, not a colour alone.
+    const overdue = within(rows[0]!).getByText("Aug 15 (8 days overdue)");
+    expect(overdue).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(overdue).toHaveTextContent(/^Overdue Aug 15 \(8 days overdue\)$/);
     expect(within(rows[1]!).getByText("Licence renewal")).toBeInTheDocument();
+    const upcoming = within(rows[1]!).getByText("Sep 20 (in 28 days)");
+    expect(upcoming).toHaveClass("text-muted");
+    expect(upcoming).not.toHaveClass("bg-status-severe-bg");
+    expect(upcoming).not.toHaveTextContent("Overdue");
+    expect(within(rows[2]!).getByText("Board minutes filed")).toBeInTheDocument();
+    expect(within(rows[2]!).getByText("Aug 10")).not.toHaveClass("bg-status-severe-bg");
+    expect(rows[2]).not.toHaveTextContent(/overdue/i);
   });
 
   it("carries every filter to the calendar read and the URL", async () => {
@@ -270,6 +299,20 @@ describe("the Entities compliance calendar", () => {
     expect(await screen.findByRole("heading", { name: "October 2026" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Previous month" }));
     expect(await screen.findByRole("heading", { name: "September 2026" })).toBeInTheDocument();
+  });
+
+  it("names an overdue month chip Overdue", async () => {
+    onToday("2026-09-23T12:00:00Z");
+    const late = { ...obligations[0], label: "Annual return", nextDueOn: "2026-09-10" };
+    stubApi({ signedIn: MEMBER, extra: calendarApi([late, obligations[1]]) });
+    renderAt("/entities?calendar=month&month=2026-09");
+
+    const grid = await screen.findByRole("grid", { name: "September 2026" });
+    const chip = within(grid).getByRole("link", { name: "Overdue Annual return" });
+    expect(chip).toHaveClass("bg-status-severe-bg", "text-status-severe-fg");
+    expect(within(grid).getByRole("link", { name: "Licence renewal" })).not.toHaveClass(
+      "bg-status-severe-bg",
+    );
   });
 
   it("keeps the month a link opened when a filter changes", async () => {

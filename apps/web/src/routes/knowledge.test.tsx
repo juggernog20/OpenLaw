@@ -560,11 +560,16 @@ describe("a Knowledge record", () => {
   });
 
   it("previews Markdown as allowlisted React elements and exposes History", async () => {
-    stubApi({ signedIn: MEMBER, extra: recordApi([]) });
+    const table =
+      "\n\n| Contract | Value |\n| --- | --- |\n" +
+      "| *C-17* | [ledger](https://example.com/c17) |\n| <b>C-18</b> | [void](javascript:alert(2)) |";
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { body: String(item().body) + table }) });
     renderAt("/knowledge/knowledge-1");
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Preview" }));
-    expect(screen.getByRole("heading", { name: "Review" })).toBeInTheDocument();
+    // Saved guidance opens rendered, with Edit one click away (#1318).
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
     expect(screen.getByText("term").tagName).toBe("STRONG");
     expect(screen.getByRole("link", { name: "source (opens in a new tab)" })).toHaveAttribute(
       "rel",
@@ -572,12 +577,67 @@ describe("a Knowledge record", () => {
     );
     expect(screen.queryByRole("link", { name: "bad" })).not.toBeInTheDocument();
     expect(screen.getByText(/<img src=x onerror=alert/)).toBeInTheDocument();
+    // A pipe table renders as an owned table, its cells read as paragraphs do (#1314).
+    const grid = within(screen.getByRole("region", { name: "Guidance" })).getByRole("table");
+    expect(
+      within(grid)
+        .getAllByRole("columnheader")
+        .map((cell) => cell.textContent),
+    ).toEqual(["Contract", "Value"]);
+    const cells = within(grid).getAllByRole("cell");
+    expect(cells).toHaveLength(4);
+    expect(within(cells[0]!).getByText("C-17").tagName).toBe("EM");
+    expect(
+      within(cells[1]!).getByRole("link", { name: "ledger (opens in a new tab)" }),
+    ).toHaveAttribute("href", "https://example.com/c17");
+    expect(cells[2]).toHaveTextContent("<b>C-18</b>");
+    expect(within(grid).queryByRole("link", { name: /void/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "History" }));
     expect(
       await screen.findByText(
         "Nothing has happened to this record yet. Every change to it shows up here.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("switches rendered guidance to a focused source editor and commits the edit before Preview", async () => {
+    const patches: unknown[] = [];
+    stubApi({ signedIn: MEMBER, extra: recordApi(patches, { body: "Read the term." }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    expect(await screen.findByText("Read the term.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    const source = screen.getByRole("textbox", { name: "Guidance" });
+    await waitFor(() => expect(source).toHaveFocus());
+    expect(source).toHaveValue("Read the term.");
+    await user.type(source, " Then sign.");
+    await user.click(screen.getByRole("button", { name: "Preview" }));
+    expect(patches).toEqual([{ body: "Read the term. Then sign." }]);
+    expect(await screen.findByText("Read the term. Then sign.")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
+  });
+
+  it("opens a focused editor from Add guidance when the item has none", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { body: null }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Add guidance" }));
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Guidance" })).toHaveFocus());
+    expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
+  });
+
+  it("renders an archived item's guidance and disables its Edit button", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi([], { archivedAt: "2026-08-30T12:00:00.000Z" }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByRole("heading", { name: "Review" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeDisabled();
+    expect(screen.queryByRole("textbox", { name: "Guidance" })).not.toBeInTheDocument();
   });
 
   it("publishes from the overflow and warns with the deflection-link count before unpublishing", async () => {
@@ -598,6 +658,82 @@ describe("a Knowledge record", () => {
     expect(within(warning).getByText(/2 deflection links point/)).toBeInTheDocument();
     await user.click(within(warning).getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(writes).toContainEqual({ action: "unpublish", body: {} }));
+  });
+
+  it("marks a published Everyone item with no deflection link Portal-ready and says how to reach it", async () => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], { audience: "everyone" }) });
+    renderAt("/knowledge/knowledge-1");
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Knowledge Item actions" }));
+    await user.click(screen.getByRole("menuitem", { name: "Publish" }));
+    expect(await screen.findByText("Portal-ready")).toBeInTheDocument();
+    expect(screen.queryByText("On the portal")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "No deflection link points here yet. Business Users reach this item only through one. Ask an Administrator to add it in Settings, Intake, Deflection links.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Settings, Intake, Deflection links/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("links an Administrator from the Portal-ready note to the deflection links", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi([], {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+      }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByText("Portal-ready")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Add one in Settings, Intake, Deflection links." }),
+    ).toHaveAttribute("href", "/settings/intake/links");
+    expect(screen.queryByText(/Ask an Administrator/)).not.toBeInTheDocument();
+  });
+
+  it("shows On the portal and no note once deflection links point at the item", async () => {
+    stubApi({
+      signedIn: ADMIN,
+      extra: recordApi([], {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+        deflectionLinkCount: 2,
+      }),
+    });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByText("On the portal")).toBeInTheDocument();
+    expect(screen.queryByText("Portal-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText(/No deflection link points here yet/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a draft", { audience: "everyone" }],
+    ["a Legal Only item", { state: "published", publishedAt: "2026-08-30T12:00:00.000Z" }],
+    [
+      "an archived item",
+      {
+        state: "published",
+        audience: "everyone",
+        publishedAt: "2026-08-30T12:00:00.000Z",
+        archivedAt: "2026-08-31T12:00:00.000Z",
+      },
+    ],
+  ])("shows no portal badge on %s", async (_label, overrides) => {
+    stubApi({ signedIn: MEMBER, extra: recordApi([], overrides) });
+    renderAt("/knowledge/knowledge-1");
+
+    expect(await screen.findByRole("heading", { name: "Guidance" })).toBeInTheDocument();
+    expect(screen.queryByText("Portal-ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("On the portal")).not.toBeInTheDocument();
+    expect(screen.queryByText(/No deflection link points here yet/)).not.toBeInTheDocument();
   });
 
   it("archives with an optional replacement and restores from the overflow", async () => {

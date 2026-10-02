@@ -301,6 +301,7 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
         if (!target) throw httpError(404, "No officer exists with this id under this entity.");
         const patch: Partial<EntityOfficer> = {};
         const changed: Record<string, { from: unknown; to: unknown }> = {};
+        let role = target.officerRoleId;
         if (request.body.name !== undefined && request.body.name.trim() !== target.name) {
           patch.name = request.body.name.trim();
           changed.name = { from: target.name, to: patch.name };
@@ -312,6 +313,7 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
           const current = await officerRole(tx, target.officerRoleId, false);
           const next = await officerRole(tx, request.body.officerRoleId);
           patch.officerRoleId = next.id;
+          role = next.id;
           changed.role = { from: current.displayName, to: next.displayName };
         }
         if (
@@ -326,7 +328,10 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
           request.body.resignedOn !== target.resignedOn
         ) {
           patch.resignedOn = request.body.resignedOn;
-          changed.resignedOn = { from: target.resignedOn, to: request.body.resignedOn };
+          // A first resignation date keeps its own verb, so History says
+          // "resigned". A later change or a cleared date is an edit.
+          if (target.resignedOn !== null || request.body.resignedOn === null)
+            changed.resignedOn = { from: target.resignedOn, to: request.body.resignedOn };
         }
         if (request.body.userId !== undefined && request.body.userId !== target.userId) {
           // The link is a person, so the audit map carries names, not
@@ -347,6 +352,8 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
             .update(entityOfficers)
             .set({ ...patch, updatedAt: new Date() })
             .where(eq(entityOfficers.id, target.id));
+        }
+        if (Object.keys(changed).length > 0) {
           await recordActivity(tx, {
             entityType: "entity",
             entityId: entity.id,
@@ -357,6 +364,21 @@ export const entityRecordChildRoutes: FastifyPluginAsyncZod = async (app) => {
               legalName: entity.legalName,
               officerName: patch.name ?? target.name,
               changed,
+            },
+          });
+        }
+        if (target.resignedOn === null && patch.resignedOn) {
+          await recordActivity(tx, {
+            entityType: "entity",
+            entityId: entity.id,
+            actorId: request.user.id,
+            action: "entity_officer.resigned",
+            visibility: "legal_only",
+            payload: {
+              legalName: entity.legalName,
+              officerName: patch.name ?? target.name,
+              role: (await officerRole(tx, role, false)).displayName,
+              resignedOn: patch.resignedOn,
             },
           });
         }

@@ -119,7 +119,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "addContractTask",
         description:
-          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
+          "Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
           "Add a task to a contract's checklist (CTR-017). A blank " +
           "title is refused. The task starts not done, with the " +
@@ -158,7 +158,7 @@ export const contractTasksRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         operationId: "updateContractTask",
         description:
-          "Assignees must be active staff who manage the record or belong to its team. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
+          "Assignees must be active users who manage the record or belong to its team. A Business User on the team may own a Task. Set addToTeam to add an eligible person before assignment. An invalid assignee or a missing team membership without addToTeam returns 400. Adding someone to a Confidential record requires permission to change its audience, otherwise the request returns 403. Membership, assignment, activity and notification commit together.",
         summary:
           "Edit a task's title, description, assignee, or due date (CTR-017). " +
           "Every field is optional and only what is sent is read. A " +

@@ -102,6 +102,8 @@ export type EntityRegistration =
 export type EntityRegistrationStatus = EntityRegistration["status"];
 export type EntityObligation =
   paths["/api/v1/entities/{id}/obligations"]["get"]["responses"]["200"]["content"]["application/json"]["obligations"][number];
+export type EntityObligationFiling =
+  paths["/api/v1/entities/{id}/obligations/{childId}/filings"]["get"]["responses"]["200"]["content"]["application/json"]["filings"][number];
 export type EntityObligationOptions =
   paths["/api/v1/entities/obligation-options"]["get"]["responses"]["200"]["content"]["application/json"];
 export type CalendarObligation =

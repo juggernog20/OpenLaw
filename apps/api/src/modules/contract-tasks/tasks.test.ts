@@ -29,6 +29,7 @@ import {
   contracts,
   contractTasks,
   contractTeam,
+  notifications,
 } from "@openlaw/db";
 import { provisionUser } from "../../auth/instance.js";
 import {
@@ -435,7 +436,7 @@ describe("task due dates never join the deadline union (CTR-017)", () => {
 });
 
 describe("who may read and write tasks (CTR-021, DD-015)", () => {
-  it("refuses Business User Task reads and mutations on their team", async () => {
+  it("refuses Business User staff Task reads and mutations, even on their own Task", async () => {
     const contract = await newContract("Tasks contributor");
     const joined = await harness.app.inject({
       method: "POST",
@@ -444,7 +445,7 @@ describe("who may read and write tasks (CTR-021, DD-015)", () => {
       payload: { userId: contributorId },
     });
     expect(joined.statusCode, joined.body).toBe(201);
-    const id = await add(contract.number, { title: "Draft the brief" });
+    const id = await add(contract.number, { title: "Draft the brief", assigneeId: contributorId });
 
     expect((await listRaw(contract.number, contributorCookies)).statusCode).toBe(403);
     expect((await addRaw(contract.number, { title: "Mine" }, contributorCookies)).statusCode).toBe(
@@ -453,6 +454,49 @@ describe("who may read and write tasks (CTR-021, DD-015)", () => {
     expect((await editRaw(id, { title: "Mine" }, contributorCookies)).statusCode).toBe(403);
     expect((await toggleRaw(id, contributorCookies)).statusCode).toBe(403);
     expect((await removeRaw(id, contributorCookies)).statusCode).toBe(403);
+    expect((await reorderRaw(contract.number, [id], contributorCookies)).statusCode).toBe(403);
+  });
+
+  it("lets Legal give a Task to a Business User on the team and tells them in the Portal", async () => {
+    const contract = await newContract("Tasks for the business");
+    const refused = await addRaw(contract.number, {
+      title: "Send the evidence",
+      assigneeId: contributorId,
+    });
+    expect(refused.statusCode, refused.body).toBe(400);
+    const created = await addRaw(contract.number, {
+      title: "Send the evidence",
+      assigneeId: contributorId,
+      addToTeam: true,
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().tasks[0].assigneeId).toBe(contributorId);
+    const [member] = await harness.db
+      .select()
+      .from(contractTeam)
+      .where(and(eq(contractTeam.contractId, contract.id), eq(contractTeam.userId, contributorId)));
+    expect(member).toBeDefined();
+    const bell = await harness.db
+      .select()
+      .from(notifications)
+      .where(and(eq(notifications.userId, contributorId), eq(notifications.entityId, contract.id)));
+    expect(bell.map((row) => row.eventType)).toContain("contract.task_assigned");
+    const deadline = Date.now() + 20_000;
+    let mail: string | undefined;
+    while (!mail && Date.now() < deadline) {
+      mail = harness.mailer
+        .messagesTo(CONTRIBUTOR.email)
+        .find((message) => message.text.includes("Send the evidence"))?.text;
+      if (!mail) await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    expect(mail).toContain(`/portal/contracts/${contract.number}\n`);
+    const portalBell = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/portal/notifications",
+      cookies: contributorCookies,
+    });
+    expect(portalBell.statusCode, portalBell.body).toBe(200);
+    expect(portalBell.body).toContain("contract.task_assigned");
   });
 
   it("refuses every write on an archived record until it is restored", async () => {

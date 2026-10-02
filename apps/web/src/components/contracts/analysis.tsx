@@ -7,7 +7,9 @@
 import { useState, type ReactNode } from "react";
 import { CircleAlert, Sparkles } from "lucide-react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Link } from "react-router";
 import type { ContractAnalysis, ContractRow } from "../../lib/contracts";
+import type { Role } from "../../lib/roles";
 import { Button } from "../ui/button";
 
 export function UnverifiedMarker() {
@@ -143,28 +145,70 @@ export function AnalysisRunActions({
  * needs no sentence: each value it wrote carries its own marker,
  * evidence and Confirm on its own row. A failure has no row, so it is
  * said here, and so is a refusal the overflow menu's run earned
- * (DES-075 amendment, 2026-09-22). */
+ * (DES-075 amendment, 2026-09-22).
+ *
+ * A failed run writes no Field, so the note says the values on screen
+ * still stand, and names one next step. */
 export function AnalysisRunNote({
   analysis,
   runError,
+  canRun,
+  viewerRole,
 }: Readonly<{
   analysis: ContractAnalysis;
   runError?: string;
+  /** This viewer may start a run on this Contract now. */
+  canRun: boolean;
+  viewerRole: Role;
 }>) {
   const intl = useIntl();
   const run = analysis.latestRun;
   const failure = run?.state === "failed" ? run : null;
   if (!failure && !runError) return null;
+  // One next step. The Run analysis button sits in the same header. With
+  // the connector on but no run allowed, as on an archived Contract,
+  // there is no step to name.
+  let nextStep: ReactNode = null;
+  if (canRun) {
+    nextStep = (
+      <FormattedMessage
+        id="contracts.analysis.failedRunAgain"
+        defaultMessage="Run analysis again."
+      />
+    );
+  } else if (!analysis.available && viewerRole === "administrator") {
+    nextStep = (
+      <Link
+        to="/settings/ai-analysis"
+        className="text-link underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link"
+      >
+        <FormattedMessage
+          id="contracts.analysis.failedTurnOn"
+          defaultMessage="Turn on AI analysis in Settings"
+        />
+      </Link>
+    );
+  } else if (!analysis.available) {
+    nextStep = (
+      <FormattedMessage
+        id="contracts.analysis.failedAskAdmin"
+        defaultMessage="Ask an Administrator to check AI analysis settings."
+      />
+    );
+  }
   return (
     <div className="flex flex-col gap-1 border-b border-border-muted px-4 py-3">
-      {failure && (
+      {failure?.trigger === "conversion" && (
         <p role="alert" className="text-sm text-status-danger-fg">
-          {failure.trigger === "conversion" ? (
-            <FormattedMessage
-              id="contracts.analysis.requestFailed"
-              defaultMessage="Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
-            />
-          ) : (
+          <FormattedMessage
+            id="contracts.analysis.requestFailed"
+            defaultMessage="Request-context Analysis failed. The Contract was created successfully. Check the Type, sources and AI settings, then retry."
+          />
+        </p>
+      )}
+      {failure && failure.trigger !== "conversion" && (
+        <div role="alert" className="flex flex-col gap-1 text-sm">
+          <p className="text-status-danger-fg">
             <FormattedMessage
               id="contracts.analysis.failedShort"
               defaultMessage="Analysis failed: {reason}"
@@ -177,8 +221,15 @@ export function AnalysisRunNote({
                   }),
               }}
             />
-          )}
-        </p>
+          </p>
+          <p className="text-primary">
+            <FormattedMessage
+              id="contracts.analysis.failedValuesStand"
+              defaultMessage="This run changed no Fields. Values marked Unverified still need a check."
+            />
+            {nextStep && <> {nextStep}</>}
+          </p>
+        </div>
       )}
       {runError && (
         <p role="alert" className="text-sm text-status-danger-fg">

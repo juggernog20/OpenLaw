@@ -53,9 +53,10 @@
  * designation empty would hand it instead to whatever somebody uploaded
  * by hand next, which is a worse answer and a stranger one.
  *
- * **The kind is `draft_ours`.** A requester is one of our own people, so
- * their paper is our side's (CTR-014) — and it is the same default the
- * upload route applies to a file that names no kind.
+ * **The file has No type, in both modules.** It is the upload route's
+ * default for a file that names no type (DOC-015). A Requester may have
+ * sent the counterparty's paper, so the file waits for a person to type
+ * it. This supersedes the INT-002 addendum that chose `draft_ours`.
  *
  * **Zero attachments promotes nothing and says nothing.** No document,
  * no entry, no event. A Request that carried no paper is a complete
@@ -262,7 +263,8 @@ async function promotePaper(
       versionId,
       versionNumber: 1,
       fileRef: copied.fileRef,
-      kind: record.module === "matter" ? "general" : "draft_ours",
+      kind: "general",
+      documentTypeId: null,
       source: "uploaded",
       comparedFromVersionId: null,
       comparedToVersionId: null,
