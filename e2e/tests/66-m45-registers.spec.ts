@@ -219,8 +219,8 @@ test("M45 partnership: admission and capital, basis change, projected Holding an
       chart.getByRole("link", { name: `Open ${partnershipName}`, exact: true }),
     ).toBeVisible();
     const sixtyPercentEdges = chartData.edges.filter((edge) => edge.ownershipPercent === 60);
-    // Archived Holdings stay on the chart. Count all matching edges so an old one
-    // cannot stand in for the new partnership's edge.
+    // Other Holdings on the chart may also read 60%. Count every one in the chart
+    // data, so another edge cannot stand in for the new partnership's edge.
     await expect(chart.getByText("60%", { exact: true })).toHaveCount(sixtyPercentEdges.length);
     await capture(page, "m45-partnership-chart");
   } finally {

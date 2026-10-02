@@ -118,6 +118,10 @@ Migration 0151 (the same migration as the register tables) adds `source` (`manua
 
 Hand-typed Holdings are superseded by ENT-012. The write routes, Add Holding, the individual-owner dialog and the soft ≤100% warning are removed, and migration 0185 deletes the typed rows. The graph, the chart and the majority spine read the projected rows as before.
 
+### Archived Entities addendum (2026-10-02, [#1298](https://github.com/juggernog20/OpenLaw/issues/1298))
+
+The chart draws live Entities only. `GET /entities/chart` leaves out an archived Entity, its Holdings in either direction, its individual holders, a trust role it holds and a branch link to it. Restoring the Entity puts all of them back. ENT-009 treats an archive as a recoverable mistake, so the chart follows the registry heading, which never counts an archived row. A dissolved or divested Entity is not archived, so it keeps its status and stays on the chart. We considered drawing archived Entities with the list's archived treatment and counting them apart, and rejected it. The chart export counts the Entities the viewer reaches, as the heading does. Individual, class and Confidential Entity cards draw but do not count.
+
 ## ENT-004 — Access: global for legal staff; DD-014 confidential flag for the rare case
 
 **Amended 10 September 2026:** the DD-014 administrator bypass is removed. Confidential Entities require a grant for administrators too. New Entity creators receive a recorded grant; explicit grantees can manage access. The DD-014 amendment in [DECISIONS.md](DECISIONS.md) supersedes the original administrator exceptions below.
