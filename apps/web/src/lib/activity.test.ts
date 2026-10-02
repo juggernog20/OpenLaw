@@ -566,6 +566,12 @@ const SAMPLE_PAYLOADS: { [A in ActivityAction]: ActivityPayloadMap[A] } = {
     officerName: "Nadia Counsel",
     changed: { resignedOn: { from: null, to: "2027-08-29" } },
   },
+  "entity_officer.resigned": {
+    legalName: "Helix Labs GmbH",
+    officerName: "Nadia Counsel",
+    role: "Director",
+    resignedOn: "2027-08-29",
+  },
   "entity_officer.deleted": {
     legalName: "Helix Labs GmbH",
     officerName: "Nadia Counsel",
@@ -1475,6 +1481,19 @@ describe("the sentences a reader gets", () => {
         ownershipPercent: 40,
       }).sentence,
     ).toBe("Nadia Counsel removed Ada Quill's 40% Holding in Register Co");
+  });
+
+  it("says an officer resigned, with the role and the date", () => {
+    expect(
+      narrate("entity_officer.resigned", {
+        legalName: "Helix Software Ireland Limited",
+        officerName: "Naomi Ellis",
+        role: "Director",
+        resignedOn: "2025-09-22",
+      }).sentence,
+    ).toBe(
+      "Nadia Counsel recorded that Naomi Ellis resigned as Director from Helix Software Ireland Limited on Sep 22, 2025",
+    );
   });
 
   it("names a redacted Holding owner without calling it someone", () => {

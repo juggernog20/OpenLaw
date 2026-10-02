@@ -428,6 +428,9 @@
   "activity.entityOfficer.deleted": {
     "defaultMessage": "{actor} removed officer {officer} from {name}"
   },
+  "activity.entityOfficer.resigned": {
+    "defaultMessage": "{actor} recorded that {officer} resigned as {role} from {name} on {date}"
+  },
   "activity.entityOfficer.updated": {
     "defaultMessage": "{actor} changed officer {officer} on {name}"
   },
@@ -5800,6 +5803,21 @@
   },
   "entities.record.officers.remove": {
     "defaultMessage": "Remove {officer}"
+  },
+  "entities.record.officers.resign": {
+    "defaultMessage": "Resign {officer}"
+  },
+  "entities.record.officers.resignAction": {
+    "defaultMessage": "Resign"
+  },
+  "entities.record.officers.resignFailed": {
+    "defaultMessage": "The resignation could not be saved. Try again."
+  },
+  "entities.record.officers.resignSummary": {
+    "defaultMessage": "{officer} resigns as {role}. The row moves to Show former."
+  },
+  "entities.record.officers.resignTitle": {
+    "defaultMessage": "Resign {officer}"
   },
   "entities.record.officers.resignedOn": {
     "defaultMessage": "Resigned on"

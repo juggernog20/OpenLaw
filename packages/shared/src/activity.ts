@@ -510,6 +510,12 @@ type EntityPayloads = {
     officerName: string;
     changed: ChangedFields;
   };
+  "entity_officer.resigned": {
+    legalName: string;
+    officerName: string;
+    role: string;
+    resignedOn: string;
+  };
   "entity_officer.deleted": { legalName: string; officerName: string; role: string };
   "entity_registration.created": {
     legalName: string;
