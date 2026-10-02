@@ -8,8 +8,9 @@
  * loose for credentials: a migration that rewrites a hashed key, a grant's
  * Toolsets or a refresh token would still read back "fine" through the
  * routes. So this reads the rows straight from Compose's Postgres and asks
- * for an exact match. The one permitted change is migration 0172, which
- * takes Team and Administration out of every Organization ceiling.
+ * for an exact match. Two changes are permitted. Migration 0172 takes Team
+ * and Administration out of every Organization ceiling. Migration 0192 adds
+ * `org_settings.invite_link_lifetime_days`, and every existing row takes 7.
  *
  * An added column trips this on purpose. The next migration that touches
  * one of these tables has to say so here, the way `removesToolsets` does
@@ -100,20 +101,33 @@ function describeDifference(expected, actual) {
   return "the rows serialize differently";
 }
 
+/**
+ * Columns a later migration added to `org_settings`, with the value every
+ * existing row takes. A baseline that already has the column keeps its own
+ * value, so a migration that rewrites it still fails.
+ */
+const addedOrgSettings = {
+  // Migration 0192: the invite link lifetime in days.
+  invite_link_lifetime_days: 7,
+};
+
 export function assertMcpRows(before, after, removesToolsets) {
   for (const [table, rows] of Object.entries(before)) {
     const expected =
-      table === "org_settings" && removesToolsets
+      table === "org_settings"
         ? rows.map((row) => ({
+            ...addedOrgSettings,
             ...row,
-            mcp_toolset_ceiling: row.mcp_toolset_ceiling.filter(
-              (toolset) => toolset !== "team" && toolset !== "administration",
-            ),
+            mcp_toolset_ceiling: removesToolsets
+              ? row.mcp_toolset_ceiling.filter(
+                  (toolset) => toolset !== "team" && toolset !== "administration",
+                )
+              : row.mcp_toolset_ceiling,
           }))
         : rows;
     if (!isDeepStrictEqual(after[table], expected))
       throw new Error(
-        `M42 upgrade changed ${table} beyond the permitted ceiling removal: ${describeDifference(expected, after[table])}`,
+        `M42 upgrade changed ${table} beyond the permitted changes: ${describeDifference(expected, after[table])}`,
       );
   }
 }

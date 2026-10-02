@@ -980,10 +980,12 @@ describe("the /contracts/:number record page", () => {
 
     it("says a failed run changed no Fields, and to run analysis again", async () => {
       const note = await failedNote(MEMBER, true);
+      // Two paragraphs: the reason, then what to do next.
       expect(note).toHaveTextContent(
-        // Two paragraphs, so no space between the reason and the sentence.
-        "Analysis failed: The provider reply did not match the requested fields or value types." +
-          "This run changed no Fields. Values marked Unverified still need a check. Run analysis again.",
+        "Analysis failed: The provider reply did not match the requested fields or value types.",
+      );
+      expect(note).toHaveTextContent(
+        "This run changed no Fields. Values marked Unverified still need a check. Run analysis again.",
       );
       expect(within(note).queryByRole("link")).not.toBeInTheDocument();
       // The control the step names is in the same header.

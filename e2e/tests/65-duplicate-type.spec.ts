@@ -320,7 +320,10 @@ test("Duplicate preserves the Form through Portal submission and Contract conver
     await expect(portal.getByLabel(/^Governing law/)).toHaveCount(0);
     await portal.getByLabel("Term type").selectOption("fixed");
     await portal.getByRole("button", { name: "Submit request", exact: true }).click();
-    await expect(portal.getByText("Answer this before you submit.", { exact: true })).toBeVisible();
+    // Expiry date and Governing law are both required once Term type is Fixed.
+    await expect(portal.getByText("Answer this before you submit.", { exact: true })).toHaveCount(
+      2,
+    );
     // A Date Field is the month calendar, so the date is picked, not typed.
     await portal.getByLabel("Expiry date").click();
     const calendar = portal.getByRole("dialog", { name: "Choose a date" });
