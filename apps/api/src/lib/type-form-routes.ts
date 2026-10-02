@@ -383,18 +383,63 @@ export function typeFormRoutes(
     return byId;
   }
 
-  function changes(before: Form, after: Form): ChangedFields {
+  /** The catalog name of each Field Row in either tree, as the Administrator saw it. */
+  async function fieldNames(tx: Transaction, ...forms: Form[]): Promise<Map<string, string>> {
+    const ids = new Set<string>();
+    function walk(nodes: Form) {
+      for (const node of nodes)
+        if (node.kind === "branch") walk(node.children);
+        else if (
+          !Object.hasOwn(definitions, node.rowRef) &&
+          !pins.some((p) => p.rowRef === node.rowRef)
+        )
+          ids.add(node.id);
+    }
+    forms.forEach(walk);
+    if (!ids.size) return new Map();
+    const rows = await tx
+      .select({ id: fields.id, displayName: fields.displayName })
+      .from(fields)
+      .where(inArray(fields.id, [...ids]));
+    return new Map(rows.map((row) => [row.id, row.displayName]));
+  }
+
+  function changes(before: Form, after: Form, names: Map<string, string>): ChangedFields {
+    function key(node: FormNode) {
+      return node.kind === "row" ? `Row ${node.rowRef}` : `Branch ${node.id}`;
+    }
+    function parents(form: Form) {
+      const found = new Map<string, string | null>();
+      function walk(nodes: Form, parent: string | null) {
+        for (const node of nodes) {
+          found.set(key(node), parent);
+          if (node.kind === "branch") walk(node.children, node.id);
+        }
+      }
+      walk(form, null);
+      return found;
+    }
+    const beforeParents = parents(before),
+      afterParents = parents(after);
+    // Order counts only the siblings that stay under the same parent, so
+    // adding or removing one Row does not read as a move of every Row after it.
+    const stays = (k: string) =>
+      beforeParents.has(k) && afterParents.has(k) && beforeParents.get(k) === afterParents.get(k);
     function index(form: Form) {
       const values = new Map<string, unknown>();
       function walk(nodes: Form, parent: string | null) {
-        nodes.forEach((node, order) => {
-          if (node.kind === "row") values.set(`Row ${node.rowRef}`, { ...node, parent, order });
-          else {
+        let order = 0;
+        for (const node of nodes) {
+          const position = stays(key(node)) ? order++ : null;
+          if (node.kind === "row") {
+            const name = names.get(node.id);
+            values.set(key(node), { ...node, ...(name ? { name } : {}), parent, order: position });
+          } else {
             const { children, ...branch } = node;
-            values.set(`Branch ${node.id}`, { ...branch, parent, order });
+            values.set(key(node), { ...branch, parent, order: position });
             walk(children, node.id);
           }
-        });
+        }
       }
       walk(form, null);
       return values;
@@ -458,12 +503,13 @@ export function typeFormRoutes(
           const before = await readTypeForm(tx, module, type.id);
           await writeTypeForm(tx, module, type.id, form);
           const result = await readTypeForm(tx, module, type.id);
+          const names = await fieldNames(tx, before, result);
           await recordActivity(tx, {
             entityType: "system",
             actorId: request.user.id,
             action: `${module}_type.updated`,
             visibility: "admin_only",
-            payload: { slug: type.slug, changed: changes(before, result) },
+            payload: { slug: type.slug, changed: changes(before, result, names) },
           });
           return { form: result };
         }),

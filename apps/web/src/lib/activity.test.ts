@@ -1265,6 +1265,114 @@ it("names a Contract Type's default people, in the order the card holds them", (
   ]);
 });
 
+describe("a type Form save in the audit log", () => {
+  /** A Field Row as a save before Field names were stored wrote it. */
+  const unnamed = {
+    kind: "row",
+    id: "fld_1",
+    rowRef: "budget_code",
+    fieldType: "text",
+    onIntakeForm: false,
+    isRequired: false,
+    visibleOnPortal: true,
+    parent: null,
+    order: 8,
+  };
+  const budget = { ...unnamed, name: "Budget code" };
+  const branch = {
+    kind: "branch",
+    id: "br_1",
+    match: "all",
+    conditions: [{ rowRef: "budget_code", operator: "is_set", value: null }],
+    parent: null,
+    order: 9,
+  };
+  /** Each change as the audit log prints it. */
+  function lines(changed: Record<string, unknown>, action = "matter_type.updated") {
+    return narrate(action, { slug: "m_a", changed }).changes.map(
+      (change) => change.line ?? `${change.label}: ${change.from} → ${change.to}`,
+    );
+  }
+
+  it("says a Row was added to or removed from the Form, by its Field name", () => {
+    expect(lines({ "Row budget_code": { from: null, to: budget } })).toEqual([
+      "Budget code: added to the Form",
+    ]);
+    expect(lines({ "Row budget_code": { from: budget, to: null } })).toEqual([
+      "Budget code: removed from the Form",
+    ]);
+  });
+
+  it("names each switch that changed as Off or On", () => {
+    expect(
+      lines({
+        "Row budget_code": {
+          from: budget,
+          to: { ...budget, onIntakeForm: true, isRequired: true, visibleOnPortal: false },
+        },
+      }),
+    ).toEqual([
+      "Budget code, On intake form: Off → On",
+      "Budget code, Required for creation: Off → On",
+      "Budget code, Visible on Portal: On → Off",
+    ]);
+  });
+
+  it("says a Row moved when its parent or its place changed", () => {
+    expect(lines({ "Row budget_code": { from: budget, to: { ...budget, order: 2 } } })).toEqual([
+      "Budget code: moved",
+    ]);
+    expect(
+      lines({ "Row budget_code": { from: budget, to: { ...budget, parent: "br_1", order: 0 } } }),
+    ).toEqual(["Budget code: moved"]);
+  });
+
+  it("says a condition group was added, removed or changed", () => {
+    expect(lines({ "Branch br_1": { from: null, to: branch } })).toEqual(["Condition group added"]);
+    expect(lines({ "Branch br_1": { from: branch, to: null } })).toEqual([
+      "Condition group removed",
+    ]);
+    expect(lines({ "Branch br_1": { from: branch, to: { ...branch, match: "any" } } })).toEqual([
+      "Condition group changed",
+    ]);
+  });
+
+  it("names a built-in Row by its label, and an old Field Row with no name by its key", () => {
+    const value = { ...unnamed, id: "value", rowRef: "value", fieldType: "money" };
+    expect(
+      lines({
+        "Row budget_code": { from: null, to: unnamed },
+        "Row value": { from: value, to: { ...value, isRequired: true } },
+      }),
+    ).toEqual(["Budget code: added to the Form", "Value, Required for creation: Off → On"]);
+  });
+
+  it("keeps the usual pairs for the other keys of a Contract type entry", () => {
+    expect(
+      lines(
+        {
+          description: { from: null, to: "Short-form confidentiality" },
+          "Row budget_code": { from: null, to: budget },
+        },
+        "contract_type.updated",
+      ),
+    ).toEqual([
+      "Description: Not set → Short-form confidentiality",
+      "Budget code: added to the Form",
+    ]);
+  });
+
+  it("prints no raw JSON for any Form change", () => {
+    const all = lines({
+      "Row budget_code": { from: budget, to: { ...budget, isRequired: true, order: 3 } },
+      "Row title": { from: null, to: { ...unnamed, id: "title", rowRef: "title" } },
+      "Branch br_1": { from: branch, to: { ...branch, parent: "br_0" } },
+    });
+    expect(all.length).toBeGreaterThan(0);
+    for (const line of all) expect(line).not.toContain("{");
+  });
+});
+
 describe("the Portal's reading of a record's progress", () => {
   it("says a Task's due date when it was given one, and says nothing when it was not", () => {
     // A short date carries its year outside the current one, so pin the clock to 2026.

@@ -601,11 +601,13 @@ function EntryRow({ entry }: Readonly<{ entry: AuditEntry }>) {
                 never reordered. */}
             {changes.map((change, index) => (
               <p key={index} className="text-xs break-words text-muted">
-                <FormattedMessage
-                  id="activity.changeWithLabel"
-                  defaultMessage="{label}: {from} → {to}"
-                  values={{ label: change.label, from: change.from, to: change.to }}
-                />
+                {change.line ?? (
+                  <FormattedMessage
+                    id="activity.changeWithLabel"
+                    defaultMessage="{label}: {from} → {to}"
+                    values={{ label: change.label, from: change.from, to: change.to }}
+                  />
+                )}
               </p>
             ))}
             {closingNote && (
