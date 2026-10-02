@@ -8,7 +8,7 @@ import { CONTROL_CLASS } from "../lib/form-controls";
 import { problem as readProblem } from "../lib/problem";
 import { TeamRoster, type TeamPerson, type TeamRosterEntry } from "./team-roster";
 import type { Applet } from "./shell/applets";
-import { Alert } from "./ui/alert";
+import { BusinessUserConfidentialWarning } from "./business-user-confidential-warning";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Label } from "./ui/label";
@@ -316,13 +316,7 @@ export function AddTeamDialog({
             </select>
           </div>
           {confidential && chosen?.role === "business_user" && (
-            <Alert variant="warning" className="text-sm">
-              <FormattedMessage
-                id="record.team.businessUserConfidential"
-                defaultMessage="{name} is a Business User. They will see this confidential {module, select, contract {Contract} other {Matter}} in the Portal, with its Documents and Full Thread comments."
-                values={{ name: chosen.displayName, module }}
-              />
-            </Alert>
+            <BusinessUserConfidentialWarning name={chosen.displayName} module={module} />
           )}
           {error && (
             <p role="alert" className="text-sm text-status-danger-fg">

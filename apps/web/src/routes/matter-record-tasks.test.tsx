@@ -338,6 +338,35 @@ describe("team-first task picker", () => {
     );
   });
 
+  it.each([
+    { isConfidential: true, warns: "warns" },
+    { isConfidential: false, warns: "does not warn" },
+  ])(
+    "$warns before a Business User joins the team through the Task picker (confidential: $isConfidential)",
+    async ({ isConfidential }) => {
+      const warning =
+        "Felix Brandt is a Business User. They will see this confidential Matter in the Portal, with its Documents and Full Thread comments.";
+      const api = recordApi([task()], matter({ isConfidential }));
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/matters/12/tasks");
+      const user = userEvent.setup();
+      const card = within(await screen.findByRole("region", { name: "Tasks" }));
+      await user.click(
+        card.getByRole("button", { name: "Change assignee for Draft response: Unassigned" }),
+      );
+      const picker = within(screen.getByRole("dialog", { name: "Assign task" }));
+      await user.click(picker.getByRole("button", { name: "Add someone to the team…" }));
+      // A Legal Team Member gets no warning on either record.
+      await user.click(picker.getByRole("button", { name: "Olivia Outsider" }));
+      expect(picker.queryByText(/is a Business User/)).not.toBeInTheDocument();
+      await user.click(picker.getByRole("button", { name: "Back" }));
+      await user.click(picker.getByRole("button", { name: "Felix Brandt" }));
+      expect(picker.getByRole("button", { name: "Add to team and assign" })).toBeEnabled();
+      if (isConfidential) expect(picker.getByText(warning)).toBeInTheDocument();
+      else expect(picker.queryByText(warning)).not.toBeInTheDocument();
+    },
+  );
+
   it("does not offer team expansion to someone who cannot manage the confidential audience", async () => {
     const api = recordApi([task()], matter({ isConfidential: true, manager: null }));
     stubApi({ signedIn: { ...MEMBER, id: "ordinary-member" }, extra: api.handler });

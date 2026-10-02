@@ -94,7 +94,7 @@ export const taskTools: readonly ToolDefinition[] = [
     name: "openlaw_task_update",
     title: "Update a Task",
     description:
-      "Update a Task by taskId and kind contract or matter. Set changes.isDone true to complete, false to reopen; assigneeId reassigns and dueDate reschedules. Null clears assignee or due date. title and description are editable. Uses the same active-staff and team rules as creation. Ask before addToTeam true. Completion, assignment, rescheduling, activity and notifications commit together. Repeating the same values does not toggle completion.",
+      "Update a Task by taskId and kind contract or matter. Set changes.isDone true to complete, false to reopen; assigneeId reassigns and dueDate reschedules. Null clears assignee or due date. title and description are editable. Uses the same active-user and team rules as creation. Ask before addToTeam true. Completion, assignment, rescheduling, activity and notifications commit together. Repeating the same values does not toggle completion.",
     inputSchema: updateInput,
     outputSchema: output,
     run: async (input, { db, user, notifier }) =>

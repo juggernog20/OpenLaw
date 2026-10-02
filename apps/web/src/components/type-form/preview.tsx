@@ -262,6 +262,8 @@ export function IntakePreview({
                 ) : row.rowRef === "region" ? (
                   <select
                     id={id}
+                    aria-required={row.isRequired}
+                    aria-invalid={submitted && row.isRequired && !answered(row.rowRef)}
                     className={CONTROL_CLASS}
                     value={String(answers[row.rowRef] ?? "")}
                     onChange={(e) => answer(row.rowRef, e.target.value)}

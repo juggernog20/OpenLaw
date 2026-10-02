@@ -12,6 +12,7 @@ import { FileText } from "lucide-react";
 import { api } from "../../lib/api";
 import type { EntityObligation, EntityObligationFiling } from "../../lib/entities";
 import { formatFullDate } from "../../lib/format";
+import { networkError } from "../../lib/messages";
 import { problem } from "../../lib/problem";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
@@ -35,12 +36,12 @@ export function FilingHistoryDialog({
       .then(async (result) => {
         if (!live) return;
         if (result?.data) setFilings(result.data.filings);
-        else setError((await problem(result)).detail);
+        else setError((await problem(result)).detail ?? networkError(intl));
       });
     return () => {
       live = false;
     };
-  }, [entityId, obligation.id]);
+  }, [entityId, obligation.id, intl]);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

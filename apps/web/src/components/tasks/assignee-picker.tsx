@@ -2,10 +2,13 @@
 
 /** MTR-005 and CTR-017 assign Tasks to people through a searchable picker. */
 
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, UserPlus, UserRound } from "lucide-react";
 import { useIntl } from "react-intl";
+import type { Role } from "../../lib/roles";
 import { Avatar } from "../avatar";
+import { BusinessUserConfidentialWarning } from "../business-user-confidential-warning";
+import { RecordContext } from "../record-context";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -14,6 +17,9 @@ export interface TaskAssigneePerson {
   id: string;
   displayName: string;
   image?: string | null;
+  /** Set on people offered for the team, so the picker can warn before
+   * a Business User joins a confidential record. */
+  role?: Role;
 }
 
 export interface TaskTeamExpansion {
@@ -62,6 +68,8 @@ export function TaskAssigneePicker({
   onChange: (id: string | null, addToTeam?: boolean) => Promise<string | null>;
 }>) {
   const intl = useIntl();
+  // The picker also sits on pages with no record above it.
+  const facts = useContext(RecordContext);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
@@ -199,6 +207,12 @@ export function TaskAssigneePicker({
                   "This person will join the team, gain access to this record, and be assigned this task.",
               })}
             </p>
+            {facts?.confidential && selected.role === "business_user" && (
+              <BusinessUserConfidentialWarning
+                name={selected.displayName}
+                module={facts.record.kind === "contract" ? "contract" : "matter"}
+              />
+            )}
             {deferred && (
               <p className="text-sm text-muted">
                 {intl.formatMessage({
