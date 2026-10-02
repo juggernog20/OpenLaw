@@ -256,6 +256,7 @@ export const requestTypesRoutes: FastifyPluginAsyncZod = async (app) => {
           visibility: "admin_only",
           payload: {
             slug: requestType.slug,
+            displayName: requestType.displayName,
             changed: {
               targetType: {
                 from: currentTypeId === null ? null : source.displayName,
