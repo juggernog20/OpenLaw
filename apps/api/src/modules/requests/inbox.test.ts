@@ -21,7 +21,7 @@ import { requestDepartment } from "../../testing/request-department.js";
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { INBOX_SORT_KEYS } from "@openlaw/shared";
+import { INBOX_SORT_KEYS, isOpenRequestStatus } from "@openlaw/shared";
 import {
   contracts,
   contractTeam,
@@ -143,6 +143,7 @@ async function plant(row: {
   urgency: "low" | "medium" | "high" | "critical";
   createdAt: Date;
   status?: RequestStatus;
+  dispositionedAt?: Date;
   slug?: string;
   convertedContractId?: string;
   archivedAt?: Date;
@@ -158,6 +159,8 @@ async function plant(row: {
       description: "The ask, in full.",
       urgency: row.urgency,
       status: row.status ?? "new",
+      dispositionedAt:
+        row.dispositionedAt ?? (isOpenRequestStatus(row.status ?? "new") ? null : row.createdAt),
       createdAt: row.createdAt,
       convertedContractId: row.convertedContractId,
       archivedAt: row.archivedAt,
@@ -208,6 +211,7 @@ describe("Inbox column sorting", () => {
         urgency,
         status,
         createdAt: ago(i % 5),
+        ...(status === "new" ? {} : { dispositionedAt: ago((i * 3) % 7) }),
         slug: type.slug,
         requesterId: person.id,
       });
@@ -229,6 +233,9 @@ describe("Inbox column sorting", () => {
               return ["new", "converted", "resolved", "declined"].indexOf(row.status);
             case "createdAt":
               return row.createdAt.getTime();
+            case "dispositionedAt":
+              // Open Requests have no close time and sort as the latest.
+              return row.dispositionedAt?.getTime() ?? Infinity;
             default:
               return row[sort];
           }

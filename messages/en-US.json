@@ -6866,6 +6866,9 @@
   "inbox.column.age": {
     "defaultMessage": "Age"
   },
+  "inbox.column.closed": {
+    "defaultMessage": "Closed"
+  },
   "inbox.column.reference": {
     "defaultMessage": "Ref"
   },
@@ -6962,6 +6965,9 @@
   "inbox.request.convertedBy": {
     "defaultMessage": "{person, select, none {Converted on {date}} other {Converted by {person} on {date}}}"
   },
+  "inbox.request.declinedOn": {
+    "defaultMessage": "Declined"
+  },
   "inbox.request.description": {
     "defaultMessage": "Description"
   },
@@ -6982,6 +6988,9 @@
   },
   "inbox.request.resolveWithoutConverting": {
     "defaultMessage": "Resolve request without converting"
+  },
+  "inbox.request.resolvedOn": {
+    "defaultMessage": "Resolved"
   },
   "inbox.request.responses": {
     "defaultMessage": "Form responses"
@@ -8336,6 +8345,9 @@
   "notifications.request.conversionDraftFinished": {
     "defaultMessage": "{outcome, select, ready {The Conversion draft for {request} is ready to review} other {The Conversion draft for {request} could not finish}}"
   },
+  "notifications.request.converted": {
+    "defaultMessage": "Legal opened {recordModule, select, contract {Contract C-{recordNumber}} other {Matter M-{recordNumber}}} from your request {request}"
+  },
   "notifications.request.created": {
     "defaultMessage": "{hasVia, select, yes {{actor} submitted your request {request} to Legal} other {Legal has received your request {request}}}"
   },
@@ -8911,6 +8923,9 @@
   },
   "portal.matters.title": {
     "defaultMessage": "Your Matters"
+  },
+  "portal.myRequests.convertedRecord": {
+    "defaultMessage": "{module, select, contract {Contract C-{number}} other {Matter M-{number}}}"
   },
   "portal.myRequests.count": {
     "defaultMessage": "{count, plural, one {# request} other {# requests}}"

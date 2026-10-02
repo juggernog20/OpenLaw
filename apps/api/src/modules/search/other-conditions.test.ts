@@ -110,6 +110,7 @@ beforeAll(async () => {
               requesterId: viewer,
               urgency: i === 0 ? "high" : "low",
               status: i === 0 ? "new" : "resolved",
+              dispositionedAt: i === 0 ? null : new Date("2026-01-11T09:00:00Z"),
               createdAt: new Date("2026-01-10T23:30:00Z"),
               archivedAt,
             })

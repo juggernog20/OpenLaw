@@ -536,6 +536,7 @@ export const INBOX_SORT_KEYS = [
   "requester",
   "urgency",
   "createdAt",
+  "dispositionedAt",
   "status",
 ] as const;
 export type InboxSortKey = (typeof INBOX_SORT_KEYS)[number];

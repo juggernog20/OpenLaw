@@ -21,8 +21,10 @@ import { conversionForm, ConversionParties } from "./convert-form.js";
  * its own sequence, default open state, no team beyond the
  * creator row, and no Confidential flag inherited from anywhere. The one thing it
  * defaults from the Request is its urgency as priority. The converting
- * person is its Matter Manager or Contract Owner (the INT-002
- * 2026-09-06 and 2026-09-09 addenda).
+ * person is its Matter Manager or Contract Owner by default (the INT-002
+ * 2026-09-06 and 2026-09-09 addenda). On the matter arm the dialog may
+ * name another Matter Manager or Unassigned, and may set Confidential
+ * (the INT-002 2026-10-02 addendum).
  *
  * Built-in Rows land through the ordinary creation path alongside attached Fields.
  *
@@ -32,9 +34,10 @@ import { conversionForm, ConversionParties } from "./convert-form.js";
  * two numbers are the two names, and the log is append-only.
  *
  * **`requestStatusChanged` is raised, not a conversion event of its
- * own** — Resolve's shape rather than Decline's (the M20/8 rule). The
- * requester hears "In progress", which is the whole of what a
- * conversion means to them (the INT-003 M21/6 vocabulary).
+ * own** — Resolve's shape rather than Decline's (the M20/8 rule). It
+ * carries the record's module and number, and the requester is told
+ * which record Legal opened rather than a status (the INT-003
+ * 2026-10-02 addendum).
  *
  * The lock, the `new` guard, the race refusal, and the envelope read
  * are all `disposition.ts`'s. The 409 gained one extension member for
@@ -75,6 +78,7 @@ import {
   requestTypes,
   SEVERITY_LEVELS,
   requests,
+  sql,
 } from "@openlaw/db";
 import { MAX_CONTRACT_TITLE_LENGTH, MAX_MATTER_TITLE_LENGTH } from "@openlaw/shared";
 import { requireRole } from "../../auth/guards.js";
@@ -114,15 +118,17 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
           "never both. The record is born through its ordinary create callable " +
           "with the title seeded from the Request title, urgency defaulting " +
           "priority unless overridden, the collected built-in Rows, the converting " +
-          "person as Matter Manager or Contract Owner, one creator row, and no confidential " +
-          "flag. Matching collected values carry server-side; values with no " +
+          "person as Contract Owner, and one creator row. A matter conversion takes " +
+          "managerId and isConfidential. The Matter Manager defaults to the converting " +
+          "person and may be another Member+ or null, and Confidential defaults to off. " +
+          "A contract conversion refuses both with 400. Matching collected values carry server-side; values with no " +
           "field remain on the Request; missing required fields and dead " +
           "references are refused by name and can be answered in customFields. " +
           "Built-in Row answers land on native columns, parties and the Needed by key date. " +
           "Matter conversions may apply a live template for the confirmed type; " +
           "carried values and triager answers override its defaults. " +
           "Both records narrate the conversion and requestStatusChanged raises " +
-          "the Requester's In progress notification. Attachments become ordinary " +
+          "the Requester's notification naming the record Legal opened. Attachments become ordinary " +
           "root documents and the tiered thread moves onto either target while " +
           "the Portal Request address redirects to the converted record. Member+ only",
         tags: ["requests"],
@@ -147,6 +153,11 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
              * instantiation, so direct creation and conversion cannot
              * drift. */
             templateId: z.string().min(1).optional(),
+            /** Matter arm only. Omitted means the converting person;
+             * null means Unassigned. `createMatter` checks the person. */
+            managerId: z.string().min(1).nullable().optional(),
+            /** Matter arm only. Omitted means not Confidential. */
+            isConfidential: z.boolean().optional(),
             /** Dialog answers use Row keys; Value uses its three intake scalar keys. */
             customFields: CustomFieldsInput.optional(),
             priority: z.enum(SEVERITY_LEVELS).optional(),
@@ -241,6 +252,12 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             if (target.module === "contract" && chosenTemplateId !== undefined) {
               throw httpError(400, "A matter template can only be applied to a matter conversion.");
             }
+            if (target.module === "contract" && request.body.managerId !== undefined) {
+              throw httpError(400, "A Matter Manager can only be set on a matter conversion.");
+            }
+            if (target.module === "contract" && request.body.isConfidential !== undefined) {
+              throw httpError(400, "Confidential can only be set on a matter conversion.");
+            }
             if (title === "") {
               throw httpError(
                 400,
@@ -297,8 +314,13 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
                     matterTypeId: target.typeId,
                     ...(chosenTemplateId === undefined ? {} : { templateId: chosenTemplateId }),
                     customFields,
-                    managerId: request.user.id,
-                    isConfidential: false,
+                    // The converting person unless the dialog chose
+                    // another Member+ or Unassigned (#1310).
+                    managerId:
+                      request.body.managerId === undefined
+                        ? request.user.id
+                        : request.body.managerId,
+                    isConfidential: request.body.isConfidential ?? false,
                   });
             const provenance = await acceptedConversionProvenance(tx, {
               targetModule: target.module,
@@ -410,9 +432,15 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
               .update(requests)
               .set(
                 record.module === "contract"
-                  ? { status: "converted", convertedContractId: record.id, convertedMatterId: null }
+                  ? {
+                      status: "converted",
+                      dispositionedAt: sql`now()`,
+                      convertedContractId: record.id,
+                      convertedMatterId: null,
+                    }
                   : {
                       status: "converted",
+                      dispositionedAt: sql`now()`,
                       convertedContractId: null,
                       convertedMatterId: record.id,
                     },
@@ -451,15 +479,17 @@ export const requestConvertRoutes: FastifyPluginAsyncZod = async (app) => {
             });
 
             // Resolve's shape rather than Decline's: the closure is the
-            // whole news, and the requester's word for it is "In progress".
-            // The audience, the actor exclusion, the preferences, and the
-            // after-commit wake-up are all the seam's.
+            // whole news. The requester is told which record Legal opened,
+            // not a status, because the record's status is live and moves
+            // after this (#1299). The audience, the actor exclusion, the
+            // preferences, and the after-commit wake-up are all the seam's.
             await app.notifier.requestStatusChanged(tx, {
               requestId: held.id,
               actorId: request.user.id,
               actorName: request.user.displayName,
               from: held.status,
               to: "converted",
+              record: { module: record.module, number: record.number },
             });
           }),
       );

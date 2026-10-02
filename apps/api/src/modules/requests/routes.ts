@@ -82,9 +82,10 @@ const RequestTypeRefSchema = z.object({
   displayName: z.string(),
 });
 
-/** One row of my-requests. Five facts, because that is what the I5
- * block draws: the reference, the one-line ask, the front door it came
- * through, where it got to, and how old it is. */
+/** One row of my-requests: the reference, the one-line ask, the front
+ * door it came through, where it got to, and how old it is. A converted
+ * row also names the record it became, which the row shows in place of
+ * the status pill and opens. */
 export const MyRequestRowSchema = z.object({
   owner: z.object({ displayName: z.string() }).nullable(),
   id: z.string(),
@@ -95,11 +96,17 @@ export const MyRequestRowSchema = z.object({
   requestType: RequestTypeRefSchema,
   /** The age the list states, computed by the reader. */
   createdAt: z.string(),
+  /** The record a converted Request became, or null. A converted row
+   * is listed only while that record is live and the requester is on
+   * its team (DD-023 addendum, #1307). */
+  convertedRecord: z
+    .object({ module: z.enum(["contract", "matter"]), number: z.number().int() })
+    .nullable(),
 });
 
 /** The Request detail's envelope: the I7 head block, the "What you
  * submitted" card, and the disposition. */
-export const MyRequestSchema = MyRequestRowSchema.extend({
+export const MyRequestSchema = MyRequestRowSchema.omit({ convertedRecord: true }).extend({
   description: z.string().nullable(),
   departmentId: z.string().nullable().optional(),
   department: z.string().nullable().optional(),
@@ -138,8 +145,10 @@ export const requestsRoutes: FastifyPluginAsyncZod = async (app) => {
         operationId: "listMyRequests",
         summary:
           "The session user's own Requests, newest first (DD-013). " +
-          "There is no way to ask for anybody else's, and a converted " +
-          "Request stays on the list (INT-001). The whole list is " +
+          "There is no way to ask for anybody else's. A converted Request " +
+          "stays on the list with its convertedRecord while that record is " +
+          "live and the user is on its team, and leaves it after team " +
+          "removal or archive (DD-023 addendum). The whole list is " +
           "answered: it is one person's own asks, and a cap would hide " +
           "a Request from the only person who can see it",
         tags: ["requests"],

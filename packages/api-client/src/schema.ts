@@ -4311,7 +4311,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's, and a converted Request stays on the list (INT-001). The whole list is answered: it is one person's own asks, and a cap would hide a Request from the only person who can see it */
+    /** The session user's own Requests, newest first (DD-013). There is no way to ask for anybody else's. A converted Request stays on the list with its convertedRecord while that record is live and the user is on its team, and leaves it after team removal or archive (DD-023 addendum). The whole list is answered: it is one person's own asks, and a cap would hide a Request from the only person who can see it */
     get: operations["listMyRequests"];
     put?: never;
     post?: never;
@@ -4758,7 +4758,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only
+     * Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Contract Owner, and one creator row. A matter conversion takes managerId and isConfidential. The Matter Manager defaults to the converting person and may be another Member+ or null, and Confidential defaults to off. A contract conversion refuses both with 400. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's notification naming the record Legal opened. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only
      * @description Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).
      */
     post: operations["convertRequest"];
@@ -24011,7 +24011,15 @@ export interface operations {
         receivedFrom?: string;
         receivedTo?: string;
         timeZone?: string;
-        sort?: "number" | "title" | "type" | "requester" | "urgency" | "createdAt" | "status";
+        sort?:
+          | "number"
+          | "title"
+          | "type"
+          | "requester"
+          | "urgency"
+          | "createdAt"
+          | "dispositionedAt"
+          | "status";
         dir?: "asc" | "desc";
         includeTriaged?: "true" | "false";
         cursor?: string;
@@ -24054,6 +24062,7 @@ export interface operations {
                 image: string | null;
               } | null;
               createdAt: string;
+              dispositionedAt: string | null;
               convertedContract: {
                 number: number;
               } | null;
@@ -24188,6 +24197,11 @@ export interface operations {
                 displayName: string;
               };
               createdAt: string;
+              convertedRecord: {
+                /** @enum {string} */
+                module: "contract" | "matter";
+                number: number;
+              } | null;
             }[];
           };
         };
@@ -24510,6 +24524,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24840,6 +24855,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -24928,6 +24944,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -25113,6 +25130,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -25254,6 +25272,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;
@@ -25839,6 +25858,8 @@ export interface operations {
           contractTypeId?: string;
           matterTypeId?: string;
           templateId?: string;
+          managerId?: string | null;
+          isConfidential?: boolean;
           customFields?: {
             [key: string]: (string | number | boolean | string[]) | null;
           };
@@ -25883,6 +25904,7 @@ export interface operations {
               }[];
               declinedReason: string | null;
               createdAt: string;
+              dispositionedAt: string | null;
               requestType: {
                 id: string;
                 displayName: string;

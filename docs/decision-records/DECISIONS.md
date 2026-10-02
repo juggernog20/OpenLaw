@@ -1188,7 +1188,7 @@ The Portal design record will set the page layout and detailed read projection. 
 
 At conversion to either kind of record, the Requester becomes **Business Owner and a team member**. This is one conversion operation with the record creation and the existing movement of conversation and paper. Matters gain the Business Owner assignment needed to express the same responsibility. An archived Requester account can remain recorded historically; it does not regain sign-in access.
 
-In the **Portal**, the converted Request's address redirects to its Contract or Matter. Converted Requests leave **Your Requests**. New, resolved, and declined Requests remain there; resolved and declined Requests retain their own conversation. Old notification links to a converted Request follow the redirect and check current record access. They cannot act as a second route into a record after removal from its team.
+In the **Portal**, the converted Request's address redirects to its Contract or Matter. ~~Converted Requests leave **Your Requests**.~~ The 2026-10-02 addendum below keeps a converted Request on **Your Requests** while its record is reachable. New, resolved, and declined Requests remain there; resolved and declined Requests retain their own conversation. Old notification links to a converted Request follow the redirect and check current record access. They cannot act as a second route into a record after removal from its team.
 
 The original ask lives on the Contract or Matter in a read-only **Original request** block. Preserve who asked, when, the original description and submitted answers, and references to the submitted paper under the record's Document rules. Reuse the full-app Contract's original-intake snapshot and presentation where appropriate. A record created without a Request has no invented original ask. Where several Requests point to one record, retain each original submission separately.
 
@@ -1255,6 +1255,19 @@ The product owner clarified that the Business Owner must automatically be a memb
 Creating or assigning a Business Owner adds their team row in the same transaction. Current Business Owners are backfilled onto existing teams, including Confidential and archived records. Each backfilled membership records a system Activity entry; existing historical exclusion entries remain evidence of the earlier rule. The current Business Owner cannot be removed from the team until that assignment is cleared or changed. Reassignment adds the successor without removing the former owner's membership. The former member can then be removed explicitly.
 
 On a Confidential record, assigning a Business Owner uses the existing permission to change its audience. Ordinary team members cannot widen that audience through the owner control. Account archival, record archival, Portal capabilities, Document gates, and notification preferences continue to apply. Business Owner membership carries no Legal administration rights.
+
+### DD-023 addendum (2026-10-02, #1307): a converted Request stays on Your requests while its record is reachable
+
+Section 5 said converted Requests leave **Your Requests**. Two focus groups in a row lost work there. Four of nine panelists on 2026-09-29 checked Your requests to see where an ask stood, and after conversion only the bell or the email led to the record.
+
+**Decision.** A converted Request stays on **Your requests** while its record is live and the requester is on its team. The row shows the record reference, for example "Contract C-193" or "Matter M-87", in the status pill's place, and opens `/portal/contracts/193` or `/portal/matters/87`. After team removal or archive the row leaves the list, as the Request address stops redirecting.
+
+- `listMyRequests` filters with `requestDestinationScope`, the grant converted Request notifications already use. It reads "not converted, or converted to a live record on my team".
+- Each row carries `convertedRecord`, the module and number, or null. The Request detail does not carry it, because `redirectTo` already says the same.
+- The row grants nothing new. The Request address already redirects to the record under the same team check.
+- The row names the record and no status, for the reason in the INT-003 addendum of the same date (#1299). The record's status is live.
+
+New, resolved and declined Requests stay on the list as before.
 
 ## DD-024: Business Users work with Document versions on their records
 

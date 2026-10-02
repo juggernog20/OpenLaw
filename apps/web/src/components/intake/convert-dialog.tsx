@@ -46,6 +46,7 @@ import {
   type CustomFieldValue,
 } from "../../lib/custom-fields";
 import { CONTROL_CLASS } from "../../lib/form-controls";
+import { ConfidentialToggle } from "../confidential-toggle";
 import type {
   ConvertedRecord,
   ConvertRequestInput,
@@ -115,6 +116,8 @@ export function ConvertDialog({
   contractTypes,
   matterTypes,
   people,
+  managers = [],
+  viewerId,
   entities,
   busy,
   onClose,
@@ -140,6 +143,10 @@ export function ConvertDialog({
   matterTypes: readonly MatterTypeOption[];
   /** What a `user` creation field offers. */
   people: readonly FieldReference[];
+  /** The live Member+ people the Matter Manager select offers. */
+  managers?: readonly FieldReference[];
+  /** The converting person, who is the Matter Manager by default. */
+  viewerId?: string;
   /** What an `entity` creation field offers — the M7 registry. */
   entities: readonly FieldReference[];
   busy: boolean;
@@ -260,6 +267,12 @@ export function ConvertDialog({
   });
   const pickedId = pickedIds[targetModule];
   const [templateId, setTemplateId] = useState("");
+  // Seeded once with the converting person, as Create matter does. The
+  // person may pick another Member+ or Unassigned (#1310).
+  const [managerId, setManagerId] = useState(
+    managers.some((person) => person.id === viewerId) ? (viewerId ?? "") : "",
+  );
+  const [confidential, setConfidential] = useState(false);
   const [title, setTitle] = useState(String(suggestions.title?.value ?? request.title));
   const [priority, setPriority] = useState<StaffRequest["urgency"]>(
     SEVERITY_LEVELS.find((level) => level === suggestions.priority?.value) ??
@@ -603,6 +616,9 @@ export function ConvertDialog({
         ? { contractTypeId: target.id }
         : { matterTypeId: target.id }),
       ...(selectedTemplate ? { templateId: selectedTemplate.id } : {}),
+      ...(targetModule === "matter"
+        ? { managerId: managerId || null, isConfidential: confidential }
+        : {}),
       ...(Object.keys(customFields).length === 0 ? {} : { customFields }),
       ...(visibleNative.counterparties?.length ||
       (visibleNative.counterparties && human.has("counterparties"))
@@ -993,6 +1009,28 @@ export function ConvertDialog({
                 </select>
               </div>
             )}
+            {targetModule === "matter" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="convert-manager">
+                  <FormattedMessage id="matters.field.manager" defaultMessage="Matter Manager" />
+                </Label>
+                <select
+                  id="convert-manager"
+                  className={CONTROL_CLASS}
+                  value={managerId}
+                  onChange={(event) => setManagerId(event.target.value)}
+                >
+                  <option value="">
+                    {intl.formatMessage({ id: "matters.unassigned", defaultMessage: "Unassigned" })}
+                  </option>
+                  {managers.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="convert-priority" required>
                 <FormattedMessage id="convert.priority" defaultMessage="Priority" />
@@ -1130,6 +1168,14 @@ export function ConvertDialog({
                   </DescribedField>
                 );
               })}
+            {targetModule === "matter" && (
+              <ConfidentialToggle
+                id="convert-confidential"
+                record="matter"
+                confidential={confidential}
+                onChange={setConfidential}
+              />
+            )}
             <CreateAttachments
               module={targetModule}
               uploads={attachments}

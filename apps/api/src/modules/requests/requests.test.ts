@@ -648,7 +648,10 @@ describe("the request detail", () => {
     const created = await submit(completeBody({ title: "Converted without a destination" }));
     expect(created.statusCode, created.body).toBe(201);
     const { id, number } = created.json().request;
-    await harness.db.update(requests).set({ status: "converted" }).where(eq(requests.id, id));
+    await harness.db
+      .update(requests)
+      .set({ status: "converted", dispositionedAt: new Date() })
+      .where(eq(requests.id, id));
     expect((await readDetail(number)).statusCode).toBe(404);
     const list = await harness.app.inject({
       method: "GET",
@@ -665,7 +668,11 @@ describe("the request detail", () => {
     const { id, number } = created.json().request;
     await harness.db
       .update(requests)
-      .set({ status: "declined", declinedReason: "Procurement owns vendor paper under $10k." })
+      .set({
+        status: "declined",
+        declinedReason: "Procurement owns vendor paper under $10k.",
+        dispositionedAt: new Date(),
+      })
       .where(eq(requests.id, id));
 
     const res = await readDetail(number);

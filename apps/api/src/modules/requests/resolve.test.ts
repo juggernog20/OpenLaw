@@ -23,7 +23,8 @@ import { requestDepartment } from "../../testing/request-department.js";
  * the outcome, and that a refused resolution writes no comment.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 import { and, comments, eq, requestTypes } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE } from "@openlaw/shared";
 import {
@@ -78,6 +79,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.stop();
 });
+
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 async function submit(title: string): Promise<{ id: string; number: number }> {
   const res = await submitRequestFixture(harness, {
@@ -181,6 +184,23 @@ describe("what a resolution writes (INT-007)", () => {
     expect(row.status).toBe("resolved");
     expect(row.declinedReason).toBeNull();
     expect(row.convertedContractId).toBeNull();
+  });
+
+  it("records the close time once, in the transaction that wrote the status (#1322)", async () => {
+    const request = await submit("When was it closed");
+    expect((await stored(request.id)).dispositionedAt).toBeNull();
+    const res = await resolve(request.number, "Answered on the thread.");
+    expect(res.statusCode, res.body).toBe(200);
+
+    const row = await stored(request.id);
+    const entry = (await entriesOn(request.id)).find((e) => e.action === "request.resolved")!;
+    // One transaction, one now(): the close time is the entry's own stamp.
+    expect(row.dispositionedAt).toEqual(entry.createdAt);
+    expect(res.json().request.dispositionedAt).toBe(row.dispositionedAt!.toISOString());
+
+    // A losing second press does not move it.
+    expect((await resolve(request.number, "Again.")).statusCode).toBe(409);
+    expect((await stored(request.id)).dispositionedAt).toEqual(row.dispositionedAt);
   });
 
   it("narrates request.resolved with the actor, and carries no words in the payload", async () => {

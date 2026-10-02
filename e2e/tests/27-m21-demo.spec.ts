@@ -594,13 +594,15 @@ test.describe.serial("M21 demo path", () => {
       ).toBeVisible();
       await expect(portal.getByRole("link", { name: ATTACHMENT, exact: true })).toBeVisible();
 
-      // The outcome reached them where they are: the status change as
-      // email, in the same words the pill uses (INT-003, NOT-002 group
-      // 5).
+      // The outcome reached them where they are: the conversion as
+      // email, naming the record Legal opened rather than a status
+      // (INT-003 addendum of 2026-10-02, NOT-002 group 5).
       const statusMail = await waitForMailTo(
         page.request,
         REQUESTER,
-        new RegExp(`^Your request is in progress: ${reference} · `),
+        new RegExp(
+          `^Legal opened Contract C-${String(contractNumber)} from your request: ${reference} · `,
+        ),
       );
       expect(statusMail.text).toContain(`/portal/requests/${String(number)}`);
 
@@ -619,11 +621,13 @@ test.describe.serial("M21 demo path", () => {
       await expect(
         portalCentre.getByRole("link", { name: new RegExp(`replied on your request ${TITLE}`) }),
       ).toHaveAttribute("href", `/portal/requests/${String(number)}`);
-      // The item names the status it moved to, in the requester's own
-      // vocabulary rather than the enum's (NOT-005, 2026-09-09).
+      // The item names the record Legal opened and no status, because
+      // the record's status is live (INT-003 addendum of 2026-10-02).
       await expect(
         portalCentre.getByRole("link", {
-          name: new RegExp(`Your request ${TITLE} is now In progress`),
+          name: new RegExp(
+            `Legal opened Contract C-${String(contractNumber)} from your request ${TITLE}`,
+          ),
         }),
       ).toBeVisible();
       await portal.keyboard.press("Escape");

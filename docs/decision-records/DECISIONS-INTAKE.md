@@ -936,3 +936,47 @@ styles. Prompted catalog text Fields use the effective style through the shared 
 path, including Contract Field overrides. Sources, provenance and acceptance rules
 remain as recorded above. The same per-target validation preserves valid sibling
 answers when another value fails validation.
+
+### INT-007 built addendum (2026-10-02, #1322): the close time is stored on the Request
+
+A Request now records when it closed. Before this, it stored only when it was submitted. The close time existed only as the stamp of the `request.converted`, `request.resolved` or `request.declined` Activity entry, so no screen could measure time to close.
+
+- `requests.dispositioned_at` is a nullable `timestamptz`. Convert, Resolve and Decline set it to `now()` in the same write as the status. It therefore equals the stamp of the Activity entry that the same transaction writes. A losing second press is refused before the write, so the value is set once.
+- The check `requests_dispositioned_at_check` requires the column to be set exactly when `status` is `converted`, `resolved` or `declined`. No route reopens a closed Request.
+- Migration `0194_request-dispositioned-at` backfills every closed Request from its earliest disposition Activity entry, the same lookup the staff detail uses for "Converted by". A closed Request with no entry takes `updated_at`, so the check holds for every row. Open Requests stay null.
+- The staff Request detail shows Resolved or Declined with the date beside Submitted. The full timestamp is on hover. A converted Request keeps its "Converted by" line on the Status card.
+- The Inbox column picker offers Closed after Age. It is not in the default layout. It is blank for an open Request. The `dispositionedAt` sort key orders by close time, and open Requests sort after every closed one in ascending order.
+- The Portal does not show the close time. A turnaround report is not part of this change. This column is its base.
+
+### INT-002 addendum (2026-10-02, #1310): Convert to matter offers the Matter Manager and Confidential
+
+Two panelists in the focus group of 2026-09-29 found that Convert to matter always made the converter Matter Manager and always made a non-Confidential Matter. A sensitive Request's Matter was open to every Legal Team Member until someone flagged it by hand. Create matter already offers both controls.
+
+**Decision.** The matter arm of the Convert dialog shows a **Matter Manager** select after the template and the Confidential switch before the attachments. The select starts on the converting person and offers every live Administrator and Legal Team Member, and **Unassigned**. The switch starts off. These are the same controls and defaults as Create matter.
+
+- The convert body takes optional `managerId`, a person id or null, and optional `isConfidential`. An omitted `managerId` keeps the converting person, so the 2026-09-06 default stands. Null is Unassigned.
+- `createMatter` checks the person, as it does for Create matter. A Business User or an archived person is refused with 400 and nothing is written.
+- Template Tasks for the Matter Manager go to the chosen person, or have no assignee when the Matter is Unassigned.
+- A Confidential conversion writes `matter.confidentiality_set`, as Create matter does. The Requester still joins the team as Business Owner under DD-023.
+- The triage assignee still does not decide the Matter Manager.
+
+This supersedes "Manager unassigned, confidentiality off" in the INT-007 M22 close addendum for the matter arm.
+
+**Convert to contract does not get these controls.** The converting person stays the Contract Owner, by the 2026-09-09 addendum, and the Contract starts non-Confidential. A contract conversion that sends either member is refused with 400, as a template is. The focus group asked only about Matters. A later change can add the same pair to the contract arm.
+
+### INT-003 addendum (2026-10-02, #1299): a conversion names the record, not a status
+
+A Business User followed the bell item "Your request ... is now In progress" and opened a Matter that said On hold. The bell item is a snapshot, and the Matter's status is live. Legal changes it after conversion, so the two disagreed and the requester could not tell which was true.
+
+**Decision.** On conversion, the bell and the email name the record Legal opened and no status. The bell reads "Legal opened Matter M-87 from your request {request}", or "Contract C-193". The email subject is "Legal opened Matter M-87 from your request: R-19 · {title}", and its headline and body say the same. The record page then holds the only status.
+
+- `request.status_changed` carries `recordModule` and `recordNumber` when `to` is `converted`. The convert route has the record's module and number at that point.
+- The conversion email has no step tracker, because its "In progress" step would be a second status. Its action reads "View Matter M-87" and still goes through the Request address, which redirects to the record.
+- A conversion row written before this change has no record keys. It keeps the status sentence, "is now In progress". Resolve still reads "is now Resolved", and Decline keeps its own event.
+- Device push copy does not change. It names no payload values.
+
+This narrows the M21/6 addendum above and the INT-007 M21/9 addendum. The requester's four words still label the pills and the Resolve and Decline messages. Conversion is no longer told to the requester as "In progress". After conversion the Request address redirects to the record, so the record is where the requester acts.
+
+### INT-003 addendum (2026-10-02, #1307): Your requests names the record, not In progress
+
+A converted Request now stays on **Your requests** while its record is reachable (the DD-023 addendum of the same date). Its row shows the record reference, for example "Contract C-193", where the status pill was. It does not say "In progress", for the same reason the conversion notification no longer does (#1299): the record's status is live. The requester's four words still label every other row. The pill keeps the `converted` colour family from `REQUEST_STATUS_PILL`.

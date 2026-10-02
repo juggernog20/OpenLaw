@@ -1292,6 +1292,7 @@ describe("GET /api/v1/home", () => {
         title: "Already resolved",
         urgency: "critical",
         status: "resolved",
+        dispositionedAt: new Date(),
         createdAt: new Date("2026-01-01T09:00:00Z"),
       },
     ]);

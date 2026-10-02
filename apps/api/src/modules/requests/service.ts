@@ -9,12 +9,13 @@
 import type { Db } from "@openlaw/db";
 import {
   and,
+  contracts,
   count,
   desc,
   eq,
   gte,
   isNull,
-  ne,
+  matters,
   REQUEST_STATUSES,
   requests,
   requestTypes,
@@ -29,6 +30,7 @@ import { evaluateForm, intakeFormAnswers, isOpenRequestStatus } from "@openlaw/s
 import { z } from "zod";
 import type { AuthenticatedUser } from "../../auth/guards.js";
 import { NO_PERMISSION } from "../../auth/guards.js";
+import { requestDestinationScope } from "../../lib/notifications/audience.js";
 import { RECORD_ACTIVITY_TIER, recordActivity } from "../../lib/activity.js";
 import {
   coerceCustomFieldValue,
@@ -323,20 +325,29 @@ export async function listMyRequests(db: Db, user: AuthenticatedUser) {
       typeSlug: requestTypes.slug,
       typeDisplayName: requestTypes.displayName,
       owner: { displayName: requestAssignees.displayName },
+      convertedContractNumber: contracts.number,
+      convertedMatterNumber: matters.number,
     })
     .from(requests)
     .innerJoin(requestTypes, eq(requests.requestTypeId, requestTypes.id))
     .leftJoin(requestAssignees, eq(requests.assigneeId, requestAssignees.id))
+    .leftJoin(contracts, eq(requests.convertedContractId, contracts.id))
+    .leftJoin(matters, eq(requests.convertedMatterId, matters.id))
     // DD-013 as a `where` clause: the Requester is the session, and
     // the route offers no other filter to be widened by a query
     // string. Archived Requests are absent by the house rule that
     // NULL means live; nothing archives one yet, and a rule stated
     // now is a rule the first archiver inherits.
+    //
+    // A converted Request stays while its record is live and the
+    // requester is on its team, the same grant the Request address
+    // redirects under. After team removal or archive it leaves the
+    // list (the DD-023 addendum of 2026-10-02).
     .where(
       and(
         eq(requests.requesterId, user.id),
         isNull(requests.archivedAt),
-        ne(requests.status, "converted"),
+        requestDestinationScope(db, user),
       ),
     )
     // Newest first — the index the table declares, and the order a
@@ -350,7 +361,20 @@ export async function listMyRequests(db: Db, user: AuthenticatedUser) {
     // home draws the block whole — there is no "load more" in I5 to
     // recover the tail with.
     .orderBy(desc(requests.createdAt), desc(requests.number));
-  return { requests: rows.map((row) => toPortalRequestRow(row)) };
+  return {
+    requests: rows.map(({ convertedContractNumber, convertedMatterNumber, ...row }) => ({
+      ...toPortalRequestRow(row),
+      // The scope above already holds the record live and reachable.
+      convertedRecord:
+        row.status !== "converted"
+          ? null
+          : convertedMatterNumber !== null
+            ? { module: "matter" as const, number: convertedMatterNumber }
+            : convertedContractNumber !== null
+              ? { module: "contract" as const, number: convertedContractNumber }
+              : null,
+    })),
+  };
 }
 /** The joined row, reshaped into the answer's nested request type. */
 export function toPortalRequestRow<T extends RequestRowColumns>(row: T) {

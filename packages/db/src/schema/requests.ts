@@ -117,6 +117,10 @@ export const requests = pgTable(
     convertedContractId: text("converted_contract_id").references(() => contracts.id),
     /** INT-006: "no" always arrives with a why. M21 writes it. */
     declinedReason: text("declined_reason"),
+    /** When Convert, Resolve or Decline closed the Request (INT-007).
+     * NULL while it is open. `updated_at` moves on any write, so it
+     * cannot say when a Request closed. */
+    dispositionedAt: timestamp("dispositioned_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -167,6 +171,12 @@ export const requests = pgTable(
       sql`${table.status} in ('new', 'read', 'converted', 'resolved', 'declined')`,
     ),
     check("requests_urgency_check", sql`${table.urgency} in ('low', 'medium', 'high', 'critical')`),
+    // A closed Request has a close time and an open one has none. No
+    // route reopens a closed Request, so the pair never moves back.
+    check(
+      "requests_dispositioned_at_check",
+      sql`(${table.status} in ('converted', 'resolved', 'declined')) = (${table.dispositionedAt} is not null)`,
+    ),
   ],
 );
 

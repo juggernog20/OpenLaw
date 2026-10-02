@@ -25,7 +25,8 @@ import { requestDepartment } from "../../testing/request-department.js";
  * the decline reaches them.
  */
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { emptyRequestQuotaWindow } from "../../testing/request-quota.js";
 import { eq, requests, requestTypes, type RequestStatus } from "@openlaw/db";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, MAX_DECLINE_REASON_LENGTH } from "@openlaw/shared";
 import {
@@ -80,6 +81,8 @@ beforeAll(async () => {
 afterAll(async () => {
   await harness.stop();
 });
+
+beforeEach(() => emptyRequestQuotaWindow(harness.db));
 
 async function submit(title: string): Promise<{ id: string; number: number }> {
   const res = await submitRequestFixture(harness, {
@@ -203,6 +206,23 @@ describe("what a decline writes (INT-007)", () => {
     const row = await stored(request.id);
     expect(row.status).toBe("declined");
     expect(row.convertedContractId).toBeNull();
+  });
+
+  it("records the close time once, in the transaction that wrote the status (#1322)", async () => {
+    const request = await submit("When was it turned down");
+    expect((await stored(request.id)).dispositionedAt).toBeNull();
+    const res = await decline(request.number, "Ask Procurement.");
+    expect(res.statusCode, res.body).toBe(200);
+
+    const row = await stored(request.id);
+    const entry = (await entriesOn(request.id)).find((e) => e.action === "request.declined")!;
+    // One transaction, one now(): the close time is the entry's own stamp.
+    expect(row.dispositionedAt).toEqual(entry.createdAt);
+    expect(res.json().request.dispositionedAt).toBe(row.dispositionedAt!.toISOString());
+
+    // A losing second press does not move it.
+    expect((await decline(request.number, "Again.")).statusCode).toBe(409);
+    expect((await stored(request.id)).dispositionedAt).toEqual(row.dispositionedAt);
   });
 
   it("narrates request.declined with the actor, and carries no reason in the payload", async () => {
@@ -332,7 +352,10 @@ describe("the disposition scaffold (INT-007)", () => {
     // contract, a comment, an event, an email — standing behind it.
     for (const outcome of ["resolved", "converted"] as const satisfies readonly RequestStatus[]) {
       const request = await submit(`Already ${outcome}`);
-      await harness.db.update(requests).set({ status: outcome }).where(eq(requests.id, request.id));
+      await harness.db
+        .update(requests)
+        .set({ status: outcome, dispositionedAt: new Date() })
+        .where(eq(requests.id, request.id));
 
       const res = await decline(request.number, "Too late.");
       expect(res.statusCode, res.body).toBe(409);

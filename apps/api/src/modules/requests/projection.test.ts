@@ -113,6 +113,7 @@ async function plantRequest(convertedContractId: string | null) {
       title: "Projection fixture",
       urgency: "medium",
       status: convertedContractId === null ? "new" : "converted",
+      dispositionedAt: convertedContractId === null ? null : new Date(),
       convertedContractId,
     })
     .returning();

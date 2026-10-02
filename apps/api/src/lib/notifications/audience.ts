@@ -642,8 +642,10 @@ function inboxRows(db: Executor): SQL | undefined {
   );
 }
 
-/** Converted Request notifications follow the live destination's team grant. */
-function requestDestinationScope(
+/** A Request that is not converted, or converted to a live record the
+ * person is on the team for. Converted Request notifications and the
+ * Portal's Your requests list both follow this grant (#1307). */
+export function requestDestinationScope(
   db: Executor,
   user: { id: string | typeof users.id },
 ): SQL | undefined {

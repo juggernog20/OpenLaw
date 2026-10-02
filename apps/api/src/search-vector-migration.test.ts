@@ -265,7 +265,7 @@ async function sourceRows(
     : sql.raw("");
   const withoutLaterRequestColumns = migrated
     ? sql.raw(
-        " - 'search_vector' - 'assignee_id' - 'expected_by' - 'title' - 'department_id' - 'intake_counterparties'",
+        " - 'search_vector' - 'assignee_id' - 'expected_by' - 'title' - 'department_id' - 'intake_counterparties' - 'dispositioned_at'",
       )
     : sql.raw("");
   const tableNames = SEARCH_TABLE_NAMES.map((name) => sql`${name}`);
