@@ -308,6 +308,79 @@ function toRow(row: TaxonomyRow, counts: Map<string, number>, projectExtras?: Pr
   };
 }
 
+/**
+ * Locks every row of one taxonomy list, archived rows included, behind
+ * the list's advisory lock. Archived types keep their slugs and display
+ * orders, so a new row's identity is free only against all of them.
+ */
+export async function lockTypeIdentities(
+  tx: Transaction,
+  table: TaxonomyTable,
+  path: string,
+  where?: SQL,
+): Promise<TaxonomyRow[]> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
+  return tx.select().from(table).where(where).orderBy(asc(table.id)).for("update");
+}
+
+/** A free slug and the next display order, against the locked rows. */
+export function nextTypeIdentity(existing: readonly TaxonomyRow[], displayName: string) {
+  return {
+    slug: freeSlug(displayName, "type", new Set(existing.map((row) => row.slug))),
+    displayOrder: existing.reduce((top, row) => Math.max(top, row.displayOrder), 0) + 1,
+  };
+}
+
+/**
+ * Copies a live type and its Form into a new type of the same list
+ * (DD-028, 2026-09-30 amendment). The copy is plain: it is never a
+ * Default type or a system default. The caller holds `existing` from
+ * `lockTypeIdentities` in the same transaction.
+ */
+export async function insertTypeCopy(
+  tx: Transaction,
+  input: {
+    table: TaxonomyTable;
+    module: FormModule;
+    source: TaxonomyRow;
+    existing: readonly TaxonomyRow[];
+    displayName: string;
+    actorId: string;
+    /** The mount's own columns on the copy: a scope, `is_default`, or
+     * a column the source carries over. */
+    columns?: Record<string, unknown>;
+  },
+): Promise<TaxonomyRow> {
+  const { table, module, source, displayName } = input;
+  const { slug, displayOrder } = nextTypeIdentity(input.existing, displayName);
+  const form = await readTypeForm(tx, module, source.id);
+  const [created] = await tx
+    .insert(table)
+    .values({
+      slug,
+      displayName,
+      description: source.description,
+      displayOrder,
+      isSystemDefault: false,
+      ...input.columns,
+    })
+    .returning();
+  await writeTypeForm(tx, module, created!.id, form);
+  await recordActivity(tx, {
+    entityType: "system",
+    actorId: input.actorId,
+    action: `${module}_type.duplicated`,
+    visibility: "admin_only",
+    payload: {
+      slug,
+      displayName,
+      sourceSlug: source.slug,
+      sourceDisplayName: source.displayName,
+    },
+  });
+  return created!;
+}
+
 /** Builds the "3 entities" / "1 entity" phrase helper for guard refusals. */
 export function recordNounPhrase(recordNoun: { singular: string; plural: string }) {
   return (count: number) => `${count} ${count === 1 ? recordNoun.singular : recordNoun.plural}`;
@@ -484,18 +557,7 @@ export function taxonomyRoutes<
       },
     );
 
-    async function lockIdentities(tx: Transaction) {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${path}))`);
-      // Archived types retain their slugs and display orders.
-      return tx.select().from(table).where(scoped()).orderBy(asc(table.id)).for("update");
-    }
-
-    function nextIdentity(existing: TaxonomyRow[], displayName: string) {
-      return {
-        slug: freeSlug(displayName, "type", new Set(existing.map((row) => row.slug))),
-        displayOrder: existing.reduce((top, row) => Math.max(top, row.displayOrder), 0) + 1,
-      };
-    }
+    const lockIdentities = (tx: Transaction) => lockTypeIdentities(tx, table, path, scoped());
 
     app.post(
       `/${path}`,
@@ -520,7 +582,7 @@ export function taxonomyRoutes<
             existing.some((row) => row.displayName.toLowerCase() === displayName.toLowerCase())
           )
             throw httpError(409, `A ${noun} with this name already exists.`);
-          const { slug, displayOrder } = nextIdentity(existing, displayName);
+          const { slug, displayOrder } = nextTypeIdentity(existing, displayName);
 
           const [created] = await tx
             .insert(table)
@@ -569,36 +631,19 @@ export function taxonomyRoutes<
             // The copy must still pass DisplayNameSchema on a later rename,
             // so a long source name gives up room for the suffix.
             const suffix = " (copy)";
-            const displayName = source.displayName.slice(0, 100 - suffix.length).trimEnd() + suffix;
-            const { slug, displayOrder } = nextIdentity(existing, displayName);
-            const form = await readTypeForm(tx, duplicateModule, source.id);
-            const [created] = await tx
-              .insert(table)
-              .values({
-                slug,
-                displayName,
-                description: source.description,
-                displayOrder,
-                isSystemDefault: false,
+            return insertTypeCopy(tx, {
+              table,
+              module: duplicateModule,
+              source,
+              existing,
+              displayName: source.displayName.slice(0, 100 - suffix.length).trimEnd() + suffix,
+              actorId: request.user.id,
+              columns: {
                 ...(config.formModule ? { isDefault: false } : {}),
                 ...(scope ? { [scope.key]: scope.value } : {}),
                 ...(config.extras?.duplicateColumns?.(source) ?? {}),
-              })
-              .returning();
-            await writeTypeForm(tx, duplicateModule, created!.id, form);
-            await recordActivity(tx, {
-              entityType: "system",
-              actorId: request.user.id,
-              action: `${duplicateModule}_type.duplicated`,
-              visibility: "admin_only",
-              payload: {
-                slug,
-                displayName,
-                sourceSlug: source.slug,
-                sourceDisplayName: source.displayName,
               },
             });
-            return created!;
           });
           return reply.status(201).send({ [config.keySingular]: await rowJson(row) });
         },

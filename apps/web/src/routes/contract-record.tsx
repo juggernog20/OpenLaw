@@ -3601,9 +3601,9 @@ function FieldsCard({
 /**
  * One custom field, committed on its own (DES-017). Which gesture
  * commits it follows the split the record already draws: a pick is a
- * decision, so a toggle, a select, and a checkbox group commit the
- * moment they change; typing is a draft, so a text, number, or date box
- * commits on blur and on Enter, and Escape puts back what was saved.
+ * decision, so a toggle, a select, a checkbox group, and a calendar
+ * commit the moment they change; typing is a draft, so a text or number
+ * box commits on blur and on Enter. Escape puts back what was saved.
  */
 function CustomFieldRow({
   field,

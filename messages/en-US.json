@@ -3209,6 +3209,9 @@
   "contracts.field.numberInvalidNamed": {
     "defaultMessage": "{fieldName}: enter this as a number."
   },
+  "contracts.field.requiredAnswer": {
+    "defaultMessage": "Required"
+  },
   "contracts.field.requiredMark": {
     "defaultMessage": "(required)"
   },
@@ -6623,9 +6626,6 @@
   "fields.descriptionFor": {
     "defaultMessage": "Show description for {field}"
   },
-  "fields.notSet": {
-    "defaultMessage": "Not set"
-  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -8681,6 +8681,9 @@
   "portal.documents.versionOf": {
     "defaultMessage": "New version of {name}"
   },
+  "portal.form.answerRequired": {
+    "defaultMessage": "Answer this before you submit."
+  },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
   },
@@ -8714,6 +8717,9 @@
   "portal.form.basicsHeading": {
     "defaultMessage": "About your request"
   },
+  "portal.form.choosePlaceholder": {
+    "defaultMessage": "Choose an answer"
+  },
   "portal.form.confirmationBack": {
     "defaultMessage": "Back to the portal"
   },
@@ -8729,14 +8735,14 @@
   "portal.form.description": {
     "defaultMessage": "Description"
   },
-  "portal.form.fieldRequired": {
-    "defaultMessage": "{field} is required."
+  "portal.form.fieldNumberInvalid": {
+    "defaultMessage": "Enter a number without symbols, for example 180000."
   },
   "portal.form.footerNote": {
     "defaultMessage": "You'll get email updates and can track progress here."
   },
   "portal.form.missingRequired": {
-    "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
+    "defaultMessage": "{count, plural, one {Answer this before you submit: {fields}} other {Answer these before you submit: {fields}}}"
   },
   "portal.form.numberInvalid": {
     "defaultMessage": "{fieldName}: enter this as a number."
@@ -12905,6 +12911,9 @@
   "settings.requestTypeEditor.defaultType": {
     "defaultMessage": "Default"
   },
+  "settings.requestTypeEditor.defaultTypeForm": {
+    "defaultMessage": "This is the {module, select, contract {Contract} other {Matter}} Default type."
+  },
   "settings.requestTypeEditor.description": {
     "defaultMessage": "Description"
   },
@@ -12949,6 +12958,15 @@
   },
   "settings.requestTypeEditor.retryForm": {
     "defaultMessage": "Retry"
+  },
+  "settings.requestTypeEditor.separateForm": {
+    "defaultMessage": "Use a separate Form"
+  },
+  "settings.requestTypeEditor.separateFormError": {
+    "defaultMessage": "The separate Form could not be created."
+  },
+  "settings.requestTypeEditor.sharedForm": {
+    "defaultMessage": "Also used by {names}. Changes here apply to {total, plural, =2 {both} other {all # Request types}}."
   },
   "settings.requestTypeEditor.turnaround": {
     "defaultMessage": "Target turnaround (business days)"

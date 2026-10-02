@@ -126,14 +126,15 @@ export function unansweredRequired(
 
 /**
  * A field's control commits the moment it changes (a toggle, a select,
- * a checkbox group) rather than on blur. The split is the one the
- * record already draws between its selects and its text boxes: picking
- * is a decision, typing is a draft.
+ * a checkbox group, a day picked from the calendar) rather than on
+ * blur. The split is the one the record already draws between its
+ * selects and its text boxes: picking is a decision, typing is a draft.
  */
 export function commitsOnChange(field: AttachedField): boolean {
   return (
     field.fieldType === "boolean" ||
     field.fieldType === "currency" ||
+    field.fieldType === "date" ||
     field.fieldType === "single_select" ||
     field.fieldType === "multi_select" ||
     field.fieldType === "user" ||

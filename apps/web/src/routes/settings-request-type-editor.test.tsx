@@ -85,17 +85,26 @@ const FORM: Form = [
 interface EditorCalls {
   patches: unknown[];
   reads: string[];
+  separations: string[];
 }
-const newCalls = (): EditorCalls => ({ patches: [], reads: [] });
+const newCalls = (): EditorCalls => ({ patches: [], reads: [], separations: [] });
 function editorApi(
   calls: EditorCalls,
   initial = review(),
   refuse?: { status: number; detail: string },
+  others: ReturnType<typeof review>[] = [review({ id: "other", displayName: "Other request" })],
 ) {
   let current = initial;
   return (call: StubCall): Response | undefined => {
     const path = call.url.pathname;
     if (call.method === "GET") calls.reads.push(path);
+    if (path === `/api/v1/request-types/${current.id}/separate-form` && call.method === "POST") {
+      calls.separations.push(current.id);
+      return json(201, {
+        requestType: { id: current.id, targetModule: "contract", targetTypeId: "ct-copy" },
+        type: { id: "ct-copy", slug: "contract_review", displayName: "Contract review" },
+      });
+    }
     if (path === `/api/v1/request-types/${current.id}`) {
       if (call.method === "PATCH") {
         calls.patches.push(call.body);
@@ -104,10 +113,7 @@ function editorApi(
       }
       return json(200, { requestType: current });
     }
-    if (path === "/api/v1/request-types")
-      return json(200, {
-        requestTypes: [review({ id: "other", displayName: "Other request" }), current],
-      });
+    if (path === "/api/v1/request-types") return json(200, { requestTypes: [...others, current] });
     if (path === "/api/v1/contract-types") return json(200, { contractTypes: CONTRACT_TYPES });
     if (path === "/api/v1/matter-types") return json(200, { matterTypes: MATTER_TYPES });
     if (path === "/api/v1/contract-types/ct-default/form") return json(200, { form: FORM });
@@ -205,6 +211,88 @@ describe("the Intake form card", () => {
       "href",
       "/settings/contracts/types/ct-default/form",
     );
+  });
+
+  it("names the other Request types that share the Form, and says it is the Default type", async () => {
+    openEditor(
+      editorApi(newCalls(), review(), undefined, [
+        // A saved Default id and a module-only destination are the same
+        // destination, so both share the Default type's Form.
+        review({ id: "other", displayName: "Legal question" }),
+        review({ id: "nda", displayName: "NDA request", targetTypeId: "ct-default" }),
+        review({ id: "elsewhere", displayName: "Elsewhere", targetTypeId: "ct-nda" }),
+        review({ id: "matters", displayName: "Matter ask", targetModule: "matter" }),
+        review({ id: "old", displayName: "Archived ask", archivedAt: "2026-01-01" }),
+      ]),
+    );
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    expect(
+      await within(card).findByText(
+        "Also used by Legal question and NDA request. Changes here apply to all 3 Request types. " +
+          "This is the Contract Default type.",
+      ),
+    ).toBeVisible();
+    expect(within(card).getByRole("button", { name: "Use a separate Form" })).toBeVisible();
+  });
+
+  it("says nothing about sharing on an unshared Form", async () => {
+    openEditor(editorApi(newCalls(), review({ targetTypeId: "ct-nda" })));
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    await within(card).findByText("Effective date");
+    expect(within(card).queryByText(/Also used by/)).not.toBeInTheDocument();
+    expect(within(card).queryByText(/Default type/)).not.toBeInTheDocument();
+    expect(
+      within(card).queryByRole("button", { name: "Use a separate Form" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("names the Default type when no other Request type uses it, and updates on a destination change", async () => {
+    openEditor(
+      editorApi(newCalls(), review(), undefined, [
+        review({ id: "other", displayName: "NDA request", targetTypeId: "ct-nda" }),
+      ]),
+    );
+    const user = userEvent.setup();
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    expect(await within(card).findByText("This is the Contract Default type.")).toBeVisible();
+    expect(
+      within(card).queryByRole("button", { name: "Use a separate Form" }),
+    ).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("Default contract type"), "ct-nda");
+    const moved = screen.getByRole("region", { name: "Intake form" });
+    expect(
+      await within(moved).findByText("Also used by NDA request. Changes here apply to both."),
+    ).toBeVisible();
+    expect(within(moved).queryByText(/Default type/)).not.toBeInTheDocument();
+  });
+
+  it("gives a shared Request type its own Form and opens the copy's Form tab", async () => {
+    const calls = newCalls();
+    const { router } = openEditor(editorApi(calls));
+    const user = userEvent.setup();
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    await user.click(await within(card).findByRole("button", { name: "Use a separate Form" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/settings/contracts/types/ct-copy/form"),
+    );
+    expect(calls.separations).toEqual(["r2"]);
+  });
+
+  it("shows the refusal when the separate Form cannot be created", async () => {
+    const base = editorApi(newCalls());
+    openEditor((call) =>
+      call.url.pathname.endsWith("/separate-form")
+        ? problem(409, "This request type already has its own Form.")
+        : base(call),
+    );
+    const user = userEvent.setup();
+    const card = await screen.findByRole("region", { name: "Intake form" });
+    await user.click(await within(card).findByRole("button", { name: "Use a separate Form" }));
+    expect(await within(card).findByRole("alert")).toHaveTextContent(
+      "This request type already has its own Form.",
+    );
+    expect(within(card).getByRole("button", { name: "Use a separate Form" })).toBeEnabled();
   });
 
   it("uses the current name of a renamed Default type", async () => {

@@ -54,17 +54,24 @@ export function DatePicker({
   value,
   disabled,
   describedBy,
+  invalid = false,
   onChange,
   onRevert,
+  onKeyDown,
 }: Readonly<{
   id?: string;
   /** A bare `YYYY-MM-DD`, or empty when nothing is recorded. */
   value: string;
   disabled?: boolean;
   describedBy?: string;
+  /** A refusal named this field. */
+  invalid?: boolean;
   onChange: (next: string) => void;
   /** Escape on the closed trigger — a refused pick still showing. */
   onRevert?: () => void;
+  /** A key pressed on the closed trigger, for a surface that handles
+   * Escape and Enter itself. */
+  onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
 }>) {
   const intl = useIntl();
   const generatedId = useId();
@@ -84,11 +91,14 @@ export function DatePicker({
           id={triggerId}
           disabled={disabled}
           aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
           className={cn(CONTROL_CLASS, "inline-flex items-center justify-start gap-2 text-start", {
             "text-muted": value === "",
           })}
           onKeyDown={(event) => {
-            if (event.key !== "Escape" || open) return;
+            if (open) return;
+            onKeyDown?.(event);
+            if (event.key !== "Escape") return;
             event.preventDefault();
             onRevert?.();
           }}

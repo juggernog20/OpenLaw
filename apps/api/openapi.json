@@ -35975,6 +35975,82 @@
         }
       }
     },
+    "/api/v1/request-types/{id}/separate-form": {
+      "post": {
+        "operationId": "separateRequestTypeForm",
+        "summary": "Give a Request type that shares its destination Form a Form of its own: copy the destination type with its Form, name the copy after the Request type, and point the Request type at the copy (DD-028)",
+        "tags": ["request-types"],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestType": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "targetModule": {
+                          "type": "string",
+                          "enum": ["matter", "contract"]
+                        },
+                        "targetTypeId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "targetModule", "targetTypeId"],
+                      "additionalProperties": false
+                    },
+                    "type": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "displayName": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "slug", "displayName"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": ["requestType", "type"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Problem details (RFC 9457)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/intake-links/knowledge-options": {
       "get": {
         "operationId": "listIntakeLinkKnowledgeOptions",

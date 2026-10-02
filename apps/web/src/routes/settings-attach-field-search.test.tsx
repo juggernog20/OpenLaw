@@ -10,17 +10,23 @@ describe.each([
   ["matter", "matters"],
   ["entity", "entities"],
 ] as const)("%s Attach field search", (module, section) => {
-  function setup() {
+  function setup(
+    catalog: { displayName: string; description: string | null }[] = [
+      "Zebra notes",
+      "beta notes",
+      "Alpha notes",
+    ].map((displayName) => ({ displayName, description: null })),
+  ) {
     const attaches: unknown[] = [];
     const attachLabel = "Attach Field";
     const path = `/api/v1/${module}-types/t1`;
-    const fields = ["Zebra notes", "beta notes", "Alpha notes"].map((displayName, i) => ({
+    const fields = catalog.map(({ displayName, description }, i) => ({
       id: `f${i}`,
       slug: `field_${i}`,
       displayName,
       moduleScope: module,
       fieldType: "text",
-      description: null,
+      description,
       options: null,
       aiPrompt: null,
       archivedAt: null,
@@ -87,6 +93,23 @@ describe.each([
     await user.click(screen.getByRole("button", { name: attachLabel }));
     expect(screen.getByRole("textbox", { name: "Search fields" })).toHaveValue("");
     expect(within(screen.getByRole("menu")).queryByText("beta notes")).not.toBeInTheDocument();
+  });
+
+  it("draws each Field's description under its name, so two Fields of one name differ", async () => {
+    const { user, attachLabel } = setup([
+      { displayName: "Budget code", description: "Finance cost centre for the work." },
+      { displayName: "Budget code", description: null },
+    ]);
+    await user.click(await screen.findByRole("button", { name: attachLabel }));
+    const menu = await screen.findByRole("menu");
+    const options = [...menu.querySelectorAll<HTMLElement>("[data-field-option]")];
+    expect(options.map((e) => e.textContent)).toEqual([
+      "Budget codeFinance cost centre for the work.Text",
+      "Budget codeText",
+    ]);
+    expect(within(options[0]!).getByText("Finance cost centre for the work.")).toHaveClass(
+      "truncate",
+    );
   });
 
   it("shows no results, keeps creation available, and closes with Escape", async () => {

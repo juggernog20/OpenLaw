@@ -18,6 +18,7 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { REQUEST_DISPOSITIONED_PROBLEM_TYPE, type FormNode } from "@openlaw/shared";
 import { json, problem, renderAt, stubApi, type StubCall } from "../testing/helpers";
+import { pickDate } from "../testing/dates";
 
 const REQUESTER = {
   id: "u9",
@@ -212,6 +213,13 @@ function openForm(state: Parameters<typeof portalForm>[0] = {}): Submissions {
   return submissions;
 }
 
+/** The Field a control sits in, which holds the line under the control. */
+function fieldOf(control: HTMLElement) {
+  return within(control.parentElement!);
+}
+
+const ANSWER_REQUIRED = "Answer this before you submit.";
+
 async function fillComplete(user: ReturnType<typeof userEvent.setup>) {
   await user.type(await screen.findByLabelText(/^Title/), "MSA renewal with Orion Cloud");
   await user.type(screen.getByLabelText(/^Description/), "They sent a redline on the cap.");
@@ -256,20 +264,21 @@ describe("the request type's form", () => {
       within(urgency)
         .getAllByRole("option")
         .map((option) => option.textContent),
-    ).toEqual(["Not set", "Low", "Medium", "High", "Critical"]);
+    ).toEqual(["Choose an answer", "Low", "Medium", "High", "Critical"]);
   });
 
   it("draws the attached fields in the Administrator's display order", async () => {
     openForm();
     expect(await screen.findByLabelText(/^Counterparty/)).toBeInTheDocument();
     const paperSide = screen.getByLabelText(/^Paper side/);
-    // "Not set" leads an optional select: an empty answer is a real one
-    // there, and the only way to clear it.
+    // The empty choice leads an optional select: an empty answer is a
+    // real one there, and the only way to clear it. A record page says
+    // "Not set"; a form the requester still has to answer does not.
     expect(
       within(paperSide)
         .getAllByRole("option")
         .map((o) => o.textContent),
-    ).toEqual(["Not set", "Ours", "Theirs"]);
+    ).toEqual(["Choose an answer", "Ours", "Theirs"]);
     // The catalog's help text rides with the control it explains.
     expect(screen.getByText("Company on the other side of the contract.")).toBeInTheDocument();
   });
@@ -337,11 +346,12 @@ describe("submitting the form", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Submit request" }));
     const department = screen.getByRole("combobox", { name: /^Department/ });
-    expect(screen.getByText("Department is required.")).toBeVisible();
+    expect(department).toHaveDisplayValue("Choose an answer");
+    expect(fieldOf(department).getByText(ANSWER_REQUIRED)).toBeVisible();
     expect(department).toHaveAttribute("aria-invalid", "true");
     expect(submissions.bodies).toEqual([]);
     await user.selectOptions(department, "dept-finance");
-    expect(screen.queryByText("Department is required.")).not.toBeInTheDocument();
+    expect(fieldOf(department).queryByText(ANSWER_REQUIRED)).not.toBeInTheDocument();
     expect(department).not.toHaveAttribute("aria-invalid");
   });
 
@@ -402,23 +412,131 @@ describe("submitting the form", () => {
 
     // The sentence names every gap…
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(/Description and Counterparty/);
+    expect(alert).toHaveTextContent("Answer these before you submit: Description and Counterparty");
     // …and each box says it too, because a sentence cannot point.
-    expect(screen.getByText("Description is required.")).toBeInTheDocument();
-    expect(screen.getByText("Counterparty is required.")).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Description/)).toHaveAttribute("aria-invalid", "true");
+    const description = screen.getByLabelText(/^Description/);
+    expect(fieldOf(description).getByText(ANSWER_REQUIRED)).toBeInTheDocument();
+    expect(
+      fieldOf(screen.getByLabelText(/^Counterparty/)).getByText(ANSWER_REQUIRED),
+    ).toBeInTheDocument();
+    expect(description).toHaveAttribute("aria-invalid", "true");
     expect(submissions.bodies).toEqual([]);
+  });
+
+  it("asks for a missing answer in words that read with a question label", async () => {
+    const QUESTION: FormField = {
+      fieldId: "f4",
+      slug: "names_customer",
+      displayName: "Does the content name a customer?",
+      description: null,
+      fieldType: "single_select",
+      options: ["Yes", "No"],
+      displayOrder: 3,
+      isRequired: true,
+    };
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [QUESTION] });
+    await user.type(await screen.findByLabelText(/^Title/), "Launch post");
+    await user.type(screen.getByLabelText(/^Description/), "Blog post for the launch.");
+    const question = screen.getByLabelText(/^Does the content name a customer\?/);
+    expect(question).toHaveDisplayValue("Choose an answer");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /^Answer this before you submit: Does the content name a customer\?$/,
+    );
+    expect(fieldOf(question).getByText(ANSWER_REQUIRED)).toBeInTheDocument();
+    expect(screen.queryByText(/is required/)).not.toBeInTheDocument();
+    expect(question).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+  });
+
+  it("says a refused number needs no symbols, not that it is missing", async () => {
+    const DEAL_VALUE: FormField = {
+      fieldId: "f3",
+      slug: "deal_value",
+      displayName: "Deal value (USD)",
+      description: null,
+      fieldType: "number",
+      options: null,
+      displayOrder: 3,
+      isRequired: true,
+    };
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [COUNTERPARTY, DEAL_VALUE] });
+    await fillComplete(user);
+    const deal = screen.getByLabelText(/^Deal value \(USD\)/);
+    await user.type(deal, "$180,000");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Deal value (USD): enter this as a number.",
+    );
+    expect(
+      screen.getByText("Enter a number without symbols, for example 180000."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/is required/)).not.toBeInTheDocument();
+    expect(deal).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+
+    // An edit clears the mark, as it does for a missing answer.
+    await user.type(deal, "{Backspace}");
+    expect(
+      screen.queryByText("Enter a number without symbols, for example 180000."),
+    ).not.toBeInTheDocument();
+    expect(deal).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("collects a Date Field from the month calendar as a civil date", async () => {
+    const LAUNCH: FormField = {
+      fieldId: "f5",
+      slug: "launch_date",
+      displayName: "Launch date",
+      description: null,
+      fieldType: "date",
+      options: null,
+      displayOrder: 3,
+      isRequired: true,
+    };
+    const user = userEvent.setup();
+    const submissions = openForm({ fields: [COUNTERPARTY, LAUNCH] });
+    await fillComplete(user);
+    const launch = screen.getByLabelText(/^Launch date/);
+    // A button that opens a calendar, so no typed digits can be read in
+    // the wrong order.
+    expect(launch.tagName).toBe("BUTTON");
+    expect(launch).toHaveTextContent("Select a date");
+    expect(launch).toHaveAccessibleDescription("Required");
+
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    expect(fieldOf(launch).getByText(ANSWER_REQUIRED)).toBeInTheDocument();
+    expect(launch).toHaveAttribute("aria-invalid", "true");
+    expect(submissions.bodies).toEqual([]);
+
+    await pickDate(user, /^Launch date/, "2026-10-15");
+    expect(screen.getByLabelText(/^Launch date/)).toHaveTextContent("Oct 15, 2026");
+    expect(screen.getByLabelText(/^Launch date/)).not.toHaveAttribute("aria-invalid");
+    await user.click(screen.getByRole("button", { name: "Submit request" }));
+    await screen.findByRole("heading", {
+      name: "Thanks! Your request has been submitted to legal.",
+    });
+    expect(
+      (submissions.bodies[0] as { customFields: Record<string, unknown> }).customFields.launch_date,
+    ).toBe("2026-10-15");
   });
 
   it("clears a field's mark the moment it is answered", async () => {
     const user = userEvent.setup();
     openForm({ fields: [] });
     await user.click(await screen.findByRole("button", { name: "Submit request" }));
-    expect(await screen.findByText("Title is required.")).toBeInTheDocument();
+    const title = screen.getByLabelText(/^Title/);
+    expect(await fieldOf(title).findByText(ANSWER_REQUIRED)).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/^Title/), "MSA renewal");
-    expect(screen.queryByText("Title is required.")).not.toBeInTheDocument();
-    expect(screen.getByText("Description is required.")).toBeInTheDocument();
+    await user.type(title, "MSA renewal");
+    expect(fieldOf(title).queryByText(ANSWER_REQUIRED)).not.toBeInTheDocument();
+    expect(
+      fieldOf(screen.getByLabelText(/^Description/)).getByText(ANSWER_REQUIRED),
+    ).toBeInTheDocument();
   });
 
   it("shows the API's refusal when the seam turns the submission down", async () => {

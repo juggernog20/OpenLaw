@@ -272,7 +272,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
       fieldType: "text",
     });
     const legal = await defineField({
-      displayName: "Governing law",
+      displayName: "Governing law note",
       fieldType: "text",
     });
     await attachField(type.id, business.fieldId, true);
@@ -417,7 +417,7 @@ describe("the fields a contract's type attaches (CTR-016)", () => {
   it("renders the type's live attachments in attachment order, and no others", async () => {
     const type = await newType("Order form");
     const other = await newType("Statement of work");
-    const first = await defineField({ displayName: "Payment terms", fieldType: "text" });
+    const first = await defineField({ displayName: "Payment window", fieldType: "text" });
     const second = await defineField({ displayName: "Notice days", fieldType: "number" });
     const elsewhere = await defineField({ displayName: "Site count", fieldType: "number" });
     await attachField(type.id, first.fieldId);
@@ -507,7 +507,7 @@ describe("the nine field types round-trip through their own shape", () => {
       defineField({ displayName: "Signed on", fieldType: "date" }),
       defineField({ displayName: "Auto renews", fieldType: "boolean" }),
       defineField({
-        displayName: "Our position",
+        displayName: "Our side",
         fieldType: "single_select",
         options: ["Customer", "Provider"],
       }),
@@ -631,8 +631,8 @@ describe("the nine field types round-trip through their own shape", () => {
 
   it("takes reference locks in one order across concurrent creates", async () => {
     const type = await newType("Concurrent references");
-    const approver = await defineField({ displayName: "Approver", fieldType: "user" });
-    const reviewer = await defineField({ displayName: "Reviewer", fieldType: "user" });
+    const approver = await defineField({ displayName: "Deal approver", fieldType: "user" });
+    const reviewer = await defineField({ displayName: "Lock reviewer", fieldType: "user" });
     await attachField(type.id, approver.fieldId);
     await attachField(type.id, reviewer.fieldId);
 
@@ -692,15 +692,15 @@ describe("values are retained on detach (CTR-016)", () => {
 describe("hard-required fields at creation (MTR-014)", () => {
   it("refuses to create a contract while a required field is empty, and names it", async () => {
     const type = await newType("Requires two");
-    const first = await defineField({ displayName: "Governing law", fieldType: "text" });
-    const second = await defineField({ displayName: "Our position", fieldType: "text" });
+    const first = await defineField({ displayName: "Deal governing law", fieldType: "text" });
+    const second = await defineField({ displayName: "Deal position", fieldType: "text" });
     await attachField(type.id, first.fieldId, true);
     await attachField(type.id, second.fieldId, true);
 
     const bare = await createContract({ title: "No answers", contractTypeId: type.id });
     expect(bare.statusCode, bare.body).toBe(400);
-    expect(bare.json().detail).toContain("Governing law");
-    expect(bare.json().detail).toContain("Our position");
+    expect(bare.json().detail).toContain("Deal governing law");
+    expect(bare.json().detail).toContain("Deal position");
 
     // A blank string is not an answer: it is how a text field is
     // cleared, so it leaves the same gap an absent key does.
@@ -710,7 +710,7 @@ describe("hard-required fields at creation (MTR-014)", () => {
       customFields: { [first.slug]: "  ", [second.slug]: "Provider" },
     });
     expect(blank.statusCode, blank.body).toBe(400);
-    expect(blank.json().detail).toContain("Governing law");
+    expect(blank.json().detail).toContain("Deal governing law");
 
     const filled = await createContract({
       title: "Both answered",
@@ -727,7 +727,7 @@ describe("hard-required fields at creation (MTR-014)", () => {
   it("counts false and zero as answers", async () => {
     const type = await newType("Falsy answers");
     const flag = await defineField({ displayName: "Auto renew", fieldType: "boolean" });
-    const number = await defineField({ displayName: "Notice days", fieldType: "number" });
+    const number = await defineField({ displayName: "Notice day count", fieldType: "number" });
     await attachField(type.id, flag.fieldId, true);
     await attachField(type.id, number.fieldId, true);
 

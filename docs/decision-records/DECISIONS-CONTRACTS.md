@@ -311,6 +311,14 @@ also covers a user who signed.
 
 The **Intake** paragraph above is replaced. A Request form no longer has its own attachment list. It is the Intake Rows of the destination type's Form, so a collected answer always has a Row to land on. "Order and requiredness set on each attachment" becomes order in the Form tree plus three switches: On intake form, Required for creation, Visible on Portal. Built-in columns join the same Form as Rows; the ten protected intake rows (`built_in_key`) are retired. The 2026-09-08 addendum below ("all attached Fields at creation") is superseded: the creation dialog collects the Intake and Creation Rows only.
 
+### Addendum (2026-10-02, #1277) — one Field name per module
+
+Field names are unique within one module, case ignored. Create and rename refuse a name that a live or archived Field of the same module already has, with "A Matter Field named Budget code already exists." The same name stays allowed across modules, because migration 0140 made same-name copies in each module on purpose. Same-name pairs from before this rule stay. A save that keeps the name passes, and a case change to a Field's own name passes. One advisory lock serializes every create and rename, so two saves of one name give one success and one refusal. The seeded default Fields count, so a new Contract Field cannot take the name Governing law, Jurisdiction or Our position.
+
+The Attach Field picker draws each Field's description as a second line, cut to one line, so the pairs that remain can be told apart.
+
+The alternative was a warning that lets the Administrator save anyway. Regions already refuse a repeated name, and no picker can show two equal names in a way a person can tell apart.
+
 ## CTR-017 — Tasks adopted; contract templates deferred
 
 - **Status** — Accepted

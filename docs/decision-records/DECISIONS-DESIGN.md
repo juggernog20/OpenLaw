@@ -5323,6 +5323,16 @@ The shipped Form tab uses the inline Branch direction. Details, Form, People and
 
 The browser journey in `61-m39-type-form.spec.ts` tests the builder and Intake form card against built Compose images, then follows the conditional answers into the Contract and Portal record. This is implementation evidence, not a new mock approval or an independent guide publication review.
 
+### Addendum (2026-10-02, #1271) — the Intake form card says when its Form is shared
+
+Point 7 amended. Two focus group panelists edited a Form that another Request type also used, and nothing on the card told them. Only Help said so.
+
+- Under the type name, the card names the other live Request types that resolve to the same type: "Also used by Legal question. Changes here apply to both." With three or more Request types the second sentence reads "Changes here apply to all 3 Request types." The rule is the one the preview uses. A module-only destination counts on the Default type.
+- On a Default type the card adds "This is the Matter Default type." or "This is the Contract Default type.", shared or not.
+- A shared card shows a secondary **Use a separate Form** button below that line. It copies the type with its Form, names the copy after the Request type, and points only this Request type at the copy, in one transaction. Then the copy's Form tab opens. A refusal shows below the button.
+- The sentence "The card has no footer link; the header's Edit form button is the one way to the Form tab" still holds. **Edit form** stays the one link to the Form tab of the type the Request type uses now. **Use a separate Form** changes which type that is. It is not a second way to the same tab.
+- The alternative was the warning line alone. The Administrator would duplicate the type from the Types list, rename it and re-point the Request type by hand. Both panelists did that, across three screens.
+
 ### Rationale
 
 An Administrator can read the condition, its source Rows and its children in one place. Opening a Branch adds height without taking width from the switch columns. Most edits change one Row or one condition. Per-control commits and local refusals keep that edit small. The read-only card answers what a Request type will ask; the preview answers when those questions appear. Both read the same Form, so neither becomes a second editor.
