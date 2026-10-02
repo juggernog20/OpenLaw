@@ -392,6 +392,7 @@ export const MatterListQuery = z
     deadlineTo: z.iso.date().optional(),
     manager: FilterChoices.optional(),
     incomplete: z.enum(["true", "false"]).optional(),
+    confidential: z.enum(["true", "false"]).optional(),
     sort: z.enum(MATTER_SORT_KEYS).optional(),
     dir: z.enum(SORT_DIRECTIONS).optional(),
     cursor: CursorSchema.optional(),

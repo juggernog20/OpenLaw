@@ -97,6 +97,8 @@ export async function listMatters(
       query.deadlineTo,
     ),
     query.incomplete === "true" ? incompleteMatter : undefined,
+    // Narrows only. The team scope below still decides reach (DD-014).
+    query.confidential === "true" ? eq(matters.isConfidential, true) : undefined,
     scope(db, user),
   );
   const rows = await selectMatters(db, today)

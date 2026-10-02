@@ -18127,6 +18127,7 @@ export interface operations {
         deadlineTo?: string;
         manager?: string;
         incomplete?: "true" | "false";
+        confidential?: "true" | "false";
         sort?:
           "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
         dir?: "asc" | "desc";
@@ -41291,6 +41292,7 @@ export interface operations {
         deadlineTo?: string;
         manager?: string;
         incomplete?: "true" | "false";
+        confidential?: "true" | "false";
         sort?:
           "number" | "title" | "type" | "status" | "priority" | "risk" | "manager" | "openedAt";
         dir?: "asc" | "desc";

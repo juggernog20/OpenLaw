@@ -1278,6 +1278,10 @@ Field components need saving/saved/error micro-states (design-system addition). 
 
 _(2026-08-28, high-level review, [#552](https://github.com/juggernog20/OpenLaw/issues/552): the micro-states shipped as `StatusNote` plus eleven hand-written copies of the state machine behind it, which had already diverged. The design-system addition this clause promised is now built: `useFieldCommit` in `apps/web/src/lib/field-commit.ts` is the implementation of the micro-states clause, with `useRowCommit` for row-keyed settings lists. The hook owns the saving/saved/error note per field, the Enter-then-blur double-submit guard, the unchanged-value no-op, and the empty-required revert. It answers every commit with a `CommitOutcome` (the refusal's `detail` and TECH-020 `type`), so a screen can act on a refusal without reading the note. `StatusNote` draws what the hook says. A new per-field surface uses the hook, never a local copy. `entity-record.tsx` is the canonical example; the other ten copies migrate one route per touch, not in a sweep.)_
 
+### Addendum (2026-10-02, [#1282](https://github.com/juggernog20/OpenLaw/issues/1282)): Esc reverts record fields, not list filters
+
+"Esc reverts the in-progress edit" governs record fields only. A list filter is a view setting and writes no record. When a filter popover closes with Escape or a click outside, it applies a changed draft, as Apply does. This holds for the Filter menu, a filter chip and the Advanced search value list. An unchanged draft closes with no read. A date range that ends before it starts does not apply, and the popover stays open with its error. The Back arrow still discards the draft. A focus group panelist pressed Escape to close and expected the ticks to stay. The chip's remove control undoes a filter in one press. Reverting on Escape and applying only on a click outside was rejected.
+
 ## DES-018: Chromatic discipline — status families kept, one severity ramp for ordinal scales, uniform avatars
 
 - **Status:** Accepted
@@ -1925,6 +1929,10 @@ _M11/6 adds the inline variant's second surface: a **document** row in the contr
 Home renders the inline lock and literal `CONFI` beside reachable Confidential Contract and Matter titles in its Approvals, Tasks, Dates, Your contracts, and Your matters sections. The marker keeps its accessible name and carries no background wash. Record reach runs before totals and the four-row cap, so an unreachable Confidential record still contributes no title, marker, row, count, or gap.
 
 This closes the last future surface named in this record's consequences. Search adopted the marker in M25, and Home adopts it in M29.
+
+### Addendum (2026-10-02, [#1306](https://github.com/juggernog20/OpenLaw/issues/1306)): the inline marker has a hover title
+
+A focus group panelist read the lock and "CONFI" as a clipped word and took it for a rendering bug. The inline marker keeps the drawn "CONFI", because the density reason above still holds in list rows. It now has a `title` of "Confidential", the same message as its accessible name, so a hover gives a sighted reader the whole word. The micro variant stays decorative and has no title. Drawing the full word and drawing the lock alone were both rejected. Each needs addenda to DES-009, this record and DES-069, and only one of 20 panelists misread the marker.
 
 ## DES-030: The shell scroll model — one viewport tall, and `main` owns the scroll
 
@@ -4867,6 +4875,12 @@ The shared Contract team and Matter team roster shows each person once in both t
 The full app keeps one membership removal control when the person has a removable team membership. It removes only that membership. Owner and Creator statements remain, and the existing focus-after-removal rule still applies. Responsibility alone supplies no removal control or Portal access. The Portal roster remains read-only.
 
 This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
+
+### Addendum (2026-10-02, [#1273](https://github.com/juggernog20/OpenLaw/issues/1273)): the roster and the picker mark Business Users
+
+A Business User added to a Confidential record gets Portal access to it, and the full-app team did not say who was a Business User. The account type is a fact about access, not a team tag, so it joins the row's statements. A Business User's row on the full-app Contract team and Matter team shows "Business user" beside the other statements, in the shared role wording. Legal rows get no role statement. The Portal roster does not change.
+
+Add team member groups the people under Legal and Business Users. On a Confidential record, a chosen Business User shows a warning above the buttons. The warning names the Portal access, the Documents and the Full Thread comments. Add stays enabled, because DD-023 allows the add. The Portal dialog stays one flat list. DD-023 section 2 says the roster lists names. This adds one account-type statement, and only for Business Users.
 
 ## DES-081: One Documents section for Portal Contracts and Matters
 

@@ -134,6 +134,16 @@ export function useRecordFilterDefinitions(
             kind: "flag",
           },
           {
+            // DD-014 still decides reach. The flag only narrows the
+            // Matters the reader already reaches.
+            key: "confidential",
+            label: intl.formatMessage({
+              id: "matters.filter.confidential",
+              defaultMessage: "Confidential only",
+            }),
+            kind: "flag",
+          },
+          {
             key: "includeClosed",
             label: intl.formatMessage({ id: "matters.showClosed", defaultMessage: "Show closed" }),
             kind: "flag",

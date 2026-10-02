@@ -26339,6 +26339,15 @@
           {
             "schema": {
               "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "confidential",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": [
                 "number",
                 "title",
@@ -95511,6 +95520,15 @@
             },
             "in": "query",
             "name": "incomplete",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "in": "query",
+            "name": "confidential",
             "required": false
           },
           {

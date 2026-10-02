@@ -7715,6 +7715,9 @@
   "matters.field.type": {
     "defaultMessage": "Matter type"
   },
+  "matters.filter.confidential": {
+    "defaultMessage": "Confidential only"
+  },
   "matters.filter.incomplete": {
     "defaultMessage": "Incomplete"
   },
@@ -9050,6 +9053,9 @@
   "record.team.addError": {
     "defaultMessage": "That person could not be added to the team."
   },
+  "record.team.businessUserConfidential": {
+    "defaultMessage": "{name} is a Business User. They will see this confidential {module, select, contract {Contract} other {Matter}} in the Portal, with its Documents and Full Thread comments."
+  },
   "record.team.choose": {
     "defaultMessage": "Choose a person"
   },
@@ -9058,6 +9064,12 @@
   },
   "record.team.empty": {
     "defaultMessage": "Nobody is on this team yet."
+  },
+  "record.team.groupBusiness": {
+    "defaultMessage": "Business Users"
+  },
+  "record.team.groupLegal": {
+    "defaultMessage": "Legal"
   },
   "record.team.person": {
     "defaultMessage": "Person"
@@ -13525,6 +13537,9 @@
   },
   "tasks.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
+  },
+  "teamRoster.archived": {
+    "defaultMessage": "Archived"
   },
   "theme.dark": {
     "defaultMessage": "Dark"

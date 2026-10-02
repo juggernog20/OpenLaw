@@ -702,6 +702,7 @@ function MatterRecord() {
     users,
     frozen,
     audienceLocked,
+    isConfidential: saved.isConfidential,
     onTeam: setTeam,
   });
   const loadFilingDocuments = useCallback(async () => {

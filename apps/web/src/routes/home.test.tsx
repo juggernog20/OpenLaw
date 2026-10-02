@@ -985,4 +985,20 @@ describe("Home", () => {
       "/matters?manager=me",
     );
   });
+
+  it("gives the CONFI marker a Confidential hover title", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/home" && call.method === "GET"
+          ? json(200, { sections: [mattersSection] })
+          : undefined,
+    });
+    renderAt("/");
+
+    const matters = await screen.findByRole("region", { name: "Your matters" });
+    const marker = within(matters).getByRole("img", { name: "Confidential" });
+    expect(marker).toHaveAttribute("title", "Confidential");
+    expect(marker).toHaveTextContent("CONFI");
+  });
 });
