@@ -65,6 +65,9 @@ export function ConfidentialMarker({
     <span
       role="img"
       aria-label={spoken}
+      // A sighted reader can read "CONFI" as clipped text. The hover
+      // gives them the word the screen reader already speaks.
+      title={spoken}
       className={cn(
         "inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-confidential",
         className,
