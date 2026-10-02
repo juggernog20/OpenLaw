@@ -2,7 +2,7 @@
   "name": "openlaw",
   "private": true,
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=24"
@@ -63,7 +63,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@secretlint/secretlint-rule-preset-recommend": "^13.0.6",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
