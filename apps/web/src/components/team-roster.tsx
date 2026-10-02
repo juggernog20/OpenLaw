@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { X } from "lucide-react";
+import { FormattedMessage } from "react-intl";
+import { cn } from "../lib/utils";
 import { Avatar } from "./avatar";
 import { Button } from "./ui/button";
 
@@ -37,19 +39,34 @@ export function TeamRoster({ entries }: Readonly<{ entries: readonly TeamRosterE
   return (
     <ul className="flex flex-col py-1">
       {[...people.values()].map(({ person, statements, onRemove, removeLabel, removeDisabled }) => (
-        <li key={person.id} className="flex items-center gap-2.5 px-4 py-2.5 text-primary">
+        <li
+          key={person.id}
+          // SET-005: an archived person stays on the team, greyed out and
+          // marked as gone, so nobody sends them work they will not see.
+          className={cn(
+            "flex items-center gap-2.5 px-4 py-2.5",
+            person.archived ? "text-muted" : "text-primary",
+          )}
+        >
           <Avatar name={person.displayName} image={person.image} className="size-6" />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {statements.length > 0 && (
-              <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-primary">
+              <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs">
                 {statements.map((statement) => (
                   <span key={statement}>{statement}</span>
                 ))}
               </div>
             )}
-            <span className="truncate text-base font-medium" title={person.displayName}>
-              {person.displayName}
-            </span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-base font-medium" title={person.displayName}>
+                {person.displayName}
+              </span>
+              {person.archived && (
+                <span className="inline-flex shrink-0 rounded-pill bg-status-neutral-bg px-2 py-0.5 text-xs font-medium text-status-neutral-fg">
+                  <FormattedMessage id="teamRoster.archived" defaultMessage="Archived" />
+                </span>
+              )}
+            </div>
           </div>
           {onRemove && (
             <Button

@@ -13445,6 +13445,9 @@
   "tasks.writeFailed": {
     "defaultMessage": "The change could not be saved. Try again."
   },
+  "teamRoster.archived": {
+    "defaultMessage": "Archived"
+  },
   "theme.dark": {
     "defaultMessage": "Dark"
   },
