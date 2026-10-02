@@ -5000,6 +5000,9 @@
   "docusignConsent.refused.title": {
     "defaultMessage": "DocuSign did not grant consent"
   },
+  "dueDate.overdue": {
+    "defaultMessage": "Overdue"
+  },
   "entities.archivedPill": {
     "defaultMessage": "Archived"
   },
@@ -6604,9 +6607,6 @@
   },
   "home.obligations.entityDue": {
     "defaultMessage": "{entity} · Due {date}"
-  },
-  "home.obligations.overdue": {
-    "defaultMessage": "Overdue"
   },
   "home.obligations.title": {
     "defaultMessage": "Entity obligations"

@@ -295,8 +295,9 @@ export function formatLongDateTime(value: Date | string, options?: FormatOptions
  * Due-date rule: short absolute plus a relative qualifier while it is
  * relevant — "May 10 (in 7 days)", "May 1 (3 days overdue)",
  * "May 3 (today)". The qualifier drops beyond 30 calendar days out,
- * where the absolute date alone reads better. Day math is calendar
- * days in the display timezone, not 24-hour blocks.
+ * where the absolute date alone reads better. An overdue date keeps it
+ * at any age, because how late it is matters more than the date.
+ * Day math is calendar days in the display timezone, not 24-hour blocks.
  */
 export function formatDeadline(value: Date | string, options?: FormatOptions): string {
   const { date, dateOnly } = parseValue(value);
@@ -309,7 +310,7 @@ export function formatDeadline(value: Date | string, options?: FormatOptions): s
       DAY,
   );
   const absolute = formatShortDate(value, options);
-  if (Math.abs(days) > 30) return absolute;
+  if (days > 30) return absolute;
   const locale = resolveLocale(options);
   const qualifier =
     days >= 0
