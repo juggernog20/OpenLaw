@@ -603,16 +603,18 @@ async function expectStageMarker(page: Page, stage: StageName): Promise<void> {
 }
 
 /**
- * The record's own move control (DES-053) — the current stage's pill in
- * the strip, which is the one item of the six that can be pressed.
+ * One stage's move control in the strip. Every stage is a trigger
+ * (DES-053 addendum), named for its own stage, and its menu holds only
+ * that stage's statuses.
  */
-function moveControl(page: Page): Locator {
-  return page.getByRole("button", { name: /move contract$/ });
+function moveControl(page: Page, stage: string): Locator {
+  const name = stage.charAt(0).toUpperCase() + stage.slice(1);
+  return page.getByRole("button", { name: `${name} — move contract`, exact: true });
 }
 
 /** Opens the move menu and picks one status by the label it wears. */
 async function pickFrom(page: Page, status: StatusOption): Promise<void> {
-  await moveControl(page).click();
+  await moveControl(page, status.stage).click();
   await page
     .getByRole("menuitemradio")
     .filter({ hasText: startsWithName(status.displayName) })
@@ -627,7 +629,7 @@ async function pickFrom(page: Page, status: StatusOption): Promise<void> {
  * current-stage pill structurally.
  */
 async function expectStatus(page: Page, status: StatusOption): Promise<void> {
-  await moveControl(page).click();
+  await moveControl(page, status.stage).click();
   await expect(
     page
       .getByRole("menuitemradio")

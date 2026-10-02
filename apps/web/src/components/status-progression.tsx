@@ -90,7 +90,8 @@ export function StatusProgression({
             {index > 0 && (
               <ChevronRight size={12} aria-hidden="true" className="shrink-0 text-border-default" />
             )}
-            {move && (current || move.grouped) ? (
+            {/* A current step the strip cannot place leaves no trigger at all. */}
+            {move && (current || (move.grouped && position >= 0)) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button

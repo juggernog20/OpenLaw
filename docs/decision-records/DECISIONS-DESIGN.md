@@ -3667,6 +3667,20 @@ Six e2e specs drove the status through `getByLabel("Status")`. They now open the
 
 The seeded `redlining` status is renamed to **"With counterparty"** by `0056_redlining_status_rename.sql`, guarded on the old text so an install that renamed it keeps its own name. `0009` seeded it as "Redlining with counterparty", which names the act; a status says where the contract sits, so the label says who holds it. Drawing the status list in a menu is where the wrong word showed.
 
+### Addendum (2026-10-02, focus group of 2026-09-29, [#1303](https://github.com/juggernog20/OpenLaw/issues/1303)): every stage opens its own Statuses
+
+**Clauses 1 and 4 are superseded.** Every stage in the strip is a menu trigger. A stage's menu holds only the Statuses in that stage, in the seam's order, with the held Status checked. The current stage keeps its pill, border and chevron. The other stages show their name and a chevron. Each trigger's accessible name is `{stage} — move contract` for its own stage.
+
+**Clause 3's stage column goes.** A menu of one stage does not need to name the stage on each row.
+
+Clauses 5, 7, 8 and 9 do not change. A pick commits as before, and re-picking the held Status commits nothing. The Soft gate is still raised by the seam's refusal, wherever the pick was made. An archived Contract gets no trigger on any stage. DD-023 removed the Contributor account type, so that is the one case of clause 9 left on this page. A stage the build cannot place still leaves no trigger, per normalization point 5.
+
+A Legal Team Member pressed Review on a Draft Contract and nothing happened. The Matter progression already works the other way, through the same `StatusProgression` component, so a person who uses both modules learned two rules for one control. Clause 1 refused six presses because "five of the six presses would have been a guess about which status was meant". A press on a stage that opens only that stage's Statuses is not a guess. CTR-001 keeps at least one live Status in every stage, so no menu is empty.
+
+The declined option kept clause 1 and added a tooltip on the other stages that points at the current pill. It explains the rule but keeps two rules for one control.
+
+`docs/user-guides/contract-stages.md` now says to select any Stage.
+
 ## DES-054: The collapsible settings card — the header is the disclosure (extends DES-020, DES-011)
 
 - **Status:** Accepted

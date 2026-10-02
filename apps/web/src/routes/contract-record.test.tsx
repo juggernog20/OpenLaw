@@ -335,24 +335,19 @@ async function openTeam(user: ReturnType<typeof userEvent.setup>) {
   return screen.getByRole("complementary", { name: "Contract team" });
 }
 
-/** The strip's move control (DES-053): the current stage's pill, which
- * is the one item of the six that can be pressed. Queried by its
- * accessible name rather than its role, so it is still reachable behind
- * an open dialog — the soft gate hides the page from the a11y tree. */
+/** One stage's move control in the strip (DES-053 addendum). Every stage
+ * is a trigger. Queried by its accessible name rather than its role, so
+ * it is still reachable behind an open dialog. The soft gate hides the
+ * page from the a11y tree. */
 function moveControl(stage: string) {
   return screen.getByLabelText(`${stage} — move contract`);
 }
 
-/** Opens the move menu and picks a status by the label it wears. Does
- * not wait for the commit that follows. */
-async function moveTo(user: ReturnType<typeof userEvent.setup>, status: string) {
-  await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-  // A row's name is the status followed by its stage, so the match is on
-  // what the name starts with — literally, because a status name is the
-  // install's own words and may carry regex punctuation.
-  await user.click(
-    await screen.findByRole("menuitemradio", { name: (name: string) => name.startsWith(status) }),
-  );
+/** Opens a stage's move menu and picks a status by the label it wears.
+ * Does not wait for the commit that follows. */
+async function moveTo(user: ReturnType<typeof userEvent.setup>, stage: string, status: string) {
+  await user.click(await screen.findByRole("button", { name: `${stage} — move contract` }));
+  await user.click(await screen.findByRole("menuitemradio", { name: status }));
 }
 
 /** The record's overflow menu (DES-055), opened by its sub-bar trigger.
@@ -1695,7 +1690,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
     const subbar = screen.getByRole("region", { name: "Acme master services agreement" });
     // The pipeline beside the pill says "Active" too, so the pill is
@@ -1708,7 +1703,7 @@ describe("the /contracts/:number record page", () => {
     ).toHaveLength(1);
 
     // Backwards too — deals collapse and reopen (CTR-001).
-    await moveTo(user, "With counterparty");
+    await moveTo(user, "Review", "With counterparty");
     await waitFor(() =>
       expect(api.patches).toEqual([{ statusId: "s-active" }, { statusId: "s-redlining" }]),
     );
@@ -1720,7 +1715,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Draft");
+    await moveTo(user, "Draft", "Draft");
 
     // The record is already on Draft, so that press is not a move. An
     // entry saying the contract moved to where it was is worse than no
@@ -2470,7 +2465,7 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
     expect(
       await screen.findByText("The status must be a live contract status."),
     ).toBeInTheDocument();
@@ -2484,8 +2479,8 @@ describe("the /contracts/:number record page", () => {
     renderAt("/contracts/42");
     const user = userEvent.setup();
 
-    await user.click(await screen.findByRole("button", { name: /move contract$/ }));
-    const row = await screen.findByRole("menuitemradio", { name: /^Superseded/ });
+    await user.click(await screen.findByRole("button", { name: "Draft — move contract" }));
+    const row = await screen.findByRole("menuitemradio", { name: "Superseded" });
     // Checked, so the menu says where the record is rather than leaving
     // every row unpicked and the reader guessing.
     expect(row).toHaveAttribute("aria-checked", "true");
@@ -3267,7 +3262,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow());
     const user = userEvent.setup();
 
-    await moveTo(user, "Active");
+    await moveTo(user, "Active", "Active");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
@@ -3286,7 +3281,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const user = userEvent.setup();
 
     // The redline status maps to `review` — two stages behind where it sits.
-    await moveTo(user, "With counterparty");
+    await moveTo(user, "Review", "With counterparty");
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
@@ -3314,23 +3309,25 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     expect(screen.queryByRole("button", { name: /move contract$/ })).not.toBeInTheDocument();
   });
 
-  it("names every status the record may hold, each beside the stage it maps to", async () => {
+  it("offers each stage's own statuses under that stage", async () => {
     await pipelineOn(contractRow());
     const user = userEvent.setup();
 
     await user.click(await screen.findByRole("button", { name: "Draft — move contract" }));
 
-    // Statuses, not stages: what commits is the label, and two labels
-    // may share one stage (CTR-001). The stage is named on each row
-    // because that pair would otherwise read as unexplained.
+    // Statuses, not stages: what commits is the label (CTR-001). A
+    // stage's menu holds only its own statuses, so a row needs no stage
+    // beside it (DES-053 addendum).
     const rows = screen.getAllByRole("menuitemradio");
-    expect(rows.map((row) => row.textContent)).toEqual([
-      "DraftDraft",
-      "With counterpartyReview",
-      "ActiveActive",
-    ]);
+    expect(rows.map((row) => row.textContent)).toEqual(["Draft"]);
     // Where the record is now, marked in the menu as well as the strip.
     expect(rows[0]).toHaveAttribute("aria-checked", "true");
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Review — move contract" }));
+    const review = screen.getAllByRole("menuitemradio");
+    expect(review.map((row) => row.textContent)).toEqual(["With counterparty"]);
+    expect(review[0]).toHaveAttribute("aria-checked", "false");
   });
 });
 
@@ -3339,7 +3336,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
  * CTR-001 keeps them. The shared stub offers three Statuses, so these
  * cases swap in a fuller set and put the shared one back after.
  */
-describe("the stage bar on every stage (#1281)", () => {
+describe("the stage bar on every stage (#1281, #1303)", () => {
   const SHARED_STATUSES = OPTIONS.contractStatuses;
   const EVERY_STAGE = [
     { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
@@ -3364,7 +3361,7 @@ describe("the stage bar on every stage (#1281)", () => {
     const user = userEvent.setup();
     const pipeline = await screen.findByRole("list", { name: "Stage" });
 
-    await moveTo(user, "Out for signature");
+    await moveTo(user, "Signature", "Out for signature");
     await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-signature" }]));
     await waitFor(() =>
       expect(pipeline.querySelector('[aria-current="step"]')).toHaveTextContent("Signature"),
@@ -3383,6 +3380,70 @@ describe("the stage bar on every stage (#1281)", () => {
       expect(item).not.toHaveTextContent(/earlier$/);
     }
     expect(pipeline).not.toHaveTextContent(/done/);
+  });
+
+  it("opens a menu of only its own statuses from each of the six stages", async () => {
+    const api = recordApi(contractRow({ statusId: "s-redlining", stage: "review" }));
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    await screen.findByRole("list", { name: "Stage" });
+
+    const menus: Record<string, { status: string; checked: string | null }[]> = {};
+    for (const stage of ["Draft", "Review", "Approval", "Signature", "Active", "Ended"]) {
+      // Each trigger's name says its own stage, not the current one.
+      await user.click(screen.getByRole("button", { name: `${stage} — move contract` }));
+      menus[stage] = screen.getAllByRole("menuitemradio").map((row) => ({
+        status: row.textContent ?? "",
+        checked: row.getAttribute("aria-checked"),
+      }));
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    }
+    expect(menus).toEqual({
+      Draft: [{ status: "Draft", checked: "false" }],
+      Review: [
+        { status: "Internal review", checked: "false" },
+        { status: "With counterparty", checked: "true" },
+      ],
+      Approval: [{ status: "Pending approval", checked: "false" }],
+      Signature: [{ status: "Out for signature", checked: "false" }],
+      Active: [{ status: "Active", checked: "false" }],
+      Ended: [{ status: "Expired", checked: "false" }],
+    });
+    expect(api.patches).toEqual([]);
+  });
+
+  it("moves the Contract from a stage that is not the current one", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+
+    await moveTo(user, "Active", "Active");
+
+    await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-active" }]));
+    // The pressed stage is now the current one and keeps its trigger.
+    await waitFor(() =>
+      expect(
+        screen.getByRole("list", { name: "Stage" }).querySelector('[aria-current="step"]'),
+      ).toHaveTextContent("Active"),
+    );
+    expect(moveControl("Active")).toBeEnabled();
+  });
+
+  it("draws no trigger on any stage of an archived Contract", async () => {
+    // DD-023 removed the Contributor account type, and a Business User
+    // never reaches this page. An archived Contract is the one reader
+    // of the strip who may not move it (DES-053 clause 9).
+    stubApi({
+      signedIn: MEMBER,
+      extra: recordApi(contractRow({ archivedAt: "2026-08-01T00:00:00.000Z" })).handler,
+    });
+    renderAt("/contracts/42");
+    const archived = await screen.findByRole("list", { name: "Stage" });
+    expect(within(archived).getAllByRole("listitem")).toHaveLength(6);
+    expect(within(archived).queryAllByRole("button")).toEqual([]);
   });
 });
 

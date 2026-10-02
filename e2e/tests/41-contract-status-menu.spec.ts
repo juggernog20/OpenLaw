@@ -28,10 +28,11 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
   let walkthroughPassed = false;
   const stamp = Date.now();
   try {
-    const stages = ["draft", "review", "approval", "signature", "active", "ended"] as const;
+    // Each stage opens a menu of only its own Statuses (DES-053
+    // addendum), so the crowd goes into one stage.
     for (let index = 0; index < 20; index++) {
       const response = await page.request.post("/api/v1/contract-statuses", {
-        data: { displayName: `E2E menu ${stamp} ${index}`, stage: stages[index % stages.length] },
+        data: { displayName: `E2E menu ${stamp} ${index}`, stage: "review" },
       });
       expect(response.status(), await response.text()).toBe(201);
       createdStatuses.push(
@@ -70,7 +71,7 @@ test("every Contract Status stays reachable in crowded menus at viewport edges (
     ]) {
       await test.step(`${viewport.width}×${viewport.height}`, async () => {
         await page.setViewportSize(viewport);
-        const trigger = page.getByRole("button", { name: /move contract$/ });
+        const trigger = page.getByRole("button", { name: "Review — move contract", exact: true });
         await expect(trigger).toBeVisible();
         await trigger.click();
         const menu = page.getByRole("menu");
