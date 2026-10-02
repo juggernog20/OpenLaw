@@ -7,8 +7,9 @@
  * The list shows current officers unless "Show former" is on, so an
  * update that sets `resignedOn` drops the row from the list while the
  * toggle is off. Resign opens a dialog that confirms the date and says
- * so; the inline Resigned on field stays for corrections. The row still exists; the toggle reads it back. A
- * row's role may be archived, so the role selector retains its saved value.
+ * so. The inline Resigned on field stays for corrections. The row still
+ * exists; the toggle reads it back. A row's role may be archived, so the
+ * role selector retains its saved value.
  * The name picker also preserves links to users no longer offered in the list.
  */
 
