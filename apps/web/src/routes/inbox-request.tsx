@@ -397,6 +397,13 @@ export function InboxRequestPage() {
             label: person.displayName,
             archived: person.archived,
           }))}
+          managers={people
+            .filter(
+              (person: UserOption) =>
+                person.role === "administrator" || person.role === "legal_team_member",
+            )
+            .map((person: UserOption) => ({ id: person.id, label: person.displayName }))}
+          viewerId={user.id}
           entities={entities.map((entity: RegistryEntity) => ({
             id: entity.id,
             label: entity.legalName,

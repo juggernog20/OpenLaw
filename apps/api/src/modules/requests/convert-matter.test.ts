@@ -491,6 +491,59 @@ describe("the matter target", () => {
     expect(matter.managerId).not.toBeNull();
   });
 
+  it("lands the chosen Matter Manager and Confidential flag, and template Tasks follow the Manager (#1310)", async () => {
+    const request = await submit("A sensitive employment matter");
+    const result = await convert(
+      request.number,
+      { title: "Sensitive matter", templateId, managerId: memberId, isConfidential: true },
+      otherMemberCookies,
+    );
+    expect(result.statusCode, result.body).toBe(200);
+    const matter = await matterNumbered(result.json().request.convertedRecord.number as number);
+    expect(matter.managerId).toBe(memberId);
+    expect(matter.createdBy).not.toBe(memberId);
+    expect(matter.isConfidential).toBe(true);
+    const [task] = await harness.db
+      .select({ assigneeId: matterTasks.assigneeId })
+      .from(matterTasks)
+      .where(and(eq(matterTasks.matterId, matter.id), eq(matterTasks.title, "Preserve evidence")));
+    expect(task!.assigneeId).toBe(memberId);
+    const actions = await harness.db
+      .select({ action: activityLog.action })
+      .from(activityLog)
+      .where(and(eq(activityLog.entityType, "matter"), eq(activityLog.entityId, matter.id)));
+    expect(actions.map((row) => row.action)).toContain("matter.confidentiality_set");
+  });
+
+  it("leaves the Matter Unassigned when the dialog chooses no Manager (#1310)", async () => {
+    const request = await submit("Nobody manages this yet");
+    const result = await convert(request.number, { title: "Unmanaged matter", managerId: null });
+    expect(result.statusCode, result.body).toBe(200);
+    const matter = await matterNumbered(result.json().request.convertedRecord.number as number);
+    expect(matter.managerId).toBeNull();
+    expect(matter.isConfidential).toBe(false);
+  });
+
+  it("refuses a Business User or an archived person as Matter Manager, and writes nothing (#1310)", async () => {
+    const request = await submit("A Manager who cannot manage");
+    const before = await matterCount();
+    const business = await convert(request.number, { title: "No", managerId: requesterId });
+    expect(business.statusCode, business.body).toBe(400);
+    await harness.db.update(users).set({ archivedAt: new Date() }).where(eq(users.id, memberId));
+    try {
+      const archived = await convert(
+        request.number,
+        { title: "No", managerId: memberId },
+        otherMemberCookies,
+      );
+      expect(archived.statusCode, archived.body).toBe(400);
+    } finally {
+      await harness.db.update(users).set({ archivedAt: null }).where(eq(users.id, memberId));
+    }
+    expect(await matterCount()).toBe(before);
+    expect((await cast.stored(request.id)).status).toBe("new");
+  });
+
   it("clears a carried optional Field without restoring its template default", async () => {
     const request = await submit("Clear the inherited value", boundRequestTypeId, {
       [carrySlug]: "Original party",
@@ -590,6 +643,17 @@ describe("the matter target", () => {
     const refused = await convert(request.number, { title: "An NDA", templateId });
     expect(refused.statusCode, refused.body).toBe(400);
     expect(refused.json().detail).toContain("matter template");
+  });
+
+  it("refuses a Matter Manager or Confidential on a contract conversion (#1310)", async () => {
+    const request = await submit("Matter controls on the wrong arm", contractTargetRequestTypeId);
+    const manager = await convert(request.number, { title: "An NDA", managerId: memberId });
+    expect(manager.statusCode, manager.body).toBe(400);
+    expect(manager.json().detail).toContain("Matter Manager");
+    const flag = await convert(request.number, { title: "An NDA", isConfidential: false });
+    expect(flag.statusCode, flag.body).toBe(400);
+    expect(flag.json().detail).toContain("Confidential");
+    expect((await cast.stored(request.id)).status).toBe("new");
   });
 
   it("uses the matter title ceiling rather than the contract ceiling", async () => {

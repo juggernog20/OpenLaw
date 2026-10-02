@@ -46985,7 +46985,7 @@
     "/api/v1/requests/{number}/convert": {
       "post": {
         "operationId": "convertRequest",
-        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Matter Manager or Contract Owner, one creator row, and no confidential flag. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
+        "summary": "Turn a Request into the contract or matter its request type targets (INT-002, DD-018, M22/9). The Request row is locked so racing triagers produce one record; the loser receives 409 with the reachable converted record's module and permanent number. Triage may override the configured type or Re-target to the other module. A body may name a contract type or a matter type, never both. The record is born through its ordinary create callable with the title seeded from the Request title, urgency defaulting priority unless overridden, the collected built-in Rows, the converting person as Contract Owner, and one creator row. A matter conversion takes managerId and isConfidential. The Matter Manager defaults to the converting person and may be another Member+ or null, and Confidential defaults to off. A contract conversion refuses both with 400. Matching collected values carry server-side; values with no field remain on the Request; missing required fields and dead references are refused by name and can be answered in customFields. Built-in Row answers land on native columns, parties and the Needed by key date. Matter conversions may apply a live template for the confirmed type; carried values and triager answers override its defaults. Both records narrate the conversion and requestStatusChanged raises the Requester's In progress notification. Attachments become ordinary root documents and the tiered thread moves onto either target while the Portal Request address redirects to the converted record. Member+ only",
         "tags": ["requests"],
         "description": "Contract and Matter conversion set the Requester as Business Owner and add them to the record team. Team membership grants Portal access to the non-archived record (DD-023).",
         "requestBody": {
@@ -47030,6 +47030,20 @@
                   "templateId": {
                     "type": "string",
                     "minLength": 1
+                  },
+                  "managerId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "isConfidential": {
+                    "type": "boolean"
                   },
                   "customFields": {
                     "type": "object",

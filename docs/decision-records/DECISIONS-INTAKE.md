@@ -943,3 +943,19 @@ A Request now records when it closed. Before this, it stored only when it was su
 - The staff Request detail shows Resolved or Declined with the date beside Submitted. The full timestamp is on hover. A converted Request keeps its "Converted by" line on the Status card.
 - The Inbox column picker offers Closed after Age. It is not in the default layout. It is blank for an open Request. The `dispositionedAt` sort key orders by close time, and open Requests sort after every closed one in ascending order.
 - The Portal does not show the close time. A turnaround report is not part of this change. This column is its base.
+
+### INT-002 addendum (2026-10-02, #1310): Convert to matter offers the Matter Manager and Confidential
+
+Two panelists in the focus group of 2026-09-29 found that Convert to matter always made the converter Matter Manager and always made a non-Confidential Matter. A sensitive Request's Matter was open to every Legal Team Member until someone flagged it by hand. Create matter already offers both controls.
+
+**Decision.** The matter arm of the Convert dialog shows a **Matter Manager** select after the template and the Confidential switch before the attachments. The select starts on the converting person and offers every live Administrator and Legal Team Member, and **Unassigned**. The switch starts off. These are the same controls and defaults as Create matter.
+
+- The convert body takes optional `managerId`, a person id or null, and optional `isConfidential`. An omitted `managerId` keeps the converting person, so the 2026-09-06 default stands. Null is Unassigned.
+- `createMatter` checks the person, as it does for Create matter. A Business User or an archived person is refused with 400 and nothing is written.
+- Template Tasks for the Matter Manager go to the chosen person, or have no assignee when the Matter is Unassigned.
+- A Confidential conversion writes `matter.confidentiality_set`, as Create matter does. The Requester still joins the team as Business Owner under DD-023.
+- The triage assignee still does not decide the Matter Manager.
+
+This supersedes "Manager unassigned, confidentiality off" in the INT-007 M22 close addendum for the matter arm.
+
+**Convert to contract does not get these controls.** The converting person stays the Contract Owner, by the 2026-09-09 addendum, and the Contract starts non-Confidential. A contract conversion that sends either member is refused with 400, as a template is. The focus group asked only about Matters. A later change can add the same pair to the contract arm.

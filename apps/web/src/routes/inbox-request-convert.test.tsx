@@ -784,10 +784,54 @@ describe("editable conversion targets", () => {
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       matterTypeId: "mt-dispute",
+      managerId: "u2",
+      isConfidential: false,
       priority: "high",
       title: "Northwind Labs mutual NDA",
       customFields: { governing_law: "DIFC Courts" },
     });
+  });
+
+  it("offers a Matter Manager starting on the converter and a Confidential switch starting off (#1310)", async () => {
+    const user = userEvent.setup();
+    const api = requestApi(
+      request({
+        customFields: { governing_law: "DIFC Courts" },
+        requestType: {
+          id: "rt-advice",
+          displayName: "Advice request",
+          targetModule: "matter",
+          targetTypeId: "mt-dispute",
+          targetTypeName: "Dispute",
+        },
+      }),
+    );
+    open(api);
+    const dialog = await openDisposition(user, "Convert to matter");
+    const manager = within(dialog).getByLabelText("Matter Manager");
+    expect(manager).toHaveValue("u2");
+    expect(
+      within(manager)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual(["Unassigned", "Nadia Counsel"]);
+    const flag = within(dialog).getByRole("switch", { name: /Confidential/ });
+    expect(flag).not.toBeChecked();
+
+    await user.selectOptions(manager, "");
+    await user.click(flag);
+    await user.click(within(dialog).getByRole("button", { name: "Convert to matter" }));
+    await waitFor(() => expect(api.conversions).toHaveLength(1));
+    expect(api.conversions[0]).toMatchObject({ managerId: null, isConfidential: true });
+  });
+
+  it("draws neither matter control on a contract conversion (#1310)", async () => {
+    const user = userEvent.setup();
+    const api = requestApi();
+    open(api);
+    const dialog = await openConvert(user);
+    expect(within(dialog).queryByLabelText("Matter Manager")).toBeNull();
+    expect(within(dialog).queryByRole("switch", { name: /Confidential/ })).toBeNull();
   });
 
   it("offers the confirmed type's optional template and sends an overridable pre-fill", async () => {
@@ -840,6 +884,8 @@ describe("editable conversion targets", () => {
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       matterTypeId: "mt-employment",
+      managerId: "u2",
+      isConfidential: false,
       priority: "high",
       title: "Northwind Labs mutual NDA",
       templateId: "tpl-employment",
@@ -872,6 +918,8 @@ describe("editable conversion targets", () => {
       priority: "high",
       title: "Northwind Labs mutual NDA",
       matterTypeId: "mt-employment",
+      managerId: "u2",
+      isConfidential: false,
       customFields: { governing_law: "DIFC Courts" },
     });
   });
@@ -897,6 +945,8 @@ describe("editable conversion targets", () => {
     await waitFor(() => expect(api.conversions).toHaveLength(1));
     expect(api.conversions[0]).toEqual({
       matterTypeId: "mt-employment",
+      managerId: "u2",
+      isConfidential: false,
       priority: "high",
       title: "Northwind Labs mutual NDA",
       templateId: "tpl-employment",
