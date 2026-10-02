@@ -8,7 +8,7 @@ Use an Administrator account in OpenLaw. The app and worker need outbound HTTPS 
 
 Prepare a DocuSign integration key, the sending user's **User ID**, that integration's RSA private key, and, for Webhook mode, a Connect HMAC secret. Keep them in your organization's secret store. OpenLaw stores the two secrets encrypted and never displays their saved values. The operator must retain the install's encryption key with its recovery materials; see [deployment configuration](deployment-configuration.md).
 
-Start in a DocuSign developer account with fictional paper and test Signers whose inboxes you control. Preparation acceptance requires two controlled inboxes and a non-administrator integration user. The account owner enters credentials directly; an agent must never read, enter, capture or save them. Choose **Demo** for that account. **Production** requires the corresponding production integration, user and consent, plus Connect configuration for Webhook mode; changing this selector does not promote a developer integration.
+Start in a DocuSign developer account with fictional paper and test Signers whose inboxes you control. The account owner enters credentials directly; an agent must never read, enter, capture or save them. Choose **Demo** for that account. **Production** requires the corresponding production integration, user and consent, plus Connect configuration for Webhook mode; changing this selector does not promote a developer integration.
 
 ## Prepare the DocuSign account
 
@@ -77,8 +77,20 @@ Finish or resolve outstanding rounds before changing the integration, sending us
 
 When escalating, provide the environment, time, C- reference, Envelope ID, and displayed error. Exclude private keys, HMAC secrets, access tokens, and the Contract's contents unless your team's support process specifically requires the paper.
 
-## Preparation acceptance and release status
+## Preparation release status
 
-Once the connector is saved and turned on, Contracts use **Continue to DocuSign** by default. The operator can switch the install back to immediate **Send envelope** with `SIGNING_PREPARATION_ENABLED=false`. The native editor restrictions have not yet passed the live account checks. A successful **Test connection** is not that proof. Follow the [electronic signing guide](electronic-signing.md) for the two interfaces and the [operator acceptance procedure](https://github.com/juggernog20/OpenLaw/blob/4cdb988cbfded942fcc6282349c364ebd3088785/docs/DEPLOYMENT.md#docusign-preparation-acceptance).
+Once the connector is saved and turned on, Contracts use **Continue to DocuSign** by default. The operator can switch the install back to immediate **Send envelope** with `SIGNING_PREPARATION_ENABLED=false`. Follow the [electronic signing guide](electronic-signing.md) for the two interfaces and the [operator acceptance procedure](https://github.com/juggernog20/OpenLaw/blob/4cdb988cbfded942fcc6282349c364ebd3088785/docs/DEPLOYMENT.md#docusign-preparation-acceptance).
 
-No live preparation evidence has yet been obtained for distinct fields, editor restrictions, native Discard, Send Later, browser return behavior, two-Signer delivery or remote session revocation. The earlier developer-account round verified legacy sending only. Real signed Connect delivery and recovery remain tracked separately in [issue #888](https://github.com/juggernog20/OpenLaw/issues/888). Do not treat a provider stand-in or an enabled developer feature as production entitlement.
+The preparation interface has not yet passed the live account checks. A successful **Test connection** is not that proof. The checks need a non-administrator DocuSign integration user and two Signer inboxes that you control. No live preparation evidence has yet been obtained for:
+
+- a distinct field for each Signer
+- the native editor restrictions on recipients, Documents, pages, Subject, visibility and templates, through every editor route
+- native Discard
+- Send Later, which also depends on the DocuSign account
+- browser return behavior
+- two-Signer delivery
+- the remote lifetime and revocation of a DocuSign session that OpenLaw already issued
+
+The older **Send envelope** interface uses the legacy `/sig/` signature anchor for every Signer. New preparations do not use these anchors. The earlier developer-account round verified legacy sending with one Signer and one visible anchor only. Multiple Signers, hidden anchors and paper without anchors have not been verified live.
+
+Real signed Connect delivery and recovery remain tracked separately in [issue #888](https://github.com/juggernog20/OpenLaw/issues/888). Do not treat a provider stand-in or an enabled developer feature as production entitlement.
