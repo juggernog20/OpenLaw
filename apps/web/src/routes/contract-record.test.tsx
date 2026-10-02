@@ -7080,6 +7080,112 @@ describe("the contract record's Documents section (M11/2, M11/3, M11/4, M11/5)",
     ).toBeInTheDocument();
   });
 
+  /** A Document whose current version holds exactly `bytes`, with the
+   * checksum the API stores: SHA-256 as lowercase hex. */
+  async function draftHolding(bytes: string) {
+    const { createHash } = await import("node:crypto");
+    const checksumSha256 = createHash("sha256").update(bytes).digest("hex");
+    return { ...DRAFT, versions: [version({ checksumSha256 })] };
+  }
+
+  it("warns before Add version sends a copy of the current version, and sends it on Upload anyway", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "counter_redline.docx", { type: "application/pdf" }),
+    );
+
+    expect(
+      await within(dialog).findByText("This file is the same as version 1. Upload it anyway?"),
+    ).toBeVisible();
+    expect(api.writes).toEqual([]);
+    await user.click(within(dialog).getByRole("button", { name: "Upload anyway" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/documents/doc-1/versions");
+    expect(await within(section).findByText("v2")).toBeVisible();
+  });
+
+  it("clears the copy warning when another file is picked", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+    const dialog = await screen.findByRole("dialog");
+    const input = within(dialog).getByLabelText("File", { selector: "input" });
+    await user.upload(input, new File(["our counter"], "same.docx", { type: "application/pdf" }));
+    await within(dialog).findByText("This file is the same as version 1. Upload it anyway?");
+
+    // A different file is a new round, so it uploads with no warning.
+    await user.upload(
+      input,
+      new File(["their redline"], "redline.docx", { type: "application/pdf" }),
+    );
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(within(dialog).queryByText(/is the same as version/)).toBeNull();
+  });
+
+  it("uploads a copy with no warning when the browser cannot hash it", async () => {
+    // A plain HTTP install has no `crypto.subtle`, so the check is skipped.
+    const original = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: original.getRandomValues.bind(original),
+      randomUUID: original.randomUUID.bind(original),
+    });
+    try {
+      const api = documentsApi([await draftHolding("our counter")]);
+      stubApi({ signedIn: MEMBER, extra: api.handler });
+      renderAt("/contracts/42/documents");
+      const user = userEvent.setup();
+
+      const section = await documentsSection();
+      await act(user, section, "Orion_MSA_2026_draft.docx", "Add version");
+      const dialog = await screen.findByRole("dialog");
+      await user.upload(
+        within(dialog).getByLabelText("File", { selector: "input" }),
+        new File(["our counter"], "same.docx", { type: "application/pdf" }),
+      );
+      await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+      await waitFor(() => expect(api.writes).toHaveLength(1));
+      expect(screen.queryByText(/is the same as version/)).toBeNull();
+      expect(screen.queryByRole("alert")).toBeNull();
+    } finally {
+      vi.stubGlobal("crypto", original);
+    }
+  });
+
+  it("never checks a new Document, which has no current version", async () => {
+    const api = documentsApi([await draftHolding("our counter")]);
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42/documents");
+    const user = userEvent.setup();
+
+    const section = await documentsSection();
+    const dialog = await compose(user, section, "Upload");
+    await user.upload(
+      within(dialog).getByLabelText("File", { selector: "input" }),
+      new File(["our counter"], "copy.docx", { type: "application/pdf" }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Upload" }));
+
+    await waitFor(() => expect(api.writes).toHaveLength(1));
+    expect(api.writes[0]!.url).toBe("/api/v1/contracts/42/documents");
+  });
+
   it("renames a document and edits its description, leaving the file's own name alone", async () => {
     const api = documentsApi([DRAFT]);
     stubApi({ signedIn: MEMBER, extra: api.handler });

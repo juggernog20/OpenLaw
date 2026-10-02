@@ -4601,11 +4601,17 @@
   "documents.composer.notePlaceholder": {
     "defaultMessage": "What changed in this round"
   },
+  "documents.composer.sameAsCurrent": {
+    "defaultMessage": "This file is the same as version {number}. Upload it anyway?"
+  },
   "documents.composer.submit": {
     "defaultMessage": "Upload"
   },
   "documents.composer.type": {
     "defaultMessage": "Type"
+  },
+  "documents.composer.uploadAnyway": {
+    "defaultMessage": "Upload anyway"
   },
   "documents.composer.uploadTitle": {
     "defaultMessage": "Upload document"
