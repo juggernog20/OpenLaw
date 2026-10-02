@@ -107383,6 +107383,22 @@
             "in": "query",
             "name": "cursor",
             "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "assigned_to_you",
+                "activity_on_your_records",
+                "dates_approaching",
+                "new_requests",
+                "knowledge",
+                "requester_events"
+              ]
+            },
+            "in": "query",
+            "name": "group",
+            "required": false
           }
         ],
         "responses": {
@@ -108284,6 +108300,22 @@
             },
             "in": "query",
             "name": "cursor",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "assigned_to_you",
+                "activity_on_your_records",
+                "dates_approaching",
+                "new_requests",
+                "knowledge",
+                "requester_events"
+              ]
+            },
+            "in": "query",
+            "name": "group",
             "required": false
           }
         ],

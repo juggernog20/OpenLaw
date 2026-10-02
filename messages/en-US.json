@@ -8069,6 +8069,15 @@
   "notifications.envelope.ended": {
     "defaultMessage": "Signing ended on {contract}"
   },
+  "notifications.filter.all": {
+    "defaultMessage": "All"
+  },
+  "notifications.filter.empty": {
+    "defaultMessage": "Nothing in this group."
+  },
+  "notifications.filter.label": {
+    "defaultMessage": "Show"
+  },
   "notifications.keyClient": {
     "defaultMessage": "a Client"
   },

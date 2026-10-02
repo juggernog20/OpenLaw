@@ -99,6 +99,14 @@ const READER = {
   password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
 } as const;
 
+/** Whose bell the group filter is read on (#1297). Their own person,
+ * so a filtered page can be asserted exactly. */
+const FILTERER = {
+  email: "notif-filterer@example.com",
+  displayName: "Fay Filter",
+  password: "correct-horse-battery", // NOSONAR — fixture for a throwaway container
+} as const;
+
 let harness: TestHarness;
 const cookies = new Map<string, Record<string, string>>();
 const userIds = new Map<string, string>();
@@ -147,7 +155,7 @@ beforeAll(async () => {
   userIds.set(ADMIN.email, admin!.id);
   cookies.set(ADMIN.email, await signInCookies(harness.app, ADMIN.email, ADMIN.password));
 
-  for (const fixture of [MEMBER, APPROVER, INSIDER, OUTSIDER, READER] as const) {
+  for (const fixture of [MEMBER, APPROVER, INSIDER, OUTSIDER, READER, FILTERER] as const) {
     const user = await provisionUser(harness.app.auth, fixture);
     await harness.db.update(users).set({ role: "legal_team_member" }).where(eq(users.id, user.id));
     userIds.set(fixture.email, user.id);
@@ -557,6 +565,90 @@ describe("the reads answer for the signed-in person", () => {
       .filter((row) => !row.approvalKind || row.handledAt)
       .map((row) => Date.parse(row.createdAt));
     expect([...times].sort((a, b) => b - a)).toEqual(times);
+  });
+});
+
+describe("the bell filtered by event group (#1297)", () => {
+  async function filtered(group: string, cursor?: string) {
+    const query = new URLSearchParams({ group, ...(cursor ? { cursor } : {}) });
+    const res = await harness.app.inject({
+      method: "GET",
+      url: `/api/v1/notifications?${query.toString()}`,
+      cookies: as(FILTERER),
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    return res.json() as { notifications: BellItem[]; nextCursor: string | null };
+  }
+
+  async function seed(contract: ContractRow, eventType: string, howMany: number) {
+    await harness.db.insert(notifications).values(
+      Array.from({ length: howMany }, (_, index) => ({
+        userId: idOf(FILTERER),
+        eventType,
+        entityType: "contract" as const,
+        entityId: contract.id,
+        payload: { contractNumber: contract.number, contractTitle: contract.title, seq: index },
+        emailOwed: false,
+      })),
+    );
+  }
+
+  it("answers one group plus the open approvals on the first page, and pages inside the group", async () => {
+    const contract = await newContract("Notify · filtered bell");
+    await ask(contract.number, idOf(FILTERER));
+    await seed(contract, "contract.team_added", 30);
+    await seed(contract, "contract.status_changed", 3);
+    const approval = (await bell(FILTERER)).notifications.find(
+      (row) => row.approvalKind && !row.handledAt,
+    );
+    expect(approval).toBeDefined();
+
+    const activity = await filtered("activity_on_your_records");
+    expect(activity.notifications[0]!.id).toBe(approval!.id);
+    expect(activity.notifications.slice(1).map((row) => row.eventType)).toEqual(
+      Array(3).fill("contract.status_changed"),
+    );
+    expect(activity.nextCursor).toBeNull();
+
+    const dates = await filtered("dates_approaching");
+    expect(dates.notifications.map((row) => row.id)).toEqual([approval!.id]);
+
+    const first = await filtered("assigned_to_you");
+    expect(first.notifications[0]!.id).toBe(approval!.id);
+    const firstNews = first.notifications.slice(1);
+    expect(firstNews).toHaveLength(25);
+    expect(firstNews.every((row) => row.eventType === "contract.team_added")).toBe(true);
+    expect(first.nextCursor).not.toBeNull();
+
+    const second = await filtered("assigned_to_you", first.nextCursor!);
+    expect(second.notifications).toHaveLength(5);
+    expect(second.notifications.every((row) => row.eventType === "contract.team_added")).toBe(true);
+    const seen = new Set(first.notifications.map((row) => row.id));
+    expect(second.notifications.some((row) => seen.has(row.id))).toBe(false);
+    expect(second.nextCursor).toBeNull();
+
+    // The filter narrows the list only: the badge still counts the bell.
+    expect(await unread(FILTERER)).toBe(34);
+  });
+
+  it("refuses a group the catalog does not name", async () => {
+    const res = await harness.app.inject({
+      method: "GET",
+      url: "/api/v1/notifications?group=everything",
+      cookies: as(FILTERER),
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("keeps the DD-014 wall under a filter", async () => {
+    const contract = await newContract("Notify · filtered and walled");
+    await seed(contract, "date.key_date_approaching", 2);
+    const before = await filtered("dates_approaching");
+    expect(before.notifications.filter((row) => row.entityId === contract.id)).toHaveLength(2);
+
+    await wallOff(contract.id);
+    const after = await filtered("dates_approaching");
+    expect(after.notifications.map((row) => row.entityId)).not.toContain(contract.id);
   });
 });
 

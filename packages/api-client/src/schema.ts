@@ -45784,6 +45784,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;
@@ -46243,6 +46250,13 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: string;
+        group?:
+          | "assigned_to_you"
+          | "activity_on_your_records"
+          | "dates_approaching"
+          | "new_requests"
+          | "knowledge"
+          | "requester_events";
       };
       header?: never;
       path?: never;
