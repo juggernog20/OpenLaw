@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 import { FormattedMessage } from "react-intl";
-import { Check, ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleSmall } from "lucide-react";
 import { cn } from "../lib/utils";
 import {
   DropdownMenu,
@@ -41,7 +41,15 @@ function revealCheckedStatus(content: HTMLDivElement | null) {
   return () => cancelAnimationFrame(frame);
 }
 
-/** Shared status strip. Earlier checks show position, not completed work. */
+/** A step before the current one. The dot shows position only. It never
+ * says the work in that step was done, because a record may jump past a
+ * step or move back. */
+function EarlierMark() {
+  return <CircleSmall size={12} fill="currentColor" aria-hidden="true" className="shrink-0" />;
+}
+
+/** Shared status strip. A step before the current one reads as "earlier",
+ * never as "done". */
 export function StatusProgression({
   steps,
   currentId,
@@ -72,7 +80,7 @@ export function StatusProgression({
         const current = index === position;
         const options =
           move?.statuses.filter((option) => !move.grouped || option.groupId === step.id) ?? [];
-        const behind = position >= 0 && index < position;
+        const earlier = position >= 0 && index < position;
         return (
           <li
             key={step.id}
@@ -82,7 +90,8 @@ export function StatusProgression({
             {index > 0 && (
               <ChevronRight size={12} aria-hidden="true" className="shrink-0 text-border-default" />
             )}
-            {move && (current || move.grouped) ? (
+            {/* A current step the strip cannot place leaves no trigger at all. */}
+            {move && (current || (move.grouped && position >= 0)) ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -95,12 +104,15 @@ export function StatusProgression({
                       "hover:brightness-95 active:brightness-90",
                       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link",
                       "disabled:pointer-events-none disabled:opacity-50",
-                      current ? step.className : "border-transparent bg-transparent text-muted",
+                      current
+                        ? step.className
+                        : cn(
+                            "border-transparent bg-transparent",
+                            earlier ? "text-primary" : "text-muted",
+                          ),
                     )}
                   >
-                    {behind && (
-                      <Check size={12} aria-hidden="true" className="text-status-success-fg" />
-                    )}
+                    {earlier && <EarlierMark />}
                     {step.label}
                     <ChevronDown size={12} aria-hidden="true" className="shrink-0" />
                   </button>
@@ -141,22 +153,20 @@ export function StatusProgression({
               <span
                 className={cn(
                   "flex items-center gap-1 text-xs",
-                  behind ? "text-primary" : "text-muted",
+                  earlier ? "text-primary" : "text-muted",
                 )}
               >
-                {behind && (
-                  <Check size={12} aria-hidden="true" className="shrink-0 text-status-success-fg" />
-                )}
+                {earlier && <EarlierMark />}
                 {step.label}
-                {behind && (
-                  <>
-                    {" "}
-                    <span className="sr-only">
-                      <FormattedMessage id="contracts.stage.done" defaultMessage="done" />
-                    </span>
-                  </>
-                )}
               </span>
+            )}
+            {earlier && (
+              <>
+                {" "}
+                <span className="sr-only">
+                  <FormattedMessage id="statusProgression.earlier" defaultMessage="earlier" />
+                </span>
+              </>
             )}
           </li>
         );

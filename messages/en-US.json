@@ -2954,8 +2954,20 @@
   "contracts.analysis.evidenceUnavailable": {
     "defaultMessage": "Source evidence is unavailable. The Document Version may have been removed or you may not have access."
   },
+  "contracts.analysis.failedAskAdmin": {
+    "defaultMessage": "Ask an Administrator to check AI analysis settings."
+  },
+  "contracts.analysis.failedRunAgain": {
+    "defaultMessage": "Run analysis again."
+  },
   "contracts.analysis.failedShort": {
     "defaultMessage": "Analysis failed: {reason}"
+  },
+  "contracts.analysis.failedTurnOn": {
+    "defaultMessage": "Turn on AI analysis in Settings"
+  },
+  "contracts.analysis.failedValuesStand": {
+    "defaultMessage": "This run changed no Fields. Values marked Unverified still need a check."
   },
   "contracts.analysis.loadingEvidence": {
     "defaultMessage": "Opening cited passage…"
@@ -3199,6 +3211,12 @@
   },
   "contracts.form.matter": {
     "defaultMessage": "Matter"
+  },
+  "contracts.form.matterConfidentialAccept": {
+    "defaultMessage": "Make this Contract confidential"
+  },
+  "contracts.form.matterConfidentialAlert": {
+    "defaultMessage": "{reference} is confidential. This Contract will be open to every Legal Team Member."
   },
   "contracts.form.matterHelp": {
     "defaultMessage": "Link only when this Contract is part of broader Matter work. Nothing else flows across the link."
@@ -3508,9 +3526,6 @@
   },
   "contracts.softGate.title": {
     "defaultMessage": "Move past approval"
-  },
-  "contracts.stage.done": {
-    "defaultMessage": "done"
   },
   "contracts.stage.move": {
     "defaultMessage": "{stage} — move contract"
@@ -13342,6 +13357,9 @@
   },
   "signing.waiting": {
     "defaultMessage": "Waiting for confirmation"
+  },
+  "statusProgression.earlier": {
+    "defaultMessage": "earlier"
   },
   "table.columns": {
     "defaultMessage": "Columns"

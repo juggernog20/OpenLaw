@@ -14,17 +14,18 @@
  * **It renders position, never progress.** Transitions are
  * unrestricted (CTR-001) — deals collapse and redlines reopen after
  * approval — so a stage may move backwards, and the marker simply
- * moves back with it. The check on every stage before the marker means
- * "behind the current position", not "achieved": it is recomputed from
- * the current stage on every render, and a regression takes those
- * checks away again.
+ * moves back with it. A stage before the marker is "earlier", not
+ * "done". A Contract may jump from Draft to Signature with no review, so
+ * a check there would claim work nobody did. The marker is recomputed
+ * from the current stage on every render.
  *
  * Three states, and none of them is carried by colour alone (DES-011):
- * a stage behind the marker takes a check glyph and full-strength text,
+ * a stage before the marker takes a neutral dot and full-strength text,
  * the current stage takes the DES-005 pill its stage family names, and
  * a stage ahead of the marker takes muted plain text. The current item
- * carries `aria-current="step"`; the ones behind it say "done" in a
- * screen-reader-only word, which the check glyph says visually.
+ * carries `aria-current="step"`. The ones before it say "earlier" in a
+ * screen-reader-only word, which the dot says visually (DES-034
+ * addendum, 2026-10-02).
  *
  * The strip scrolls sideways rather than wrapping when its slot is too
  * narrow for six stages — a chevron at a line break reads as a broken
@@ -32,13 +33,14 @@
  * reachable from the keyboard. Where it sits and when its row wraps is
  * the record's business, not the strip's; DES-034 has both.
  *
- * **One item of the six is pressable, and it is the one the contract is
- * on** (DES-053). Given `move`, the current stage's pill becomes the
- * menu trigger that changes the status: the act starts where the reader
- * is already looking, and the other five stages stay what they always
- * were. The menu offers **statuses**, not stages — a status is what
- * commits and two of them may share one stage (CTR-001) — so the
- * trigger is labelled with a stage and the list under it is not.
+ * **Every stage is pressable** (DES-053 addendum, 2026-10-02). Given
+ * `move`, each stage becomes a menu trigger that changes the status. The
+ * current stage keeps its pill. The other stages show their name and a
+ * chevron. A stage's menu offers only the **statuses** in that stage,
+ * because a status is what commits and two of them may share one stage
+ * (CTR-001). So a press on a stage is never a guess about which status
+ * was meant. CTR-001 keeps at least one live status in every stage, so
+ * no menu is empty. Each trigger is labelled with its own stage.
  *
  * Without `move` the strip is exactly the reading it has always been.
  * That is what a read-only viewer and an archived record get: no
@@ -97,14 +99,26 @@ export function StagePipeline({
         ? {
             move: {
               statusId: move.statusId,
+              grouped: true,
               busy: move.busy,
               label: intl.formatMessage(
                 { id: "contracts.stage.move", defaultMessage: "{stage} — move contract" },
                 { stage: stageLabel(intl, stage) },
               ),
+              labelForGroup: (group: string) =>
+                intl.formatMessage(
+                  { id: "contracts.stage.move", defaultMessage: "{stage} — move contract" },
+                  {
+                    stage: stageLabel(
+                      intl,
+                      CONTRACT_STAGES.find((candidate) => candidate === group) ?? stage,
+                    ),
+                  },
+                ),
               statuses: move.statuses.map((status) => ({
                 id: status.id,
                 label: status.displayName,
+                groupId: status.stage,
                 detail: stageLabel(intl, status.stage),
               })),
               onPick: move.onPick,
