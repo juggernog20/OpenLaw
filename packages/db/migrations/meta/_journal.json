@@ -1345,6 +1345,13 @@
       "when": 1790965911886,
       "tag": "0191_invite-link-lifetime",
       "breakpoints": true
+    },
+    {
+      "idx": 192,
+      "version": "7",
+      "when": 1790966704737,
+      "tag": "0192_legal-question-description",
+      "breakpoints": true
     }
   ]
 }
