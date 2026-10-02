@@ -305,6 +305,102 @@ describe("the Matters destination", () => {
     expect(screen.getByRole("button", { name: "Remove Incomplete filter" })).toBeInTheDocument();
   });
 
+  it("narrows to Confidential matters, says when none match, and saves the flag in a view", async () => {
+    const calls: URL[] = [];
+    const writes: unknown[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET") {
+          calls.push(call.url);
+          return call.url.searchParams.get("confidential") === "true"
+            ? json(200, { total: 0, matters: [], nextCursor: null, counts: { open: 0, onHold: 0 } })
+            : json(200, {
+                total: 1,
+                matters: [matter()],
+                nextCursor: null,
+                counts: { open: 1, onHold: 0 },
+              });
+        }
+        if (call.url.pathname === "/api/v1/list-views" && call.method === "POST") {
+          writes.push(call.body);
+          return json(201, { views: [] });
+        }
+        return matterApi()(call);
+      },
+    });
+    renderAt("/matters");
+    const user = userEvent.setup();
+    expect(await screen.findByText("Employment advice")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Confidential only",
+      }),
+    );
+    await waitFor(() => expect(calls.at(-1)?.searchParams.get("confidential")).toBe("true"));
+    expect(
+      await screen.findByRole("heading", { name: "No matters match these filters" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Remove Confidential only filter" }),
+    ).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: /Default view/ }));
+    await user.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "Save as…" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.clear(within(dialog).getByLabelText("Name"));
+    await user.type(within(dialog).getByLabelText("Name"), "Confidential watch");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(writes).toHaveLength(1));
+    expect(
+      (writes[0] as { config: { filters: Record<string, unknown> } }).config.filters,
+    ).toMatchObject({ confidential: true });
+  });
+
+  it("opens a saved view that keeps the Confidential flag", async () => {
+    const calls: URL[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/list-views" && call.method === "GET")
+          return json(200, {
+            views: [
+              {
+                id: "view-confidential",
+                surface: "matters",
+                name: "Confidential watch",
+                isDefault: true,
+                config: {
+                  columns: [{ key: "title", width: 240 }],
+                  flexKey: "title",
+                  sort: null,
+                  filters: { confidential: true },
+                },
+              },
+            ],
+          });
+        if (call.url.pathname === "/api/v1/matters" && call.method === "GET") {
+          calls.push(call.url);
+          return json(200, {
+            total: 1,
+            matters: [matter({ isConfidential: true })],
+            nextCursor: null,
+            counts: { open: 1, onHold: 0 },
+          });
+        }
+        return matterApi()(call);
+      },
+    });
+    renderAt("/matters");
+    expect(await screen.findByRole("button", { name: /Confidential watch/ })).toBeInTheDocument();
+    await waitFor(() => expect(calls.at(-1)?.searchParams.get("confidential")).toBe("true"));
+    expect(
+      screen.getByRole("button", { name: "Remove Confidential only filter" }),
+    ).toBeInTheDocument();
+  });
+
   it("keeps saved views available on the empty state and names a filter that matches nothing", async () => {
     stubApi({ signedIn: MEMBER, extra: matterApi() });
     renderAt("/matters");
