@@ -139,6 +139,8 @@ it.each([
         {
           ...before,
           mcp_toolset_ceiling: ceiling.filter((id) => id !== "team" && id !== "administration"),
+          // Added by 0192, a later migration in the same run.
+          invite_link_lifetime_days: 7,
         },
       ]);
       await db.execute(sql`delete from org_settings`);

@@ -84,7 +84,9 @@ beforeAll(async () => {
     .returning();
   entityId = entity!.id;
   const field = await post("/fields", {
-    displayName: "Governing law",
+    // A seeded default Field holds "Governing law", and a Field name is
+    // unique in its module (CTR-016 addendum).
+    displayName: "Governing law note",
     fieldType: "text",
     moduleScope: "contract",
   });
