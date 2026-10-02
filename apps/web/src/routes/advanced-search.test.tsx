@@ -479,6 +479,42 @@ describe("search conditions", () => {
       await screen.findByRole("button", { name: "Edit Contract Confidential is Yes" }),
     ).toBeVisible();
   });
+  it("names the Contract entity property Our entity, and still reads the stored entity key", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) =>
+        call.url.pathname.endsWith("/filter-options")
+          ? json(200, { ...options, entities: [{ id: "e-uk", displayName: "Helix Holdings Ltd" }] })
+          : call.url.pathname === "/api/v1/search/query"
+            ? answer([CONTRACT])
+            : undefined,
+    });
+    // The property key stays `entity`, so a question saved before the
+    // rename opens with the same condition.
+    const question = {
+      ...simpleSearchQuestion("", ["contract"]),
+      conditions: [
+        { kind: "contract" as const, property: "entity", operator: "is_any_of", value: ["e-uk"] },
+      ],
+    };
+    renderAt(`/search?aq=${encodeSearchQuestion(question)}`);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Edit Contract Our entity is any of Helix Holdings Ltd",
+      }),
+    );
+    expect(screen.getByRole("group", { name: "Contract Our entity condition" })).toBeVisible();
+    const dialog = screen.getByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+    await user.type(screen.getByRole("textbox", { name: "Search properties" }), "our");
+    expect(
+      within(screen.getByRole("group", { name: "Contract" })).getByRole("button", {
+        name: "Our entity",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Signing Entity" })).not.toBeInTheDocument();
+  });
 });
 
 describe("condition values and refusals", () => {
