@@ -1272,6 +1272,10 @@ Field components need saving/saved/error micro-states (design-system addition). 
 
 _(2026-08-28, high-level review, [#552](https://github.com/juggernog20/OpenLaw/issues/552): the micro-states shipped as `StatusNote` plus eleven hand-written copies of the state machine behind it, which had already diverged. The design-system addition this clause promised is now built: `useFieldCommit` in `apps/web/src/lib/field-commit.ts` is the implementation of the micro-states clause, with `useRowCommit` for row-keyed settings lists. The hook owns the saving/saved/error note per field, the Enter-then-blur double-submit guard, the unchanged-value no-op, and the empty-required revert. It answers every commit with a `CommitOutcome` (the refusal's `detail` and TECH-020 `type`), so a screen can act on a refusal without reading the note. `StatusNote` draws what the hook says. A new per-field surface uses the hook, never a local copy. `entity-record.tsx` is the canonical example; the other ten copies migrate one route per touch, not in a sweep.)_
 
+### Addendum (2026-10-02, [#1282](https://github.com/juggernog20/OpenLaw/issues/1282)): Esc reverts record fields, not list filters
+
+"Esc reverts the in-progress edit" governs record fields only. A list filter is a view setting and writes no record. When a filter popover closes with Escape or a click outside, it applies a changed draft, as Apply does. This holds for the Filter menu, a filter chip and the Advanced search value list. An unchanged draft closes with no read. A date range that ends before it starts does not apply, and the popover stays open with its error. The Back arrow still discards the draft. A focus group panelist pressed Escape to close and expected the ticks to stay. The chip's remove control undoes a filter in one press. Reverting on Escape and applying only on a click outside was rejected.
+
 ## DES-018: Chromatic discipline — status families kept, one severity ramp for ordinal scales, uniform avatars
 
 - **Status:** Accepted

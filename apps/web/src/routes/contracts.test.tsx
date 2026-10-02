@@ -998,6 +998,72 @@ describe("quick contract filters", () => {
     expect(screen.queryByRole("button", { name: "Owner: Me" })).not.toBeInTheDocument();
   });
 
+  it("applies changed ticks when a filter popover closes with Escape or a click outside", async () => {
+    const surface = filteringApi();
+    stubApi({ signedIn: MEMBER, extra: surface.handler });
+    const { router } = renderAt("/contracts?owner=me");
+    const user = userEvent.setup();
+    expect(await screen.findByRole("button", { name: "Owner: Me" })).toBeInTheDocument();
+    const outside = screen.getByRole("heading", { level: 1 });
+
+    // The Filter menu, closed with Escape.
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Status",
+      }),
+    );
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await navigated(
+      router,
+      () => user.keyboard("{Escape}"),
+      (search) => search.get("status") === "s-draft",
+    );
+    expect(screen.queryByRole("dialog", { name: "Filter" })).not.toBeInTheDocument();
+
+    // The chip, closed with a click outside.
+    await user.click(screen.getByRole("button", { name: "Status: Draft" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await navigated(
+      router,
+      () => user.click(outside),
+      (search) => search.get("status") === "s-draft,s-active",
+    );
+    expect(surface.queries.at(-1)?.get("status")).toBe("s-draft,s-active");
+
+    // No change, no read.
+    const reads = surface.queries.length;
+    await user.click(screen.getByRole("button", { name: "Status: Draft, Active" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Status" })).not.toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole("button", { name: "Status: Draft, Active" }));
+    await user.click(outside);
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Status" })).not.toBeInTheDocument(),
+    );
+    expect(surface.queries).toHaveLength(reads);
+
+    // An end before the start does not apply, and the popover stays open.
+    await user.click(screen.getByRole("button", { name: /^Filter/ }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Filter" })).getByRole("button", {
+        name: "Expiry date",
+      }),
+    );
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2027-02-01" } });
+    fireEvent.change(screen.getByLabelText("To"), { target: { value: "2027-01-01" } });
+    await user.keyboard("{Escape}");
+    await user.click(outside);
+    const menu = screen.getByRole("dialog", { name: "Filter" });
+    expect(within(menu).getByRole("alert")).toHaveTextContent(
+      "End date must be on or after start date.",
+    );
+    expect(new URLSearchParams(router.state.location.search).has("expiryFrom")).toBe(false);
+    expect(surface.queries).toHaveLength(reads);
+  });
+
   it("saves multi-value filters and date ranges with the view and restores them", async () => {
     const surface = filteringApi();
     stubApi({ signedIn: MEMBER, extra: surface.handler });

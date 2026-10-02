@@ -444,6 +444,37 @@ describe("search conditions", () => {
     ).not.toBeInTheDocument();
     expect(within(dialog).getByText("Conditions for Contract were removed.")).toBeVisible();
   });
+
+  it("applies changed ticks when the value list closes with Escape or a click outside", async () => {
+    stubConditions();
+    renderAt("/");
+    const user = userEvent.setup();
+    const dialog = await openDialog();
+    await user.click(within(dialog).getByRole("button", { name: "Contract" }));
+    await user.click(within(dialog).getByRole("button", { name: "Add condition" }));
+    await user.click(screen.getByRole("button", { name: "Status" }));
+    const row = within(dialog).getByRole("group", { name: "Contract Status condition" });
+
+    await user.click(within(row).getByRole("button", { name: "Choose values" }));
+    await user.click(screen.getByRole("checkbox", { name: "Active" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "Active" })).not.toBeInTheDocument(),
+    );
+    // Escape closed the value list only, not the Advanced search dialog.
+    expect(screen.getByRole("dialog", { name: "Advanced search" })).toBeVisible();
+    expect(within(row).getByRole("button", { name: "Choose values" })).toHaveTextContent("Active");
+
+    await user.click(within(row).getByRole("button", { name: "Choose values" }));
+    await user.click(screen.getByRole("checkbox", { name: "Draft" }));
+    await user.click(within(dialog).getByRole("heading", { name: "Advanced search" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("checkbox", { name: "Draft" })).not.toBeInTheDocument(),
+    );
+    expect(within(row).getByRole("button", { name: "Choose values" })).toHaveTextContent(
+      "Active, Draft",
+    );
+  });
   it("edits a condition chip on its row, removes it, and keeps the question on reload", async () => {
     stubConditions();
     const question = {
