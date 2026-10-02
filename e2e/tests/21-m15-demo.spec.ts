@@ -566,7 +566,7 @@ function pipeline(page: Page): Locator {
 }
 
 /** One stage's place in the strip. Matched on the name it starts with,
- * because a stage behind the marker carries a screen-reader "done"
+ * because a stage behind the marker carries a screen-reader "earlier"
  * after it. */
 function stageStep(page: Page, stage: StageName): Locator {
   return pipeline(page)
@@ -575,7 +575,7 @@ function stageStep(page: Page, stage: StageName): Locator {
 }
 
 /**
- * The marker on one stage, and the stage behind it marked done.
+ * The marker on one stage, and the stages behind it marked earlier.
  *
  * Two statements rather than one, because the strip renders **position,
  * not progress** (CTR-001, DES-034) and this demo's whole question is
@@ -595,8 +595,8 @@ async function expectStageMarker(page: Page, stage: StageName): Promise<void> {
       "step",
     );
     if (index < position) {
-      await expect(step, `${name} is behind the marker and is not marked done`).toContainText(
-        "done",
+      await expect(step, `${name} is behind the marker and is not marked earlier`).toContainText(
+        "earlier",
       );
     }
   }

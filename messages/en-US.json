@@ -3503,9 +3503,6 @@
   "contracts.softGate.title": {
     "defaultMessage": "Move past approval"
   },
-  "contracts.stage.done": {
-    "defaultMessage": "done"
-  },
   "contracts.stage.move": {
     "defaultMessage": "{stage} — move contract"
   },
@@ -13306,6 +13303,9 @@
   },
   "signing.waiting": {
     "defaultMessage": "Waiting for confirmation"
+  },
+  "statusProgression.earlier": {
+    "defaultMessage": "earlier"
   },
   "table.columns": {
     "defaultMessage": "Columns"

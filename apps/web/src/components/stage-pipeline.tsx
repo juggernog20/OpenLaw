@@ -14,17 +14,18 @@
  * **It renders position, never progress.** Transitions are
  * unrestricted (CTR-001) — deals collapse and redlines reopen after
  * approval — so a stage may move backwards, and the marker simply
- * moves back with it. The check on every stage before the marker means
- * "behind the current position", not "achieved": it is recomputed from
- * the current stage on every render, and a regression takes those
- * checks away again.
+ * moves back with it. A stage before the marker is "earlier", not
+ * "done". A Contract may jump from Draft to Signature with no review, so
+ * a check there would claim work nobody did. The marker is recomputed
+ * from the current stage on every render.
  *
  * Three states, and none of them is carried by colour alone (DES-011):
- * a stage behind the marker takes a check glyph and full-strength text,
+ * a stage before the marker takes a neutral dot and full-strength text,
  * the current stage takes the DES-005 pill its stage family names, and
  * a stage ahead of the marker takes muted plain text. The current item
- * carries `aria-current="step"`; the ones behind it say "done" in a
- * screen-reader-only word, which the check glyph says visually.
+ * carries `aria-current="step"`. The ones before it say "earlier" in a
+ * screen-reader-only word, which the dot says visually (DES-034
+ * addendum, 2026-10-02).
  *
  * The strip scrolls sideways rather than wrapping when its slot is too
  * narrow for six stages — a chevron at a line break reads as a broken

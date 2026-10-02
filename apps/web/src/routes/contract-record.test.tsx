@@ -3212,17 +3212,17 @@ describe("the contract record's broader Matter context (M23/6)", () => {
  */
 describe("the contract record's stage pipeline (M14/2)", () => {
   /** The six stages as the strip reads them: the name, whether the
-   * marker is on it, and whether it says the "done" word the check
-   * glyph says visually. */
+   * marker is on it, and whether it says the "earlier" word the dot
+   * says visually. */
   function steps(pipeline: HTMLElement) {
     return within(pipeline)
       .getAllByRole("listitem")
       .map((item) => {
         const text = (item.textContent ?? "").trim();
         return {
-          stage: text.replace(/\s*done$/, ""),
+          stage: text.replace(/\s*earlier$/, ""),
           current: item.getAttribute("aria-current") === "step",
-          done: /\s*done$/.test(text),
+          earlier: /\s*earlier$/.test(text),
         };
       });
   }
@@ -3239,12 +3239,12 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     const { pipeline } = await pipelineOn(contractRow());
 
     expect(steps(pipeline)).toEqual([
-      { stage: "Draft", current: true, done: false },
-      { stage: "Review", current: false, done: false },
-      { stage: "Approval", current: false, done: false },
-      { stage: "Signature", current: false, done: false },
-      { stage: "Active", current: false, done: false },
-      { stage: "Ended", current: false, done: false },
+      { stage: "Draft", current: true, earlier: false },
+      { stage: "Review", current: false, earlier: false },
+      { stage: "Approval", current: false, earlier: false },
+      { stage: "Signature", current: false, earlier: false },
+      { stage: "Active", current: false, earlier: false },
+      { stage: "Ended", current: false, earlier: false },
     ]);
   });
 
@@ -3258,7 +3258,7 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     expect(steps(pipeline).find((step) => step.current)?.stage).toBe("Review");
     expect(
       steps(pipeline)
-        .filter((step) => step.done)
+        .filter((step) => step.earlier)
         .map((step) => step.stage),
     ).toEqual(["Draft"]);
   });
@@ -3271,12 +3271,12 @@ describe("the contract record's stage pipeline (M14/2)", () => {
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
-        { stage: "Draft", current: false, done: true },
-        { stage: "Review", current: false, done: true },
-        { stage: "Approval", current: false, done: true },
-        { stage: "Signature", current: false, done: true },
-        { stage: "Active", current: true, done: false },
-        { stage: "Ended", current: false, done: false },
+        { stage: "Draft", current: false, earlier: true },
+        { stage: "Review", current: false, earlier: true },
+        { stage: "Approval", current: false, earlier: true },
+        { stage: "Signature", current: false, earlier: true },
+        { stage: "Active", current: true, earlier: false },
+        { stage: "Ended", current: false, earlier: false },
       ]),
     );
   });
@@ -3290,12 +3290,12 @@ describe("the contract record's stage pipeline (M14/2)", () => {
 
     await waitFor(() =>
       expect(steps(pipeline)).toEqual([
-        { stage: "Draft", current: false, done: true },
-        { stage: "Review", current: true, done: false },
-        { stage: "Approval", current: false, done: false },
-        { stage: "Signature", current: false, done: false },
-        { stage: "Active", current: false, done: false },
-        { stage: "Ended", current: false, done: false },
+        { stage: "Draft", current: false, earlier: true },
+        { stage: "Review", current: true, earlier: false },
+        { stage: "Approval", current: false, earlier: false },
+        { stage: "Signature", current: false, earlier: false },
+        { stage: "Active", current: false, earlier: false },
+        { stage: "Ended", current: false, earlier: false },
       ]),
     );
   });
@@ -3331,6 +3331,58 @@ describe("the contract record's stage pipeline (M14/2)", () => {
     ]);
     // Where the record is now, marked in the menu as well as the strip.
     expect(rows[0]).toHaveAttribute("aria-checked", "true");
+  });
+});
+
+/**
+ * The stage bar on an install whose Statuses cover all six stages, as
+ * CTR-001 keeps them. The shared stub offers three Statuses, so these
+ * cases swap in a fuller set and put the shared one back after.
+ */
+describe("the stage bar on every stage (#1281)", () => {
+  const SHARED_STATUSES = OPTIONS.contractStatuses;
+  const EVERY_STAGE = [
+    { id: "s-draft", slug: "draft", displayName: "Draft", stage: "draft" },
+    { id: "s-internal", slug: "internal_review", displayName: "Internal review", stage: "review" },
+    { id: "s-redlining", slug: "redlining", displayName: "With counterparty", stage: "review" },
+    { id: "s-approval", slug: "approval", displayName: "Pending approval", stage: "approval" },
+    { id: "s-signature", slug: "signature", displayName: "Out for signature", stage: "signature" },
+    { id: "s-active", slug: "active", displayName: "Active", stage: "active" },
+    { id: "s-expired", slug: "expired", displayName: "Expired", stage: "ended" },
+  ];
+  beforeEach(() => {
+    OPTIONS.contractStatuses = EVERY_STAGE;
+  });
+  afterEach(() => {
+    OPTIONS.contractStatuses = SHARED_STATUSES;
+  });
+
+  it("marks the stages a jump skipped as earlier, never as done", async () => {
+    const api = recordApi(contractRow());
+    stubApi({ signedIn: MEMBER, extra: api.handler });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const pipeline = await screen.findByRole("list", { name: "Stage" });
+
+    await moveTo(user, "Out for signature");
+    await waitFor(() => expect(api.patches).toEqual([{ statusId: "s-signature" }]));
+    await waitFor(() =>
+      expect(pipeline.querySelector('[aria-current="step"]')).toHaveTextContent("Signature"),
+    );
+
+    // Nobody reviewed or approved this Contract. The stages before the
+    // marker say where it sits, not what was done (DES-034 addendum).
+    const items = within(pipeline).getAllByRole("listitem");
+    for (const item of items.slice(0, 3)) {
+      expect(item.querySelector("svg.lucide-circle-small")).not.toBeNull();
+      expect(item.querySelector("svg.lucide-check")).toBeNull();
+      expect(item).toHaveTextContent(/earlier$/);
+    }
+    for (const item of items.slice(3)) {
+      expect(item.querySelector("svg.lucide-circle-small")).toBeNull();
+      expect(item).not.toHaveTextContent(/earlier$/);
+    }
+    expect(pipeline).not.toHaveTextContent(/done/);
   });
 });
 

@@ -2291,6 +2291,16 @@ Anything reading the record's sub-bar by text now finds stage names there as wel
 
 `designs/contracts.pen` is the reference: `S2 StagePipe` in every C-frame, C2 and C22 being the clearest.
 
+### Addendum (2026-10-02, focus group of 2026-09-29, [#1281](https://github.com/juggernog20/OpenLaw/issues/1281)): a stage before the marker is "earlier", not "done"
+
+**Clauses 1 and 7 change for the stages behind the marker.** A stage before the marker takes a neutral 12px dot, a filled Lucide `circle-small` in the stage name's own `text-primary`. The check glyph and its `text-status-success-fg` colour go. The screen-reader-only word becomes "earlier". The message `statusProgression.earlier` replaces `contracts.stage.done`. The marker and the stages ahead do not change.
+
+Two panelists moved a Draft Contract straight to Out for signature. The strip then drew Review and Approval with green checks, and a screen reader said "done" after each. Nobody had reviewed or approved the Contract. A reader who skims the strip takes a green check as "reviewed and approved". Clause 2 already said that the check means position, not progress, but the glyph said the opposite. A dot says position and makes no claim.
+
+The change is in `StatusProgression`, so it applies to the Matter progression too. There, the earlier groups were grouped menu triggers with a muted check. They now take the same dot in `text-primary`, and the same "earlier" word beside the trigger.
+
+Two other options were declined. Checks only on stages the Contract held, read from its history, would draw progress, which DES-053 refuses. A Soft gate warning on any move across Approval with no Approval request would change CTR-012. That is a separate call: many small teams sign an NDA with no Approval, and a warning on every such move teaches people to press Move anyway. CTR-001 and CTR-012 do not change.
+
 ## DES-035: The record's Approvals section — the roster table and its row actions (extends DES-032, DES-020, DES-005)
 
 - **Status:** Accepted

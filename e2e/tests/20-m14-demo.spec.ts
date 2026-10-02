@@ -385,7 +385,7 @@ function pipeline(page: Page): Locator {
 }
 
 /** One stage's place in the strip. Matched on the name it starts with,
- * because a stage behind the marker carries a screen-reader "done"
+ * because a stage behind the marker carries a screen-reader "earlier"
  * after it. */
 function stageStep(page: Page, stage: StageName): Locator {
   return pipeline(page)
@@ -395,15 +395,15 @@ function stageStep(page: Page, stage: StageName): Locator {
 
 /**
  * The whole pipeline, read as one statement: the marker on the stage
- * the contract sits at, a "done" on every stage behind it, and neither
- * on any stage ahead.
+ * the contract sits at, an "earlier" on every stage behind it, and
+ * neither on any stage ahead.
  *
  * Read whole rather than one step at a time because the property is
  * about the strip and not about a step. It renders **position, not
- * progress** (CTR-001, DES-034): a stage carries its check because it
- * is behind the marker now, so a regression would have to take those
- * checks away again — and only an assertion over all six stages would
- * notice if it did not.
+ * progress** (CTR-001, DES-034): a stage carries its marker because it
+ * is behind the current one now, so a regression would have to take
+ * those markers away again — and only an assertion over all six stages
+ * would notice if it did not.
  */
 async function expectPipelineAt(page: Page, stage: StageName): Promise<void> {
   const position = STAGE_NAMES.indexOf(stage);
@@ -416,20 +416,21 @@ async function expectPipelineAt(page: Page, stage: StageName): Promise<void> {
     await expect(item, `the pipeline draws no ${step} step`).toHaveCount(1);
     if (index === position) {
       await expect(item, `the marker is not on ${step}`).toHaveAttribute("aria-current", "step");
-      await expect(item).not.toContainText("done");
+      await expect(item).not.toContainText("earlier");
     } else {
       await expect(item, `${step} is marked as the current stage`).not.toHaveAttribute(
         "aria-current",
         "step",
       );
       if (index < position) {
-        await expect(item, `${step} is behind the marker and is not marked done`).toContainText(
-          "done",
+        await expect(item, `${step} is behind the marker and is not marked earlier`).toContainText(
+          "earlier",
         );
       } else {
-        await expect(item, `${step} is ahead of the marker and is marked done`).not.toContainText(
-          "done",
-        );
+        await expect(
+          item,
+          `${step} is ahead of the marker and is marked earlier`,
+        ).not.toContainText("earlier");
       }
     }
   }

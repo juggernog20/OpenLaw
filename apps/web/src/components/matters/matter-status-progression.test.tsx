@@ -108,3 +108,38 @@ it("uses the closed category even when the persisted group is in progress", asyn
   await userEvent.setup().click(screen.getByRole("button", { name: "Closed — move matter" }));
   expect(screen.getAllByRole("menuitemradio").map((item) => item.textContent)).toEqual(["Closed"]);
 });
+
+it("marks the groups before the current one as earlier, never as done (#1281)", () => {
+  const { rerender } = render(
+    <IntlProvider locale="en">
+      <MatterStatusProgression
+        statuses={statuses}
+        statusId="business"
+        busy={false}
+        onPick={vi.fn()}
+      />
+    </IntlProvider>,
+  );
+  const readEarlier = () =>
+    within(screen.getByRole("list", { name: "Status" }))
+      .getAllByRole("listitem")
+      .map((item) => ({
+        text: item.textContent,
+        dot: item.querySelector("svg.lucide-circle-small") !== null,
+        check: item.querySelector("svg.lucide-check") !== null,
+      }));
+  // The move triggers and the read-only strip draw the same marker.
+  for (const pass of ["move", "read-only"]) {
+    expect(readEarlier(), pass).toEqual([
+      { text: "Open earlier", dot: true, check: false },
+      { text: "In progress earlier", dot: true, check: false },
+      { text: "Waiting", dot: false, check: false },
+      { text: "Closed", dot: false, check: false },
+    ]);
+    rerender(
+      <IntlProvider locale="en">
+        <MatterStatusProgression statuses={statuses} statusId="business" busy={false} />
+      </IntlProvider>,
+    );
+  }
+});
