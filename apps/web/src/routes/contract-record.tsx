@@ -1305,6 +1305,7 @@ function ContractRecord() {
     // cannot hide "Manage team" from somebody the applet would
     // then let manage it.
     audienceLocked: saved.isConfidential && !canFlag,
+    isConfidential: saved.isConfidential,
     onRoster: setRoster,
   });
 

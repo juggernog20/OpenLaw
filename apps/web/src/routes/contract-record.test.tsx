@@ -2034,6 +2034,56 @@ describe("the /contracts/:number record page", () => {
     expect(within(team).queryByText("Casey Contributor")).not.toBeInTheDocument();
   });
 
+  it("groups the team picker and warns before a Business User joins a confidential Contract", async () => {
+    const felix = { id: "u8", displayName: "Felix Brandt", image: null, archived: false };
+    const bree = { id: "u7", displayName: "Bree Portal", image: null, archived: false };
+    const api = recordApi(contractRow({ isConfidential: true }), [person("u2", "creator"), felix]);
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) =>
+        call.url.pathname === "/api/v1/contracts/options" && call.method === "GET"
+          ? json(200, {
+              ...OPTIONS,
+              users: [
+                ...PEOPLE,
+                { ...felix, role: "business_user" },
+                { ...bree, role: "business_user" },
+              ],
+            })
+          : api.handler(call),
+    });
+    renderAt("/contracts/42");
+    const user = userEvent.setup();
+    const team = await openTeam(user);
+
+    const rows = within(team).getAllByRole("listitem");
+    const felixRow = rows.find((row) => within(row).queryByText("Felix Brandt"))!;
+    const nadiaRow = rows.find((row) => within(row).queryByText("Nadia Counsel"))!;
+    expect(within(felixRow).getByText("Business user")).toBeInTheDocument();
+    expect(within(nadiaRow).queryByText("Business user")).not.toBeInTheDocument();
+    expect(within(nadiaRow).getByText("Creator")).toBeInTheDocument();
+
+    await user.click(within(team).getByRole("button", { name: "Add team member" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add team member" });
+    const picker = within(dialog).getByLabelText("Person");
+    const legal = within(picker).getByRole("group", { name: "Legal" });
+    const business = within(picker).getByRole("group", { name: "Business Users" });
+    expect(within(legal).getByRole("option", { name: "Ada Admin" })).toBeInTheDocument();
+    expect(within(legal).queryByRole("option", { name: "Bree Portal" })).toBeNull();
+    expect(within(business).getByRole("option", { name: "Bree Portal" })).toBeInTheDocument();
+
+    await user.selectOptions(picker, "u1");
+    expect(within(dialog).queryByText(/is a Business User/)).not.toBeInTheDocument();
+    await user.selectOptions(picker, "u7");
+    expect(
+      within(dialog).getByText(
+        "Bree Portal is a Business User. They will see this confidential Contract in the Portal, with its Documents and Full Thread comments.",
+      ),
+    ).toBeInTheDocument();
+    // DD-023 allows the add, so the warning does not block it.
+    expect(within(dialog).getByRole("button", { name: "Add" })).toBeEnabled();
+  });
+
   it.each([false, true])(
     "preserves deliberate focus when removing a membership (moved focus: %s)",
     async (moveFocus) => {

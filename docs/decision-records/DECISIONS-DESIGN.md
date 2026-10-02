@@ -4826,6 +4826,12 @@ The full app keeps one membership removal control when the person has a removabl
 
 This amends DES-047, DES-075, DES-076 and DES-079's separate statement and membership rows. It changes presentation only; the team grant and Confidential gate are unchanged.
 
+### Addendum (2026-10-02, [#1273](https://github.com/juggernog20/OpenLaw/issues/1273)): the roster and the picker mark Business Users
+
+A Business User added to a Confidential record gets Portal access to it, and the full-app team did not say who was a Business User. The account type is a fact about access, not a team tag, so it joins the row's statements. A Business User's row on the full-app Contract team and Matter team shows "Business user" beside the other statements, in the shared role wording. Legal rows get no role statement. The Portal roster does not change.
+
+Add team member groups the people under Legal and Business Users. On a Confidential record, a chosen Business User shows a warning above the buttons. The warning names the Portal access, the Documents and the Full Thread comments. Add stays enabled, because DD-023 allows the add. The Portal dialog stays one flat list. DD-023 section 2 says the roster lists names. This adds one account-type statement, and only for Business Users.
+
 ## DES-081: One Documents section for Portal Contracts and Matters
 
 - **Status:** Accepted under Blair's 2026-09-12 instructions to combine primary and supporting paper and show Versions without duplicating the current Version

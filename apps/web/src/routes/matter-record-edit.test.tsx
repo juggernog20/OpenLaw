@@ -1157,6 +1157,87 @@ describe("the editable matter record", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("groups the team picker, warns only on a confidential Matter, and marks Business Users", async () => {
+    const business = {
+      ...MEMBER,
+      id: "u-business",
+      displayName: "Felix Brandt",
+      role: "business_user",
+    };
+    const portal = { ...business, id: "u-portal", displayName: "Bree Portal" };
+    const { role: _role, ...felix } = business;
+    const saved = row({ isConfidential: true });
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(saved, [felix]));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return json(200, {
+            matterTypes: TYPES,
+            matterStatuses: STATUSES,
+            users: [MEMBER, business, portal],
+          });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12");
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("link", { name: "Manage team" }));
+    const panel = screen.getByRole("complementary", { name: "Matter team" });
+    const felixRow = within(panel).getByText("Felix Brandt").closest("li")!;
+    expect(within(felixRow).getByText("Business user")).toBeInTheDocument();
+
+    await user.click(within(panel).getByRole("button", { name: "Add team member" }));
+    const add = await screen.findByRole("dialog", { name: "Add team member" });
+    const picker = within(add).getByLabelText(/^Person\*?$/);
+    expect(
+      within(within(picker).getByRole("group", { name: "Legal" })).getByRole("option", {
+        name: "Mina Member",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(within(picker).getByRole("group", { name: "Business Users" })).getByRole("option", {
+        name: "Bree Portal",
+      }),
+    ).toBeInTheDocument();
+    await user.selectOptions(picker, MEMBER.id);
+    expect(within(add).queryByText(/is a Business User/)).not.toBeInTheDocument();
+    await user.selectOptions(picker, portal.id);
+    expect(
+      within(add).getByText(
+        "Bree Portal is a Business User. They will see this confidential Matter in the Portal, with its Documents and Full Thread comments.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(add).getByRole("button", { name: "Add" })).toBeEnabled();
+  });
+
+  it("does not warn when a Business User joins a Matter that is not confidential", async () => {
+    const portal = {
+      ...MEMBER,
+      id: "u-portal",
+      displayName: "Bree Portal",
+      role: "business_user",
+    };
+    stubApi({
+      signedIn: ADMIN,
+      extra: (call) => {
+        if (call.url.pathname === "/api/v1/matters/12" && call.method === "GET")
+          return json(200, record(row()));
+        if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET")
+          return json(200, { matterTypes: TYPES, matterStatuses: STATUSES, users: [portal] });
+        return undefined;
+      },
+    });
+    renderAt("/matters/12#matter-team");
+    const user = userEvent.setup();
+    const panel = await screen.findByRole("complementary", { name: "Matter team" });
+    await user.click(within(panel).getByRole("button", { name: "Add team member" }));
+    const add = await screen.findByRole("dialog", { name: "Add team member" });
+    await user.selectOptions(within(add).getByLabelText(/^Person\*?$/), portal.id);
+    expect(within(add).queryByText(/is a Business User/)).not.toBeInTheDocument();
+  });
+
   it("works the Team applet, draws the confidential banner, and confirms archive and restore", async () => {
     const creator = {
       id: ADMIN.id,
