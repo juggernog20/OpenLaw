@@ -4,11 +4,21 @@ import assert from "node:assert/strict";
 // Read at a fixed date so midnight cannot change a preserved register's fingerprint.
 const DATE = "2024-01-01";
 const path = (id) => `/api/v1/entities/${id}`;
+function registerValue(value) {
+  if (Array.isArray(value)) return value.map(registerValue);
+  if (value === null || typeof value !== "object") return value;
+  // Older register reads omit user links; null still means an unlinked party.
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key, field]) => key !== "userId" || field !== null)
+      .map(([key, field]) => [key, registerValue(field)]),
+  );
+}
 export function registerFacts(register) {
   const keys = register.partners
     ? ["basis", "currency", "partners", "entries", "totals"]
     : ["parties", "entries", "fund"];
-  return Object.fromEntries(keys.map((key) => [key, register[key]]));
+  return Object.fromEntries(keys.map((key) => [key, registerValue(register[key])]));
 }
 export function assertRegisterFacts(expected, actual) {
   assert.deepEqual(registerFacts(actual), expected, "register facts changed across the upgrade");

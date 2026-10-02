@@ -5512,7 +5512,15 @@ DES-088 draws one Ownership tab: a share register read as of a date. ENT-013 giv
 
 ### Decision
 
-**The kind line.** Every Ownership tab opens with one muted line above the first card: the register in use and where it came from, "Share register · from the type Corporation" or "Trust register · set on this Entity", and a secondary Change register button. The button opens a DES-017 dialog with the four kinds as a radio list, each with a one-line description, and a note that the choice locks once the register holds an entry. The button is disabled, with that note as its tooltip, when any register holds data. Choosing the kind the type already names clears the override, so the line reads "from the type" again.
+**The kind line (superseded 2026-10-02).** Every Ownership tab opens with one muted line above the first card: the register in use and where it came from, "Share register · from the type Corporation" or "Trust register · set on this Entity", and a secondary Change register button. The button opens a DES-017 dialog with the four kinds as a radio list, each with a one-line description, and a note that the choice locks once the register holds an entry. The button is disabled, with that note as its tooltip, when any register holds data. Choosing the kind the type already names clears the override, so the line reads "from the type" again.
+
+**Amendment (2026-10-02).** Ownership opens directly with its register or head-office
+cards. The kind line and Change register dialog are removed; Administrators choose
+the register on the Entity type in Settings. The type editor keeps the Register
+select without the descriptive helper line. References to the kind line below
+describe the superseded layout.
+This supersedes the helper-description requirement in the type-editor paragraph below.
+The trust-party header also omits the party, role and derived-entry count note.
 
 **Partnership register.** DES-088's order, with these words. "Register as of" and its timeline are unchanged. In place of the reconciliation line, one DES-005 note states the ownership basis: "Ownership by unreturned capital · AED" with a secondary Change basis control that opens a four-option radio dialog, and the `stated-total` warning when the typed percentages do not sum to 100. "Register of partners" replaces "Register of members": Partner (the DES-018 avatar, the name, and the muted "Entity · jurisdiction" or "Individual" line), Capacity as a DES-005 pill (General assigned, Limited neutral, Assignee muted), Units, Committed, Contributed, Returned, Unreturned, % by the basis, Partner since, and Change to today when historic. A totals row closes the table on the section-header surface. The meta line reads "N partners · derived from N register entries". "Register of partnership entries" replaces the allotments card: #, Date, Entry as a pill (admission info, commitment neutral, contribution assigned, return severe, transfer neutral, capacity change info, withdrawal danger), From, To, Capacity, Units, %, Amount in the mono face with the currency, Consideration, Reference. The filter bar carries Entry, Partner and Effective date. Record entry is one dialog whose fields change with the kind, on the C10 spec, in the order kind, date, party or from and to, capacity, units, percent, amount, form, consideration, reference, note. "Holdings in other Entities" closes the tab, unchanged.
 
@@ -5522,7 +5530,7 @@ DES-088 draws one Ownership tab: a share register read as of a date. ENT-013 giv
 
 **Empty states.** A partnership or trust register with no entry shows the kind line, the empty state with Record entry, and the Holdings card, without the timeline or the note, as DES-088 does for an empty share register.
 
-**The type editor.** The Entities Settings type editor gains a Register field under the type's name and description: a select with Share register, Partnership register, Trust register and None, each with its one-line description. A refused change shows the API's problem detail inline, naming how many Entities hold data under the current register.
+**The type editor (helper descriptions superseded by the 2026-10-02 amendment above).** The Entities Settings type editor gains a Register field under the type's name and description: a select with Share register, Partnership register, Trust register and None, each with its one-line description. A refused change shows the API's problem detail inline, naming how many Entities hold data under the current register.
 
 **The chart.** Role edges are dashed in the muted foreground with the role as a small label at the mid-point and no percentage; individual and class parties are terminal nodes in the individual style, a class with a dotted border. Branch edges are solid in the muted foreground with the label "Branch" and no percentage. The legend gains both. The export dialog carries them in the PNG and SVG.
 

@@ -476,45 +476,12 @@ describe("the Entity Ownership tab as a share register", () => {
 });
 
 describe("the Ownership register kind", () => {
-  it("names the kind and its source above the register", async () => {
+  it("uses the type's register without exposing a record-level selector", async () => {
     stubApi({ signedIn: MEMBER, extra: registerApi().handler });
     renderAt("/entities/e1/ownership");
-    expect(
-      await screen.findByText("Share register · from the type Corporation"),
-    ).toBeInTheDocument();
-  });
-  it("changes the register through a four-kind dialog and returns to the type", async () => {
-    const api = registerApi({ empty: true });
-    stubApi({ signedIn: MEMBER, extra: api.handler });
-    renderAt("/entities/e1/ownership");
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Change register" }));
-    expect(screen.getAllByRole("radio")).toHaveLength(4);
-    await user.click(screen.getByRole("radio", { name: /Trust register/ }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    expect(await screen.findByText("Trust register · set on this Entity")).toBeInTheDocument();
-    expect(
-      await screen.findByRole("heading", { name: "No trust register yet" }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Change register" }));
-    await user.click(screen.getByRole("radio", { name: /Share register/ }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(api.writes.at(-1)?.body).toEqual({ registerKind: "shares" }));
-    expect(
-      await screen.findByText("Share register · from the type Corporation"),
-    ).toBeInTheDocument();
-  });
-  it("disables Change register with the reason when any register holds data", async () => {
-    const reason = "The register kind cannot change while a register holds data.";
-    stubApi({
-      signedIn: MEMBER,
-      extra: registerApi({ entity: { registerKindLocked: true, registerKindLockReason: reason } })
-        .handler,
-    });
-    renderAt("/entities/e1/ownership");
-    const button = await screen.findByRole("button", { name: "Change register" });
-    expect(button).toBeDisabled();
-    expect(button).toHaveAccessibleDescription(reason);
+    await screen.findByRole("button", { name: "Record entry" });
+    expect(screen.queryByText(/from the type Corporation/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Change register" })).not.toBeInTheDocument();
   });
   it("picks and clears a head office without offering itself", async () => {
     const api = registerApi({ entity: { registerKind: "none", typeRegisterKind: "none" } });
@@ -547,22 +514,73 @@ describe("the Ownership register kind", () => {
   });
 });
 
-it("keeps a refused register change in its dialog", async () => {
+it.each(["Cancel", "Escape"])("clears a refused head-office change after %s", async (dismiss) => {
   stubApi({
     signedIn: MEMBER,
     extra: registerApi({
-      empty: true,
-      refuse: "The register kind cannot change while a register holds data.",
+      entity: { registerKind: "none", typeRegisterKind: "none" },
+      refuse: "The head office would create a cycle.",
     }).handler,
   });
   renderAt("/entities/e1/ownership");
   const user = userEvent.setup();
-  await user.click(await screen.findByRole("button", { name: "Change register" }));
-  await user.click(screen.getByRole("radio", { name: /Trust register/ }));
+  await user.click(await screen.findByRole("button", { name: "Change head office" }));
+  await user.selectOptions(screen.getByRole("combobox", { name: "Head office" }), "e2");
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "The register kind cannot change while a register holds data.",
+    "The head office would create a cycle.",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
-  expect(screen.getByText("Share register · from the type Corporation")).toBeInTheDocument();
+  if (dismiss === "Cancel") await user.click(screen.getByRole("button", { name: "Cancel" }));
+  else await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("selects an existing user as an individual", async () => {
+  const api = registerApi({ refuse: "Test refusal" });
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/entities/officer-roles"
+        ? json(200, {
+            officerRoles: [],
+            users: [
+              {
+                id: "selected-user",
+                displayName: "Selected Person",
+                image: null,
+                role: "legal_team_member",
+              },
+            ],
+          })
+        : api.handler(call),
+  });
+  renderAt("/entities/e1/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Record entry" }));
+  const d = within(screen.getByRole("dialog"));
+  await user.selectOptions(d.getByLabelText(/^To/), "individual");
+  await user.click(d.getByRole("combobox", { name: /Full name/ }));
+  await user.click(await screen.findByRole("option", { name: "Selected Person" }));
+  await user.type(d.getByLabelText(/^Shares/), "1");
+  await user.click(d.getByRole("button", { name: "Enter in register" }));
+  await waitFor(() =>
+    expect(api.writes[0]?.body).toMatchObject({ to: { kind: "user", userId: "selected-user" } }),
+  );
+});
+
+it("blocks a new individual whose name already exists in the register", async () => {
+  const api = registerApi();
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/entities/e1/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Record entry" }));
+  const d = within(screen.getByRole("dialog"));
+  await user.selectOptions(d.getByLabelText(/^To/), "individual");
+  await user.type(d.getByRole("combobox", { name: /Full name/ }), "  DEVON   CALLOWAY  ");
+  await user.type(d.getByLabelText(/^Shares/), "1");
+  await user.click(d.getByRole("button", { name: "Enter in register" }));
+  expect(await d.findByRole("alert")).toHaveTextContent("already in the register");
+  expect(api.writes).toHaveLength(0);
 });

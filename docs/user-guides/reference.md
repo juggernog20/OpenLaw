@@ -23,16 +23,16 @@ See [Entities and Counterparties](entities-and-counterparties.md), [Entity recor
 
 ## Entity registers and Activity actions
 
-| Term              | Meaning                                                                                                                                         |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Register kind     | Share register, Partnership register, Trust register or None. The Entity type sets it; an Entity can override it while its registers are empty. |
-| Head office       | The Entity a branch belongs to, connected on the chart without a percentage.                                                                    |
-| Partner           | An Entity or individual derived from Partnership entries, with a capacity and standing in the register.                                         |
-| Partnership entry | A dated admission, commitment, contribution, return, transfer, capacity change or withdrawal.                                                   |
-| Ownership basis   | Unreturned capital, Units, Stated percent or Equal shares, used to project partnership Holdings.                                                |
-| Trust party       | An Entity, individual or class of beneficiaries derived from Role entries.                                                                      |
-| Role              | Settlor, Trustee, Protector, Enforcer, Beneficiary or Other with a label.                                                                       |
-| Role entry        | A dated appointment, cessation, settlement or distribution in the trust register.                                                               |
+| Term              | Meaning                                                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Register kind     | Share register, Partnership register, Trust register or None. An Administrator sets it on the Entity type in Settings → Entities → Types. |
+| Head office       | The Entity a branch belongs to, connected on the chart without a percentage.                                                              |
+| Partner           | An Entity or individual derived from Partnership entries, with a capacity and standing in the register.                                   |
+| Partnership entry | A dated admission, commitment, contribution, return, transfer, capacity change or withdrawal.                                             |
+| Ownership basis   | Unreturned capital, Units, Stated percent or Equal shares, used to project partnership Holdings.                                          |
+| Trust party       | An Entity, individual or class of beneficiaries derived from Role entries.                                                                |
+| Role              | Settlor, Trustee, Protector, Enforcer, Beneficiary or Other with a label.                                                                 |
+| Role entry        | A dated appointment, cessation, settlement or distribution in the trust register.                                                         |
 
 The Entity's Activity and Administrator audit log use these actions. An entry
 write also appears on each Entity party it names.

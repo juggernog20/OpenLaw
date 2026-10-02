@@ -37,7 +37,7 @@ import { EntityFieldsCard } from "../components/entities/entity-fields-card";
 import { EntityGrantsDialog } from "../components/entities/entity-grants-dialog";
 import { OfficersCard } from "../components/entities/officers-card";
 import { ObligationsPanel } from "../components/entities/obligations-panel";
-import { RegisterKindPanel } from "../components/entities/register-kind-panel";
+import { HeadOfficePanel } from "../components/entities/head-office-panel";
 import { OwnedHoldingsCard } from "../components/entities/owned-holdings-card";
 import { PartnershipRegisterTab } from "../components/entities/partnership-register-tab";
 import { TrustRegisterTab } from "../components/entities/trust-register-tab";
@@ -819,13 +819,14 @@ function EntityRecord() {
               </>
             ) : loaded.tab === "ownership" ? (
               <>
-                <RegisterKindPanel entity={saved} candidates={loaded.entities} onSaved={setSaved} />
+                <HeadOfficePanel entity={saved} candidates={loaded.entities} onSaved={setSaved} />
                 {saved.registerKind === "shares" && loaded.register ? (
                   <ShareRegisterTab
                     entity={saved}
                     register={loaded.register}
                     holdings={loaded.holdings}
                     candidates={loaded.entities}
+                    users={loaded.users}
                     frozen={frozen}
                   />
                 ) : saved.registerKind === "trust" && loaded.trustRegister ? (
@@ -834,6 +835,7 @@ function EntityRecord() {
                     register={loaded.trustRegister}
                     holdings={loaded.holdings}
                     candidates={loaded.entities}
+                    users={loaded.users}
                     frozen={frozen}
                   />
                 ) : saved.registerKind === "partnership" && loaded.partnershipRegister ? (
@@ -842,6 +844,7 @@ function EntityRecord() {
                     register={loaded.partnershipRegister}
                     holdings={loaded.holdings}
                     candidates={loaded.entities}
+                    users={loaded.users}
                     frozen={frozen}
                   />
                 ) : (

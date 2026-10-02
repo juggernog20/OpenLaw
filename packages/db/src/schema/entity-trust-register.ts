@@ -59,6 +59,7 @@ export const entityRegisterParties = pgTable(
       .references(() => entities.id),
     kind: text("kind", { enum: REGISTER_PARTY_KINDS }).notNull(),
     partyEntityId: text("party_entity_id").references(() => entities.id),
+    userId: text("user_id").references(() => users.id),
     name: text("name"),
     description: text("description"),
     ...timestamps(),
@@ -68,6 +69,13 @@ export const entityRegisterParties = pgTable(
     uniqueIndex("entity_register_parties_entity_party_idx")
       .on(t.entityId, t.partyEntityId)
       .where(sql`${t.partyEntityId} is not null`),
+    uniqueIndex("entity_register_parties_user_idx")
+      .on(t.entityId, t.userId)
+      .where(sql`${t.userId} is not null`),
+    check(
+      "entity_register_parties_user_kind",
+      sql`${t.userId} is null or ${t.kind} = 'individual'`,
+    ),
     check(
       "entity_register_parties_kind_shape",
       sql`case ${t.kind}

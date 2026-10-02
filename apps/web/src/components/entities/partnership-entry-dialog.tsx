@@ -25,23 +25,33 @@ import { DatePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { OfficerNameInput } from "./officer-name-input";
+import { registerIndividualMatch, duplicateIndividualMessage } from "../../lib/register-individual";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 type PartyInput = NonNullable<PartnershipEntryBody["party"]>;
-type PartyChoice = { pick: string; entity: string; name: string };
+type PartyChoice = { pick: string; entity: string; name: string; userId: string | null };
 const choice = (party?: PartnershipParty | null): PartyChoice => ({
   pick: party ? `party:${party.id}` : "",
   entity: "",
   name: "",
+  userId: null,
 });
-const partyInput = (value: PartyChoice): PartyInput | null =>
+const partyInput = (value: PartyChoice, parties: PartnershipParty[]): PartyInput | null =>
   value.pick.startsWith("party:")
     ? { kind: "party", partyId: value.pick.slice(6) }
     : value.pick === "entity" && value.entity
       ? { kind: "entity", entityId: value.entity }
       : value.pick === "individual" && value.name.trim()
-        ? { kind: "individual", name: value.name.trim() }
+        ? registerIndividualMatch(parties, value.name, value.userId).known
+          ? {
+              kind: "party",
+              partyId: registerIndividualMatch(parties, value.name, value.userId).known!.id,
+            }
+          : value.userId
+            ? { kind: "user", userId: value.userId }
+            : { kind: "individual", name: value.name.trim() }
         : null;
 
 function PartnerPicker({
@@ -51,6 +61,7 @@ function PartnerPicker({
   onChange,
   parties,
   candidates,
+  users,
   entityId,
   original,
 }: Readonly<{
@@ -60,6 +71,7 @@ function PartnerPicker({
   onChange: (value: PartyChoice) => void;
   parties: PartnershipParty[];
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   entityId: string;
   original?: PartnershipParty | null;
 }>) {
@@ -130,11 +142,12 @@ function PartnerPicker({
           <Label htmlFor={`${id}-name`} required>
             <FormattedMessage id="entities.ownership.fullName" defaultMessage="Full name" />
           </Label>
-          <Input
+          <OfficerNameInput
             id={`${id}-name`}
-            value={value.name}
-            maxLength={200}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
+            name={value.name}
+            userId={value.userId}
+            users={users}
+            onChange={(person) => onChange({ ...value, ...person })}
           />
         </>
       ) : null}
@@ -147,6 +160,7 @@ export function PartnershipEntryDialog({
   register,
   entry,
   candidates,
+  users,
   onClose,
   onSaved,
 }: Readonly<{
@@ -154,6 +168,7 @@ export function PartnershipEntryDialog({
   register: PartnershipRegister;
   entry?: PartnershipEntry;
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   onClose: () => void;
   onSaved: () => void;
 }>) {
@@ -167,15 +182,20 @@ export function PartnershipEntryDialog({
   // ENT-014: only a transferee with no standing needs the admitted-or-assignee
   // choice. A party admitted or holding as an assignee today keeps that standing
   // unless the entry says otherwise, so "" (no change) is the default for one.
-  const stands = (value: PartyChoice) =>
-    value.pick.startsWith("party:") &&
-    register.partnersToday.some((p) => p.party.id === value.pick.slice(6) && p.status !== "ceased");
+  const stands = (value: PartyChoice) => {
+    const resolved = partyInput(value, knownParties(register));
+    return (
+      resolved?.kind === "party" &&
+      register.partnersToday.some((p) => p.party.id === resolved.partyId && p.status !== "ceased")
+    );
+  };
   const [status, setStatus] = useState<"admitted" | "assignee" | "">(
     entry?.kind === "transfer" ? (entry.transfereeStatus ?? "") : "admitted",
   );
   const changeTo = (next: PartyChoice) => {
     setTo(next);
-    if (next.pick !== to.pick) setStatus(stands(next) ? "" : status || "admitted");
+    if (next.pick !== to.pick || next.userId !== to.userId)
+      setStatus(stands(next) ? "" : status || "admitted");
   };
   const [units, setUnits] = useState(entry?.units == null ? "" : String(entry.units));
   const [percent, setPercent] = useState(
@@ -205,9 +225,18 @@ export function PartnershipEntryDialog({
   const parties = knownParties(register);
   async function submit() {
     if (busy) return;
-    const party = partyInput(partner),
-      fromParty = partyInput(from),
-      toParty = partyInput(to);
+    for (const selected of transfer ? [from, to] : [partner]) {
+      if (
+        selected.pick === "individual" &&
+        registerIndividualMatch(parties, selected.name, selected.userId).duplicate
+      ) {
+        setError(intl.formatMessage(duplicateIndividualMessage));
+        return;
+      }
+    }
+    const party = partyInput(partner, parties),
+      fromParty = partyInput(from, parties),
+      toParty = partyInput(to, parties);
     const numericUnits = balances && units.trim() ? Number(units) : null;
     const numericPercent = balances && percent.trim() ? Number(percent) : null;
     if (!date || (transfer ? !fromParty || !toParty : !party)) {
@@ -316,7 +345,7 @@ export function PartnershipEntryDialog({
       );
     else onSaved();
   }
-  const pickerProps = { parties, candidates, entityId };
+  const pickerProps = { parties, candidates, users, entityId };
   return (
     <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
       <DialogContent

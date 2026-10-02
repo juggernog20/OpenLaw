@@ -32,6 +32,7 @@ import { requireRole, type AuthenticatedUser } from "../../auth/guards.js";
 import { recordActivity } from "../../lib/activity.js";
 import { CurrencySchema } from "../../lib/currencies.js";
 import { entityReachScope, NO_ENTITY, reachedEntity } from "../../lib/entity-access.js";
+import { resolveRegisterIndividual } from "../../lib/register-individual.js";
 import { csvRow } from "../../lib/csv.js";
 import { projectRegisterHoldings } from "../../lib/holdings-projection.js";
 import { assertProjectionAcyclic } from "../../lib/ownership-cycle.js";
@@ -77,6 +78,7 @@ const HolderRefSchema = z.discriminatedUnion("restricted", [
     kind: z.enum(["entity", "individual"]),
     name: z.string(),
     entityId: z.string().nullable(),
+    userId: z.string().nullable().optional(),
     jurisdiction: z.string().nullable(),
   }),
   z.object({ restricted: z.literal(true), id: z.string() }),
@@ -172,6 +174,7 @@ const HolderInput = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("holder"), holderId: z.string().min(1).max(64) }),
   z.strictObject({ kind: z.literal("entity"), entityId: z.string().min(1).max(64) }),
   z.strictObject({ kind: z.literal("individual"), name: z.string().trim().min(1).max(200) }),
+  z.strictObject({ kind: z.literal("user"), userId: z.string().min(1).max(64) }),
 ]);
 
 const CertificateInput = z.strictObject({
@@ -261,6 +264,7 @@ async function readHolders(db: Executor, entityId: string) {
       id: entityShareholders.id,
       kind: entityShareholders.kind,
       name: entityShareholders.name,
+      userId: entityShareholders.userId,
       holderEntityId: entityShareholders.holderEntityId,
       entityName: entities.legalName,
       jurisdiction: entities.jurisdiction,
@@ -285,6 +289,7 @@ function holderRef(row: HolderRow, visible: ReadonlySet<string>) {
     kind: row.kind,
     name: holderName(row),
     entityId: row.holderEntityId,
+    userId: row.userId,
     jurisdiction: row.kind === "entity" ? row.jurisdiction : null,
   };
 }
@@ -553,9 +558,16 @@ async function resolveHolder(
       .returning({ id: entityShareholders.id });
     return (await readHolders(tx, issuer.id)).find((row) => row.id === inserted!.id)!;
   }
+  const individual = await resolveRegisterIndividual(tx, input, holders);
+  if (individual.existingId) return holders.find((holder) => holder.id === individual.existingId)!;
   const [inserted] = await tx
     .insert(entityShareholders)
-    .values({ entityId: issuer.id, kind: "individual", name: input.name })
+    .values({
+      entityId: issuer.id,
+      kind: "individual",
+      name: individual.name,
+      userId: individual.userId,
+    })
     .returning({ id: entityShareholders.id });
   return (await readHolders(tx, issuer.id)).find((row) => row.id === inserted!.id)!;
 }

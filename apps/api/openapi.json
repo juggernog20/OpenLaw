@@ -82558,6 +82558,9 @@
                                   "entityId": {
                                     "type": ["string", "null"]
                                   },
+                                  "userId": {
+                                    "type": ["string", "null"]
+                                  },
                                   "jurisdiction": {
                                     "type": ["string", "null"]
                                   }
@@ -82761,6 +82764,9 @@
                                       "entityId": {
                                         "type": ["string", "null"]
                                       },
+                                      "userId": {
+                                        "type": ["string", "null"]
+                                      },
                                       "jurisdiction": {
                                         "type": ["string", "null"]
                                       }
@@ -82818,6 +82824,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       },
                                       "jurisdiction": {
@@ -83258,6 +83267,9 @@
                                   "entityId": {
                                     "type": ["string", "null"]
                                   },
+                                  "userId": {
+                                    "type": ["string", "null"]
+                                  },
                                   "jurisdiction": {
                                     "type": ["string", "null"]
                                   }
@@ -83461,6 +83473,9 @@
                                       "entityId": {
                                         "type": ["string", "null"]
                                       },
+                                      "userId": {
+                                        "type": ["string", "null"]
+                                      },
                                       "jurisdiction": {
                                         "type": ["string", "null"]
                                       }
@@ -83518,6 +83533,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       },
                                       "jurisdiction": {
@@ -83967,6 +83985,9 @@
                                   "entityId": {
                                     "type": ["string", "null"]
                                   },
+                                  "userId": {
+                                    "type": ["string", "null"]
+                                  },
                                   "jurisdiction": {
                                     "type": ["string", "null"]
                                   }
@@ -84170,6 +84191,9 @@
                                       "entityId": {
                                         "type": ["string", "null"]
                                       },
+                                      "userId": {
+                                        "type": ["string", "null"]
+                                      },
                                       "jurisdiction": {
                                         "type": ["string", "null"]
                                       }
@@ -84227,6 +84251,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       },
                                       "jurisdiction": {
@@ -84596,6 +84623,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -84654,6 +84697,22 @@
                               }
                             },
                             "required": ["kind", "name"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
                             "additionalProperties": false
                           }
                         ]
@@ -84913,6 +84972,9 @@
                                   "entityId": {
                                     "type": ["string", "null"]
                                   },
+                                  "userId": {
+                                    "type": ["string", "null"]
+                                  },
                                   "jurisdiction": {
                                     "type": ["string", "null"]
                                   }
@@ -85116,6 +85178,9 @@
                                       "entityId": {
                                         "type": ["string", "null"]
                                       },
+                                      "userId": {
+                                        "type": ["string", "null"]
+                                      },
                                       "jurisdiction": {
                                         "type": ["string", "null"]
                                       }
@@ -85173,6 +85238,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       },
                                       "jurisdiction": {
@@ -85501,6 +85569,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -85559,6 +85643,22 @@
                               }
                             },
                             "required": ["kind", "name"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
                             "additionalProperties": false
                           }
                         ]
@@ -85828,6 +85928,9 @@
                                   "entityId": {
                                     "type": ["string", "null"]
                                   },
+                                  "userId": {
+                                    "type": ["string", "null"]
+                                  },
                                   "jurisdiction": {
                                     "type": ["string", "null"]
                                   }
@@ -86031,6 +86134,9 @@
                                       "entityId": {
                                         "type": ["string", "null"]
                                       },
+                                      "userId": {
+                                        "type": ["string", "null"]
+                                      },
                                       "jurisdiction": {
                                         "type": ["string", "null"]
                                       }
@@ -86088,6 +86194,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       },
                                       "jurisdiction": {
@@ -86448,6 +86557,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -86548,6 +86660,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -86666,6 +86781,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -86978,6 +87096,22 @@
                         "properties": {
                           "kind": {
                             "type": "string",
+                            "enum": ["user"]
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          }
+                        },
+                        "required": ["kind", "userId"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
                             "enum": ["class"]
                           },
                           "description": {
@@ -87158,6 +87292,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -87258,6 +87395,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -87376,6 +87516,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -87629,6 +87772,22 @@
                         "properties": {
                           "kind": {
                             "type": "string",
+                            "enum": ["user"]
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          }
+                        },
+                        "required": ["kind", "userId"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
                             "enum": ["class"]
                           },
                           "description": {
@@ -87819,6 +87978,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -87919,6 +88081,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -88037,6 +88202,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -88365,6 +88533,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -88480,6 +88651,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -88670,6 +88844,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -88719,6 +88896,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -88767,6 +88947,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       }
                                     },
@@ -89060,6 +89243,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -89119,6 +89318,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -89177,6 +89392,22 @@
                               }
                             },
                             "required": ["kind", "name"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
                             "additionalProperties": false
                           }
                         ]
@@ -89396,6 +89627,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -89511,6 +89745,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -89701,6 +89938,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -89750,6 +89990,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -89798,6 +90041,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       }
                                     },
@@ -90032,6 +90278,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -90091,6 +90353,22 @@
                             },
                             "required": ["kind", "name"],
                             "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
+                            "additionalProperties": false
                           }
                         ]
                       },
@@ -90149,6 +90427,22 @@
                               }
                             },
                             "required": ["kind", "name"],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": ["user"]
+                              },
+                              "userId": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 64
+                              }
+                            },
+                            "required": ["kind", "userId"],
                             "additionalProperties": false
                           }
                         ]
@@ -90378,6 +90672,9 @@
                                   },
                                   "entityId": {
                                     "type": ["string", "null"]
+                                  },
+                                  "userId": {
+                                    "type": ["string", "null"]
                                   }
                                 },
                                 "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -90493,6 +90790,9 @@
                                     "type": "string"
                                   },
                                   "entityId": {
+                                    "type": ["string", "null"]
+                                  },
+                                  "userId": {
                                     "type": ["string", "null"]
                                   }
                                 },
@@ -90683,6 +90983,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -90732,6 +91035,9 @@
                                       },
                                       "entityId": {
                                         "type": ["string", "null"]
+                                      },
+                                      "userId": {
+                                        "type": ["string", "null"]
                                       }
                                     },
                                     "required": ["restricted", "id", "kind", "name", "entityId"],
@@ -90780,6 +91086,9 @@
                                         "type": "string"
                                       },
                                       "entityId": {
+                                        "type": ["string", "null"]
+                                      },
+                                      "userId": {
                                         "type": ["string", "null"]
                                       }
                                     },

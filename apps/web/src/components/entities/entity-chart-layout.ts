@@ -74,7 +74,8 @@ export function entityStructureChain(chart: EntityChart, selectedId: string): Se
  * The majority Holdings form a forest because the API rejects cycles and
  * chooses at most one primary owner per node. Leaves claim horizontal slots;
  * each parent sits over the midpoint of its first and last child. Separate
- * roots continue in the same row, and nodes with no Holding sit in a final row.
+ * roots continue in the same row. Disconnected structures are then packed
+ * side by side, counting Holding, branch and trust-role edges as links.
  * The returned nodes follow placement order (root, then its children, depth
  * first), so DOM and keyboard focus order follow the tree.
  */
@@ -211,6 +212,44 @@ export function layoutEntityChart(
     ...(positions.get(id) ?? { x: PADDING, y: PADDING }),
     unconnected: !connected.has(id) && !terminalParties.has(id),
   }));
+  // Keep each structure's internal geometry, then align independent structures
+  // at the top. A trust-role or secondary Holding still connects two trees.
+  const neighbours = new Map(nodes.map((node) => [node.id, new Set<string>()]));
+  const links = [
+    ...structureEdges(chart).map((edge) => [edge.ownerEntityId, edge.ownedEntityId]),
+    ...(chart.roleEdges ?? []).map((edge) => [edge.trustEntityId, edge.partyNodeId]),
+  ];
+  for (const [from, to] of links) {
+    if (!from || !to || !neighbours.has(from) || !neighbours.has(to)) continue;
+    neighbours.get(from)!.add(to);
+    neighbours.get(to)!.add(from);
+  }
+  const positioned = new Map(nodes.map((node) => [node.id, node]));
+  const packed = new Set<string>();
+  let structureLeft = PADDING;
+  for (const node of nodes) {
+    if (packed.has(node.id)) continue;
+    const structure: PositionedChartNode[] = [];
+    const pending = [node.id];
+    packed.add(node.id);
+    while (pending.length) {
+      const id = pending.pop()!;
+      structure.push(positioned.get(id)!);
+      for (const neighbour of neighbours.get(id)!) {
+        if (packed.has(neighbour)) continue;
+        packed.add(neighbour);
+        pending.push(neighbour);
+      }
+    }
+    const left = Math.min(...structure.map((item) => item.x));
+    const top = Math.min(...structure.map((item) => item.y));
+    const right = Math.max(...structure.map((item) => item.x + nodeWidth));
+    for (const item of structure) {
+      item.x += structureLeft - left;
+      item.y += PADDING - top;
+    }
+    structureLeft += right - left + HORIZONTAL_GAP * 2;
+  }
   const right = Math.max(PADDING, ...nodes.map((node) => node.x + nodeWidth));
   const bottom = Math.max(PADDING, ...nodes.map((node) => node.y + nodeHeight));
   return { nodes, width: right + PADDING, height: bottom + PADDING };

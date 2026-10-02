@@ -6002,6 +6002,9 @@
   "entities.register.classes.votesInvalid": {
     "defaultMessage": "Votes per share must be zero or more."
   },
+  "entities.register.duplicateIndividual": {
+    "defaultMessage": "An individual with this name is already in the register. Select the existing individual."
+  },
   "entities.register.empty": {
     "defaultMessage": "No share register yet"
   },
@@ -6269,32 +6272,14 @@
   "entities.register.wholeNumber": {
     "defaultMessage": "Enter a whole number of zero or more."
   },
-  "entities.registerKind.change": {
-    "defaultMessage": "Change register"
-  },
   "entities.registerKind.field": {
     "defaultMessage": "Register"
-  },
-  "entities.registerKind.fromEntity": {
-    "defaultMessage": "{kind} · set on this Entity"
-  },
-  "entities.registerKind.fromType": {
-    "defaultMessage": "{kind} · from the type {type}"
-  },
-  "entities.registerKind.lockReason": {
-    "defaultMessage": "The register kind cannot change while a register holds data."
   },
   "entities.registerKind.none": {
     "defaultMessage": "None"
   },
-  "entities.registerKind.noneHelp": {
-    "defaultMessage": "No register. Record a head office for a branch."
-  },
   "entities.registerKind.partnership": {
     "defaultMessage": "Partnership register"
-  },
-  "entities.registerKind.partnershipHelp": {
-    "defaultMessage": "Partners, their capacity and capital."
   },
   "entities.registerKind.saveError": {
     "defaultMessage": "The Entity could not be updated."
@@ -6302,14 +6287,8 @@
   "entities.registerKind.shares": {
     "defaultMessage": "Share register"
   },
-  "entities.registerKind.sharesHelp": {
-    "defaultMessage": "Share classes, holders and dated movements of shares."
-  },
   "entities.registerKind.trust": {
     "defaultMessage": "Trust register"
-  },
-  "entities.registerKind.trustHelp": {
-    "defaultMessage": "Trust parties, their roles and the trust fund."
   },
   "entities.restricted": {
     "defaultMessage": "Restricted Entity"
@@ -6415,9 +6394,6 @@
   },
   "entities.trust.kind.settlement": {
     "defaultMessage": "Settlement"
-  },
-  "entities.trust.meta": {
-    "defaultMessage": "{parties, plural, one {# party} other {# parties}} · {roles, plural, one {# role} other {# roles}} · derived from {entries, plural, one {# register entry} other {# register entries}}"
   },
   "entities.trust.money": {
     "defaultMessage": "Money"

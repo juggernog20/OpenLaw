@@ -64,12 +64,14 @@ export function ShareRegisterTab({
   register,
   holdings,
   candidates,
+  users,
   frozen,
 }: Readonly<{
   entity: EntityRow;
   register: ShareRegister;
   holdings: EntityHoldings;
   candidates: EntityRow[];
+  users: import("../../lib/entities").EntityPersonOption[];
   frozen: boolean;
 }>) {
   const intl = useIntl();
@@ -289,6 +291,7 @@ export function ShareRegisterTab({
           register={register}
           entry={entryDialog.entry}
           candidates={candidates}
+          users={users}
           onOpenChange={(open) => {
             if (!open) setEntryDialog(null);
           }}

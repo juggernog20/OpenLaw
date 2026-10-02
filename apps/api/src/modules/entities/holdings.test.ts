@@ -454,7 +454,7 @@ it("draws today's trust roles and distinct terminal parties without owner Holdin
   const company = await newEntity("Chart Trustee");
   await appoint(trust.id, { kind: "entity", entityId: company.id }, "trustee");
   for (const role of ["settlor", "protector", "enforcer", "beneficiary"])
-    await appoint(trust.id, { kind: "individual", name: "Same Name" }, role);
+    await appoint(trust.id, { kind: "individual", name: `Party ${role}` }, role);
   await appoint(trust.id, { kind: "class", description: "Future descendants" });
   await appoint(trust.id, { kind: "individual", name: "Adviser" }, "other", memberCookies, {
     roleLabel: "Investment adviser",
@@ -483,7 +483,7 @@ it("draws today's trust roles and distinct terminal parties without owner Holdin
   );
   expect(roles.every((edge: object) => !("ownershipPercent" in edge))).toBe(true);
   expect(
-    chart.nodes.filter((node: { legalName?: string }) => node.legalName === "Same Name"),
+    chart.nodes.filter((node: { legalName?: string }) => node.legalName?.startsWith("Party ")),
   ).toHaveLength(4);
   expect(chart.nodes).toContainEqual(
     expect.objectContaining({

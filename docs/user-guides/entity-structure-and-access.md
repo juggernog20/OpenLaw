@@ -8,14 +8,12 @@ Legal Team Members and Administrators can maintain reachable, live Entities. A C
 
 ## Choose the register and head office
 
-Open **Ownership**. The line above the first card names the register and says whether
-it comes from the Entity type or was set on this Entity. Select **Change register**,
-choose **Share register**, **Partnership register**, **Trust register**, or **None**,
-then **Save**. Choosing the type's own kind returns the Entity to the type's setting.
+An Administrator sets the Entity type's **Register** in **Settings → Entities → Types**:
+**Share register**, **Partnership register**, **Trust register**, or **None**.
+Open **Ownership** to maintain that register.
 
 The choice locks while a register holds data, including a Share class without entries.
-The disabled control explains why. Changing the Entity type cannot bypass this lock.
-An Administrator sets the type's **Register** in **Settings → Entities → Types**.
+Changing the Entity type cannot bypass this lock.
 Corporation, LLC and Other start with Share register; Partnership starts with
 Partnership register; Branch starts with None. A refused type change names how many
 Entities have register data. On upgrade, an existing share register stays visible
@@ -54,6 +52,12 @@ The share register records each dated movement of shares as a Register entry. Op
 A class name must be unique on the Entity. You can edit a class at any time. Its archive control is available only while no entry uses the class.
 
 ### Record an entry
+
+In all three registers, **Full name** lets you select an active OpenLaw user or
+enter a name for someone outside the user list. Selecting the same user again
+reuses their individual record within that register. A new individual with an
+existing name is refused, ignoring case and extra spaces; choose the existing
+Holder or Party instead. Existing name-only records are not linked automatically.
 
 1. Select **Record entry**. It is unavailable until the Entity has a live share class.
 2. Choose **Entry**: **Allotment**, **Transfer**, **Buyback**, **Cancellation**, or **Conversion**. Set **Effective date**. It starts at today.
@@ -102,7 +106,7 @@ cannot add a Partner by hand.
 1. Open **Ownership** on an Entity that keeps a **Partnership register**. An empty
    register shows **No partnership register yet**. Select **Record entry**.
 2. Choose **Admission** in **Entry** and set **Effective date**. Choose **Entity** in
-   **Partner** and select the Entity, or choose **Individual** and enter **Full name**.
+   **Partner** and select the Entity, or choose **Individual** and select a user or enter **Full name**.
 3. Choose **Capacity**, **General** or **Limited**. Enter **Units** and **Stated percent**
    if the agreement uses them. Select **Enter in register**.
 4. To record money, select **Record entry**, choose **Commitment**, **Contribution** or
@@ -179,7 +183,7 @@ in this register; it writes no owner Holdings or ownership percentages.
 2. Choose **Appointment** in **Entry** and set **Effective date**. Choose a **Role**.
    **Other** also needs a **Role label**.
 3. Choose an existing **Party**, **Entity** with a registry selection, or **Individual**
-   with a **Full name**. For Beneficiary, **Class** lets you enter a **Description**, such
+   with a user selection or **Full name**. For Beneficiary, **Class** lets you enter a **Description**, such
    as "Children and remoter issue of Helena Marsh".
 4. Use **Interest or powers** to describe a beneficiary's interest or powers held.
    Add **Reference** and **Note** when useful, then **Enter in register**.
@@ -233,6 +237,9 @@ Entity party it names. Restore an archived Entity before changing its register.
 The chart shows the Holdings that share and partnership registers write, between registered Entities and their individual owners. Individuals appear by name, with a person icon and the label **Individual**. Opening an individual takes you to the associated Entity's **Ownership** tab. Individual names follow that Entity's access restrictions and appear in chart exports. An Entity's primary owner is the owner with the highest recorded percentage; it does not require an owner to hold more than 50%. A Holding relationship does not inherit a Status or access permission.
 
 Trust parties connect to the trust with short dashed lines labelled with their current roles, without percentages. Named individuals and classes are terminal cards; a class has a dotted border. Opening either card takes you to the trust's **Ownership** tab. A head office connects to its branch with a solid line labelled **Branch**, also without a percentage. The legend identifies both relationships. Roles do not change the ownership chain.
+
+Disconnected structures appear side by side, aligned at the top. A Holding,
+branch or trust-role link connects structures; each keeps its own hierarchy.
 
 You must be able to reach the trust to see its roles and parties, and the branch to see its head-office connection. Reaching only an Entity party or the head office does not reveal an inaccessible trust or branch. An inaccessible Entity party or head office on a visible connection remains a **Confidential Entity** box.
 

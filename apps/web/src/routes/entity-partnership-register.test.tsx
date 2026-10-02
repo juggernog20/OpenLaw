@@ -245,7 +245,7 @@ describe("the partnership Ownership tab", () => {
       "Register of partnership entries",
       "Holdings in other Entities",
     ]);
-    expect(screen.getByText(/Partnership register · from the type/)).toBeInTheDocument();
+    expect(screen.queryByText(/Partnership register · from the type/)).not.toBeInTheDocument();
     const partners = within(section(/Register of partners(?: at|$)/));
     expect(partners.getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
       "Partner",
@@ -669,4 +669,52 @@ describe("the partnership Ownership tab", () => {
       expect(change).not.toHaveTextContent("pp");
     },
   );
+});
+
+it("selects an existing user as an individual", async () => {
+  const api = registerApi({ refuse: "Test refusal" });
+  stubApi({
+    signedIn: MEMBER,
+    extra: (call) =>
+      call.url.pathname === "/api/v1/entities/officer-roles"
+        ? json(200, {
+            officerRoles: [],
+            users: [
+              {
+                id: "selected-user",
+                displayName: "Selected Person",
+                image: null,
+                role: "legal_team_member",
+              },
+            ],
+          })
+        : api.handler(call),
+  });
+  renderAt("/entities/e1/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Record entry" }));
+  const d = within(screen.getByRole("dialog"));
+  await user.selectOptions(d.getByLabelText(/^Partner/), "individual");
+  await user.click(d.getByRole("combobox", { name: /Full name/ }));
+  await user.click(await screen.findByRole("option", { name: "Selected Person" }));
+
+  await user.click(d.getByRole("button", { name: "Enter in register" }));
+  await waitFor(() =>
+    expect(api.writes[0]?.body).toMatchObject({ party: { kind: "user", userId: "selected-user" } }),
+  );
+});
+
+it("blocks a new individual whose name already exists in the register", async () => {
+  const api = registerApi();
+  stubApi({ signedIn: MEMBER, extra: api.handler });
+  renderAt("/entities/e1/ownership");
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Record entry" }));
+  const d = within(screen.getByRole("dialog"));
+  await user.selectOptions(d.getByLabelText(/^Partner/), "individual");
+  await user.type(d.getByRole("combobox", { name: /Full name/ }), "  DEVON   CALLOWAY  ");
+
+  await user.click(d.getByRole("button", { name: "Enter in register" }));
+  expect(await d.findByRole("alert")).toHaveTextContent("already in the register");
+  expect(api.writes).toHaveLength(0);
 });

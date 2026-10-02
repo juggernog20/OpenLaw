@@ -1,0 +1,4 @@
+ALTER TABLE "entity_register_parties" ADD COLUMN "user_id" text;--> statement-breakpoint
+ALTER TABLE "entity_register_parties" ADD CONSTRAINT "entity_register_parties_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "entity_register_parties_user_idx" ON "entity_register_parties" USING btree ("entity_id","user_id") WHERE "entity_register_parties"."user_id" is not null;--> statement-breakpoint
+ALTER TABLE "entity_register_parties" ADD CONSTRAINT "entity_register_parties_user_kind" CHECK ("entity_register_parties"."user_id" is null or "entity_register_parties"."kind" = 'individual');

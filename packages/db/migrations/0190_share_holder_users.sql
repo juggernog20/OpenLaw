@@ -1,0 +1,4 @@
+ALTER TABLE "entity_shareholders" ADD COLUMN "user_id" text;--> statement-breakpoint
+ALTER TABLE "entity_shareholders" ADD CONSTRAINT "entity_shareholders_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "entity_shareholders_user_idx" ON "entity_shareholders" USING btree ("entity_id","user_id") WHERE "entity_shareholders"."user_id" is not null;--> statement-breakpoint
+ALTER TABLE "entity_shareholders" ADD CONSTRAINT "entity_shareholders_user_kind" CHECK ("entity_shareholders"."user_id" is null or "entity_shareholders"."kind" = 'individual');
