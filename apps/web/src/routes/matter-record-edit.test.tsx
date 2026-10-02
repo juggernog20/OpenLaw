@@ -1165,7 +1165,13 @@ describe("the editable matter record", () => {
       role: "business_user",
     };
     const portal = { ...business, id: "u-portal", displayName: "Bree Portal" };
-    const { role: _role, ...felix } = business;
+    // The record read sends no account type. The roster finds it in the options.
+    const felix = {
+      id: business.id,
+      displayName: business.displayName,
+      image: null,
+      archived: false,
+    };
     const saved = row({ isConfidential: true });
     stubApi({
       signedIn: ADMIN,
