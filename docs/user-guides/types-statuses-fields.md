@@ -52,14 +52,14 @@ Three Contract Fields in the **Custom Fields** list came with the installation: 
 4. For a select Field, enter **Options**, one per line in the intended order. Portal visibility is set on each type Form Row after attachment.
 5. Select **Add field**, then check the new row.
 
-Fields belong to the area where you create them: Contracts, Matters, or Entities. A field can be attached to several types within that area. To collect similar information in another area, create a separate field there.
+Fields belong to the area where you create them: Contracts, Matters, or Entities. A field can be attached to several types within that area. To collect similar information in another area, create a separate field there. A Field name is unique within its area, case ignored, and archived Fields count. If the name is taken, OpenLaw refuses the Field with, for example, **A Matter Field named Budget code already exists.** Choose another name, or restore and reuse the archived Field. The same name is allowed in another area.
 
 The Field catalog does not have reorder handles. Set order where Fields are attached to a type or form. Contract-scoped Fields other than User and Entity may also have an **AI prompt**. A Contract Text or Long text Field also has an **Answer style** choice. Keep **Organisation default**, or choose a style that overrides the organization's Answer style for this Field only. [Add a catalog Field to Analysis](configure-analysis.md#add-a-catalog-field-to-analysis) covers the prompt and the Answer style.
 
 ## Attach Fields and set requiredness
 
 1. Open the module's **Types** tab, select **Edit** on the intended type, then select **Form**.
-2. Select **Attach Field** and choose a Field from the same module. Use **Search fields** to filter the alphabetic list. **Create Field** opens a new Field definition without leaving the Form. If creation succeeds but attachment fails, use **Retry attaching** followed by the Field name.
+2. Select **Attach Field** and choose a Field from the same module. Use **Search fields** to filter the alphabetic list. A Field with a description shows it under the name. **Create Field** opens a new Field definition without leaving the Form. If creation succeeds but attachment fails, use **Retry attaching** followed by the Field name.
 3. Set the Row's switches. Each complete change saves immediately. Wait for **Saved** before leaving the page.
 4. Use the Row's move handle to drag it, or focus the handle and use the arrow keys. Rows and Branches share one order. Title and Type stay pinned on Contract and Matter Forms.
 

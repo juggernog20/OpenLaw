@@ -318,6 +318,109 @@ describe("creating fields (the nine-type, scope, and options matrix)", () => {
   });
 });
 
+describe("one name per module scope (CTR-016 addendum, #1277)", () => {
+  const patchName = (id: string, displayName: string) =>
+    harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/fields/${id}`,
+      cookies: adminCookies,
+      payload: { displayName },
+    });
+
+  it("refuses a create that repeats a live or archived name in the scope, case ignored", async () => {
+    await createdField({ displayName: "Budget code", moduleScope: "matter", fieldType: "text" });
+    const again = await createField({
+      displayName: "  budget CODE ",
+      moduleScope: "matter",
+      fieldType: "number",
+    });
+    expect(again.statusCode, again.body).toBe(409);
+    expect(again.headers["content-type"]).toContain("application/problem+json");
+    expect(again.json().detail).toBe("A Matter Field named budget CODE already exists.");
+
+    const archived = await createdField({
+      displayName: "Cost centre",
+      moduleScope: "matter",
+      fieldType: "text",
+    });
+    const archive = await harness.app.inject({
+      method: "POST",
+      url: `/api/v1/fields/${archived.id}/archive`,
+      cookies: adminCookies,
+    });
+    expect(archive.statusCode, archive.body).toBe(200);
+    const behindArchive = await createField({
+      displayName: "Cost centre",
+      moduleScope: "matter",
+      fieldType: "text",
+    });
+    expect(behindArchive.statusCode, behindArchive.body).toBe(409);
+  });
+
+  it("allows the same name in another module scope", async () => {
+    await createdField({ displayName: "Project code", moduleScope: "matter", fieldType: "text" });
+    await createdField({ displayName: "Project code", moduleScope: "contract", fieldType: "text" });
+    await createdField({ displayName: "Project code", moduleScope: "entity", fieldType: "text" });
+  });
+
+  it("refuses a rename onto another Field's name and allows one that keeps its own", async () => {
+    await createdField({ displayName: "Board seat", moduleScope: "entity", fieldType: "text" });
+    const other = await createdField({
+      displayName: "Board role",
+      moduleScope: "entity",
+      fieldType: "text",
+    });
+    const clash = await patchName(other.id, "BOARD SEAT");
+    expect(clash.statusCode, clash.body).toBe(409);
+    expect(clash.json().detail).toBe("An Entity Field named BOARD SEAT already exists.");
+    // A case change of its own name is not a clash.
+    const recased = await patchName(other.id, "board role");
+    expect(recased.statusCode, recased.body).toBe(200);
+    // The name exists in another scope only, so it is free here.
+    const crossScope = await createdField({
+      displayName: "Signing seat",
+      moduleScope: "contract",
+      fieldType: "text",
+    });
+    expect((await patchName(other.id, "Signing seat")).statusCode).toBe(200);
+    expect(crossScope.displayName).toBe("Signing seat");
+  });
+
+  it("keeps a same-name pair from before the rule editable while its name stays", async () => {
+    const first = await createdField({
+      displayName: "Legacy pair",
+      moduleScope: "contract",
+      fieldType: "text",
+    });
+    const second = await createdField({
+      displayName: "Legacy pair two",
+      moduleScope: "contract",
+      fieldType: "text",
+    });
+    await harness.db
+      .update(fields)
+      .set({ displayName: first.displayName })
+      .where(eq(fields.id, second.id));
+    const edit = await harness.app.inject({
+      method: "PATCH",
+      url: `/api/v1/fields/${second.id}`,
+      cookies: adminCookies,
+      payload: { displayName: "Legacy pair", description: "Still editable." },
+    });
+    expect(edit.statusCode, edit.body).toBe(200);
+    expect(edit.json().field.description).toBe("Still editable.");
+  });
+
+  it("answers two concurrent creates of one name with one 201 and one 409", async () => {
+    const body = { displayName: "Race code", moduleScope: "matter", fieldType: "text" };
+    const answers = await Promise.all([createField(body), createField(body)]);
+    expect(answers.map((answer) => answer.statusCode).sort()).toEqual([201, 409]);
+    expect(
+      (await listFields(true)).filter((field) => field.displayName === "Race code"),
+    ).toHaveLength(1);
+  });
+});
+
 describe("editing fields (rename and describe freely; type and slug never)", () => {
   const patchField = async (id: string, body: Record<string, unknown>) =>
     harness.app.inject({
@@ -348,7 +451,7 @@ describe("editing fields (rename and describe freely; type and slug never)", () 
       const unchanged = (await listFields()).find((field) => field.id === row.id)!;
       expect(unchanged.displayName).toBe(row.displayName);
       expect(unchanged.aiPrompt).toBe("Old saved prompt.");
-      const renamed = await patchField(row.id, { displayName: "Renamed reference" });
+      const renamed = await patchField(row.id, { displayName: `Renamed ${fieldType} reference` });
       expect(renamed.statusCode, renamed.body).toBe(200);
       expect(renamed.json().field.aiPrompt).toBe("Old saved prompt.");
     },
