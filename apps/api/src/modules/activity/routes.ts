@@ -79,6 +79,7 @@ import {
   confidentialDocumentEntryScope,
   contractAudience,
   contractTeamScope,
+  readableTiers,
 } from "../../lib/contract-access.js";
 import { matterAudience, matterTeamScope } from "../../lib/matter-access.js";
 import { entityAudience } from "../../lib/entity-access.js";
@@ -220,8 +221,14 @@ export const activityRoutes: FastifyPluginAsyncZod = async (app) => {
                   )[0] && {
                     entityType,
                     legalRecordId: entityId,
-                    tiers: ["legal_only"] as const,
-                    seesConfidentialDocuments: true,
+                    // Document writes on these records log at Working Team,
+                    // so the feed reads every tier this role is in the room for.
+                    tiers: readableTiers(request.user.role, false),
+                    // KNW-004: only an Administrator reaches a Confidential
+                    // Knowledge Document. An Auto-Doc template Document
+                    // cannot carry the flag.
+                    seesConfidentialDocuments:
+                      entityType === "auto_doc" || request.user.role === "administrator",
                   }
                 : null;
       if (!audience) throw httpError(404, NO_RECORD);
