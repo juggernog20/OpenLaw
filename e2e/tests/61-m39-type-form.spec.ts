@@ -190,7 +190,7 @@ test("NDA Branch answers reach the converted Contract and its Portal record", as
     await expect(portal.getByLabel(/^Governing law/)).toHaveCount(0);
     await portal.getByLabel("Term type").selectOption("fixed");
     await portal.getByRole("button", { name: "Submit request", exact: true }).click();
-    await expect(portal.getByText("Expiry date is required.", { exact: true })).toBeVisible();
+    await expect(portal.getByText("Answer this before you submit.", { exact: true })).toBeVisible();
     await portal.getByLabel("Expiry date").fill("2030-12-31");
     await portal.getByLabel(/^Governing law/).fill("England and Wales");
     await portal.getByLabel("Term type").selectOption("evergreen");

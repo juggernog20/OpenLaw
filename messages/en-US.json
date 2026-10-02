@@ -6494,9 +6494,6 @@
   "fields.descriptionFor": {
     "defaultMessage": "Show description for {field}"
   },
-  "fields.notSet": {
-    "defaultMessage": "Not set"
-  },
   "format.deadline.overdue": {
     "defaultMessage": "{days, plural, one {# day} other {# days}} overdue"
   },
@@ -8534,6 +8531,9 @@
   "portal.documents.versionOf": {
     "defaultMessage": "New version of {name}"
   },
+  "portal.form.answerRequired": {
+    "defaultMessage": "Answer this before you submit."
+  },
   "portal.form.attachmentFailedReason": {
     "defaultMessage": "{filename} — {reason}"
   },
@@ -8567,6 +8567,9 @@
   "portal.form.basicsHeading": {
     "defaultMessage": "About your request"
   },
+  "portal.form.choosePlaceholder": {
+    "defaultMessage": "Choose an answer"
+  },
   "portal.form.confirmationBack": {
     "defaultMessage": "Back to the portal"
   },
@@ -8585,14 +8588,11 @@
   "portal.form.fieldNumberInvalid": {
     "defaultMessage": "Enter a number without symbols, for example 180000."
   },
-  "portal.form.fieldRequired": {
-    "defaultMessage": "{field} is required."
-  },
   "portal.form.footerNote": {
     "defaultMessage": "You'll get email updates and can track progress here."
   },
   "portal.form.missingRequired": {
-    "defaultMessage": "Fill {fields} first — {count, plural, one {the form requires it} other {the form requires them}}."
+    "defaultMessage": "{count, plural, one {Answer this before you submit: {fields}} other {Answer these before you submit: {fields}}}"
   },
   "portal.form.numberInvalid": {
     "defaultMessage": "{fieldName}: enter this as a number."

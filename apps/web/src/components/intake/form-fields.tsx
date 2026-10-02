@@ -11,6 +11,13 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { DescribedField, DescribedFieldLabel } from "../described-field";
 
+/** The empty choice on a select the requester still has to answer. A
+ * record page says "Not set", because there empty is a saved state. */
+export const CHOOSE_ANSWER: MessageDescriptor = defineMessage({
+  id: "portal.form.choosePlaceholder",
+  defaultMessage: "Choose an answer",
+});
+
 export function Field({
   htmlFor,
   label,
@@ -55,9 +62,8 @@ export function Field({
         unanswered && (
           <p className="text-xs text-status-danger-fg">
             <FormattedMessage
-              id="portal.form.fieldRequired"
-              defaultMessage="{field} is required."
-              values={{ field: label }}
+              id="portal.form.answerRequired"
+              defaultMessage="Answer this before you submit."
             />
           </p>
         )

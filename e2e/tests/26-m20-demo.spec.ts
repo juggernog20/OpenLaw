@@ -264,8 +264,9 @@ test.describe.serial("M20 demo path", () => {
         portal.getByRole("alert").filter({ hasText: `Title, Description, and ${FIELD_NAME}` }),
       ).toBeVisible();
       // And again on each box, because a sentence cannot point at one.
-      await expect(portal.getByText("Title is required.")).toBeVisible();
-      await expect(portal.getByText(`${FIELD_NAME} is required.`)).toBeVisible();
+      await expect(portal.getByText("Answer this before you submit.", { exact: true })).toHaveCount(
+        3,
+      );
 
       // ---- The ask, with its paper ----
 

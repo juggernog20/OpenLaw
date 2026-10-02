@@ -55,6 +55,9 @@ export interface CustomFieldControlProps {
    * offending boxes set it; the ones that only print a sentence do
    * not. */
   invalid?: boolean;
+  /** The label of the empty choice on a select. A form the user still
+   * has to answer passes its own; record pages keep "Not set". */
+  placeholder?: string;
   onDraft: (draft: CustomFieldDraft) => void;
   onBlur?: (event: React.FocusEvent<HTMLElement>) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
@@ -71,11 +74,18 @@ export function CustomFieldControl({
   describedBy,
   required = false,
   invalid = false,
+  placeholder,
   onDraft,
   onBlur,
   onKeyDown,
 }: Readonly<CustomFieldControlProps>) {
   const intl = useIntl();
+  const emptyChoice =
+    placeholder ??
+    intl.formatMessage({
+      id: "contracts.field.selectPlaceholder",
+      defaultMessage: "Not set",
+    });
   const text = typeof draft === "string" ? draft : "";
   const chosen = Array.isArray(draft) ? draft : [];
   const shared = {
@@ -148,10 +158,7 @@ export function CustomFieldControl({
           value={text}
           onValueChange={onDraft}
           onKeyDown={onKeyDown}
-          placeholder={intl.formatMessage({
-            id: "contracts.field.selectPlaceholder",
-            defaultMessage: "Not set",
-          })}
+          placeholder={emptyChoice}
         />
       );
     case "single_select":
@@ -165,12 +172,7 @@ export function CustomFieldControl({
         >
           {/* Empty is a real answer on an optional field, and the only
               way to clear one; the seam refuses it on a required one. */}
-          <option value="">
-            {intl.formatMessage({
-              id: "contracts.field.selectPlaceholder",
-              defaultMessage: "Not set",
-            })}
-          </option>
+          <option value="">{emptyChoice}</option>
           {(field.options ?? []).map((option) => (
             <option key={option} value={option}>
               {option}
@@ -247,12 +249,7 @@ export function CustomFieldControl({
           onChange={(event) => onDraft(event.target.value)}
           onKeyDown={onKeyDown}
         >
-          <option value="">
-            {intl.formatMessage({
-              id: "contracts.field.selectPlaceholder",
-              defaultMessage: "Not set",
-            })}
-          </option>
+          <option value="">{emptyChoice}</option>
           {(field.fieldType === "user" ? people : entities).map((row) => (
             <option key={row.id} value={row.id}>
               {row.label}

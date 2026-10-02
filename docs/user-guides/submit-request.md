@@ -29,7 +29,7 @@ A **Touchpoint** is where a Row is first collected. It is derived from those swi
 
 A **Branch** shows its child Rows only when its condition holds. For example, choosing **Fixed** for **Term type** may reveal a required **Expiry date**. Choosing **Evergreen** hides it again and removes that requirement. Answer the Rows currently shown. The Portal does not show Branch conditions or editing controls. Hidden answers stay in the form while you change choices, but only the visible Intake Rows are submitted.
 
-Description is configurable, so some forms omit it. **Value** may appear as one Row with amount, currency and cadence. **Counterparties** uses the registry picker. Search for an existing Counterparty, or select **Add new** with the name you typed. The first Counterparty you add is marked **Primary**. **Our entity**, or another question about one of your organization's own entities, lists only the entities an Administrator lists on the Portal. A question that asks for a person offers only **Not set** in the Portal and is never required. Leave it for Legal.
+Description is configurable, so some forms omit it. **Value** may appear as one Row with amount, currency and cadence. **Counterparties** uses the registry picker. Search for an existing Counterparty, or select **Add new** with the name you typed. The first Counterparty you add is marked **Primary**. **Our entity**, or another question about one of your organization's own entities, lists only the entities an Administrator lists on the Portal. A question that asks for a person offers only **Choose an answer** in the Portal and is never required. Leave it for Legal.
 
 ## Check the result
 

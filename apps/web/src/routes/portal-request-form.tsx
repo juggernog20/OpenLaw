@@ -6,7 +6,7 @@ import {
   IntakeCounterpartiesInput,
   type IntakeCounterpartySelection,
 } from "../components/intake/counterparties-input";
-import { Field, AttachmentsField } from "../components/intake/form-fields";
+import { CHOOSE_ANSWER, Field, AttachmentsField } from "../components/intake/form-fields";
 import { HelpLink } from "../components/documentation/help-link";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
@@ -208,8 +208,8 @@ export function PortalRequestFormPage() {
           {
             id: "portal.form.missingRequired",
             defaultMessage:
-              "Fill {fields} first — " +
-              "{count, plural, one {the form requires it} other {the form requires them}}.",
+              "{count, plural, one {Answer this before you submit: {fields}} " +
+              "other {Answer these before you submit: {fields}}}",
           },
           { count: missing.length, fields: intl.formatList(missing, { type: "conjunction" }) },
         ),
@@ -487,9 +487,7 @@ function AttachedField({
           aria-describedby={field.description ? `${controlId}-help` : undefined}
           onChange={(e) => onDraft(e.target.value)}
         >
-          <option value="">
-            <FormattedMessage id="fields.notSet" defaultMessage="Not set" />
-          </option>
+          <option value="">{intl.formatMessage(CHOOSE_ANSWER)}</option>
           {referenceOptions.map((option) => (
             <option key={option.id} value={option.id}>
               {option.displayName}
@@ -504,6 +502,7 @@ function AttachedField({
           draft={draft}
           required={field.isRequired}
           invalid={invalid}
+          placeholder={intl.formatMessage(CHOOSE_ANSWER)}
           describedBy={field.description ? `${controlId}-help` : undefined}
           onDraft={onDraft}
         />
