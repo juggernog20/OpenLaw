@@ -20,6 +20,7 @@ import { PageTitle } from "../components/page-title";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Avatar } from "../components/avatar";
+import { AutoResizeTextarea } from "../components/auto-resize-textarea";
 import { SettingsCard } from "../components/settings-card";
 import { PdfSurface } from "../components/documents/doc-panel";
 import { ManagedTable } from "../components/table/managed-table";
@@ -27,7 +28,6 @@ import { builtInLayout, type TableCatalogue } from "../lib/list-views";
 import { APPROVAL_PILL } from "../lib/approvals";
 import { formatLongDateTime, formatFileSize } from "../lib/format";
 import { Input } from "../components/ui/input";
-import { CONTROL_CLASS } from "../lib/form-controls";
 
 export async function portalApprovalsLoader({ request, params }: LoaderFunctionArgs) {
   const user = await currentUserFor(request);
@@ -333,9 +333,9 @@ export function PortalApprovalsPage() {
                           defaultMessage="Note (optional)"
                         />
                       </Label>
-                      <textarea
+                      <AutoResizeTextarea
                         id="approval-note"
-                        className={`${CONTROL_CLASS} min-h-28 w-full resize-y`}
+                        className="min-h-28"
                         maxLength={MAX_APPROVAL_NOTE_LENGTH}
                         value={note}
                         onChange={(event) => setNote(event.target.value)}

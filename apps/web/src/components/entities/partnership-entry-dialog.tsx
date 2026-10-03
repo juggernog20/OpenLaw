@@ -6,7 +6,7 @@ import { useState } from "react";
 import { FormattedMessage, useIntl, type MessageDescriptor } from "react-intl";
 import { api } from "../../lib/api";
 import type { EntityRow } from "../../lib/entities";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS } from "../../lib/form-controls";
 import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import {
@@ -20,6 +20,7 @@ import {
   type PartnershipParty,
 } from "../../lib/partnership-register";
 import { partyLabel } from "../../lib/trust-register";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { CurrencySelect } from "../currency-select";
 import { DatePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
@@ -520,9 +521,8 @@ export function PartnershipEntryDialog({
                     defaultMessage="Form of contribution"
                   />
                 </Label>
-                <textarea
+                <AutoResizeTextarea
                   id="partnership-form"
-                  className={TEXTAREA_CLASS}
                   maxLength={2000}
                   value={form}
                   onChange={(e) => setForm(e.target.value)}
@@ -537,9 +537,8 @@ export function PartnershipEntryDialog({
                     defaultMessage="Consideration"
                   />
                 </Label>
-                <textarea
+                <AutoResizeTextarea
                   id="partnership-consideration"
-                  className={TEXTAREA_CLASS}
                   maxLength={2000}
                   value={consideration}
                   onChange={(e) => setConsideration(e.target.value)}
@@ -558,9 +557,8 @@ export function PartnershipEntryDialog({
             <Label htmlFor="partnership-note">
               <FormattedMessage id="entities.register.entry.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="partnership-note"
-              className={TEXTAREA_CLASS}
               maxLength={2000}
               value={note}
               onChange={(e) => setNote(e.target.value)}

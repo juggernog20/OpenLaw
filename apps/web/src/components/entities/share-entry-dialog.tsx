@@ -11,7 +11,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Plus, Trash2 } from "lucide-react";
 import { api } from "../../lib/api";
 import type { EntityRow } from "../../lib/entities";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS } from "../../lib/form-controls";
 import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import {
@@ -23,6 +23,7 @@ import {
   type ShareEntryKind,
   type ShareRegister,
 } from "../../lib/share-register";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { CurrencySelect } from "../currency-select";
 import { DatePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
@@ -652,9 +653,8 @@ export function ShareEntryDialog({
               <Label htmlFor="share-entry-note">
                 <FormattedMessage id="entities.register.entry.note" defaultMessage="Note" />
               </Label>
-              <textarea
+              <AutoResizeTextarea
                 id="share-entry-note"
-                className={TEXTAREA_CLASS}
                 rows={2}
                 maxLength={2000}
                 value={note}

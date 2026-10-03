@@ -12,6 +12,7 @@ import type { McpToolset } from "@openlaw/shared";
 import { api } from "../lib/api";
 import { copyText } from "../lib/clipboard";
 import { toolsetLabel } from "../lib/mcp";
+import { AutoResizeTextarea } from "./auto-resize-textarea";
 import { Scope } from "./mcp-scope";
 import { ConnectedClients } from "./connected-clients";
 import { SettingsCard } from "./settings-card";
@@ -603,8 +604,7 @@ function Note({ value, onChange }: { value: string; onChange: (value: string) =>
   return (
     <label className="flex flex-col gap-1">
       <FormattedMessage id="apiKeys.note" defaultMessage="Note (Optional)" />
-      <textarea
-        className="rounded-button border border-border-default bg-raised p-2.5 text-sm text-primary focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-link"
+      <AutoResizeTextarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         maxLength={2000}

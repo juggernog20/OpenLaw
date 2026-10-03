@@ -8,7 +8,7 @@ import { api } from "../../lib/api";
 import type { EntityRow, EntityPersonOption } from "../../lib/entities";
 import { registerIndividualMatch, duplicateIndividualMessage } from "../../lib/register-individual";
 import { OfficerNameInput } from "./officer-name-input";
-import { CONTROL_CLASS, TEXTAREA_CLASS } from "../../lib/form-controls";
+import { CONTROL_CLASS } from "../../lib/form-controls";
 import { currencyFractionDigits, toMajorUnits, toMinorUnits } from "../../lib/format";
 import { problem } from "../../lib/problem";
 import {
@@ -23,6 +23,7 @@ import {
   type TrustEntryBody,
   type TrustRole,
 } from "../../lib/trust-register";
+import { AutoResizeTextarea } from "../auto-resize-textarea";
 import { CurrencySelect } from "../currency-select";
 import { DatePicker } from "../date-picker";
 import { NumberInput } from "../number-input";
@@ -326,9 +327,8 @@ export function TrustEntryDialog({
                 <Label htmlFor="trust-description" required>
                   <FormattedMessage id="entities.trust.description" defaultMessage="Description" />
                 </Label>
-                <textarea
+                <AutoResizeTextarea
                   id="trust-description"
-                  className={TEXTAREA_CLASS}
                   value={description}
                   maxLength={2000}
                   onChange={(e) => setDescription(e.target.value)}
@@ -370,9 +370,8 @@ export function TrustEntryDialog({
             <Label htmlFor="trust-interest">
               <FormattedMessage id="entities.trust.interest" defaultMessage="Interest or powers" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="trust-interest"
-              className={TEXTAREA_CLASS}
               maxLength={2000}
               value={interest}
               onChange={(e) => setInterest(e.target.value)}
@@ -426,9 +425,8 @@ export function TrustEntryDialog({
                     <Label htmlFor="trust-property" required>
                       <FormattedMessage id="entities.trust.property" defaultMessage="Property" />
                     </Label>
-                    <textarea
+                    <AutoResizeTextarea
                       id="trust-property"
-                      className={TEXTAREA_CLASS}
                       maxLength={2000}
                       value={property}
                       onChange={(e) => setProperty(e.target.value)}
@@ -449,9 +447,8 @@ export function TrustEntryDialog({
             <Label htmlFor="trust-note">
               <FormattedMessage id="entities.register.entry.note" defaultMessage="Note" />
             </Label>
-            <textarea
+            <AutoResizeTextarea
               id="trust-note"
-              className={TEXTAREA_CLASS}
               maxLength={2000}
               value={note}
               onChange={(e) => setNote(e.target.value)}
