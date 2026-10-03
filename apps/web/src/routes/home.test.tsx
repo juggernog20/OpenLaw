@@ -696,6 +696,38 @@ describe("Home", () => {
     expect(router.state.location.search).toBe("");
   });
 
+  it("reads again when a link changes the Due choice on the page", async () => {
+    const [late, later, undated] = tasksSection.rows;
+    const reads: URLSearchParams[] = [];
+    stubApi({
+      signedIn: MEMBER,
+      extra: (call) => {
+        if (call.url.pathname !== "/api/v1/home/tasks") return undefined;
+        reads.push(call.url.searchParams);
+        if (call.url.searchParams.get("overdue") === "true")
+          return json(200, { total: 1, rows: [late], nextCursor: null });
+        return json(200, { total: 3, rows: [late, later, undated], nextCursor: null });
+      },
+    });
+    const { router } = renderAt("/home/tasks?due=overdue");
+    // The page is drawn again from loader data on every real load, so
+    // the card is read fresh after each navigation.
+    const card = () => screen.getByRole("region", { name: "Tasks assigned to you" });
+    await waitFor(() => expect(within(card()).getAllByRole("listitem")).toHaveLength(1));
+
+    // The My Tasks link in the navigation lands on the bare address.
+    await act(() => router.navigate("/home/tasks"));
+    await waitFor(() => expect(within(card()).getAllByRole("listitem")).toHaveLength(3));
+    expect(within(card()).getByRole("combobox", { name: "Due" })).toHaveValue("all");
+    expect(reads).toHaveLength(2);
+    expect(reads[1]?.has("overdue")).toBe(false);
+
+    await act(() => router.navigate("/home/tasks?due=overdue"));
+    await waitFor(() => expect(within(card()).getAllByRole("listitem")).toHaveLength(1));
+    expect(within(card()).getByRole("combobox", { name: "Due" })).toHaveValue("overdue");
+    expect(reads).toHaveLength(3);
+  });
+
   it("reads the Due choice from the address on a page reload", async () => {
     const reads: URLSearchParams[] = [];
     stubApi({

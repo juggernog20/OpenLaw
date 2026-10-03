@@ -9,6 +9,7 @@
  * browser, plugin, or our own server code — can open registration.
  */
 
+import { createHash } from "node:crypto";
 import { betterAuth } from "better-auth";
 import { oauthPlugins } from "./oauth.js";
 import { admin, magicLink, twoFactor } from "better-auth/plugins";
@@ -201,6 +202,17 @@ async function magicLinkDenied(
 // The resolver, not a fixed mailer (#37): every send resolves the
 // current configuration, so an SMTP relay saved through the wizard is
 // used by the very next email with no restart.
+/**
+ * How a verification identifier is stored (TECH-032): the SHA-256 of the
+ * plain identifier, base64url without padding. This is the digest
+ * better-auth's "hashed" option uses, written out here so a route that
+ * writes a token row inside its own transaction stores what the redeem
+ * looks up. Changing it would orphan every live token.
+ */
+export function storedVerificationIdentifier(identifier: string): string {
+  return createHash("sha256").update(identifier).digest("base64url");
+}
+
 export function createAuth(
   db: Db,
   config: AuthConfig,
@@ -341,7 +353,7 @@ export function createAuth(
     // Set-password and magic-link tokens are at-rest secrets: store their
     // identifiers hashed (lookup hashes symmetrically).
     verification: {
-      storeIdentifier: "hashed",
+      storeIdentifier: { hash: async (identifier) => storedVerificationIdentifier(identifier) },
     },
     plugins: [
       apiKeyPlugin(),

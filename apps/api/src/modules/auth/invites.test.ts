@@ -2,6 +2,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { accounts, activityLog, asc, desc, eq, sql, users, verifications } from "@openlaw/db";
+import { storedVerificationIdentifier } from "../../auth/instance.js";
 import {
   linkFrom,
   signIn,
@@ -215,6 +216,42 @@ describe("invite resend (POST /api/v1/auth/invites/:userId/resend, #65)", () => 
     const reset = await setPassword(tokenFrom(mail[1]!.text), "riley-sets-her-own-1");
     expect(reset.statusCode, reset.body).toBe(200);
     await signInCookies(harness.app, "riley@example.com", "riley-sets-her-own-1");
+  });
+
+  it("keeps one live link when two resends race", async () => {
+    const userId = await invitePending("sol@example.com", "Sol Adeyemi");
+    const resend = () =>
+      harness.app.inject({
+        method: "POST",
+        url: `/api/v1/auth/invites/${userId}/resend`,
+        cookies: adminCookies,
+      });
+    const results = await Promise.all([resend(), resend()]);
+    for (const res of results) expect(res.statusCode, res.body).toBe(200);
+
+    const rows = await harness.db
+      .select()
+      .from(verifications)
+      .where(eq(verifications.value, userId));
+    expect(rows).toHaveLength(1);
+    const mail = harness.mailer.messagesTo("sol@example.com");
+    expect(mail).toHaveLength(3);
+    // Whichever resend committed last owns the one row. Its link
+    // activates; the other resend's link is dead.
+    const tokens = [tokenFrom(mail[1]!.text), tokenFrom(mail[2]!.text)];
+    const live = tokens.filter(
+      (token) => rows[0]!.identifier === storedVerificationIdentifier(`reset-password:${token}`),
+    );
+    expect(live).toHaveLength(1);
+    const dead = tokens.find((token) => token !== live[0])!;
+    expect((await setPassword(dead, "sol-sets-his-own-1")).statusCode).not.toBe(200);
+    const reset = await setPassword(live[0]!, "sol-sets-his-own-1");
+    expect(reset.statusCode, reset.body).toBe(200);
+    const [stored] = await harness.db
+      .select({ inviteExpiresAt: users.inviteExpiresAt })
+      .from(users)
+      .where(eq(users.id, userId));
+    expect(stored?.inviteExpiresAt).toBeInstanceOf(Date);
   });
 
   it("answers 404 for an unknown user id", async () => {

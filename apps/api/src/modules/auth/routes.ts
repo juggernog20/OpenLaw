@@ -31,7 +31,7 @@ import {
   AuthenticationPolicySchema,
 } from "./authentication-policy-routes.js";
 import { authenticationPolicy, authenticationForEmail } from "../../auth/authentication-policy.js";
-import { provisionUser } from "../../auth/instance.js";
+import { provisionUser, storedVerificationIdentifier } from "../../auth/instance.js";
 import { withTrustedIdpOrigins } from "../../auth/idp-origins.js";
 import { clientAddress, consumeAuthRequestBudget } from "../../auth/limits.js";
 import {
@@ -1599,25 +1599,54 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
    * password reset keeps. Every earlier set-password token of the user
    * goes first, so after a resend only the newest link works. Returns
    * when the new link expires.
+   *
+   * The delete, the new token and the expiry are one transaction with
+   * the user row locked. Two resends in the same instant would otherwise
+   * each delete and then each insert, and leave two live links. The
+   * token row is written here rather than through better-auth's adapter,
+   * which has no transaction handle; it stores the identifier the way
+   * the adapter does, so /auth/set-password redeems it unchanged.
+   *
+   * The caller has checked that the invite is pending, but an invitee
+   * can activate between that check and this lock. The check runs again
+   * under the lock, so an activated account never gets a set-password
+   * link it did not ask for.
    */
   async function sendInviteEmail(userId: string): Promise<Date> {
     const settings = await getOrgSettings(app.db);
     const days = settings.inviteLinkLifetimeDays;
-    const expiresAt = new Date(Date.now() + days * DAY_MS);
     const token = randomBytes(24).toString("base64url");
-    const context = await app.auth.$context;
-    await app.db.delete(verifications).where(eq(verifications.value, userId));
-    await context.internalAdapter.createVerificationValue({
-      value: userId,
-      identifier: `reset-password:${token}`,
-      expiresAt,
+    const { user, expiresAt } = await app.db.transaction(async (tx) => {
+      const [user] = await tx
+        .select({
+          email: users.email,
+          displayName: users.displayName,
+          lastActiveAt: users.lastActiveAt,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+        .for("update");
+      if (!user) throw httpError(404, "No user exists with this id.");
+      // A sign-in stamp also covers magic links, which create no account row.
+      const activated = await tx
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(eq(accounts.userId, userId))
+        .limit(1);
+      if (user.lastActiveAt || activated.length > 0) {
+        throw httpError(409, "This user has already activated their account.");
+      }
+      const expiresAt = new Date(Date.now() + days * DAY_MS);
+      await tx.delete(verifications).where(eq(verifications.value, userId));
+      await tx.insert(verifications).values({
+        identifier: storedVerificationIdentifier(`reset-password:${token}`),
+        value: userId,
+        expiresAt,
+      });
+      await tx.update(users).set({ inviteExpiresAt: expiresAt }).where(eq(users.id, userId));
+      return { user, expiresAt };
     });
-    const [user] = await app.db
-      .update(users)
-      .set({ inviteExpiresAt: expiresAt })
-      .where(eq(users.id, userId))
-      .returning({ email: users.email, displayName: users.displayName });
-    if (!user) throw httpError(404, "No user exists with this id.");
 
     // The token rides in the URL fragment, which a browser never sends,
     // so no request log holds a live token (TECH-032).

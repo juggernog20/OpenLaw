@@ -52,28 +52,50 @@ function dueQuery(due: Due) {
   return {};
 }
 
+// A Due change has already read the exact list it is about to put in the
+// address bar. Only that one navigation skips the loader; a link to
+// /home/tasks with another Due, such as My Tasks while a filter is on,
+// must still reload. The same arrangement as the Documents page.
+let locallyReadSearch: string | null = null;
+
+// Counts loader runs. The page remounts from loader data on every run, so a
+// skipped revalidation keeps the local state and a real one replaces it.
+let loads = 0;
+
 export async function homeTasksLoader({ request }: LoaderFunctionArgs) {
   const user = await requireUser();
   if (user.role === "business_user") return redirect("/portal");
   const due = dueFrom(new URL(request.url).searchParams.get("due"));
   const { data } = await api.GET("/api/v1/home/tasks", { params: { query: dueQuery(due) } });
   if (!data) throw new Error("My Tasks could not be read.");
-  return { user, tasks: data };
+  return { user, tasks: data, loadKey: ++loads };
 }
 
-/** The page reads a new Due choice itself, so the URL change does not reload it. */
+/** The page reads its own Due choice itself, so that one address change
+ * does not reload it. Any other change to the address does. */
 export function homeTasksShouldRevalidate({
   currentUrl,
   nextUrl,
   defaultShouldRevalidate,
 }: ShouldRevalidateFunctionArgs): boolean {
-  return currentUrl.pathname === nextUrl.pathname &&
-    currentUrl.searchParams.get("due") !== nextUrl.searchParams.get("due")
-    ? false
-    : defaultShouldRevalidate;
+  if (
+    currentUrl.pathname === nextUrl.pathname &&
+    currentUrl.search !== nextUrl.search &&
+    locallyReadSearch === nextUrl.search
+  ) {
+    locallyReadSearch = null;
+    return false;
+  }
+  locallyReadSearch = null;
+  return defaultShouldRevalidate;
 }
 
 export function HomeTasksPage() {
+  const { loadKey } = useLoaderData<typeof homeTasksLoader>();
+  return <HomeTasksPageState key={loadKey} />;
+}
+
+function HomeTasksPageState() {
   const { user, tasks } = useLoaderData<typeof homeTasksLoader>();
   const intl = useIntl();
   const signOut = useSignOut("/auth/login");
@@ -110,15 +132,12 @@ export function HomeTasksPage() {
       setPage(data);
       setShowCompleted(includeCompleted);
       if (nextDue !== due) {
-        setSearchParams(
-          (current) => {
-            const next = new URLSearchParams(current);
-            if (nextDue === "all") next.delete("due");
-            else next.set("due", nextDue);
-            return next;
-          },
-          { replace: true },
-        );
+        const next = new URLSearchParams(searchParams);
+        if (nextDue === "all") next.delete("due");
+        else next.set("due", nextDue);
+        const search = next.toString();
+        locallyReadSearch = search ? `?${search}` : "";
+        setSearchParams(next, { replace: true });
       }
       setFailed(false);
     } catch {
