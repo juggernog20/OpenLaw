@@ -239,7 +239,7 @@ export function TrustRegisterTab({
               >
                 <FormattedMessage
                   id="entities.trust.fundNegative"
-                  defaultMessage="Distributions exceed settlements in {currency}. The fund is a ledger, not a valuation."
+                  defaultMessage="Distributions exceed settlements in {currency}."
                   values={{ currency: w.currency }}
                 />
               </p>

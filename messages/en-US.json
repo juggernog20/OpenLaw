@@ -6492,7 +6492,7 @@
     "defaultMessage": "Settled {settled} {currency} · Distributed {distributed} {currency} · Fund {balance} {currency}"
   },
   "entities.trust.fundNegative": {
-    "defaultMessage": "Distributions exceed settlements in {currency}. The fund is a ledger, not a valuation."
+    "defaultMessage": "Distributions exceed settlements in {currency}."
   },
   "entities.trust.group.beneficiary": {
     "defaultMessage": "Beneficiaries"
