@@ -1606,6 +1606,11 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
    * token row is written here rather than through better-auth's adapter,
    * which has no transaction handle; it stores the identifier the way
    * the adapter does, so /auth/set-password redeems it unchanged.
+   *
+   * The caller has checked that the invite is pending, but an invitee
+   * can activate between that check and this lock. The check runs again
+   * under the lock, so an activated account never gets a set-password
+   * link it did not ask for.
    */
   async function sendInviteEmail(userId: string): Promise<Date> {
     const settings = await getOrgSettings(app.db);
@@ -1613,12 +1618,25 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     const token = randomBytes(24).toString("base64url");
     const { user, expiresAt } = await app.db.transaction(async (tx) => {
       const [user] = await tx
-        .select({ email: users.email, displayName: users.displayName })
+        .select({
+          email: users.email,
+          displayName: users.displayName,
+          lastActiveAt: users.lastActiveAt,
+        })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1)
         .for("update");
       if (!user) throw httpError(404, "No user exists with this id.");
+      // A sign-in stamp also covers magic links, which create no account row.
+      const activated = await tx
+        .select({ id: accounts.id })
+        .from(accounts)
+        .where(eq(accounts.userId, userId))
+        .limit(1);
+      if (user.lastActiveAt || activated.length > 0) {
+        throw httpError(409, "This user has already activated their account.");
+      }
       const expiresAt = new Date(Date.now() + days * DAY_MS);
       await tx.delete(verifications).where(eq(verifications.value, userId));
       await tx.insert(verifications).values({
