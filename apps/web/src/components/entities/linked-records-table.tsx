@@ -59,6 +59,10 @@ export function EntityContractsTable({ entityId }: { entityId: string }) {
       catalogue={CONTRACTS_CATALOGUE}
       read={readContracts}
       title={defineMessage({ id: "entities.linked.contracts", defaultMessage: "Contracts" })}
+      emptyMessage={defineMessage({
+        id: "entities.linked.contracts.empty",
+        defaultMessage: "No linked contracts.",
+      })}
     />
   );
 }
@@ -69,6 +73,10 @@ export function EntityMattersTable({ entityId }: { entityId: string }) {
       catalogue={MATTERS_CATALOGUE}
       read={readMatters}
       title={defineMessage({ id: "entities.linked.matters", defaultMessage: "Matters" })}
+      emptyMessage={defineMessage({
+        id: "entities.linked.matters.empty",
+        defaultMessage: "No linked matters.",
+      })}
     />
   );
 }
@@ -78,11 +86,13 @@ function LinkedTable<Row extends { id: string }>({
   catalogue,
   read,
   title,
+  emptyMessage,
 }: {
   entityId: string;
   catalogue: TableCatalogue<Row>;
   read: ReadPage<Row>;
   title: MessageDescriptor;
+  emptyMessage: MessageDescriptor;
 }) {
   const intl = useIntl();
   const [layout, setLayout] = useState(() => builtInLayout(catalogue));
@@ -191,7 +201,7 @@ function LinkedTable<Row extends { id: string }>({
         )
       ) : page.records.length === 0 ? (
         <p className="rounded-card border border-border-default bg-raised p-4 text-sm text-muted">
-          <FormattedMessage id="entities.linked.empty" defaultMessage="No linked records." />
+          <FormattedMessage {...emptyMessage} />
         </p>
       ) : (
         <ManagedTable

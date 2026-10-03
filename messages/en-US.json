@@ -5471,8 +5471,8 @@
   "entities.linked.contracts": {
     "defaultMessage": "Contracts"
   },
-  "entities.linked.empty": {
-    "defaultMessage": "No linked records."
+  "entities.linked.contracts.empty": {
+    "defaultMessage": "No linked contracts."
   },
   "entities.linked.failed": {
     "defaultMessage": "The linked records could not be read."
@@ -5482,6 +5482,9 @@
   },
   "entities.linked.matters": {
     "defaultMessage": "Matters"
+  },
+  "entities.linked.matters.empty": {
+    "defaultMessage": "No linked matters."
   },
   "entities.linked.more": {
     "defaultMessage": "Show more"
