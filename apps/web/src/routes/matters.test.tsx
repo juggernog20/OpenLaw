@@ -646,7 +646,7 @@ describe("the Matters destination", () => {
       extra: (call) => {
         if (call.url.pathname === "/api/v1/matters/options" && call.method === "GET") {
           return json(200, {
-            matterTypes: [templatedType, otherType],
+            matterTypes: [templatedType, otherType, { ...TYPE, id: "type-empty", templates: [] }],
             matterStatuses: [
               { id: "status-open", slug: "open", displayName: "Open", category: "open" },
             ],
@@ -680,7 +680,7 @@ describe("the Matters destination", () => {
     const dialog = await screen.findByRole("dialog");
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), templatedType.id);
 
-    const picker = within(dialog).getByLabelText("Matter template");
+    let picker = within(dialog).getByLabelText("Matter template");
     expect(picker).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
@@ -690,7 +690,10 @@ describe("the Matters destination", () => {
     expect(picker).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Title\*?$/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Priority\*?$/)).toHaveValue("medium");
+    await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), "type-empty");
+    expect(within(dialog).queryByLabelText("Matter template")).toBeNull();
     await user.selectOptions(within(dialog).getByLabelText(/^Matter type\*?$/), templatedType.id);
+    picker = within(dialog).getByLabelText("Matter template");
     expect(picker).toHaveValue("");
     await user.selectOptions(picker, TEMPLATE.id);
     expect(picker).toHaveValue(TEMPLATE.id);

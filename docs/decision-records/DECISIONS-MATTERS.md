@@ -698,6 +698,10 @@ New **`matter_templates`** entity, Admin-managed:
 - Intake triage (**DD-010**) can apply a template at handoff.
 - If a template's type detaches a custom field the template pre-fills, the template editor flags it (stale value warning).
 
+### Addendum (2026-10-03, UX review) — show the template selector only when available
+
+Direct Matter creation and Request conversion show the optional Matter template selector only when the selected Matter Type has available templates. A Type with no available templates shows no template field. Switching Type still clears the selected template.
+
 ### Addendum (2026-09-06, UX review) — creation defaults to No template
 
 Matter and sub-Matter creation start with **No template** whenever the Matter type changes, including types with a single template. This supersedes the optional single-template default above. A person must explicitly choose a template to apply its values, tasks, and Key dates. The creation form's Description grows and shrinks with its contents and has no manual resize handle.

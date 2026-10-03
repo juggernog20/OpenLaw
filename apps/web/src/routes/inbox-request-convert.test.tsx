@@ -908,6 +908,7 @@ describe("editable conversion targets", () => {
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("Template forum");
 
     await user.selectOptions(typePicker, "mt-dispute");
+    expect(within(dialog).queryByLabelText(/^Matter template/)).toBeNull();
     await user.selectOptions(typePicker, "mt-employment");
     expect(within(dialog).getByLabelText(/^Matter template/)).toHaveValue("");
     expect(within(dialog).getByLabelText(/^Governing law/)).toHaveValue("");

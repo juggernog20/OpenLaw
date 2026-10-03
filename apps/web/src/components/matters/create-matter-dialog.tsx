@@ -274,7 +274,7 @@ export function CreateMatterDialog({
                 ))}
               </select>
             </div>
-            {selectedType && (
+            {selectedType && templates.length > 0 && (
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="matter-new-template">
                   <FormattedMessage id="matters.field.template" defaultMessage="Matter template" />
