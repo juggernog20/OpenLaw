@@ -15,12 +15,19 @@ import { pickDate } from "../testing/dates";
 function Harness({
   initial = "",
   onRevert,
-}: Readonly<{ initial?: string; onRevert?: () => void }>) {
+  minDate,
+}: Readonly<{ initial?: string; onRevert?: () => void; minDate?: string }>) {
   const [value, setValue] = useState(initial);
   return (
     <IntlProvider locale="en-US" defaultLocale="en-US">
       <label htmlFor="when">When</label>
-      <DatePicker id="when" value={value} onChange={setValue} onRevert={onRevert} />
+      <DatePicker
+        id="when"
+        value={value}
+        onChange={setValue}
+        onRevert={onRevert}
+        minDate={minDate}
+      />
       <span>{value || "(empty)"}</span>
     </IntlProvider>
   );
@@ -40,6 +47,18 @@ describe("civil date conversion", () => {
 });
 
 describe("DatePicker", () => {
+  it("disables earlier dates while allowing the earliest date", async () => {
+    const user = userEvent.setup();
+    render(<Harness initial="2026-03-15" minDate="2026-03-10" />);
+    await user.click(screen.getByLabelText("When"));
+    const earlier = screen.getByRole("button", { name: /March 9th, 2026/ });
+    expect(earlier).toBeDisabled();
+    await user.click(earlier);
+    expect(screen.getByText("2026-03-15")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /March 10th, 2026/ }));
+    expect(screen.getByText("2026-03-10")).toBeInTheDocument();
+  });
+
   it("shows the placeholder when empty and the formatted date when set", () => {
     const { unmount } = render(<Harness />);
     expect(screen.getByLabelText("When")).toHaveTextContent("Select a date");

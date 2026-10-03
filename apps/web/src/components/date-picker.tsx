@@ -53,6 +53,7 @@ export function DatePicker({
   id,
   value,
   disabled,
+  minDate,
   describedBy,
   invalid = false,
   onChange,
@@ -63,6 +64,8 @@ export function DatePicker({
   /** A bare `YYYY-MM-DD`, or empty when nothing is recorded. */
   value: string;
   disabled?: boolean;
+  /** Earliest selectable civil date, inclusive. */
+  minDate?: string;
   describedBy?: string;
   /** A refusal named this field. */
   invalid?: boolean;
@@ -78,6 +81,7 @@ export function DatePicker({
   const triggerId = id ?? generatedId;
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => civilToLocalDate(value), [value]);
+  const earliest = useMemo(() => civilToLocalDate(minDate ?? ""), [minDate]);
   const calendarLabel = intl.formatMessage({
     id: "datePicker.calendar",
     defaultMessage: "Choose a date",
@@ -123,6 +127,7 @@ export function DatePicker({
           selected={selected}
           defaultMonth={selected ?? new Date()}
           startMonth={START_MONTH}
+          disabled={earliest ? { before: earliest } : undefined}
           endMonth={endMonth()}
           labels={{
             labelMonthDropdown: () =>
@@ -138,7 +143,7 @@ export function DatePicker({
               intl.formatMessage({ id: "datePicker.nextMonth", defaultMessage: "Next month" }),
           }}
           onSelect={(date) => {
-            if (!date) return;
+            if (!date || (earliest && date < earliest)) return;
             onChange(localDateToCivil(date));
             setOpen(false);
           }}
@@ -148,6 +153,7 @@ export function DatePicker({
             type="button"
             variant="secondary"
             size="sm"
+            disabled={!!minDate && localDateToCivil(new Date()) < minDate}
             onClick={() => {
               onChange(localDateToCivil(new Date()));
               setOpen(false);

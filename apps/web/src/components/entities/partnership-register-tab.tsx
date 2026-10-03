@@ -294,6 +294,7 @@ export function PartnershipRegisterTab({
         <>
           <RegisterAsOf
             register={register}
+            minDate={entity.formedOn ?? undefined}
             onChange={(next) => {
               const search = new URLSearchParams(params);
               if (next && next !== register.today) search.set("asOf", next);

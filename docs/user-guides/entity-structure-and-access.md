@@ -78,7 +78,7 @@ OpenLaw replays the whole register with every change. It refuses an entry that w
 
 ### Read the register at a date
 
-The register opens at today. To read it at an earlier date, choose the date in **Register as of**, or use **Previous entry date** and **Next entry date** to step between entry dates. **Reset to today** returns to today.
+The register opens at today. To read it at an earlier date, choose the date in **Register as of**, or use **Previous entry date** and **Next entry date** to step between entry dates. **Reset to today** returns to today. Across share, partnership and trust registers, the calendar and entry-date navigation cannot select dates before the Entity’s formation date. When no formation date is recorded, earlier dates remain available.
 
 At an earlier date, **Register of members** shows the Holders on that date and a **Change to today** column. Entries after that date stay in the list but are dimmed. The line under **Register as of** states the issued total on that date.
 

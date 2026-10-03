@@ -167,7 +167,13 @@ export function ShareRegisterTab({
   return (
     <div className="flex flex-col gap-4">
       {/* An empty register has no dates to scrub and nothing to reconcile. */}
-      {empty ? null : <RegisterAsOf register={register} onChange={setAsOf} />}
+      {empty ? null : (
+        <RegisterAsOf
+          register={register}
+          minDate={entity.formedOn ?? undefined}
+          onChange={setAsOf}
+        />
+      )}
       {empty ? null : <ReconciliationNote register={register} />}
       {register.warnings.map((warning) => (
         <p
@@ -390,14 +396,18 @@ export function RemoveEntryDialog({
 /** DES-088's Register as of: prev, the date, next, Reset to today, and the timeline. */
 export function RegisterAsOf({
   register,
+  minDate,
   onChange,
 }: Readonly<{
   register: Pick<ShareRegister, "dates" | "today" | "asOf">;
+  minDate?: string;
   onChange: (next: string | null) => void;
 }>) {
   const intl = useIntl();
   const asOfHeading = useId();
-  const ticks = [...new Set([...register.dates, register.today])].sort();
+  const ticks = [...new Set([...register.dates, register.today])]
+    .filter((date) => !minDate || date >= minDate)
+    .sort();
   const earlier = ticks.filter((date) => date < register.asOf);
   const later = ticks.filter((date) => date > register.asOf);
   const first = ticks[0] ?? register.today;
@@ -438,6 +448,7 @@ export function RegisterAsOf({
           </Button>
           <DatePicker
             id="register-as-of"
+            minDate={minDate}
             value={register.asOf}
             onChange={(next) => onChange(next || null)}
           />

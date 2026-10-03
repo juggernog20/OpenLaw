@@ -328,6 +328,23 @@ describe("the Entity Ownership tab as a share register", () => {
     expect(screen.getByRole("heading", { name: "Holdings in other Entities" })).toBeInTheDocument();
   });
 
+  it("prevents navigating to register dates before the Entity was formed", async () => {
+    stubApi({
+      signedIn: MEMBER,
+      extra: registerApi({ entity: { formedOn: "2026-08-01" } }).handler,
+    });
+    renderAt("/entities/e1/ownership");
+    await screen.findByRole("heading", { name: "Register of allotments and transfers" });
+    expect(screen.getByRole("button", { name: "Previous entry date" })).toBeDisabled();
+    const user = userEvent.setup();
+    await user.click(document.getElementById("register-as-of")!);
+    const calendar = screen.getByRole("dialog", { name: "Choose a date" });
+    await user.selectOptions(within(calendar).getByRole("combobox", { name: "Month" }), "August");
+    await user.selectOptions(within(calendar).getByRole("combobox", { name: "Year" }), "2026");
+    expect(within(calendar).getByRole("button", { name: /July 31st, 2026/ })).toBeDisabled();
+    expect(within(calendar).getByRole("button", { name: /August 1st, 2026/ })).toBeEnabled();
+  });
+
   it("scrubs the register through ?asOf, dims later entries, and resets to today", async () => {
     const api = registerApi();
     stubApi({ signedIn: MEMBER, extra: api.handler });
