@@ -62,16 +62,16 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@secretlint/secretlint-rule-preset-recommend": "^13.0.6",
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.7",
     "@types/node": "^26.6.4",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "eslint": "^10.11.0",
+    "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "marked": "18.0.14",
     "prettier": "^3.9.9",
     "sanitize-html": "2.18.0",
-    "secretlint": "^13.0.6",
-    "turbo": "^2.11.6",
+    "secretlint": "^13.0.7",
+    "turbo": "^2.11.7",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.71.0"
   }
